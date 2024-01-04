@@ -1,0 +1,76 @@
+{
+  "name": "ts-vitejs-template",
+  "author": "Winkler Fabien <fabienwinkler@outlook.fr>",
+  "description": "Small description of your lib",
+  "contributors": [],
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/MyClass.ts",
+  "types": "./dist/index.d.ts",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=5.7.1"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/myclass.js",
+      "require": "./dist/myclass.umd.cjs"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/fabwcie/ts-vitejs-template.git"
+  },
+  "keywords": [
+    "typescript"
+  ],
+  "files": [
+    "dist/*"
+  ],
+  "scripts": {
+    "prepare": "husky install",
+    "start": "concurrently \"npm:dev\" \"npm:dev:docs\"",
+    "dev": "vite build --watch",
+    "dev:debug": "vite",
+    "dev:docs": "cd docs/ && npm run start",
+    "build": "tsc && vite build",
+    "build:api": "npx typedoc --gitRevision master --excludePrivate --plugin typedoc-plugin-markdown --out docs/docs/api src/**/*.ts",
+    "build:docs": "cp dist/myclass.js docs/static",
+    "test": "npm run test:unit && npm run test:e2e",
+    "test:e2e": "playwright test",
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest dev",
+    "lint": "npx eslint src/**",
+    "format": "prettier src/**/*.ts --write",
+    "docs": "cd docs && yarn start",
+    "preview": "vite preview",
+    "release": "npm run build && commit-and-tag-version && git push --follow-tags origin master && npm publish --access public",
+    "release:patch": "npm run build && commit-and-tag-version --release-as patch && npm run publish",
+    "release:minor": "npm run build && commit-and-tag-version --release-as minor && npm run publish",
+    "release:major": "npm run build && commit-and-tag-version --release-as major && npm run publish",
+    "publish": "git push --follow-tags origin master && npm publish --access public"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^17.7.2",
+    "@commitlint/config-conventional": "^17.7.0",
+    "@playwright/test": "^1.39.0",
+    "@types/node": "^20.8.7",
+    "@typescript-eslint/eslint-plugin": "^6.7.5",
+    "@typescript-eslint/parser": "^6.7.5",
+    "commit-and-tag-version": "^11.3.0",
+    "concurrently": "^8.2.2",
+    "eslint": "^8.51.0",
+    "husky": "^8.0.3",
+    "jsdom": "^22.1.0",
+    "prettier": "^3.0.3",
+    "sass": "^1.69.1",
+    "typedoc": "^0.25.2",
+    "typedoc-plugin-markdown": "^3.16.0",
+    "typescript": "^5.0.2",
+    "vite": "^4.4.5",
+    "vite-plugin-dts": "^3.6.0",
+    "vitest": "^0.34.6"
+  }
+}
