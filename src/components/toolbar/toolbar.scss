@@ -1,0 +1,11 @@
+@import '../../scss/variables';
+
+.drawer-toolbar-root {
+  width: 100%;
+  min-height: 40px;
+  background-color: $light;
+  border-top-left-radius: $radius;
+  border-top-right-radius: $radius;
+  position: sticky;
+  z-index: 1;
+}

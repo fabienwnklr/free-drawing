@@ -9,6 +9,6 @@
     { "type": "perf", "hidden": true },
     { "type": "test", "hidden": true }
   ],
-  "commitUrlFormat": "https://github.com/{org}/{repo}/commits/{{hash}}",
-  "compareUrlFormat": "https://github.com/{org}/{repo}/compare/{{previousTag}}...{{currentTag}}"
+  "commitUrlFormat": "https://github.com/fabienwnklr/free-drawing/commits/{{hash}}",
+  "compareUrlFormat": "https://github.com/fabienwnklr/free-drawing/compare/{{previousTag}}...{{currentTag}}"
 }

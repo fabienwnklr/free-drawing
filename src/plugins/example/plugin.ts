@@ -1,4 +1,4 @@
-import { MyClass } from '../../MyClass';
+import { Drawer } from '../../Drawer';
 // import { ... } from '../../utils/dom'
 import { deepMerge } from '../../utils/functions';
 import type { myType } from './@types';
@@ -12,10 +12,11 @@ import './plugin.scss';
  * @param this
  * @param opts
  */
-export default function (this: MyClass, opts: myType = {}) {
+export default function (this: Drawer, opts: myType = {}) {
   const defaultOpts: myType = { prop1: '' };
   opts = deepMerge<myType>(opts, defaultOpts);
 
+  console.log('example plugin initied');
   console.log(opts);
   this.on('init', () => {
     // write your plugin ...

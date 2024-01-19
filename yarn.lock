@@ -2334,6 +2334,11 @@ kolorist@^1.8.0:
   resolved "https://registry.yarnpkg.com/kolorist/-/kolorist-1.8.0.tgz#edddbbbc7894bc13302cdf740af6374d4a04743c"
   integrity sha512-Y+60/zizpJ3HRH8DCss+q95yr6145JXZo46OTpFvDZWLfRCE4qChOyk1b26nMaNpfHHgxagk9dXT5OP0Tfe+dQ==
 
+konva@^9.3.1:
+  version "9.3.1"
+  resolved "https://registry.yarnpkg.com/konva/-/konva-9.3.1.tgz#11eb970913f13cb87c8c8c7cb554b88be53ec37c"
+  integrity sha512-KXHJVUrYVWFIJUbnlw8QUZDBGC1jx6wwRsGaByPm/2yk78xw7hKquCMNEd9EtVqGz/jUkKFJAWom77TLB+zVOA==
+
 levn@^0.4.1:
   version "0.4.1"
   resolved "https://registry.yarnpkg.com/levn/-/levn-0.4.1.tgz#ae4562c007473b932a6200d403268dd2fffc6ade"

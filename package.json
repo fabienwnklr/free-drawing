@@ -6,7 +6,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "main": "src/MyClass.ts",
+  "main": "src/Drawer.ts",
   "types": "./dist/index.d.ts",
   "license": "Apache-2.0",
   "engines": {
@@ -15,8 +15,8 @@
   },
   "exports": {
     ".": {
-      "import": "./dist/myclass.js",
-      "require": "./dist/myclass.umd.cjs"
+      "import": "./dist/drawer.js",
+      "require": "./dist/drawer.umd.cjs"
     }
   },
   "repository": {
@@ -37,7 +37,7 @@
     "dev:docs": "cd docs/ && npm run start",
     "build": "tsc && vite build",
     "build:api": "npx typedoc --gitRevision master --excludePrivate --plugin typedoc-plugin-markdown --out docs/docs/api src/**/*.ts",
-    "build:docs": "cp dist/myclass.js docs/static",
+    "build:docs": "cp dist/drawer.iife.js docs/static",
     "test": "npm run test:unit && npm run test:e2e",
     "test:e2e": "playwright test",
     "test:unit": "vitest run",
@@ -72,5 +72,8 @@
     "vite": "^4.4.5",
     "vite-plugin-dts": "^3.6.0",
     "vitest": "^0.34.6"
+  },
+  "dependencies": {
+    "konva": "^9.3.1"
   }
 }

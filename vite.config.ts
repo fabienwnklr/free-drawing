@@ -10,10 +10,10 @@ export default defineConfig({
     minify: true,
     lib: {
       // Could also be a dictionary or array of multiple entry points
-      entry: resolve(__dirname, 'src/MyClass.ts'),
-      name: 'MyClass', // for iife and umd
+      entry: resolve(__dirname, 'src/Drawer.ts'),
+      name: 'Drawer', // for iife and umd
       // the proper extensions will be added
-      fileName: 'myclass',
+      fileName: 'drawer',
       formats: ['iife', 'cjs', 'es', 'umd'],
     },
   },
@@ -27,8 +27,8 @@ export default defineConfig({
       closeBundle: async function() {
         // this hack for don't run this on vitest run
         // cause this.cache is not present on run vitest
-        if (!this.cache) return;
-        
+        if (process.env.NODE_ENV === 'test') return;
+
         const start = Date.now();
         console.log('\x1b[36m%s\x1b[0m', `[postbuild-command] Build JS docs files...`)
         execSync('npm run build:docs'); // run during closeBundle hook. https://rollupjs.org/guide/en/#closebundle
@@ -41,6 +41,9 @@ export default defineConfig({
       find: '~',
       replacement: resolve(__dirname, 'src'),
     },
+  },
+  server: {
+    open: process.env.NODE_ENV !== 'test',
   },
   test: {
     environment: 'jsdom',
