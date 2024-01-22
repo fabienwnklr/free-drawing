@@ -20,6 +20,8 @@ export class Drawer extends MicroPlugin(MicroEvent) {
   layer: Layer;
   image: Image;
   context: CanvasRenderingContext2D;
+  toolbar: Toolbar;
+  activeTool: 'brush' | 'eraser' = 'brush';
 
   constructor($el: HTMLDivElement, options: Partial<DrawerOptions> = { plugins: ['plugin-name'] }) {
     super();
@@ -38,6 +40,10 @@ export class Drawer extends MicroPlugin(MicroEvent) {
     });
     this.$container = this.stage.content;
     this.toolbar = new Toolbar(this);
+    const activeWidget = this.toolbar.getWidget(this.activeTool);
+    if (activeWidget) {
+      this.toolbar.setActiveWidget(activeWidget);
+    }
 
     this.layer = new Layer();
     this.stage.add(this.layer);
@@ -59,7 +65,6 @@ export class Drawer extends MicroPlugin(MicroEvent) {
     this.context.lineWidth = 5;
 
     let isPaint = false;
-    const mode: 'brush' | 'eraser' = 'brush';
     let lastLine: Line | null;
 
     this.image.on('mousedown touchstart', () => {
@@ -68,7 +73,7 @@ export class Drawer extends MicroPlugin(MicroEvent) {
       lastLine = new Line({
         stroke: '#df4b26',
         strokeWidth: 5,
-        globalCompositeOperation: mode === 'brush' ? 'source-over' : 'destination-out',
+        globalCompositeOperation: this.activeTool === 'brush' ? 'source-over' : 'destination-out',
         // round cap for smoother lines
         lineCap: 'round',
         lineJoin: 'round',

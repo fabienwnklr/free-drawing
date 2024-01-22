@@ -7,6 +7,8 @@ import { EraserWidget } from './widgets/eraser/eraser';
 export class Toolbar {
   drawer: Drawer;
   private $toolbarContainer: HTMLElement;
+  widgets: Map<'brush' | 'eraser', BaseWidget> = new Map();
+  activeWidget: BaseWidget | null;
 
   constructor(drawer: Drawer) {
     this.drawer = drawer;
@@ -14,6 +16,7 @@ export class Toolbar {
     this.$toolbarContainer = document.createElement('div');
     this.$toolbarContainer.classList.add(`drawer-toolbar-root`);
     this.$toolbarContainer.setAttribute('role', 'toolbar');
+    this.activeWidget = null;
 
     this.drawer.$container.prepend(this.$toolbarContainer);
     this.init();
@@ -25,6 +28,16 @@ export class Toolbar {
   }
 
   addWidget(widget: BaseWidget) {
+    this.widgets.set(widget.toolName, widget);
     widget.addTo(this.$toolbarContainer);
+  }
+
+  setActiveWidget(widget: BaseWidget) {
+    this.activeWidget = widget;
+    widget.setActive(true);
+  }
+
+  getWidget(name: 'brush' | 'eraser'): BaseWidget | undefined {
+    return this.widgets.get(name);
   }
 }

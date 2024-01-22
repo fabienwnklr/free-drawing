@@ -35,11 +35,16 @@
 
       &:hover {
         background-color: $primary;
-        color: $tex-primary;
+        color: $text-primary;
       }
 
       &:focus {
         box-shadow: 0 0 3px $primary;
+      }
+
+      &.active {
+        background-color: $primary-active;
+        color: $text-primary-active;
       }
     }
   }
