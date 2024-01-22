@@ -1,3 +1,4 @@
+import { AvailableTools } from '../../../@types/toolbar';
 import { Drawer } from '../../../Drawer';
 
 export abstract class BaseWidget {
@@ -6,14 +7,14 @@ export abstract class BaseWidget {
   private disabled: boolean = false;
   //   #hasDropdown: boolean;
   $button: HTMLElement;
-  toolName: 'brush' | 'eraser' | 'selection';
+  toolName: AvailableTools;
 
   constructor(
     protected drawer: Drawer,
     protected id: string,
     title: string | null,
     $icon: Element | null,
-    toolName: 'brush' | 'eraser' | 'selection'
+    toolName: AvailableTools
   ) {
     this.$container = document.createElement('div');
     this.$container.classList.add(

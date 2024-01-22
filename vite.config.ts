@@ -1,8 +1,12 @@
 /// <reference types="vitest" />
 import { defineConfig } from 'vite';
-import { resolve } from 'node:path';
+import { resolve, isAbsolute } from 'node:path';
 import dts from 'vite-plugin-dts';
 import { execSync } from 'node:child_process';
+
+function isExternal(id: string) {
+  return !id.startsWith(".") && !isAbsolute(id) && !id.startsWith('~/');
+}
 
 export default defineConfig({
   build: {
@@ -15,6 +19,9 @@ export default defineConfig({
       // the proper extensions will be added
       fileName: 'drawer',
       formats: ['iife', 'cjs', 'es', 'umd'],
+    },
+    rollupOptions: {
+      external: isExternal,
     },
   },
   plugins: [
@@ -38,8 +45,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      find: '~',
-      replacement: resolve(__dirname, 'src'),
+      "~": resolve(__dirname, "./src"),
     },
   },
   server: {

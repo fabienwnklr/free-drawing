@@ -18,6 +18,12 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
+
+    /* alias */
+    "baseUrl": ".",
+    "paths": {
+      "~/*": ["./src"]
+    }
   },
   "include": ["src"]
 }

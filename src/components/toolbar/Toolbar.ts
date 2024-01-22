@@ -1,14 +1,15 @@
 import './toolbar.scss';
-import { Drawer } from '../../Drawer';
+import { Drawer } from '~/Drawer';
 import { BaseWidget } from './widgets/BaseWidget';
 import { BrushWidget } from './widgets/brush/brush';
 import { EraserWidget } from './widgets/eraser/eraser';
 import { SelectWidget } from './widgets/select/select';
+import { AvailableTools } from '../../@types/toolbar';
 
 export class Toolbar {
   drawer: Drawer;
   private $toolbarContainer: HTMLElement;
-  widgets: Map<'brush' | 'eraser' | 'selection', BaseWidget> = new Map();
+  widgets: Map<AvailableTools, BaseWidget> = new Map();
   activeWidget: BaseWidget | null;
 
   constructor(drawer: Drawer) {
@@ -39,7 +40,7 @@ export class Toolbar {
     this.drawer.activeTool = widget.toolName;
   }
 
-  getWidget(name: 'brush' | 'eraser' | 'selection'): BaseWidget | undefined {
+  getWidget(name: AvailableTools): BaseWidget | undefined {
     return this.widgets.get(name);
   }
 }

@@ -11,6 +11,7 @@ import { Vector2d } from 'konva/lib/types';
 import { Transformer } from 'konva/lib/shapes/Transformer';
 import { Rect } from 'konva/lib/shapes/Rect';
 import { Util } from 'konva/lib/Util';
+import { AvailableTools } from './@types/toolbar';
 
 export type DrawerOptions = {
   plugins: string[] | TPluginItem[] | TPluginHash | undefined;
@@ -25,11 +26,10 @@ export class Drawer extends MicroPlugin(MicroEvent) {
   image: Image;
   context: CanvasRenderingContext2D;
   toolbar: Toolbar;
-  activeTool: 'brush' | 'eraser' | 'selection' = 'brush';
+  activeTool: AvailableTools = 'brush';
 
   #transformer: Transformer;
   #isPaint: boolean = false;
-  #selecting: boolean = false;
   #lastLine: Line | null = null;
   #x1: number = 0;
   #x2: number = 0;
