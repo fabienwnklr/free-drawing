@@ -53,7 +53,6 @@ export abstract class BaseWidget {
 
   private _initEvents() {
     this.$button.addEventListener('pointerup', () => {
-        this.drawer.toolbar.setActiveWidget(this);
       this.setActive(true);
     });
   }
@@ -63,9 +62,49 @@ export abstract class BaseWidget {
       if (this.drawer.toolbar.activeWidget) {
         this.drawer.toolbar.activeWidget.setActive(false);
       }
+      this.drawer.toolbar.setActiveWidget(this);
       this.$button.classList.add('active');
     } else {
       this.$button.classList.remove('active');
     }
+    this.updateCursor();
+  }
+
+  updateCursor() {
+    const eraserThickness = this.drawer.context.lineWidth;
+    const rad = this.drawer.activeTool === 'eraser' ? eraserThickness * 1.2 : eraserThickness;
+    const cursorCanvas = document.createElement('canvas');
+    const ctx = cursorCanvas.getContext('2d') as CanvasRenderingContext2D;
+    cursorCanvas.width = cursorCanvas.height = rad;
+
+    ctx.lineCap = this.drawer.context.lineCap;
+    ctx.fillStyle = 'transparent';
+    ctx.fillRect(0, 0, this.drawer.$canvas.width, this.drawer.$canvas.height);
+
+    if (ctx.lineCap === 'round') {
+      ctx.arc(rad / 2, rad / 2, (rad / 2) * 0.9, 0, Math.PI * 2, false);
+    } else {
+      ctx.rect(0, 0, rad, rad);
+    }
+
+    if (this.drawer.activeTool === 'brush') {
+      ctx.fillStyle = this.drawer.context.strokeStyle;
+      ctx.fill();
+    } else if (this.drawer.activeTool === 'eraser') {
+      ctx.strokeStyle = this.drawer.context.strokeStyle;
+      ctx.stroke();
+    } else {
+      // Text
+      this.drawer.$canvas.style.cursor = `text`;
+      return;
+    }
+
+    cursorCanvas.toBlob((blob) => {
+      if (blob) {
+        URL.revokeObjectURL(this.drawer.$canvas.style.cursor);
+        const cursorURL = URL.createObjectURL(blob);
+        this.drawer.stage.container().style.cursor = `url(${cursorURL}) ${rad / 2} ${rad / 2}, auto`;
+      }
+    });
   }
 }

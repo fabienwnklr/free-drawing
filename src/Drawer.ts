@@ -40,10 +40,6 @@ export class Drawer extends MicroPlugin(MicroEvent) {
     });
     this.$container = this.stage.content;
     this.toolbar = new Toolbar(this);
-    const activeWidget = this.toolbar.getWidget(this.activeTool);
-    if (activeWidget) {
-      this.toolbar.setActiveWidget(activeWidget);
-    }
 
     this.layer = new Layer();
     this.stage.add(this.layer);
@@ -101,6 +97,11 @@ export class Drawer extends MicroPlugin(MicroEvent) {
       const newPoints = lastLine?.points().concat([pos.x, pos.y]) ?? [0, 0];
       lastLine?.points(newPoints);
     });
+
+    const activeWidget = this.toolbar.getWidget(this.activeTool);
+    if (activeWidget) {
+      activeWidget.setActive(true);
+    }
   }
 }
 

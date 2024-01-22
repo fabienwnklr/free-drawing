@@ -34,7 +34,7 @@ export class Toolbar {
 
   setActiveWidget(widget: BaseWidget) {
     this.activeWidget = widget;
-    widget.setActive(true);
+    this.drawer.activeTool = widget.toolName;
   }
 
   getWidget(name: 'brush' | 'eraser'): BaseWidget | undefined {
