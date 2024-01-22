@@ -41,3 +41,9 @@ export function deepMerge<T extends object>(target: T, source: Partial<T> | T): 
   }
   return output;
 }
+
+export function stringToNode<T>(string: string): T | null {
+  const placeholder = document.createElement('div');
+  placeholder.innerHTML = string;
+  return placeholder.firstElementChild as T;
+}

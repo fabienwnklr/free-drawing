@@ -74,6 +74,7 @@
     "vitest": "^0.34.6"
   },
   "dependencies": {
-    "konva": "^9.3.1"
+    "konva": "^9.3.1",
+    "vite-svg-loader": "^5.1.0"
   }
 }

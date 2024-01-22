@@ -8,4 +8,39 @@
   border-top-right-radius: $radius;
   position: sticky;
   z-index: 1;
+  display: flex;
+  align-items: center;
+
+  .drawer-tool-container {
+    .button {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      padding: 0.4rem;
+      cursor: pointer;
+      transition:
+        background-color 0.3s ease,
+        color 0.3s ease;
+      margin: 0.2rem;
+      border-radius: $radius;
+
+      &.disabled {
+        pointer-events: none;
+      }
+
+      svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      &:hover {
+        background-color: $primary;
+        color: $tex-primary;
+      }
+
+      &:focus {
+        box-shadow: 0 0 3px $primary;
+      }
+    }
+  }
 }
