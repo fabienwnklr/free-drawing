@@ -6,14 +6,14 @@ export abstract class BaseWidget {
   private disabled: boolean = false;
   //   #hasDropdown: boolean;
   $button: HTMLElement;
-  toolName: 'brush' | 'eraser';
+  toolName: 'brush' | 'eraser' | 'selection';
 
   constructor(
     protected drawer: Drawer,
     protected id: string,
     title: string | null,
     $icon: Element | null,
-    toolName: 'brush' | 'eraser'
+    toolName: 'brush' | 'eraser' | 'selection'
   ) {
     this.$container = document.createElement('div');
     this.$container.classList.add(
@@ -64,15 +64,15 @@ export abstract class BaseWidget {
       }
       this.drawer.toolbar.setActiveWidget(this);
       this.$button.classList.add('active');
+      this.updateCursor();
     } else {
       this.$button.classList.remove('active');
     }
-    this.updateCursor();
   }
 
   updateCursor() {
-    const eraserThickness = this.drawer.context.lineWidth;
-    const rad = this.drawer.activeTool === 'eraser' ? eraserThickness * 1.2 : eraserThickness;
+    const lineWidth = this.drawer.context.lineWidth;
+    const rad = this.drawer.activeTool === 'brush' ? lineWidth : 30;
     const cursorCanvas = document.createElement('canvas');
     const ctx = cursorCanvas.getContext('2d') as CanvasRenderingContext2D;
     cursorCanvas.width = cursorCanvas.height = rad;
@@ -93,9 +93,12 @@ export abstract class BaseWidget {
     } else if (this.drawer.activeTool === 'eraser') {
       ctx.strokeStyle = this.drawer.context.strokeStyle;
       ctx.stroke();
+    } else if (this.drawer.activeTool === 'selection') {
+      this.drawer.stage.container().style.cursor = 'default';
+      return;
     } else {
       // Text
-      this.drawer.$canvas.style.cursor = `text`;
+      this.drawer.stage.container().style.cursor = `text`;
       return;
     }
 
