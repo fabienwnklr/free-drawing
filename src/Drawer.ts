@@ -23,7 +23,7 @@ export class Drawer {
 
   #background: Rect;
   #selectionRectangle: Rect;
-  #transformer: Transformer;
+  transformer: Transformer;
   #isPaint: boolean = false;
   #lastLine: Line | null = null;
   #x1: number = 0;
@@ -54,15 +54,17 @@ export class Drawer {
       width: this.stage.width(),
       height: this.stage.height(),
       listening: false,
+      name: 'background',
     });
     this.layer.add(this.#background);
 
-    this.#transformer = new Transformer();
-    this.layer.add(this.#transformer);
+    this.transformer = new Transformer();
+    this.layer.add(this.transformer);
 
     this.#selectionRectangle = new Rect({
       fill: 'rgba(0,0,255,0.5)',
       visible: false,
+      name: 'selection',
     });
     this.layer.add(this.#selectionRectangle);
 
@@ -95,7 +97,7 @@ export class Drawer {
         lineJoin: 'round',
         // add point twice, so we have some drawings even on a simple click
         points: [realPos.x, realPos.y, realPos.x, realPos.y],
-        draggable: true,
+        // draggable: true,
         name: 'line',
       });
       this.layer.add(this.#lastLine);
@@ -168,7 +170,7 @@ export class Drawer {
             Util.haveIntersection({ x, y, width: 1, height: 1 }, shape.getClientRect())
           );
         }
-        this.#transformer.nodes(selected);
+        this.transformer.nodes(selected);
         this.#selectionRectangle.setAttrs({
           visible: true,
           x: 0,
