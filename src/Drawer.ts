@@ -3,7 +3,6 @@ import { Stage } from 'konva/lib/Stage';
 import { Layer } from 'konva/lib/Layer';
 import { Line } from 'konva/lib/shapes/Line';
 import { Toolbar } from './components/toolbar/Toolbar';
-import { Vector2d } from 'konva/lib/types';
 import { Transformer } from 'konva/lib/shapes/Transformer';
 import { Rect } from 'konva/lib/shapes/Rect';
 import { Util } from 'konva/lib/Util';
@@ -77,7 +76,7 @@ export class Drawer {
 
   private _draw() {
     if (this.activeTool === 'selection') {
-      const realPos = this._getMousePosition()
+      const realPos = this._getMousePosition();
       this.#x1 = realPos.x;
       this.#y1 = realPos.y;
       this.#x2 = realPos.x;
@@ -95,12 +94,7 @@ export class Drawer {
         lineCap: 'round',
         lineJoin: 'round',
         // add point twice, so we have some drawings even on a simple click
-        points: [
-          realPos.x,
-          realPos.y,
-          realPos.x,
-          realPos.y,
-        ],
+        points: [realPos.x, realPos.y, realPos.x, realPos.y],
         draggable: true,
         name: 'line',
       });
@@ -135,10 +129,6 @@ export class Drawer {
       // prevent scrolling on touch devices
       e.evt.preventDefault();
 
-      const pos = this.stage.getPointerPosition() ?? { x: 0, y: 0 };
-
-      e.evt.preventDefault();
-
       if (this.activeTool === 'selection') {
         const realPos = this._getMousePosition();
         this.#x2 = realPos.x;
@@ -152,9 +142,7 @@ export class Drawer {
         });
       } else if (this.activeTool === 'brush') {
         const realPos = this._getMousePosition();
-        const newPoints = this.#lastLine
-          ?.points()
-          .concat([realPos.x, realPos.y]) ?? [0, 0];
+        const newPoints = this.#lastLine?.points().concat([realPos.x, realPos.y]) ?? [0, 0];
         this.#lastLine?.points(newPoints);
       } else if (this.activeTool === 'pan') {
         // Move stage
@@ -190,6 +178,40 @@ export class Drawer {
         });
       }
     });
+
+    // const scaleBy = 1.1;
+    // Zoom on wheel
+    // this.stage.on('wheel', (e) => {
+    //   // stop default scrolling
+    //   e.evt.preventDefault();
+
+    //   const oldScale = this.stage.scaleX();
+    //   const pointer = this.stage.getPointerPosition() ?? { x: 0, y: 0 };
+
+    //   const mousePointTo = {
+    //     x: (pointer.x - this.stage.x()) / oldScale,
+    //     y: (pointer.y - this.stage.y()) / oldScale,
+    //   };
+
+    //   // how to scale? Zoom in? Or zoom out?
+    //   let direction = e.evt.deltaY > 0 ? -1 : 1;
+
+    //   // when we zoom on trackpad, e.evt.ctrlKey is true
+    //   // in that case lets revert direction
+    //   if (e.evt.ctrlKey) {
+    //     direction = -direction;
+    //   }
+
+    //   const newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
+
+    //   this.stage.scale({ x: newScale, y: newScale });
+
+    //   const newPos = {
+    //     x: pointer.x - mousePointTo.x * newScale,
+    //     y: pointer.y - mousePointTo.y * newScale,
+    //   };
+    //   this.stage.position(newPos);
+    // });
   }
 
   /**
