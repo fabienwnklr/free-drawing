@@ -1,4 +1,5 @@
 export enum Tools {
+  pan = 'pan',
   selection = 'selection',
   brush = 'brush',
   eraser = 'eraser',

@@ -33,7 +33,7 @@
     "prepare": "husky install",
     "start": "concurrently \"npm:dev\" \"npm:dev:docs\"",
     "dev": "vite build --watch",
-    "dev:debug": "vite",
+    "debug": "vite",
     "dev:docs": "cd docs/ && npm run start",
     "build": "tsc && vite build",
     "build:api": "npx typedoc --gitRevision master --excludePrivate --plugin typedoc-plugin-markdown --out docs/docs/api src/**/*.ts",

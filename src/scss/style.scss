@@ -1,5 +1,13 @@
 @import 'variables';
-.konvajs-content {
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.4);
+
+.drawer-container {
+  box-shadow: $shadow;
+  width: fit-content;
   border-radius: $radius;
+  .konvajs-content {
+    canvas {
+      border-bottom-left-radius: $radius;
+      border-bottom-right-radius: $radius;
+    }
+  }
 }

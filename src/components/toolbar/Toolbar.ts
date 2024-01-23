@@ -1,10 +1,11 @@
 import './toolbar.scss';
-import { Drawer } from '~/Drawer';
+import { Drawer } from '@/Drawer';
 import { BaseWidget } from './widgets/BaseWidget';
 import { BrushWidget } from './widgets/brush/brush';
 import { EraserWidget } from './widgets/eraser/eraser';
 import { SelectWidget } from './widgets/select/select';
 import { AvailableTools } from '../../@types/toolbar';
+import { PanWidget } from './widgets/pan/pan';
 
 export class Toolbar {
   drawer: Drawer;
@@ -16,28 +17,30 @@ export class Toolbar {
     this.drawer = drawer;
 
     this.$toolbarContainer = document.createElement('div');
+    this.$toolbarContainer.style.maxWidth = this.drawer.stage.width() + 'px';
     this.$toolbarContainer.classList.add(`drawer-toolbar-root`);
     this.$toolbarContainer.setAttribute('role', 'toolbar');
     this.activeWidget = null;
 
-    this.drawer.$container.prepend(this.$toolbarContainer);
+    this.drawer.$el.prepend(this.$toolbarContainer);
     this.init();
   }
 
   init() {
+    this.addWidget(new PanWidget(this.drawer));
     this.addWidget(new SelectWidget(this.drawer));
     this.addWidget(new BrushWidget(this.drawer));
     this.addWidget(new EraserWidget(this.drawer));
   }
 
   addWidget(widget: BaseWidget) {
-    this.widgets.set(widget.toolName, widget);
+    this.widgets.set(widget.id, widget);
     widget.addTo(this.$toolbarContainer);
   }
 
   setActiveWidget(widget: BaseWidget) {
     this.activeWidget = widget;
-    this.drawer.activeTool = widget.toolName;
+    this.drawer.activeTool = widget.id;
   }
 
   getWidget(name: AvailableTools): BaseWidget | undefined {
