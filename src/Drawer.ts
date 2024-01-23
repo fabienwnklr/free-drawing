@@ -8,6 +8,7 @@ import { Rect } from 'konva/lib/shapes/Rect';
 import { Util } from 'konva/lib/Util';
 import { AvailableTools } from './@types/toolbar';
 import { ColorLike } from './@types/drawer';
+import { Node, NodeConfig } from 'konva/lib/Node';
 
 export type DrawerOptions = {
   tool: AvailableTools;
@@ -30,11 +31,11 @@ export class Drawer {
   #x2: number = 0;
   #y1: number = 0;
   #y2: number = 0;
+  #toRemoved: Node<NodeConfig>[] = [];
 
   constructor($el: HTMLDivElement, options: Partial<DrawerOptions> = {}) {
     this.$el = $el;
 
-    this.$el.classList.add('drawer-container');
     const width = window.innerWidth * 0.8;
     const height = window.innerHeight * 0.8;
     this.stage = new Stage({
@@ -43,6 +44,7 @@ export class Drawer {
       height: height,
     });
     this.$container = this.stage.content;
+    this.$container.tabIndex = 0;
     this.toolbar = new Toolbar(this);
 
     this.activeTool = options.tool ?? 'brush';
@@ -101,6 +103,8 @@ export class Drawer {
         name: 'line',
       });
       this.layer.add(this.#lastLine);
+    } else if (this.activeTool === 'eraser') {
+      // nothing
     }
   }
 
@@ -113,8 +117,14 @@ export class Drawer {
   }
 
   private _initEvents() {
+    this.$container.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace' || e.key === 'Delete') {
+        this.transformer.nodes().forEach((n) => n.remove());
+        this.transformer.nodes([]);
+      }
+    });
     this.stage.on('mousedown touchstart', (e) => {
-      if (e.target !== this.stage) {
+      if (e.target !== this.stage || e.evt.target.closest('[class^=drawer]')) {
         return;
       }
       e.evt.preventDefault();
@@ -148,6 +158,20 @@ export class Drawer {
         this.#lastLine?.points(newPoints);
       } else if (this.activeTool === 'pan') {
         // Move stage
+      } else if (this.activeTool === 'eraser') {
+        const shapes = this.stage.find('.line');
+        const { x, y } = this.stage.getPointerPosition() ?? { x: 0, y: 0 };
+        const selected = shapes.filter((shape) =>
+          Util.haveIntersection({ x, y, width: 1, height: 1 }, shape.getClientRect())
+        );
+
+        selected.forEach((s) => {
+          if (s.opacity() === 0.5) {
+            return;
+          }
+          this.#toRemoved.push(s);
+          s.opacity(0.5);
+        });
       }
     });
 
@@ -171,6 +195,7 @@ export class Drawer {
           );
         }
         this.transformer.nodes(selected);
+        this.$container.focus();
         this.#selectionRectangle.setAttrs({
           visible: true,
           x: 0,
@@ -178,6 +203,8 @@ export class Drawer {
           width: 0,
           height: 0,
         });
+      } else if (this.activeTool === 'eraser') {
+        this.#toRemoved.forEach((t) => t.remove());
       }
     });
 

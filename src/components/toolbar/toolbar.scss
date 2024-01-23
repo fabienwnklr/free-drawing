@@ -1,15 +1,19 @@
 @import '../../scss/variables';
 
 .drawer-toolbar-root {
-  width: 100%;
+  width: fit-content;
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  right: 50%;
+  transform: translate(-50%, -50%);
   min-height: 40px;
-  background-color: $light;
-  border-top-left-radius: $radius;
-  border-top-right-radius: $radius;
-  position: sticky;
+  border-radius: $radius;
   z-index: 1;
   display: flex;
   align-items: center;
+  justify-content: center;
+  box-shadow: $shadow;
 
   .drawer-tool-container {
     .button {

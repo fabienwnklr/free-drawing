@@ -1,13 +1,11 @@
 @import 'variables';
 
-.drawer-container {
+.konvajs-content {
   box-shadow: $shadow;
   width: fit-content;
   border-radius: $radius;
-  .konvajs-content {
-    canvas {
-      border-bottom-left-radius: $radius;
-      border-bottom-right-radius: $radius;
-    }
+  canvas {
+    border-bottom-left-radius: $radius;
+    border-bottom-right-radius: $radius;
   }
 }

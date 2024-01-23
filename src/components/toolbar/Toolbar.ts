@@ -22,7 +22,7 @@ export class Toolbar {
     this.$toolbarContainer.setAttribute('role', 'toolbar');
     this.activeWidget = null;
 
-    this.drawer.$el.prepend(this.$toolbarContainer);
+    this.drawer.$container.prepend(this.$toolbarContainer);
     this.init();
   }
 

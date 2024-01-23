@@ -75,8 +75,7 @@ export abstract class BaseWidget {
   }
 
   updateCursor() {
-    const lineWidth = 5;
-    const rad = this.drawer.activeTool === 'brush' ? lineWidth : 30;
+    const rad = 5;
     const cursorCanvas = document.createElement('canvas');
     const ctx = cursorCanvas.getContext('2d') as CanvasRenderingContext2D;
     cursorCanvas.width = cursorCanvas.height = rad;
@@ -95,24 +94,24 @@ export abstract class BaseWidget {
       ctx.fillStyle = '#df4b26';
       ctx.fill();
     } else if (this.drawer.activeTool === 'eraser') {
-      ctx.strokeStyle = '#df4b26';
-      ctx.stroke();
+      this.drawer.$container.style.cursor = 'crosshair';
+      return;
     } else if (this.drawer.activeTool === 'pan') {
-      this.drawer.stage.content.style.cursor = 'grab';
+      this.drawer.$container.style.cursor = 'grab';
       return;
     } else if (this.drawer.activeTool === 'selection') {
-      this.drawer.stage.content.style.cursor = 'default';
+      this.drawer.$container.style.cursor = 'default';
       return;
     } else {
       // Text
-      this.drawer.stage.content.style.cursor = `text`;
+      this.drawer.$container.style.cursor = `text`;
       return;
     }
 
     cursorCanvas.toBlob((blob) => {
       if (blob) {
         const cursorURL = URL.createObjectURL(blob);
-        this.drawer.stage.content.style.cursor = `url(${cursorURL}) ${rad / 2} ${rad / 2}, auto`;
+        this.drawer.$container.style.cursor = `url(${cursorURL}) ${rad / 2} ${rad / 2}, auto`;
       }
     });
   }
