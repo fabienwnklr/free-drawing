@@ -4,6 +4,9 @@ export type DrawerOptions = {
   tool: AvailableTools;
   width: number;
   height: number;
+  zoom: boolean;
+  zoomWidget: boolean;
+  scaling: number;
 };
 
 type RGB = `rgb(${number}, ${number}, ${number})`;

@@ -9,7 +9,6 @@ export class Zoom {
   $btnMinus: HTMLDivElement;
   $btnReset: HTMLDivElement;
   $btnPlus: HTMLDivElement;
-  #scaling: number = 1.11;
 
   constructor(drawer: Drawer) {
     this.drawer = drawer;
@@ -66,7 +65,7 @@ export class Zoom {
       y: (center.y - this.drawer.stage.y()) / oldScale,
     };
 
-    const newScale = this.zoomLevel / this.#scaling;
+    const newScale = this.zoomLevel / this.drawer.options.scaling;
 
     this.drawer.stage.scale({ x: newScale, y: newScale });
 
@@ -100,7 +99,7 @@ export class Zoom {
       y: (center.y - this.drawer.stage.y()) / oldScale,
     };
 
-    const newScale = this.zoomLevel * this.#scaling;
+    const newScale = this.zoomLevel * this.drawer.options.scaling;
 
     this.drawer.stage.scale({ x: newScale, y: newScale });
 

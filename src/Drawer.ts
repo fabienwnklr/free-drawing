@@ -33,7 +33,7 @@ export class Drawer {
   #y1: number = 0;
   #y2: number = 0;
   #toRemoved: Node<NodeConfig>[] = [];
-  zoom: Zoom;
+  zoom: Zoom | undefined;
 
   constructor($el: HTMLDivElement, options: Partial<DrawerOptions> = {}) {
     this.$el = $el;
@@ -55,7 +55,10 @@ export class Drawer {
     this.$container = this.stage.content;
     const activeTool = this.options.tool ?? 'brush';
     this.toolbar = new Toolbar(this);
-    this.zoom = new Zoom(this);
+
+    if (this.options.zoomWidget) {
+      this.zoom = new Zoom(this);
+    }
 
     const activeWidget = this.toolbar.getWidget(activeTool);
     if (activeWidget) {
@@ -226,41 +229,42 @@ export class Drawer {
 
       this.$container.style.cursor = 'grab';
     });
-    const scaleBy = 1.1;
     // Zoom on wheel
-    this.stage.on('wheel', (e) => {
-      if (!e.evt.ctrlKey) return;
-      // stop default scrolling
-      e.evt.preventDefault();
+    if (this.options.zoom) {
+      this.stage.on('wheel', (e) => {
+        if (!e.evt.ctrlKey) return;
+        // stop default scrolling
+        e.evt.preventDefault();
 
-      const oldScale = this.stage.scaleX();
-      const pointer = this.stage.getPointerPosition() ?? { x: 0, y: 0 };
+        const oldScale = this.stage.scaleX();
+        const pointer = this.stage.getPointerPosition() ?? { x: 0, y: 0 };
 
-      const mousePointTo = {
-        x: (pointer.x - this.stage.x()) / oldScale,
-        y: (pointer.y - this.stage.y()) / oldScale,
-      };
+        const mousePointTo = {
+          x: (pointer.x - this.stage.x()) / oldScale,
+          y: (pointer.y - this.stage.y()) / oldScale,
+        };
 
-      // how to scale? Zoom in? Or zoom out?
-      let direction = e.evt.deltaY > 0 ? 1 : -1;
+        // how to scale? Zoom in? Or zoom out?
+        let direction = e.evt.deltaY > 0 ? 1 : -1;
 
-      // when we zoom on trackpad, e.evt.ctrlKey is true
-      // in that case lets revert direction
-      if (e.evt.ctrlKey) {
-        direction = -direction;
-      }
+        // when we zoom on trackpad, e.evt.ctrlKey is true
+        // in that case lets revert direction
+        if (e.evt.ctrlKey) {
+          direction = -direction;
+        }
 
-      const newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
+        const newScale = direction > 0 ? oldScale * this.options.scaling : oldScale / this.options.scaling;
 
-      this.stage.scale({ x: newScale, y: newScale });
+        this.stage.scale({ x: newScale, y: newScale });
 
-      const newPos = {
-        x: pointer.x - mousePointTo.x * newScale,
-        y: pointer.y - mousePointTo.y * newScale,
-      };
-      this.stage.position(newPos);
-      this.zoom.update();
-    });
+        const newPos = {
+          x: pointer.x - mousePointTo.x * newScale,
+          y: pointer.y - mousePointTo.y * newScale,
+        };
+        this.stage.position(newPos);
+        this.zoom?.update();
+      });
+    }
   }
 
   /**
