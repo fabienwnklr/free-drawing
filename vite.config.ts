@@ -52,8 +52,14 @@ export default defineConfig({
     open: process.env.NODE_ENV !== 'test',
   },
   test: {
+    server: {
+      deps: {
+        inline: ['jest-canvas-mock'],
+      },
+    },
     environment: 'jsdom',
     threads: false,
+    setupFiles: ['./vitest.setup.ts'],
     // For this config, check https://github.com/vitest-dev/vitest/issues/740
     environmentOptions: {
       jsdom: {
