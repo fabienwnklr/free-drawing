@@ -1,6 +1,17 @@
 @import 'variables';
 
 .drawer-container {
+  font-family:
+    Inter,
+    -apple-system,
+    'system-ui',
+    Segoe UI,
+    Noto Sans,
+    Helvetica,
+    Arial,
+    sans-serif,
+    'Apple Color Emoji',
+    'Segoe UI Emoji';
   position: relative;
   width: fit-content;
   .drawer-toolbar-root {
@@ -9,7 +20,7 @@
     bottom: 10px;
     left: 50%;
     right: 50%;
-    transform: translate(-50%, -50%);
+    transform: translateX(-50%);
     min-height: 40px;
     border-radius: $radius;
     z-index: 1;
@@ -18,43 +29,57 @@
     justify-content: center;
     box-shadow: $shadow;
     background-color: #fff;
+  }
 
-    .drawer-tool-container {
-      .button {
-        height: 100%;
-        display: flex;
-        align-items: center;
-        padding: 0.4rem;
-        cursor: pointer;
-        transition:
-          background-color 0.3s ease,
-          color 0.3s ease;
-        margin: 0.2rem;
-        border-radius: $radius;
+  .button {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    padding: 0.4rem;
+    cursor: pointer;
+    transition:
+      background-color 0.3s ease,
+      color 0.3s ease;
+    margin: 0.2rem;
+    border-radius: $radius;
 
-        &.disabled {
-          pointer-events: none;
-        }
+    &.disabled {
+      pointer-events: none;
+    }
 
-        svg {
-          width: 18px;
-          height: 18px;
-        }
+    svg {
+      width: 18px;
+      height: 18px;
+    }
 
-        &:hover {
-          background-color: $primary;
-          color: $text-primary;
-        }
+    &:hover {
+      background-color: $primary;
+      color: $text-primary;
+    }
 
-        &:focus {
-          box-shadow: 0 0 3px $primary;
-        }
+    &:focus {
+      box-shadow: 0 0 3px $primary;
+    }
 
-        &.active {
-          background-color: $primary-active;
-          color: $text-primary-active;
-        }
-      }
+    &.active {
+      background-color: $primary-active;
+      color: $text-primary-active;
+    }
+  }
+
+  .drawer-zoom-container {
+    display: flex;
+    align-items: center;
+    width: fit-content;
+    box-shadow: $shadow;
+    border-radius: $radius;
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+
+    .reset-zoom {
+      // width: 3.75rem;
+      // text-align: center;
     }
   }
   .konvajs-content {

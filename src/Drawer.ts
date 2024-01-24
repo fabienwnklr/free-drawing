@@ -11,6 +11,7 @@ import { ColorLike, DrawerOptions } from './@types/drawer';
 import { Node, NodeConfig } from 'konva/lib/Node';
 import { deepMerge } from './utils/functions';
 import { defaultOptions } from './constants';
+import { Zoom } from './components/tools/zoom/Zoom';
 
 export class Drawer {
   $el: HTMLDivElement;
@@ -32,6 +33,7 @@ export class Drawer {
   #y1: number = 0;
   #y2: number = 0;
   #toRemoved: Node<NodeConfig>[] = [];
+  zoom: Zoom;
 
   constructor($el: HTMLDivElement, options: Partial<DrawerOptions> = {}) {
     this.$el = $el;
@@ -53,6 +55,7 @@ export class Drawer {
     this.$container = this.stage.content;
     const activeTool = this.options.tool ?? 'brush';
     this.toolbar = new Toolbar(this);
+    this.zoom = new Zoom(this);
 
     const activeWidget = this.toolbar.getWidget(activeTool);
     if (activeWidget) {
@@ -256,6 +259,7 @@ export class Drawer {
         y: pointer.y - mousePointTo.y * newScale,
       };
       this.stage.position(newPos);
+      this.zoom.update();
     });
   }
 
