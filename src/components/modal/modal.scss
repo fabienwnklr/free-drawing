@@ -1,0 +1,128 @@
+@import '../../scss/variables';
+
+.backdrop {
+  display: flex;
+  background-color: rgba(0, 0, 0, 0.2);
+  position: absolute;
+  justify-content: center;
+  align-items: center;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  transition: opacity 0.2s ease;
+  opacity: 0;
+  visibility: hidden;
+}
+.backdrop.show {
+  opacity: 1;
+  visibility: visible;
+}
+.drawer-modal {
+  display: flex;
+  visibility: hidden;
+  box-sizing: border-box;
+  position: absolute;
+  background: #fff;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
+  border-radius: 0.5rem;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: opacity 0.2s ease;
+  opacity: 0;
+  z-index: 3;
+  max-height: 80%;
+  .drawer-modal-header {
+    padding: 0.5rem;
+    border-top-left-radius: $radius;
+    border-top-right-radius: $radius;
+    background-color: #3e3e3e;
+    .drawer-modal-title {
+      font-size: 1.1rem;
+      display: inline;
+    }
+    .btn-close {
+      float: right;
+      border-radius: $radius;
+      font-size: 1em;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #3e3e3e;
+      border: none;
+      transition: background-color 0.25s;
+      padding: 0.4em;
+      &:not(:disabled) {
+        &:hover {
+          background-color: $primary;
+        }
+      }
+    }
+  }
+  .drawer-modal-body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+    &::-webkit-scrollbar-track {
+      background-color: $primary;
+    }
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background-color: red;
+      border-radius: $radius;
+    }
+    .drawer-modal-p {
+      padding: 0.5rem;
+      margin-bottom: 0.3rem;
+    }
+    kbd {
+      background-color: $primary;
+      font-weight: bold;
+      padding: 0.3rem 0.7rem;
+      border: 0;
+      border-radius: $radius;
+    }
+    .drawer-modal-body-list {
+      &:first-child {
+        margin-top: auto;
+        margin-bottom: 0.5rem;
+      }
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      width: 100%;
+    }
+    .drawer-modal-body-list-item {
+      padding: 0.5rem;
+      border-bottom: 1px solid #3e3e3e;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      label {
+        margin-right: 0.8em;
+      }
+      &:last-of-type {
+        border-bottom: none;
+      }
+    }
+    .drawer-modal-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 0.5rem;
+      border-bottom-left-radius: $radius;
+      border-bottom-right-radius: $radius;
+      background-color: #3e3e3e;
+    }
+  }
+}
+.drawer-modal.show {
+  opacity: 1;
+  visibility: visible;
+}

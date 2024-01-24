@@ -14,13 +14,8 @@
     'Segoe UI Emoji';
   position: relative;
   width: fit-content;
-  .drawer-toolbar-root {
-    width: fit-content;
-    position: absolute;
-    bottom: 10px;
-    left: 50%;
-    right: 50%;
-    transform: translateX(-50%);
+
+  .tool {
     min-height: 40px;
     border-radius: $radius;
     z-index: 1;
@@ -29,6 +24,14 @@
     justify-content: center;
     box-shadow: $shadow;
     background-color: #fff;
+  }
+  .drawer-toolbar-root {
+    width: fit-content;
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    right: 50%;
+    transform: translateX(-50%);
   }
 
   .button {

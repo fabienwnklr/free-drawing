@@ -17,14 +17,12 @@ export class Toolbar {
 
     this.$toolbarContainer = document.createElement('div');
     this.$toolbarContainer.style.maxWidth = this.drawer.stage.width() + 'px';
-    this.$toolbarContainer.classList.add(`drawer-toolbar-root`);
+    this.$toolbarContainer.classList.add(`drawer-toolbar-root`, 'tool');
     this.$toolbarContainer.setAttribute('role', 'toolbar');
 
     this.drawer.$drawerContainer.prepend(this.$toolbarContainer);
     this.init();
   }
-
-
 
   init() {
     this.addWidget(new PanWidget(this.drawer));

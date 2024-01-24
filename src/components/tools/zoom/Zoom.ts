@@ -15,7 +15,7 @@ export class Zoom {
     this.zoomLevel = drawer.stage.scaleX();
 
     this.$zoomContainer = document.createElement('div');
-    this.$zoomContainer.classList.add('drawer-zoom-container');
+    this.$zoomContainer.classList.add('drawer-zoom-container', 'tool');
 
     this.$btnMinus = document.createElement('div');
     this.$btnReset = document.createElement('div');

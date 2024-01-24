@@ -12,6 +12,7 @@ import { Node, NodeConfig } from 'konva/lib/Node';
 import { deepMerge } from './utils/functions';
 import { defaultOptions } from './constants';
 import { Zoom } from './components/tools/zoom/Zoom';
+import { Help } from './components/tools/help/Help';
 
 export class Drawer {
   $el: HTMLDivElement;
@@ -34,6 +35,7 @@ export class Drawer {
   #y2: number = 0;
   #toRemoved: Node<NodeConfig>[] = [];
   zoom: Zoom | undefined;
+  help: Help;
 
   constructor($el: HTMLDivElement, options: Partial<DrawerOptions> = {}) {
     this.$el = $el;
@@ -59,6 +61,8 @@ export class Drawer {
     if (this.options.zoomWidget) {
       this.zoom = new Zoom(this);
     }
+
+    this.help = new Help(this);
 
     const activeWidget = this.toolbar.getWidget(activeTool);
     if (activeWidget) {
@@ -172,9 +176,9 @@ export class Drawer {
         // Move stage
       } else if (this.activeTool === 'eraser') {
         const shapes = this.stage.find('.line');
-        const { x, y } = this.stage.getPointerPosition() ?? { x: 0, y: 0 };
-        const selected = shapes.filter((shape) =>
-          Util.haveIntersection({ x, y, width: 1, height: 1 }, shape.getClientRect())
+        const pos = this.stage.getPointerPosition() ?? { x: 0, y: 0 };
+        const selected = shapes.filter(() =>
+          this.layer.getIntersection(pos)
         );
 
         selected.forEach((s) => {
@@ -228,6 +232,14 @@ export class Drawer {
       if (e.target !== this.stage || this.activeTool !== 'pan') return;
 
       this.$container.style.cursor = 'grab';
+    });
+
+    this.stage.on('click tap', (e) => {
+      if (this.activeTool === 'eraser') {
+        if (!(e.target instanceof Transformer) && !e.target.hasName('background') && !e.target.hasName('selection')) {
+          e.target.remove();
+        }
+      }
     });
     // Zoom on wheel
     if (this.options.zoom) {
