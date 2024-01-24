@@ -1,4 +1,3 @@
-import './toolbar.scss';
 import { Drawer } from '@/Drawer';
 import { BaseWidget } from './widgets/BaseWidget';
 import { BrushWidget } from './widgets/brush/brush';
@@ -21,7 +20,7 @@ export class Toolbar {
     this.$toolbarContainer.classList.add(`drawer-toolbar-root`);
     this.$toolbarContainer.setAttribute('role', 'toolbar');
 
-    this.drawer.$container.prepend(this.$toolbarContainer);
+    this.drawer.$drawerContainer.prepend(this.$toolbarContainer);
     this.init();
   }
 

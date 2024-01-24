@@ -2,6 +2,6 @@ import { DrawerOptions } from './@types/drawer';
 
 export const defaultOptions: DrawerOptions = {
   tool: 'brush',
-  width: 400,
-  height: 400,
+  width: window.innerWidth * 0.8,
+  height: window.innerHeight * 0.8,
 };

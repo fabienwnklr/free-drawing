@@ -25,7 +25,7 @@ export class Drawer {
   #background: Rect;
   #selectionRectangle: Rect;
   transformer: Transformer;
-  #isPaint: boolean = false;
+  isPaint: boolean = false;
   #lastLine: Line | null = null;
   #x1: number = 0;
   #x2: number = 0;
@@ -40,20 +40,19 @@ export class Drawer {
     // Creating drawer container
     this.$drawerContainer = document.createElement('div');
     this.$drawerContainer.classList.add('drawer-container');
+    this.$drawerContainer.tabIndex = 0;
 
     this.$el.replaceChildren(this.$drawerContainer);
-    const width = options.width ?? window.innerWidth * 0.8;
-    const height = options.height ?? window.innerHeight * 0.8;
+    const width = this.options.width;
+    const height = this.options.height;
     this.stage = new Stage({
       container: this.$drawerContainer,
       width: width,
       height: height,
     });
     this.$container = this.stage.content;
-    this.$container.tabIndex = 0;
-    const activeTool = options.tool ?? 'brush';
+    const activeTool = this.options.tool ?? 'brush';
     this.toolbar = new Toolbar(this);
-
 
     const activeWidget = this.toolbar.getWidget(activeTool);
     if (activeWidget) {
@@ -116,15 +115,15 @@ export class Drawer {
   }
 
   private _getMousePosition(): { x: number; y: number } {
-    const pos = this.stage.getPointerPosition() ?? { x: 0, y: 0 };
+    const { x, y } = this.stage.getRelativePointerPosition() ?? { x: 0, y: 0 };
     return {
-      x: pos.x - this.stage.getPosition().x,
-      y: pos.y - this.stage.getPosition().y,
+      x,
+      y,
     };
   }
 
   private _initEvents() {
-    this.$container.addEventListener('keydown', (e) => {
+    this.$drawerContainer.addEventListener('keydown', (e) => {
       if (e.key === 'Backspace' || e.key === 'Delete') {
         this.transformer.nodes().forEach((n) => n.remove());
         this.transformer.nodes([]);
@@ -136,13 +135,13 @@ export class Drawer {
       }
       e.evt.preventDefault();
 
-      this.#isPaint = true;
+      this.isPaint = true;
       this._draw();
     });
 
     // and core function - drawing
     this.stage.on('mousemove touchmove', (e) => {
-      if (!this.#isPaint) {
+      if (!this.isPaint) {
         return;
       }
       // prevent scrolling on touch devices
@@ -182,10 +181,8 @@ export class Drawer {
       }
     });
 
-    // will it be better to listen move/end events on the window?
-
     this.stage.on('mouseup touchend', (e) => {
-      this.#isPaint = false;
+      this.isPaint = false;
 
       e.evt.preventDefault();
       if (this.activeTool === 'selection') {
@@ -215,39 +212,51 @@ export class Drawer {
       }
     });
 
-    // const scaleBy = 1.1;
+    this.stage.on('dragstart', (e) => {
+      if (e.target !== this.stage || this.activeTool !== 'pan') return;
+
+      this.$container.style.cursor = 'grabbing';
+    });
+
+    this.stage.on('dragend', (e) => {
+      if (e.target !== this.stage || this.activeTool !== 'pan') return;
+
+      this.$container.style.cursor = 'grab';
+    });
+    const scaleBy = 1.1;
     // Zoom on wheel
-    // this.stage.on('wheel', (e) => {
-    //   // stop default scrolling
-    //   e.evt.preventDefault();
+    this.stage.on('wheel', (e) => {
+      if (!e.evt.ctrlKey) return;
+      // stop default scrolling
+      e.evt.preventDefault();
 
-    //   const oldScale = this.stage.scaleX();
-    //   const pointer = this.stage.getPointerPosition() ?? { x: 0, y: 0 };
+      const oldScale = this.stage.scaleX();
+      const pointer = this.stage.getPointerPosition() ?? { x: 0, y: 0 };
 
-    //   const mousePointTo = {
-    //     x: (pointer.x - this.stage.x()) / oldScale,
-    //     y: (pointer.y - this.stage.y()) / oldScale,
-    //   };
+      const mousePointTo = {
+        x: (pointer.x - this.stage.x()) / oldScale,
+        y: (pointer.y - this.stage.y()) / oldScale,
+      };
 
-    //   // how to scale? Zoom in? Or zoom out?
-    //   let direction = e.evt.deltaY > 0 ? -1 : 1;
+      // how to scale? Zoom in? Or zoom out?
+      let direction = e.evt.deltaY > 0 ? 1 : -1;
 
-    //   // when we zoom on trackpad, e.evt.ctrlKey is true
-    //   // in that case lets revert direction
-    //   if (e.evt.ctrlKey) {
-    //     direction = -direction;
-    //   }
+      // when we zoom on trackpad, e.evt.ctrlKey is true
+      // in that case lets revert direction
+      if (e.evt.ctrlKey) {
+        direction = -direction;
+      }
 
-    //   const newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
+      const newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
 
-    //   this.stage.scale({ x: newScale, y: newScale });
+      this.stage.scale({ x: newScale, y: newScale });
 
-    //   const newPos = {
-    //     x: pointer.x - mousePointTo.x * newScale,
-    //     y: pointer.y - mousePointTo.y * newScale,
-    //   };
-    //   this.stage.position(newPos);
-    // });
+      const newPos = {
+        x: pointer.x - mousePointTo.x * newScale,
+        y: pointer.y - mousePointTo.y * newScale,
+      };
+      this.stage.position(newPos);
+    });
   }
 
   /**
