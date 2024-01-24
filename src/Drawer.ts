@@ -1,4 +1,4 @@
-import './scss/style.scss';
+import './drawer.scss';
 import { Stage } from 'konva/lib/Stage';
 import { Layer } from 'konva/lib/Layer';
 import { Line } from 'konva/lib/shapes/Line';

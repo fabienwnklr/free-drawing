@@ -1,4 +1,4 @@
-@import 'variables';
+@import './scss/variables';
 
 .drawer-container {
   font-family:
@@ -24,14 +24,6 @@
     justify-content: center;
     box-shadow: $shadow;
     background-color: #fff;
-  }
-  .drawer-toolbar-root {
-    width: fit-content;
-    position: absolute;
-    bottom: 10px;
-    left: 50%;
-    right: 50%;
-    transform: translateX(-50%);
   }
 
   .button {

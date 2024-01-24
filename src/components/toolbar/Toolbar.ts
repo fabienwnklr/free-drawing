@@ -1,3 +1,4 @@
+import './toolbar.scss';
 import { Drawer } from '@/Drawer';
 import { BaseWidget } from './widgets/BaseWidget';
 import { BrushWidget } from './widgets/brush/brush';
