@@ -7,20 +7,20 @@ import { Transformer } from 'konva/lib/shapes/Transformer';
 import { Rect } from 'konva/lib/shapes/Rect';
 import { Util } from 'konva/lib/Util';
 import { AvailableTools } from './@types/toolbar';
-import { ColorLike } from './@types/drawer';
+import { ColorLike, DrawerOptions } from './@types/drawer';
 import { Node, NodeConfig } from 'konva/lib/Node';
-
-export type DrawerOptions = {
-  tool: AvailableTools;
-};
+import { deepMerge } from './utils/functions';
+import { defaultOptions } from './constants';
 
 export class Drawer {
   $el: HTMLDivElement;
+  $drawerContainer: HTMLDivElement;
   $container: HTMLDivElement;
   stage: Stage;
   layer: Layer;
   toolbar: Toolbar;
   activeTool: AvailableTools = 'brush';
+  options: DrawerOptions;
 
   #background: Rect;
   #selectionRectangle: Rect;
@@ -36,10 +36,16 @@ export class Drawer {
   constructor($el: HTMLDivElement, options: Partial<DrawerOptions> = {}) {
     this.$el = $el;
 
-    const width = window.innerWidth * 0.8;
-    const height = window.innerHeight * 0.8;
+    this.options = deepMerge(defaultOptions, options);
+    // Creating drawer container
+    this.$drawerContainer = document.createElement('div');
+    this.$drawerContainer.classList.add('drawer-container');
+
+    this.$el.replaceChildren(this.$drawerContainer);
+    const width = options.width ?? window.innerWidth * 0.8;
+    const height = options.height ?? window.innerHeight * 0.8;
     this.stage = new Stage({
-      container: this.$el,
+      container: this.$drawerContainer,
       width: width,
       height: height,
     });

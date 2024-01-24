@@ -1,5 +1,11 @@
 export declare interface Drawer {}
 
+export type DrawerOptions = {
+  tool: AvailableTools;
+  width: number;
+  height: number;
+};
+
 type RGB = `rgb(${number}, ${number}, ${number})`;
 type RGBA = `rgba(${number}, ${number}, ${number}, ${number})`;
 type HEX = `#${string}`;
