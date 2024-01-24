@@ -1,4 +1,5 @@
 @import './scss/variables';
+@import './scss/reboot';
 
 .drawer-container {
   font-family:
@@ -16,7 +17,6 @@
   width: fit-content;
 
   .tool {
-    min-height: 40px;
     border-radius: $radius;
     z-index: 1;
     display: flex;
@@ -35,7 +35,6 @@
     transition:
       background-color 0.3s ease,
       color 0.3s ease;
-    margin: 0.2rem;
     border-radius: $radius;
 
     &.disabled {

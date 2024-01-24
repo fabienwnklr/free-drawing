@@ -125,7 +125,7 @@ export class Drawer {
   }
 
   private _getMousePosition(): { x: number; y: number } {
-    const { x, y } = this.stage.getRelativePointerPosition();
+    const { x, y } = this.stage.getRelativePointerPosition() ?? { x:0, y: 0};
     return {
       x,
       y,
@@ -175,7 +175,7 @@ export class Drawer {
       } else if (this.activeTool === 'pan') {
         // Move stage
       } else if (this.activeTool === 'eraser') {
-        const shapes = this.stage.find('.line') as Line[];
+        const shapes = this.stage.find<Line>('.line');
         const pos = this._getMousePosition();
         const selected = shapes.filter((s) => s.intersects(pos));
 

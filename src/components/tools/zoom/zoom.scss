@@ -1,0 +1,17 @@
+.drawer-container {
+  .drawer-zoom-container {
+    .button {
+      &.reset-zoom {
+        border-radius: 0;
+      }
+      &:first-of-type {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+      }
+      &:last-of-type {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+      }
+    }
+  }
+}
