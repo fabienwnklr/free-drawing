@@ -177,7 +177,7 @@ export class Drawer {
       } else if (this.activeTool === 'eraser') {
         const shapes = this.stage.find<Line>('.line');
         const pos = this._getMousePosition();
-        const selected = shapes.filter((s) => s.intersects(pos));
+        const selected = shapes.filter((s) =>  s == this.stage.getIntersection(pos));
 
         selected.forEach((s) => {
           if (s.opacity() === 0.5) {
@@ -217,6 +217,7 @@ export class Drawer {
         });
       } else if (this.activeTool === 'eraser') {
         this.#toRemoved.forEach((t) => t.remove());
+        this.#toRemoved = [];
       }
     });
 
