@@ -9,9 +9,9 @@ import { PanWidget } from './widgets/pan/pan';
 
 export class Toolbar {
   drawer: Drawer;
-  private $toolbarContainer: HTMLElement;
+  $toolbarContainer: HTMLElement;
   widgets: Map<AvailableTools, BaseWidget> = new Map();
-  activeWidget: BaseWidget | null;
+  activeWidget!: BaseWidget;
 
   constructor(drawer: Drawer) {
     this.drawer = drawer;
@@ -20,11 +20,12 @@ export class Toolbar {
     this.$toolbarContainer.style.maxWidth = this.drawer.stage.width() + 'px';
     this.$toolbarContainer.classList.add(`drawer-toolbar-root`);
     this.$toolbarContainer.setAttribute('role', 'toolbar');
-    this.activeWidget = null;
 
     this.drawer.$container.prepend(this.$toolbarContainer);
     this.init();
   }
+
+
 
   init() {
     this.addWidget(new PanWidget(this.drawer));

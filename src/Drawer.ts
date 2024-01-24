@@ -51,9 +51,15 @@ export class Drawer {
     });
     this.$container = this.stage.content;
     this.$container.tabIndex = 0;
+    const activeTool = options.tool ?? 'brush';
     this.toolbar = new Toolbar(this);
 
-    this.activeTool = options.tool ?? 'brush';
+
+    const activeWidget = this.toolbar.getWidget(activeTool);
+    if (activeWidget) {
+      activeWidget.setActive(true);
+    }
+
     this.layer = new Layer();
     this.stage.add(this.layer);
 
@@ -77,11 +83,6 @@ export class Drawer {
     this.layer.add(this.#selectionRectangle);
 
     this._initEvents();
-
-    const activeWidget = this.toolbar.getWidget(this.activeTool);
-    if (activeWidget) {
-      activeWidget.setActive(true);
-    }
   }
 
   private _draw() {
@@ -130,7 +131,7 @@ export class Drawer {
       }
     });
     this.stage.on('mousedown touchstart', (e) => {
-      if (e.target !== this.stage || e.evt.target.closest('[class^=drawer]')) {
+      if (e.target !== this.stage) {
         return;
       }
       e.evt.preventDefault();
