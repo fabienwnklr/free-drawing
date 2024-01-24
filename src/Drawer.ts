@@ -125,7 +125,7 @@ export class Drawer {
   }
 
   private _getMousePosition(): { x: number; y: number } {
-    const { x, y } = this.stage.getRelativePointerPosition() ?? { x: 0, y: 0 };
+    const { x, y } = this.stage.getRelativePointerPosition();
     return {
       x,
       y,
@@ -175,11 +175,9 @@ export class Drawer {
       } else if (this.activeTool === 'pan') {
         // Move stage
       } else if (this.activeTool === 'eraser') {
-        const shapes = this.stage.find('.line');
-        const pos = this.stage.getPointerPosition() ?? { x: 0, y: 0 };
-        const selected = shapes.filter(() =>
-          this.layer.getIntersection(pos)
-        );
+        const shapes = this.stage.find('.line') as Line[];
+        const pos = this._getMousePosition();
+        const selected = shapes.filter((s) => s.intersects(pos));
 
         selected.forEach((s) => {
           if (s.opacity() === 0.5) {
@@ -200,7 +198,7 @@ export class Drawer {
         this.#selectionRectangle.visible(false);
         const shapes = this.stage.find('.line');
         const box = this.#selectionRectangle.getClientRect();
-        const { x, y } = this.stage.getPointerPosition() ?? { x: 0, y: 0 };
+        const { x, y } = this._getMousePosition();
         let selected = shapes.filter((shape) => Util.haveIntersection(box, shape.getClientRect()));
 
         if (!selected.length && x && y) {
@@ -249,7 +247,7 @@ export class Drawer {
         e.evt.preventDefault();
 
         const oldScale = this.stage.scaleX();
-        const pointer = this.stage.getPointerPosition() ?? { x: 0, y: 0 };
+        const pointer = this._getMousePosition();
 
         const mousePointTo = {
           x: (pointer.x - this.stage.x()) / oldScale,
