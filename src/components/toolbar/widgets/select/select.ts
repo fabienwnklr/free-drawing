@@ -1,7 +1,7 @@
 import { Drawer } from '@/Drawer';
 import { stringToNode } from '@/utils/functions';
 import { BaseWidget } from '../BaseWidget';
-import SelectIcon from './select.svg?raw';
+import SelectIcon from '@/icons/select.svg?raw';
 import { Transformer } from 'konva/lib/shapes/Transformer';
 
 export class SelectWidget extends BaseWidget {

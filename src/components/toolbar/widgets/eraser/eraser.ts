@@ -1,7 +1,7 @@
 import { Drawer } from '@/Drawer';
 import { stringToNode } from '@/utils/functions';
 import { BaseWidget } from '../BaseWidget';
-import EraserIcon from './eraser.svg?raw';
+import EraserIcon from '@/icons/eraser.svg?raw';
 
 export class EraserWidget extends BaseWidget {
   constructor(protected drawer: Drawer) {
