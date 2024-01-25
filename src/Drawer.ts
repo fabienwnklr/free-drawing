@@ -109,6 +109,13 @@ export class Drawer {
       this.#lastLine = new Line({
         stroke: '#df4b26',
         strokeWidth: 5,
+        hitFunc: function (context, shape) {
+          const { x, y, width, height } = shape.getSelfRect();
+          context.beginPath();
+          context.rect(x, y, width, height);
+          context.closePath();
+          context.fillStrokeShape(shape);
+        },
         globalCompositeOperation: 'source-over',
         // round cap for smoother lines
         lineCap: 'round',
@@ -125,7 +132,7 @@ export class Drawer {
   }
 
   private _getMousePosition(): { x: number; y: number } {
-    const { x, y } = this.stage.getRelativePointerPosition() ?? { x:0, y: 0};
+    const { x, y } = this.stage.getRelativePointerPosition() ?? { x: 0, y: 0 };
     return {
       x,
       y,
@@ -177,7 +184,7 @@ export class Drawer {
       } else if (this.activeTool === 'eraser') {
         const shapes = this.stage.find<Line>('.line');
         const pos = this._getMousePosition();
-        const selected = shapes.filter((s) =>  s == this.stage.getIntersection(pos));
+        const selected = shapes.filter((s) => s == this.stage.getIntersection(pos));
 
         selected.forEach((s) => {
           if (s.opacity() === 0.5) {
