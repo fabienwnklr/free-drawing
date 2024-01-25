@@ -108,14 +108,8 @@ export class Drawer {
       const realPos = this._getMousePosition();
       this.#lastLine = new Line({
         stroke: '#df4b26',
+        tension: 0,
         strokeWidth: 5,
-        hitFunc: function (context, shape) {
-          const { x, y, width, height } = shape.getSelfRect();
-          context.beginPath();
-          context.rect(x, y, width, height);
-          context.closePath();
-          context.fillStrokeShape(shape);
-        },
         globalCompositeOperation: 'source-over',
         // round cap for smoother lines
         lineCap: 'round',
@@ -160,6 +154,8 @@ export class Drawer {
     this.stage.on('mousemove touchmove', (e) => {
       if (!this.isPaint) {
         if (this.activeTool === 'selection') {
+          // Don't change cursor on anchor or on transforming
+          if (e.target.hasName('_anchor') || this.transformer.isTransforming()) return;
           if (e.target !== this.stage) {
             this.$container.style.cursor = 'move';
           } else {

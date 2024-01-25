@@ -1,15 +1,23 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="#" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + TS</title>
+    <title>Free-drawing</title>
+    <style>
+      #app {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+      }
+    </style>
   </head>
   <body>
     <div id="app"></div>
     <script type="module">
-      import { Drawer } from "/src/Drawer.ts";
+      import { Drawer } from '/src/Drawer.ts';
 
       window.drawer = new Drawer(document.getElementById('app'));
     </script>
