@@ -31,12 +31,20 @@
   transition: opacity 0.2s ease;
   opacity: 0;
   z-index: 3;
+  max-width: 60%;
   max-height: 80%;
+  padding: 1rem;
+
   .drawer-modal-header {
     padding: 0.5rem;
     border-top-left-radius: $radius;
     border-top-right-radius: $radius;
-    background-color: #3e3e3e;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #ebebeb;
+    margin-bottom: 1rem;
+
     .drawer-modal-title {
       font-size: 1.1rem;
       display: inline;
@@ -50,19 +58,25 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background-color: #3e3e3e;
       border: none;
-      transition: background-color 0.25s;
+      background-color: inherit;
       padding: 0.4em;
+
+      svg {
+        opacity: 0.5;
+      }
       &:not(:disabled) {
         &:hover {
-          background-color: $primary;
+          svg {
+            opacity: 1;
+          }
         }
       }
     }
   }
   .drawer-modal-body {
     display: flex;
+    flex: 1;
     align-items: center;
     justify-content: center;
     overflow: auto;
@@ -73,19 +87,12 @@
       width: 6px;
     }
     &::-webkit-scrollbar-thumb {
-      background-color: red;
+      background-color: $primary;
       border-radius: $radius;
     }
     .drawer-modal-p {
       padding: 0.5rem;
       margin-bottom: 0.3rem;
-    }
-    kbd {
-      background-color: $primary;
-      font-weight: bold;
-      padding: 0.3rem 0.7rem;
-      border: 0;
-      border-radius: $radius;
     }
     .drawer-modal-body-list {
       &:first-child {
@@ -118,7 +125,6 @@
       padding: 0.5rem;
       border-bottom-left-radius: $radius;
       border-bottom-right-radius: $radius;
-      background-color: #3e3e3e;
     }
   }
 }
