@@ -159,6 +159,13 @@ export class Drawer {
     // and core function - drawing
     this.stage.on('mousemove touchmove', (e) => {
       if (!this.isPaint) {
+        if (this.activeTool === 'selection') {
+          if (e.target !== this.stage) {
+            this.$container.style.cursor = 'move';
+          } else {
+            this.$container.style.cursor = 'default';
+          }
+        }
         return;
       }
       // prevent scrolling on touch devices
