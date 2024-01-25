@@ -2,6 +2,7 @@ import './zoom.scss';
 import { Drawer } from '@/Drawer';
 import MinusIcon from '@/icons/minus.svg?raw';
 import PlusIcon from '@/icons/plus.svg?raw';
+import ZoomReset from '@/icons/zoom-reset.svg?raw';
 
 export class Zoom {
   drawer: Drawer;
@@ -31,7 +32,7 @@ export class Zoom {
     this.$btnReset.classList.add('button', 'reset-zoom');
     this.$btnReset.tabIndex = 0;
     this.$btnReset.title = 'Reset zoom';
-    this.$btnReset.innerHTML = this._formatPercentage();
+    this.$btnReset.innerHTML = ZoomReset + this._formatPercentage();
 
     this.$btnPlus.role = 'button';
     this.$btnPlus.classList.add('button');
@@ -117,7 +118,7 @@ export class Zoom {
 
   update() {
     this.zoomLevel = this.drawer.stage.scaleX();
-    this.$btnReset.innerHTML = this._formatPercentage();
+    this.$btnReset.innerHTML = ZoomReset + this._formatPercentage();
   }
 
   private _formatPercentage() {

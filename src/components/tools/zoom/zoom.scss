@@ -1,9 +1,13 @@
+@import '../../../scss/variables';
+
 .drawer-container {
   .drawer-zoom-container {
     .button {
       &.reset-zoom {
         border-radius: 0;
         user-select: none;
+        border-left: 1px solid $primary-light;
+        border-right: 1px solid $primary-light;
       }
       &:first-of-type {
         border-top-right-radius: 0;
