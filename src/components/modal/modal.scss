@@ -75,19 +75,15 @@
     }
   }
   .drawer-modal-body {
-    display: flex;
-    flex: 1;
-    align-items: center;
-    justify-content: center;
     overflow: auto;
     &::-webkit-scrollbar-track {
-      background-color: $primary;
+      background-color: $light;
     }
     &::-webkit-scrollbar {
-      width: 6px;
+      width: 3px;
     }
     &::-webkit-scrollbar-thumb {
-      background-color: $primary;
+      background-color: $light;
       border-radius: $radius;
     }
     .drawer-modal-p {
