@@ -5,7 +5,7 @@ import BrushIcon from '@/icons/brush.svg?raw';
 import { Line } from 'konva/lib/shapes/Line';
 export class BrushWidget extends BaseWidget {
   #lastLine: Line = new Line();
-  isPaint: any;
+  isPaint: boolean = false;
   constructor(protected drawer: Drawer) {
     const $BrushIcon = stringToNode<SVGElement>(BrushIcon);
     super(drawer, 'brush', 'Brush', $BrushIcon);
@@ -59,8 +59,8 @@ export class BrushWidget extends BaseWidget {
   private _draw() {
     const realPos = this.drawer._getRelativePointerPos();
     this.#lastLine = new Line({
-      stroke: '#df4b26',
-      strokeWidth: 5,
+      stroke: this.drawer.options.strokeColor,
+      strokeWidth: this.drawer.options.strokeWidth,
       hitStrokeWidth: 20,
       globalCompositeOperation: 'source-over',
       // round cap for smoother lines
