@@ -4,6 +4,8 @@ export type DrawerOptions = {
   tool: AvailableTools;
   width: number;
   height: number;
+  strokeWidth: number;
+  strokeColor: ColorLike;
   zoom: boolean;
   zoomWidget: boolean;
   scaling: number;

@@ -3,6 +3,8 @@ export enum Tools {
   selection = 'selection',
   brush = 'brush',
   eraser = 'eraser',
+  undo = 'undo',
+  redo = 'redo',
   text = 'text',
   rect = 'rect',
   circle = 'circle',
