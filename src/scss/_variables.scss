@@ -1,11 +1,14 @@
 $radius: 5px;
-$primary: #1e2e2e;
-$primary-light: lighten($primary, 70%);
+$primary: #c444bd;
+$primary-light: lighten($primary, 5%);
 $text-primary: #cccccc;
 
-$primary-active: #334d4d;
+$primary-hover: lighten($primary, 30%);
+$primary-active: darken($primary, 5%);
 $text-primary-active: #cccccc;
 
 $light: #eeeeee;
+$light-hover: darken($light, 10%);
+$light-color: #383838;
 
 $shadow: 0 0 5px rgba(0, 0, 0, 0.4);

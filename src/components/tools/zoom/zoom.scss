@@ -2,12 +2,12 @@
 
 .drawer-container {
   .drawer-zoom-container {
-    .button {
+    .drawer-button {
       &.reset-zoom {
         border-radius: 0;
         user-select: none;
-        border-left: 1px solid $primary-light;
-        border-right: 1px solid $primary-light;
+        border-left: 1px solid $light;
+        border-right: 1px solid $light;
       }
       &:first-of-type {
         border-top-right-radius: 0;
