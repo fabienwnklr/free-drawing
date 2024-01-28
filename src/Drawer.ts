@@ -96,7 +96,7 @@ export class Drawer {
 
   private _draw() {
     if (this.activeTool === 'selection') {
-      const realPos = this._getMousePosition();
+      const realPos = this._getRelativePointerPos();
       this.#x1 = realPos.x;
       this.#y1 = realPos.y;
       this.#x2 = realPos.x;
@@ -105,11 +105,11 @@ export class Drawer {
       this.#selectionRectangle.width(0);
       this.#selectionRectangle.height(0);
     } else if (this.activeTool === 'brush') {
-      const realPos = this._getMousePosition();
+      const realPos = this._getRelativePointerPos();
       this.#lastLine = new Line({
         stroke: '#df4b26',
-        tension: 0,
         strokeWidth: 5,
+        hitStrokeWidth: 20,
         globalCompositeOperation: 'source-over',
         // round cap for smoother lines
         lineCap: 'round',
@@ -125,8 +125,16 @@ export class Drawer {
     }
   }
 
-  private _getMousePosition(): { x: number; y: number } {
+  private _getRelativePointerPos(): { x: number; y: number } {
     const { x, y } = this.stage.getRelativePointerPosition() ?? { x: 0, y: 0 };
+    return {
+      x,
+      y,
+    };
+  }
+
+  private _getPointerPos(): { x: number; y: number } {
+    const { x, y } = this.stage.getPointerPosition() ?? { x: 0, y: 0 };
     return {
       x,
       y,
@@ -168,7 +176,7 @@ export class Drawer {
       e.evt.preventDefault();
 
       if (this.activeTool === 'selection') {
-        const realPos = this._getMousePosition();
+        const realPos = this._getRelativePointerPos();
         this.#x2 = realPos.x;
         this.#y2 = realPos.y;
         this.#selectionRectangle.setAttrs({
@@ -179,14 +187,14 @@ export class Drawer {
           height: Math.abs(this.#y2 - this.#y1),
         });
       } else if (this.activeTool === 'brush') {
-        const realPos = this._getMousePosition();
+        const realPos = this._getRelativePointerPos();
         const newPoints = this.#lastLine?.points().concat([realPos.x, realPos.y]) ?? [0, 0];
         this.#lastLine?.points(newPoints);
       } else if (this.activeTool === 'pan') {
         // Move stage
       } else if (this.activeTool === 'eraser') {
         const shapes = this.stage.find<Line>('.line');
-        const pos = this._getMousePosition();
+        const pos = this._getRelativePointerPos();
         const selected = shapes.filter((s) => s == this.stage.getIntersection(pos));
 
         selected.forEach((s) => {
@@ -206,9 +214,9 @@ export class Drawer {
       if (this.activeTool === 'selection') {
         // update visibility in timeout, so we can check it in click event
         this.#selectionRectangle.visible(false);
-        const shapes = this.stage.find('.line');
+        const shapes = this.stage.find<Line>('.line');
         const box = this.#selectionRectangle.getClientRect();
-        const { x, y } = this._getMousePosition();
+        const { x, y } = this._getPointerPos();
         let selected = shapes.filter((shape) => Util.haveIntersection(box, shape.getClientRect()));
 
         if (!selected.length && x && y) {
@@ -216,6 +224,22 @@ export class Drawer {
             Util.haveIntersection({ x, y, width: 1, height: 1 }, shape.getClientRect())
           );
         }
+        const currentlySelected = this.transformer.nodes() as Line<NodeConfig>[];
+
+        currentlySelected.forEach(s => {
+          s.hitFunc(undefined);
+          s.hitStrokeWidth(20)
+        })
+        selected.forEach(s => {
+          s.hitFunc((context, shape) => {
+            const { x, y, width, height } = shape.getSelfRect();
+            context.beginPath();
+            context.rect(x, y, width, height);
+            context.closePath();
+            context.fillStrokeShape(shape);
+          });
+          s.hitStrokeWidth('auto')
+        })
         this.transformer.nodes(selected);
         this.$container.focus();
         this.#selectionRectangle.setAttrs({
@@ -258,7 +282,7 @@ export class Drawer {
         e.evt.preventDefault();
 
         const oldScale = this.stage.scaleX();
-        const pointer = this._getMousePosition();
+        const pointer = this._getRelativePointerPos();
 
         const mousePointTo = {
           x: (pointer.x - this.stage.x()) / oldScale,

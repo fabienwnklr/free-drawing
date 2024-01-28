@@ -21,13 +21,13 @@ export class SelectWidget extends BaseWidget {
     draw.forEach((d) => {
       d.setDraggable(true);
       if (d instanceof Group) return;
-      d.hitFunc((context, shape) => {
-        const { x, y, width, height } = shape.getSelfRect();
-        context.beginPath();
-        context.rect(x, y, width, height);
-        context.closePath();
-        context.fillStrokeShape(shape);
-      });
+      // d.hitFunc((context, shape) => {
+      //   const { x, y, width, height } = shape.getSelfRect();
+      //   context.beginPath();
+      //   context.rect(x, y, width, height);
+      //   context.closePath();
+      //   context.fillStrokeShape(shape);
+      // });
     });
   }
 
@@ -41,7 +41,7 @@ export class SelectWidget extends BaseWidget {
     draw.forEach((d) => {
       d.setDraggable(false);
       if (d instanceof Group) return;
-      d.hitFunc(undefined);
+      // d.hitFunc(undefined);
     });
     this.drawer.transformer.nodes([]);
   }
