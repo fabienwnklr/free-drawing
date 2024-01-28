@@ -42,7 +42,7 @@ export class Toolbar {
     this.drawer.activeTool = widget.id;
   }
 
-  getWidget(name: AvailableTools): BaseWidget | undefined {
-    return this.widgets.get(name);
+  getWidget<T>(name: AvailableTools): T | undefined {
+    return this.widgets.get(name) as T;
   }
 }

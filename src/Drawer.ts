@@ -9,6 +9,11 @@ import { deepMerge } from './utils/functions';
 import { defaultOptions } from './constants';
 import { Zoom } from './components/tools/zoom/Zoom';
 import { Help } from './components/tools/help/Help';
+import { SelectWidget } from './components/toolbar/widgets/select/select';
+import { PanWidget } from './components/toolbar/widgets/pan/pan';
+import { BrushWidget } from './components/toolbar/widgets/brush/brush';
+import { EraserWidget } from './components/toolbar/widgets/eraser/eraser';
+import { BaseWidget } from './components/toolbar/widgets/BaseWidget';
 
 export class Drawer {
   $el: HTMLDivElement;
@@ -21,7 +26,6 @@ export class Drawer {
   options: DrawerOptions;
 
   #background: Rect;
-  isPaint: boolean = false;
   zoom: Zoom | undefined;
   help: Help;
 
@@ -53,7 +57,7 @@ export class Drawer {
 
     this.help = new Help(this);
 
-    const activeWidget = this.toolbar.getWidget(activeTool);
+    const activeWidget = this.toolbar.getWidget<BaseWidget>(activeTool);
     if (activeWidget) {
       activeWidget.setActive(true);
     }
@@ -88,6 +92,53 @@ export class Drawer {
   }
 
   private _initEvents() {
+    // Keyboad shortcut
+    this.$drawerContainer.addEventListener('keydown', (e) => {
+      const selectWidget = this.toolbar.widgets.get('selection') as SelectWidget;
+      if (selectWidget && (e.code === 'Backspace' || e.code === 'Delete')) {
+        selectWidget.transformer.nodes().forEach((n) => n.remove());
+        selectWidget.transformer.nodes([]);
+      }
+
+      if (e.code === "KeyH") {
+        const panWidget = this.toolbar.getWidget<PanWidget>('pan');
+
+        if (panWidget) {
+          panWidget.setActive(true);
+          panWidget.$button.focus();
+        }
+        return;
+      }
+
+      if (e.code === "KeyS") {
+        const selectWidget = this.toolbar.getWidget<SelectWidget>('selection');
+
+        if (selectWidget) {
+          selectWidget.setActive(true);
+          selectWidget.$button.focus();
+        }
+        return;
+      }
+
+      if (e.code === "KeyB") {
+        const brushWidhet = this.toolbar.getWidget<BrushWidget>('brush');
+
+        if (brushWidhet) {
+          brushWidhet.setActive(true);
+          brushWidhet.$button.focus();
+        }
+        return;
+      }
+
+      if (e.code === "KeyE") {
+        const eraserWidget = this.toolbar.getWidget<EraserWidget>('eraser');
+
+        if (eraserWidget) {
+          eraserWidget.setActive(true);
+          eraserWidget.$button.focus();
+        }
+      }
+    });
     // Zoom on wheel
     if (this.options.zoom) {
       this.stage.on('wheel', (e) => {
