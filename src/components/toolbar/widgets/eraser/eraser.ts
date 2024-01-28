@@ -32,7 +32,7 @@ export class EraserWidget extends BaseWidget {
       // prevent scrolling on touch devices
       e.evt.preventDefault();
       const shapes = this.drawer.stage.find<Line>('.line');
-      const pos = this.drawer._getRelativePointerPos();
+      const pos = this.drawer._getPointerPos();
       const selected = shapes.filter((s) => s == this.drawer.stage.getIntersection(pos));
 
       selected.forEach((s) => {
