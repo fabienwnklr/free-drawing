@@ -95,7 +95,22 @@ export class SelectWidget extends BaseWidget {
       const currentlySelected = this.transformer.nodes() as Line<NodeConfig>[];
 
       currentlySelected.forEach(s => {
-        // s.hitFunc(undefined);
+        s.hitFunc((context, shape) => {
+          const points = shape.points();
+          let i = 0;
+          context.beginPath();
+          while (i < points.length) {
+            if (i === 0) {
+              context.moveTo(points[i], points[i + 1]);
+            }
+            else {
+              context.lineTo(points[i], points[i + 1]);
+            }
+            i += 2;
+          }
+          context.closePath();
+          context.fillStrokeShape(shape);
+        });
         s.hitStrokeWidth(20)
       })
       selected.forEach(s => {
@@ -117,13 +132,6 @@ export class SelectWidget extends BaseWidget {
         width: 0,
         height: 0,
       });
-    });
-
-    this.drawer.$drawerContainer.addEventListener('keydown', (e) => {
-      if (e.key === 'Backspace' || e.key === 'Delete') {
-        this.transformer.nodes().forEach((n) => n.remove());
-        this.transformer.nodes([]);
-      }
     });
   }
 
