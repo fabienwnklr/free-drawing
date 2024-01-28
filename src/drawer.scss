@@ -26,7 +26,7 @@
     background-color: #fff;
   }
 
-  .button {
+  .drawer-button {
     height: 100%;
     display: flex;
     align-items: center;
@@ -47,17 +47,53 @@
     }
 
     &:hover {
-      background-color: $primary;
-      color: $text-primary;
+      background-color: $primary-hover;
     }
 
     &:focus {
-      box-shadow: 0 0 3px $primary;
+      box-shadow: 0 0 3px $primary-hover;
     }
 
     &.active {
       background-color: $primary-active;
       color: $text-primary-active;
+    }
+  }
+
+  .drawer-link {
+    text-decoration: none;
+    color: $light-color;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    padding: 0.4rem;
+    cursor: pointer;
+    border: 1px solid $light;
+    transition:
+      background-color 0.3s ease,
+      color 0.3s ease;
+    border-radius: $radius;
+    background-color: $light;
+
+    &.disabled {
+      pointer-events: none;
+    }
+
+    &>svg {
+      margin-left: .5rem;
+    }
+
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    &:hover {
+      background-color: $light-hover;
+    }
+
+    &:focus {
+      box-shadow: 0 0 3px $light-hover;
     }
   }
 
@@ -70,11 +106,6 @@
     position: absolute;
     bottom: 10px;
     left: 10px;
-
-    .reset-zoom {
-      // width: 3.75rem;
-      // text-align: center;
-    }
   }
   .konvajs-content {
     width: fit-content;
