@@ -39,6 +39,17 @@ export class Help extends Modal {
             </li>
           </ul>
         </div>
+
+
+      <div class="drawer-modal-help-grid-container">
+        <h4>View</h4>
+        <ul class="drawer-modal-help-shortcut-container">
+        <li class="drawer-modal-help-shortcut">
+        Zen mode <span><kbd class="drawer-modal-help-kdb">Alt</kbd> + <kbd class="drawer-modal-help-kdb">Z</kbd></span>
+        </li>
+          </ul>
+        </div>
+
       </div>
     `;
 

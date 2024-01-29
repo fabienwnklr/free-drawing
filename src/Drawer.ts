@@ -102,22 +102,22 @@ export class Drawer {
     this.$drawerContainer.addEventListener('keydown', (e) => {
       const selectWidget = this.toolbar.widgets.get('selection') as SelectWidget;
       if (selectWidget) {
-        if ((e.code === 'Backspace' || e.code === 'Delete')) {
+        if (e.key === 'Backspace' || e.key === 'Delete') {
           selectWidget.transformer.nodes().forEach((n) => n.remove());
           selectWidget.transformer.nodes([]);
         }
 
-        if (e.ctrlKey && e.code === 'KeyQ') {
-          const allNodes =  this.layer.children.filter((e) => {
+        if (e.ctrlKey && e.key === 'a') {
+          const allNodes = this.layer.children.filter((e) => {
             if (!(e instanceof Transformer) && !e.hasName('background') && !e.hasName('selection')) {
               return e;
             }
           });
-          selectWidget.transformer.nodes(allNodes)
+          selectWidget.transformer.nodes(allNodes);
         }
       }
 
-      if (e.code === "KeyH") {
+      if (e.key === 'h') {
         const panWidget = this.toolbar.getWidget<PanWidget>('pan');
 
         if (panWidget) {
@@ -127,7 +127,7 @@ export class Drawer {
         return;
       }
 
-      if (e.code === "KeyS") {
+      if (e.key === 's') {
         const selectWidget = this.toolbar.getWidget<SelectWidget>('selection');
 
         if (selectWidget) {
@@ -137,7 +137,7 @@ export class Drawer {
         return;
       }
 
-      if (e.code === "KeyB") {
+      if (e.key === 'b') {
         const brushWidhet = this.toolbar.getWidget<BrushWidget>('brush');
 
         if (brushWidhet) {
@@ -147,7 +147,7 @@ export class Drawer {
         return;
       }
 
-      if (e.code === "KeyE") {
+      if (e.key === 'e') {
         const eraserWidget = this.toolbar.getWidget<EraserWidget>('eraser');
 
         if (eraserWidget) {
@@ -156,6 +156,9 @@ export class Drawer {
         }
       }
 
+      if (e.altKey && e.key === 'z') {
+        this.setting.toggleZenMode();
+      }
     });
     // Zoom on wheel
     if (this.options.zoom) {

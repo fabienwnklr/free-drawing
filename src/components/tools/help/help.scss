@@ -52,14 +52,6 @@
           border: 1px solid $primary-light;
           border-radius: $radius;
 
-          &:first-of-type {
-            grid-area: 1/1/2/2;
-          }
-
-          &:last-of-type {
-            grid-area: 1/2/2/2;
-          }
-
           .drawer-modal-help-shortcut {
             padding: 0.65rem;
             border-bottom: 1px solid $primary-light;

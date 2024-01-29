@@ -7,6 +7,7 @@ import ExportIcon from '@/icons/export.svg?raw';
 import TrashIcon from '@/icons/trash.svg?raw';
 import GridIcon from '@/icons/grid.svg?raw';
 import GithubIcon from '@/icons/github.svg?raw';
+import ZenIcon from '@/icons/zen.svg?raw';
 import { ConfirmModal } from '@/components/modal/ConfirmModal';
 
 export class Settings extends Dropdown {
@@ -17,6 +18,7 @@ export class Settings extends Dropdown {
   $showGridButton: HTMLDivElement;
   $githubButton: HTMLDivElement;
   $clearConfirmModal: ConfirmModal | null = null;
+  $zenModeButton: HTMLDivElement;
 
   constructor(drawer: Drawer) {
     super();
@@ -45,13 +47,25 @@ export class Settings extends Dropdown {
     this.$showGridButton.innerHTML = GridIcon + 'Show grid';
     this.$showGridButton.role = 'button';
 
+    this.$zenModeButton = document.createElement('div');
+    this.$zenModeButton.classList.add('drawer-button', 'drawer-dropdown-list-item');
+    this.$zenModeButton.innerHTML = ZenIcon + 'Zen mode';
+    this.$zenModeButton.role = 'button';
+
     this.$githubButton = document.createElement('div');
     this.$githubButton.classList.add('drawer-button', 'drawer-dropdown-list-item');
     this.$githubButton.innerHTML = GithubIcon + 'Github';
     this.$githubButton.role = 'button';
 
     this.$dropdownList.append(
-      ...[this.$openButton, this.$exportButton, this.$clearCanvasButton, this.$showGridButton, this.$githubButton]
+      ...[
+        this.$openButton,
+        this.$exportButton,
+        this.$clearCanvasButton,
+        // this.$showGridButton,
+        this.$zenModeButton,
+        this.$githubButton,
+      ]
     );
     this.drawer.$drawerContainer.append(this.$dropdownContainer);
 
@@ -61,12 +75,33 @@ export class Settings extends Dropdown {
   private initEvents() {
     this.$clearCanvasButton.addEventListener('click', () => {
       if (!this.$clearConfirmModal) {
-        this.$clearConfirmModal = new ConfirmModal(this.drawer, { message: 'Are you sure to remove all canvas draw ?' });
+        this.$clearConfirmModal = new ConfirmModal(this.drawer, {
+          message: 'Are you sure to remove all canvas draw ?',
+        });
       }
-      this.$clearConfirmModal.show()
+      this.$clearConfirmModal.show();
     });
+
+    this.$zenModeButton.addEventListener('click', () => {
+      this.toggleZenMode();
+    });
+
     this.$githubButton.addEventListener('click', () => {
       window.open('https://github.com/fabienwnklr/free-drawing', 'blank');
     });
+  }
+
+  toggleZenMode() {
+    this.$zenModeButton.classList.toggle('active');
+
+    if (this.$zenModeButton.classList.contains('active')) {
+      if (this.drawer.zoom) this.drawer.zoom.$zoomContainer.style.display = 'none';
+      this.drawer.help.$helpContainer.style.display = 'none';
+    } else {
+      if (this.drawer.zoom) this.drawer.zoom.$zoomContainer.style.display = '';
+      this.drawer.help.$helpContainer.style.display = '';
+    }
+
+    this.hide();
   }
 }
