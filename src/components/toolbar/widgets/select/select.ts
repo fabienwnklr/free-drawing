@@ -8,6 +8,7 @@ import { Rect } from 'konva/lib/shapes/Rect';
 import { Line } from 'konva/lib/shapes/Line';
 import { Util } from 'konva/lib/Util';
 import { NodeConfig } from 'konva/lib/Node';
+import { Context } from 'konva/lib/Context';
 
 export class SelectWidget extends BaseWidget {
   #x1: number = 0;
@@ -95,22 +96,7 @@ export class SelectWidget extends BaseWidget {
       const currentlySelected = this.transformer.nodes() as Line<NodeConfig>[];
 
       currentlySelected.forEach(s => {
-        s.hitFunc((context, shape) => {
-          const points = shape.points();
-          let i = 0;
-          context.beginPath();
-          while (i < points.length) {
-            if (i === 0) {
-              context.moveTo(points[i], points[i + 1]);
-            }
-            else {
-              context.lineTo(points[i], points[i + 1]);
-            }
-            i += 2;
-          }
-          context.closePath();
-          context.fillStrokeShape(shape);
-        });
+        s.hitFunc(undefined as any as (ctx: Context, shape: Line<NodeConfig>) => void)
         s.hitStrokeWidth(20)
       })
       selected.forEach(s => {

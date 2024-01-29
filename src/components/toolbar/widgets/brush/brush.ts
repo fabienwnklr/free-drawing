@@ -3,6 +3,7 @@ import { stringToNode } from '@/utils/functions';
 import { BaseWidget } from '../BaseWidget';
 import BrushIcon from '@/icons/brush.svg?raw';
 import { Line } from 'konva/lib/shapes/Line';
+import { SelectWidget } from '../select/select';
 export class BrushWidget extends BaseWidget {
   #lastLine: Line = new Line();
   isPaint: boolean = false;
@@ -45,6 +46,11 @@ export class BrushWidget extends BaseWidget {
 
     this.drawer.stage.on('mouseup touchend', (e) => {
       this.isPaint = false;
+
+      const selectWidget = this.drawer.toolbar.widgets.get('selection') as SelectWidget;
+      if (selectWidget) {
+        selectWidget.transformer.nodes([]);
+      }
 
       e.evt.preventDefault();
     });

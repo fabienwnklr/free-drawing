@@ -14,6 +14,7 @@ import { PanWidget } from './components/toolbar/widgets/pan/pan';
 import { BrushWidget } from './components/toolbar/widgets/brush/brush';
 import { EraserWidget } from './components/toolbar/widgets/eraser/eraser';
 import { BaseWidget } from './components/toolbar/widgets/BaseWidget';
+import { Transformer } from 'konva/lib/shapes/Transformer';
 
 export class Drawer {
   $el: HTMLDivElement;
@@ -36,7 +37,7 @@ export class Drawer {
     // Creating drawer container
     this.$drawerContainer = document.createElement('div');
     this.$drawerContainer.classList.add('drawer-container');
-    this.$drawerContainer.tabIndex = 0;
+    this.$drawerContainer.tabIndex = 1;
 
     this.$el.replaceChildren(this.$drawerContainer);
     const width = this.options.width;
@@ -72,6 +73,7 @@ export class Drawer {
       name: 'background',
     });
 
+    this.$drawerContainer.focus();
     this._initEvents();
   }
 
@@ -95,9 +97,20 @@ export class Drawer {
     // Keyboad shortcut
     this.$drawerContainer.addEventListener('keydown', (e) => {
       const selectWidget = this.toolbar.widgets.get('selection') as SelectWidget;
-      if (selectWidget && (e.code === 'Backspace' || e.code === 'Delete')) {
-        selectWidget.transformer.nodes().forEach((n) => n.remove());
-        selectWidget.transformer.nodes([]);
+      if (selectWidget) {
+        if ((e.code === 'Backspace' || e.code === 'Delete')) {
+          selectWidget.transformer.nodes().forEach((n) => n.remove());
+          selectWidget.transformer.nodes([]);
+        }
+
+        if (e.ctrlKey && e.code === 'KeyQ') {
+          const allNodes =  this.layer.children.filter((e) => {
+            if (!(e instanceof Transformer) && !e.hasName('background') && !e.hasName('selection')) {
+              return e;
+            }
+          });
+          selectWidget.transformer.nodes(allNodes)
+        }
       }
 
       if (e.code === "KeyH") {
@@ -138,6 +151,7 @@ export class Drawer {
           eraserWidget.$button.focus();
         }
       }
+
     });
     // Zoom on wheel
     if (this.options.zoom) {

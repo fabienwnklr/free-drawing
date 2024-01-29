@@ -4,6 +4,7 @@ import { BaseWidget } from '../BaseWidget';
 import EraserIcon from '@/icons/eraser.svg?raw';
 import { Line } from 'konva/lib/shapes/Line';
 import { Node, NodeConfig } from 'konva/lib/Node';
+import { SelectWidget } from '../select/select';
 
 export class EraserWidget extends BaseWidget {
   isErasing: boolean = false;
@@ -47,15 +48,20 @@ export class EraserWidget extends BaseWidget {
     this.drawer.stage.on('mouseup touchend', (e) => {
       this.isErasing = false;
 
+      const selectWidget = this.drawer.toolbar.widgets.get('selection') as SelectWidget;
+      if (selectWidget) {
+        selectWidget.transformer.nodes([]);
+      }
+
       e.evt.preventDefault();
-        this.#toRemoved.forEach((t) => t.remove());
-        this.#toRemoved = [];
+      this.#toRemoved.forEach((t) => t.remove());
+      this.#toRemoved = [];
     });
 
     this.drawer.stage.on('click tap', (e) => {
-        if (!e.target.hasName('background') && !e.target.hasName('selection')) {
-          e.target.remove();
-        }
+      if (!e.target.hasName('background') && !e.target.hasName('selection')) {
+        e.target.remove();
+      }
     });
   }
 
