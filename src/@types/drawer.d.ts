@@ -1,6 +1,7 @@
 export declare interface Drawer {}
 
 export type DrawerOptions = {
+  id: string;
   tool: AvailableTools;
   width: number;
   height: number;

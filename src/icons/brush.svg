@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE xml>
-<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <path fill="currentColor"
-        d="M1.999 22h3.623a3 3 0 0 0 2.12-.878l14.79-14.789l-4.866-4.865L2.878 16.256a3 3 0 0 0-.879 2.122zm2-2v-1.622a1 1 0 0 1 .293-.707l2.158-2.158l2.037 2.036l-2.158 2.158a1 1 0 0 1-.707.293zm5.902-3.865l-2.037-2.037l9.802-9.801l2.037 2.036z" />
+<svg aria-hidden="true" focusable="false" role="img" viewBox="0 0 20 20" class="" fill="none"
+    stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <g stroke-width="1.25">
+        <path clip-rule="evenodd"
+            d="m7.643 15.69 7.774-7.773a2.357 2.357 0 1 0-3.334-3.334L4.31 12.357a3.333 3.333 0 0 0-.977 2.357v1.953h1.953c.884 0 1.732-.352 2.357-.977Z"></path>
+        <path d="m11.25 5.417 3.333 3.333"></path>
+    </g>
 </svg>

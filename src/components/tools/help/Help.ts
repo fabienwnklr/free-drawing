@@ -10,7 +10,7 @@ export class Help extends Modal {
   constructor(drawer: Drawer) {
     super(drawer, { title: 'Help' });
 
-    const data = /*html*/`
+    const data = /*html*/ `
     <div class="drawer-modal-help-links">
       <a class="drawer-link" href="">Documentation${ExternalLink}</a>
       <a class="drawer-link" href="https://github.com/fabienwnklr/free-drawing/" target="_blank">Found issue ? Please inform us !${ExternalLink}</a>
@@ -40,8 +40,9 @@ export class Help extends Modal {
           </ul>
         </div>
       </div>
-    `
+    `;
 
+    this.$modal.classList.add('drawer-modal-help');
     this.setBodyContent(data);
 
     this.$helpContainer = document.createElement('div');

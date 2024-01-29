@@ -7,11 +7,17 @@
 }
 
 .drawer-modal {
-  width: 80%;
-  height: 80%;
+  &.drawer-modal-help {
+    width: 80%;
+    height: 80%;
+  }
 
-
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     margin-bottom: 0.7rem;
     font-weight: bold;
   }
@@ -20,7 +26,6 @@
     display: flex;
     flex-direction: column;
     gap: 2rem;
-
 
     .drawer-modal-help-links {
       display: flex;
@@ -56,7 +61,7 @@
           }
 
           .drawer-modal-help-shortcut {
-            padding: .65rem;
+            padding: 0.65rem;
             border-bottom: 1px solid $primary-light;
             display: flex;
             justify-content: space-between;

@@ -36,7 +36,9 @@ export class Modal {
 
     if (this.options.showHeader) {
       this.setHeaderContent(
-          `<h2 class="drawer-modal-title">${this.options.title ?? "Modal"}</h2><button title="Close" class="btn-close" data-modal="close">${CloseIcon}</button>`
+        `<h2 class="drawer-modal-title">${
+          this.options.title ?? 'Modal'
+        }</h2><button title="Close" class="btn-close" data-modal="close">${CloseIcon}</button>`
       );
     } else {
       this.$modalHeader.remove();
@@ -62,6 +64,7 @@ export class Modal {
         (event) => {
           if (event.target) {
             const outsideClick =
+              !this.drawer.setting.$clearCanvasButton.contains(event.target as Node) &&
               !this.drawer.help.$button.contains(event.target as Node) &&
               !this.$modal.contains(event.target as Node);
 

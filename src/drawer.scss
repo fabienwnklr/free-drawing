@@ -61,6 +61,20 @@
     }
   }
 
+  .drawer-button-neutral {
+    border: 1px solid $light;
+    &:hover {
+      background-color: $light;
+    }
+  }
+  .drawer-button-danger {
+    color: $text-danger;
+    background-color: $danger;
+    &:hover {
+      background-color: $danger-hover;
+    }
+  }
+
   .drawer-link {
     text-decoration: none;
     color: $light-color;
