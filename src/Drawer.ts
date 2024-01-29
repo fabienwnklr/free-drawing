@@ -184,7 +184,15 @@ export class Drawer {
           direction = -direction;
         }
 
-        const newScale = direction > 0 ? oldScale * this.options.scaling : oldScale / this.options.scaling;
+        let newScale = direction > 0 ? oldScale * this.options.scaling : oldScale / this.options.scaling;
+
+        if (newScale <= 0.1) {
+          // limit min scale to 10%
+          newScale = 0.1;
+        } else if (newScale >= 30) {
+          // limit max scale to 3000%
+          newScale = 30;
+        }
 
         this.stage.scale({ x: newScale, y: newScale });
 

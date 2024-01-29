@@ -7,7 +7,7 @@
 - create shortcut keyboard with doc
 - add color and bg color button (overlay when drawing ?)
 - find how not pan the entire scene (create group with all draw ?)
-- block zoom to min 10% max 3000%
+<!-- - block zoom to min 10% max 3000% -->
 - add effect during draw with eraser
-- focus on init
+<!-- - focus on init -->
 - context menu
