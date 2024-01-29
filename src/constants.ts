@@ -8,5 +8,5 @@ export const defaultOptions: DrawerOptions = {
   strokeColor: '#df4b26',
   zoom: true,
   zoomWidget: true,
-  scaling: 1.11
+  scaling: 1.11,
 };

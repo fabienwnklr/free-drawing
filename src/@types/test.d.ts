@@ -1,3 +1,3 @@
 export declare type Test = {
-    test: string;
-}
+  test: string;
+};

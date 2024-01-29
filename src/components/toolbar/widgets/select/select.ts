@@ -53,7 +53,6 @@ export class SelectWidget extends BaseWidget {
 
     this.drawer.stage.on('mousemove touchmove', (e) => {
       if (!this.isSelecting) {
-
         // Don't change cursor on anchor or on transforming
         if (e.target.hasName('_anchor') || this.transformer.isTransforming()) return;
         if (e.target !== this.drawer.stage) {
@@ -75,7 +74,6 @@ export class SelectWidget extends BaseWidget {
         width: Math.abs(this.#x2 - this.#x1),
         height: Math.abs(this.#y2 - this.#y1),
       });
-
     });
 
     this.drawer.stage.on('mouseup touchend', (e) => {
@@ -95,11 +93,11 @@ export class SelectWidget extends BaseWidget {
       }
       const currentlySelected = this.transformer.nodes() as Line<NodeConfig>[];
 
-      currentlySelected.forEach(s => {
-        s.hitFunc(undefined as any as (ctx: Context, shape: Line<NodeConfig>) => void)
-        s.hitStrokeWidth(20)
-      })
-      selected.forEach(s => {
+      currentlySelected.forEach((s) => {
+        s.hitFunc(undefined as any as (ctx: Context, shape: Line<NodeConfig>) => void);
+        s.hitStrokeWidth(20);
+      });
+      selected.forEach((s) => {
         s.hitFunc((context, shape) => {
           const { x, y, width, height } = shape.getSelfRect();
           context.beginPath();
@@ -107,8 +105,8 @@ export class SelectWidget extends BaseWidget {
           context.closePath();
           context.fillStrokeShape(shape);
         });
-        s.hitStrokeWidth('auto')
-      })
+        s.hitStrokeWidth('auto');
+      });
       this.transformer.nodes(selected);
       this.$container.focus();
       this.#selectionRectangle.setAttrs({

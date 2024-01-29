@@ -22,7 +22,7 @@ export class PanWidget extends BaseWidget {
       if (e.target !== this.drawer.stage || !this.isGrabbing) return;
 
       this.drawer.$container.style.cursor = 'grabbing';
-    })
+    });
 
     this.drawer.stage.on('mouseup touchend', () => {
       this.isGrabbing = false;
@@ -40,7 +40,6 @@ export class PanWidget extends BaseWidget {
     this.initEvents();
     this.updateCursor();
     this.drawer.stage.draggable(true);
-
   }
   protected onDesactive(): void {
     this.removeEvents();

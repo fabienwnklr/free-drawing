@@ -21,7 +21,7 @@ export const confirmModalDefaultOpts = {
     modal.hide();
   },
   onConfirm: (modal: ConfirmModal) => {
-    modal.drawer.layer.find('Line').forEach(l => l.destroy());
+    modal.drawer.layer.find('Line').forEach((l) => l.destroy());
     modal.hide();
   },
 };

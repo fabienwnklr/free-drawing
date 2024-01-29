@@ -1,6 +1,5 @@
 export declare type ThrottledFunction<T extends (...args: any) => any> = (...args: Parameters<T>) => ReturnType<T>;
 
-
 /**
  * permet de déclencher l'appel à une fonction après un certain délai (un peu comme la fonction setTimeout())
  * mais permet en plus de réinitialiser le timer si on demande une nouvelle exécution dans un intervalle de temps plus court que le délai
