@@ -9,3 +9,5 @@
 - find how not pan the entire scene (create group with all draw ?)
 - block zoom to min 10% max 3000%
 - add effect during draw with eraser
+- focus on init
+- context menu
