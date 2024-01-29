@@ -15,6 +15,7 @@ import { BrushWidget } from './components/toolbar/widgets/brush/brush';
 import { EraserWidget } from './components/toolbar/widgets/eraser/eraser';
 import { BaseWidget } from './components/toolbar/widgets/BaseWidget';
 import { Transformer } from 'konva/lib/shapes/Transformer';
+import { Settings } from './components/tools/settings/Settings';
 
 export class Drawer {
   $el: HTMLDivElement;
@@ -29,6 +30,7 @@ export class Drawer {
   #background: Rect;
   zoom: Zoom | undefined;
   help: Help;
+  setting: Settings;
 
   constructor($el: HTMLDivElement, options: Partial<DrawerOptions> = {}) {
     this.$el = $el;
@@ -55,6 +57,8 @@ export class Drawer {
     if (this.options.zoomWidget) {
       this.zoom = new Zoom(this);
     }
+
+    this.setting = new Settings(this);
 
     this.help = new Help(this);
 
