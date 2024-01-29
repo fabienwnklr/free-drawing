@@ -77,6 +77,7 @@ export class Drawer {
       name: 'background',
     });
 
+    this.layer.add(this.#background);
     this.$drawerContainer.focus();
     this._initEvents();
   }
@@ -103,7 +104,7 @@ export class Drawer {
       const selectWidget = this.toolbar.widgets.get('selection') as SelectWidget;
       if (selectWidget) {
         if (e.key === 'Backspace' || e.key === 'Delete') {
-          selectWidget.transformer.nodes().forEach((n) => n.remove());
+          selectWidget.transformer.nodes().forEach((n) => n.destroy());
           selectWidget.transformer.nodes([]);
         }
 
@@ -212,5 +213,15 @@ export class Drawer {
    */
   setBgColor(color: ColorLike) {
     this.#background.fill(color);
+  }
+
+  setColor(color: ColorLike) {
+    this.options.strokeColor = color;
+
+    const brushWidget = this.toolbar.getWidget('brush') as BrushWidget;
+
+    if (brushWidget) {
+      brushWidget.updateCursor();
+    }
   }
 }

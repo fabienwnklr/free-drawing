@@ -54,13 +54,13 @@ export class EraserWidget extends BaseWidget {
       }
 
       e.evt.preventDefault();
-      this.#toRemoved.forEach((t) => t.remove());
+      this.#toRemoved.forEach((t) => t.destroy());
       this.#toRemoved = [];
     });
 
     this.drawer.stage.on('click tap', (e) => {
-      if (!e.target.hasName('background') && !e.target.hasName('selection')) {
-        e.target.remove();
+      if (e.target !== this.drawer.stage && !e.target.hasName('background') && !e.target.hasName('selection')) {
+        e.target.destroy();
       }
     });
   }

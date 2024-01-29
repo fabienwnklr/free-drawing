@@ -81,7 +81,7 @@ export class BrushWidget extends BaseWidget {
   }
 
   updateCursor() {
-    const rad = 5;
+    const rad = this.drawer.options.strokeWidth;
     const cursorCanvas = document.createElement('canvas');
     const ctx = cursorCanvas.getContext('2d') as CanvasRenderingContext2D;
     cursorCanvas.width = cursorCanvas.height = rad;
@@ -96,7 +96,7 @@ export class BrushWidget extends BaseWidget {
       ctx.rect(0, 0, rad, rad);
     }
 
-    ctx.fillStyle = '#df4b26';
+    ctx.fillStyle = this.drawer.options.strokeColor;
     ctx.fill();
 
     cursorCanvas.toBlob((blob) => {
