@@ -48,8 +48,10 @@ export class SelectWidget extends BaseWidget {
         if (e.target.hasName('_anchor') || this.transformer.isTransforming()) return;
         if (e.target !== this.drawer.stage) {
           this.drawer.$container.style.cursor = 'move';
+          // e.target.setAttrs({ strokeWidth: 2, strokeColor: "red"})
         } else {
           this.drawer.$container.style.cursor = 'default';
+          // e.target.setAttrs({ strokeWidth: 0, strokeColor: "transparant"})
         }
         return;
       }
