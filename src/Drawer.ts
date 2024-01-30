@@ -28,7 +28,7 @@ export class Drawer {
   activeTool: AvailableTools = 'brush';
   options: DrawerOptions;
 
-  #background: Rect;
+  background: Rect;
   zoom: Zoom | undefined;
   help: Help;
   setting: Settings;
@@ -50,7 +50,7 @@ export class Drawer {
     if (saved) {
       this.stage = Node.create(saved, this.$drawerContainer);
       this.layer = this.stage.findOne('Layer') as Layer;
-      this.#background = this.stage.findOne('.background') as Rect
+      this.background = this.stage.findOne('.background') as Rect
     } else {
       this.stage = new Stage({
         container: this.$drawerContainer,
@@ -60,7 +60,7 @@ export class Drawer {
       this.layer = new Layer();
       this.stage.add(this.layer);
 
-      this.#background = new Rect({
+      this.background = new Rect({
         fill: '#fff',
         width: this.stage.width() * 100,
         height: this.stage.height() * 100,
@@ -68,7 +68,7 @@ export class Drawer {
         name: 'background',
       });
 
-      this.layer.add(this.#background);
+      this.layer.add(this.background);
     }
     this.$container = this.stage.content;
     const activeTool = this.options.tool ?? 'brush';
@@ -224,7 +224,7 @@ export class Drawer {
    * @param {ColorLike} color
    */
   setBgColor(color: ColorLike) {
-    this.#background.fill(color);
+    this.background.fill(color);
   }
 
   setColor(color: ColorLike) {
