@@ -67,10 +67,9 @@ export class Dropdown {
       'click',
       (event) => {
         if (event.target) {
-          const outsideClick =
-            !this.$button.contains(event.target as Node) && !this.$dropdownContainer.contains(event.target as Node);
+          const openBtnClicked = this.$button.contains(event.target as Node);
 
-          if (outsideClick) {
+          if (!openBtnClicked) {
             this.hide();
           }
         }

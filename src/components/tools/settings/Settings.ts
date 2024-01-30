@@ -49,7 +49,7 @@ export class Settings extends Dropdown {
 
     this.$zenModeButton = document.createElement('div');
     this.$zenModeButton.classList.add('drawer-button', 'drawer-dropdown-list-item');
-    this.$zenModeButton.innerHTML = ZenIcon + 'Zen mode';
+    this.$zenModeButton.innerHTML = ZenIcon + 'Zen mode <span class="text-muted">Altr+Z</span>';
     this.$zenModeButton.role = 'button';
 
     this.$githubButton = document.createElement('div');
@@ -101,7 +101,5 @@ export class Settings extends Dropdown {
       if (this.drawer.zoom) this.drawer.zoom.$zoomContainer.style.display = '';
       this.drawer.help.$helpContainer.style.display = '';
     }
-
-    this.hide();
   }
 }

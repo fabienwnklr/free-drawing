@@ -27,6 +27,10 @@
     background-color: #fff;
   }
 
+  .text-muted {
+    opacity: $text-muted-opacity;
+  }
+
   .drawer-button {
     height: 100%;
     display: flex;
