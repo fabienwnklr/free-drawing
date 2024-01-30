@@ -15,22 +15,13 @@ export class SelectWidget extends BaseWidget {
   #y1: number = 0;
   #x2: number = 0;
   #y2: number = 0;
-  #selectionRectangle: Rect;
-  transformer: Transformer;
+  selectionRectangle: Rect = new Rect();
+  transformer: Transformer = new Transformer();
   isSelecting: boolean = false;
+
   constructor(protected drawer: Drawer) {
     const $SelectIcon = stringToNode<SVGElement>(SelectIcon);
     super(drawer, 'selection', 'Select', $SelectIcon);
-
-    this.transformer = new Transformer();
-    this.drawer.layer.add(this.transformer);
-
-    this.#selectionRectangle = new Rect({
-      fill: 'rgba(0,0,255,0.5)',
-      visible: false,
-      name: 'selection',
-    });
-    this.drawer.layer.add(this.#selectionRectangle);
   }
 
   protected initEvents(): void {
@@ -46,8 +37,8 @@ export class SelectWidget extends BaseWidget {
       this.#x2 = realPos.x;
       this.#y2 = realPos.y;
 
-      this.#selectionRectangle.width(0);
-      this.#selectionRectangle.height(0);
+      this.selectionRectangle.width(0);
+      this.selectionRectangle.height(0);
       this.isSelecting = true;
     });
 
@@ -67,7 +58,7 @@ export class SelectWidget extends BaseWidget {
       const realPos = this.drawer._getRelativePointerPos();
       this.#x2 = realPos.x;
       this.#y2 = realPos.y;
-      this.#selectionRectangle.setAttrs({
+      this.selectionRectangle.setAttrs({
         visible: true,
         x: Math.min(this.#x1, this.#x2),
         y: Math.min(this.#y1, this.#y2),
@@ -80,9 +71,9 @@ export class SelectWidget extends BaseWidget {
       this.isSelecting = false;
       e.evt.preventDefault();
       // update visibility in timeout, so we can check it in click event
-      this.#selectionRectangle.visible(false);
+      this.selectionRectangle.visible(false);
       const shapes = this.drawer.stage.find<Line>('.line');
-      const box = this.#selectionRectangle.getClientRect();
+      const box = this.selectionRectangle.getClientRect();
       const { x, y } = this.drawer._getPointerPos();
       let selected = shapes.filter((shape) => Util.haveIntersection(box, shape.getClientRect()));
 
@@ -109,7 +100,7 @@ export class SelectWidget extends BaseWidget {
       });
       this.transformer.nodes(selected);
       this.$container.focus();
-      this.#selectionRectangle.setAttrs({
+      this.selectionRectangle.setAttrs({
         visible: true,
         x: 0,
         y: 0,
@@ -126,6 +117,17 @@ export class SelectWidget extends BaseWidget {
   }
 
   protected onActive(): void {
+    this.transformer = new Transformer();
+    this.drawer.layer.add(this.transformer);
+
+    this.selectionRectangle = new Rect({
+      fill: 'rgba(152, 158, 255, .2)',
+      stroke: 'rgba(152, 158, 255, .8)',
+      strokeWidth: 1,
+      visible: false,
+      name: 'selection',
+    });
+    this.drawer.layer.add(this.selectionRectangle);
     this.initEvents();
     this.updateCursor();
     const draw = this.drawer.layer.children.filter((e) => {
@@ -152,6 +154,8 @@ export class SelectWidget extends BaseWidget {
   }
 
   protected onDesactive(): void {
+    this.transformer.destroy();
+    this.selectionRectangle.destroy();
     this.removeEvents();
     const draw = this.drawer.layer.children.filter((e) => {
       if (!(e instanceof Transformer) && !e.hasName('background') && !e.hasName('selection')) {
