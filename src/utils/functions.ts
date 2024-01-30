@@ -5,7 +5,7 @@
  * @return {Boolean} Whether or not @item is an object
  */
 export function isObject(item: any): boolean {
-  return item === Object(item) && !Array.isArray(item);
+  return item === Object(item) && !Array.isArray(item) && typeof item !== 'function';
 }
 
 /**
