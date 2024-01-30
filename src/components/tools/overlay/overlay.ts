@@ -7,5 +7,6 @@ export class Overlay {
   constructor(drawer: Drawer) {
     this.drawer = drawer;
     this.$overlayContainer = document.createElement('div');
+    this.$overlayContainer.classList.add('drawer-overlay-container', 'tool')
   }
 }
