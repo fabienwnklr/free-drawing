@@ -59,8 +59,8 @@ export class Settings extends Dropdown {
 
     this.$dropdownList.append(
       ...[
-        this.$openButton,
-        this.$exportButton,
+        // this.$openButton,
+        // this.$exportButton,
         this.$clearCanvasButton,
         // this.$showGridButton,
         this.$zenModeButton,
