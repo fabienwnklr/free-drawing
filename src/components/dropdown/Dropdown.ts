@@ -10,7 +10,7 @@ export class Dropdown {
   constructor() {
     this.$button = document.createElement('div');
     this.$button.role = 'button';
-    this.$button.classList.add('drawer-button', 'tool', 'drawer-button-dropdown');
+    this.$button.classList.add('drawer-button', 'drawer-button-neutral', 'tool', 'drawer-button-dropdown');
     this.$menu = document.createElement('div');
     this.$menu.classList.add('drawer-dropdown');
 

@@ -24,18 +24,18 @@ export class Zoom {
     this.$btnPlus = document.createElement('div');
 
     this.$btnMinus.role = 'button';
-    this.$btnMinus.classList.add('drawer-button');
+    this.$btnMinus.classList.add('drawer-button', 'drawer-button-neutral');
     this.$btnMinus.tabIndex = 0;
     this.$btnMinus.innerHTML = MinusIcon;
 
     this.$btnReset.role = 'button';
-    this.$btnReset.classList.add('drawer-button', 'reset-zoom');
+    this.$btnReset.classList.add('drawer-button', 'drawer-button-neutral', 'reset-zoom');
     this.$btnReset.tabIndex = 0;
     this.$btnReset.title = 'Reset zoom';
     this.$btnReset.innerHTML = ZoomReset + this._formatPercentage();
 
     this.$btnPlus.role = 'button';
-    this.$btnPlus.classList.add('drawer-button');
+    this.$btnPlus.classList.add('drawer-button', 'drawer-button-neutral');
     this.$btnPlus.tabIndex = 0;
     this.$btnPlus.innerHTML = PlusIcon;
 

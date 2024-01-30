@@ -28,32 +28,32 @@ export class Settings extends Dropdown {
     this.$button.innerHTML = SettingIcon;
 
     this.$openButton = document.createElement('div');
-    this.$openButton.classList.add('drawer-button', 'drawer-dropdown-list-item');
+    this.$openButton.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-dropdown-list-item');
     this.$openButton.innerHTML = OpenIcon + 'Open';
     this.$openButton.role = 'button';
 
     this.$exportButton = document.createElement('div');
-    this.$exportButton.classList.add('drawer-button', 'drawer-dropdown-list-item');
+    this.$exportButton.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-dropdown-list-item');
     this.$exportButton.innerHTML = ExportIcon + 'Export to...';
     this.$exportButton.role = 'button';
 
     this.$clearCanvasButton = document.createElement('div');
-    this.$clearCanvasButton.classList.add('drawer-button', 'drawer-dropdown-list-item');
+    this.$clearCanvasButton.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-dropdown-list-item');
     this.$clearCanvasButton.innerHTML = TrashIcon + 'Clear canvas';
     this.$clearCanvasButton.role = 'button';
 
     this.$showGridButton = document.createElement('div');
-    this.$showGridButton.classList.add('drawer-button', 'drawer-dropdown-list-item');
+    this.$showGridButton.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-dropdown-list-item');
     this.$showGridButton.innerHTML = GridIcon + 'Show grid';
     this.$showGridButton.role = 'button';
 
     this.$zenModeButton = document.createElement('div');
-    this.$zenModeButton.classList.add('drawer-button', 'drawer-dropdown-list-item');
+    this.$zenModeButton.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-dropdown-list-item');
     this.$zenModeButton.innerHTML = ZenIcon + 'Zen mode <span class="text-muted">Altr+Z</span>';
     this.$zenModeButton.role = 'button';
 
     this.$githubButton = document.createElement('div');
-    this.$githubButton.classList.add('drawer-button', 'drawer-dropdown-list-item');
+    this.$githubButton.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-dropdown-list-item');
     this.$githubButton.innerHTML = GithubIcon + 'Github';
     this.$githubButton.role = 'button';
 

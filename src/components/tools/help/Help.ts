@@ -59,7 +59,7 @@ export class Help extends Modal {
     this.$helpContainer = document.createElement('div');
     this.$helpContainer.classList.add('drawer-help-container', 'tool');
     this.$button = document.createElement('div');
-    this.$button.classList.add('drawer-button');
+    this.$button.classList.add('drawer-button', 'drawer-button-neutral');
     this.$button.innerHTML = HelpIcon;
 
     this.$helpContainer.append(this.$button);
