@@ -27,7 +27,7 @@ describe('utilities', () => {
   test('isTruthy', () => {
     expect(isTruthy(null)).toBe(false);
     expect(isTruthy('')).toBe(false);
-    expect(isTruthy(undefined)).toBe(true);
+    expect(isTruthy(undefined)).toBe(false);
     expect(isTruthy(false)).toBe(true);
     expect(isTruthy(0)).toBe(true);
     expect(isTruthy(() => {})).toBe(true);
