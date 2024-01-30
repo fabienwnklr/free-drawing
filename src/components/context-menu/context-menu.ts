@@ -12,7 +12,7 @@ export class ContextMenu {
     this.$menu = document.createElement('div');
     this.$menu.classList.add('drawer-context-menu');
 
-    this.drawer.$container.append(this.$menu);
+    this.drawer.$drawerContainer.append(this.$menu);
     this._initEvents();
   }
 

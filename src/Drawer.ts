@@ -16,6 +16,7 @@ import { EraserWidget } from './components/toolbar/widgets/eraser/eraser';
 import { BaseWidget } from './components/toolbar/widgets/BaseWidget';
 import { Transformer } from 'konva/lib/shapes/Transformer';
 import { Settings } from './components/tools/settings/Settings';
+import { Node } from 'konva/lib/Node';
 
 export class Drawer {
   $el: HTMLDivElement;
@@ -44,14 +45,33 @@ export class Drawer {
     this.$el.replaceChildren(this.$drawerContainer);
     const width = this.options.width;
     const height = this.options.height;
-    this.stage = new Stage({
-      container: this.$drawerContainer,
-      width: width,
-      height: height,
-    });
+
+    const saved = localStorage.getItem('free-drawing');
+    if (saved) {
+      this.stage = Node.create(saved, this.$drawerContainer);
+      this.layer = this.stage.findOne('Layer') as Layer;
+      this.#background = this.stage.findOne('.background') as Rect
+    } else {
+      this.stage = new Stage({
+        container: this.$drawerContainer,
+        width: width,
+        height: height,
+      });
+      this.layer = new Layer();
+      this.stage.add(this.layer);
+
+      this.#background = new Rect({
+        fill: '#fff',
+        width: this.stage.width() * 100,
+        height: this.stage.height() * 100,
+        listening: false,
+        name: 'background',
+      });
+
+      this.layer.add(this.#background);
+    }
     this.$container = this.stage.content;
     const activeTool = this.options.tool ?? 'brush';
-    this.layer = new Layer();
     this.toolbar = new Toolbar(this);
 
     if (this.options.zoomWidget) {
@@ -66,18 +86,6 @@ export class Drawer {
     if (activeWidget) {
       activeWidget.setActive(true);
     }
-
-    this.stage.add(this.layer);
-
-    this.#background = new Rect({
-      fill: '#fff',
-      width: this.stage.width() * 100,
-      height: this.stage.height() * 100,
-      listening: false,
-      name: 'background',
-    });
-
-    this.layer.add(this.#background);
     this.$drawerContainer.focus();
     this._initEvents();
   }
@@ -205,6 +213,10 @@ export class Drawer {
         this.zoom?.update();
       });
     }
+  }
+
+  save() {
+    localStorage.setItem('free-drawing', this.stage.toJSON());
   }
 
   /**

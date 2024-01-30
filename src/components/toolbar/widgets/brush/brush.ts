@@ -102,7 +102,7 @@ export class BrushWidget extends BaseWidget {
     cursorCanvas.toBlob((blob) => {
       if (blob) {
         const cursorURL = URL.createObjectURL(blob);
-        this.drawer.$container.style.cursor = `url(${cursorURL}) ${rad / 2} ${rad / 2}, auto`;
+        this.drawer.$drawerContainer.style.cursor = `url(${cursorURL}) ${rad / 2} ${rad / 2}, auto`;
       }
     });
   }
