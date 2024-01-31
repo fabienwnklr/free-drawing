@@ -21,4 +21,16 @@ describe('Use drawer api', () => {
 
     expect(drawer.background.fill()).toBe('#3ee551');
   });
+
+  it('setColor', () => {
+    const drawer = new Drawer(document.getElementById('test') as HTMLDivElement);
+
+    expect(drawer.background.stroke()).toBe(drawer.options.strokeColor);
+
+    drawer.setColor('#3ee551');
+
+    expect(drawer.background.stroke()).toBe('#3ee551');
+  });
+
+
 });
