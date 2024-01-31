@@ -29,7 +29,21 @@ export class BrushWidget extends BaseWidget {
       e.evt.preventDefault();
 
       this.isPaint = true;
-      this._draw();
+
+      const realPos = this.drawer._getRelativePointerPos();
+      this.#lastLine = new Line({
+        stroke: this.drawer.options.strokeColor,
+        strokeWidth: this.drawer.options.strokeWidth,
+        hitStrokeWidth: 20,
+        globalCompositeOperation: 'source-over',
+        // round cap for smoother lines
+        lineCap: 'round',
+        lineJoin: 'round',
+        // add point twice, so we have some drawings even on a simple click
+        points: [realPos.x, realPos.y, realPos.x, realPos.y],
+        name: 'line',
+      });
+      this.drawer.layer.add(this.#lastLine);
     });
 
     // and core function - drawing
@@ -40,8 +54,9 @@ export class BrushWidget extends BaseWidget {
       if (!this.isPaint) return;
 
       const realPos = this.drawer._getRelativePointerPos();
-      const newPoints = this.#lastLine?.points().concat([realPos.x, realPos.y]) ?? [0, 0];
+      const newPoints = this.#lastLine.points().concat([realPos.x, realPos.y]) ?? [0, 0];
       this.#lastLine?.points(newPoints);
+      this.drawer.layer.batchDraw();
     });
 
     this.drawer.stage.on('mouseup touchend', (e) => {
@@ -60,24 +75,6 @@ export class BrushWidget extends BaseWidget {
     this.drawer.stage.off('mousedown touchstart');
     this.drawer.stage.off('mousemove touchmove');
     this.drawer.stage.off('mouseup touchend');
-  }
-
-  private _draw() {
-    const realPos = this.drawer._getRelativePointerPos();
-    this.#lastLine = new Line({
-      stroke: this.drawer.options.strokeColor,
-      strokeWidth: this.drawer.options.strokeWidth,
-      hitStrokeWidth: 20,
-      globalCompositeOperation: 'source-over',
-      // round cap for smoother lines
-      lineCap: 'round',
-      lineJoin: 'round',
-      // add point twice, so we have some drawings even on a simple click
-      points: [realPos.x, realPos.y, realPos.x, realPos.y],
-      // draggable: true,
-      name: 'line',
-    });
-    this.drawer.layer.add(this.#lastLine);
   }
 
   updateCursor() {
