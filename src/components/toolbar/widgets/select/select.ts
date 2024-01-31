@@ -22,6 +22,9 @@ export class SelectWidget extends BaseWidget {
   constructor(protected drawer: Drawer) {
     const $SelectIcon = stringToNode<SVGElement>(SelectIcon);
     super(drawer, 'selection', 'Select', $SelectIcon);
+
+    this.transformer = new Transformer();
+    this.drawer.layer.add(this.transformer);
   }
 
   protected initEvents(): void {
@@ -119,9 +122,6 @@ export class SelectWidget extends BaseWidget {
   }
 
   protected onActive(): void {
-    this.transformer = new Transformer();
-    this.drawer.layer.add(this.transformer);
-
     this.selectionRectangle = new Rect({
       fill: 'rgba(152, 158, 255, .2)',
       stroke: 'rgba(152, 158, 255, .8)',
@@ -156,7 +156,7 @@ export class SelectWidget extends BaseWidget {
   }
 
   protected onDesactive(): void {
-    this.transformer.destroy();
+    // this.transformer.destroy();
     this.selectionRectangle.destroy();
     this.removeEvents();
     const draw = this.drawer.layer.children.filter((e) => {
