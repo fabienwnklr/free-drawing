@@ -34,7 +34,9 @@ export class Drawer extends MicroEvent {
   zoom: Zoom | undefined;
   help: Help;
   setting: Settings;
-  $clearConfirmModal: any;
+  $clearConfirmModal: ConfirmModal | null = null;
+
+  debug: boolean = false;
 
   constructor($el: HTMLDivElement, options: Partial<DrawerOptions> = {}) {
     super();
@@ -49,6 +51,10 @@ export class Drawer extends MicroEvent {
     this.$el.replaceChildren(this.$drawerContainer);
     const width = this.options.width;
     const height = this.options.height;
+
+    if (width === window.innerWidth && height === window.innerHeight) {
+      this.$drawerContainer.classList.add('is-full');
+    }
 
     const saved = localStorage.getItem('free-drawing');
     if (saved) {
@@ -142,6 +148,10 @@ export class Drawer extends MicroEvent {
       }
 
       if (e.key === 'h') {
+        if (this._duringAction()) {
+          return;
+        }
+
         const panWidget = this.toolbar.getWidget<PanWidget>('pan');
 
         if (panWidget) {
@@ -152,6 +162,10 @@ export class Drawer extends MicroEvent {
       }
 
       if (e.key === 's') {
+        if (this._duringAction()) {
+          return;
+        }
+
         const selectWidget = this.toolbar.getWidget<SelectWidget>('selection');
 
         if (selectWidget) {
@@ -162,18 +176,25 @@ export class Drawer extends MicroEvent {
       }
 
       if (e.key === 'b') {
-        const brushWidhet = this.toolbar.getWidget<BrushWidget>('brush');
+        if (this._duringAction()) {
+          return;
+        }
 
-        if (brushWidhet) {
-          brushWidhet.setActive(true);
-          brushWidhet.$button.focus();
+        const brushWidget = this.toolbar.getWidget<BrushWidget>('brush');
+
+        if (brushWidget) {
+          brushWidget.setActive(true);
+          brushWidget.$button.focus();
         }
         return;
       }
 
       if (e.key === 'e') {
-        const eraserWidget = this.toolbar.getWidget<EraserWidget>('eraser');
+        if (this._duringAction()) {
+          return;
+        }
 
+        const eraserWidget = this.toolbar.getWidget<EraserWidget>('eraser');
         if (eraserWidget) {
           eraserWidget.setActive(true);
           eraserWidget.$button.focus();
@@ -188,6 +209,22 @@ export class Drawer extends MicroEvent {
         this.clearCanvas();
       }
     });
+  }
+
+  private _duringAction() {
+    const eraserWidget = this.toolbar.getWidget<EraserWidget>('eraser');
+    const brushWidget = this.toolbar.getWidget<BrushWidget>('brush');
+    const selectionWidget = this.toolbar.getWidget<SelectWidget>('selection');
+
+    if (
+      (eraserWidget && eraserWidget.isErasing) ||
+      (selectionWidget && selectionWidget.isSelecting) ||
+      (brushWidget && brushWidget.isPaint)
+    ) {
+      return true;
+    }
+
+    return false;
   }
 
   private _initZoomWheel() {
@@ -260,6 +297,16 @@ export class Drawer extends MicroEvent {
     if (brushWidget) {
       brushWidget.updateCursor();
     }
+  }
+
+  /**
+   * Show toast message for user
+   *
+   * @param message Message to show
+   * @param type Type of toast
+   */
+  toast(message: string, type?: 'info' | 'warning' | 'error' | 'neutral') {
+    console.log(message, type);
   }
 
   clearCanvas(force = false) {

@@ -15,14 +15,27 @@ export class SelectWidget extends BaseWidget {
   #x2: number = 0;
   #y2: number = 0;
   selectionRectangle: Rect = new Rect();
-  transformer: Transformer = new Transformer();
+  transformer: Transformer = new Transformer({
+    borderStroke: 'rgba(152, 158, 255, 1)',
+    anchorStroke: 'rgba(152, 158, 255, 1)',
+    anchorFill: 'rgba(152, 158, 255, 1)',
+    borderDash: [5, 5, 5, 5],
+    borderStrokeWidth: 2,
+  });
   isSelecting: boolean = false;
 
   constructor(protected drawer: Drawer) {
     const $SelectIcon = stringToNode<SVGElement>(SelectIcon);
     super(drawer, 'selection', 'Select', $SelectIcon);
 
-    this.transformer = new Transformer();
+    this.transformer.on('transformstart dragstart', () => {
+      if (this.drawer.activeTool !== 'selection') {
+        this.transformer.stopTransform();
+        if (this.drawer.debug) {
+          this.drawer.toast('You need to use "selection" tool.', 'info');
+        }
+      }
+    });
     this.drawer.layer.add(this.transformer);
   }
 
