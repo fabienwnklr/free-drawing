@@ -1,6 +1,7 @@
 import { DrawerOptions } from './@types/drawer';
 
 export const defaultOptions: DrawerOptions = {
+  id: 'drawer-' + Date.now(),
   tool: 'brush',
   width: window.innerWidth * 0.8,
   height: window.innerHeight * 0.8,
