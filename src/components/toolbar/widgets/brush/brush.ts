@@ -42,6 +42,24 @@ export class BrushWidget extends BaseWidget {
         points: [realPos.x, realPos.y, realPos.x, realPos.y],
         name: 'line',
       });
+
+      // this.#lastLine.on('mouseover', (e) => {
+      //   if (!this.isPaint && this.drawer.activeTool === "selection") {
+      //     if (e.target instanceof Line) {
+      //       e.target.stroke('blue');
+      //       e.target.strokeWidth(8);
+      //     }
+      //   }
+      // });
+
+      // this.#lastLine.on('mouseout', (e) => {
+      //   if (!this.isPaint && this.drawer.activeTool === "selection") {
+      //     if (e.target instanceof Line) {
+      //       e.target.stroke(this.drawer.options.strokeColor);
+      //       e.target.strokeWidth(this.drawer.options.strokeWidth);
+      //     }
+      //   }
+      // });
       this.drawer.layer.add(this.#lastLine);
     });
 
