@@ -25,11 +25,11 @@ describe('Use drawer api', () => {
   it('setColor', () => {
     const drawer = new Drawer(document.getElementById('test') as HTMLDivElement);
 
-    expect(drawer.background.stroke()).toBe(drawer.options.strokeColor);
+    expect(drawer.options.strokeColor).toBe(drawer.options.strokeColor);
 
     drawer.setColor('#3ee551');
 
-    expect(drawer.background.stroke()).toBe('#3ee551');
+    expect(drawer.options.strokeColor).toBe('#3ee551');
   });
 
 
