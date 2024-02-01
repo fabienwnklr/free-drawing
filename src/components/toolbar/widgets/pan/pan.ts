@@ -5,6 +5,8 @@ import PanIcon from '@/icons/pan.svg?raw';
 
 export class PanWidget extends BaseWidget {
   isGrabbing: boolean = false;
+  hasMoved: boolean = false;
+
   constructor(protected drawer: Drawer) {
     const $PanIcon = stringToNode<SVGElement>(PanIcon);
     super(drawer, 'pan', 'Pan', $PanIcon);
@@ -15,18 +17,23 @@ export class PanWidget extends BaseWidget {
     this.drawer.stage.on('mousedown touchstart', () => {
       this.isGrabbing = true;
 
-      this.drawer.$container.style.cursor = 'grabbing';
+      this.drawer.$stageContainer.style.cursor = 'grabbing';
     });
 
     this.drawer.stage.on('mousemove touchmove', (e) => {
       if (e.target !== this.drawer.stage || !this.isGrabbing) return;
+      this.hasMoved = true;
 
-      this.drawer.$container.style.cursor = 'grabbing';
+      this.drawer.$stageContainer.style.cursor = 'grabbing';
     });
 
     this.drawer.stage.on('mouseup touchend', () => {
+      if (this.hasMoved) {
+        this.drawer.stage.fire('change');
+      }
       this.isGrabbing = false;
-      this.drawer.$container.style.cursor = 'grab';
+      this.hasMoved = false;
+      this.drawer.$stageContainer.style.cursor = 'grab';
     });
   }
 
@@ -47,6 +54,6 @@ export class PanWidget extends BaseWidget {
   }
 
   protected updateCursor() {
-    this.drawer.$container.style.cursor = 'grab';
+    this.drawer.$stageContainer.style.cursor = 'grab';
   }
 }

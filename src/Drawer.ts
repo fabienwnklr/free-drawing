@@ -17,11 +17,12 @@ import { BaseWidget } from './components/toolbar/widgets/BaseWidget';
 import { Transformer } from 'konva/lib/shapes/Transformer';
 import { Settings } from './components/tools/settings/Settings';
 import { Node } from 'konva/lib/Node';
+import MicroEvent from './utils/MicroEvent';
 
-export class Drawer {
+export class Drawer extends MicroEvent {
   $el: HTMLDivElement;
   $drawerContainer: HTMLDivElement;
-  $container: HTMLDivElement;
+  $stageContainer: HTMLDivElement;
   stage: Stage;
   layer: Layer;
   toolbar: Toolbar;
@@ -34,6 +35,7 @@ export class Drawer {
   setting: Settings;
 
   constructor($el: HTMLDivElement, options: Partial<DrawerOptions> = {}) {
+    super();
     this.$el = $el;
 
     this.options = deepMerge(defaultOptions, options);
@@ -50,7 +52,7 @@ export class Drawer {
     if (saved) {
       this.stage = Node.create(saved, this.$drawerContainer);
       this.layer = this.stage.findOne('Layer') as Layer;
-      this.background = this.stage.findOne('.background') as Rect
+      this.background = this.stage.findOne('.background') as Rect;
     } else {
       this.stage = new Stage({
         container: this.$drawerContainer,
@@ -70,7 +72,7 @@ export class Drawer {
 
       this.layer.add(this.background);
     }
-    this.$container = this.stage.content;
+    this.$stageContainer = this.stage.content;
     const activeTool = this.options.tool ?? 'brush';
     this.toolbar = new Toolbar(this);
 
@@ -213,6 +215,13 @@ export class Drawer {
         this.zoom?.update();
       });
     }
+
+    this.stage.on('change', () => {
+      if (this.options.autoSave) {
+        this.save();
+      }
+      this.trigger('change', this);
+    });
   }
 
   save() {

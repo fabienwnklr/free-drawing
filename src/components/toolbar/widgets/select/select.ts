@@ -50,10 +50,10 @@ export class SelectWidget extends BaseWidget {
         // Don't change cursor on anchor or on transforming
         if (e.target.hasName('_anchor') || this.transformer.isTransforming()) return;
         if (e.target !== this.drawer.stage) {
-          this.drawer.$container.style.cursor = 'move';
+          this.drawer.$stageContainer.style.cursor = 'move';
           // e.target.setAttrs({ strokeWidth: 2, strokeColor: "red"})
         } else {
-          this.drawer.$container.style.cursor = 'default';
+          this.drawer.$stageContainer.style.cursor = 'default';
           // e.target.setAttrs({ strokeWidth: 0, strokeColor: "transparant"})
         }
         return;
@@ -113,6 +113,10 @@ export class SelectWidget extends BaseWidget {
         height: 0,
       });
     });
+
+    this.transformer.on('transformend dragend', () => {
+      this.drawer.stage.fire('change');
+    });
   }
 
   protected removeEvents() {
@@ -152,7 +156,7 @@ export class SelectWidget extends BaseWidget {
   }
 
   protected updateCursor(): void {
-    this.drawer.$container.style.cursor = 'default';
+    this.drawer.$stageContainer.style.cursor = 'default';
   }
 
   protected onDesactive(): void {
