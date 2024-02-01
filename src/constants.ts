@@ -9,4 +9,5 @@ export const defaultOptions: DrawerOptions = {
   zoom: true,
   zoomWidget: true,
   scaling: 1.11,
+  autoSave: true,
 };

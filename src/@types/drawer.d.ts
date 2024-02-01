@@ -10,6 +10,7 @@ export type DrawerOptions = {
   zoom: boolean;
   zoomWidget: boolean;
   scaling: number;
+  autoSave: boolean;
 };
 
 type RGB = `rgb(${number}, ${number}, ${number})`;
