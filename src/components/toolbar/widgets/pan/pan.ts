@@ -53,7 +53,7 @@ export class PanWidget extends BaseWidget {
     this.drawer.stage.draggable(false);
   }
 
-  protected updateCursor() {
+  updateCursor() {
     this.drawer.$stageContainer.style.cursor = 'grab';
   }
 }

@@ -25,9 +25,6 @@ export class BrushWidget extends BaseWidget {
 
   protected initEvents(): void {
     this.drawer.stage.on('mousedown touchstart', (e) => {
-      if (e.target !== this.drawer.stage) {
-        return;
-      }
       e.evt.preventDefault();
 
       this.isPaint = true;
@@ -198,7 +195,8 @@ export class BrushWidget extends BaseWidget {
   }
 
   updateCursor() {
-    const rad = this.drawer.options.strokeWidth;
+    const scale = this.drawer.stage.scale()?.x ?? 0;
+    const rad = this.drawer.options.strokeWidth * scale;
     const cursorCanvas = document.createElement('canvas');
     const ctx = cursorCanvas.getContext('2d') as CanvasRenderingContext2D;
     cursorCanvas.width = cursorCanvas.height = rad;

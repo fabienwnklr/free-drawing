@@ -21,7 +21,7 @@ export class UndoWidget extends BaseWidget {
   protected removeEvents(): void {
     throw new Error('Method not implemented.');
   }
-  protected updateCursor(): void {
+  updateCursor(): void {
     throw new Error('Method not implemented.');
   }
 }

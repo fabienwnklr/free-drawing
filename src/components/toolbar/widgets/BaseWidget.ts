@@ -54,7 +54,7 @@ export abstract class BaseWidget {
   protected abstract onDesactive(): void;
   protected abstract initEvents(): void;
   protected abstract removeEvents(): void;
-  protected abstract updateCursor(): void;
+  public abstract updateCursor(): void;
 
   private _initEvents() {
     this.$button.addEventListener('click', () => {

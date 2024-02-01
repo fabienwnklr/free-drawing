@@ -155,7 +155,7 @@ export class SelectWidget extends BaseWidget {
     });
   }
 
-  protected updateCursor(): void {
+  updateCursor(): void {
     this.drawer.$stageContainer.style.cursor = 'default';
   }
 
