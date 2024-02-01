@@ -5,12 +5,6 @@ import type { Drawer } from '@/Drawer';
 import type { ModalOptions } from '@/@types/modal';
 import CloseIcon from '@/icons/close.svg?raw';
 
-declare global {
-  interface HTMLDivElement {
-    modal: Modal;
-  }
-}
-
 export class Modal {
   $modal!: HTMLDivElement;
   $modalHeader!: HTMLDivElement;
@@ -76,6 +70,14 @@ export class Modal {
         false
       );
     }
+
+    if (this.options.closeOnEsc) {
+      document.addEventListener('keydown', (e) => {
+        if (e.key === "Escape" && this.isVisible()) {
+          this.hide();
+        }
+      })
+    }
   }
 
   private _createModal() {
@@ -87,8 +89,6 @@ export class Modal {
       <div class="drawer-modal-body"></div>`);
     this.$modalFooter = stringToNode<HTMLDivElement>(/*html*/ `
       <div class="drawer-modal-footer"></div>`);
-
-    this.$modal.modal = this;
 
     this.$modal.append(...[this.$modalHeader, this.$modalBody, this.$modalFooter]);
 

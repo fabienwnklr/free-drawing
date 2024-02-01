@@ -5,6 +5,7 @@ export interface ModalOptions {
   bodyContent?: string;
   footerContent?: string;
   closeOnClickOutside?: boolean;
+  closeOnEsc?: boolean;
   backdrop?: boolean;
 }
 
