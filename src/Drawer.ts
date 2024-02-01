@@ -18,6 +18,7 @@ import { Transformer } from 'konva/lib/shapes/Transformer';
 import { Settings } from './components/tools/settings/Settings';
 import { Node } from 'konva/lib/Node';
 import MicroEvent from './utils/MicroEvent';
+import { ConfirmModal } from './components/modal/ConfirmModal';
 
 export class Drawer extends MicroEvent {
   $el: HTMLDivElement;
@@ -33,6 +34,7 @@ export class Drawer extends MicroEvent {
   zoom: Zoom | undefined;
   help: Help;
   setting: Settings;
+  $clearConfirmModal: any;
 
   constructor($el: HTMLDivElement, options: Partial<DrawerOptions> = {}) {
     super();
@@ -110,7 +112,6 @@ export class Drawer extends MicroEvent {
 
   private _initEvents() {
     this._initHotKey();
-
     this._initZoomWheel();
 
     this.stage.on('change', () => {
@@ -181,6 +182,10 @@ export class Drawer extends MicroEvent {
 
       if (e.altKey && e.key === 'z') {
         this.setting.toggleZenMode();
+      }
+
+      if (e.ctrlKey && e.key === 'Delete') {
+        this.clearCanvas();
       }
     });
   }
@@ -254,6 +259,20 @@ export class Drawer extends MicroEvent {
 
     if (brushWidget) {
       brushWidget.updateCursor();
+    }
+  }
+
+  clearCanvas(force = false) {
+    if (!force) {
+      if (!this.$clearConfirmModal) {
+        this.$clearConfirmModal = new ConfirmModal(this, {
+          message: 'Are you sure to remove all canvas draw ?',
+        });
+      }
+      this.$clearConfirmModal.show();
+    } else {
+      this.layer.find('Line').forEach((l) => l.destroy());
+      this.stage.fire('change');
     }
   }
 }

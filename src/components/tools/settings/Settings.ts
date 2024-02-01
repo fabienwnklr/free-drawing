@@ -8,7 +8,6 @@ import TrashIcon from '@/icons/trash.svg?raw';
 import GridIcon from '@/icons/grid.svg?raw';
 import GithubIcon from '@/icons/github.svg?raw';
 import ZenIcon from '@/icons/zen.svg?raw';
-import { ConfirmModal } from '@/components/modal/ConfirmModal';
 
 export class Settings extends Dropdown {
   drawer: Drawer;
@@ -17,7 +16,6 @@ export class Settings extends Dropdown {
   $clearCanvasButton: HTMLDivElement;
   $showGridButton: HTMLDivElement;
   $githubButton: HTMLDivElement;
-  $clearConfirmModal: ConfirmModal | null = null;
   $zenModeButton: HTMLDivElement;
 
   constructor(drawer: Drawer) {
@@ -74,12 +72,7 @@ export class Settings extends Dropdown {
 
   private initEvents() {
     this.$clearCanvasButton.addEventListener('click', () => {
-      if (!this.$clearConfirmModal) {
-        this.$clearConfirmModal = new ConfirmModal(this.drawer, {
-          message: 'Are you sure to remove all canvas draw ?',
-        });
-      }
-      this.$clearConfirmModal.show();
+      this.drawer.clearCanvas();
     });
 
     this.$zenModeButton.addEventListener('click', () => {

@@ -40,13 +40,29 @@ export class Help extends Modal {
           </ul>
         </div>
 
+        <div class="drawer-modal-help-grid-container">
+          <h4>Editor</h4>
+          <ul class="drawer-modal-help-shortcut-container">
+            <li class="drawer-modal-help-shortcut">
+              Clear canvas
+              <span>
+                <kbd class="drawer-modal-help-kdb">Ctrl+Delete</kbd>
+                or
+                <kbd class="drawer-modal-help-kdb">Ctrl+Backspace</kbd>
+              </span>
+            </li>
+          </ul>
+        </div>
 
-      <div class="drawer-modal-help-grid-container">
-        <h4>View</h4>
-        <ul class="drawer-modal-help-shortcut-container">
-        <li class="drawer-modal-help-shortcut">
-        Zen mode <span><kbd class="drawer-modal-help-kdb">Alt</kbd> + <kbd class="drawer-modal-help-kdb">Z</kbd></span>
-        </li>
+        <div class="drawer-modal-help-grid-container">
+          <h4>View</h4>
+          <ul class="drawer-modal-help-shortcut-container">
+            <li class="drawer-modal-help-shortcut">
+              Zen mode
+              <span>
+                <kbd class="drawer-modal-help-kdb">Alt+Z</kbd>
+              </span>
+            </li>
           </ul>
         </div>
 

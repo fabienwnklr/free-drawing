@@ -8,7 +8,8 @@
 
 .drawer-modal {
   &.drawer-modal-help {
-    width: 80%;
+    width: 75%;
+    max-width: 75%;
     height: 80%;
   }
 
@@ -30,7 +31,6 @@
     .drawer-modal-help-links {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.75rem;
     }
 
     .drawer-modal-help-kdb {
@@ -42,11 +42,13 @@
     }
     .drawer-modal-help-grid {
       display: flex;
-      justify-content: space-between;
+      flex-wrap: wrap;
 
       .drawer-modal-help-grid-container {
-        width: 50%;
         padding-right: 0.5rem;
+        padding-top: 0.5rem;
+        flex: 0 0 auto;
+        width: 50%;
 
         .drawer-modal-help-shortcut-container {
           border: 1px solid $primary-light;
