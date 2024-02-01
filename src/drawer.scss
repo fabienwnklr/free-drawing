@@ -76,6 +76,7 @@
       color: currentColor
     }
   }
+
   .drawer-button-danger {
     color: $text-danger;
     background-color: $danger;
@@ -131,7 +132,7 @@
     bottom: 10px;
     left: 10px;
   }
-  .konvajs-content {
+  &:not(.is-full).konvajs-content {
     width: fit-content;
     box-shadow: $shadow;
     border-radius: $radius;
