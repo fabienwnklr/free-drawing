@@ -109,7 +109,19 @@ export class Drawer extends MicroEvent {
   }
 
   private _initEvents() {
-    // Keyboad shortcut
+    this._initHotKey();
+
+    this._initZoomWheel();
+
+    this.stage.on('change', () => {
+      if (this.options.autoSave) {
+        this.save();
+      }
+      this.trigger('change', this);
+    });
+  }
+
+  private _initHotKey() {
     this.$drawerContainer.addEventListener('keydown', (e) => {
       const selectWidget = this.toolbar.widgets.get('selection') as SelectWidget;
       if (selectWidget) {
@@ -171,7 +183,9 @@ export class Drawer extends MicroEvent {
         this.setting.toggleZenMode();
       }
     });
-    // Zoom on wheel
+  }
+
+  private _initZoomWheel() {
     if (this.options.zoom) {
       this.stage.on('wheel', (e) => {
         if (!e.evt.ctrlKey) return;
@@ -214,18 +228,11 @@ export class Drawer extends MicroEvent {
         this.stage.position(newPos);
         this.zoom?.update();
 
-        if (this.activeTool === "brush") {
-          this.toolbar.activeWidget.updateCursor()
+        if (this.activeTool === 'brush') {
+          this.toolbar.activeWidget.updateCursor();
         }
       });
     }
-
-    this.stage.on('change', () => {
-      if (this.options.autoSave) {
-        this.save();
-      }
-      this.trigger('change', this);
-    });
   }
 
   save() {

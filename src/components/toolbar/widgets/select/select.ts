@@ -3,7 +3,6 @@ import { stringToNode } from '@/utils/functions';
 import { BaseWidget } from '../BaseWidget';
 import SelectIcon from '@/icons/select.svg?raw';
 import { Transformer } from 'konva/lib/shapes/Transformer';
-import { Group } from 'konva/lib/Group';
 import { Rect } from 'konva/lib/shapes/Rect';
 import { Line } from 'konva/lib/shapes/Line';
 import { Util } from 'konva/lib/Util';
@@ -144,14 +143,6 @@ export class SelectWidget extends BaseWidget {
 
     draw.forEach((d) => {
       d.setDraggable(true);
-      if (d instanceof Group) return;
-      // d.hitFunc((context, shape) => {
-      //   const { x, y, width, height } = shape.getSelfRect();
-      //   context.beginPath();
-      //   context.rect(x, y, width, height);
-      //   context.closePath();
-      //   context.fillStrokeShape(shape);
-      // });
     });
   }
 
@@ -160,7 +151,6 @@ export class SelectWidget extends BaseWidget {
   }
 
   protected onDesactive(): void {
-    // this.transformer.destroy();
     this.selectionRectangle.destroy();
     this.removeEvents();
     const draw = this.drawer.layer.children.filter((e) => {
@@ -171,8 +161,6 @@ export class SelectWidget extends BaseWidget {
 
     draw.forEach((d) => {
       d.setDraggable(false);
-      if (d instanceof Group) return;
-      // d.hitFunc(undefined);
     });
     this.transformer.nodes([]);
   }
