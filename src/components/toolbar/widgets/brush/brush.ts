@@ -43,6 +43,10 @@ export class BrushWidget extends BaseWidget {
         name: 'line',
       });
 
+      this.#lastLine.on('dragend', () => {
+        this.drawer.stage.fire('change');
+      });
+
       // this.#lastLine.on('mouseover', (e) => {
       //   if (!this.isPaint && this.drawer.activeTool === "selection") {
       //     if (e.target instanceof Line) {
@@ -87,6 +91,8 @@ export class BrushWidget extends BaseWidget {
 
       const selectWidget = this.drawer.toolbar.widgets.get('selection') as SelectWidget;
       if (selectWidget) {
+        const zIndex = this.#lastLine.zIndex() + 1;
+        selectWidget.transformer.zIndex(zIndex);
         selectWidget.transformer.nodes([]);
       }
 

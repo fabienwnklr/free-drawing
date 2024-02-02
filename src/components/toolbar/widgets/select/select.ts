@@ -15,12 +15,11 @@ export class SelectWidget extends BaseWidget {
   #x2: number = 0;
   #y2: number = 0;
   selectionRectangle: Rect = new Rect();
+  // In constructor for be usable out of widget
   transformer: Transformer = new Transformer({
     borderStroke: 'rgba(152, 158, 255, 1)',
     anchorStroke: 'rgba(152, 158, 255, 1)',
-    anchorFill: 'rgba(152, 158, 255, 1)',
-    borderDash: [5, 5, 5, 5],
-    borderStrokeWidth: 2,
+    anchorCornerRadius: 3,
   });
   isSelecting: boolean = false;
 
@@ -36,6 +35,7 @@ export class SelectWidget extends BaseWidget {
         }
       }
     });
+
     this.drawer.layer.add(this.transformer);
   }
 
@@ -138,6 +138,8 @@ export class SelectWidget extends BaseWidget {
   }
 
   protected onActive(): void {
+    this.transformer.zIndex(this.transformer.zIndex() + 1);
+
     this.selectionRectangle = new Rect({
       fill: 'rgba(152, 158, 255, .2)',
       stroke: 'rgba(152, 158, 255, .8)',
@@ -145,6 +147,7 @@ export class SelectWidget extends BaseWidget {
       visible: false,
       name: 'selection',
     });
+
     this.drawer.layer.add(this.selectionRectangle);
     this.initEvents();
     this.updateCursor();

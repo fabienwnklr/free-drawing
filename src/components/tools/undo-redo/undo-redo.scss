@@ -1,7 +1,7 @@
 @import '../../../scss/variables';
 
 .drawer-container {
-  .drawer-zoom-container {
+  .drawer-undoredo-container {
     display: flex;
     align-items: center;
     width: fit-content;
@@ -9,15 +9,9 @@
     border-radius: $radius;
     position: absolute;
     bottom: 10px;
-    left: 10px;
+    left: 200px;
 
     .drawer-button {
-      &.reset-zoom {
-        border-radius: 0;
-        user-select: none;
-        border-left: 1px solid $light;
-        border-right: 1px solid $light;
-      }
       &:first-of-type {
         border-top-right-radius: 0;
         border-bottom-right-radius: 0;

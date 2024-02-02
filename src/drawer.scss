@@ -122,16 +122,6 @@
     }
   }
 
-  .drawer-zoom-container {
-    display: flex;
-    align-items: center;
-    width: fit-content;
-    box-shadow: $shadow;
-    border-radius: $radius;
-    position: absolute;
-    bottom: 10px;
-    left: 10px;
-  }
   &:not(.is-full).konvajs-content {
     width: fit-content;
     box-shadow: $shadow;

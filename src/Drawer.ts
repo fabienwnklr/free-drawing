@@ -19,6 +19,7 @@ import { Settings } from './components/tools/settings/Settings';
 import { Node } from 'konva/lib/Node';
 import MicroEvent from './utils/MicroEvent';
 import { ConfirmModal } from './components/modal/ConfirmModal';
+import { UndoRedo } from './components/tools/undo-redo/undoRedo';
 
 export class Drawer extends MicroEvent {
   $el: HTMLDivElement;
@@ -37,6 +38,7 @@ export class Drawer extends MicroEvent {
   $clearConfirmModal: ConfirmModal | null = null;
 
   debug: boolean = false;
+  undoRedo: UndoRedo;
 
   constructor($el: HTMLDivElement, options: Partial<DrawerOptions> = {}) {
     super();
@@ -89,8 +91,8 @@ export class Drawer extends MicroEvent {
     }
 
     this.setting = new Settings(this);
-
     this.help = new Help(this);
+    this.undoRedo = new UndoRedo(this);
 
     const activeWidget = this.toolbar.getWidget<BaseWidget>(activeTool);
     if (activeWidget) {
@@ -124,6 +126,8 @@ export class Drawer extends MicroEvent {
       if (this.options.autoSave) {
         this.save();
       }
+
+      this.undoRedo.saveState();
       this.trigger('change', this);
     });
   }
