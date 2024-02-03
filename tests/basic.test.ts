@@ -24,7 +24,8 @@ describe('Basic integration', () => {
     expect(drawer.zoom).instanceOf(Zoom);
     expect(drawer.help).instanceOf(Help);
     expect(drawer.setting).instanceOf(Settings);
-    expect(drawer.toolbar.$toolbarContainer).instanceOf(HTMLDivElement);
+    expect(drawer.toolbar.$toolbarContent).instanceOf(HTMLDivElement);
+    expect(drawer.toolbar.$toolbarRoot).instanceOf(HTMLDivElement);
     expect(drawer.toolbar.widgets.size).eq(4);
     expect(drawer.toolbar.activeWidget).not.toBe(null);
     expect(drawer.toolbar.activeWidget.id).eq('brush');
