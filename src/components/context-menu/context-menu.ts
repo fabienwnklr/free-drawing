@@ -2,6 +2,7 @@ import type { Drawer } from '@/Drawer';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Stage } from 'konva/lib/Stage';
 import './context-menu.scss';
+import { Text } from 'konva/lib/shapes/Text';
 
 export class ContextMenu {
   drawer: Drawer;
@@ -19,12 +20,13 @@ export class ContextMenu {
 
     this.$pasteBtn = document.createElement('div');
     this.$pasteBtn.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-context-menu-list-item');
-    this.$pasteBtn.innerHTML = '<span class="drawer-context-menu-item__label">Paste</span><kbd class="drawer-context-menu-item__shortcut">Ctrl+V</kbd>';
+    this.$pasteBtn.innerHTML =
+      '<span class="drawer-context-menu-item__label">Paste</span><kbd class="drawer-context-menu-item__shortcut">Ctrl+V</kbd>';
     this.$pasteBtn.role = 'button';
 
-    this.$list.append(...[this.$pasteBtn])
+    this.$list.append(...[this.$pasteBtn]);
 
-    this.$menu.append(this.$list)
+    this.$menu.append(this.$list);
     this.drawer.$drawerContainer.append(this.$menu);
     this._initEvents();
   }
@@ -35,9 +37,20 @@ export class ContextMenu {
     });
 
     // Disable native context menu on my own context menu.. contextmenuception
-    this.$menu.addEventListener('contextmenu', e => {
+    this.$menu.addEventListener('contextmenu', (e) => {
       e.preventDefault();
-    })
+    });
+
+    this.$pasteBtn.addEventListener('click', async () => {
+      const text = await navigator.clipboard.readText()
+      this.drawer.layer.add(new Text({
+        x: this.drawer.stage.width() / 2,
+        y: this.drawer.stage.height() / 2,
+        text,
+        fontSize: 20,
+        name: 'text',
+      }))
+    });
 
     this.drawer.stage.on('contextmenu', (e) => {
       // prevent default behavior
