@@ -11,4 +11,5 @@ export const defaultOptions: DrawerOptions = {
   zoomWidget: true,
   scaling: 1.11,
   autoSave: false,
+  localStorageKey: 'free-drawing',
 };

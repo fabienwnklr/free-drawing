@@ -64,7 +64,7 @@ export class Drawer extends MicroEvent {
       this.$drawerContainer.classList.add('is-full');
     }
 
-    const saved = localStorage.getItem('free-drawing');
+    const saved = localStorage.getItem(this.options.localStorageKey);
     if (saved) {
       this.stage = Node.create(saved, this.$drawerContainer);
       this.layer = this.stage.findOne('Layer') as Layer;
@@ -309,7 +309,7 @@ export class Drawer extends MicroEvent {
   }
 
   save() {
-    localStorage.setItem('free-drawing', this.stage.toJSON());
+    localStorage.setItem(this.options.localStorageKey, this.stage.toJSON());
   }
 
   /**
