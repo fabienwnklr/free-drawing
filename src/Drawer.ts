@@ -174,6 +174,7 @@ export class Drawer extends MicroEvent {
               return e;
             }
           });
+          this.$drawerContainer.focus();
           selectWidget.transformer.nodes(allNodes);
         }
       }
