@@ -8,6 +8,7 @@ import TrashIcon from '@/icons/trash.svg?raw';
 import GridIcon from '@/icons/grid.svg?raw';
 import GithubIcon from '@/icons/github.svg?raw';
 import ZenIcon from '@/icons/zen.svg?raw';
+import StoreIcon from '@/icons/store.svg?raw';
 
 export class Settings extends Dropdown {
   drawer: Drawer;
@@ -17,6 +18,7 @@ export class Settings extends Dropdown {
   $showGridButton: HTMLDivElement;
   $githubButton: HTMLDivElement;
   $zenModeButton: HTMLDivElement;
+  $clearStorageButton: HTMLDivElement;
 
   constructor(drawer: Drawer) {
     super();
@@ -55,6 +57,11 @@ export class Settings extends Dropdown {
     this.$githubButton.innerHTML = GithubIcon + 'Github';
     this.$githubButton.role = 'button';
 
+    this.$clearStorageButton = document.createElement('div');
+    this.$clearStorageButton.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-dropdown-list-item');
+    this.$clearStorageButton.innerHTML = StoreIcon + 'Clear stored data';
+    this.$clearStorageButton.role = 'button';
+
     this.$dropdownList.append(
       ...[
         // this.$openButton,
@@ -63,11 +70,19 @@ export class Settings extends Dropdown {
         // this.$showGridButton,
         this.$zenModeButton,
         this.$githubButton,
+        this.getSeparator(),
+        this.$clearStorageButton
       ]
     );
     this.drawer.$drawerContainer.append(this.$dropdownContainer);
 
     this.initEvents();
+  }
+
+  getSeparator() {
+    const $separator = document.createElement('hr');
+
+    return $separator;
   }
 
   private initEvents() {
@@ -82,6 +97,10 @@ export class Settings extends Dropdown {
     this.$githubButton.addEventListener('click', () => {
       window.open('https://github.com/fabienwnklr/free-drawing', 'blank');
     });
+
+    this.$clearStorageButton.addEventListener('click', () => {
+      localStorage.removeItem(this.drawer.options.localStorageKey);
+    })
   }
 
   toggleZenMode() {
