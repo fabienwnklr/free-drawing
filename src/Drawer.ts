@@ -113,6 +113,7 @@ export class Drawer extends MicroEvent {
 
     this.$drawerContainer.appendChild(this.$footerContainer);
     this.$drawerContainer.focus();
+    this.undoRedo.manageButtons();
     this._initEvents();
   }
 
@@ -150,6 +151,7 @@ export class Drawer extends MicroEvent {
       }
 
       this.undoRedo.saveState();
+      this.undoRedo.manageButtons();
       this.trigger('change', this);
     });
   }

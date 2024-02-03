@@ -21,6 +21,9 @@ export class History {
     this.appHistoryStep += 1;
   }
 
+  canUndo() {
+    return this.appHistory[this.appHistoryStep - 1] ? true : false;
+  }
   undo() {
     try {
       const state = this.appHistory[this.appHistoryStep - 1];
@@ -48,6 +51,10 @@ export class History {
     } catch (error: any) {
       throw new Error(error.message);
     }
+  }
+
+  canRedo() {
+    return this.appHistory[this.appHistoryStep + 1] ? true : false;
   }
 
   redo() {

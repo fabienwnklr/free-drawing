@@ -3,6 +3,7 @@ import { History } from './history';
 import UndoIcon from '@/icons/undo.svg?raw';
 import RedoIcon from '@/icons/redo.svg?raw';
 import './undo-redo.scss';
+import { disableElement, enableElement } from '@/utils/dom';
 
 export class UndoRedo extends History {
   $undoRedoContainer: HTMLDivElement;
@@ -36,10 +37,36 @@ export class UndoRedo extends History {
   private _initEvents() {
     this.$btnUndo.addEventListener('click', () => {
       this.undo();
+
+      this.manageButtons();
     });
 
     this.$btnRedo.addEventListener('click', () => {
       this.redo();
+
+      this.manageButtons();
     });
+  }
+
+  manageUndoBtn() {
+    if (!this.canUndo()) {
+      this.$btnUndo.ariaDisabled = 'true';
+      disableElement(this.$btnUndo);
+    } else {
+      enableElement(this.$btnUndo);
+    }
+  }
+
+  manageRedoBtn() {
+    if (!this.canRedo()) {
+      disableElement(this.$btnRedo);
+    } else {
+      enableElement(this.$btnRedo);
+    }
+  }
+
+  manageButtons() {
+    this.manageUndoBtn()
+    this.manageRedoBtn()
   }
 }

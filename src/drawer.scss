@@ -44,7 +44,8 @@
     user-select: none;
 
     &.disabled {
-      pointer-events: none;
+      cursor: not-allowed;
+      opacity: .5;
     }
 
     svg {
@@ -52,7 +53,7 @@
       height: 18px;
     }
 
-    &:hover {
+    &:not(.disabled):hover {
       background-color: $primary-hover;
     }
 
@@ -68,7 +69,8 @@
 
   .drawer-button-neutral {
     border: 1px solid $light;
-    &:hover {
+
+    &:not(.disabled):hover {
       background-color: $light;
     }
 
