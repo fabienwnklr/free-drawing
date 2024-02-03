@@ -220,30 +220,6 @@ export class BrushWidget extends BaseWidget {
   }
 
   updateCursor() {
-    const scale = this.drawer.stage.scale()?.x ?? 0;
-    const rad = this.drawer.options.strokeWidth * scale;
-    const cursorCanvas = document.createElement('canvas');
-    const ctx = cursorCanvas.getContext('2d') as CanvasRenderingContext2D;
-    cursorCanvas.width = cursorCanvas.height = rad;
-
-    ctx.lineCap = 'round';
-    ctx.fillStyle = 'transparent';
-    ctx.fillRect(0, 0, this.drawer.stage.width(), this.drawer.stage.height());
-
-    if (ctx.lineCap === 'round') {
-      ctx.arc(rad / 2, rad / 2, (rad / 2) * 0.9, 0, Math.PI * 2, false);
-    } else {
-      ctx.rect(0, 0, rad, rad);
-    }
-
-    ctx.fillStyle = this.drawer.options.strokeColor;
-    ctx.fill();
-
-    cursorCanvas.toBlob((blob) => {
-      if (blob) {
-        const cursorURL = URL.createObjectURL(blob);
-        this.drawer.$stageContainer.style.cursor = `url(${cursorURL}) ${rad / 2} ${rad / 2}, auto`;
-      }
-    });
+    this.drawer.$stageContainer.style.cursor = `url("data:image/svg+xml,<svg height='32' width='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg' style='color: black;'><defs><filter id='shadow' y='-40%' x='-40%' width='180px' height='180%' color-interpolation-filters='sRGB'><feDropShadow dx='1' dy='1' stdDeviation='1.2' flood-opacity='.5'/></filter></defs><g fill='none' transform='rotate(0 16 16)' filter='url(%23shadow)'><path d='m25 16h-6.01v-6h-2.98v6h-6.01v3h6.01v6h2.98v-6h6.01z' fill='white'/><path d='m23.9902 17.0103h-6v-6.01h-.98v6.01h-6v.98h6v6.01h.98v-6.01h6z' fill='%23231f1f'/></g></svg>") 16 16, crosshair`;
   }
 }
