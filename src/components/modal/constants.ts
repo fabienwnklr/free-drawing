@@ -22,8 +22,12 @@ export const confirmModalDefaultOpts = {
     modal.hide();
   },
   onConfirm: (modal: ConfirmModal) => {
-    modal.drawer.layer.find('Line').forEach((l) => l.destroy());
-    modal.drawer.stage.fire('change');
+    const lines = modal.drawer.layer.find('Line');
+
+    if (lines) {
+      modal.drawer.layer.find('Line').forEach((l) => l.destroy());
+      modal.drawer.stage.fire('change');
+    }
     modal.hide();
   },
 };

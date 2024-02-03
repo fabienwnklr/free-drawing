@@ -6,7 +6,7 @@ export const defaultOptions: DrawerOptions = {
   width: window.innerWidth,
   height: window.innerHeight,
   strokeWidth: 5,
-  strokeColor: '#df4b26',
+  strokeColor: '#000',
   zoom: true,
   zoomWidget: true,
   scaling: 1.11,

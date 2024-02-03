@@ -39,6 +39,8 @@ export class Drawer extends MicroEvent {
 
   debug: boolean = false;
   undoRedo: UndoRedo;
+  $footerContainer: HTMLElement;
+  $footerLeftElement: HTMLDivElement;
 
   constructor($el: HTMLDivElement, options: Partial<DrawerOptions> = {}) {
     super();
@@ -51,8 +53,10 @@ export class Drawer extends MicroEvent {
     this.$drawerContainer.tabIndex = 1;
 
     this.$el.replaceChildren(this.$drawerContainer);
+
     const width = this.options.width;
     const height = this.options.height;
+    const activeTool = this.options.tool ?? 'brush';
 
     if (width === window.innerWidth && height === window.innerHeight) {
       this.$drawerContainer.classList.add('is-full');
@@ -83,21 +87,29 @@ export class Drawer extends MicroEvent {
       this.layer.add(this.background);
     }
     this.$stageContainer = this.stage.content;
-    const activeTool = this.options.tool ?? 'brush';
-    this.toolbar = new Toolbar(this);
+    this.$footerContainer = document.createElement('footer');
+    this.$footerContainer.classList.add('drawer-footer-container');
+
+
+    this.$footerLeftElement = document.createElement('div');
+    this.$footerLeftElement.classList.add('drawer-footer-left');
+    this.$footerContainer.append(this.$footerLeftElement);
+
+    this.setting = new Settings(this);
 
     if (this.options.zoomWidget) {
       this.zoom = new Zoom(this);
     }
-
-    this.setting = new Settings(this);
-    this.help = new Help(this);
     this.undoRedo = new UndoRedo(this);
+    this.toolbar = new Toolbar(this);
+    this.help = new Help(this);
 
     const activeWidget = this.toolbar.getWidget<BaseWidget>(activeTool);
     if (activeWidget) {
       activeWidget.setActive(true);
     }
+
+    this.$drawerContainer.appendChild(this.$footerContainer);
     this.$drawerContainer.focus();
     this._initEvents();
   }
@@ -137,8 +149,13 @@ export class Drawer extends MicroEvent {
       const selectWidget = this.toolbar.widgets.get('selection') as SelectWidget;
       if (selectWidget) {
         if (e.key === 'Backspace' || e.key === 'Delete') {
-          selectWidget.transformer.nodes().forEach((n) => n.destroy());
-          selectWidget.transformer.nodes([]);
+          const allNodes = selectWidget.transformer.nodes();
+
+          if (allNodes) {
+            allNodes.forEach((n) => n.destroy());
+            selectWidget.transformer.nodes([]);
+            this.stage.fire('change');
+          }
         }
 
         if (e.ctrlKey && e.key === 'a') {
@@ -322,8 +339,12 @@ export class Drawer extends MicroEvent {
       }
       this.$clearConfirmModal.show();
     } else {
-      this.layer.find('Line').forEach((l) => l.destroy());
-      this.stage.fire('change');
+      const lines = this.layer.find('Line');
+
+      if (lines) {
+        this.layer.find('Line').forEach((l) => l.destroy());
+        this.stage.fire('change');
+      }
     }
   }
 }

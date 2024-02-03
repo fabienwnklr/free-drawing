@@ -28,7 +28,7 @@ export class UndoRedo extends History {
 
     this.$undoRedoContainer.append(...[this.$btnUndo, this.$btnRedo]);
 
-    this.drawer.$drawerContainer.append(this.$undoRedoContainer);
+    this.drawer.$footerLeftElement.append(this.$undoRedoContainer);
 
     this._initEvents();
   }

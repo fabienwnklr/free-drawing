@@ -30,6 +30,7 @@ export class SelectWidget extends BaseWidget {
     this.transformer.on('transformstart dragstart', () => {
       if (this.drawer.activeTool !== 'selection') {
         this.transformer.stopTransform();
+        this.transformer.nodes([]);
         if (this.drawer.debug) {
           this.drawer.toast('You need to use "selection" tool.', 'info');
         }

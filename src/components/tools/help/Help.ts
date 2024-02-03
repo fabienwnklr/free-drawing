@@ -80,7 +80,7 @@ export class Help extends Modal {
 
     this.$helpContainer.append(this.$button);
 
-    this.drawer.$drawerContainer.append(this.$helpContainer);
+    this.drawer.$footerContainer.append(this.$helpContainer);
 
     this.$button.addEventListener('click', () => {
       this.show();

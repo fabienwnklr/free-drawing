@@ -73,7 +73,7 @@
 
     &.active {
       background-color: darken($light, 5%);
-      color: currentColor
+      color: currentColor;
     }
   }
 
@@ -104,8 +104,8 @@
       pointer-events: none;
     }
 
-    &>svg {
-      margin-left: .5rem;
+    & > svg {
+      margin-left: 0.5rem;
     }
 
     svg {
@@ -128,6 +128,36 @@
     border-radius: $radius;
     canvas {
       border-radius: $radius;
+    }
+  }
+
+  .drawer-footer-container {
+    position: absolute;
+    bottom: 1rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-gap: 3rem;
+    align-items: flex-start;
+    justify-content: space-between;
+    cursor: default;
+    box-sizing: border-box;
+    padding: 0 1rem;
+    width: 100%;
+
+    .drawer-footer-left {
+      display: flex;
+      gap: 0.75rem;
+      height: 100%;
+    }
+
+    .drawer-toolbar-root {
+      display: flex;
+      justify-content: center;
+    }
+
+    :last-of-type {
+      justify-self: flex-end;
+      height: 100%;
     }
   }
 }

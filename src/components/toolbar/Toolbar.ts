@@ -9,19 +9,22 @@ import { PanWidget } from './widgets/pan/pan';
 
 export class Toolbar {
   drawer: Drawer;
-  $toolbarContainer: HTMLElement;
+  $toolbarRoot: HTMLElement;
   widgets: Map<AvailableTools, BaseWidget> = new Map();
   activeWidget!: BaseWidget;
+  $toolbarContent: HTMLDivElement;
 
   constructor(drawer: Drawer) {
     this.drawer = drawer;
 
-    this.$toolbarContainer = document.createElement('div');
-    this.$toolbarContainer.style.maxWidth = this.drawer.stage.width() + 'px';
-    this.$toolbarContainer.classList.add(`drawer-toolbar-root`, 'tool');
-    this.$toolbarContainer.setAttribute('role', 'toolbar');
+    this.$toolbarContent = document.createElement('div');
+    this.$toolbarContent.classList.add('drawer-toolbar-container');
+    this.$toolbarRoot = document.createElement('div');
+    this.$toolbarRoot.classList.add(`drawer-toolbar-root`, 'tool');
+    this.$toolbarRoot.setAttribute('role', 'toolbar');
 
-    this.drawer.$drawerContainer.prepend(this.$toolbarContainer);
+    this.$toolbarContent.append(this.$toolbarRoot);
+    this.drawer.$footerContainer.append(this.$toolbarContent);
     this.init();
   }
 
@@ -34,7 +37,7 @@ export class Toolbar {
 
   addWidget(widget: BaseWidget) {
     this.widgets.set(widget.id, widget);
-    widget.addTo(this.$toolbarContainer);
+    widget.addTo(this.$toolbarRoot);
   }
 
   setActiveWidget(widget: BaseWidget) {
