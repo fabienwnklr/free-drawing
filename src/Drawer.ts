@@ -92,7 +92,6 @@ export class Drawer extends MicroEvent {
     this.$footerContainer = document.createElement('footer');
     this.$footerContainer.classList.add('drawer-footer-container');
 
-
     this.$footerLeftElement = document.createElement('div');
     this.$footerLeftElement.classList.add('drawer-footer-left');
     this.$footerContainer.append(this.$footerLeftElement);
@@ -115,6 +114,14 @@ export class Drawer extends MicroEvent {
     this.$drawerContainer.appendChild(this.$footerContainer);
     this.$drawerContainer.focus();
     this._initEvents();
+  }
+
+  getDrawingShapes() {
+    return this.layer.children.filter((e) => {
+      if (!(e instanceof Transformer) && !e.hasName('background') && !e.hasName('selection')) {
+        return e;
+      }
+    });
   }
 
   _getRelativePointerPos(): { x: number; y: number } {
@@ -342,10 +349,10 @@ export class Drawer extends MicroEvent {
       }
       this.$clearConfirmModal.show();
     } else {
-      const lines = this.layer.find('Line');
+      const shapes = this.getDrawingShapes();
 
-      if (lines) {
-        this.layer.find('Line').forEach((l) => l.destroy());
+      if (shapes) {
+        shapes.forEach((l) => l.destroy());
         this.stage.fire('change');
       }
     }

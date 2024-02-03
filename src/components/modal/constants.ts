@@ -22,10 +22,10 @@ export const confirmModalDefaultOpts = {
     modal.hide();
   },
   onConfirm: (modal: ConfirmModal) => {
-    const lines = modal.drawer.layer.find('Line');
+    const shapes = modal.drawer.getDrawingShapes();
 
-    if (lines) {
-      modal.drawer.layer.find('Line').forEach((l) => l.destroy());
+    if (shapes) {
+      shapes.forEach((l) => l.destroy());
       modal.drawer.stage.fire('change');
     }
     modal.hide();

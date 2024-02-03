@@ -90,7 +90,7 @@ export class SelectWidget extends BaseWidget {
       e.evt.preventDefault();
       // update visibility in timeout, so we can check it in click event
       this.selectionRectangle.visible(false);
-      const shapes = this.drawer.stage.find<Line>('.line');
+      const shapes = this.drawer.getDrawingShapes();
       const box = this.selectionRectangle.getClientRect();
       const { x, y } = this.drawer._getPointerPos();
       let selected = shapes.filter((shape) => Util.haveIntersection(box, shape.getClientRect()));
@@ -107,14 +107,16 @@ export class SelectWidget extends BaseWidget {
         s.hitStrokeWidth(20);
       });
       selected.forEach((s) => {
-        s.hitFunc((context, shape) => {
-          const { x, y, width, height } = shape.getSelfRect();
-          context.beginPath();
-          context.rect(x, y, width, height);
-          context.closePath();
-          context.fillStrokeShape(shape);
-        });
-        s.hitStrokeWidth('auto');
+        if (s instanceof Line) {
+          s.hitFunc((context, shape) => {
+            const { x, y, width, height } = shape.getSelfRect();
+            context.beginPath();
+            context.rect(x, y, width, height);
+            context.closePath();
+            context.fillStrokeShape(shape);
+          });
+          s.hitStrokeWidth('auto');
+        }
       });
       this.transformer.nodes(selected);
       this.$container.focus();
@@ -152,13 +154,9 @@ export class SelectWidget extends BaseWidget {
     this.drawer.layer.add(this.selectionRectangle);
     this.initEvents();
     this.updateCursor();
-    const draw = this.drawer.layer.children.filter((e) => {
-      if (!(e instanceof Transformer) && !e.hasName('background') && !e.hasName('selection')) {
-        return e;
-      }
-    });
+    const shapes = this.drawer.getDrawingShapes();
 
-    draw.forEach((d) => {
+    shapes.forEach((d) => {
       d.setDraggable(true);
     });
   }
