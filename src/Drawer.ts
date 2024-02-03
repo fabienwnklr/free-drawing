@@ -20,6 +20,7 @@ import { Node } from 'konva/lib/Node';
 import MicroEvent from './utils/MicroEvent';
 import { ConfirmModal } from './components/modal/ConfirmModal';
 import { UndoRedo } from './components/tools/undo-redo/undoRedo';
+import { ContextMenu } from './components/context-menu/context-menu';
 
 export class Drawer extends MicroEvent {
   $el: HTMLDivElement;
@@ -41,6 +42,7 @@ export class Drawer extends MicroEvent {
   undoRedo: UndoRedo;
   $footerContainer: HTMLElement;
   $footerLeftElement: HTMLDivElement;
+  contextMenu: ContextMenu;
 
   constructor($el: HTMLDivElement, options: Partial<DrawerOptions> = {}) {
     super();
@@ -95,6 +97,7 @@ export class Drawer extends MicroEvent {
     this.$footerLeftElement.classList.add('drawer-footer-left');
     this.$footerContainer.append(this.$footerLeftElement);
 
+    this.contextMenu = new ContextMenu(this);
     this.setting = new Settings(this);
 
     if (this.options.zoomWidget) {

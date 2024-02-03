@@ -25,6 +25,7 @@ export class BrushWidget extends BaseWidget {
 
   protected initEvents(): void {
     this.drawer.stage.on('mousedown touchstart', (e) => {
+      if (e.evt.button === 2) return;
       e.evt.preventDefault();
 
       this.isPaint = true;

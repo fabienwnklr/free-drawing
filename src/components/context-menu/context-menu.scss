@@ -1,0 +1,34 @@
+@import '../../scss/variables';
+
+.drawer-context-menu {
+  position: absolute;
+  display: none;
+  background-color: $bg-light;
+  // padding: .2rem;
+  border-radius: $radius;
+  box-shadow: $shadow;
+  min-width: 250px;
+
+  &.show {
+    display: block;
+  }
+
+  .drawer-context-menu-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    &:hover {
+        background-color: $btn-context-menu;
+        color: $btn-context-menu-hover;
+    }
+    .drawer-context-menu-item__label {
+        margin-inline-end: 20px;
+    }
+    .drawer-context-menu-item__shortcut {
+      opacity: 0.6;
+      font-family: inherit;
+      font-size: 0.7rem;
+    }
+  }
+}

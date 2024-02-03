@@ -27,21 +27,6 @@ export class Dropdown {
     this._initEvents();
   }
 
-  fillList(items: { content: string }[]) {
-    const liArr: Node[] = [];
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
-    const _this = this;
-    for (const item of items) {
-      const li = _this.$dropdownItem.cloneNode(true);
-      if (item.content) {
-        li.textContent = item.content;
-      }
-      liArr.push(li);
-    }
-
-    this.$dropdownList.append(...liArr);
-  }
-
   setContent(content: string | Node) {
     if (typeof content === 'string') {
       this.$menu.innerHTML = content;

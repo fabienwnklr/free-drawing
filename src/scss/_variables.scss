@@ -3,10 +3,14 @@ $primary: #646cff;
 $primary-light: lighten($primary, 20%);
 $text-primary: #cccccc;
 
+$btn-context-menu: #4851f5;
+$btn-context-menu-hover: #ececec;
+
 $primary-hover: lighten($primary, 20%);
 $primary-active: darken($primary, 2%);
 $text-primary-active: #e0e0e0;
 
+$bg-light: #f3f3f3;
 $light: #eeeeee;
 $light-hover: darken($light, 10%);
 $light-color: #383838;
