@@ -109,9 +109,11 @@ export class Settings extends Dropdown {
     if (this.$zenModeButton.classList.contains('active')) {
       if (this.drawer.zoom) this.drawer.zoom.$zoomContainer.style.display = 'none';
       this.drawer.help.$helpContainer.style.display = 'none';
+      this.drawer.undoRedo.$undoRedoContainer.style.display = 'none';
     } else {
       if (this.drawer.zoom) this.drawer.zoom.$zoomContainer.style.display = '';
       this.drawer.help.$helpContainer.style.display = '';
+      this.drawer.undoRedo.$undoRedoContainer.style.display = '';
     }
   }
 }
