@@ -31,6 +31,7 @@ export class TextWidget extends BaseWidget {
       text,
       x,
       y,
+      fontFamily: 'Ubuntu',
       fontSize: 15,
       width: 50,
       name: 'text',
@@ -88,9 +89,9 @@ export class TextWidget extends BaseWidget {
     textarea.style.position = 'absolute';
     textarea.style.top = areaPosition.y + 2 + 'px';
     textarea.style.left = areaPosition.x + 'px';
-    textarea.style.width = textNode.width() - textNode.padding() * 2 + 'px';
+    textarea.style.width = (textNode.width() - textNode.padding() * 2) * this.drawer.stage.scaleX() + 'px';
     textarea.style.height = textNode.height() - textNode.padding() * 2 + 5 + 'px';
-    textarea.style.fontSize = textNode.fontSize() + 'px';
+    textarea.style.fontSize = textNode.fontSize() * this.drawer.stage.scaleX() + 'px';
     textarea.style.border = 'none';
     textarea.style.padding = '0px';
     textarea.style.margin = '0px';
@@ -190,6 +191,7 @@ export class TextWidget extends BaseWidget {
       window.addEventListener('click', handleOutsideClick);
     });
   }
+
   protected removeEvents(): void {
     this.drawer.stage.off('click tap');
   }
