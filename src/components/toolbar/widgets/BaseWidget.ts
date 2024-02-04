@@ -6,7 +6,7 @@ export abstract class BaseWidget {
   protected readonly $container: HTMLElement;
   private $icon: Element | undefined;
   private disabled: boolean = false;
-  $button: HTMLElement;
+  $button: HTMLButtonElement;
   id: AvailableTools;
 
   constructor(
@@ -22,7 +22,7 @@ export abstract class BaseWidget {
       `drawer-tool-button-container`,
       `drawer-internal-widgetId--${id.replace(/\W/g, '-')}`
     );
-    this.$button = document.createElement('div');
+    this.$button = document.createElement('button');
     this.$button.classList.add(`drawer-button`);
     this.$button.setAttribute('role', 'button');
     this.$button.tabIndex = 0;

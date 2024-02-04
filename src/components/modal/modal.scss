@@ -76,7 +76,7 @@
   }
   .drawer-modal-body {
     overflow: auto;
-    height: max-content;
+    height: 100%;
     &::-webkit-scrollbar-track {
       background-color: $light;
     }

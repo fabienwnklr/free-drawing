@@ -2,13 +2,13 @@ import './dropdown.scss';
 
 export class Dropdown {
   $dropdownContainer: HTMLDivElement;
-  $button: HTMLDivElement;
+  $button: HTMLButtonElement;
   $menu: HTMLDivElement;
   $dropdownList: HTMLUListElement;
   $dropdownItem: HTMLLIElement;
 
   constructor() {
-    this.$button = document.createElement('div');
+    this.$button = document.createElement('button');
     this.$button.role = 'button';
     this.$button.classList.add('drawer-button', 'drawer-button-neutral', 'tool', 'drawer-button-dropdown');
     this.$menu = document.createElement('div');

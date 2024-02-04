@@ -12,13 +12,13 @@ import StoreIcon from '@/icons/store.svg?raw';
 
 export class Settings extends Dropdown {
   drawer: Drawer;
-  $exportButton: HTMLDivElement;
-  $openButton: HTMLDivElement;
-  $clearCanvasButton: HTMLDivElement;
-  $showGridButton: HTMLDivElement;
-  $githubButton: HTMLDivElement;
-  $zenModeButton: HTMLDivElement;
-  $clearStorageButton: HTMLDivElement;
+  $exportButton: HTMLButtonElement;
+  $openButton: HTMLButtonElement;
+  $clearCanvasButton: HTMLButtonElement;
+  $showGridButton: HTMLButtonElement;
+  $githubButton: HTMLButtonElement;
+  $zenModeButton: HTMLButtonElement;
+  $clearStorageButton: HTMLButtonElement;
 
   constructor(drawer: Drawer) {
     super();
@@ -27,37 +27,37 @@ export class Settings extends Dropdown {
     this.$dropdownContainer.classList.add('drawer-dropdown-setting');
     this.$button.innerHTML = SettingIcon;
 
-    this.$openButton = document.createElement('div');
+    this.$openButton = document.createElement('button');
     this.$openButton.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-dropdown-list-item');
     this.$openButton.innerHTML = OpenIcon + 'Open';
     this.$openButton.role = 'button';
 
-    this.$exportButton = document.createElement('div');
+    this.$exportButton = document.createElement('button');
     this.$exportButton.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-dropdown-list-item');
     this.$exportButton.innerHTML = ExportIcon + 'Export to...';
     this.$exportButton.role = 'button';
 
-    this.$clearCanvasButton = document.createElement('div');
+    this.$clearCanvasButton = document.createElement('button');
     this.$clearCanvasButton.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-dropdown-list-item');
     this.$clearCanvasButton.innerHTML = TrashIcon + 'Clear canvas';
     this.$clearCanvasButton.role = 'button';
 
-    this.$showGridButton = document.createElement('div');
+    this.$showGridButton = document.createElement('button');
     this.$showGridButton.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-dropdown-list-item');
     this.$showGridButton.innerHTML = GridIcon + 'Show grid';
     this.$showGridButton.role = 'button';
 
-    this.$zenModeButton = document.createElement('div');
+    this.$zenModeButton = document.createElement('button');
     this.$zenModeButton.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-dropdown-list-item');
     this.$zenModeButton.innerHTML = ZenIcon + 'Zen mode <span class="text-muted">Altr+Z</span>';
     this.$zenModeButton.role = 'button';
 
-    this.$githubButton = document.createElement('div');
+    this.$githubButton = document.createElement('button');
     this.$githubButton.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-dropdown-list-item');
     this.$githubButton.innerHTML = GithubIcon + 'Github';
     this.$githubButton.role = 'button';
 
-    this.$clearStorageButton = document.createElement('div');
+    this.$clearStorageButton = document.createElement('button');
     this.$clearStorageButton.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-dropdown-list-item');
     this.$clearStorageButton.innerHTML = StoreIcon + 'Clear stored data';
     this.$clearStorageButton.role = 'button';

@@ -5,18 +5,12 @@
   --drawer-pointer-events: all;
 }
 
+* {
+  box-sizing: border-box;
+}
+
 .drawer-container {
-  font-family:
-    Inter,
-    -apple-system,
-    'system-ui',
-    Segoe UI,
-    Noto Sans,
-    Helvetica,
-    Arial,
-    sans-serif,
-    'Apple Color Emoji',
-    'Segoe UI Emoji';
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   position: relative;
   width: fit-content;
   outline: none;
@@ -29,6 +23,7 @@
     justify-content: center;
     box-shadow: $shadow;
     background-color: #fff;
+    height: min-content;
   }
 
   .text-muted {
@@ -37,20 +32,25 @@
 
   .drawer-button {
     pointer-events: var(--drawer-pointer-events);
-    height: 100%;
     display: flex;
     align-items: center;
-    padding: 0.4rem;
     cursor: pointer;
     transition:
       background-color 0.3s ease,
       color 0.3s ease;
     border-radius: $radius;
     user-select: none;
+    padding: 0.625rem;
+    width: 2.25rem;
+    height: 2.25rem;
+    box-sizing: border-box;
+    background-color: $btn-bg;
+    color: $btn-color;
+    border: 0;
 
     &.disabled {
       cursor: not-allowed;
-      opacity: .5;
+      opacity: 0.5;
     }
 
     svg {
@@ -146,7 +146,7 @@
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     grid-gap: 3rem;
-    align-items: flex-start;
+    align-items: flex-end;
     justify-content: space-between;
     cursor: default;
     box-sizing: border-box;
@@ -164,9 +164,8 @@
       justify-content: center;
     }
 
-    :last-of-type {
+    .drawer-help-container {
       justify-self: flex-end;
-      height: 100%;
     }
   }
 }

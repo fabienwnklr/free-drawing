@@ -7,21 +7,21 @@ import { disableElement, enableElement } from '@/utils/dom';
 
 export class UndoRedo extends History {
   $undoRedoContainer: HTMLDivElement;
-  $btnUndo: HTMLDivElement;
-  $btnRedo: any;
+  $btnUndo: HTMLButtonElement;
+  $btnRedo: HTMLButtonElement;
 
   constructor(drawer: Drawer) {
     super(drawer);
     this.$undoRedoContainer = document.createElement('div');
     this.$undoRedoContainer.classList.add('drawer-undoredo-container', 'tool');
 
-    this.$btnUndo = document.createElement('div');
+    this.$btnUndo = document.createElement('button');
     this.$btnUndo.role = 'button';
     this.$btnUndo.classList.add('drawer-button', 'drawer-button-neutral');
     this.$btnUndo.tabIndex = 0;
     this.$btnUndo.innerHTML = UndoIcon;
 
-    this.$btnRedo = document.createElement('div');
+    this.$btnRedo = document.createElement('button');
     this.$btnRedo.role = 'button';
     this.$btnRedo.classList.add('drawer-button', 'drawer-button-neutral');
     this.$btnRedo.tabIndex = 0;

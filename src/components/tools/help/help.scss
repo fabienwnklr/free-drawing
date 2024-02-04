@@ -24,11 +24,12 @@
   .drawer-modal-body {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 1rem;
 
     .drawer-modal-help-links {
       display: flex;
       flex-wrap: wrap;
+      gap: .5rem;
     }
 
     .drawer-modal-help-kdb {
@@ -37,6 +38,7 @@
       padding: 0.3rem 0.7rem;
       border: 0;
       border-radius: $radius;
+      font-size: .7rem;
     }
     .drawer-modal-help-grid {
       display: flex;

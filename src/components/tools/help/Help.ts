@@ -5,7 +5,7 @@ import HelpIcon from '@/icons/help.svg?raw';
 import ExternalLink from '@/icons/external-link.svg?raw';
 
 export class Help extends Modal {
-  $button: HTMLDivElement;
+  $button: HTMLButtonElement;
   $helpContainer: HTMLDivElement;
   constructor(drawer: Drawer) {
     super(drawer, { title: 'Help' });
@@ -51,6 +51,12 @@ export class Help extends Modal {
                 <kbd class="drawer-modal-help-kdb">Ctrl+Backspace</kbd>
               </span>
             </li>
+            <li class="drawer-modal-help-shortcut">
+              Select all
+              <span>
+                <kbd class="drawer-modal-help-kdb">Ctrl+A</kbd>
+              </span>
+            </li>
           </ul>
         </div>
 
@@ -74,7 +80,7 @@ export class Help extends Modal {
 
     this.$helpContainer = document.createElement('div');
     this.$helpContainer.classList.add('drawer-help-container', 'tool');
-    this.$button = document.createElement('div');
+    this.$button = document.createElement('button');
     this.$button.classList.add('drawer-button', 'drawer-button-neutral');
     this.$button.innerHTML = HelpIcon;
 

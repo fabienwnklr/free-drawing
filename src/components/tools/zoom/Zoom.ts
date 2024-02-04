@@ -8,9 +8,9 @@ export class Zoom {
   drawer: Drawer;
   zoomLevel: number;
   $zoomContainer: HTMLDivElement;
-  $btnMinus: HTMLDivElement;
-  $btnReset: HTMLDivElement;
-  $btnPlus: HTMLDivElement;
+  $btnMinus: HTMLButtonElement;
+  $btnReset: HTMLButtonElement;
+  $btnPlus: HTMLButtonElement;
 
   constructor(drawer: Drawer) {
     this.drawer = drawer;
@@ -19,9 +19,9 @@ export class Zoom {
     this.$zoomContainer = document.createElement('div');
     this.$zoomContainer.classList.add('drawer-zoom-container', 'tool');
 
-    this.$btnMinus = document.createElement('div');
-    this.$btnReset = document.createElement('div');
-    this.$btnPlus = document.createElement('div');
+    this.$btnMinus = document.createElement('button');
+    this.$btnReset = document.createElement('button');
+    this.$btnPlus = document.createElement('button');
 
     this.$btnMinus.role = 'button';
     this.$btnMinus.classList.add('drawer-button', 'drawer-button-neutral');
