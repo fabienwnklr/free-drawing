@@ -21,6 +21,8 @@ import MicroEvent from './utils/MicroEvent';
 import { ConfirmModal } from './components/modal/ConfirmModal';
 import { UndoRedo } from './components/tools/undo-redo/undoRedo';
 import { ContextMenu } from './components/context-menu/context-menu';
+import { TextWidget } from './components/toolbar/widgets/Text/Text';
+import { Text } from 'konva/lib/shapes/Text';
 
 export class Drawer extends MicroEvent {
   $el: HTMLDivElement;
@@ -109,6 +111,17 @@ export class Drawer extends MicroEvent {
     const activeWidget = this.toolbar.getWidget<BaseWidget>(activeTool);
     if (activeWidget) {
       activeWidget.setActive(true);
+    }
+
+    if (saved) {
+      const textWidget = this.toolbar.getWidget<TextWidget>('text');
+      if (textWidget) {
+        this.layer.find('.text').forEach((t) => {
+          if (t instanceof Text) {
+            textWidget.addTextNodeEvents(t);
+          }
+        });
+      }
     }
 
     this.$drawerContainer.appendChild(this.$footerContainer);
@@ -326,7 +339,7 @@ export class Drawer extends MicroEvent {
   setColor(color: ColorLike) {
     this.options.strokeColor = color;
 
-    const brushWidget = this.toolbar.getWidget('brush') as BrushWidget;
+    const brushWidget = this.toolbar.getWidget<BrushWidget>('brush');
 
     if (brushWidget) {
       brushWidget.updateCursor();

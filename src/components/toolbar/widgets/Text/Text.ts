@@ -17,42 +17,56 @@ export class TextWidget extends BaseWidget {
   protected onDesactive(): void {
     this.removeEvents();
   }
+
+  /**
+   * Add text node to layer
+   * @param text Text content
+   * @returns
+   */
+  addTextNode(text: string = '') {
+    const { x, y } = this.drawer._getRelativePointerPos();
+    const draggable = this.drawer.activeTool === 'selection';
+
+    const textNode = new Text({
+      text,
+      x,
+      y,
+      fontSize: 15,
+      width: 50,
+      name: 'text',
+      draggable,
+    });
+
+    this.addTextNodeEvents(textNode);
+
+    this.drawer.layer.add(textNode);
+
+      const selectWidget = this.drawer.toolbar.getWidget<SelectWidget>('selection');
+      if (selectWidget) {
+        selectWidget.setActive(true);
+      }
+
+    return textNode;
+  }
+
+  addTextNodeEvents(textNode: Text) {
+    textNode.on('transform', function () {
+      // reset scale, so only with is changing by transformer
+      this.setAttrs({
+        width: this.width() * this.scaleX(),
+        scaleX: 1,
+      });
+    });
+
+    textNode.on('dblclick', (e) => {
+      this.editTextNode(e.target as Text);
+    });
+  }
+
   protected initEvents(): void {
     this.drawer.stage.on('click tap', () => {
-      const { x, y } = this.drawer._getRelativePointerPos();
-
-      this.#lastText = new Text({
-        text: '',
-        x,
-        y,
-        fontSize: 15,
-        width: 50,
-        name: 'text',
-        padding: 5,
-      });
-
-      this.drawer.layer.add(this.#lastText);
-
+      this.#lastText = this.addTextNode();
       this.editTextNode(this.#lastText);
-
-      setTimeout(() => {
-        const selectWidget = this.drawer.toolbar.getWidget<SelectWidget>('selection');
-        if (selectWidget) {
-          selectWidget.setActive(true);
-        }
-      }, 100);
-
-      this.#lastText.on('transform', function () {
-        // reset scale, so only with is changing by transformer
-        this.setAttrs({
-          width: this.width() * this.scaleX(),
-          scaleX: 1,
-        });
-      });
-
-      this.#lastText.on('dblclick', (e) => {
-        this.editTextNode(e.target as Text);
-      });
     });
   }
 

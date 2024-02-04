@@ -2,7 +2,7 @@ import type { Drawer } from '@/Drawer';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Stage } from 'konva/lib/Stage';
 import './context-menu.scss';
-import { Text } from 'konva/lib/shapes/Text';
+import { TextWidget } from '../toolbar/widgets/Text/Text';
 
 export class ContextMenu {
   drawer: Drawer;
@@ -43,17 +43,11 @@ export class ContextMenu {
 
     this.$pasteBtn.addEventListener('click', async () => {
       const text = await navigator.clipboard.readText();
-      const draggable = this.drawer.activeTool === 'selection';
-      this.drawer.layer.add(
-        new Text({
-          x: this.drawer.stage.width() / 2,
-          y: this.drawer.stage.height() / 2,
-          text,
-          fontSize: 20,
-          name: 'text',
-          draggable
-        })
-      );
+      const textWidget = this.drawer.toolbar.getWidget<TextWidget>('text');
+
+      if (textWidget) {
+        textWidget.addTextNode(text);
+      }
     });
 
     this.drawer.stage.on('contextmenu', (e) => {
