@@ -41,8 +41,8 @@
     border-radius: $radius;
     user-select: none;
     padding: 0.625rem;
-    width: 2.25rem;
-    height: 2.25rem;
+    width: $btn-width;
+    height: $btn-height;
     box-sizing: border-box;
     background-color: $btn-bg;
     color: $btn-color;

@@ -4,7 +4,6 @@
   position: absolute;
   display: none;
   background-color: $bg-light;
-  // padding: .2rem;
   border-radius: $radius;
   box-shadow: $shadow;
   min-width: 250px;
@@ -13,14 +12,15 @@
     display: block;
   }
 
-  .drawer-context-menu-list-item {
+  .drawer-context-menu-list-item.drawer-button.drawer-button-neutral {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    width: 100%;
 
     &:hover {
-        background-color: $btn-context-menu;
-        color: $btn-context-menu-hover;
+        background-color: $bg-context-menu-item-hover;
+        color: $bg-context-menu-item-hover-color;
     }
     .drawer-context-menu-item__label {
         margin-inline-end: 20px;

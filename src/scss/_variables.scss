@@ -5,9 +5,11 @@ $text-primary: #cccccc;
 
 $btn-bg: #fff;
 $btn-color: #000;
+$btn-width: 2.45rem;
+$btn-height: $btn-width;
 
-$btn-context-menu: #4851f5;
-$btn-context-menu-hover: #ececec;
+$bg-context-menu-item-hover: #4049f3;
+$bg-context-menu-item-hover-color: #ececec;
 
 $primary-hover: lighten($primary, 20%);
 $primary-active: darken($primary, 2%);
