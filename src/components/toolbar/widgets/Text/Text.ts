@@ -33,11 +33,11 @@ export class TextWidget extends BaseWidget {
       y,
       fontFamily: 'Ubuntu',
       fontSize: 15,
-      width: 50,
       name: 'text',
       draggable,
     });
 
+    textNode.width(textNode.measureSize(text).width);
     this.addTextNodeEvents(textNode);
 
     this.drawer.layer.add(textNode);
