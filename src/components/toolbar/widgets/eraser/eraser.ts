@@ -4,7 +4,7 @@ import { BaseWidget } from '../BaseWidget';
 import EraserIcon from '@/icons/eraser.svg?raw';
 import { Line } from 'konva/lib/shapes/Line';
 import { Node, NodeConfig } from 'konva/lib/Node';
-import { SelectWidget } from '../select/select';
+import { SelectWidget } from '../Select/Select';
 
 export class EraserWidget extends BaseWidget {
   isErasing: boolean = false;
@@ -23,6 +23,7 @@ export class EraserWidget extends BaseWidget {
       e.evt.preventDefault();
 
       this.isErasing = true;
+      this.drawer.UIPointerEvents('none');
     });
 
     // and core function - drawing
@@ -47,6 +48,7 @@ export class EraserWidget extends BaseWidget {
 
     this.drawer.stage.on('mouseup touchend', (e) => {
       this.isErasing = false;
+      this.drawer.UIPointerEvents('all');
 
       const selectWidget = this.drawer.toolbar.widgets.get('selection') as SelectWidget;
       if (selectWidget) {

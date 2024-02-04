@@ -1,6 +1,10 @@
 @import './scss/variables';
 @import './scss/reboot';
 
+:root {
+  --drawer-pointer-events: all;
+}
+
 .drawer-container {
   font-family:
     Inter,
@@ -32,6 +36,7 @@
   }
 
   .drawer-button {
+    pointer-events: var(--drawer-pointer-events);
     height: 100%;
     display: flex;
     align-items: center;
@@ -53,7 +58,7 @@
       height: 18px;
     }
 
-    &:not(.disabled):hover {
+    &:not(.disabled):not(.active):hover {
       background-color: $primary-hover;
     }
 
@@ -135,6 +140,7 @@
   }
 
   .drawer-footer-container {
+    pointer-events: none;
     position: absolute;
     bottom: 1rem;
     display: grid;

@@ -1,5 +1,6 @@
 import { AvailableTools } from '@/@types/toolbar';
 import { Drawer } from '@/Drawer';
+import { stringToNode } from '@/utils/functions';
 
 export abstract class BaseWidget {
   protected readonly $container: HTMLElement;
@@ -12,7 +13,7 @@ export abstract class BaseWidget {
     protected drawer: Drawer,
     id: AvailableTools,
     title: string | undefined,
-    $icon: Element | undefined
+    $icon: SVGElement | string
   ) {
     this.id = id;
     this.$container = document.createElement('div');
@@ -26,7 +27,7 @@ export abstract class BaseWidget {
     this.$button.setAttribute('role', 'button');
     this.$button.tabIndex = 0;
     this.$button.title = title ?? '';
-    this.$icon = $icon;
+    this.$icon = typeof $icon === 'string' ? stringToNode<SVGElement>($icon) : $icon;
 
     this._initEvents();
   }

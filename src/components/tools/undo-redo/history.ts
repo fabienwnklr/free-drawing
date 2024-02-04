@@ -1,5 +1,5 @@
 import type { Drawer } from '@/Drawer';
-import { SelectWidget } from '@/components/toolbar/widgets/select/select';
+import { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { Line } from 'konva/lib/shapes/Line';
 
 export class History {
@@ -22,7 +22,7 @@ export class History {
   }
 
   canUndo() {
-    return this.appHistory[this.appHistoryStep - 1] ? true : false;
+    return !!this.appHistory[this.appHistoryStep - 1];
   }
   undo() {
     try {
@@ -54,7 +54,7 @@ export class History {
   }
 
   canRedo() {
-    return this.appHistory[this.appHistoryStep + 1] ? true : false;
+    return !!this.appHistory[this.appHistoryStep + 1];
   }
 
   redo() {

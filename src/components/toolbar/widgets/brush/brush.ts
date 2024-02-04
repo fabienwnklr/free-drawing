@@ -3,7 +3,7 @@ import { stringToNode } from '@/utils/functions';
 import { BaseWidget } from '../BaseWidget';
 import BrushIcon from '@/icons/brush.svg?raw';
 import { Line } from 'konva/lib/shapes/Line';
-import { SelectWidget } from '../select/select';
+import { SelectWidget } from '../Select/Select';
 
 export class BrushWidget extends BaseWidget {
   #lastLine: Line = new Line();
@@ -29,6 +29,7 @@ export class BrushWidget extends BaseWidget {
       e.evt.preventDefault();
 
       this.isPaint = true;
+      this.drawer.UIPointerEvents('none');
 
       const realPos = this.drawer._getRelativePointerPos();
       this.#lastLine = new Line({
@@ -86,6 +87,7 @@ export class BrushWidget extends BaseWidget {
 
     this.drawer.stage.on('mouseup touchend', (e) => {
       this.isPaint = false;
+      this.drawer.UIPointerEvents('all');
       this.#allPoints = [];
 
       this.drawer.stage.fire('change');

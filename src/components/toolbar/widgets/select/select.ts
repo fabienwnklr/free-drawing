@@ -56,6 +56,7 @@ export class SelectWidget extends BaseWidget {
       this.selectionRectangle.width(0);
       this.selectionRectangle.height(0);
       this.isSelecting = true;
+      this.drawer.UIPointerEvents('none');
     });
 
     this.drawer.stage.on('mousemove touchmove', (e) => {
@@ -87,6 +88,7 @@ export class SelectWidget extends BaseWidget {
 
     this.drawer.stage.on('mouseup touchend', (e) => {
       this.isSelecting = false;
+      this.drawer.UIPointerEvents('all')
       e.evt.preventDefault();
       // update visibility in timeout, so we can check it in click event
       this.selectionRectangle.visible(false);
@@ -118,6 +120,23 @@ export class SelectWidget extends BaseWidget {
           s.hitStrokeWidth('auto');
         }
       });
+
+      if (selected.filter((e) => e.hasName('text')).length === selected.length) {
+        this.transformer.enabledAnchors(['middle-left', 'middle-right']);
+        this.transformer.boundBoxFunc(function (_oldBox, newBox) {
+          newBox.width = Math.max(30, newBox.width);
+          return newBox;
+        });
+      } else {
+        this.transformer.enabledAnchors([
+          'top-left',
+          'top-right',
+          'bottom-left',
+          'bottom-right',
+          'middle-left',
+          'middle-right',
+        ]);
+      }
       this.transformer.nodes(selected);
       this.$container.focus();
       this.selectionRectangle.setAttrs({

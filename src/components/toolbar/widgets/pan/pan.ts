@@ -16,6 +16,7 @@ export class PanWidget extends BaseWidget {
     // this.drawer.stage.off()
     this.drawer.stage.on('mousedown touchstart', () => {
       this.isGrabbing = true;
+      this.drawer.UIPointerEvents('none');
 
       this.drawer.$stageContainer.style.cursor = 'grabbing';
     });
@@ -32,6 +33,7 @@ export class PanWidget extends BaseWidget {
         this.drawer.stage.fire('change');
       }
       this.isGrabbing = false;
+      this.drawer.UIPointerEvents('all');
       this.hasMoved = false;
       this.drawer.$stageContainer.style.cursor = 'grab';
     });
