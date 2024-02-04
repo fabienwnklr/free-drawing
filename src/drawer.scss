@@ -58,7 +58,7 @@
       height: 18px;
     }
 
-    &:not(.disabled):not(.active):hover {
+    &:not(.disabled):not(.active):not(.drawer-button-danger):not(.drawer-button-neutral):hover {
       background-color: $primary-hover;
     }
 
