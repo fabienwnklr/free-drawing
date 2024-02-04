@@ -2,7 +2,6 @@ import { Drawer } from '@/Drawer';
 import { stringToNode } from '@/utils/functions';
 import { BaseWidget } from '../BaseWidget';
 import EraserIcon from '@/icons/eraser.svg?raw';
-import { Line } from 'konva/lib/shapes/Line';
 import { Node, NodeConfig } from 'konva/lib/Node';
 import { SelectWidget } from '../Select/Select';
 
@@ -33,7 +32,7 @@ export class EraserWidget extends BaseWidget {
       }
       // prevent scrolling on touch devices
       e.evt.preventDefault();
-      const shapes = this.drawer.stage.find<Line>('.line');
+      const shapes = this.drawer.getDrawingShapes();
       const pos = this.drawer._getPointerPos();
       const selected = shapes.filter((s) => s == this.drawer.stage.getIntersection(pos));
 
