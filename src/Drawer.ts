@@ -9,10 +9,10 @@ import { deepMerge } from './utils/functions';
 import { defaultOptions } from './constants';
 import { Zoom } from './components/tools/zoom/Zoom';
 import { Help } from './components/tools/help/Help';
-import { SelectWidget } from './components/toolbar/widgets/select/select';
-import { PanWidget } from './components/toolbar/widgets/pan/pan';
-import { BrushWidget } from './components/toolbar/widgets/brush/brush';
-import { EraserWidget } from './components/toolbar/widgets/eraser/eraser';
+import { SelectWidget } from './components/toolbar/widgets/Select/Select';
+import { PanWidget } from './components/toolbar/widgets/Pan/Pan';
+import { BrushWidget } from './components/toolbar/widgets/Brush/Brush';
+import { EraserWidget } from './components/toolbar/widgets/Eraser/Eraser';
 import { BaseWidget } from './components/toolbar/widgets/BaseWidget';
 import { Transformer } from 'konva/lib/shapes/Transformer';
 import { Settings } from './components/tools/settings/Settings';
@@ -341,6 +341,10 @@ export class Drawer extends MicroEvent {
    */
   toast(message: string, type?: 'info' | 'warning' | 'error' | 'neutral') {
     console.log(message, type);
+  }
+
+  UIPointerEvents(state: 'all' | 'none') {
+    document.getElementsByTagName('html')[0].style.setProperty('--drawer-pointer-events', state);
   }
 
   clearCanvas(force = false) {

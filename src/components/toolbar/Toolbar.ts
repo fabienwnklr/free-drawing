@@ -1,11 +1,12 @@
 import './toolbar.scss';
 import { Drawer } from '@/Drawer';
 import { BaseWidget } from './widgets/BaseWidget';
-import { BrushWidget } from './widgets/brush/brush';
-import { EraserWidget } from './widgets/eraser/eraser';
-import { SelectWidget } from './widgets/select/select';
+import { BrushWidget } from './widgets/Brush/Brush';
+import { EraserWidget } from './widgets/Eraser/Eraser';
+import { SelectWidget } from './widgets/Select/Select';
 import { AvailableTools } from '../../@types/toolbar';
-import { PanWidget } from './widgets/pan/pan';
+import { PanWidget } from './widgets/Pan/Pan';
+import { TextWidget } from './widgets/Text/Text';
 
 export class Toolbar {
   drawer: Drawer;
@@ -33,6 +34,7 @@ export class Toolbar {
     this.addWidget(new SelectWidget(this.drawer));
     this.addWidget(new BrushWidget(this.drawer));
     this.addWidget(new EraserWidget(this.drawer));
+    this.addWidget(new TextWidget(this.drawer));
   }
 
   addWidget(widget: BaseWidget) {
