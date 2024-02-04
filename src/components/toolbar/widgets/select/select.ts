@@ -176,7 +176,7 @@ export class SelectWidget extends BaseWidget {
     const shapes = this.drawer.getDrawingShapes();
 
     shapes.forEach((d) => {
-      d.setDraggable(true);
+      d.draggable(true);
     });
   }
 
@@ -194,7 +194,7 @@ export class SelectWidget extends BaseWidget {
     });
 
     draw.forEach((d) => {
-      d.setDraggable(false);
+      d.draggable(false);
     });
     this.transformer.nodes([]);
   }

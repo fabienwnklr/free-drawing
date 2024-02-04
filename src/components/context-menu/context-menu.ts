@@ -8,7 +8,7 @@ export class ContextMenu {
   drawer: Drawer;
   currentShape: Shape<ShapeConfig> | null = null;
   $menu: HTMLDivElement;
-  $pasteBtn: HTMLDivElement;
+  $pasteBtn: HTMLButtonElement;
   $list: HTMLUListElement;
 
   constructor(drawer: Drawer) {
@@ -18,7 +18,7 @@ export class ContextMenu {
 
     this.$list = document.createElement('ul');
 
-    this.$pasteBtn = document.createElement('div');
+    this.$pasteBtn = document.createElement('button');
     this.$pasteBtn.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-context-menu-list-item');
     this.$pasteBtn.innerHTML =
       '<span class="drawer-context-menu-item__label">Paste</span><kbd class="drawer-context-menu-item__shortcut">Ctrl+V</kbd>';
@@ -42,14 +42,18 @@ export class ContextMenu {
     });
 
     this.$pasteBtn.addEventListener('click', async () => {
-      const text = await navigator.clipboard.readText()
-      this.drawer.layer.add(new Text({
-        x: this.drawer.stage.width() / 2,
-        y: this.drawer.stage.height() / 2,
-        text,
-        fontSize: 20,
-        name: 'text',
-      }))
+      const text = await navigator.clipboard.readText();
+      const draggable = this.drawer.activeTool === 'selection';
+      this.drawer.layer.add(
+        new Text({
+          x: this.drawer.stage.width() / 2,
+          y: this.drawer.stage.height() / 2,
+          text,
+          fontSize: 20,
+          name: 'text',
+          draggable
+        })
+      );
     });
 
     this.drawer.stage.on('contextmenu', (e) => {
