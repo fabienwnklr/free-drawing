@@ -1,9 +1,9 @@
 import { describe, expect, it, beforeAll } from 'vitest';
 import { Drawer } from '../src/Drawer';
 import { Toolbar } from '../src/components/toolbar/Toolbar';
-import { Zoom } from '../src/components/tools/zoom/Zoom';
-import { Help } from '../src/components/tools/help/Help';
-import { Settings } from '../src/components/tools/settings/Settings';
+import { Zoom } from '../src/components/tools/Zoom/Zoom';
+import { Help } from '../src/components/tools/Help/Help';
+import { Settings } from '../src/components/tools/Settings/Settings';
 
 beforeAll(() => {
   function noOp () { }
