@@ -2,11 +2,15 @@
     position: absolute;
     top: 5rem;
     left: 10px;
-    display: flex;
     flex-direction: column;
     min-width: 100px;
     width: fit-content;
     max-height: 70%;
+    display: none;
+
+    &.show {
+        display: flex;
+    }
 
     .overlay-title {
         font-size: .8rem;

@@ -18,9 +18,6 @@
   .tool {
     border-radius: $radius;
     z-index: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     box-shadow: $shadow;
     background-color: #fff;
     height: min-content;
@@ -41,8 +38,8 @@
     border-radius: $radius;
     user-select: none;
     padding: 0.625rem;
-    width: $btn-width;
-    height: $btn-height;
+    width: $btn-size-lg;
+    height: $btn-size-lg;
     box-sizing: border-box;
     background-color: $btn-bg;
     color: $btn-color;
