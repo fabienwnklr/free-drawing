@@ -44,6 +44,17 @@ export class Help extends Modal {
           <h4>Editor</h4>
           <ul class="drawer-modal-help-shortcut-container">
             <li class="drawer-modal-help-shortcut">
+              Undo
+              <span>
+                <kbd class="drawer-modal-help-kdb">Ctrl+Z</kbd>
+            </li>
+            <li class="drawer-modal-help-shortcut">
+              Redo
+              <span>
+                <kbd class="drawer-modal-help-kdb">Ctrl+Y</kbd>
+              </span>
+            </li>
+            <li class="drawer-modal-help-shortcut">
               Clear canvas
               <span>
                 <kbd class="drawer-modal-help-kdb">Ctrl+Delete</kbd>
