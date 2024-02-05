@@ -1,6 +1,7 @@
 import type { Drawer } from '@/Drawer';
 import { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { Line } from 'konva/lib/shapes/Line';
+import { Text } from 'konva/lib/shapes/Text';
 
 export class History {
   appHistory: { type: string }[][] = [[]];
@@ -12,7 +13,7 @@ export class History {
   }
 
   saveState() {
-    const draw = this.drawer.layer.getChildren().filter((e) => e.className === 'Line');
+    const draw = this.drawer.getDrawingShapes();
     const state = draw.map((d) => {
       return { type: d.className, ...d.attrs };
     });
@@ -33,18 +34,19 @@ export class History {
           selectWidget.transformer.nodes([]);
         }
         this.appHistoryStep -= 1;
-        this.drawer.layer
-          .getChildren()
-          .filter((e) => e.className === 'Line')
-          .forEach((c) => c.destroy());
+        this.drawer.getDrawingShapes().forEach((c) => c.destroy());
         state.forEach((shape) => {
           if (shape.type === 'Line') {
             const line = new Line(shape);
-
+            line.draggable(true);
             line.on('dragend', () => {
               this.drawer.stage.fire('change');
             });
             this.drawer.layer.add(line);
+          }
+
+          if (shape.type === 'Text') {
+            this.drawer.layer.add(new Text(shape));
           }
         });
       }
@@ -66,12 +68,10 @@ export class History {
           selectWidget.transformer.nodes([]);
         }
         this.appHistoryStep += 1;
-        this.drawer.layer
-          .getChildren()
-          .filter((e) => e.className === 'Line')
-          .forEach((c) => c.destroy());
+        this.drawer.getDrawingShapes().forEach((c) => c.destroy());
         state.forEach((shape) => {
           if (shape.type === 'Line') this.drawer.layer.add(new Line(shape));
+          if (shape.type === 'Text') this.drawer.layer.add(new Text(shape));
         });
 
         // if selection active, update

@@ -6,6 +6,8 @@ import { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 
 export class TextWidget extends BaseWidget {
   #lastText!: Text;
+  isEditing: boolean = false;
+
   constructor(drawer: Drawer) {
     super(drawer, 'text', 'Text', TextIcon);
   }
@@ -105,6 +107,7 @@ export class TextWidget extends BaseWidget {
 
     textarea.focus();
 
+    this.isEditing = true;
     this._initEventsTextarea(textNode, textarea);
   }
 
@@ -115,7 +118,7 @@ export class TextWidget extends BaseWidget {
       y: this.drawer.stage.container().offsetTop + textPosition.y + 5,
     };
     const textarea = document.createElement('textarea');
-    document.body.appendChild(textarea);
+    this.drawer.$drawerContainer.appendChild(textarea);
 
     textarea.value = textNode.text();
     textarea.style.position = 'absolute';
@@ -131,6 +134,7 @@ export class TextWidget extends BaseWidget {
     textarea.style.background = 'none';
     textarea.style.outline = 'none';
     textarea.style.resize = 'none';
+    textarea.style.zIndex = '999';
     textarea.style.lineHeight = textNode.lineHeight().toString();
     textarea.style.fontFamily = textNode.fontFamily();
     textarea.style.transformOrigin = 'left top';
@@ -144,7 +148,8 @@ export class TextWidget extends BaseWidget {
     const removeTextarea = () => {
       textarea.parentNode?.removeChild(textarea);
       window.removeEventListener('click', handleOutsideClick);
-
+      this.isEditing = false;
+      this.drawer.$drawerContainer.focus();
       // Do not consider empty textarea
       if (textarea.value === '') {
         textNode.destroy();
@@ -156,6 +161,8 @@ export class TextWidget extends BaseWidget {
       const selectWidget = this.drawer.toolbar.getWidget<SelectWidget>('selection');
       selectWidget?.transformer.show();
       selectWidget?.transformer.forceUpdate();
+
+      this.drawer.stage.fire('change');
     };
 
     const setTextareaWidth = (newWidth: number) => {
@@ -175,6 +182,10 @@ export class TextWidget extends BaseWidget {
     };
 
     textarea.addEventListener('keydown', (e) => {
+      const scale = textNode.getAbsoluteScale().x;
+      setTextareaWidth(textNode.width() * scale);
+      textarea.style.height = 'auto';
+      textarea.style.height = textarea.scrollHeight + textNode.fontSize() + 'px';
       // hide on enter
       // but don't hide on shift + enter
       if (e.code === 'Enter' && !e.shiftKey) {
@@ -185,13 +196,6 @@ export class TextWidget extends BaseWidget {
       if (e.code === 'Escape') {
         removeTextarea();
       }
-    });
-
-    textarea.addEventListener('keydown', () => {
-      const scale = textNode.getAbsoluteScale().x;
-      setTextareaWidth(textNode.width() * scale);
-      textarea.style.height = 'auto';
-      textarea.style.height = textarea.scrollHeight + textNode.fontSize() + 'px';
     });
 
     const handleOutsideClick = (e: MouseEvent) => {

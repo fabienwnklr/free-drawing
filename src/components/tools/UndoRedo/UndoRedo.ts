@@ -1,5 +1,5 @@
 import type { Drawer } from '@/Drawer';
-import { History } from './history';
+import { History } from './History';
 import UndoIcon from '@/icons/undo.svg?raw';
 import RedoIcon from '@/icons/redo.svg?raw';
 import './undo-redo.scss';
