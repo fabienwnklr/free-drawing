@@ -344,10 +344,6 @@ export class Drawer extends MicroEvent {
         };
         this.stage.position(newPos);
         this.zoom?.update();
-
-        if (this.activeTool === 'brush') {
-          this.toolbar.activeWidget.updateCursor();
-        }
       });
     }
   }
