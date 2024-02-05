@@ -47,7 +47,7 @@ export class TextWidget extends BaseWidget {
 
     this.drawer.layer.add(textNode);
 
-    const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
+    const selectWidget = this.drawer.toolbar.getWidget<SelectWidget>('selection');
     if (selectWidget) {
       selectWidget.setActive(true);
     }
@@ -78,7 +78,7 @@ export class TextWidget extends BaseWidget {
 
   editTextNode(textNode: Text) {
     textNode.hide();
-    const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
+    const selectWidget = this.drawer.toolbar.getWidget<SelectWidget>('selection');
     if (selectWidget) {
       selectWidget.transformer.hide();
     }
@@ -158,32 +158,14 @@ export class TextWidget extends BaseWidget {
 
       textNode.show();
 
-      const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
+      const selectWidget = this.drawer.toolbar.getWidget<SelectWidget>('selection');
       selectWidget?.transformer.show();
       selectWidget?.transformer.forceUpdate();
 
-      this.drawer.stage.fire('change');
-    };
-
-    const setTextareaWidth = (newWidth: number) => {
-      // some extra fixes on different browsers
-      const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-      const isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
-      if (isSafari || isFirefox) {
-        newWidth = Math.ceil(newWidth);
-      }
-
-      const isEdge = document.DOCUMENT_NODE || /Edge/.test(navigator.userAgent);
-      if (isEdge) {
-        newWidth += 1;
-      }
-      textarea.style.width = newWidth + 'px';
-      textarea.style.width = newWidth + 'px';
+      this.drawer.stage.fire('change')
     };
 
     textarea.addEventListener('keydown', (e) => {
-      const scale = textNode.getAbsoluteScale().x;
-      setTextareaWidth(textNode.width() * scale);
       textarea.style.height = 'auto';
       textarea.style.height = textarea.scrollHeight + textNode.fontSize() + 'px';
       // hide on enter
