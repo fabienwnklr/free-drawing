@@ -6,7 +6,6 @@ import ZoomReset from '@/icons/zoom-reset.svg?raw';
 
 export class Zoom {
   drawer: Drawer;
-  zoomLevel: number;
   $zoomContainer: HTMLDivElement;
   $btnMinus: HTMLButtonElement;
   $btnReset: HTMLButtonElement;
@@ -14,7 +13,6 @@ export class Zoom {
 
   constructor(drawer: Drawer) {
     this.drawer = drawer;
-    this.zoomLevel = drawer.stage.scaleX();
 
     this.$zoomContainer = document.createElement('div');
     this.$zoomContainer.classList.add('drawer-zoom-container', 'tool');
@@ -67,7 +65,7 @@ export class Zoom {
       y: (center.y - this.drawer.stage.y()) / oldScale,
     };
 
-    const newScale = this.zoomLevel / this.drawer.options.scaling;
+    const newScale = this.drawer.getZoomLevel() / this.drawer.options.scaling;
 
     this.drawer.stage.scale({ x: newScale, y: newScale });
 
@@ -101,7 +99,7 @@ export class Zoom {
       y: (center.y - this.drawer.stage.y()) / oldScale,
     };
 
-    const newScale = this.zoomLevel * this.drawer.options.scaling;
+    const newScale = this.drawer.getZoomLevel() * this.drawer.options.scaling;
 
     this.drawer.stage.scale({ x: newScale, y: newScale });
 
@@ -117,11 +115,10 @@ export class Zoom {
   }
 
   update() {
-    this.zoomLevel = this.drawer.stage.scaleX();
     this.$btnReset.innerHTML = ZoomReset + this._formatPercentage();
   }
 
   private _formatPercentage() {
-    return Number(this.zoomLevel).toLocaleString(undefined, { style: 'percent', maximumFractionDigits: 0 });
+    return Number(this.drawer.getZoomLevel()).toLocaleString(undefined, { style: 'percent', maximumFractionDigits: 0 });
   }
 }

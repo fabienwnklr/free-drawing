@@ -20,10 +20,7 @@
     background-color: #fff;
     border-radius: 5px;
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
-    opacity: 0;
-    transition:
-      max-height 0.2s ease,
-      opacity 0.2s ease;
+    display: none;
 
       .drawer-dropdown-list {
         margin-left: .3rem;
@@ -40,7 +37,7 @@
       }
 
     &.show {
-      opacity: 1;
+      display: block;
     }
   }
 }
