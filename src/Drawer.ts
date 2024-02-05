@@ -286,7 +286,7 @@ export class Drawer extends MicroEvent {
    * @param name
    */
   getWidget<T>(name: AvailableTools): T | undefined {
-    return this.getWidget<T>(name);
+    return this.toolbar.getWidget<T>(name);
   }
 
   private _duringAction() {
