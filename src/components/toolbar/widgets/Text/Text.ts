@@ -35,9 +35,12 @@ export class TextWidget extends BaseWidget {
       fontSize: 15,
       name: 'text',
       draggable,
+      width: 100,
     });
 
-    textNode.width(textNode.measureSize(text).width);
+    if (text) {
+      textNode.width(textNode.measureSize(text).width);
+    }
     this.addTextNodeEvents(textNode);
 
     this.drawer.layer.add(textNode);

@@ -1,0 +1,26 @@
+@import '../../../scss/variables';
+
+.drawer-container {
+  .drawer-zoom-container {
+    display: flex;
+    align-items: center;
+    width: fit-content;
+
+    .drawer-button {
+      &.reset-zoom {
+        border-radius: 0;
+        border-left: 1px solid $light;
+        border-right: 1px solid $light;
+        width: auto;
+      }
+      &:first-of-type {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+      }
+      &:last-of-type {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+      }
+    }
+  }
+}

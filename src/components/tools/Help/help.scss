@@ -1,0 +1,72 @@
+@import '../../../scss/variables';
+
+.drawer-help-container {
+  // margin-left: auto;
+}
+
+.drawer-modal {
+  &.drawer-modal-help {
+    width: 75%;
+    max-width: 75%;
+    height: 80%;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin-bottom: 0.7rem;
+    font-weight: bold;
+  }
+
+  .drawer-modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    .drawer-modal-help-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+    }
+
+    .drawer-modal-help-kdb {
+      background-color: $primary-light;
+      font-weight: bold;
+      padding: 0.3rem 0.7rem;
+      border: 0;
+      border-radius: $radius;
+      font-size: .7rem;
+    }
+    .drawer-modal-help-grid {
+      display: flex;
+      flex-wrap: wrap;
+
+      .drawer-modal-help-grid-container {
+        padding-right: 0.5rem;
+        padding-top: 0.5rem;
+        flex: 0 0 auto;
+        width: 50%;
+
+        .drawer-modal-help-shortcut-container {
+          border: 1px solid $primary-light;
+          border-radius: $radius;
+
+          .drawer-modal-help-shortcut {
+            padding: 0.65rem;
+            border-bottom: 1px solid $primary-light;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            &:last-of-type {
+              border: none;
+            }
+          }
+        }
+      }
+    }
+  }
+}

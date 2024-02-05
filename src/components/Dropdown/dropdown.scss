@@ -1,0 +1,46 @@
+@import '../../scss/variables';
+
+.drawer-dropdown-container {
+  pointer-events: none;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-size: 0.875rem;
+
+  .drawer-button-dropdown {
+    width: fit-content;
+  }
+
+  .drawer-dropdown {
+    margin-top: .1rem;
+    list-style: none;
+    padding: 0;
+    width: fit-content;
+    overflow: auto;
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transition:
+      max-height 0.2s ease,
+      opacity 0.2s ease;
+
+      .drawer-dropdown-list {
+        margin-left: .3rem;
+        margin-right: .3rem;
+        .drawer-dropdown-list-item {
+            width: 100%;
+            margin-top: .3rem;
+            margin-bottom: .3rem;
+
+            svg {
+                margin-right: .4rem;
+            }
+        }
+      }
+
+    &.show {
+      opacity: 1;
+    }
+  }
+}
