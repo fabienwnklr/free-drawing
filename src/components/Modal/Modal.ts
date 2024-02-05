@@ -62,7 +62,7 @@ export class Modal {
               !this.drawer.help.$button.contains(event.target as Node) &&
               !this.$modal.contains(event.target as Node);
 
-            if (outsideClick) {
+            if (outsideClick && this.isVisible()) {
               this.hide();
             }
           }
@@ -134,7 +134,7 @@ export class Modal {
       this.$backdrop.classList.remove('show');
     }
     this.$modal.classList.remove('show');
-    this.drawer.$drawerContainer.focus();
+    // this.drawer.$drawerContainer.focus();
   }
 
   isVisible(): boolean {
