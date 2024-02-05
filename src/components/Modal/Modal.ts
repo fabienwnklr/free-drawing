@@ -134,6 +134,7 @@ export class Modal {
       this.$backdrop.classList.remove('show');
     }
     this.$modal.classList.remove('show');
+    this.drawer.$drawerContainer.focus();
   }
 
   isVisible(): boolean {
