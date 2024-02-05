@@ -176,6 +176,7 @@ export class Drawer extends MicroEvent {
   private _initHotKey() {
     const DELTA = 4;
     this.$drawerContainer.addEventListener('keydown', (e) => {
+      if (this._duringAction()) return;
       const selectWidget = this.toolbar.widgets.get('selection') as SelectWidget;
       if (selectWidget) {
         if (e.key === 'Backspace' || e.key === 'Delete') {
@@ -280,16 +281,21 @@ export class Drawer extends MicroEvent {
     });
   }
 
-  private _duringAction() {
-    const eraserWidget = this.toolbar.getWidget<EraserWidget>('eraser');
-    const brushWidget = this.toolbar.getWidget<BrushWidget>('brush');
-    const selectionWidget = this.toolbar.getWidget<SelectWidget>('selection');
+  /**
+   * Alias for get widget
+   * @param name
+   */
+  getWidget<T>(name: AvailableTools): T | undefined {
+    return this.toolbar.getWidget<T>(name);
+  }
 
-    if (
-      (eraserWidget && eraserWidget.isErasing) ||
-      (selectionWidget && selectionWidget.isSelecting) ||
-      (brushWidget && brushWidget.isPaint)
-    ) {
+  private _duringAction() {
+    const eraserWidget = this.getWidget<EraserWidget>('eraser');
+    const brushWidget = this.getWidget<BrushWidget>('brush');
+    const selectionWidget = this.getWidget<SelectWidget>('selection');
+    const textWidget = this.getWidget<TextWidget>('text');
+
+    if (eraserWidget?.isErasing || selectionWidget?.isSelecting || brushWidget?.isPaint || textWidget?.isEditing) {
       return true;
     }
 
