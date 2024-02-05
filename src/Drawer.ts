@@ -130,6 +130,10 @@ export class Drawer extends MicroEvent {
     this._initEvents();
   }
 
+  getZoomLevel() {
+    return this.stage.scaleX();
+  }
+
   getDrawingShapes() {
     return this.layer.children.filter((e) => {
       if (!(e instanceof Transformer) && !e.hasName('background') && !e.hasName('selection')) {
@@ -170,6 +174,7 @@ export class Drawer extends MicroEvent {
   }
 
   private _initHotKey() {
+    const DELTA = 4;
     this.$drawerContainer.addEventListener('keydown', (e) => {
       const selectWidget = this.toolbar.widgets.get('selection') as SelectWidget;
       if (selectWidget) {
@@ -191,6 +196,23 @@ export class Drawer extends MicroEvent {
           });
           this.$drawerContainer.focus();
           selectWidget.transformer.nodes(allNodes);
+        }
+
+        if (selectWidget.transformer.nodes().length) {
+          selectWidget.transformer.nodes().forEach((shape) => {
+            if (e.key === 'ArrowLeft') {
+              shape.x(shape.x() - DELTA);
+            } else if (e.key === 'ArrowUp') {
+              shape.y(shape.y() - DELTA);
+            } else if (e.key === 'ArrowRight') {
+              shape.x(shape.x() + DELTA);
+            } else if (e.key === 'ArrowDown') {
+              shape.y(shape.y() + DELTA);
+            } else {
+              return;
+            }
+          });
+          e.preventDefault();
         }
       }
 
