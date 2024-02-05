@@ -1,6 +1,6 @@
 import type { Drawer } from '@/Drawer';
 
-export class Overlay {
+export class BaseOverlay {
   $overlayContainer: HTMLDivElement;
   drawer: Drawer;
 
@@ -8,5 +8,9 @@ export class Overlay {
     this.drawer = drawer;
     this.$overlayContainer = document.createElement('div');
     this.$overlayContainer.classList.add('drawer-overlay-container', 'tool')
+  }
+
+  appendContent(elements: HTMLElement[]) {
+    this.$overlayContainer.append(...elements)
   }
 }
