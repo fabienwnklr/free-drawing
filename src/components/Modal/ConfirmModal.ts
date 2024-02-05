@@ -3,6 +3,7 @@ import { Modal } from './Modal';
 import { deepMerge } from '@/utils/functions';
 import { confirmModalDefaultOpts } from './constants';
 import type { ConfirmModalOptions } from '@/@types/modal';
+
 import './modal-confirm.scss';
 
 export class ConfirmModal extends Modal {

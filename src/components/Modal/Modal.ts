@@ -59,6 +59,7 @@ export class Modal {
           if (event.target) {
             const outsideClick =
               !this.drawer.setting.$clearCanvasButton.contains(event.target as Node) &&
+              !this.drawer.setting.$clearStorageButton.contains(event.target as Node) &&
               !this.drawer.help.$button.contains(event.target as Node) &&
               !this.$modal.contains(event.target as Node);
 

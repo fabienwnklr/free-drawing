@@ -99,7 +99,7 @@ export class Settings extends Dropdown {
     });
 
     this.$clearStorageButton.addEventListener('click', () => {
-      localStorage.removeItem(this.drawer.options.localStorageKey);
+      this.drawer.clearStoredData();
     })
   }
 

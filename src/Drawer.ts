@@ -39,6 +39,7 @@ export class Drawer extends MicroEvent {
   help: Help;
   setting: Settings;
   $clearConfirmModal: ConfirmModal | null = null;
+  $clearStoredConfirmModal: ConfirmModal | null = null;
 
   debug: boolean = false;
   undoRedo: UndoRedo;
@@ -278,6 +279,14 @@ export class Drawer extends MicroEvent {
       if (e.ctrlKey && e.key === 'Delete') {
         this.clearCanvas();
       }
+
+      if (e.ctrlKey && e.key === 'z') {
+        this.undoRedo.undo();
+
+      }
+      if (e.ctrlKey && e.key === 'y') {
+        this.undoRedo.redo();
+      }
     });
   }
 
@@ -400,5 +409,18 @@ export class Drawer extends MicroEvent {
         this.stage.fire('change');
       }
     }
+  }
+
+  clearStoredData() {
+    if (!this.$clearStoredConfirmModal) {
+      this.$clearStoredConfirmModal = new ConfirmModal(this, {
+        message: 'Are you sure to remove all stored data ?',
+        onConfirm: (modal) => {
+          localStorage.removeItem(this.options.localStorageKey);
+          modal.hide()
+        }
+      });
+    }
+    this.$clearStoredConfirmModal.show();
   }
 }
