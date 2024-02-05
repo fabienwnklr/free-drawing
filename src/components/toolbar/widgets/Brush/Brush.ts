@@ -4,23 +4,30 @@ import { BaseWidget } from '../BaseWidget';
 import BrushIcon from '@/icons/brush.svg?raw';
 import { Line } from 'konva/lib/shapes/Line';
 import { SelectWidget } from '../Select/Select';
+import { BrushOverlay } from '@/components/tools/Overlay/BrushOverlay/BrushOverlay';
 
 export class BrushWidget extends BaseWidget {
   #lastLine: Line = new Line();
   isPaint: boolean = false;
   #allPoints: { x: number; y: number }[] = [];
+  overlay: BrushOverlay;
+
   constructor(protected drawer: Drawer) {
     const $BrushIcon = stringToNode<SVGElement>(BrushIcon);
     super(drawer, 'brush', 'Brush', $BrushIcon);
+
+    this.overlay = new BrushOverlay(drawer);
   }
 
   protected onActive(): void {
     this.initEvents();
     this.updateCursor();
+    this.overlay.show();
   }
 
   protected onDesactive(): void {
     this.removeEvents();
+    this.overlay.hide();
   }
 
   protected initEvents(): void {

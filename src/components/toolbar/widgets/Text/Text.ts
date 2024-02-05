@@ -36,6 +36,7 @@ export class TextWidget extends BaseWidget {
       fontFamily: 'Ubuntu',
       fontSize: 15,
       name: 'text',
+      fill: this.drawer.options.strokeColor,
       draggable,
       width: 100,
     });
