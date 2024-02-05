@@ -108,13 +108,13 @@ export class Drawer extends MicroEvent {
     this.toolbar = new Toolbar(this);
     this.help = new Help(this);
 
-    const activeWidget = this.toolbar.getWidget<BaseWidget>(activeTool);
+    const activeWidget = this.getWidget<BaseWidget>(activeTool);
     if (activeWidget) {
       activeWidget.setActive(true);
     }
 
     if (saved) {
-      const textWidget = this.toolbar.getWidget<TextWidget>('text');
+      const textWidget = this.getWidget<TextWidget>('text');
       if (textWidget) {
         this.layer.find('.text').forEach((t) => {
           if (t instanceof Text) {
@@ -222,7 +222,7 @@ export class Drawer extends MicroEvent {
           return;
         }
 
-        const panWidget = this.toolbar.getWidget<PanWidget>('pan');
+        const panWidget = this.getWidget<PanWidget>('pan');
 
         if (panWidget) {
           panWidget.setActive(true);
@@ -236,7 +236,7 @@ export class Drawer extends MicroEvent {
           return;
         }
 
-        const selectWidget = this.toolbar.getWidget<SelectWidget>('selection');
+        const selectWidget = this.getWidget<SelectWidget>('selection');
 
         if (selectWidget) {
           selectWidget.setActive(true);
@@ -250,7 +250,7 @@ export class Drawer extends MicroEvent {
           return;
         }
 
-        const brushWidget = this.toolbar.getWidget<BrushWidget>('brush');
+        const brushWidget = this.getWidget<BrushWidget>('brush');
 
         if (brushWidget) {
           brushWidget.setActive(true);
@@ -264,7 +264,7 @@ export class Drawer extends MicroEvent {
           return;
         }
 
-        const eraserWidget = this.toolbar.getWidget<EraserWidget>('eraser');
+        const eraserWidget = this.getWidget<EraserWidget>('eraser');
         if (eraserWidget) {
           eraserWidget.setActive(true);
           eraserWidget.$button.focus();
@@ -286,7 +286,7 @@ export class Drawer extends MicroEvent {
    * @param name
    */
   getWidget<T>(name: AvailableTools): T | undefined {
-    return this.toolbar.getWidget<T>(name);
+    return this.getWidget<T>(name);
   }
 
   private _duringAction() {
@@ -367,7 +367,7 @@ export class Drawer extends MicroEvent {
   setColor(color: ColorLike) {
     this.options.strokeColor = color;
 
-    const brushWidget = this.toolbar.getWidget<BrushWidget>('brush');
+    const brushWidget = this.getWidget<BrushWidget>('brush');
 
     if (brushWidget) {
       brushWidget.updateCursor();

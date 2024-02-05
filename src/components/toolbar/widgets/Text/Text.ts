@@ -47,7 +47,7 @@ export class TextWidget extends BaseWidget {
 
     this.drawer.layer.add(textNode);
 
-    const selectWidget = this.drawer.toolbar.getWidget<SelectWidget>('selection');
+    const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
     if (selectWidget) {
       selectWidget.setActive(true);
     }
@@ -78,7 +78,7 @@ export class TextWidget extends BaseWidget {
 
   editTextNode(textNode: Text) {
     textNode.hide();
-    const selectWidget = this.drawer.toolbar.getWidget<SelectWidget>('selection');
+    const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
     if (selectWidget) {
       selectWidget.transformer.hide();
     }
@@ -158,7 +158,7 @@ export class TextWidget extends BaseWidget {
 
       textNode.show();
 
-      const selectWidget = this.drawer.toolbar.getWidget<SelectWidget>('selection');
+      const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
       selectWidget?.transformer.show();
       selectWidget?.transformer.forceUpdate();
 

@@ -43,7 +43,7 @@ export class ContextMenu {
 
     this.$pasteBtn.addEventListener('click', async () => {
       const text = await navigator.clipboard.readText();
-      const textWidget = this.drawer.toolbar.getWidget<TextWidget>('text');
+      const textWidget = this.drawer.getWidget<TextWidget>('text');
 
       if (textWidget) {
         textWidget.addTextNode(text);
