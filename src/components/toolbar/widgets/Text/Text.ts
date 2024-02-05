@@ -45,10 +45,10 @@ export class TextWidget extends BaseWidget {
 
     this.drawer.layer.add(textNode);
 
-      const selectWidget = this.drawer.toolbar.getWidget<SelectWidget>('selection');
-      if (selectWidget) {
-        selectWidget.setActive(true);
-      }
+    const selectWidget = this.drawer.toolbar.getWidget<SelectWidget>('selection');
+    if (selectWidget) {
+      selectWidget.setActive(true);
+    }
 
     return textNode;
   }
@@ -80,6 +80,35 @@ export class TextWidget extends BaseWidget {
     if (selectWidget) {
       selectWidget.transformer.hide();
     }
+    const textarea = this._createTextarea(textNode);
+    const rotation = textNode.rotation();
+    let transform = '';
+    if (rotation) {
+      transform += 'rotateZ(' + rotation + 'deg)';
+    }
+
+    let px = 0;
+    // also we need to slightly move textarea on firefox
+    // because it jumps a bit
+    const isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+    if (isFirefox) {
+      px += 2 + Math.round(textNode.fontSize() / 20);
+    }
+    transform += 'translateY(-' + px + 'px)';
+
+    textarea.style.transform = transform;
+
+    // reset height
+    textarea.style.height = 'auto';
+    // after browsers resized it we can set actual value
+    textarea.style.height = textarea.scrollHeight + 3 + 'px';
+
+    textarea.focus();
+
+    this._initEventsTextarea(textNode, textarea);
+  }
+
+  private _createTextarea(textNode: Text) {
     const textPosition = textNode.absolutePosition();
     const areaPosition = {
       x: this.drawer.stage.container().offsetLeft + textPosition.x,
@@ -107,30 +136,11 @@ export class TextWidget extends BaseWidget {
     textarea.style.transformOrigin = 'left top';
     textarea.style.textAlign = textNode.align();
     textarea.style.color = textNode.fill();
-    const rotation = textNode.rotation();
-    let transform = '';
-    if (rotation) {
-      transform += 'rotateZ(' + rotation + 'deg)';
-    }
 
-    let px = 0;
-    // also we need to slightly move textarea on firefox
-    // because it jumps a bit
-    const isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
-    if (isFirefox) {
-      px += 2 + Math.round(textNode.fontSize() / 20);
-    }
-    transform += 'translateY(-' + px + 'px)';
+    return textarea;
+  }
 
-    textarea.style.transform = transform;
-
-    // reset height
-    textarea.style.height = 'auto';
-    // after browsers resized it we can set actual value
-    textarea.style.height = textarea.scrollHeight + 3 + 'px';
-
-    textarea.focus();
-
+  private _initEventsTextarea(textNode: Text, textarea: HTMLTextAreaElement) {
     const removeTextarea = () => {
       textarea.parentNode?.removeChild(textarea);
       window.removeEventListener('click', handleOutsideClick);
