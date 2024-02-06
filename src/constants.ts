@@ -5,7 +5,7 @@ export const defaultOptions: DrawerOptions = {
   tool: 'brush',
   width: window.innerWidth,
   height: window.innerHeight,
-  strokeWidth: 5,
+  strokeWidth: 8,
   strokeColor: '#000',
   zoom: true,
   zoomWidget: true,
