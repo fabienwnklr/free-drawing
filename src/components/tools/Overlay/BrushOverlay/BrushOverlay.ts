@@ -2,6 +2,7 @@ import type { Drawer } from '@/Drawer';
 import { BaseOverlay } from '../BaseOverlay';
 import './brush-overlay.scss';
 import { ColorLike } from '@/@types/drawer';
+import LineIcon from '@/icons/line.svg?raw';
 
 export class BrushOverlay extends BaseOverlay {
   $strokeColorContainer: HTMLDivElement;
@@ -58,14 +59,17 @@ export class BrushOverlay extends BaseOverlay {
     this.$strokeWidthBtnContainer.classList.add('stroke-width-btn-container');
     const $strokeWidthButtons: HTMLButtonElement[] = [];
 
-    const strokeSize = [5, 10, 15];
+    const strokeSize = [3, 5, 8];
 
     strokeSize.forEach((width) => {
       const $btn = document.createElement('button');
+      $btn.innerHTML = LineIcon;
+      $btn.dataset.strokeWidth = width.toString();
       $btn.classList.add('drawer-button');
       $btn.addEventListener('click', () => {
         this.$strokeWidthBtnContainer.querySelector('.drawer-button.active')?.classList.remove('active');
         $btn.classList.add('active');
+        this.drawer.options.strokeWidth = Number($btn.dataset.strokeWidth);
       });
 
       if (this.drawer.options.strokeWidth === width) {
