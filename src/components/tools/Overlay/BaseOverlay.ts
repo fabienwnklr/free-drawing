@@ -1,6 +1,7 @@
 import type { Drawer } from '@/Drawer';
+import { ColorLike } from '@/@types/drawer';
+import LineIcon from '@/icons/line.svg?raw';
 import './overlay.scss';
-import type { ColorLike } from '@/@types/drawer';
 export class BaseOverlay {
   $overlayContainer: HTMLDivElement;
   drawer: Drawer;
@@ -8,6 +9,8 @@ export class BaseOverlay {
   $strokeColorBtnContainer!: HTMLDivElement;
   $strokeWidthContainer!: HTMLDivElement;
   $strokeWidthBtnContainer!: HTMLDivElement;
+  $opacityContainer!: HTMLDivElement;
+  $opacityRange!: HTMLInputElement;
 
   constructor(drawer: Drawer) {
     this.drawer = drawer;
@@ -67,14 +70,18 @@ export class BaseOverlay {
     this.$strokeWidthBtnContainer.classList.add('stroke-width-btn-container');
     const $strokeWidthButtons: HTMLButtonElement[] = [];
 
-    const strokeSize = [5, 10, 15];
+    const strokeSize = [3, 5, 8, 12];
 
     strokeSize.forEach((width) => {
       const $btn = document.createElement('button');
-      $btn.classList.add('drawer-button');
+      console.log(LineIcon);
+      $btn.innerHTML = LineIcon.replace('stroke-width="2.5"', `stroke-width="${width}"`);
+      $btn.dataset.strokeWidth = width.toString();
+      $btn.classList.add('drawer-button', 'stroke-picker__button');
       $btn.addEventListener('click', () => {
         this.$strokeWidthBtnContainer.querySelector('.drawer-button.active')?.classList.remove('active');
         $btn.classList.add('active');
+        this.drawer.options.strokeWidth = Number($btn.dataset.strokeWidth);
       });
 
       if (this.drawer.options.strokeWidth === width) {
@@ -85,7 +92,29 @@ export class BaseOverlay {
     this.$strokeWidthBtnContainer.append(...$strokeWidthButtons);
     this.$strokeWidthContainer.append(this.$strokeWidthBtnContainer);
     // End stroke width
-    this.appendContent([this.$strokeColorContainer, this.$strokeWidthContainer]);
+
+    // opacity
+    this.$opacityContainer = document.createElement('div');
+    this.$opacityContainer.classList.add('opacity-container');
+
+    const $opacityTitle = document.createElement('h6');
+    $opacityTitle.classList.add('overlay-title');
+    $opacityTitle.innerText = 'Opacity';
+    this.$opacityContainer.append($opacityTitle);
+
+    this.$opacityRange = document.createElement('input');
+    this.$opacityRange.type = 'range';
+    this.$opacityRange.min = '0';
+    this.$opacityRange.max = '10';
+    this.$opacityRange.step = '1';
+
+    this.$opacityRange.addEventListener('change', () => {
+      this.drawer.options.opacity = Number(this.$opacityRange.value) / 10;
+    });
+
+    this.$opacityContainer.append(this.$opacityRange);
+
+    this.appendContent([this.$strokeColorContainer, this.$strokeWidthContainer, this.$opacityContainer]);
   }
 
   appendContent(elements: HTMLElement[]) {

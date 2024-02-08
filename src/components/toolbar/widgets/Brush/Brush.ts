@@ -43,6 +43,7 @@ export class BrushWidget extends BaseWidget {
       this.#lastLine = new Line({
         stroke: this.drawer.options.strokeColor,
         fill: this.drawer.options.strokeColor,
+        opacity: this.drawer.options.opacity,
         tension: 0.3,
         strokeWidth: this.drawer.options.strokeWidth,
         hitStrokeWidth: 20,

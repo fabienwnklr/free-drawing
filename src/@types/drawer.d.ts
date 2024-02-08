@@ -7,6 +7,7 @@ export type DrawerOptions = {
   height: number;
   strokeWidth: number;
   strokeColor: ColorLike;
+  opacity: number;
   zoom: boolean;
   zoomWidget: boolean;
   scaling: number;

@@ -12,4 +12,5 @@ export const defaultOptions: DrawerOptions = {
   scaling: 1.11,
   autoSave: false,
   localStorageKey: 'free-drawing',
+  opacity: 1,
 };
