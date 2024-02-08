@@ -16,11 +16,27 @@ export class SelectWidget extends BaseWidget {
   #y1: number = 0;
   #x2: number = 0;
   #y2: number = 0;
+  defaultAnchors: string[] = ['top-left', 'top-center', 'top-right', 'middle-right', 'middle-left', 'bottom-left', 'bottom-center', 'bottom-right'];
   selectionRectangle: Rect = new Rect();
   // In constructor for be usable out of widget
   transformer: Transformer = new Transformer({
     borderStroke: 'rgba(152, 158, 255, 1)',
     anchorStroke: 'rgba(152, 158, 255, 1)',
+    enabledAnchors: this.defaultAnchors,
+    anchorStyleFunc(anchor) {
+      if (anchor.hasName('top-center') || anchor.hasName('bottom-center')) {
+        anchor.height(6);
+        anchor.offsetY(3);
+        anchor.width(30);
+        anchor.offsetX(15);
+      }
+      if (anchor.hasName('middle-left') || anchor.hasName('middle-right')) {
+        anchor.height(30);
+        anchor.offsetY(15);
+        anchor.width(6);
+        anchor.offsetX(3);
+      }
+    },
     anchorCornerRadius: 3,
   });
   isSelecting: boolean = false;
@@ -131,14 +147,7 @@ export class SelectWidget extends BaseWidget {
           return newBox;
         });
       } else {
-        this.transformer.enabledAnchors([
-          'top-left',
-          'top-right',
-          'bottom-left',
-          'bottom-right',
-          'middle-left',
-          'middle-right',
-        ]);
+        this.transformer.enabledAnchors(this.defaultAnchors);
       }
       this.transformer.nodes(selected);
       this.$container.focus();
