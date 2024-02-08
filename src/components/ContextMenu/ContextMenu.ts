@@ -12,6 +12,7 @@ export class ContextMenu {
 
   $pasteBtn: HTMLButtonElement;
   $snappingBtn: HTMLButtonElement;
+  $gridBtn: HTMLButtonElement;
 
   constructor(drawer: Drawer) {
     this.drawer = drawer;
@@ -32,7 +33,13 @@ export class ContextMenu {
       '<span class="drawer-context-menu-item__label">Toggle snapping</span><kbd class="drawer-context-menu-item__shortcut">Alt+S</kbd>';
     this.$snappingBtn.role = 'button';
 
-    this.$list.append(...[this.$pasteBtn, this.$snappingBtn]);
+    this.$gridBtn = document.createElement('button');
+    this.$gridBtn.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-context-menu-list-item');
+    this.$gridBtn.innerHTML =
+      '<span class="drawer-context-menu-item__label">Toggle grid</span><kbd class="drawer-context-menu-item__shortcut">Alt+G</kbd>';
+    this.$gridBtn.role = 'button';
+
+    this.$list.append(...[this.$pasteBtn, this.$snappingBtn, this.$gridBtn]);
 
     this.$menu.append(this.$list);
     this.drawer.$drawerContainer.append(this.$menu);
@@ -60,7 +67,11 @@ export class ContextMenu {
 
     this.$snappingBtn.addEventListener('click', () => {
       this.drawer.setting.toggleSnapping();
-    })
+    });
+
+    this.$gridBtn.addEventListener('click', () => {
+      this.drawer.setting.toggleGrid();
+    });
 
     this.drawer.stage.on('contextmenu', (e) => {
       // prevent default behavior

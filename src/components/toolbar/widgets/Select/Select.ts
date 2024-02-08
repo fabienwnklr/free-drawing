@@ -266,11 +266,7 @@ export class SelectWidget extends BaseWidget {
   protected onDesactive(): void {
     this.selectionRectangle.destroy();
     this.removeEvents();
-    const draw = this.drawer.layer.children.filter((e) => {
-      if (!(e instanceof Transformer) && !e.hasName('background') && !e.hasName('selection')) {
-        return e;
-      }
-    });
+    const draw = this.drawer.getDrawingShapes();
 
     draw.forEach((d) => {
       d.draggable(false);

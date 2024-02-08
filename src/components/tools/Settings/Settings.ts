@@ -72,7 +72,7 @@ export class Settings extends Dropdown {
         this.$zenModeButton,
         this.$githubButton,
         this.getSeparator(),
-        this.$clearStorageButton
+        this.$clearStorageButton,
       ]
     );
     this.drawer.$drawerContainer.append(this.$dropdownContainer);
@@ -101,7 +101,7 @@ export class Settings extends Dropdown {
 
     this.$clearStorageButton.addEventListener('click', () => {
       this.drawer.clearStoredData();
-    })
+    });
   }
 
   toggleZenMode() {
@@ -126,5 +126,13 @@ export class Settings extends Dropdown {
 
       selectWidget.toggleSnapping(active);
     }
+  }
+
+  toggleGrid() {
+      if (this.drawer.grid) {
+        this.drawer.hideGrid();
+      } else {
+        this.drawer.showGrid();
+      }
   }
 }
