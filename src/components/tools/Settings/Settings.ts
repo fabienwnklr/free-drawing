@@ -16,7 +16,7 @@ export class Settings extends Dropdown {
   $exportButton: HTMLButtonElement;
   $openButton: HTMLButtonElement;
   $clearCanvasButton: HTMLButtonElement;
-  $showGridButton: HTMLButtonElement;
+  $toggleGridButton: HTMLButtonElement;
   $githubButton: HTMLButtonElement;
   $zenModeButton: HTMLButtonElement;
   $clearStorageButton: HTMLButtonElement;
@@ -43,10 +43,10 @@ export class Settings extends Dropdown {
     this.$clearCanvasButton.innerHTML = TrashIcon + 'Clear canvas';
     this.$clearCanvasButton.role = 'button';
 
-    this.$showGridButton = document.createElement('button');
-    this.$showGridButton.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-dropdown-list-item');
-    this.$showGridButton.innerHTML = GridIcon + 'Show grid';
-    this.$showGridButton.role = 'button';
+    this.$toggleGridButton = document.createElement('button');
+    this.$toggleGridButton.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-dropdown-list-item');
+    this.$toggleGridButton.innerHTML = GridIcon + 'Toggle grid';
+    this.$toggleGridButton.role = 'button';
 
     this.$zenModeButton = document.createElement('button');
     this.$zenModeButton.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-dropdown-list-item');
@@ -68,7 +68,7 @@ export class Settings extends Dropdown {
         // this.$openButton,
         // this.$exportButton,
         this.$clearCanvasButton,
-        // this.$showGridButton,
+        this.$toggleGridButton,
         this.$zenModeButton,
         this.$githubButton,
         this.getSeparator(),
@@ -89,6 +89,10 @@ export class Settings extends Dropdown {
   private initEvents() {
     this.$clearCanvasButton.addEventListener('click', () => {
       this.drawer.clearCanvas();
+    });
+    
+    this.$toggleGridButton.addEventListener('click', () => {
+      this.toggleGrid();
     });
 
     this.$zenModeButton.addEventListener('click', () => {

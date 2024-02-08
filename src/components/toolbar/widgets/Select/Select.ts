@@ -171,7 +171,7 @@ export class SelectWidget extends BaseWidget {
     this.snapping = true;
     this.drawer.layer.on('dragmove', (e) => {
       // clear all previous lines on the screen
-      this.drawer.layer.find('.guid-line').forEach((l) => l.destroy());
+      this.drawer.getDrawingShapeByClassName('guideLine').forEach((l) => l.destroy());
 
       // find possible snapping lines
       const lineGuideStops = this._getLineGuideStops(e.target);
@@ -214,7 +214,7 @@ export class SelectWidget extends BaseWidget {
 
     this.drawer.layer.on('dragend', () => {
       // clear all previous lines on the screen
-      this.drawer.layer.find('.guid-line').forEach((l) => l.destroy());
+      this.drawer.getDrawingShapeByClassName('guideLine').forEach((l) => l.destroy());
     });
   }
 

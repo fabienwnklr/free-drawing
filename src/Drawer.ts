@@ -433,34 +433,94 @@ export class Drawer extends MicroEvent {
   }
 
   showGrid() {
+    this.stage.off('dragend');
+    this.stage.on('dragend', () => {
+      this.hideGrid();
+      this.showGrid();
+    });
     this.grid = true;
+    this.layer.clipWidth(0);
     this.contextMenu.$gridBtn.classList.add('active');
+    this.setting.$toggleGridButton.classList.add('active');
+    const stepSize = 40;
 
-    const xSnaps = Math.round(this.stage.width() / 70);
-    const ySnaps = Math.round(this.stage.height() / 70);
-    const cellWidth = this.stage.width() / xSnaps;
-    const cellHeight = this.stage.height() / ySnaps;
+    const unScale = (val: number) => {
+      return val / this.stage.scaleX();
+    };
 
-    for (let i = 0; i < xSnaps; i++) {
+    const stageRect = {
+      x1: 0,
+      y1: 0,
+      x2: this.stage.width(),
+      y2: this.stage.height(),
+      offset: {
+        x: unScale(this.stage.position().x),
+        y: unScale(this.stage.position().y),
+      },
+    };
+    const viewRect = {
+      x1: -stageRect.offset.x,
+      y1: -stageRect.offset.y,
+      x2: unScale(this.stage.width()) - stageRect.offset.x,
+      y2: unScale(this.stage.height()) - stageRect.offset.y,
+    };
+    // and find the largest rectangle that bounds both the stage and view rect.
+    // This is the rect we will draw on.
+    const gridOffset = {
+      x: Math.ceil(unScale(this.stage.position().x) / stepSize) * stepSize,
+      y: Math.ceil(unScale(this.stage.position().y) / stepSize) * stepSize,
+    };
+    const gridRect = {
+      x1: -gridOffset.x,
+      y1: -gridOffset.y,
+      x2: unScale(this.stage.width()) - gridOffset.x + stepSize,
+      y2: unScale(this.stage.height()) - gridOffset.y + stepSize,
+    };
+    const gridFullRect = {
+      x1: Math.min(stageRect.x1, gridRect.x1),
+      y1: Math.min(stageRect.y1, gridRect.y1),
+      x2: Math.max(stageRect.x2, gridRect.x2),
+      y2: Math.max(stageRect.y2, gridRect.y2),
+    };
+
+    // set clip function to stop leaking lines into non-viewable space.
+    this.layer.clip({
+      x: viewRect.x1,
+      y: viewRect.y1,
+      width: viewRect.x2 - viewRect.x1,
+      height: viewRect.y2 - viewRect.y1,
+    });
+
+    const // find the x & y size of the grid
+      xSize = gridFullRect.x2 - gridFullRect.x1,
+      ySize = gridFullRect.y2 - gridFullRect.y1,
+      // compute the number of steps required on each axis.
+      xSteps = Math.round(xSize / stepSize),
+      ySteps = Math.round(ySize / stepSize);
+
+    // draw vertical lines
+    for (let i = 0; i <= xSteps; i++) {
       this.layer.add(
         new Line({
-          x: i * cellWidth,
-          points: [0, 0, 0, this.stage.height()],
+          x: gridFullRect.x1 + i * stepSize,
+          y: gridFullRect.y1,
+          points: [0, 0, 0, ySize],
           stroke: 'rgba(0, 0, 0, 0.2)',
           strokeWidth: 1,
-          name: shapeName.gridLine
+          name: shapeName.gridLine,
         })
       );
     }
-
-    for (let i = 0; i < ySnaps; i++) {
+    //draw Horizontal lines
+    for (let i = 0; i <= ySteps; i++) {
       this.layer.add(
         new Line({
-          y: i * cellHeight,
-          points: [0, 0, this.stage.width(), 0],
+          x: gridFullRect.x1,
+          y: gridFullRect.y1 + i * stepSize,
+          points: [0, 0, xSize, 0],
           stroke: 'rgba(0, 0, 0, 0.2)',
           strokeWidth: 1,
-          name: shapeName.gridLine
+          name: shapeName.gridLine,
         })
       );
     }
@@ -468,7 +528,8 @@ export class Drawer extends MicroEvent {
 
   hideGrid() {
     this.grid = false;
+    this.setting.$toggleGridButton.classList.remove('active');
     this.contextMenu.$gridBtn.classList.remove('active');
-    this.layer.find('.' + shapeName.gridLine).forEach(l => l.destroy())
+    this.layer.find('.' + shapeName.gridLine).forEach((l) => l.destroy());
   }
 }
