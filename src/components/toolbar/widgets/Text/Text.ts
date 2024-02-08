@@ -3,6 +3,7 @@ import { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import TextIcon from '@/icons/text.svg?raw';
 import { Text } from 'konva/lib/shapes/Text';
 import { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
+import { shapeName } from '@/constants';
 
 export class TextWidget extends BaseWidget {
   #lastText!: Text;
@@ -35,7 +36,7 @@ export class TextWidget extends BaseWidget {
       y,
       fontFamily: 'Ubuntu',
       fontSize: 15,
-      name: 'text',
+      name: shapeName.text,
       fill: this.drawer.options.strokeColor,
       draggable,
       width: 100,

@@ -14,3 +14,12 @@ export const defaultOptions: DrawerOptions = {
   localStorageKey: 'free-drawing',
   opacity: 1,
 };
+
+export const shapeName = {
+  line: 'drawer-line',
+  text: 'drawer-text',
+  selection: 'drawer-selection',
+  guideLine: 'drawer-guide-line',
+  gridLine: 'drawer-grid-line',
+  background: 'drawer-background',
+}

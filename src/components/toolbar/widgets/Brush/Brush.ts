@@ -6,6 +6,7 @@ import { Line } from 'konva/lib/shapes/Line';
 import { SelectWidget } from '../Select/Select';
 import { BrushOverlay } from '@/components/tools/Overlay/BrushOverlay/BrushOverlay';
 import { getStroke } from 'perfect-freehand'
+import { shapeName } from '@/constants';
 
 export class BrushWidget extends BaseWidget {
   #lastLine: Line = new Line();
@@ -53,7 +54,7 @@ export class BrushWidget extends BaseWidget {
         lineJoin: 'round',
         // add point twice, so we have some drawings even on a simple click
         points: [realPos.x, realPos.y, realPos.x, realPos.y],
-        name: 'line',
+        name: shapeName.line,
       });
 
       this.#lastLine.on('dragend', () => {

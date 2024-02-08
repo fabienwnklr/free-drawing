@@ -10,6 +10,7 @@ import { NodeConfig } from 'konva/lib/Node';
 import { Context } from 'konva/lib/Context';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Stage } from 'konva/lib/Stage';
+import { shapeName } from '@/constants';
 
 export class SelectWidget extends BaseWidget {
   #x1: number = 0;
@@ -140,7 +141,8 @@ export class SelectWidget extends BaseWidget {
         }
       });
 
-      if (selected.filter((e) => e.hasName('text')).length === selected.length) {
+      const textShapes = this.drawer.getDrawingShapeByClassName('text');
+      if (textShapes.length > 0 && textShapes.length  === selected.length) {
         this.transformer.enabledAnchors(['middle-left', 'middle-right']);
         this.transformer.boundBoxFunc(function (_oldBox, newBox) {
           newBox.width = Math.max(30, newBox.width);
@@ -236,7 +238,7 @@ export class SelectWidget extends BaseWidget {
       stroke: 'rgba(152, 158, 255, .8)',
       strokeWidth: 1,
       visible: false,
-      name: 'selection',
+      name: shapeName.selection,
     });
 
     this.drawer.layer.add(this.selectionRectangle);
@@ -439,7 +441,7 @@ export class SelectWidget extends BaseWidget {
           points: [-6000, 0, 6000, 0],
           stroke: 'rgb(0, 161, 255)',
           strokeWidth: 1,
-          name: 'guid-line',
+          name: shapeName.guideLine,
           dash: [4, 6],
         });
         this.drawer.layer.add(line);
@@ -452,7 +454,7 @@ export class SelectWidget extends BaseWidget {
           points: [0, -6000, 0, 6000],
           stroke: 'rgb(0, 161, 255)',
           strokeWidth: 1,
-          name: 'guid-line',
+          name: shapeName.guideLine,
           dash: [4, 6],
         });
         this.drawer.layer.add(line);

@@ -1,6 +1,7 @@
 @import '../../../scss/variables';
 
 .drawer-overlay-container {
+  user-select: none;
   position: absolute;
   top: 5rem;
   left: 10px;
@@ -60,8 +61,8 @@
         height: $btn-size-default;
 
         &.stroke-picker__button {
-            border: 1px solid $light;
-            border-radius: $radius;
+          border: 1px solid $light;
+          border-radius: $radius;
         }
       }
     }
@@ -70,9 +71,9 @@
   .opacity-container {
     padding: 0.4rem;
 
-    input[type=range] {
-        appearance: auto;
-        width: 97%;
+    input[type='range'] {
+      appearance: auto;
+      width: 97%;
     }
   }
 }

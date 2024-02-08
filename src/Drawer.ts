@@ -6,7 +6,7 @@ import { Rect } from 'konva/lib/shapes/Rect';
 import { AvailableTools } from './@types/toolbar';
 import { ColorLike, DrawerOptions } from './@types/drawer';
 import { deepMerge } from './utils/functions';
-import { defaultOptions } from './constants';
+import { defaultOptions, shapeName } from './constants';
 import { Zoom } from './components/tools/Zoom/Zoom';
 import { Help } from './components/tools/Help/Help';
 import { SelectWidget } from './components/toolbar/widgets/Select/Select';
@@ -14,7 +14,6 @@ import { PanWidget } from './components/toolbar/widgets/Pan/Pan';
 import { BrushWidget } from './components/toolbar/widgets/Brush/Brush';
 import { EraserWidget } from './components/toolbar/widgets/Eraser/Eraser';
 import { BaseWidget } from './components/toolbar/widgets/BaseWidget';
-import { Transformer } from 'konva/lib/shapes/Transformer';
 import { Settings } from './components/tools/Settings/Settings';
 import { Node } from 'konva/lib/Node';
 import MicroEvent from './utils/MicroEvent';
@@ -88,7 +87,7 @@ export class Drawer extends MicroEvent {
         width: this.stage.width() * 100,
         height: this.stage.height() * 100,
         listening: false,
-        name: 'background',
+        name: shapeName.background,
       });
 
       this.layer.add(this.background);
@@ -139,7 +138,15 @@ export class Drawer extends MicroEvent {
 
   getDrawingShapes() {
     return this.layer.children.filter((e) => {
-      if (!(e instanceof Transformer) && !e.hasName('background') && !e.hasName('selection') && !e.hasName('guid-line') && !e.hasName('grid-line')) {
+      if (e.hasName(shapeName.line) || e.hasName(shapeName.text)) {
+        return e;
+      }
+    });
+  }
+
+  getDrawingShapeByClassName(shapeType: keyof typeof shapeName) {
+    return this.layer.children.filter((e) => {
+      if (e.hasName(shapeName[shapeType])) {
         return e;
       }
     });
@@ -441,7 +448,7 @@ export class Drawer extends MicroEvent {
           points: [0, 0, 0, this.stage.height()],
           stroke: 'rgba(0, 0, 0, 0.2)',
           strokeWidth: 1,
-          name: 'grid-line'
+          name: shapeName.gridLine
         })
       );
     }
@@ -453,7 +460,7 @@ export class Drawer extends MicroEvent {
           points: [0, 0, this.stage.width(), 0],
           stroke: 'rgba(0, 0, 0, 0.2)',
           strokeWidth: 1,
-          name: 'grid-line'
+          name: shapeName.gridLine
         })
       );
     }
@@ -462,6 +469,6 @@ export class Drawer extends MicroEvent {
   hideGrid() {
     this.grid = false;
     this.contextMenu.$gridBtn.classList.remove('active');
-    this.layer.find('.grid-line').forEach(l => l.destroy())
+    this.layer.find('.' + shapeName.gridLine).forEach(l => l.destroy())
   }
 }
