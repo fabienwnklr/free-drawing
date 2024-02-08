@@ -9,6 +9,7 @@ import GridIcon from '@/icons/grid.svg?raw';
 import GithubIcon from '@/icons/github.svg?raw';
 import ZenIcon from '@/icons/zen.svg?raw';
 import StoreIcon from '@/icons/store.svg?raw';
+import { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 
 export class Settings extends Dropdown {
   drawer: Drawer;
@@ -71,7 +72,7 @@ export class Settings extends Dropdown {
         this.$zenModeButton,
         this.$githubButton,
         this.getSeparator(),
-        this.$clearStorageButton
+        this.$clearStorageButton,
       ]
     );
     this.drawer.$drawerContainer.append(this.$dropdownContainer);
@@ -100,7 +101,7 @@ export class Settings extends Dropdown {
 
     this.$clearStorageButton.addEventListener('click', () => {
       this.drawer.clearStoredData();
-    })
+    });
   }
 
   toggleZenMode() {
@@ -115,5 +116,23 @@ export class Settings extends Dropdown {
       this.drawer.help.$helpContainer.style.display = '';
       this.drawer.undoRedo.$undoRedoContainer.style.display = '';
     }
+  }
+
+  toggleSnapping() {
+    const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
+
+    if (selectWidget) {
+      const active = !selectWidget.snapping;
+
+      selectWidget.toggleSnapping(active);
+    }
+  }
+
+  toggleGrid() {
+      if (this.drawer.grid) {
+        this.drawer.hideGrid();
+      } else {
+        this.drawer.showGrid();
+      }
   }
 }

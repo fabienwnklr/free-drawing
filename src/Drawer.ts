@@ -23,6 +23,7 @@ import { UndoRedo } from './components/tools/UndoRedo/UndoRedo';
 import { ContextMenu } from './components/ContextMenu/ContextMenu';
 import { TextWidget } from './components/toolbar/widgets/Text/Text';
 import { Text } from 'konva/lib/shapes/Text';
+import { Line } from 'konva/lib/shapes/Line';
 
 export class Drawer extends MicroEvent {
   $el: HTMLDivElement;
@@ -46,6 +47,7 @@ export class Drawer extends MicroEvent {
   $footerContainer: HTMLElement;
   $footerLeftElement: HTMLDivElement;
   contextMenu: ContextMenu;
+  grid: boolean = false;
 
   constructor($el: HTMLDivElement, options: Partial<DrawerOptions> = {}) {
     super();
@@ -137,7 +139,7 @@ export class Drawer extends MicroEvent {
 
   getDrawingShapes() {
     return this.layer.children.filter((e) => {
-      if (!(e instanceof Transformer) && !e.hasName('background') && !e.hasName('selection')) {
+      if (!(e instanceof Transformer) && !e.hasName('background') && !e.hasName('selection') && !e.hasName('guid-line') && !e.hasName('grid-line')) {
         return e;
       }
     });
@@ -191,11 +193,7 @@ export class Drawer extends MicroEvent {
         }
 
         if (e.ctrlKey && e.key === 'a') {
-          const allNodes = this.layer.children.filter((e) => {
-            if (!(e instanceof Transformer) && !e.hasName('background') && !e.hasName('selection')) {
-              return e;
-            }
-          });
+          const allNodes = this.getDrawingShapes();
           this.$drawerContainer.focus();
           selectWidget.transformer.nodes(allNodes);
         }
@@ -276,13 +274,16 @@ export class Drawer extends MicroEvent {
         this.setting.toggleZenMode();
       }
 
+      if (e.altKey && e.key === 'z') {
+        this.setting.toggleSnapping();
+      }
+
       if (e.ctrlKey && e.key === 'Delete') {
         this.clearCanvas();
       }
 
       if (e.ctrlKey && e.key === 'z') {
         this.undoRedo.undo();
-
       }
       if (e.ctrlKey && e.key === 'y') {
         this.undoRedo.redo();
@@ -417,10 +418,50 @@ export class Drawer extends MicroEvent {
         message: 'Are you sure to remove all stored data ?',
         onConfirm: (modal) => {
           localStorage.removeItem(this.options.localStorageKey);
-          modal.hide()
-        }
+          modal.hide();
+        },
       });
     }
     this.$clearStoredConfirmModal.show();
+  }
+
+  showGrid() {
+    this.grid = true;
+    this.contextMenu.$gridBtn.classList.add('active');
+
+    const xSnaps = Math.round(this.stage.width() / 70);
+    const ySnaps = Math.round(this.stage.height() / 70);
+    const cellWidth = this.stage.width() / xSnaps;
+    const cellHeight = this.stage.height() / ySnaps;
+
+    for (let i = 0; i < xSnaps; i++) {
+      this.layer.add(
+        new Line({
+          x: i * cellWidth,
+          points: [0, 0, 0, this.stage.height()],
+          stroke: 'rgba(0, 0, 0, 0.2)',
+          strokeWidth: 1,
+          name: 'grid-line'
+        })
+      );
+    }
+
+    for (let i = 0; i < ySnaps; i++) {
+      this.layer.add(
+        new Line({
+          y: i * cellHeight,
+          points: [0, 0, this.stage.width(), 0],
+          stroke: 'rgba(0, 0, 0, 0.2)',
+          strokeWidth: 1,
+          name: 'grid-line'
+        })
+      );
+    }
+  }
+
+  hideGrid() {
+    this.grid = false;
+    this.contextMenu.$gridBtn.classList.remove('active');
+    this.layer.find('.grid-line').forEach(l => l.destroy())
   }
 }

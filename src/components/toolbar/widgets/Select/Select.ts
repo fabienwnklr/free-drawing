@@ -8,20 +8,39 @@ import { Line } from 'konva/lib/shapes/Line';
 import { Util } from 'konva/lib/Util';
 import { NodeConfig } from 'konva/lib/Node';
 import { Context } from 'konva/lib/Context';
+import { Shape, ShapeConfig } from 'konva/lib/Shape';
+import { Stage } from 'konva/lib/Stage';
 
 export class SelectWidget extends BaseWidget {
   #x1: number = 0;
   #y1: number = 0;
   #x2: number = 0;
   #y2: number = 0;
+  defaultAnchors: string[] = ['top-left', 'top-center', 'top-right', 'middle-right', 'middle-left', 'bottom-left', 'bottom-center', 'bottom-right'];
   selectionRectangle: Rect = new Rect();
   // In constructor for be usable out of widget
   transformer: Transformer = new Transformer({
     borderStroke: 'rgba(152, 158, 255, 1)',
     anchorStroke: 'rgba(152, 158, 255, 1)',
+    enabledAnchors: this.defaultAnchors,
+    anchorStyleFunc(anchor) {
+      if (anchor.hasName('top-center') || anchor.hasName('bottom-center')) {
+        anchor.height(6);
+        anchor.offsetY(3);
+        anchor.width(30);
+        anchor.offsetX(15);
+      }
+      if (anchor.hasName('middle-left') || anchor.hasName('middle-right')) {
+        anchor.height(30);
+        anchor.offsetY(15);
+        anchor.width(6);
+        anchor.offsetX(3);
+      }
+    },
     anchorCornerRadius: 3,
   });
   isSelecting: boolean = false;
+  snapping: boolean = false;
 
   constructor(protected drawer: Drawer) {
     const $SelectIcon = stringToNode<SVGElement>(SelectIcon);
@@ -88,7 +107,7 @@ export class SelectWidget extends BaseWidget {
 
     this.drawer.stage.on('mouseup touchend', (e) => {
       this.isSelecting = false;
-      this.drawer.UIPointerEvents('all')
+      this.drawer.UIPointerEvents('all');
       e.evt.preventDefault();
       // update visibility in timeout, so we can check it in click event
       this.selectionRectangle.visible(false);
@@ -128,14 +147,7 @@ export class SelectWidget extends BaseWidget {
           return newBox;
         });
       } else {
-        this.transformer.enabledAnchors([
-          'top-left',
-          'top-right',
-          'bottom-left',
-          'bottom-right',
-          'middle-left',
-          'middle-right',
-        ]);
+        this.transformer.enabledAnchors(this.defaultAnchors);
       }
       this.transformer.nodes(selected);
       this.$container.focus();
@@ -151,6 +163,63 @@ export class SelectWidget extends BaseWidget {
     this.transformer.on('transformend dragend', () => {
       this.drawer.stage.fire('change');
     });
+  }
+
+  private _initSnapEvents() {
+    this.snapping = true;
+    this.drawer.layer.on('dragmove', (e) => {
+      // clear all previous lines on the screen
+      this.drawer.layer.find('.guid-line').forEach((l) => l.destroy());
+
+      // find possible snapping lines
+      const lineGuideStops = this._getLineGuideStops(e.target);
+      // find snapping points of current object
+      const itemBounds = this._getObjectSnappingEdges(e.target);
+
+      // now find where can we snap current object
+      const guides = this._getGuides(lineGuideStops, itemBounds);
+
+      // do nothing of no snapping
+      if (!guides.length) {
+        return;
+      }
+
+      this._drawGuides(guides);
+
+      const absPos = e.target.absolutePosition();
+      // now force object position
+      guides.forEach((lg) => {
+        switch (lg.snap) {
+          case 'start':
+          case 'center':
+          case 'end': {
+            switch (lg.orientation) {
+              case 'V': {
+                absPos.x = lg.lineGuide + lg.offset;
+                break;
+              }
+              case 'H': {
+                absPos.y = lg.lineGuide + lg.offset;
+                break;
+              }
+            }
+            break;
+          }
+        }
+      });
+      e.target.absolutePosition(absPos);
+    });
+
+    this.drawer.layer.on('dragend', () => {
+      // clear all previous lines on the screen
+      this.drawer.layer.find('.guid-line').forEach((l) => l.destroy());
+    });
+  }
+
+  private _removeSnapEvents() {
+    this.snapping = false;
+    this.drawer.layer.off('dragmove');
+    this.drawer.layer.off('dragend');
   }
 
   protected removeEvents() {
@@ -180,6 +249,16 @@ export class SelectWidget extends BaseWidget {
     });
   }
 
+  toggleSnapping(active: boolean = true) {
+    if (active && !this.snapping) {
+      this.drawer.contextMenu.$snappingBtn.classList.add('active');
+      this._initSnapEvents();
+    } else if (!active && this.snapping) {
+      this._removeSnapEvents();
+      this.drawer.contextMenu.$snappingBtn.classList.remove('active');
+    }
+  }
+
   updateCursor(): void {
     this.drawer.$stageContainer.style.cursor = 'default';
   }
@@ -187,15 +266,201 @@ export class SelectWidget extends BaseWidget {
   protected onDesactive(): void {
     this.selectionRectangle.destroy();
     this.removeEvents();
-    const draw = this.drawer.layer.children.filter((e) => {
-      if (!(e instanceof Transformer) && !e.hasName('background') && !e.hasName('selection')) {
-        return e;
-      }
-    });
+    const draw = this.drawer.getDrawingShapes();
 
     draw.forEach((d) => {
       d.draggable(false);
     });
     this.transformer.nodes([]);
+  }
+
+  private _getLineGuideStops(skipShape: Shape<ShapeConfig> | Stage): { vertical: number[]; horizontal: number[] } {
+    // we can snap to stage borders and the center of the stage
+    const vertical = [0, this.drawer.stage.width() / 2, this.drawer.stage.width()];
+    const horizontal = [0, this.drawer.stage.height() / 2, this.drawer.stage.height()];
+
+    // and we snap over edges and center of each object on the canvas
+    this.drawer.getDrawingShapes().forEach((guideItem) => {
+      if (guideItem === skipShape) {
+        return;
+      }
+      const box = guideItem.getClientRect();
+      // and we can snap to all edges of shapes
+      vertical.push(box.x, box.x + box.width, box.x + box.width / 2);
+      horizontal.push(box.y, box.y + box.height, box.y + box.height / 2);
+    });
+    return {
+      vertical,
+      horizontal,
+    };
+  }
+
+  // what points of the object will trigger to snapping?
+  // it can be just center of the object
+  // but we will enable all edges and center
+  private _getObjectSnappingEdges(node: Shape<ShapeConfig> | Stage) {
+    const box = node.getClientRect();
+    const absPos = node.absolutePosition();
+
+    return {
+      vertical: [
+        {
+          guide: Math.round(box.x),
+          offset: Math.round(absPos.x - box.x),
+          snap: 'start',
+        },
+        {
+          guide: Math.round(box.x + box.width / 2),
+          offset: Math.round(absPos.x - box.x - box.width / 2),
+          snap: 'center',
+        },
+        {
+          guide: Math.round(box.x + box.width),
+          offset: Math.round(absPos.x - box.x - box.width),
+          snap: 'end',
+        },
+      ],
+      horizontal: [
+        {
+          guide: Math.round(box.y),
+          offset: Math.round(absPos.y - box.y),
+          snap: 'start',
+        },
+        {
+          guide: Math.round(box.y + box.height / 2),
+          offset: Math.round(absPos.y - box.y - box.height / 2),
+          snap: 'center',
+        },
+        {
+          guide: Math.round(box.y + box.height),
+          offset: Math.round(absPos.y - box.y - box.height),
+          snap: 'end',
+        },
+      ],
+    };
+  }
+
+  // find all snapping possibilities
+  private _getGuides(
+    lineGuideStops: {
+      vertical: number[];
+      horizontal: number[];
+    },
+    itemBounds: {
+      vertical: {
+        guide: number;
+        offset: number;
+        snap: string;
+      }[];
+      horizontal: {
+        guide: number;
+        offset: number;
+        snap: string;
+      }[];
+    }
+  ) {
+    const resultV: {
+      lineGuide: number;
+      offset: number;
+      diff: number;
+      snap: string;
+    }[] = [];
+    const resultH: {
+      lineGuide: number;
+      offset: number;
+      diff: number;
+      snap: string;
+    }[] = [];
+    const GUIDELINE_OFFSET = 5;
+    lineGuideStops.vertical.forEach((lineGuide) => {
+      itemBounds.vertical.forEach((itemBound) => {
+        const diff = Math.abs(lineGuide - itemBound.guide);
+        // if the distance between guild line and object snap point is close we can consider this for snapping
+        if (diff < GUIDELINE_OFFSET) {
+          resultV.push({
+            lineGuide: lineGuide,
+            diff: diff,
+            snap: itemBound.snap,
+            offset: itemBound.offset,
+          });
+        }
+      });
+    });
+
+    lineGuideStops.horizontal.forEach((lineGuide) => {
+      itemBounds.horizontal.forEach((itemBound) => {
+        const diff = Math.abs(lineGuide - itemBound.guide);
+        if (diff < GUIDELINE_OFFSET) {
+          resultH.push({
+            lineGuide: lineGuide,
+            diff: diff,
+            snap: itemBound.snap,
+            offset: itemBound.offset,
+          });
+        }
+      });
+    });
+
+    const guides = [];
+
+    // find closest snap
+    const minV = resultV.toSorted((a, b) => a.diff - b.diff)[0];
+    const minH = resultH.toSorted((a, b) => a.diff - b.diff)[0];
+    if (minV) {
+      guides.push({
+        lineGuide: minV.lineGuide,
+        offset: minV.offset,
+        orientation: 'V',
+        snap: minV.snap,
+      });
+    }
+    if (minH) {
+      guides.push({
+        lineGuide: minH.lineGuide,
+        offset: minH.offset,
+        orientation: 'H',
+        snap: minH.snap,
+      });
+    }
+    return guides;
+  }
+
+  private _drawGuides(
+    guides: {
+      lineGuide: number;
+      offset: number;
+      orientation: string;
+      snap: string;
+    }[]
+  ) {
+    guides.forEach((lg) => {
+      if (lg.orientation === 'H') {
+        const line = new Line({
+          points: [-6000, 0, 6000, 0],
+          stroke: 'rgb(0, 161, 255)',
+          strokeWidth: 1,
+          name: 'guid-line',
+          dash: [4, 6],
+        });
+        this.drawer.layer.add(line);
+        line.absolutePosition({
+          x: 0,
+          y: lg.lineGuide,
+        });
+      } else if (lg.orientation === 'V') {
+        const line = new Line({
+          points: [0, -6000, 0, 6000],
+          stroke: 'rgb(0, 161, 255)',
+          strokeWidth: 1,
+          name: 'guid-line',
+          dash: [4, 6],
+        });
+        this.drawer.layer.add(line);
+        line.absolutePosition({
+          x: lg.lineGuide,
+          y: 0,
+        });
+      }
+    });
   }
 }

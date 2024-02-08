@@ -96,7 +96,7 @@ export class BrushWidget extends BaseWidget {
       });
 
       if (!this.#lastLine.closed()) this.#lastLine.closed(true);
-      const newPoints = points.reduce((arr: number[], p) => arr.concat([p[0], p[1]]), [])
+      const newPoints = points.flat();
       this.#lastLine?.points(newPoints);
     });
 

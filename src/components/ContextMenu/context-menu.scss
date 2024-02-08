@@ -3,10 +3,11 @@
 .drawer-context-menu {
   position: absolute;
   display: none;
-  background-color: $bg-light;
+  background-color: #fff;
   border-radius: $radius;
   box-shadow: $shadow;
   min-width: 250px;
+  padding: 0.4rem 0 0.4rem 0;
 
   &.show {
     display: block;
@@ -17,13 +18,23 @@
     justify-content: space-between;
     align-items: center;
     width: 100%;
+    border-radius: 0;
+    border: 0;
+    padding: 0.25rem 1rem 0.25rem 1.25rem;
+
+    &.active::before {
+      position: absolute;
+      left: 6px;
+      margin-bottom: 1px;
+      content: '✓';
+    }
 
     &:hover {
-        background-color: $bg-context-menu-item-hover;
-        color: $bg-context-menu-item-hover-color;
+      background-color: $bg-context-menu-item-hover;
+      color: $bg-context-menu-item-hover-color;
     }
     .drawer-context-menu-item__label {
-        margin-inline-end: 20px;
+      margin-inline-end: 20px;
     }
     .drawer-context-menu-item__shortcut {
       opacity: 0.6;
