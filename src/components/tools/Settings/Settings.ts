@@ -9,6 +9,7 @@ import GridIcon from '@/icons/grid.svg?raw';
 import GithubIcon from '@/icons/github.svg?raw';
 import ZenIcon from '@/icons/zen.svg?raw';
 import StoreIcon from '@/icons/store.svg?raw';
+import { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 
 export class Settings extends Dropdown {
   drawer: Drawer;
@@ -114,6 +115,16 @@ export class Settings extends Dropdown {
       if (this.drawer.zoom) this.drawer.zoom.$zoomContainer.style.display = '';
       this.drawer.help.$helpContainer.style.display = '';
       this.drawer.undoRedo.$undoRedoContainer.style.display = '';
+    }
+  }
+
+  toggleSnapping() {
+    const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
+
+    if (selectWidget) {
+      const active = !selectWidget.snapping;
+
+      selectWidget.toggleSnapping(active);
     }
   }
 }

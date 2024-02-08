@@ -242,9 +242,11 @@ export class SelectWidget extends BaseWidget {
 
   toggleSnapping(active: boolean = true) {
     if (active && !this.snapping) {
+      this.drawer.contextMenu.$snappingBtn.classList.add('active');
       this._initSnapEvents();
     } else if (!active && this.snapping) {
       this._removeSnapEvents();
+      this.drawer.contextMenu.$snappingBtn.classList.remove('active');
     }
   }
 

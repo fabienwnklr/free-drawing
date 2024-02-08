@@ -276,6 +276,10 @@ export class Drawer extends MicroEvent {
         this.setting.toggleZenMode();
       }
 
+      if (e.altKey && e.key === 'z') {
+        this.setting.toggleSnapping();
+      }
+
       if (e.ctrlKey && e.key === 'Delete') {
         this.clearCanvas();
       }

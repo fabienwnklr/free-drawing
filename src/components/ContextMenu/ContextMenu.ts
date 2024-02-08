@@ -1,9 +1,8 @@
 import type { Drawer } from '@/Drawer';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Stage } from 'konva/lib/Stage';
-import './context-menu.scss';
 import { TextWidget } from '../toolbar/widgets/Text/Text';
-import { SelectWidget } from '../toolbar/widgets/Select/Select';
+import './context-menu.scss';
 
 export class ContextMenu {
   drawer: Drawer;
@@ -30,7 +29,7 @@ export class ContextMenu {
     this.$snappingBtn = document.createElement('button');
     this.$snappingBtn.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-context-menu-list-item');
     this.$snappingBtn.innerHTML =
-      '<span class="drawer-context-menu-item__label">Toggle snapping</span>';
+      '<span class="drawer-context-menu-item__label">Toggle snapping</span><kbd class="drawer-context-menu-item__shortcut">Alt+S</kbd>';
     this.$snappingBtn.role = 'button';
 
     this.$list.append(...[this.$pasteBtn, this.$snappingBtn]);
@@ -60,19 +59,7 @@ export class ContextMenu {
     });
 
     this.$snappingBtn.addEventListener('click', () => {
-      const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
-
-      if (selectWidget) {
-        const active = !selectWidget.snapping;
-
-        if (active) {
-          this.$snappingBtn.classList.add('active');
-        } else {
-          this.$snappingBtn.classList.remove('active');
-        }
-
-        selectWidget.toggleSnapping(active);
-      }
+      this.drawer.setting.toggleSnapping();
     })
 
     this.drawer.stage.on('contextmenu', (e) => {
