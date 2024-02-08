@@ -47,36 +47,3 @@ export function stringToNode<T>(string: string): T {
   placeholder.innerHTML = string;
   return placeholder.firstElementChild as T;
 }
-
-/**
- * Convert simple array into two-dimensional array (matrix)
- *
- * @param list The array
- * @param width The num of elements per sub-array
- * @return the new matrix
- */
-export function listToMatrix<T>(list: T[], width: number): T[][] {
-  const matrix: T[][] = [];
-
-  for (let i = 0, k = -1; i < list.length; i++) {
-    if (i % width === 0) {
-      k++;
-      matrix[k] = [];
-    }
-    matrix[k].push(list[i]);
-  }
-
-  return matrix;
-};
-
-/**
- * Convert two-dimensional array (matrix) into simple array
- *
- * @param list The 2d array
- * @return the 1d array
- */
-export function matrixToList(list: number[][]): number[] {
-  const array: number[] = list.reduce((acc, value) => acc.concat(value), []);
-  
-  return array;
-};
