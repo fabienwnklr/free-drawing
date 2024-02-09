@@ -78,7 +78,7 @@
 
     &.active {
       background-color: darken($light, 5%);
-      color: currentColor;
+      color: $primary;
     }
   }
 

@@ -74,7 +74,7 @@ export class BaseOverlay {
 
     strokeSize.forEach((width) => {
       const $btn = document.createElement('button');
-      console.log(LineIcon);
+
       $btn.innerHTML = LineIcon.replace('stroke-width="2.5"', `stroke-width="${width}"`);
       $btn.dataset.strokeWidth = width.toString();
       $btn.classList.add('drawer-button', 'stroke-picker__button');
