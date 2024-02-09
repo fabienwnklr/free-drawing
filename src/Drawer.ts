@@ -173,9 +173,30 @@ export class Drawer extends MicroEvent {
     };
   }
 
+  /**
+   * Update grid lines and bg position
+   */
+  _update() {
+    if (this.grid) {
+      this._drawLines();
+    }
+
+    if (this.background.fill() !== '#fff') {
+      this.bgLayer.position({ x: -this._unScale(this.stage.position().x), y: -this._unScale(this.stage.position().y) });
+    }
+  }
+
   private _initEvents() {
     this._initHotKey();
     this._initZoomWheel();
+
+    this.stage.on('dragmove', () => {
+      this._update();
+    });
+
+    this.stage.on('wheel', () => {
+      this._update();
+    })
 
     this.stage.on('change', () => {
       if (this.options.autoSave) {
@@ -426,12 +447,14 @@ export class Drawer extends MicroEvent {
   }
 
   showGrid() {
-    this.stage.off('dragend');
-    this.stage.on('dragend', () => {});
     this.grid = true;
     this.contextMenu.$gridBtn.classList.add('active');
     this.setting.$toggleGridButton.classList.add('active');
     this._drawLines();
+  }
+
+  private _unScale(val: number) {
+    return val / this.getZoomLevel();
   }
 
   private _drawLines() {
@@ -440,37 +463,33 @@ export class Drawer extends MicroEvent {
     this.gridLayer.clipWidth(0);
     const stepSize = 40;
 
-    const unScale = (val: number) => {
-      return val / this.stage.scaleX();
-    };
-
     const stageRect = {
       x1: 0,
       y1: 0,
       x2: this.stage.width(),
       y2: this.stage.height(),
       offset: {
-        x: unScale(this.stage.position().x),
-        y: unScale(this.stage.position().y),
+        x: this._unScale(this.stage.position().x),
+        y: this._unScale(this.stage.position().y),
       },
     };
     const viewRect = {
       x1: -stageRect.offset.x,
       y1: -stageRect.offset.y,
-      x2: unScale(this.stage.width()) - stageRect.offset.x,
-      y2: unScale(this.stage.height()) - stageRect.offset.y,
+      x2: this._unScale(this.stage.width()) - stageRect.offset.x,
+      y2: this._unScale(this.stage.height()) - stageRect.offset.y,
     };
     // and find the largest rectangle that bounds both the stage and view rect.
     // This is the rect we will draw on.
     const gridOffset = {
-      x: Math.ceil(unScale(this.stage.position().x) / stepSize) * stepSize,
-      y: Math.ceil(unScale(this.stage.position().y) / stepSize) * stepSize,
+      x: Math.ceil(this._unScale(this.stage.position().x) / stepSize) * stepSize,
+      y: Math.ceil(this._unScale(this.stage.position().y) / stepSize) * stepSize,
     };
     const gridRect = {
       x1: -gridOffset.x,
       y1: -gridOffset.y,
-      x2: unScale(this.stage.width()) - gridOffset.x + stepSize,
-      y2: unScale(this.stage.height()) - gridOffset.y + stepSize,
+      x2: this._unScale(this.stage.width()) - gridOffset.x + stepSize,
+      y2: this._unScale(this.stage.height()) - gridOffset.y + stepSize,
     };
     const gridFullRect = {
       x1: Math.min(stageRect.x1, gridRect.x1),
