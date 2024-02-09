@@ -132,7 +132,7 @@ export class Drawer extends MicroEvent {
     }
 
     this.$drawerContainer.appendChild(this.$footerContainer);
-    this.$drawerContainer.focus();
+    this.focus();
     this.undoRedo.manageButtons();
     this._initEvents();
   }
@@ -224,7 +224,7 @@ export class Drawer extends MicroEvent {
 
       if (e.ctrlKey && e.key === 'a') {
         const allNodes = this.getDrawingShapes();
-        this.$drawerContainer.focus();
+        this.focus();
         selectWidget?.transformer.nodes(allNodes);
       }
 
@@ -545,5 +545,12 @@ export class Drawer extends MicroEvent {
     this.contextMenu.$gridBtn.classList.remove('active');
     this.gridLayer.clear();
     this.gridLayer.removeChildren();
+  }
+
+  /**
+   * Focus drawer div container (usefull for keyevent)
+   */
+  focus() {
+    this.$drawerContainer.focus();
   }
 }

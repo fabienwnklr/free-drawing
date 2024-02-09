@@ -163,6 +163,7 @@ export class Settings extends Dropdown {
     const active = !selectWidget?.snapping;
 
     selectWidget?.toggleSnapping(active);
+    this.drawer.focus();
   }
 
   toggleGrid() {
@@ -171,5 +172,6 @@ export class Settings extends Dropdown {
     } else {
       this.drawer.showGrid();
     }
+    this.drawer.focus()
   }
 }

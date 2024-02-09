@@ -71,7 +71,7 @@ export abstract class BaseWidget {
       this.drawer.toolbar.setActiveWidget(this);
       this.$button.classList.add('active');
       this.onActive();
-      this.drawer.$drawerContainer.focus();
+      this.drawer.focus();
     } else {
       this.onDesactive();
       this.$button.classList.remove('active');

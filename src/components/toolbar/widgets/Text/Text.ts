@@ -147,7 +147,7 @@ export class TextWidget extends BaseWidget {
       textarea.parentNode?.removeChild(textarea);
       window.removeEventListener('click', handleOutsideClick);
       this.isEditing = false;
-      this.drawer.$drawerContainer.focus();
+      this.drawer.focus();
       // Do not consider empty textarea
       if (textarea.value === '') {
         textNode.destroy();

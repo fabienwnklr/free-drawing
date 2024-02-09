@@ -20,8 +20,7 @@
   visibility: visible;
 }
 .drawer-modal {
-  // display: flex;
-  // visibility: hidden;
+  user-select: none;
   box-sizing: border-box;
   position: absolute;
   background: #fff;

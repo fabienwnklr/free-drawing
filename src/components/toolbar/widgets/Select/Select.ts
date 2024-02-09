@@ -143,11 +143,11 @@ export class SelectWidget extends BaseWidget {
 
       const textShapes = this.drawer.getDrawingShapeByClassName('text');
       if (textShapes.length > 0 && textShapes.length  === selected.length) {
-        this.transformer.enabledAnchors(['middle-left', 'middle-right']);
-        this.transformer.boundBoxFunc(function (_oldBox, newBox) {
-          newBox.width = Math.max(30, newBox.width);
-          return newBox;
-        });
+        // this.transformer.enabledAnchors(['middle-left', 'middle-right']);
+        // this.transformer.boundBoxFunc(function (_oldBox, newBox) {
+        //   newBox.width = Math.max(30, newBox.width);
+        //   return newBox;
+        // });
       } else {
         this.transformer.enabledAnchors(this.defaultAnchors);
       }

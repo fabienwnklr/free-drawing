@@ -181,6 +181,12 @@
     border: 1px solid $light;
   }
 
+  .title {
+    font-size: 0.8rem;
+    align-self: start;
+    margin-bottom: 0.4rem;
+  }
+
   .color-picker-container {
     display: flex;
     align-items: center;
@@ -188,12 +194,6 @@
     flex-direction: column;
     width: 100%;
     padding: 0.4rem;
-
-    .title {
-      font-size: 0.8rem;
-      align-self: start;
-      margin-bottom: 0.4rem;
-    }
 
     .color-picker-btn-container {
       display: flex;
