@@ -47,7 +47,7 @@ export class TextWidget extends BaseWidget {
     }
     this.addTextNodeEvents(textNode);
 
-    this.drawer.layer.add(textNode);
+    this.drawer.drawLayer.add(textNode);
 
     const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
     selectWidget?.setActive(true);

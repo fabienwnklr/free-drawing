@@ -1,6 +1,5 @@
 import type { Drawer } from '@/Drawer';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
-import { Stage } from 'konva/lib/Stage';
 import { TextWidget } from '../toolbar/widgets/Text/Text';
 import './context-menu.scss';
 
@@ -74,24 +73,34 @@ export class ContextMenu {
     this.drawer.stage.on('contextmenu', (e) => {
       // prevent default behavior
       e.evt.preventDefault();
-      if (e.target instanceof Stage) {
-        // if we are on empty place of the this.drawer.stage we will do nothing
+      const scope = this.drawer.$drawerContainer;
+      const { left: scopeOffsetX, top: scopeOffsetY } = scope.getBoundingClientRect();
 
-        const containerRect = this.drawer.stage.container().getBoundingClientRect();
-        this.$menu.style.top = containerRect.top + this.drawer._getPointerPos().y + 4 + 'px';
-        this.$menu.style.left = containerRect.left + this.drawer._getPointerPos().x + 4 + 'px';
-        // show menu
-        this.show();
-        return;
-      } else {
-        // if we are on empty place of the this.drawer.stage we will do nothing
+      const scopeX = this.drawer._getPointerPos().x - scopeOffsetX;
+      const scopeY = this.drawer._getPointerPos().y - scopeOffsetY;
 
-        const containerRect = this.drawer.stage.container().getBoundingClientRect();
-        this.$menu.style.top = containerRect.top + this.drawer._getPointerPos().y + 4 + 'px';
-        this.$menu.style.left = containerRect.left + this.drawer._getPointerPos().x + 4 + 'px';
-        // show menu
-        this.show();
+      // ? check if the element will go out of bounds
+      const outOfBoundsOnX = scopeX + this.$menu.clientWidth > scope.clientWidth;
+
+      const outOfBoundsOnY = scopeY + this.$menu.clientHeight > scope.clientHeight;
+
+      let normalizedX = this.drawer._getPointerPos().x;
+      let normalizedY = this.drawer._getPointerPos().y;
+
+      // ? normalzie on X
+      if (outOfBoundsOnX) {
+        normalizedX = scopeOffsetX + scope.clientWidth - this.$menu.clientWidth - 4;
       }
+
+      // ? normalize on Y
+      if (outOfBoundsOnY) {
+        normalizedY = scopeOffsetY + scope.clientHeight - this.$menu.clientHeight - 4;
+      }
+
+      this.$menu.style.top = normalizedY + 'px';
+      this.$menu.style.left = normalizedX + 'px';
+      // show menu
+      this.show();
     });
   }
 

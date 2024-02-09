@@ -23,13 +23,15 @@ import { ContextMenu } from './components/ContextMenu/ContextMenu';
 import { TextWidget } from './components/toolbar/widgets/Text/Text';
 import { Text } from 'konva/lib/shapes/Text';
 import { Line } from 'konva/lib/shapes/Line';
+import { Transformer } from 'konva/lib/shapes/Transformer';
 
 export class Drawer extends MicroEvent {
   $el: HTMLDivElement;
   $drawerContainer: HTMLDivElement;
   $stageContainer: HTMLDivElement;
   stage: Stage;
-  layer: Layer;
+  gridLayer: Layer;
+  drawLayer: Layer;
   toolbar: Toolbar;
   activeTool: AvailableTools = 'brush';
   options: DrawerOptions;
@@ -47,6 +49,7 @@ export class Drawer extends MicroEvent {
   $footerLeftElement: HTMLDivElement;
   contextMenu: ContextMenu;
   grid: boolean = false;
+  bgLayer: Layer;
 
   constructor($el: HTMLDivElement, options: Partial<DrawerOptions> = {}) {
     super();
@@ -71,7 +74,9 @@ export class Drawer extends MicroEvent {
     const saved = localStorage.getItem(this.options.localStorageKey);
     if (saved) {
       this.stage = Node.create(saved, this.$drawerContainer);
-      this.layer = this.stage.findOne('Layer') as Layer;
+      this.bgLayer = this.stage.findOne('.background') as Layer;
+      this.gridLayer = this.stage.findOne('.grid') as Layer;
+      this.drawLayer = this.stage.findOne('.draw') as Layer;
       this.background = this.stage.findOne('.background') as Rect;
     } else {
       this.stage = new Stage({
@@ -79,9 +84,9 @@ export class Drawer extends MicroEvent {
         width: width,
         height: height,
       });
-      this.layer = new Layer();
-      this.stage.add(this.layer);
-
+      this.bgLayer = new Layer({ name: 'background' });
+      this.gridLayer = new Layer({ name: 'grid' });
+      this.drawLayer = new Layer({ name: ' draw' });
       this.background = new Rect({
         fill: '#fff',
         width: this.stage.width() * 100,
@@ -90,7 +95,11 @@ export class Drawer extends MicroEvent {
         name: shapeName.background,
       });
 
-      this.layer.add(this.background);
+      // First bgcolor
+      this.bgLayer.add(this.background);
+      this.stage.add(this.bgLayer);
+      this.stage.add(this.gridLayer);
+      this.stage.add(this.drawLayer);
     }
     this.$stageContainer = this.stage.content;
     this.$footerContainer = document.createElement('footer');
@@ -115,7 +124,7 @@ export class Drawer extends MicroEvent {
 
     if (saved) {
       const textWidget = this.getWidget<TextWidget>('text');
-      this.layer.find('.text').forEach((t) => {
+      this.drawLayer.find('.text').forEach((t) => {
         if (t instanceof Text) {
           textWidget?.addTextNodeEvents(t);
         }
@@ -133,15 +142,15 @@ export class Drawer extends MicroEvent {
   }
 
   getDrawingShapes() {
-    return this.layer.children.filter((e) => {
-      if (e.hasName(shapeName.line) || e.hasName(shapeName.text)) {
+    return this.drawLayer.children.filter((e) => {
+      if (!(e instanceof Transformer) && !e.hasName(shapeName.selection)) {
         return e;
       }
     });
   }
 
   getDrawingShapeByClassName(shapeType: keyof typeof shapeName) {
-    return this.layer.children.filter((e) => {
+    return this.drawLayer.children.filter((e) => {
       if (e.hasName(shapeName[shapeType])) {
         return e;
       }
@@ -418,14 +427,17 @@ export class Drawer extends MicroEvent {
 
   showGrid() {
     this.stage.off('dragend');
-    this.stage.on('dragend', () => {
-      this.hideGrid();
-      this.showGrid();
-    });
+    this.stage.on('dragend', () => {});
     this.grid = true;
-    this.layer.clipWidth(0);
     this.contextMenu.$gridBtn.classList.add('active');
     this.setting.$toggleGridButton.classList.add('active');
+    this._drawLines();
+  }
+
+  private _drawLines() {
+    this.gridLayer.clear();
+    this.gridLayer.removeChildren();
+    this.gridLayer.clipWidth(0);
     const stepSize = 40;
 
     const unScale = (val: number) => {
@@ -468,15 +480,15 @@ export class Drawer extends MicroEvent {
     };
 
     // set clip function to stop leaking lines into non-viewable space.
-    this.layer.clip({
+    this.gridLayer.clip({
       x: viewRect.x1,
       y: viewRect.y1,
       width: viewRect.x2 - viewRect.x1,
       height: viewRect.y2 - viewRect.y1,
     });
 
-    const // find the x & y size of the grid
-      xSize = gridFullRect.x2 - gridFullRect.x1,
+    // find the x & y size of the grid
+    const xSize = gridFullRect.x2 - gridFullRect.x1,
       ySize = gridFullRect.y2 - gridFullRect.y1,
       // compute the number of steps required on each axis.
       xSteps = Math.round(xSize / stepSize),
@@ -484,7 +496,7 @@ export class Drawer extends MicroEvent {
 
     // draw vertical lines
     for (let i = 0; i <= xSteps; i++) {
-      this.layer.add(
+      this.gridLayer.add(
         new Line({
           x: gridFullRect.x1 + i * stepSize,
           y: gridFullRect.y1,
@@ -497,7 +509,7 @@ export class Drawer extends MicroEvent {
     }
     //draw Horizontal lines
     for (let i = 0; i <= ySteps; i++) {
-      this.layer.add(
+      this.gridLayer.add(
         new Line({
           x: gridFullRect.x1,
           y: gridFullRect.y1 + i * stepSize,
@@ -514,6 +526,7 @@ export class Drawer extends MicroEvent {
     this.grid = false;
     this.setting.$toggleGridButton.classList.remove('active');
     this.contextMenu.$gridBtn.classList.remove('active');
-    this.layer.find('.' + shapeName.gridLine).forEach((l) => l.destroy());
+    this.gridLayer.clear();
+    this.gridLayer.removeChildren();
   }
 }

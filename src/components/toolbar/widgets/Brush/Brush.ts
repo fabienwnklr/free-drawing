@@ -78,7 +78,7 @@ export class BrushWidget extends BaseWidget {
       //     }
       //   }
       // });
-      this.drawer.layer.add(this.#lastLine);
+      this.drawer.drawLayer.add(this.#lastLine);
     });
 
     // and core function - drawing

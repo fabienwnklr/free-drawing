@@ -57,7 +57,7 @@ export class SelectWidget extends BaseWidget {
       }
     });
 
-    this.drawer.layer.add(this.transformer);
+    this.drawer.drawLayer.add(this.transformer);
   }
 
   protected initEvents(): void {
@@ -169,7 +169,7 @@ export class SelectWidget extends BaseWidget {
 
   private _initSnapEvents() {
     this.snapping = true;
-    this.drawer.layer.on('dragmove', (e) => {
+    this.drawer.drawLayer.on('dragmove', (e) => {
       // clear all previous lines on the screen
       this.drawer.getDrawingShapeByClassName('guideLine').forEach((l) => l.destroy());
 
@@ -212,7 +212,7 @@ export class SelectWidget extends BaseWidget {
       e.target.absolutePosition(absPos);
     });
 
-    this.drawer.layer.on('dragend', () => {
+    this.drawer.drawLayer.on('dragend', () => {
       // clear all previous lines on the screen
       this.drawer.getDrawingShapeByClassName('guideLine').forEach((l) => l.destroy());
     });
@@ -220,8 +220,8 @@ export class SelectWidget extends BaseWidget {
 
   private _removeSnapEvents() {
     this.snapping = false;
-    this.drawer.layer.off('dragmove');
-    this.drawer.layer.off('dragend');
+    this.drawer.drawLayer.off('dragmove');
+    this.drawer.drawLayer.off('dragend');
   }
 
   protected removeEvents() {
@@ -241,7 +241,7 @@ export class SelectWidget extends BaseWidget {
       name: shapeName.selection,
     });
 
-    this.drawer.layer.add(this.selectionRectangle);
+    this.drawer.drawLayer.add(this.selectionRectangle);
     this.initEvents();
     this.updateCursor();
     const shapes = this.drawer.getDrawingShapes();
@@ -444,7 +444,7 @@ export class SelectWidget extends BaseWidget {
           name: shapeName.guideLine,
           dash: [4, 6],
         });
-        this.drawer.layer.add(line);
+        this.drawer.drawLayer.add(line);
         line.absolutePosition({
           x: 0,
           y: lg.lineGuide,
@@ -457,7 +457,7 @@ export class SelectWidget extends BaseWidget {
           name: shapeName.guideLine,
           dash: [4, 6],
         });
-        this.drawer.layer.add(line);
+        this.drawer.drawLayer.add(line);
         line.absolutePosition({
           x: lg.lineGuide,
           y: 0,

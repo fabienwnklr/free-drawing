@@ -40,11 +40,11 @@ export class History {
             line.on('dragend', () => {
               this.drawer.stage.fire('change');
             });
-            this.drawer.layer.add(line);
+            this.drawer.drawLayer.add(line);
           }
 
           if (shape.type === 'Text') {
-            this.drawer.layer.add(new Text(shape));
+            this.drawer.drawLayer.add(new Text(shape));
           }
         });
       }
@@ -66,8 +66,8 @@ export class History {
         this.appHistoryStep += 1;
         this.drawer.getDrawingShapes().forEach((c) => c.destroy());
         state.forEach((shape) => {
-          if (shape.type === 'Line') this.drawer.layer.add(new Line(shape));
-          if (shape.type === 'Text') this.drawer.layer.add(new Text(shape));
+          if (shape.type === 'Line') this.drawer.drawLayer.add(new Line(shape));
+          if (shape.type === 'Text') this.drawer.drawLayer.add(new Text(shape));
         });
       }
     } catch (error: any) {
