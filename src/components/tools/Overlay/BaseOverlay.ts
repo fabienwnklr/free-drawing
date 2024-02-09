@@ -1,5 +1,5 @@
 import type { Drawer } from '@/Drawer';
-import { ColorLike } from '@/@types/drawer';
+import type { ColorLike } from '@/@types/drawer';
 import LineIcon from '@/icons/line.svg?raw';
 import './overlay.scss';
 export class BaseOverlay {

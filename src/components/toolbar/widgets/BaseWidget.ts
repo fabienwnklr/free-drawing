@@ -1,4 +1,4 @@
-import { AvailableTools } from '@/@types/toolbar';
+import type { AvailableTools } from '@/@types/toolbar';
 import { Drawer } from '@/Drawer';
 import { stringToNode } from '@/utils/functions';
 

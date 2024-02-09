@@ -10,7 +10,7 @@ import GithubIcon from '@/icons/github.svg?raw';
 import ZenIcon from '@/icons/zen.svg?raw';
 import StoreIcon from '@/icons/store.svg?raw';
 import { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
-import { ColorLike } from '@/@types/drawer';
+import type { ColorLike } from '@/@types/drawer';
 
 export class Settings extends Dropdown {
   drawer: Drawer;

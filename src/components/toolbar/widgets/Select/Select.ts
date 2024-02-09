@@ -11,7 +11,7 @@ import { Context } from 'konva/lib/Context';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Stage } from 'konva/lib/Stage';
 import { shapeName } from '@/constants';
-import { ColorLike } from '@/@types/drawer';
+import type { ColorLike } from '@/@types/drawer';
 
 export class SelectWidget extends BaseWidget {
   #x1: number = 0;
