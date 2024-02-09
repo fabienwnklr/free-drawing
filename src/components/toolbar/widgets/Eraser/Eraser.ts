@@ -49,7 +49,7 @@ export class EraserWidget extends BaseWidget {
       this.isErasing = false;
       this.drawer.UIPointerEvents('all');
 
-      const selectWidget = this.drawer.toolbar.widgets.get('selection') as SelectWidget;
+      const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
       if (selectWidget) {
         selectWidget.transformer.nodes([]);
       }

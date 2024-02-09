@@ -29,7 +29,7 @@ export class History {
     try {
       const state = this.appHistory[this.appHistoryStep - 1];
       if (state) {
-        const selectWidget = this.drawer.toolbar.widgets.get('selection') as SelectWidget;
+        const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
         if (selectWidget) {
           selectWidget.transformer.nodes([]);
         }
@@ -63,7 +63,7 @@ export class History {
     try {
       const state = this.appHistory[this.appHistoryStep + 1];
       if (state) {
-        const selectWidget = this.drawer.toolbar.widgets.get('selection') as SelectWidget;
+        const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
         if (selectWidget) {
           selectWidget.transformer.nodes([]);
         }

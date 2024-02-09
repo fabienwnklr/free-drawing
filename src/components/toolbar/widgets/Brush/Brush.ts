@@ -109,7 +109,7 @@ export class BrushWidget extends BaseWidget {
 
       this.drawer.stage.fire('change');
 
-      const selectWidget = this.drawer.toolbar.widgets.get('selection') as SelectWidget;
+      const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
       if (selectWidget) {
         const zIndex = this.#lastLine.zIndex() + 1;
         selectWidget.transformer.zIndex(zIndex);

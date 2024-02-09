@@ -187,7 +187,7 @@ export class Drawer extends MicroEvent {
     const DELTA = 4;
     this.$drawerContainer.addEventListener('keydown', (e) => {
       if (this._duringAction()) return;
-      const selectWidget = this.toolbar.widgets.get('selection') as SelectWidget;
+      const selectWidget = this.getWidget<SelectWidget>('selection');
       if (selectWidget) {
         if (e.key === 'Backspace' || e.key === 'Delete') {
           const allNodes = selectWidget.transformer.nodes();
