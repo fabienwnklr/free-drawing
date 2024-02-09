@@ -60,9 +60,7 @@ export class ContextMenu {
       const text = await navigator.clipboard.readText();
       const textWidget = this.drawer.getWidget<TextWidget>('text');
 
-      if (textWidget) {
-        textWidget.addTextNode(text);
-      }
+      textWidget?.addTextNode(text);
     });
 
     this.$snappingBtn.addEventListener('click', () => {

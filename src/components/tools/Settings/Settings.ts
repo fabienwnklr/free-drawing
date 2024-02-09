@@ -90,7 +90,7 @@ export class Settings extends Dropdown {
     this.$clearCanvasButton.addEventListener('click', () => {
       this.drawer.clearCanvas();
     });
-    
+
     this.$toggleGridButton.addEventListener('click', () => {
       this.toggleGrid();
     });
@@ -124,19 +124,16 @@ export class Settings extends Dropdown {
 
   toggleSnapping() {
     const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
+    const active = !selectWidget?.snapping;
 
-    if (selectWidget) {
-      const active = !selectWidget.snapping;
-
-      selectWidget.toggleSnapping(active);
-    }
+    selectWidget?.toggleSnapping(active);
   }
 
   toggleGrid() {
-      if (this.drawer.grid) {
-        this.drawer.hideGrid();
-      } else {
-        this.drawer.showGrid();
-      }
+    if (this.drawer.grid) {
+      this.drawer.hideGrid();
+    } else {
+      this.drawer.showGrid();
+    }
   }
 }

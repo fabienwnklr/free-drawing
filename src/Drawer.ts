@@ -111,19 +111,15 @@ export class Drawer extends MicroEvent {
     this.help = new Help(this);
 
     const activeWidget = this.getWidget<BaseWidget>(activeTool);
-    if (activeWidget) {
-      activeWidget.setActive(true);
-    }
+    activeWidget?.setActive(true);
 
     if (saved) {
       const textWidget = this.getWidget<TextWidget>('text');
-      if (textWidget) {
-        this.layer.find('.text').forEach((t) => {
-          if (t instanceof Text) {
-            textWidget.addTextNodeEvents(t);
-          }
-        });
-      }
+      this.layer.find('.text').forEach((t) => {
+        if (t instanceof Text) {
+          textWidget?.addTextNodeEvents(t);
+        }
+      });
     }
 
     this.$drawerContainer.appendChild(this.$footerContainer);
@@ -188,39 +184,37 @@ export class Drawer extends MicroEvent {
     this.$drawerContainer.addEventListener('keydown', (e) => {
       if (this._duringAction()) return;
       const selectWidget = this.getWidget<SelectWidget>('selection');
-      if (selectWidget) {
-        if (e.key === 'Backspace' || e.key === 'Delete') {
-          const allNodes = selectWidget.transformer.nodes();
+      if (e.key === 'Backspace' || e.key === 'Delete') {
+        const allNodes = selectWidget?.transformer.nodes();
 
-          if (allNodes) {
-            allNodes.forEach((n) => n.destroy());
-            selectWidget.transformer.nodes([]);
-            this.stage.fire('change');
+        if (allNodes) {
+          allNodes.forEach((n) => n.destroy());
+          selectWidget?.transformer.nodes([]);
+          this.stage.fire('change');
+        }
+      }
+
+      if (e.ctrlKey && e.key === 'a') {
+        const allNodes = this.getDrawingShapes();
+        this.$drawerContainer.focus();
+        selectWidget?.transformer.nodes(allNodes);
+      }
+
+      if (selectWidget?.transformer.nodes().length) {
+        selectWidget?.transformer.nodes().forEach((shape) => {
+          if (e.key === 'ArrowLeft') {
+            shape.x(shape.x() - DELTA);
+          } else if (e.key === 'ArrowUp') {
+            shape.y(shape.y() - DELTA);
+          } else if (e.key === 'ArrowRight') {
+            shape.x(shape.x() + DELTA);
+          } else if (e.key === 'ArrowDown') {
+            shape.y(shape.y() + DELTA);
+          } else {
+            return;
           }
-        }
-
-        if (e.ctrlKey && e.key === 'a') {
-          const allNodes = this.getDrawingShapes();
-          this.$drawerContainer.focus();
-          selectWidget.transformer.nodes(allNodes);
-        }
-
-        if (selectWidget.transformer.nodes().length) {
-          selectWidget.transformer.nodes().forEach((shape) => {
-            if (e.key === 'ArrowLeft') {
-              shape.x(shape.x() - DELTA);
-            } else if (e.key === 'ArrowUp') {
-              shape.y(shape.y() - DELTA);
-            } else if (e.key === 'ArrowRight') {
-              shape.x(shape.x() + DELTA);
-            } else if (e.key === 'ArrowDown') {
-              shape.y(shape.y() + DELTA);
-            } else {
-              return;
-            }
-          });
-          e.preventDefault();
-        }
+        });
+        e.preventDefault();
       }
 
       if (e.key === 'h') {
@@ -230,10 +224,8 @@ export class Drawer extends MicroEvent {
 
         const panWidget = this.getWidget<PanWidget>('pan');
 
-        if (panWidget) {
-          panWidget.setActive(true);
-          panWidget.$button.focus();
-        }
+        panWidget?.setActive(true);
+        panWidget?.$button.focus();
         return;
       }
 
@@ -242,12 +234,8 @@ export class Drawer extends MicroEvent {
           return;
         }
 
-        const selectWidget = this.getWidget<SelectWidget>('selection');
-
-        if (selectWidget) {
-          selectWidget.setActive(true);
-          selectWidget.$button.focus();
-        }
+        selectWidget?.setActive(true);
+        selectWidget?.$button.focus();
         return;
       }
 
@@ -258,10 +246,8 @@ export class Drawer extends MicroEvent {
 
         const brushWidget = this.getWidget<BrushWidget>('brush');
 
-        if (brushWidget) {
-          brushWidget.setActive(true);
-          brushWidget.$button.focus();
-        }
+        brushWidget?.setActive(true);
+        brushWidget?.$button.focus();
         return;
       }
 
@@ -271,10 +257,8 @@ export class Drawer extends MicroEvent {
         }
 
         const eraserWidget = this.getWidget<EraserWidget>('eraser');
-        if (eraserWidget) {
-          eraserWidget.setActive(true);
-          eraserWidget.$button.focus();
-        }
+        eraserWidget?.setActive(true);
+        eraserWidget?.$button.focus();
       }
 
       if (e.altKey && e.key === 'z') {

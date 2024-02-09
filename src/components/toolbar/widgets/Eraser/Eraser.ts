@@ -50,9 +50,7 @@ export class EraserWidget extends BaseWidget {
       this.drawer.UIPointerEvents('all');
 
       const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
-      if (selectWidget) {
-        selectWidget.transformer.nodes([]);
-      }
+      selectWidget?.transformer.nodes([]);
 
       e.evt.preventDefault();
 

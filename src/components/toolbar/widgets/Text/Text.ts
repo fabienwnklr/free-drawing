@@ -49,10 +49,8 @@ export class TextWidget extends BaseWidget {
 
     this.drawer.layer.add(textNode);
 
-    const selectWidget = this.drawer.toolbar.getWidget<SelectWidget>('selection');
-    if (selectWidget) {
-      selectWidget.setActive(true);
-    }
+    const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
+    selectWidget?.setActive(true);
 
     return textNode;
   }
@@ -81,9 +79,7 @@ export class TextWidget extends BaseWidget {
   editTextNode(textNode: Text) {
     textNode.hide();
     const selectWidget = this.drawer.toolbar.getWidget<SelectWidget>('selection');
-    if (selectWidget) {
-      selectWidget.transformer.hide();
-    }
+    selectWidget?.transformer.hide();
     const textarea = this._createTextarea(textNode);
     const rotation = textNode.rotation();
     let transform = '';
@@ -164,7 +160,7 @@ export class TextWidget extends BaseWidget {
       selectWidget?.transformer.show();
       selectWidget?.transformer.forceUpdate();
 
-      this.drawer.stage.fire('change')
+      this.drawer.stage.fire('change');
     };
 
     textarea.addEventListener('keydown', (e) => {

@@ -30,9 +30,7 @@ export class History {
       const state = this.appHistory[this.appHistoryStep - 1];
       if (state) {
         const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
-        if (selectWidget) {
-          selectWidget.transformer.nodes([]);
-        }
+        selectWidget?.transformer.nodes([]);
         this.appHistoryStep -= 1;
         this.drawer.getDrawingShapes().forEach((c) => c.destroy());
         state.forEach((shape) => {
@@ -64,17 +62,13 @@ export class History {
       const state = this.appHistory[this.appHistoryStep + 1];
       if (state) {
         const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
-        if (selectWidget) {
-          selectWidget.transformer.nodes([]);
-        }
+        selectWidget?.transformer.nodes([]);
         this.appHistoryStep += 1;
         this.drawer.getDrawingShapes().forEach((c) => c.destroy());
         state.forEach((shape) => {
           if (shape.type === 'Line') this.drawer.layer.add(new Line(shape));
           if (shape.type === 'Text') this.drawer.layer.add(new Text(shape));
         });
-
-        // if selection active, update
       }
     } catch (error: any) {
       throw new Error(error.message);
