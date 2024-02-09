@@ -5,7 +5,6 @@
   position: absolute;
   top: 10px;
   left: 10px;
-  font-size: 0.875rem;
   z-index: 2;
 
   .drawer-button-dropdown {
@@ -13,7 +12,7 @@
   }
 
   .drawer-dropdown {
-    margin-top: .1rem;
+    margin-top: 0.3rem;
     list-style: none;
     padding: 0;
     width: fit-content;
@@ -22,20 +21,22 @@
     border-radius: 5px;
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
     display: none;
+    font-size: 0.875rem;
+    font-weight: 400;
 
-      .drawer-dropdown-list {
-        margin-left: .3rem;
-        margin-right: .3rem;
-        .drawer-dropdown-list-item {
-            width: 100%;
-            margin-top: .3rem;
-            margin-bottom: .3rem;
+    .drawer-dropdown-list {
+      margin-left: 0.3rem;
+      margin-right: 0.3rem;
+      .drawer-dropdown-list-item {
+        width: 100%;
+        margin-top: 0.3rem;
+        margin-bottom: 0.3rem;
 
-            svg {
-                margin-right: .4rem;
-            }
+        svg {
+          margin-right: 0.4rem;
         }
       }
+    }
 
     &.show {
       display: block;

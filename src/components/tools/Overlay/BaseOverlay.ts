@@ -25,15 +25,15 @@ export class BaseOverlay {
   private _init() {
     // Start create stroke color management
     this.$strokeColorContainer = document.createElement('div');
-    this.$strokeColorContainer.classList.add('stroke-color-container');
+    this.$strokeColorContainer.classList.add('color-picker-container');
 
     const $strokeTitle = document.createElement('h6');
-    $strokeTitle.classList.add('overlay-title');
+    $strokeTitle.classList.add('title');
     $strokeTitle.innerText = 'Stroke';
     this.$strokeColorContainer.append($strokeTitle);
 
     this.$strokeColorBtnContainer = document.createElement('div');
-    this.$strokeColorBtnContainer.classList.add('stroke-color-btn-container');
+    this.$strokeColorBtnContainer.classList.add('color-picker-btn-container');
     const $strokeColorButtons: HTMLButtonElement[] = [];
 
     const strokeColors = ['#000', '#e03131', '#2f9e44', '#1971c2', '#f08c00'] as ColorLike[];
@@ -59,15 +59,15 @@ export class BaseOverlay {
 
     // Start create stroke width
     this.$strokeWidthContainer = document.createElement('div');
-    this.$strokeWidthContainer.classList.add('stroke-width-container');
+    this.$strokeWidthContainer.classList.add('color-picker-container');
 
     const $widthTitle = document.createElement('h6');
-    $widthTitle.classList.add('overlay-title');
+    $widthTitle.classList.add('title');
     $widthTitle.innerText = 'Stroke width';
     this.$strokeWidthContainer.append($widthTitle);
 
     this.$strokeWidthBtnContainer = document.createElement('div');
-    this.$strokeWidthBtnContainer.classList.add('stroke-width-btn-container');
+    this.$strokeWidthBtnContainer.classList.add('color-picker-btn-container');
     const $strokeWidthButtons: HTMLButtonElement[] = [];
 
     const strokeSize = [3, 5, 8, 12];
@@ -98,7 +98,7 @@ export class BaseOverlay {
     this.$opacityContainer.classList.add('opacity-container');
 
     const $opacityTitle = document.createElement('h6');
-    $opacityTitle.classList.add('overlay-title');
+    $opacityTitle.classList.add('title');
     $opacityTitle.innerText = 'Opacity';
     this.$opacityContainer.append($opacityTitle);
 

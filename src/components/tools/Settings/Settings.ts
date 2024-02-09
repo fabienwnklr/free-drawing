@@ -10,6 +10,7 @@ import GithubIcon from '@/icons/github.svg?raw';
 import ZenIcon from '@/icons/zen.svg?raw';
 import StoreIcon from '@/icons/store.svg?raw';
 import { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
+import { ColorLike } from '@/@types/drawer';
 
 export class Settings extends Dropdown {
   drawer: Drawer;
@@ -20,6 +21,8 @@ export class Settings extends Dropdown {
   $githubButton: HTMLButtonElement;
   $zenModeButton: HTMLButtonElement;
   $clearStorageButton: HTMLButtonElement;
+  $bgColorContainer: HTMLDivElement;
+  $bgColorBtnContainer: HTMLDivElement;
 
   constructor(drawer: Drawer) {
     super();
@@ -63,6 +66,37 @@ export class Settings extends Dropdown {
     this.$clearStorageButton.innerHTML = StoreIcon + 'Clear stored data';
     this.$clearStorageButton.role = 'button';
 
+    this.$bgColorContainer = document.createElement('div');
+    this.$bgColorContainer.classList.add('color-picker-container');
+    const $bgColorTitle = document.createElement('h6');
+    $bgColorTitle.classList.add('title');
+    $bgColorTitle.innerText = 'Background color';
+    this.$bgColorContainer.append($bgColorTitle);
+
+    this.$bgColorBtnContainer = document.createElement('div');
+    this.$bgColorBtnContainer.classList.add('color-picker-btn-container');
+    const $strokeColorButtons: HTMLButtonElement[] = [];
+
+    const strokeColors = ['#fff', '#f8f9fa', '#f5faff', '#fffce8', '#fdf8f6'] as ColorLike[];
+
+    strokeColors.forEach((color) => {
+      const $btn = document.createElement('button');
+      $btn.classList.add('color-picker__button');
+      $btn.style.backgroundColor = color;
+      $btn.addEventListener('click', () => {
+        this.$bgColorBtnContainer.querySelector('.color-picker__button.active')?.classList.remove('active');
+        $btn.classList.add('active');
+        this.drawer.setBgColor(color);
+      });
+
+      if (this.drawer.options.strokeColor === color) {
+        $btn.classList.add('active');
+      }
+      $strokeColorButtons.push($btn);
+    });
+    this.$bgColorBtnContainer.append(...$strokeColorButtons);
+    this.$bgColorContainer.append(this.$bgColorBtnContainer);
+
     this.$dropdownList.append(
       ...[
         // this.$openButton,
@@ -73,6 +107,8 @@ export class Settings extends Dropdown {
         this.$githubButton,
         this.getSeparator(),
         this.$clearStorageButton,
+        this.getSeparator(),
+        this.$bgColorContainer
       ]
     );
     this.drawer.$drawerContainer.append(this.$dropdownContainer);

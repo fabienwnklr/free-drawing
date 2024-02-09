@@ -3,8 +3,8 @@
 .drawer-overlay-container {
   user-select: none;
   position: absolute;
-  top: 5rem;
-  left: 10px;
+  top: 10px;
+  right: 10px;
   flex-direction: column;
   min-width: 100px;
   width: fit-content;
@@ -13,59 +13,6 @@
 
   &.show {
     display: flex;
-  }
-
-  .overlay-title {
-    font-size: 0.8rem;
-    align-self: start;
-    margin-bottom: 0.4rem;
-  }
-
-  .stroke-color-container,
-  .stroke-width-container {
-    display: flex;
-    align-items: center;
-    justify-content: left;
-    flex-direction: column;
-    width: 100%;
-    padding: 0.4rem;
-
-    .stroke-color-btn-container,
-    .stroke-width-btn-container {
-      display: flex;
-      gap: 0.4rem;
-      // justify-content: ;
-      align-items: center;
-      width: 100%;
-      margin-top: 0.3rem;
-      margin-bottom: 0.3rem;
-
-      .color-picker__button {
-        padding: 0;
-        margin: 0;
-        width: 1.35rem;
-        height: 1.35rem;
-        border: 1px solid $light;
-        border-radius: $radius;
-        background-position: left center;
-        position: relative;
-        font-family: inherit;
-
-        &.active {
-          outline: 3px solid $primary;
-        }
-      }
-
-      .drawer-button {
-        width: $btn-size-default;
-        height: $btn-size-default;
-
-        &.stroke-picker__button {
-          border: 1px solid $light;
-          border-radius: $radius;
-        }
-      }
-    }
   }
 
   .opacity-container {
