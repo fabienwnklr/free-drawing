@@ -11,6 +11,7 @@ import { Context } from 'konva/lib/Context';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Stage } from 'konva/lib/Stage';
 import { shapeName } from '@/constants';
+import { ColorLike } from '@/@types/drawer';
 
 export class SelectWidget extends BaseWidget {
   #x1: number = 0;
@@ -27,11 +28,12 @@ export class SelectWidget extends BaseWidget {
     'bottom-center',
     'bottom-right',
   ];
+  color: ColorLike = 'rgba(152, 158, 255, 1)';
   selectionRectangle: Rect = new Rect();
   // In constructor for be usable out of widget
   transformer: Transformer = new Transformer({
-    borderStroke: 'rgba(152, 158, 255, 1)',
-    anchorStroke: 'rgba(152, 158, 255, 1)',
+    borderStroke: this.color,
+    anchorStroke: this.color,
     enabledAnchors: this.defaultAnchors,
     anchorStyleFunc(anchor) {
       if (anchor.hasName('top-center') || anchor.hasName('bottom-center')) {
@@ -454,7 +456,7 @@ export class SelectWidget extends BaseWidget {
       if (lg.orientation === 'H') {
         const line = new Line({
           points: [-6000, 0, 6000, 0],
-          stroke: 'rgb(0, 161, 255)',
+          stroke: this.color,
           strokeWidth: 1,
           name: shapeName.guideLine,
           dash: [4, 6],
@@ -467,7 +469,7 @@ export class SelectWidget extends BaseWidget {
       } else if (lg.orientation === 'V') {
         const line = new Line({
           points: [0, -6000, 0, 6000],
-          stroke: 'rgb(0, 161, 255)',
+          stroke: this.color,
           strokeWidth: 1,
           name: shapeName.guideLine,
           dash: [4, 6],
