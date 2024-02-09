@@ -104,10 +104,16 @@ export class ContextMenu {
     });
   }
 
+  /**
+   * Show the context menu
+   */
   show() {
     this.$menu.classList.add('show');
   }
 
+  /**
+   * Hide the context menu
+   */
   hide() {
     this.$menu.classList.remove('show');
   }

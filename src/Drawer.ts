@@ -25,7 +25,21 @@ import { Text } from 'konva/lib/shapes/Text';
 import { Line } from 'konva/lib/shapes/Line';
 import { Transformer } from 'konva/lib/shapes/Transformer';
 import { Toast } from './components/Toast/Toast';
+import { Group } from 'konva/lib/Group';
+import { Shape, ShapeConfig } from 'konva/lib/Shape';
 
+/**
+ * Drawer constructor. A drawer is used to draw multiple shapes
+ * @constructor
+ * @memberof Drawer
+ * @augments Konva.MicroEvent
+ *
+ * @example
+ * const drawer = new Drawer(document.getElementById('draw'), {
+ *   width: 500,
+ *   height: 800,
+ * });
+ */
 export class Drawer extends MicroEvent {
   $el: HTMLDivElement;
   $drawerContainer: HTMLDivElement;
@@ -138,11 +152,19 @@ export class Drawer extends MicroEvent {
     this._initEvents();
   }
 
-  getZoomLevel() {
+  /**
+   * Get zoom level
+   * @returns {number}
+   */
+  getZoomLevel(): number {
     return this.stage.scaleX();
   }
 
-  getDrawingShapes() {
+  /**
+   * Get all shape drawing
+   * @returns {(Group | Shape<ShapeConfig>)[]}
+   */
+  getDrawingShapes(): (Group | Shape<ShapeConfig>)[] {
     return this.drawLayer.children.filter((e) => {
       if (!(e instanceof Transformer) && !e.hasName(shapeName.selection)) {
         return e;
@@ -150,7 +172,12 @@ export class Drawer extends MicroEvent {
     });
   }
 
-  getDrawingShapeByClassName(shapeType: keyof typeof shapeName) {
+  /**
+   * Get all drawing shape by name
+   * @param {keyof typeof shapeName} shapeType Shape type
+   * @returns {(Group | Shape<ShapeConfig>)[]}
+   */
+  getDrawingShapeByName(shapeType: keyof typeof shapeName): (Group | Shape<ShapeConfig>)[] {
     return this.drawLayer.children.filter((e) => {
       if (e.hasName(shapeName[shapeType])) {
         return e;
@@ -319,8 +346,8 @@ export class Drawer extends MicroEvent {
   }
 
   /**
-   * Alias for get widget
-   * @param name
+   * Get widget by name
+   * @param {AvailableTools} name
    */
   getWidget<T>(name: AvailableTools): T | undefined {
     return this.toolbar.getWidget<T>(name);
@@ -385,6 +412,9 @@ export class Drawer extends MicroEvent {
     }
   }
 
+  /**
+   * Save current draw state to localstorage
+   */
   save() {
     localStorage.setItem(this.options.localStorageKey, this.stage.toJSON());
   }
@@ -397,14 +427,16 @@ export class Drawer extends MicroEvent {
     this.background.fill(color);
   }
 
+  /**
+   * Set color for draw
+   * @param {ColorLike} color
+   */
   setColor(color: ColorLike) {
     this.options.strokeColor = color;
 
     const brushWidget = this.getWidget<BrushWidget>('brush');
 
-    if (brushWidget) {
-      brushWidget.updateCursor();
-    }
+    brushWidget?.updateCursor();
   }
 
   /**
@@ -412,8 +444,9 @@ export class Drawer extends MicroEvent {
    *
    * @param message Message to show
    * @param type Type of toast
+   * @returns {Toast}
    */
-  toast(message: string, type?: 'info' | 'warning' | 'error' | 'neutral') {
+  toast(message: string, type?: 'info' | 'warning' | 'error' | 'neutral'): Toast {
     const toast = new Toast(this, message, type);
 
     toast.show();
@@ -421,11 +454,21 @@ export class Drawer extends MicroEvent {
     return toast;
   }
 
+  /**
+   * @private
+   *
+   * update pointer-event state
+   * @param state
+   */
   UIPointerEvents(state: 'all' | 'none') {
     document.getElementsByTagName('html')[0].style.setProperty('--drawer-pointer-events', state);
   }
 
-  clearCanvas(force = false) {
+  /**
+   * Clear canvas draw
+   * @param force Force clear (don't show confirm modal)
+   */
+  clearCanvas(force: boolean = false) {
     if (!force) {
       if (!this.$clearConfirmModal) {
         this.$clearConfirmModal = new ConfirmModal(this, {
@@ -443,19 +486,30 @@ export class Drawer extends MicroEvent {
     }
   }
 
-  clearStoredData() {
-    if (!this.$clearStoredConfirmModal) {
-      this.$clearStoredConfirmModal = new ConfirmModal(this, {
-        message: 'Are you sure to remove all stored data ?',
-        onConfirm: (modal) => {
-          localStorage.removeItem(this.options.localStorageKey);
-          modal.hide();
-        },
-      });
+  /**
+   * Remove localstorage data
+   * @param force Force clear (don't show confirm modal)
+   */
+  clearStoredData(force: boolean = false) {
+    if (!force) {
+      if (!this.$clearStoredConfirmModal) {
+        this.$clearStoredConfirmModal = new ConfirmModal(this, {
+          message: 'Are you sure to remove all stored data ?',
+          onConfirm: (modal) => {
+            localStorage.removeItem(this.options.localStorageKey);
+            modal.hide();
+          },
+        });
+      }
+      this.$clearStoredConfirmModal.show();
+    } else {
+      localStorage.removeItem(this.options.localStorageKey);
     }
-    this.$clearStoredConfirmModal.show();
   }
 
+  /**
+   * Show grid
+   */
   showGrid() {
     this.grid = true;
     this.contextMenu.$gridBtn.classList.add('active');
@@ -551,6 +605,9 @@ export class Drawer extends MicroEvent {
     }
   }
 
+  /**
+   * Hide grid
+   */
   hideGrid() {
     this.grid = false;
     this.setting.$toggleGridButton.classList.remove('active');
@@ -560,7 +617,7 @@ export class Drawer extends MicroEvent {
   }
 
   /**
-   * Focus drawer div container (usefull for keyevent)
+   * Focus drawer div container (usefull for keyevent for example)
    */
   focus() {
     this.$drawerContainer.focus();

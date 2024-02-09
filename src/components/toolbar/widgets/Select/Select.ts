@@ -152,7 +152,7 @@ export class SelectWidget extends BaseWidget {
         }
       });
 
-      const textShapes = this.drawer.getDrawingShapeByClassName('text');
+      const textShapes = this.drawer.getDrawingShapeByName('text');
       if (textShapes.length > 0 && textShapes.length === selected.length) {
         this.transformer.enabledAnchors(['middle-left', 'middle-right']);
         this.transformer.boundBoxFunc(function (_oldBox, newBox) {
@@ -188,7 +188,7 @@ export class SelectWidget extends BaseWidget {
     this.snapping = true;
     this.drawer.drawLayer.on('dragmove', (e) => {
       // clear all previous lines on the screen
-      this.drawer.getDrawingShapeByClassName('guideLine').forEach((l) => l.destroy());
+      this.drawer.getDrawingShapeByName('guideLine').forEach((l) => l.destroy());
 
       // find possible snapping lines
       const lineGuideStops = this._getLineGuideStops(e.target);
@@ -231,7 +231,7 @@ export class SelectWidget extends BaseWidget {
 
     this.drawer.drawLayer.on('dragend', () => {
       // clear all previous lines on the screen
-      this.drawer.getDrawingShapeByClassName('guideLine').forEach((l) => l.destroy());
+      this.drawer.getDrawingShapeByName('guideLine').forEach((l) => l.destroy());
     });
   }
 
