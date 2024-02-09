@@ -17,7 +17,16 @@ export class SelectWidget extends BaseWidget {
   #y1: number = 0;
   #x2: number = 0;
   #y2: number = 0;
-  defaultAnchors: string[] = ['top-left', 'top-center', 'top-right', 'middle-right', 'middle-left', 'bottom-left', 'bottom-center', 'bottom-right'];
+  defaultAnchors: string[] = [
+    'top-left',
+    'top-center',
+    'top-right',
+    'middle-right',
+    'middle-left',
+    'bottom-left',
+    'bottom-center',
+    'bottom-right',
+  ];
   selectionRectangle: Rect = new Rect();
   // In constructor for be usable out of widget
   transformer: Transformer = new Transformer({
@@ -142,12 +151,12 @@ export class SelectWidget extends BaseWidget {
       });
 
       const textShapes = this.drawer.getDrawingShapeByClassName('text');
-      if (textShapes.length > 0 && textShapes.length  === selected.length) {
-        // this.transformer.enabledAnchors(['middle-left', 'middle-right']);
-        // this.transformer.boundBoxFunc(function (_oldBox, newBox) {
-        //   newBox.width = Math.max(30, newBox.width);
-        //   return newBox;
-        // });
+      if (textShapes.length > 0 && textShapes.length === selected.length) {
+        this.transformer.enabledAnchors(['middle-left', 'middle-right']);
+        this.transformer.boundBoxFunc(function (_oldBox, newBox) {
+          newBox.width = Math.max(30, newBox.width);
+          return newBox;
+        });
       } else {
         this.transformer.enabledAnchors(this.defaultAnchors);
       }
@@ -165,6 +174,12 @@ export class SelectWidget extends BaseWidget {
     this.transformer.on('transformend dragend', () => {
       this.drawer.stage.fire('change');
     });
+  }
+
+  selectAll() {
+    const allNodes = this.drawer.getDrawingShapes();
+    this.transformer.nodes(allNodes);
+    this.drawer.focus();
   }
 
   private _initSnapEvents() {

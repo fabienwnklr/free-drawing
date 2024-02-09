@@ -194,7 +194,7 @@ export class Drawer extends MicroEvent {
 
     this.stage.on('wheel', () => {
       this._update();
-    })
+    });
 
     this.stage.on('change', () => {
       if (this.options.autoSave) {
@@ -223,9 +223,7 @@ export class Drawer extends MicroEvent {
       }
 
       if (e.ctrlKey && e.key === 'a') {
-        const allNodes = this.getDrawingShapes();
-        this.focus();
-        selectWidget?.transformer.nodes(allNodes);
+        selectWidget?.selectAll();
       }
 
       if (selectWidget?.transformer.nodes().length) {
@@ -257,7 +255,7 @@ export class Drawer extends MicroEvent {
         return;
       }
 
-      if (e.key === 's') {
+      if (!e.altKey && e.key === 's') {
         if (this._duringAction()) {
           return;
         }
@@ -304,8 +302,17 @@ export class Drawer extends MicroEvent {
       if (e.ctrlKey && e.key === 'z') {
         this.undoRedo.undo();
       }
+
       if (e.ctrlKey && e.key === 'y') {
         this.undoRedo.redo();
+      }
+
+      if (e.altKey && e.key === 's') {
+        this.setting.toggleSnapping();
+      }
+
+      if (e.altKey && e.key === 'g') {
+        this.setting.toggleGrid();
       }
     });
   }
