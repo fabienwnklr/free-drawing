@@ -24,6 +24,7 @@ import { TextWidget } from './components/toolbar/widgets/Text/Text';
 import { Text } from 'konva/lib/shapes/Text';
 import { Line } from 'konva/lib/shapes/Line';
 import { Transformer } from 'konva/lib/shapes/Transformer';
+import { Toast } from './components/Toast/Toast';
 
 export class Drawer extends MicroEvent {
   $el: HTMLDivElement;
@@ -413,7 +414,11 @@ export class Drawer extends MicroEvent {
    * @param type Type of toast
    */
   toast(message: string, type?: 'info' | 'warning' | 'error' | 'neutral') {
-    console.log(message, type);
+    const toast = new Toast(this, message, type);
+
+    toast.show();
+
+    return toast;
   }
 
   UIPointerEvents(state: 'all' | 'none') {
