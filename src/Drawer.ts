@@ -181,9 +181,7 @@ export class Drawer extends MicroEvent {
       this._drawLines();
     }
 
-    if (this.background.fill() !== '#fff') {
-      this.bgLayer.position({ x: -this._unScale(this.stage.position().x), y: -this._unScale(this.stage.position().y) });
-    }
+    this.bgLayer.position({ x: -this._unScale(this.stage.position().x), y: -this._unScale(this.stage.position().y) });
   }
 
   private _initEvents() {
