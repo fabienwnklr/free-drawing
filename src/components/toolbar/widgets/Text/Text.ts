@@ -56,14 +56,6 @@ export class TextWidget extends BaseWidget {
   }
 
   addTextNodeEvents(textNode: Text) {
-    textNode.on('transform', function () {
-      // reset scale, so only with is changing by transformer
-      this.setAttrs({
-        width: this.width() * this.scaleX(),
-        scaleX: 1,
-      });
-    });
-
     textNode.on('dblclick', (e) => {
       this.editTextNode(e.target as Text);
     });

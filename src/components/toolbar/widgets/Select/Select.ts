@@ -36,6 +36,7 @@ export class SelectWidget extends BaseWidget {
     borderStroke: this.color,
     anchorStroke: this.color,
     enabledAnchors: this.defaultAnchors,
+    keepRatio: true,
     anchorStyleFunc(anchor) {
       if (anchor.hasName('top-center') || anchor.hasName('bottom-center')) {
         anchor.height(6);
@@ -154,7 +155,7 @@ export class SelectWidget extends BaseWidget {
 
       const textShapes = this.drawer.getDrawingShapeByName('text');
       if (textShapes.length > 0 && textShapes.length === selected.length) {
-        this.transformer.enabledAnchors(['middle-left', 'middle-right']);
+        this.transformer.enabledAnchors(['top-left', 'top-right', 'bottom-left', 'bottom-right']);
         this.transformer.boundBoxFunc(function (_oldBox, newBox) {
           newBox.width = Math.max(30, newBox.width);
           return newBox;
@@ -331,7 +332,7 @@ export class SelectWidget extends BaseWidget {
       return newPos;
     });
 
-    this.transformer.rotationSnaps([0, 90, 180, 270])
+    this.transformer.rotationSnaps([0, 90, 180, 270]);
 
     this.drawer.drawLayer.on('dragend', () => {
       // clear all previous lines on the screen
@@ -346,7 +347,7 @@ export class SelectWidget extends BaseWidget {
     this.transformer.anchorDragBoundFunc(
       undefined as any as (oldPos: Vector2d, newPos: Vector2d, e: MouseEvent) => Vector2d
     );
-    this.transformer.rotationSnaps(undefined as any as number[])
+    this.transformer.rotationSnaps(undefined as any as number[]);
   }
 
   protected removeEvents() {
