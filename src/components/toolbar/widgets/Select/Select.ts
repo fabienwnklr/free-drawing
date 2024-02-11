@@ -133,12 +133,10 @@ export class SelectWidget extends BaseWidget {
           Util.haveIntersection({ x, y, width: 1, height: 1 }, shape.getClientRect())
         );
       }
-      const currentlySelected = this.transformer.nodes() as Line<NodeConfig>[];
 
-      currentlySelected.forEach((s) => {
-        s.hitFunc(undefined as any as (ctx: Context, shape: Line<NodeConfig>) => void);
-        s.hitStrokeWidth(20);
-      });
+      this._restoreHit();
+
+      // now apply hit detection
       selected.forEach((s) => {
         if (s instanceof Line) {
           s.hitFunc((context, shape) => {
@@ -175,6 +173,17 @@ export class SelectWidget extends BaseWidget {
 
     this.transformer.on('transformend dragend', () => {
       this.drawer.stage.fire('change');
+    });
+  }
+
+  /**
+   * reset hit detection for old selected shape
+   */
+  private _restoreHit() {
+    const currentlySelected = this.transformer.nodes() as Line<NodeConfig>[];
+    currentlySelected.forEach((s) => {
+      s.hitFunc(undefined as any as (ctx: Context, shape: Line<NodeConfig>) => void);
+      s.hitStrokeWidth(20);
     });
   }
 
@@ -285,6 +294,7 @@ export class SelectWidget extends BaseWidget {
   protected onDesactive(): void {
     this.selectionRectangle.destroy();
     this.removeEvents();
+    this._restoreHit();
     const draw = this.drawer.getDrawingShapes();
 
     draw.forEach((d) => {
