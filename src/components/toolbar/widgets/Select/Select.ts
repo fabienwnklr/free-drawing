@@ -74,7 +74,7 @@ export class SelectWidget extends BaseWidget {
   protected initEvents(): void {
     this.drawer.stage.on('mousedown touchstart', (e) => {
       // do nothing if we mousedown on any shape
-      if (e.target !== this.drawer.stage) {
+      if (e.target !== this.drawer.stage || e.evt.target.button === 2) {
         return;
       }
       e.evt.preventDefault();
@@ -118,6 +118,7 @@ export class SelectWidget extends BaseWidget {
     });
 
     this.drawer.stage.on('mouseup touchend', (e) => {
+      if (e.evt.button === 2) return;
       this.isSelecting = false;
       this.drawer.UIPointerEvents('all');
       e.evt.preventDefault();

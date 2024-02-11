@@ -239,6 +239,7 @@ export class Drawer extends MicroEvent {
     const DELTA = 4;
     this.$drawerContainer.addEventListener('keydown', (e) => {
       if (this._duringAction()) return;
+
       const selectWidget = this.getWidget<SelectWidget>('selection');
       if (e.key === 'Backspace' || e.key === 'Delete') {
         const allNodes = selectWidget?.transformer.nodes();
@@ -271,12 +272,13 @@ export class Drawer extends MicroEvent {
         e.preventDefault();
       }
 
+      const panWidget = this.getWidget<PanWidget>('pan');
+
       if (e.key === 'h') {
         if (this._duringAction()) {
           return;
         }
 
-        const panWidget = this.getWidget<PanWidget>('pan');
 
         panWidget?.setActive(true);
         panWidget?.$button.focus();
