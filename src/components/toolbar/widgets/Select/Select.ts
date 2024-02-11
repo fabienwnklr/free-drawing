@@ -331,6 +331,8 @@ export class SelectWidget extends BaseWidget {
       return newPos;
     });
 
+    this.transformer.rotationSnaps([0, 90, 180, 270])
+
     this.drawer.drawLayer.on('dragend', () => {
       // clear all previous lines on the screen
       this.drawer.selectionLayer.find('.' + shapeName.guideLine).forEach((l) => l.destroy());
@@ -344,6 +346,7 @@ export class SelectWidget extends BaseWidget {
     this.transformer.anchorDragBoundFunc(
       undefined as any as (oldPos: Vector2d, newPos: Vector2d, e: MouseEvent) => Vector2d
     );
+    this.transformer.rotationSnaps(undefined as any as number[])
   }
 
   protected removeEvents() {
