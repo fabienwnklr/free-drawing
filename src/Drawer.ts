@@ -46,8 +46,8 @@ export class Drawer extends MicroEvent {
   stage: Stage;
   // Layers
   gridLayer: Layer;
-  selectionLayer: Layer;
   drawLayer: Layer;
+  selectionLayer: Layer;
   toolbar: Toolbar;
   activeTool: AvailableTools = 'brush';
   options: DrawerOptions;
@@ -92,8 +92,8 @@ export class Drawer extends MicroEvent {
       this.stage = Node.create(saved, this.$drawerContainer);
       this.bgLayer = this.stage.findOne('.background') as Layer;
       this.gridLayer = this.stage.findOne('.grid') as Layer;
-      this.selectionLayer = this.stage.findOne('.grid') as Layer;
       this.drawLayer = this.stage.findOne('.draw') as Layer;
+      this.selectionLayer = this.stage.findOne('.grid') as Layer;
       this.background = this.stage.findOne('.background') as Rect;
     } else {
       this.stage = new Stage({
@@ -103,8 +103,8 @@ export class Drawer extends MicroEvent {
       });
       this.bgLayer = new Layer({ name: 'background' });
       this.gridLayer = new Layer({ name: 'grid' });
-      this.selectionLayer = new Layer({ name: 'selection' });
       this.drawLayer = new Layer({ name: ' draw' });
+      this.selectionLayer = new Layer({ name: 'selection' });
       this.background = new Rect({
         fill: '#fff',
         width: this.stage.width() * 100,
@@ -117,8 +117,8 @@ export class Drawer extends MicroEvent {
       this.bgLayer.add(this.background);
       this.stage.add(this.bgLayer);
       this.stage.add(this.gridLayer);
-      this.stage.add(this.selectionLayer);
       this.stage.add(this.drawLayer);
+      this.stage.add(this.selectionLayer);
     }
     this.$stageContainer = this.stage.content;
     this.$footerContainer = document.createElement('footer');
