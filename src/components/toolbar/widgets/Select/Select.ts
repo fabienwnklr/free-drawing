@@ -68,13 +68,13 @@ export class SelectWidget extends BaseWidget {
       }
     });
 
-    this.drawer.drawLayer.add(this.transformer);
+    this.drawer.selectionLayer.add(this.transformer);
   }
 
   protected initEvents(): void {
     this.drawer.stage.on('mousedown touchstart', (e) => {
       // do nothing if we mousedown on any shape
-      if (e.target !== this.drawer.stage || e.evt.target.button === 2) {
+      if (e.target !== this.drawer.stage || e.evt.button === 2) {
         return;
       }
       e.evt.preventDefault();
@@ -194,11 +194,58 @@ export class SelectWidget extends BaseWidget {
     this.drawer.focus();
   }
 
+  protected onActive(): void {
+    this.transformer.zIndex(this.transformer.zIndex() + 1);
+
+    this.selectionRectangle = new Rect({
+      fill: 'rgba(152, 158, 255, .2)',
+      stroke: 'rgba(152, 158, 255, .8)',
+      strokeWidth: 1,
+      visible: false,
+      name: shapeName.selection,
+    });
+
+    this.drawer.selectionLayer.add(this.selectionRectangle);
+    this.initEvents();
+    this.updateCursor();
+    const shapes = this.drawer.getDrawingShapes();
+
+    shapes.forEach((d) => {
+      d.draggable(true);
+    });
+  }
+
+  toggleSnapping(active: boolean = true) {
+    if (active && !this.snapping) {
+      this.drawer.contextMenu.$snappingBtn.classList.add('active');
+      this._initSnapEvents();
+    } else if (!active && this.snapping) {
+      this._removeSnapEvents();
+      this.drawer.contextMenu.$snappingBtn.classList.remove('active');
+    }
+  }
+
+  updateCursor(): void {
+    this.drawer.$stageContainer.style.cursor = 'default';
+  }
+
+  protected onDesactive(): void {
+    this.selectionRectangle.destroy();
+    this.removeEvents();
+    this._restoreHit();
+    const draw = this.drawer.getDrawingShapes();
+
+    draw.forEach((d) => {
+      d.draggable(false);
+    });
+    this.transformer.nodes([]);
+  }
+
   private _initSnapEvents() {
     this.snapping = true;
     this.drawer.drawLayer.on('dragmove', (e) => {
       // clear all previous lines on the screen
-      this.drawer.getDrawingShapeByName('guideLine').forEach((l) => l.destroy());
+      this.drawer.selectionLayer.find('.' + shapeName.guideLine).forEach((l) => l.destroy());
 
       // find possible snapping lines
       const lineGuideStops = this._getLineGuideStops(e.target);
@@ -241,7 +288,7 @@ export class SelectWidget extends BaseWidget {
 
     this.drawer.drawLayer.on('dragend', () => {
       // clear all previous lines on the screen
-      this.drawer.getDrawingShapeByName('guideLine').forEach((l) => l.destroy());
+      this.drawer.selectionLayer.find('.' + shapeName.guideLine).forEach((l) => l.destroy());
     });
   }
 
@@ -255,53 +302,6 @@ export class SelectWidget extends BaseWidget {
     this.drawer.stage.off('mousedown touchstart');
     this.drawer.stage.off('mousemove touchmove');
     this.drawer.stage.off('mouseup touchend');
-  }
-
-  protected onActive(): void {
-    this.transformer.zIndex(this.transformer.zIndex() + 1);
-
-    this.selectionRectangle = new Rect({
-      fill: 'rgba(152, 158, 255, .2)',
-      stroke: 'rgba(152, 158, 255, .8)',
-      strokeWidth: 1,
-      visible: false,
-      name: shapeName.selection,
-    });
-
-    this.drawer.drawLayer.add(this.selectionRectangle);
-    this.initEvents();
-    this.updateCursor();
-    const shapes = this.drawer.getDrawingShapes();
-
-    shapes.forEach((d) => {
-      d.draggable(true);
-    });
-  }
-
-  toggleSnapping(active: boolean = true) {
-    if (active && !this.snapping) {
-      this.drawer.contextMenu.$snappingBtn.classList.add('active');
-      this._initSnapEvents();
-    } else if (!active && this.snapping) {
-      this._removeSnapEvents();
-      this.drawer.contextMenu.$snappingBtn.classList.remove('active');
-    }
-  }
-
-  updateCursor(): void {
-    this.drawer.$stageContainer.style.cursor = 'default';
-  }
-
-  protected onDesactive(): void {
-    this.selectionRectangle.destroy();
-    this.removeEvents();
-    this._restoreHit();
-    const draw = this.drawer.getDrawingShapes();
-
-    draw.forEach((d) => {
-      d.draggable(false);
-    });
-    this.transformer.nodes([]);
   }
 
   private _getLineGuideStops(skipShape: Shape<ShapeConfig> | Stage): { vertical: number[]; horizontal: number[] } {
@@ -472,7 +472,7 @@ export class SelectWidget extends BaseWidget {
           name: shapeName.guideLine,
           dash: [4, 6],
         });
-        this.drawer.drawLayer.add(line);
+        this.drawer.selectionLayer.add(line);
         line.absolutePosition({
           x: 0,
           y: lg.lineGuide,
@@ -485,7 +485,7 @@ export class SelectWidget extends BaseWidget {
           name: shapeName.guideLine,
           dash: [4, 6],
         });
-        this.drawer.drawLayer.add(line);
+        this.drawer.selectionLayer.add(line);
         line.absolutePosition({
           x: lg.lineGuide,
           y: 0,

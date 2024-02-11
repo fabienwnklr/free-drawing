@@ -23,7 +23,6 @@ import { ContextMenu } from './components/ContextMenu/ContextMenu';
 import { TextWidget } from './components/toolbar/widgets/Text/Text';
 import { Text } from 'konva/lib/shapes/Text';
 import { Line } from 'konva/lib/shapes/Line';
-import { Transformer } from 'konva/lib/shapes/Transformer';
 import { Toast } from './components/Toast/Toast';
 import { Group } from 'konva/lib/Group';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
@@ -45,7 +44,9 @@ export class Drawer extends MicroEvent {
   $drawerContainer: HTMLDivElement;
   $stageContainer: HTMLDivElement;
   stage: Stage;
+  // Layers
   gridLayer: Layer;
+  selectionLayer: Layer;
   drawLayer: Layer;
   toolbar: Toolbar;
   activeTool: AvailableTools = 'brush';
@@ -91,6 +92,7 @@ export class Drawer extends MicroEvent {
       this.stage = Node.create(saved, this.$drawerContainer);
       this.bgLayer = this.stage.findOne('.background') as Layer;
       this.gridLayer = this.stage.findOne('.grid') as Layer;
+      this.selectionLayer = this.stage.findOne('.grid') as Layer;
       this.drawLayer = this.stage.findOne('.draw') as Layer;
       this.background = this.stage.findOne('.background') as Rect;
     } else {
@@ -101,6 +103,7 @@ export class Drawer extends MicroEvent {
       });
       this.bgLayer = new Layer({ name: 'background' });
       this.gridLayer = new Layer({ name: 'grid' });
+      this.selectionLayer = new Layer({ name: 'selection' });
       this.drawLayer = new Layer({ name: ' draw' });
       this.background = new Rect({
         fill: '#fff',
@@ -114,6 +117,7 @@ export class Drawer extends MicroEvent {
       this.bgLayer.add(this.background);
       this.stage.add(this.bgLayer);
       this.stage.add(this.gridLayer);
+      this.stage.add(this.selectionLayer);
       this.stage.add(this.drawLayer);
     }
     this.$stageContainer = this.stage.content;
@@ -165,11 +169,7 @@ export class Drawer extends MicroEvent {
    * @returns {(Group | Shape<ShapeConfig>)[]}
    */
   getDrawingShapes(): (Group | Shape<ShapeConfig>)[] {
-    return this.drawLayer.children.filter((e) => {
-      if (!(e instanceof Transformer) && !e.hasName(shapeName.selection)) {
-        return e;
-      }
-    });
+    return this.drawLayer.children;
   }
 
   /**
