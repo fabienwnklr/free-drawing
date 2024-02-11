@@ -196,8 +196,6 @@ export class SelectWidget extends BaseWidget {
   }
 
   protected onActive(): void {
-    this.transformer.zIndex(this.transformer.zIndex() + 1);
-
     this.selectionRectangle = new Rect({
       fill: 'rgba(152, 158, 255, .2)',
       stroke: 'rgba(152, 158, 255, .8)',
