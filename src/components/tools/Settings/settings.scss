@@ -1,8 +1,53 @@
+@import '../../../scss/variables';
+
 .drawer-dropdown-setting {
   .drawer-button-neutral {
     border: 0;
   }
   .text-muted {
     margin-left: 0.5rem;
+  }
+
+  .color-picker-container {
+    display: flex;
+    align-items: center;
+    justify-content: left;
+    flex-direction: column;
+    width: 100%;
+    padding: 0.4rem;
+
+    .color-picker-btn-container {
+      display: flex;
+      gap: 0.4rem;
+      align-items: center;
+      width: 100%;
+      margin-top: 0.3rem;
+      margin-bottom: 0.3rem;
+
+      .color-picker__button {
+        width: 1.35rem;
+        height: 1.35rem;
+        border: 1px solid $light;
+        border-radius: $radius;
+        font-family: Ubuntu, sans-serif;
+        cursor: pointer;
+        pointer-events: var(--drawer-pointer-events);
+
+        &.active {
+          outline: 3px solid $primary;
+        }
+      }
+
+      .drawer-button {
+        width: $btn-size-default;
+        height: $btn-size-default;
+
+        &.stroke-picker__button,
+        &.font-picker__button {
+          border: 1px solid $light;
+          border-radius: $radius;
+        }
+      }
+    }
   }
 }
