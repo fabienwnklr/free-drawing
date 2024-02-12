@@ -187,7 +187,7 @@
     margin-bottom: 0.4rem;
   }
 
-  .color-picker-container {
+  .overlay-picker-container {
     display: flex;
     align-items: center;
     justify-content: left;
@@ -195,7 +195,7 @@
     width: 100%;
     padding: 0.4rem;
 
-    .color-picker-btn-container {
+    .overlay-picker-btn-container {
       display: flex;
       gap: 0.4rem;
       align-items: center;
@@ -203,16 +203,12 @@
       margin-top: 0.3rem;
       margin-bottom: 0.3rem;
 
-      .color-picker__button {
-        padding: 0;
-        margin: 0;
+      .overlay-picker__button {
         width: 1.35rem;
         height: 1.35rem;
         border: 1px solid $light;
         border-radius: $radius;
-        background-position: left center;
-        position: relative;
-        font-family: inherit;
+        font-family: Ubuntu, sans-serif;
         cursor: pointer;
         pointer-events: var(--drawer-pointer-events);
 
@@ -225,7 +221,7 @@
         width: $btn-size-default;
         height: $btn-size-default;
 
-        &.stroke-picker__button {
+        &.stroke-picker__button, &.font-picker__button {
           border: 1px solid $light;
           border-radius: $radius;
         }

@@ -4,15 +4,33 @@ import LineIcon from '@/icons/line.svg?raw';
 import './overlay.scss';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Group } from 'konva/lib/Group';
+import { shapeName } from '@/constants';
+
+/**
+ * All common tool for all shape (color, opacity for now)
+ */
+
 export class BaseOverlay {
   $overlayContainer: HTMLDivElement;
   drawer: Drawer;
+
   $strokeColorContainer!: HTMLDivElement;
   $strokeColorBtnContainer!: HTMLDivElement;
+
   $strokeWidthContainer!: HTMLDivElement;
   $strokeWidthBtnContainer!: HTMLDivElement;
+
+  $fontSizeContainer!: HTMLDivElement;
+  $fontSizeBtnContainer!: HTMLDivElement;
+
   $opacityContainer!: HTMLDivElement;
   $opacityRange!: HTMLInputElement;
+
+  selectors = {
+    container: 'overlay-picker-container',
+    buttonContainer: 'overlay-picker-btn-container',
+    button: 'overlay-picker__button',
+  };
 
   constructor(drawer: Drawer) {
     this.drawer = drawer;
@@ -25,9 +43,27 @@ export class BaseOverlay {
   }
 
   private _init() {
-    // Start create stroke color management
+    // stroke color
+    this._createStrokeColorFields();
+    // stroke width
+    this._createStrokeWidthFields();
+    // font size for text node
+    this._createFontsizeFields();
+    // opacity
+    this._createOpacityField();
+
+    // Then append to dom
+    this.appendContent([
+      this.$strokeColorContainer,
+      this.$strokeWidthContainer,
+      this.$fontSizeContainer,
+      this.$opacityContainer,
+    ]);
+  }
+
+  private _createStrokeColorFields() {
     this.$strokeColorContainer = document.createElement('div');
-    this.$strokeColorContainer.classList.add('color-picker-container');
+    this.$strokeColorContainer.classList.add(this.selectors.container);
 
     const $strokeTitle = document.createElement('h6');
     $strokeTitle.classList.add('title');
@@ -35,34 +71,30 @@ export class BaseOverlay {
     this.$strokeColorContainer.append($strokeTitle);
 
     this.$strokeColorBtnContainer = document.createElement('div');
-    this.$strokeColorBtnContainer.classList.add('color-picker-btn-container');
+    this.$strokeColorBtnContainer.classList.add(this.selectors.buttonContainer);
     const $strokeColorButtons: HTMLButtonElement[] = [];
 
     const strokeColors = ['#000', '#e03131', '#2f9e44', '#1971c2', '#f08c00'] as ColorLike[];
 
     strokeColors.forEach((color) => {
       const $btn = document.createElement('button');
-      $btn.classList.add('color-picker__button');
+      $btn.classList.add(this.selectors.button);
       $btn.style.backgroundColor = color;
       $btn.dataset.color = color;
       $btn.addEventListener('click', () => {
-        this.$strokeColorBtnContainer.querySelector('.color-picker__button.active')?.classList.remove('active');
+        this.$strokeColorBtnContainer.querySelector(`.${this.selectors.button}.active`)?.classList.remove('active');
         $btn.classList.add('active');
         this.drawer.setColor(color);
       });
-
-      if (this.drawer.options.strokeColor === color) {
-        $btn.classList.add('active');
-      }
       $strokeColorButtons.push($btn);
     });
     this.$strokeColorBtnContainer.append(...$strokeColorButtons);
     this.$strokeColorContainer.append(this.$strokeColorBtnContainer);
-    // End stroke color
+  }
 
-    // Start create stroke width
+  private _createStrokeWidthFields() {
     this.$strokeWidthContainer = document.createElement('div');
-    this.$strokeWidthContainer.classList.add('color-picker-container');
+    this.$strokeWidthContainer.classList.add(this.selectors.container);
 
     const $widthTitle = document.createElement('h6');
     $widthTitle.classList.add('title');
@@ -70,7 +102,7 @@ export class BaseOverlay {
     this.$strokeWidthContainer.append($widthTitle);
 
     this.$strokeWidthBtnContainer = document.createElement('div');
-    this.$strokeWidthBtnContainer.classList.add('color-picker-btn-container');
+    this.$strokeWidthBtnContainer.classList.add(this.selectors.buttonContainer);
     const $strokeWidthButtons: HTMLButtonElement[] = [];
 
     const strokeSize = [3, 5, 8, 12];
@@ -80,23 +112,56 @@ export class BaseOverlay {
 
       $btn.innerHTML = LineIcon.replace('stroke-width="2.5"', `stroke-width="${width}"`);
       $btn.dataset.strokeWidth = width.toString();
-      $btn.classList.add('drawer-button', 'stroke-picker__button');
+      $btn.classList.add('drawer-button', this.selectors.button);
       $btn.addEventListener('click', () => {
-        this.$strokeWidthBtnContainer.querySelector('.drawer-button.active')?.classList.remove('active');
+        this.$strokeWidthBtnContainer.querySelector(`.${this.selectors.button}.active`)?.classList.remove('active');
         $btn.classList.add('active');
         this.drawer.setStrokeWidth($btn.dataset.strokeWidth as string);
       });
-
-      if (this.drawer.options.strokeWidth === width) {
-        $btn.classList.add('active');
-      }
       $strokeWidthButtons.push($btn);
     });
     this.$strokeWidthBtnContainer.append(...$strokeWidthButtons);
     this.$strokeWidthContainer.append(this.$strokeWidthBtnContainer);
-    // End stroke width
+  }
 
-    // opacity
+  private _createFontsizeFields() {
+    this.$fontSizeContainer = document.createElement('div');
+    this.$fontSizeContainer.classList.add(this.selectors.container);
+
+    const $fontsizeTitle = document.createElement('h6');
+    $fontsizeTitle.classList.add('title');
+    $fontsizeTitle.innerText = 'Font size';
+    this.$fontSizeContainer.append($fontsizeTitle);
+
+    this.$fontSizeBtnContainer = document.createElement('div');
+    this.$fontSizeBtnContainer.classList.add(this.selectors.buttonContainer);
+    const $fontsizeButtons: HTMLButtonElement[] = [];
+
+    const fontSize = [
+      { label: 'S', value: 10 },
+      { label: 'M', value: 15 },
+      { label: 'L', value: 20 },
+      { label: 'XL', value: 25 },
+    ];
+
+    fontSize.forEach((font) => {
+      const $btn = document.createElement('button');
+
+      $btn.innerHTML = font.label;
+      $btn.dataset.fontSize = font.value.toString();
+      $btn.classList.add('drawer-button', this.selectors.button);
+      $btn.addEventListener('click', () => {
+        this.$fontSizeBtnContainer.querySelector(`.${this.selectors.button}.active`)?.classList.remove('active');
+        $btn.classList.add('active');
+        this.drawer.setStrokeWidth($btn.dataset.strokeWidth as string);
+      });
+      $fontsizeButtons.push($btn);
+    });
+    this.$fontSizeBtnContainer.append(...$fontsizeButtons);
+    this.$fontSizeContainer.append(this.$fontSizeBtnContainer);
+  }
+
+  private _createOpacityField() {
     this.$opacityContainer = document.createElement('div');
     this.$opacityContainer.classList.add('opacity-container');
 
@@ -117,8 +182,6 @@ export class BaseOverlay {
     });
 
     this.$opacityContainer.append(this.$opacityRange);
-
-    this.appendContent([this.$strokeColorContainer, this.$strokeWidthContainer, this.$opacityContainer]);
   }
 
   appendContent(elements: HTMLElement[]) {
@@ -128,13 +191,15 @@ export class BaseOverlay {
   show(shape?: (Shape<ShapeConfig> | Group)[]) {
     this.$overlayContainer.classList.add('show');
 
-    this.$strokeColorBtnContainer.querySelector('.color-picker__button.active')?.classList.remove('active');
-    this.$strokeWidthBtnContainer.querySelector('.stroke-picker__button.active')?.classList.remove('active');
+    this.$strokeColorBtnContainer.querySelector(`.${this.selectors.button}.active`)?.classList.remove('active');
+    this.$strokeWidthBtnContainer.querySelector(`.${this.selectors.button}.active`)?.classList.remove('active');
+
     let data = {
       color: this.drawer.options.strokeColor,
       strokeWidth: this.drawer.options.strokeWidth,
       opacity: this.drawer.options.opacity,
     };
+
     if (shape && shape[0] instanceof Shape) {
       data = {
         color: shape[0].stroke() as ColorLike,
@@ -143,21 +208,31 @@ export class BaseOverlay {
       };
     }
 
-    this._updateFields(data);
+    this._updateFields(data, shape);
   }
 
-  private _updateFields(data: { color: ColorLike; strokeWidth: number; opacity: number }) {
-    this.$strokeColorBtnContainer.querySelector('.color-picker__button.active')?.classList.remove('active');
-    this.$strokeWidthBtnContainer.querySelector('.stroke-picker__button.active')?.classList.remove('active');
+  private _updateFields(
+    data: { color: ColorLike; strokeWidth: number; opacity: number },
+    shape?: (Shape<ShapeConfig> | Group)[]
+  ) {
+    this.$strokeColorBtnContainer.querySelector(`.${this.selectors.button}.active`)?.classList.remove('active');
+    this.$strokeWidthBtnContainer.querySelector(`.${this.selectors.button}.active`)?.classList.remove('active');
 
-    const $btnColor = this.$strokeColorBtnContainer.querySelector(`.color-picker__button[data-color="${data.color}"]`);
+    const $btnColor = this.$strokeColorBtnContainer.querySelector(`.${this.selectors.button}[data-color="${data.color}"]`);
 
     if ($btnColor) {
       $btnColor.classList.add('active');
     }
 
+    const hasText = shape?.filter((s) => s.hasName(shapeName.text));
+    if (hasText?.length && hasText?.length === shape?.length) {
+      this._setupTextOverlay();
+    } else {
+      this._setupShapeOverlay();
+    }
+
     const $btnStrokeWidth = this.$strokeWidthBtnContainer.querySelector(
-      `.stroke-picker__button[data-stroke-width="${data.strokeWidth}"]`
+      `.${this.selectors.button}[data-stroke-width="${data.strokeWidth}"]`
     );
 
     if ($btnStrokeWidth) {
@@ -165,6 +240,16 @@ export class BaseOverlay {
     }
 
     this.$opacityRange.value = (data.opacity * 10).toString();
+  }
+
+  private _setupTextOverlay() {
+    this.$strokeWidthContainer.style.display = 'none';
+    this.$fontSizeContainer.style.display = '';
+  }
+
+  private _setupShapeOverlay() {
+    this.$strokeWidthContainer.style.display = '';
+    this.$fontSizeContainer.style.display = 'none';
   }
 
   hide() {
