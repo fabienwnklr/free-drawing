@@ -384,18 +384,11 @@ export class Drawer extends MicroEvent {
         };
 
         // how to scale? Zoom in? Or zoom out?
-        let direction = e.evt.deltaY > 0 ? 1 : -1;
-
-        // when we zoom on trackpad, e.evt.ctrlKey is true
-        // in that case lets revert direction
-        if (e.evt.ctrlKey) {
-          direction = -direction;
-        }
-
+        const direction = e.evt.deltaY > 0 ? -1 : 1;
         let newScale = direction > 0 ? oldScale * this.options.scaling : oldScale / this.options.scaling;
 
+        // limit min scale to 10%
         if (newScale <= 0.1) {
-          // limit min scale to 10%
           newScale = 0.1;
         } else if (newScale >= 30) {
           // limit max scale to 3000%
