@@ -4,16 +4,18 @@ import { stringToNode } from '@/utils/functions';
 
 export abstract class BaseWidget {
   protected readonly $container: HTMLElement;
-  private $icon: Element | undefined;
+  private $icon: SVGElement;
   private disabled: boolean = false;
   $button: HTMLButtonElement;
   id: AvailableTools;
+  shortcut: string | undefined;
 
   constructor(
     protected drawer: Drawer,
     id: AvailableTools,
-    title: string | undefined,
-    $icon: SVGElement | string
+    title: string,
+    $icon: SVGElement | string,
+    shortcut?: string
   ) {
     this.id = id;
     this.$container = document.createElement('div');
@@ -26,8 +28,9 @@ export abstract class BaseWidget {
     this.$button.classList.add(`drawer-button`);
     this.$button.setAttribute('role', 'button');
     this.$button.tabIndex = 0;
-    this.$button.title = title ?? '';
+    this.$button.title = title ?? id;
     this.$icon = typeof $icon === 'string' ? stringToNode<SVGElement>($icon) : $icon;
+    this.shortcut = shortcut;
 
     this._initEvents();
   }
@@ -40,8 +43,12 @@ export abstract class BaseWidget {
   addTo(parent: HTMLElement) {
     this.$container.appendChild(this.$button);
 
-    if (this.$icon) {
-      this.$button.append(this.$icon);
+    this.$button.append(this.$icon);
+    if (this.shortcut) {
+      const $shortcut = document.createElement('div');
+      $shortcut.classList.add('tool-key-shortcut');
+      $shortcut.innerText = this.shortcut;
+      this.$button.append($shortcut);
     }
     parent.appendChild(this.$container);
   }
@@ -65,8 +72,8 @@ export abstract class BaseWidget {
 
   setActive(active: boolean) {
     if (active) {
-      if (this.drawer.toolbar.activeWidget) {
-        this.drawer.toolbar.activeWidget.setActive(false);
+      if (this.drawer.activeWidget) {
+        this.drawer.activeWidget.setActive(false);
       }
       this.drawer.toolbar.setActiveWidget(this);
       this.$button.classList.add('active');

@@ -9,6 +9,18 @@
 
       .drawer-button {
         margin: 0.2rem;
+        position: relative;
+
+        .tool-key-shortcut {
+          position: absolute;
+          bottom: 3px;
+          right: 3px;
+          color: #b8b8b8;
+        }
+
+        &.active .tool-key-shortcut {
+          // color: #000;
+        }
       }
     }
   }
