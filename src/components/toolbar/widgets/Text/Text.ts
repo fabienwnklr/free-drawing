@@ -43,7 +43,9 @@ export class TextWidget extends BaseWidget {
     });
 
     if (text) {
-      textNode.width(textNode.measureSize(text).width);
+      const split = text.split('\n');
+      const longest = split.toSorted((a, b) => b.length - a.length)[0];
+      textNode.width(textNode.measureSize(longest).width);
     }
     this.addTextNodeEvents(textNode);
 
@@ -116,7 +118,7 @@ export class TextWidget extends BaseWidget {
     textarea.style.left = areaPosition.x + 'px';
     textarea.style.width = (textNode.width() - textNode.padding() * 2) * this.drawer.stage.scaleX() + 'px';
     textarea.style.height = textNode.height() - textNode.padding() * 2 + 5 + 'px';
-    textarea.style.fontSize = textNode.fontSize() * this.drawer.stage.scaleX() + 'px';
+    textarea.style.fontSize = textNode.fontSize() * this.drawer.stage.scaleX() * textNode.scaleX() + 'px';
     textarea.style.border = 'none';
     textarea.style.padding = '0px';
     textarea.style.margin = '0px';
