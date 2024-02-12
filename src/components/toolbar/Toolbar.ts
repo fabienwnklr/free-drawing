@@ -12,7 +12,6 @@ export class Toolbar {
   drawer: Drawer;
   $toolbarRoot: HTMLElement;
   widgets: Map<AvailableTools, BaseWidget> = new Map();
-  activeWidget!: BaseWidget;
   $toolbarContent: HTMLDivElement;
 
   constructor(drawer: Drawer) {
@@ -43,7 +42,7 @@ export class Toolbar {
   }
 
   setActiveWidget(widget: BaseWidget) {
-    this.activeWidget = widget;
+    this.drawer.activeWidget = widget;
     this.drawer.activeTool = widget.id;
   }
 

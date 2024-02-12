@@ -16,7 +16,7 @@ export class BrushWidget extends BaseWidget {
 
   constructor(protected drawer: Drawer) {
     const $BrushIcon = stringToNode<SVGElement>(BrushIcon);
-    super(drawer, 'brush', 'Brush', $BrushIcon);
+    super(drawer, 'brush', 'Brush', $BrushIcon, 'b');
 
     this.overlay = new BrushOverlay(drawer);
   }
@@ -49,7 +49,6 @@ export class BrushWidget extends BaseWidget {
         strokeWidth: this.drawer.options.strokeWidth,
         hitStrokeWidth: 20,
         globalCompositeOperation: 'source-over',
-        // round cap for smoother lines
         lineCap: 'round',
         lineJoin: 'round',
         // add point twice, so we have some drawings even on a simple click

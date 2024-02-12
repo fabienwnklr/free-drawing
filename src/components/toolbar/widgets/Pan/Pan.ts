@@ -9,7 +9,7 @@ export class PanWidget extends BaseWidget {
 
   constructor(protected drawer: Drawer) {
     const $PanIcon = stringToNode<SVGElement>(PanIcon);
-    super(drawer, 'pan', 'Pan', $PanIcon);
+    super(drawer, 'pan', 'Pan', $PanIcon, 'h');
   }
 
   protected initEvents(): void {

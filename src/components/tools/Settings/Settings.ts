@@ -87,6 +87,7 @@ export class Settings extends Dropdown {
         this.$bgColorBtnContainer.querySelector('.color-picker__button.active')?.classList.remove('active');
         $btn.classList.add('active');
         this.drawer.setBgColor(color);
+        this.drawer.focus();
       });
 
       if (this.drawer.options.strokeColor === color) {

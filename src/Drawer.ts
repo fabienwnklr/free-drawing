@@ -50,6 +50,7 @@ export class Drawer extends MicroEvent {
   selectionLayer: Layer;
   toolbar: Toolbar;
   activeTool: AvailableTools = 'brush';
+  activeWidget!: BaseWidget;
   options: DrawerOptions;
 
   background: Rect;

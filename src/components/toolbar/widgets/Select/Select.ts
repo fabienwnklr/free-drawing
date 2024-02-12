@@ -62,7 +62,7 @@ export class SelectWidget extends BaseWidget {
 
   constructor(protected drawer: Drawer) {
     const $SelectIcon = stringToNode<SVGElement>(SelectIcon);
-    super(drawer, 'selection', 'Select', $SelectIcon);
+    super(drawer, 'selection', 'Select', $SelectIcon, 's');
 
     this.transformer.on('transformstart dragstart', () => {
       if (this.drawer.activeTool !== 'selection') {
@@ -134,11 +134,12 @@ export class SelectWidget extends BaseWidget {
       const shapes = this.drawer.getDrawingShapes();
       const box = this.selectionRectangle.getClientRect();
       const { x, y } = this.drawer._getPointerPos();
-      let selected = shapes.filter((shape) => Util.haveIntersection(box, shape.getClientRect()));
+      let selected = shapes.filter((shape) => shape.listening() && Util.haveIntersection(box, shape.getClientRect()));
 
-      if (!selected.length && x && y) {
-        selected = shapes.filter((shape) =>
-          Util.haveIntersection({ x, y, width: 1, height: 1 }, shape.getClientRect())
+      // For get object on click, force width/height to 1
+      if (box.x < 0 && box.y < 0) {
+        selected = shapes.filter(
+          (shape) => shape.listening() && Util.haveIntersection({ x, y, width: 1, height: 1 }, shape.getClientRect())
         );
       }
 
@@ -582,7 +583,7 @@ export class SelectWidget extends BaseWidget {
           s.stroke(color);
         } else if (s instanceof Text) {
           s.fill(color);
-        }else {
+        } else {
           s.stroke(color);
         }
       }

@@ -2,6 +2,7 @@ import type { Drawer } from '@/Drawer';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { TextWidget } from '../toolbar/widgets/Text/Text';
 import './context-menu.scss';
+import { Stage } from 'konva/lib/Stage';
 
 export class ContextMenu {
   drawer: Drawer;
@@ -12,6 +13,8 @@ export class ContextMenu {
   $pasteBtn: HTMLButtonElement;
   $snappingBtn: HTMLButtonElement;
   $gridBtn: HTMLButtonElement;
+  $lockShapeBtn: HTMLButtonElement;
+  focusedShape: Stage | Shape<ShapeConfig> | null = null;
 
   constructor(drawer: Drawer) {
     this.drawer = drawer;
@@ -37,6 +40,12 @@ export class ContextMenu {
     this.$gridBtn.innerHTML =
       '<span class="drawer-context-menu-item__label">Toggle grid</span><kbd class="drawer-context-menu-item__shortcut">Alt+G</kbd>';
     this.$gridBtn.role = 'button';
+
+    this.$lockShapeBtn = document.createElement('button');
+    this.$lockShapeBtn.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-context-menu-list-item');
+    this.$lockShapeBtn.innerHTML =
+      '<span class="drawer-context-menu-item__label">Lock</span><kbd class="drawer-context-menu-item__shortcut"></kbd>';
+    this.$lockShapeBtn.role = 'button';
 
     this.$list.append(...[this.$pasteBtn, this.$snappingBtn, this.$gridBtn]);
 
@@ -70,6 +79,10 @@ export class ContextMenu {
       this.drawer.setting.toggleGrid();
     });
 
+    this.$lockShapeBtn.addEventListener('click', () => {
+      this.focusedShape?.listening(false);
+    });
+
     this.drawer.stage.on('contextmenu', (e) => {
       // prevent default behavior
       e.evt.preventDefault();
@@ -99,6 +112,17 @@ export class ContextMenu {
 
       this.$menu.style.top = normalizedY + 'px';
       this.$menu.style.left = normalizedX + 'px';
+
+      // if (e.target !== this.drawer.stage) {
+      //   this.focusedShape = e.target;
+      //   if (e.target.listening()) {
+      //     this.$list.append(this.$lockShapeBtn);
+      //   } else {
+      //     this.$lockShapeBtn.remove();
+      //   }
+      // }else {
+      //   this.$lockShapeBtn.remove();
+      // }
       // show menu
       this.show();
     });

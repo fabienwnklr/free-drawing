@@ -27,8 +27,8 @@ describe('Basic integration', () => {
     expect(drawer.toolbar.$toolbarContent).instanceOf(HTMLDivElement);
     expect(drawer.toolbar.$toolbarRoot).instanceOf(HTMLDivElement);
     expect(drawer.toolbar.widgets.size).eq(5);
-    expect(drawer.toolbar.activeWidget).not.toBe(null);
-    expect(drawer.toolbar.activeWidget.id).eq('brush');
-    expect(drawer.toolbar.activeWidget.$button.classList.contains('active')).eq(true);
+    expect(drawer.activeWidget).not.toBe(null);
+    expect(drawer.activeWidget.id).eq('brush');
+    expect(drawer.activeWidget.$button.classList.contains('active')).eq(true);
   });
 });
