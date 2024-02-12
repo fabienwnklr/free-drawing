@@ -2,6 +2,8 @@ import type { Drawer } from '@/Drawer';
 import type { ColorLike } from '@/@types/drawer';
 import LineIcon from '@/icons/line.svg?raw';
 import './overlay.scss';
+import { Shape, ShapeConfig } from 'konva/lib/Shape';
+import { Group } from 'konva/lib/Group';
 export class BaseOverlay {
   $overlayContainer: HTMLDivElement;
   drawer: Drawer;
@@ -42,6 +44,7 @@ export class BaseOverlay {
       const $btn = document.createElement('button');
       $btn.classList.add('color-picker__button');
       $btn.style.backgroundColor = color;
+      $btn.dataset.color = color;
       $btn.addEventListener('click', () => {
         this.$strokeColorBtnContainer.querySelector('.color-picker__button.active')?.classList.remove('active');
         $btn.classList.add('active');
@@ -81,7 +84,7 @@ export class BaseOverlay {
       $btn.addEventListener('click', () => {
         this.$strokeWidthBtnContainer.querySelector('.drawer-button.active')?.classList.remove('active');
         $btn.classList.add('active');
-        this.drawer.options.strokeWidth = Number($btn.dataset.strokeWidth);
+        this.drawer.setStrokeWidth($btn.dataset.strokeWidth as string);
       });
 
       if (this.drawer.options.strokeWidth === width) {
@@ -109,7 +112,8 @@ export class BaseOverlay {
     this.$opacityRange.step = '1';
 
     this.$opacityRange.addEventListener('change', () => {
-      this.drawer.options.opacity = Number(this.$opacityRange.value) / 10;
+      const opacity = Number(this.$opacityRange.value) / 10;
+      this.drawer.setOpacity(opacity);
     });
 
     this.$opacityContainer.append(this.$opacityRange);
@@ -121,8 +125,46 @@ export class BaseOverlay {
     this.$overlayContainer.append(...elements);
   }
 
-  show() {
+  show(shape?: (Shape<ShapeConfig> | Group)[]) {
     this.$overlayContainer.classList.add('show');
+
+    this.$strokeColorBtnContainer.querySelector('.color-picker__button.active')?.classList.remove('active');
+    this.$strokeWidthBtnContainer.querySelector('.stroke-picker__button.active')?.classList.remove('active');
+    let data = {
+      color: this.drawer.options.strokeColor,
+      strokeWidth: this.drawer.options.strokeWidth,
+      opacity: this.drawer.options.opacity,
+    };
+    if (shape && shape[0] instanceof Shape) {
+      data = {
+        color: shape[0].stroke() as ColorLike,
+        strokeWidth: shape[0].strokeWidth(),
+        opacity: shape[0].opacity(),
+      };
+    }
+
+    this._updateFields(data);
+  }
+
+  private _updateFields(data: { color: ColorLike; strokeWidth: number; opacity: number }) {
+    this.$strokeColorBtnContainer.querySelector('.color-picker__button.active')?.classList.remove('active');
+    this.$strokeWidthBtnContainer.querySelector('.stroke-picker__button.active')?.classList.remove('active');
+
+    const $btnColor = this.$strokeColorBtnContainer.querySelector(`.color-picker__button[data-color="${data.color}"]`);
+
+    if ($btnColor) {
+      $btnColor.classList.add('active');
+    }
+
+    const $btnStrokeWidth = this.$strokeWidthBtnContainer.querySelector(
+      `.stroke-picker__button[data-stroke-width="${data.strokeWidth}"]`
+    );
+
+    if ($btnStrokeWidth) {
+      $btnStrokeWidth.classList.add('active');
+    }
+
+    this.$opacityRange.value = (data.opacity * 10).toString();
   }
 
   hide() {

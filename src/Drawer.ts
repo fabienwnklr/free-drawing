@@ -279,7 +279,6 @@ export class Drawer extends MicroEvent {
           return;
         }
 
-
         panWidget?.setActive(true);
         panWidget?.$button.focus();
         return;
@@ -420,6 +419,12 @@ export class Drawer extends MicroEvent {
    */
   setBgColor(color: ColorLike) {
     this.background.fill(color);
+
+    const selectWidget = this.getWidget<SelectWidget>('selection');
+
+    if (selectWidget?.transformer.nodes().length) {
+      selectWidget?.setBgColor(color);
+    }
   }
 
   /**
@@ -429,9 +434,42 @@ export class Drawer extends MicroEvent {
   setColor(color: ColorLike) {
     this.options.strokeColor = color;
 
-    const brushWidget = this.getWidget<BrushWidget>('brush');
+    const selectWidget = this.getWidget<SelectWidget>('selection');
 
-    brushWidget?.updateCursor();
+    if (selectWidget?.transformer.nodes().length) {
+      selectWidget?.setColor(color);
+    }
+  }
+
+  /**
+   * Set stroke width for draw
+   * @param {Number | String} width
+   */
+  setStrokeWidth(width: string | number) {
+    width = Number(width);
+
+    this.options.strokeWidth = width;
+
+    const selectWidget = this.getWidget<SelectWidget>('selection');
+
+    if (selectWidget?.transformer.nodes().length) {
+
+      selectWidget?.setStrokeWidth(width);
+    }
+  }
+
+  /**
+   * Set opacity of shape 0 to 1
+   * @param opacity
+   */
+  setOpacity(opacity: number) {
+    this.options.opacity = opacity;
+
+    const selectWidget = this.getWidget<SelectWidget>('selection');
+
+    if (selectWidget?.transformer.nodes().length) {
+      selectWidget?.setOpacity(opacity);
+    }
   }
 
   /**

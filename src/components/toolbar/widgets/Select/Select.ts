@@ -13,6 +13,9 @@ import { Stage } from 'konva/lib/Stage';
 import { shapeName } from '@/constants';
 import type { ColorLike } from '@/@types/drawer';
 import { Vector2d } from 'konva/lib/types';
+import { SelectOverlay } from '@/components/tools/Overlay/SelectOverlay/SelectOverlay';
+import { BrushWidget } from '../Brush/Brush';
+import { Text } from 'konva/lib/shapes/Text';
 
 export class SelectWidget extends BaseWidget {
   #x1: number = 0;
@@ -55,6 +58,7 @@ export class SelectWidget extends BaseWidget {
   });
   isSelecting: boolean = false;
   snapping: boolean = false;
+  overlay: SelectOverlay;
 
   constructor(protected drawer: Drawer) {
     const $SelectIcon = stringToNode<SVGElement>(SelectIcon);
@@ -71,6 +75,7 @@ export class SelectWidget extends BaseWidget {
     });
 
     this.drawer.selectionLayer.add(this.transformer);
+    this.overlay = new SelectOverlay(drawer);
   }
 
   protected initEvents(): void {
@@ -163,6 +168,11 @@ export class SelectWidget extends BaseWidget {
       } else {
         this.transformer.enabledAnchors(this.defaultAnchors);
       }
+      if (selected.length) {
+        this.overlay.show(selected);
+      } else {
+        this.overlay.hide();
+      }
       this.transformer.nodes(selected);
       this.$container.focus();
       this.selectionRectangle.setAttrs({
@@ -190,12 +200,6 @@ export class SelectWidget extends BaseWidget {
     });
   }
 
-  selectAll() {
-    const allNodes = this.drawer.getDrawingShapes();
-    this.transformer.nodes(allNodes);
-    this.drawer.focus();
-  }
-
   protected onActive(): void {
     this.selectionRectangle = new Rect({
       fill: 'rgba(152, 158, 255, .2)',
@@ -215,18 +219,15 @@ export class SelectWidget extends BaseWidget {
     });
   }
 
-  toggleSnapping(active: boolean = true) {
-    if (active && !this.snapping) {
-      this.drawer.contextMenu.$snappingBtn.classList.add('active');
-      this._initSnapEvents();
-    } else if (!active && this.snapping) {
-      this._removeSnapEvents();
-      this.drawer.contextMenu.$snappingBtn.classList.remove('active');
-    }
-  }
+  selectAll() {
+    const allNodes = this.drawer.getDrawingShapes();
+    this.transformer.nodes(allNodes);
+    this.overlay.show(allNodes);
+    this.drawer.focus();
 
-  updateCursor(): void {
-    this.drawer.$stageContainer.style.cursor = 'default';
+    const brushWidget = this.drawer.getWidget<BrushWidget>('brush');
+
+    brushWidget?.overlay.hide();
   }
 
   protected onDesactive(): void {
@@ -239,6 +240,7 @@ export class SelectWidget extends BaseWidget {
       d.draggable(false);
     });
     this.transformer.nodes([]);
+    this.overlay.hide();
   }
 
   private _initSnapEvents() {
@@ -544,5 +546,88 @@ export class SelectWidget extends BaseWidget {
         });
       }
     });
+  }
+
+  /**
+   * Change background color
+   * @param {ColorLike} color
+   */
+  setBgColor(color: ColorLike) {
+    const selected = this.transformer.nodes();
+
+    selected.forEach((s) => {
+      if (s instanceof Shape) {
+        // Ignore line
+        if (s instanceof Line) {
+          return;
+        } else {
+          s.fill(color);
+        }
+      }
+    });
+  }
+
+  /**
+   * Set color for draw
+   * @param {ColorLike} color
+   */
+  setColor(color: ColorLike) {
+    const selected = this.transformer.nodes();
+
+    selected.forEach((s) => {
+      if (s instanceof Shape) {
+        // line need to be filled
+        if (s instanceof Line) {
+          s.fill(color);
+          s.stroke(color);
+        } else if (s instanceof Text) {
+          s.fill(color);
+        }else {
+          s.stroke(color);
+        }
+      }
+    });
+  }
+
+  /**
+   * Set stroke width for draw
+   * @param {Number | String} width
+   */
+  setStrokeWidth(width: number) {
+    const selected = this.transformer.nodes();
+
+    selected.forEach((s) => {
+      if (s instanceof Shape) {
+        s.strokeWidth(width);
+      }
+    });
+  }
+
+  /**
+   * Set opacity of shape 0 to 1
+   * @param opacity
+   */
+  setOpacity(opacity: number) {
+    const selected = this.transformer.nodes();
+
+    selected.forEach((s) => {
+      if (s instanceof Shape) {
+        s.opacity(opacity);
+      }
+    });
+  }
+
+  toggleSnapping(active: boolean = true) {
+    if (active && !this.snapping) {
+      this.drawer.contextMenu.$snappingBtn.classList.add('active');
+      this._initSnapEvents();
+    } else if (!active && this.snapping) {
+      this._removeSnapEvents();
+      this.drawer.contextMenu.$snappingBtn.classList.remove('active');
+    }
+  }
+
+  updateCursor(): void {
+    this.drawer.$stageContainer.style.cursor = 'default';
   }
 }
