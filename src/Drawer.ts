@@ -248,6 +248,11 @@ export class Drawer extends MicroEvent {
         if (allNodes) {
           allNodes.forEach((n) => n.destroy());
           selectWidget?.transformer.nodes([]);
+          selectWidget?.overlay.hide();
+
+          if (this.activeWidget instanceof BrushWidget) {
+            this.activeWidget.overlay.show();
+          }
           this.stage.fire('change');
         }
       }
