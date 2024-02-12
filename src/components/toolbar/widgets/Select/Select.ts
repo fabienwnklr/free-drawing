@@ -158,7 +158,7 @@ export class SelectWidget extends BaseWidget {
         }
       });
 
-      const textShapes = this.drawer.getDrawingShapeByName('text');
+      const textShapes = selected.filter((s) => s.hasName(shapeName.text));
       if (textShapes.length > 0 && textShapes.length === selected.length) {
         this.transformer.enabledAnchors(['top-left', 'top-right', 'bottom-left', 'bottom-right']);
         this.transformer.boundBoxFunc(function (_oldBox, newBox) {
