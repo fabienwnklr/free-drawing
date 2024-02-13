@@ -174,5 +174,6 @@ export class Settings extends Dropdown {
       this.drawer.showGrid();
     }
     this.drawer.focus()
+    this.drawer.stage.fire('change');
   }
 }

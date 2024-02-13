@@ -22,12 +22,7 @@ export const confirmModalDefaultOpts = {
     modal.hide();
   },
   onConfirm: (modal: ConfirmModal) => {
-    const shapes = modal.drawer.getDrawingShapes();
-
-    if (shapes) {
-      shapes.forEach((l) => l.destroy());
-      modal.drawer.stage.fire('change');
-    }
+    modal.drawer.clearCanvas(true);
     modal.hide();
   },
 };

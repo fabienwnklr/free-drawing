@@ -172,10 +172,11 @@ export class Drawer extends MicroEvent {
 
   /**
    * Get all shape drawing
-   * @returns {(Group | Shape<ShapeConfig>)[]}
+   * @returns {Shape<ShapeConfig>[]}
    */
-  getDrawingShapes(): (Group | Shape<ShapeConfig>)[] {
-    return this.drawLayer.children;
+  getDrawingShapes(): Shape<ShapeConfig>[] {
+    // Return clone of array, else clean doesn't work
+    return [...this.drawLayer.children] as Shape<ShapeConfig>[];
   }
 
   /**
@@ -478,7 +479,6 @@ export class Drawer extends MicroEvent {
     const selectWidget = this.getWidget<SelectWidget>('selection');
 
     if (selectWidget?.transformer.nodes().length) {
-
       selectWidget?.setStrokeWidth(width);
     }
   }
@@ -538,8 +538,13 @@ export class Drawer extends MicroEvent {
       const shapes = this.getDrawingShapes();
 
       if (shapes) {
-        shapes.forEach((l) => l.destroy());
-        this.stage.fire('change');
+        shapes.forEach((l, index) => {
+          l.destroy();
+
+          if (index === shapes.length - 1) {
+            this.stage.fire('change');
+          }
+        });
       }
     }
   }
