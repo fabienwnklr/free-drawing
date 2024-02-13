@@ -1,6 +1,14 @@
 @import './scss/variables';
 @import './scss/reboot';
 
+@font-face {
+  font-family: 'Ubuntu';
+  src: url('./fonts/Ubuntu-Regular.ttf') format('ttf'),
+       url('./fonts/Ubuntu-Medium.ttf') format('ttf');
+  font-weight: normal;
+  font-style: normal;
+}
+
 :root {
   --drawer-pointer-events: all;
 }
