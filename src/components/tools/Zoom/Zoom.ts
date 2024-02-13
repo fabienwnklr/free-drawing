@@ -83,7 +83,6 @@ export class Zoom {
   resetZoom() {
     this.drawer.stage.scale({ x: 1, y: 1 });
     this.drawer.stage.position({ x: 0, y: 0 });
-    this.drawer._update();
     this.update();
   }
 
@@ -117,6 +116,7 @@ export class Zoom {
 
   update() {
     this.$btnReset.innerHTML = ZoomReset + this._formatPercentage();
+    this.drawer._update();
   }
 
   private _formatPercentage() {
