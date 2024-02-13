@@ -82,30 +82,36 @@ export class Drawer extends MicroEvent {
 
     const width = this.options.width;
     const height = this.options.height;
-    const activeTool = this.options.tool ?? 'brush';
+    let activeTool = this.options.tool ?? 'brush';
 
     if (width === window.innerWidth && height === window.innerHeight) {
       this.$drawerContainer.classList.add('is-full');
     }
 
-    const saved = localStorage.getItem(this.options.localStorageKey);
-    if (saved) {
-      this.stage = Node.create(saved, this.$drawerContainer);
+    const stageSaved = localStorage.getItem(this.options.localStorageKey);
+    const toolSaved = localStorage.getItem(this.options.localStorageKey + '-tool');
+    if (stageSaved) {
+      this.stage = Node.create(stageSaved, this.$drawerContainer);
       this.bgLayer = this.stage.findOne('.background') as Layer;
       this.gridLayer = this.stage.findOne('.grid') as Layer;
       this.drawLayer = this.stage.findOne('.draw') as Layer;
-      this.selectionLayer = this.stage.findOne('.grid') as Layer;
-      this.background = this.stage.findOne('.background') as Rect;
+      this.selectionLayer = this.stage.findOne('.selection') as Layer;
+      this.background = this.bgLayer.findOne('.' + shapeName.background) as Rect;
+      this.grid = this.gridLayer.children.length > 0;
+      activeTool = toolSaved ?? activeTool;
     } else {
       this.stage = new Stage({
         container: this.$drawerContainer,
         width: width,
         height: height,
       });
+      // Do not create more layer, if think it's necessary, maybe we should think about rethinking the logic
+      // cf : https://konvajs.org/docs/performance/Layer_Management.html
       this.bgLayer = new Layer({ name: 'background' });
       this.gridLayer = new Layer({ name: 'grid' });
       this.drawLayer = new Layer({ name: ' draw' });
       this.selectionLayer = new Layer({ name: 'selection' });
+
       this.background = new Rect({
         fill: '#fff',
         width: this.stage.width() * 100,
@@ -113,9 +119,8 @@ export class Drawer extends MicroEvent {
         listening: false,
         name: shapeName.background,
       });
-
-      // First bgcolor
       this.bgLayer.add(this.background);
+      // First bg layer
       this.stage.add(this.bgLayer);
       this.stage.add(this.gridLayer);
       this.stage.add(this.drawLayer);
@@ -142,7 +147,7 @@ export class Drawer extends MicroEvent {
     const activeWidget = this.getWidget<BaseWidget>(activeTool);
     activeWidget?.setActive(true);
 
-    if (saved) {
+    if (stageSaved) {
       const textWidget = this.getWidget<TextWidget>('text');
       this.drawLayer.find('.text').forEach((t) => {
         if (t instanceof Text) {
@@ -428,6 +433,7 @@ export class Drawer extends MicroEvent {
    */
   save() {
     localStorage.setItem(this.options.localStorageKey, this.stage.toJSON());
+    localStorage.setItem(this.options.localStorageKey + '-tool', this.activeTool);
   }
 
   /**
@@ -442,6 +448,8 @@ export class Drawer extends MicroEvent {
     if (selectWidget?.transformer.nodes().length) {
       selectWidget?.setBgColor(color);
     }
+
+    this.stage.fire('change');
   }
 
   /**
