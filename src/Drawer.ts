@@ -685,4 +685,10 @@ export class Drawer extends MicroEvent {
   focus() {
     this.$drawerContainer.focus();
   }
+
+  /**
+   * Reset draw to default state (bgcolor, color, remove draw, etc.)
+   */
+  resetDraw() {
+  }
 }
