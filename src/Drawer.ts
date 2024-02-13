@@ -280,6 +280,17 @@ export class Drawer extends MicroEvent {
 
       const panWidget = this.getWidget<PanWidget>('pan');
 
+      if (!e.altKey && e.key === 's') {
+        if (this._duringAction()) {
+          return;
+        }
+
+        selectWidget?.setActive(true);
+        selectWidget?.$button.focus();
+        return;
+      }
+
+      // Toolbar shortcut
       if (e.key === 'h') {
         if (this._duringAction()) {
           return;
@@ -290,14 +301,8 @@ export class Drawer extends MicroEvent {
         return;
       }
 
-      if (!e.altKey && e.key === 's') {
-        if (this._duringAction()) {
-          return;
-        }
-
-        selectWidget?.setActive(true);
-        selectWidget?.$button.focus();
-        return;
+      if (e.altKey && e.key === 's') {
+        this.setting.toggleSnapping();
       }
 
       if (e.key === 'b') {
@@ -322,6 +327,16 @@ export class Drawer extends MicroEvent {
         eraserWidget?.$button.focus();
       }
 
+      if (e.key === 't') {
+        if (this._duringAction()) {
+          return;
+        }
+
+        const textWidget = this.getWidget<TextWidget>('text');
+        textWidget?.setActive(true);
+        textWidget?.$button.focus();
+      }
+
       if (e.altKey && e.key === 'z') {
         this.setting.toggleZenMode();
       }
@@ -340,10 +355,6 @@ export class Drawer extends MicroEvent {
 
       if (e.ctrlKey && e.key === 'y') {
         this.undoRedo.redo();
-      }
-
-      if (e.altKey && e.key === 's') {
-        this.setting.toggleSnapping();
       }
 
       if (e.altKey && e.key === 'g') {
