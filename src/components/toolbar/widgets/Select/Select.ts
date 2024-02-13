@@ -556,13 +556,18 @@ export class SelectWidget extends BaseWidget {
   setBgColor(color: ColorLike) {
     const selected = this.transformer.nodes();
 
-    selected.forEach((s) => {
+    selected.forEach((s, index) => {
       if (s instanceof Shape) {
         // Ignore line
         if (s instanceof Line) {
           return;
         } else {
           s.fill(color);
+          s.draw();
+
+          if (index === selected.length -1) {
+            this.drawer.stage.fire('change');
+          }
         }
       }
     });
@@ -575,7 +580,7 @@ export class SelectWidget extends BaseWidget {
   setColor(color: ColorLike) {
     const selected = this.transformer.nodes();
 
-    selected.forEach((s) => {
+    selected.forEach((s, index) => {
       if (s instanceof Shape) {
         // line need to be filled
         if (s instanceof Line) {
@@ -585,6 +590,11 @@ export class SelectWidget extends BaseWidget {
           s.fill(color);
         } else {
           s.stroke(color);
+        }
+        s.draw();
+
+        if (index === selected.length -1) {
+          this.drawer.stage.fire('change');
         }
       }
     });
@@ -597,9 +607,14 @@ export class SelectWidget extends BaseWidget {
   setStrokeWidth(width: number) {
     const selected = this.transformer.nodes();
 
-    selected.forEach((s) => {
+    selected.forEach((s, index) => {
       if (s instanceof Shape) {
         s.strokeWidth(width);
+        s.draw();
+
+        if (index === selected.length -1) {
+          this.drawer.stage.fire('change');
+        }
       }
     });
   }
@@ -611,9 +626,14 @@ export class SelectWidget extends BaseWidget {
   setOpacity(opacity: number) {
     const selected = this.transformer.nodes();
 
-    selected.forEach((s) => {
+    selected.forEach((s, index) => {
       if (s instanceof Shape) {
         s.opacity(opacity);
+        s.draw();
+
+        if (index === selected.length -1) {
+          this.drawer.stage.fire('change');
+        }
       }
     });
   }
