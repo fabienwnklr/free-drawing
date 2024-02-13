@@ -16,7 +16,7 @@ export class BrushWidget extends BaseWidget {
 
   constructor(protected drawer: Drawer) {
     const $BrushIcon = stringToNode<SVGElement>(BrushIcon);
-    super(drawer, 'brush', 'Brush', $BrushIcon);
+    super(drawer, 'brush', 'Brush', $BrushIcon, 'b');
 
     this.overlay = new BrushOverlay(drawer);
   }
@@ -76,6 +76,7 @@ export class BrushWidget extends BaseWidget {
 
     this.drawer.stage.on('mouseup touchend', (e) => {
       this._updateLine(true);
+      // console.log(this.getSvgPathFromStroke(getStroke(this.#allPoints)))
       this.isPaint = false;
       this.drawer.UIPointerEvents('all');
       this.#allPoints = [];
@@ -109,6 +110,34 @@ export class BrushWidget extends BaseWidget {
     this.drawer.stage.off('mousedown touchstart');
     this.drawer.stage.off('mousemove touchmove');
     this.drawer.stage.off('mouseup touchend');
+  }
+
+  getSvgPathFromStroke(points: number[][]): string {
+    const TO_FIXED_PRECISION = /(\s?[A-Z]?,?-?[0-9]*\.[0-9]{0,2})(([0-9]|e|-)*)/g;
+    if (!points.length) {
+      return '';
+    }
+
+    const max = points.length - 1;
+
+    return points
+      .reduce(
+        (acc, point, i, arr) => {
+          if (i === max) {
+            acc.push(point, this.med(point, arr[0]), 'L', arr[0], 'Z');
+          } else {
+            acc.push(point, this.med(point, arr[i + 1]));
+          }
+          return acc;
+        },
+        ['M', points[0], 'Q']
+      )
+      .join(' ')
+      .replace(TO_FIXED_PRECISION, '$1');
+  }
+
+  med(A: number[], B: number[]) {
+    return [(A[0] + B[0]) / 2, (A[1] + B[1]) / 2];
   }
 
   updateCursor() {
