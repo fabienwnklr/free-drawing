@@ -16,7 +16,7 @@ export class BrushWidget extends BaseWidget {
 
   constructor(protected drawer: Drawer) {
     const $BrushIcon = stringToNode<SVGElement>(BrushIcon);
-    super(drawer, 'brush', 'Brush', $BrushIcon, 'b');
+    super(drawer, 'brush', 'Brush', $BrushIcon);
 
     this.overlay = new BrushOverlay(drawer);
   }
@@ -49,6 +49,7 @@ export class BrushWidget extends BaseWidget {
         strokeWidth: this.drawer.options.strokeWidth,
         hitStrokeWidth: 20,
         globalCompositeOperation: 'source-over',
+        // round cap for smoother lines
         lineCap: 'round',
         lineJoin: 'round',
         // add point twice, so we have some drawings even on a simple click
@@ -60,23 +61,6 @@ export class BrushWidget extends BaseWidget {
         this.drawer.stage.fire('change');
       });
 
-      // this.#lastLine.on('mouseover', (e) => {
-      //   if (!this.isPaint && this.drawer.activeTool === "selection") {
-      //     if (e.target instanceof Line) {
-      //       e.target.stroke('blue');
-      //       e.target.strokeWidth(8);
-      //     }
-      //   }
-      // });
-
-      // this.#lastLine.on('mouseout', (e) => {
-      //   if (!this.isPaint && this.drawer.activeTool === "selection") {
-      //     if (e.target instanceof Line) {
-      //       e.target.stroke(this.drawer.options.strokeColor);
-      //       e.target.strokeWidth(this.drawer.options.strokeWidth);
-      //     }
-      //   }
-      // });
       this.drawer.drawLayer.add(this.#lastLine);
     });
 
@@ -87,21 +71,11 @@ export class BrushWidget extends BaseWidget {
 
       if (!this.isPaint) return;
 
-      const realPos = this.drawer._getRelativePointerPos();
-      this.#allPoints.push(realPos);
-      const points = getStroke(this.#allPoints, {
-        size: this.drawer.options.strokeWidth,
-        smoothing: 1,
-        streamline: 0.5,
-        easing: (t) => t,
-      });
-
-      if (!this.#lastLine.closed()) this.#lastLine.closed(true);
-      const newPoints = points.flat();
-      this.#lastLine?.points(newPoints);
+      this._updateLine();
     });
 
     this.drawer.stage.on('mouseup touchend', (e) => {
+      this._updateLine(true);
       this.isPaint = false;
       this.drawer.UIPointerEvents('all');
       this.#allPoints = [];
@@ -113,6 +87,22 @@ export class BrushWidget extends BaseWidget {
 
       e.evt.preventDefault();
     });
+  }
+
+  private _updateLine(last?: boolean) {
+    const realPos = this.drawer._getRelativePointerPos();
+    this.#allPoints.push(realPos);
+    const points = getStroke(this.#allPoints, {
+      size: this.drawer.options.strokeWidth,
+      smoothing: 1,
+      thinning: 0.6,
+      easing: (t) => Math.sin((t * Math.PI) / 2),
+      last,
+    });
+
+    if (!this.#lastLine.closed()) this.#lastLine.closed(true);
+    const newPoints = points.flat();
+    this.#lastLine?.points(newPoints);
   }
 
   protected removeEvents(): void {
