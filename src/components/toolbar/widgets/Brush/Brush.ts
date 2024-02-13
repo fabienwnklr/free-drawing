@@ -49,6 +49,7 @@ export class BrushWidget extends BaseWidget {
         strokeWidth: this.drawer.options.strokeWidth,
         hitStrokeWidth: 20,
         globalCompositeOperation: 'source-over',
+        shadowForStrokeEnabled: false,
         // round cap for smoother lines
         lineCap: 'round',
         lineJoin: 'round',
@@ -75,6 +76,8 @@ export class BrushWidget extends BaseWidget {
     });
 
     this.drawer.stage.on('mouseup touchend', (e) => {
+      if (e.evt.button === 2) return;
+
       this._updateLine(true);
       // console.log(this.getSvgPathFromStroke(getStroke(this.#allPoints)))
       this.isPaint = false;
