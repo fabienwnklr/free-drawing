@@ -13,5 +13,5 @@
     "rules": {
       "@typescript-eslint/no-explicit-any": "off"
     },
-    "ignorePatterns": ["**/*.css", "**/*.scss", "**/*.svg"]
+    "ignorePatterns": ["**/*.css", "**/*.scss", "**/*.svg", "**/*.ttf"]
   }
