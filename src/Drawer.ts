@@ -145,6 +145,8 @@ export class Drawer extends MicroEvent {
     this.toolbar = new Toolbar(this);
     this.help = new Help(this);
 
+    if (this.grid) this.showGrid();
+
     const activeWidget = this.getWidget<BaseWidget>(activeTool);
     activeWidget?.setActive(true);
 
@@ -594,7 +596,7 @@ export class Drawer extends MicroEvent {
 
     this.drawLayer.on('dragmove', (e) => {
       if (e.target instanceof Shape) {
-        console.log(Math.round(e.target.x() / cellSize) * cellSize, Math.round(e.target.y() / cellSize) * cellSize)
+        if (e.target instanceof Line) return;
         e.target.position({
           x: Math.round(e.target.x() / cellSize) * cellSize,
           y: Math.round(e.target.y() / cellSize) * cellSize
@@ -667,6 +669,8 @@ export class Drawer extends MicroEvent {
       undefined as any as (oldPos: Vector2d, newPos: Vector2d, e: MouseEvent) => Vector2d
     );
     selectWidget?.transformer.rotationSnaps(undefined as any as number[]);
+
+    this.drawLayer.off('dragmove');
   }
 
   private _unScale(val: number) {
