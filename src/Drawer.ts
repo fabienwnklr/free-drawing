@@ -590,10 +590,17 @@ export class Drawer extends MicroEvent {
 
   private _initSnapGridEvents() {
     const selectWidget = this.getWidget<SelectWidget>('selection');
-    const cellWidth = 40;
-    const cellHeight = 40;
+    const cellSize = 40;
 
-    // this.drawLayer.on('dragmove', (e) => {});
+    this.drawLayer.on('dragmove', (e) => {
+      if (e.target instanceof Shape) {
+        console.log(Math.round(e.target.x() / cellSize) * cellSize, Math.round(e.target.y() / cellSize) * cellSize)
+        e.target.position({
+          x: Math.round(e.target.x() / cellSize) * cellSize,
+          y: Math.round(e.target.y() / cellSize) * cellSize
+        });
+      }
+    });
     selectWidget?.transformer.anchorDragBoundFunc((oldPos, newPos) => {
       // do not snap rotating point or if grid disabled
       if (selectWidget.transformer.getActiveAnchor() === 'rotater' || !this.grid) {
@@ -608,10 +615,22 @@ export class Drawer extends MicroEvent {
         return newPos;
       }
 
-      const closestX = Math.round(newPos.x / cellWidth) * cellWidth;
+      return calc(oldPos, newPos)
+    });
+
+    function calc(oldPos: Vector2d, newPos: Vector2d) {
+      const dist = Math.sqrt(Math.pow(newPos.x - oldPos.x, 2) + Math.pow(newPos.y - oldPos.y, 2));
+
+      // do not do any snapping with new absolute position (pointer position)
+      // is too far away from old position
+      if (dist > 10) {
+        return newPos;
+      }
+
+      const closestX = Math.round(newPos.x / cellSize) * cellSize;
       const diffX = Math.abs(newPos.x - closestX);
 
-      const closestY = Math.round(newPos.y / cellHeight) * cellHeight;
+      const closestY = Math.round(newPos.y / cellSize) * cellSize;
       const diffY = Math.abs(newPos.y - closestY);
 
       const snappedX = diffX < 10;
@@ -636,7 +655,7 @@ export class Drawer extends MicroEvent {
         };
       }
       return newPos;
-    });
+    }
 
     selectWidget?.transformer.rotationSnaps([0, 90, 180, 270]);
   }
@@ -655,11 +674,6 @@ export class Drawer extends MicroEvent {
   }
 
   private _drawLines() {
-    // If children, lines already draw, so just show layer
-    if (this.gridLayer.children.length) {
-      this.gridLayer.visible(true);
-      return;
-    }
     this.gridLayer.clear();
     this.gridLayer.removeChildren();
     this.gridLayer.clipWidth(0);
@@ -752,7 +766,6 @@ export class Drawer extends MicroEvent {
     this.grid = false;
     this.setting.$toggleGridButton.classList.remove('active');
     this.contextMenu.$gridBtn.classList.remove('active');
-    this.gridLayer.visible(false);
     this._removeSnapGridEvents();
   }
 
