@@ -49,6 +49,8 @@ export class BrushWidget extends BaseWidget {
         strokeWidth: this.drawer.options.strokeWidth,
         hitStrokeWidth: 20,
         globalCompositeOperation: 'source-over',
+        shadowForStrokeEnabled: false,
+        // round cap for smoother lines
         lineCap: 'round',
         lineJoin: 'round',
         // add point twice, so we have some drawings even on a simple click
@@ -60,23 +62,6 @@ export class BrushWidget extends BaseWidget {
         this.drawer.stage.fire('change');
       });
 
-      // this.#lastLine.on('mouseover', (e) => {
-      //   if (!this.isPaint && this.drawer.activeTool === "selection") {
-      //     if (e.target instanceof Line) {
-      //       e.target.stroke('blue');
-      //       e.target.strokeWidth(8);
-      //     }
-      //   }
-      // });
-
-      // this.#lastLine.on('mouseout', (e) => {
-      //   if (!this.isPaint && this.drawer.activeTool === "selection") {
-      //     if (e.target instanceof Line) {
-      //       e.target.stroke(this.drawer.options.strokeColor);
-      //       e.target.strokeWidth(this.drawer.options.strokeWidth);
-      //     }
-      //   }
-      // });
       this.drawer.drawLayer.add(this.#lastLine);
     });
 
@@ -87,21 +72,14 @@ export class BrushWidget extends BaseWidget {
 
       if (!this.isPaint) return;
 
-      const realPos = this.drawer._getRelativePointerPos();
-      this.#allPoints.push(realPos);
-      const points = getStroke(this.#allPoints, {
-        size: this.drawer.options.strokeWidth,
-        smoothing: 1,
-        streamline: 0.5,
-        easing: (t) => t,
-      });
-
-      if (!this.#lastLine.closed()) this.#lastLine.closed(true);
-      const newPoints = points.flat();
-      this.#lastLine?.points(newPoints);
+      this._updateLine();
     });
 
     this.drawer.stage.on('mouseup touchend', (e) => {
+      if (e.evt.button === 2) return;
+
+      this._updateLine(true);
+      // console.log(this.getSvgPathFromStroke(getStroke(this.#allPoints)))
       this.isPaint = false;
       this.drawer.UIPointerEvents('all');
       this.#allPoints = [];
@@ -115,10 +93,54 @@ export class BrushWidget extends BaseWidget {
     });
   }
 
+  private _updateLine(last?: boolean) {
+    const realPos = this.drawer._getRelativePointerPos();
+    this.#allPoints.push(realPos);
+    const points = getStroke(this.#allPoints, {
+      size: this.drawer.options.strokeWidth,
+      smoothing: 1,
+      thinning: 0.6,
+      easing: (t) => Math.sin((t * Math.PI) / 2),
+      last,
+    });
+
+    if (!this.#lastLine.closed()) this.#lastLine.closed(true);
+    const newPoints = points.flat();
+    this.#lastLine?.points(newPoints);
+  }
+
   protected removeEvents(): void {
     this.drawer.stage.off('mousedown touchstart');
     this.drawer.stage.off('mousemove touchmove');
     this.drawer.stage.off('mouseup touchend');
+  }
+
+  getSvgPathFromStroke(points: number[][]): string {
+    const TO_FIXED_PRECISION = /(\s?[A-Z]?,?-?[0-9]*\.[0-9]{0,2})(([0-9]|e|-)*)/g;
+    if (!points.length) {
+      return '';
+    }
+
+    const max = points.length - 1;
+
+    return points
+      .reduce(
+        (acc, point, i, arr) => {
+          if (i === max) {
+            acc.push(point, this.med(point, arr[0]), 'L', arr[0], 'Z');
+          } else {
+            acc.push(point, this.med(point, arr[i + 1]));
+          }
+          return acc;
+        },
+        ['M', points[0], 'Q']
+      )
+      .join(' ')
+      .replace(TO_FIXED_PRECISION, '$1');
+  }
+
+  med(A: number[], B: number[]) {
+    return [(A[0] + B[0]) / 2, (A[1] + B[1]) / 2];
   }
 
   updateCursor() {

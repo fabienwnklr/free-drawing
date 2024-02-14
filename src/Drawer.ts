@@ -26,6 +26,7 @@ import { Line } from 'konva/lib/shapes/Line';
 import { Toast } from './components/Toast/Toast';
 import { Group } from 'konva/lib/Group';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
+import { Vector2d } from 'konva/lib/types';
 
 /**
  * Drawer constructor. A drawer is used to draw multiple shapes
@@ -82,30 +83,36 @@ export class Drawer extends MicroEvent {
 
     const width = this.options.width;
     const height = this.options.height;
-    const activeTool = this.options.tool ?? 'brush';
+    let activeTool = this.options.tool ?? 'brush';
 
     if (width === window.innerWidth && height === window.innerHeight) {
       this.$drawerContainer.classList.add('is-full');
     }
 
-    const saved = localStorage.getItem(this.options.localStorageKey);
-    if (saved) {
-      this.stage = Node.create(saved, this.$drawerContainer);
+    const stageSaved = localStorage.getItem(this.options.localStorageKey);
+    const toolSaved = localStorage.getItem(this.options.localStorageKey + '-tool');
+    if (stageSaved) {
+      this.stage = Node.create(stageSaved, this.$drawerContainer);
       this.bgLayer = this.stage.findOne('.background') as Layer;
       this.gridLayer = this.stage.findOne('.grid') as Layer;
       this.drawLayer = this.stage.findOne('.draw') as Layer;
-      this.selectionLayer = this.stage.findOne('.grid') as Layer;
-      this.background = this.stage.findOne('.background') as Rect;
+      this.selectionLayer = this.stage.findOne('.selection') as Layer;
+      this.background = this.bgLayer.findOne('.' + shapeName.background) as Rect;
+      this.grid = this.gridLayer.children.length > 0;
+      activeTool = toolSaved ?? activeTool;
     } else {
       this.stage = new Stage({
         container: this.$drawerContainer,
         width: width,
         height: height,
       });
+      // Do not create more layer, if think it's necessary, maybe we should think about rethinking the logic
+      // cf : https://konvajs.org/docs/performance/Layer_Management.html
       this.bgLayer = new Layer({ name: 'background' });
       this.gridLayer = new Layer({ name: 'grid' });
       this.drawLayer = new Layer({ name: ' draw' });
       this.selectionLayer = new Layer({ name: 'selection' });
+
       this.background = new Rect({
         fill: '#fff',
         width: this.stage.width() * 100,
@@ -113,9 +120,8 @@ export class Drawer extends MicroEvent {
         listening: false,
         name: shapeName.background,
       });
-
-      // First bgcolor
       this.bgLayer.add(this.background);
+      // First bg layer
       this.stage.add(this.bgLayer);
       this.stage.add(this.gridLayer);
       this.stage.add(this.drawLayer);
@@ -142,7 +148,7 @@ export class Drawer extends MicroEvent {
     const activeWidget = this.getWidget<BaseWidget>(activeTool);
     activeWidget?.setActive(true);
 
-    if (saved) {
+    if (stageSaved) {
       const textWidget = this.getWidget<TextWidget>('text');
       this.drawLayer.find('.text').forEach((t) => {
         if (t instanceof Text) {
@@ -167,10 +173,11 @@ export class Drawer extends MicroEvent {
 
   /**
    * Get all shape drawing
-   * @returns {(Group | Shape<ShapeConfig>)[]}
+   * @returns {Shape<ShapeConfig>[]}
    */
-  getDrawingShapes(): (Group | Shape<ShapeConfig>)[] {
-    return this.drawLayer.children;
+  getDrawingShapes(): Shape<ShapeConfig>[] {
+    // Return clone of array, else clean doesn't work
+    return [...this.drawLayer.children] as Shape<ShapeConfig>[];
   }
 
   /**
@@ -280,6 +287,17 @@ export class Drawer extends MicroEvent {
 
       const panWidget = this.getWidget<PanWidget>('pan');
 
+      if (!e.altKey && e.key === 's') {
+        if (this._duringAction()) {
+          return;
+        }
+
+        selectWidget?.setActive(true);
+        selectWidget?.$button.focus();
+        return;
+      }
+
+      // Toolbar shortcut
       if (e.key === 'h') {
         if (this._duringAction()) {
           return;
@@ -290,14 +308,8 @@ export class Drawer extends MicroEvent {
         return;
       }
 
-      if (!e.altKey && e.key === 's') {
-        if (this._duringAction()) {
-          return;
-        }
-
-        selectWidget?.setActive(true);
-        selectWidget?.$button.focus();
-        return;
+      if (e.altKey && e.key === 's') {
+        this.setting.toggleSnapping();
       }
 
       if (e.key === 'b') {
@@ -322,6 +334,16 @@ export class Drawer extends MicroEvent {
         eraserWidget?.$button.focus();
       }
 
+      if (e.key === 't') {
+        if (this._duringAction()) {
+          return;
+        }
+
+        const textWidget = this.getWidget<TextWidget>('text');
+        textWidget?.setActive(true);
+        textWidget?.$button.focus();
+      }
+
       if (e.altKey && e.key === 'z') {
         this.setting.toggleZenMode();
       }
@@ -340,10 +362,6 @@ export class Drawer extends MicroEvent {
 
       if (e.ctrlKey && e.key === 'y') {
         this.undoRedo.redo();
-      }
-
-      if (e.altKey && e.key === 's') {
-        this.setting.toggleSnapping();
       }
 
       if (e.altKey && e.key === 'g') {
@@ -417,6 +435,7 @@ export class Drawer extends MicroEvent {
    */
   save() {
     localStorage.setItem(this.options.localStorageKey, this.stage.toJSON());
+    localStorage.setItem(this.options.localStorageKey + '-tool', this.activeTool);
   }
 
   /**
@@ -431,6 +450,8 @@ export class Drawer extends MicroEvent {
     if (selectWidget?.transformer.nodes().length) {
       selectWidget?.setBgColor(color);
     }
+
+    this.stage.fire('change');
   }
 
   /**
@@ -459,7 +480,6 @@ export class Drawer extends MicroEvent {
     const selectWidget = this.getWidget<SelectWidget>('selection');
 
     if (selectWidget?.transformer.nodes().length) {
-
       selectWidget?.setStrokeWidth(width);
     }
   }
@@ -519,8 +539,13 @@ export class Drawer extends MicroEvent {
       const shapes = this.getDrawingShapes();
 
       if (shapes) {
-        shapes.forEach((l) => l.destroy());
-        this.stage.fire('change');
+        shapes.forEach((l, index) => {
+          l.destroy();
+
+          if (index === shapes.length - 1) {
+            this.stage.fire('change');
+          }
+        });
       }
     }
   }
@@ -554,6 +579,94 @@ export class Drawer extends MicroEvent {
     this.contextMenu.$gridBtn.classList.add('active');
     this.setting.$toggleGridButton.classList.add('active');
     this._drawLines();
+    this._initSnapGridEvents();
+
+    const selectWidget = this.getWidget<SelectWidget>('selection');
+
+    if (selectWidget?.snapping) {
+      selectWidget.toggleSnapping(false);
+    }
+  }
+
+  private _initSnapGridEvents() {
+    const selectWidget = this.getWidget<SelectWidget>('selection');
+    const cellSize = 40;
+
+    this.drawLayer.on('dragmove', (e) => {
+      if (e.target instanceof Shape) {
+        console.log(Math.round(e.target.x() / cellSize) * cellSize, Math.round(e.target.y() / cellSize) * cellSize)
+        e.target.position({
+          x: Math.round(e.target.x() / cellSize) * cellSize,
+          y: Math.round(e.target.y() / cellSize) * cellSize
+        });
+      }
+    });
+    selectWidget?.transformer.anchorDragBoundFunc((oldPos, newPos) => {
+      // do not snap rotating point or if grid disabled
+      if (selectWidget.transformer.getActiveAnchor() === 'rotater' || !this.grid) {
+        return newPos;
+      }
+
+      const dist = Math.sqrt(Math.pow(newPos.x - oldPos.x, 2) + Math.pow(newPos.y - oldPos.y, 2));
+
+      // do not do any snapping with new absolute position (pointer position)
+      // is too far away from old position
+      if (dist > 10) {
+        return newPos;
+      }
+
+      return calc(oldPos, newPos)
+    });
+
+    function calc(oldPos: Vector2d, newPos: Vector2d) {
+      const dist = Math.sqrt(Math.pow(newPos.x - oldPos.x, 2) + Math.pow(newPos.y - oldPos.y, 2));
+
+      // do not do any snapping with new absolute position (pointer position)
+      // is too far away from old position
+      if (dist > 10) {
+        return newPos;
+      }
+
+      const closestX = Math.round(newPos.x / cellSize) * cellSize;
+      const diffX = Math.abs(newPos.x - closestX);
+
+      const closestY = Math.round(newPos.y / cellSize) * cellSize;
+      const diffY = Math.abs(newPos.y - closestY);
+
+      const snappedX = diffX < 10;
+      const snappedY = diffY < 10;
+
+      // a bit different snap strategies based on snap direction
+      // we need to reuse old position for better UX
+      if (snappedX && !snappedY) {
+        return {
+          x: closestX,
+          y: oldPos.y,
+        };
+      } else if (snappedY && !snappedX) {
+        return {
+          x: oldPos.x,
+          y: closestY,
+        };
+      } else if (snappedX && snappedY) {
+        return {
+          x: closestX,
+          y: closestY,
+        };
+      }
+      return newPos;
+    }
+
+    selectWidget?.transformer.rotationSnaps([0, 90, 180, 270]);
+  }
+
+  private _removeSnapGridEvents() {
+    const selectWidget = this.getWidget<SelectWidget>('selection');
+
+    selectWidget?.transformer.anchorDragBoundFunc(
+      undefined as any as (oldPos: Vector2d, newPos: Vector2d, e: MouseEvent) => Vector2d
+    );
+    selectWidget?.transformer.rotationSnaps(undefined as any as number[]);
   }
 
   private _unScale(val: number) {
@@ -625,6 +738,7 @@ export class Drawer extends MicroEvent {
           points: [0, 0, 0, ySize],
           stroke: 'rgba(0, 0, 0, 0.2)',
           strokeWidth: 1,
+          dash: [3, 3],
           name: shapeName.gridLine,
         })
       );
@@ -638,6 +752,7 @@ export class Drawer extends MicroEvent {
           points: [0, 0, xSize, 0],
           stroke: 'rgba(0, 0, 0, 0.2)',
           strokeWidth: 1,
+          dash: [3, 3],
           name: shapeName.gridLine,
         })
       );
@@ -651,8 +766,7 @@ export class Drawer extends MicroEvent {
     this.grid = false;
     this.setting.$toggleGridButton.classList.remove('active');
     this.contextMenu.$gridBtn.classList.remove('active');
-    this.gridLayer.clear();
-    this.gridLayer.removeChildren();
+    this._removeSnapGridEvents();
   }
 
   /**
@@ -660,5 +774,12 @@ export class Drawer extends MicroEvent {
    */
   focus() {
     this.$drawerContainer.focus();
+  }
+
+  /**
+   * Reset draw to default state (bgcolor, color, remove draw, etc.)
+   */
+  resetDraw() {
+    this.options = defaultOptions;
   }
 }

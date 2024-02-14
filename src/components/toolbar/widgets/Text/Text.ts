@@ -10,7 +10,7 @@ export class TextWidget extends BaseWidget {
   isEditing: boolean = false;
 
   constructor(drawer: Drawer) {
-    super(drawer, 'text', 'Text', TextIcon);
+    super(drawer, 'text', 'Text', TextIcon, 't');
   }
 
   protected onActive(): void {

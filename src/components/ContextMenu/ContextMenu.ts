@@ -32,13 +32,13 @@ export class ContextMenu {
     this.$snappingBtn = document.createElement('button');
     this.$snappingBtn.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-context-menu-list-item');
     this.$snappingBtn.innerHTML =
-      '<span class="drawer-context-menu-item__label">Toggle snapping</span><kbd class="drawer-context-menu-item__shortcut">Alt+S</kbd>';
+      '<span class="drawer-context-menu-item__label">Snap to object</span><kbd class="drawer-context-menu-item__shortcut">Alt+S</kbd>';
     this.$snappingBtn.role = 'button';
 
     this.$gridBtn = document.createElement('button');
     this.$gridBtn.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-context-menu-list-item');
     this.$gridBtn.innerHTML =
-      '<span class="drawer-context-menu-item__label">Toggle grid</span><kbd class="drawer-context-menu-item__shortcut">Alt+G</kbd>';
+      '<span class="drawer-context-menu-item__label">Show grid</span><kbd class="drawer-context-menu-item__shortcut">Alt+G</kbd>';
     this.$gridBtn.role = 'button';
 
     this.$lockShapeBtn = document.createElement('button');

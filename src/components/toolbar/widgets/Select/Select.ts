@@ -12,7 +12,6 @@ import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Stage } from 'konva/lib/Stage';
 import { shapeName } from '@/constants';
 import type { ColorLike } from '@/@types/drawer';
-import { Vector2d } from 'konva/lib/types';
 import { SelectOverlay } from '@/components/tools/Overlay/SelectOverlay/SelectOverlay';
 import { BrushWidget } from '../Brush/Brush';
 import { Text } from 'konva/lib/shapes/Text';
@@ -289,54 +288,6 @@ export class SelectWidget extends BaseWidget {
       e.target.absolutePosition(absPos);
     });
 
-    const cellWidth = 40;
-    const cellHeight = 40;
-    this.transformer.anchorDragBoundFunc((oldPos, newPos) => {
-      // do not snap rotating point or if grid disabled
-      if (this.transformer.getActiveAnchor() === 'rotater' || !this.drawer.grid) {
-        return newPos;
-      }
-
-      const dist = Math.sqrt(Math.pow(newPos.x - oldPos.x, 2) + Math.pow(newPos.y - oldPos.y, 2));
-
-      // do not do any snapping with new absolute position (pointer position)
-      // is too far away from old position
-      if (dist > 10) {
-        return newPos;
-      }
-
-      const closestX = Math.round(newPos.x / cellWidth) * cellWidth;
-      const diffX = Math.abs(newPos.x - closestX);
-
-      const closestY = Math.round(newPos.y / cellHeight) * cellHeight;
-      const diffY = Math.abs(newPos.y - closestY);
-
-      const snappedX = diffX < 10;
-      const snappedY = diffY < 10;
-
-      // a bit different snap strategies based on snap direction
-      // we need to reuse old position for better UX
-      if (snappedX && !snappedY) {
-        return {
-          x: closestX,
-          y: oldPos.y,
-        };
-      } else if (snappedY && !snappedX) {
-        return {
-          x: oldPos.x,
-          y: closestY,
-        };
-      } else if (snappedX && snappedY) {
-        return {
-          x: closestX,
-          y: closestY,
-        };
-      }
-      return newPos;
-    });
-
-    this.transformer.rotationSnaps([0, 90, 180, 270]);
-
     this.drawer.drawLayer.on('dragend', () => {
       // clear all previous lines on the screen
       this.drawer.selectionLayer.find('.' + shapeName.guideLine).forEach((l) => l.destroy());
@@ -347,10 +298,6 @@ export class SelectWidget extends BaseWidget {
     this.snapping = false;
     this.drawer.drawLayer.off('dragmove');
     this.drawer.drawLayer.off('dragend');
-    this.transformer.anchorDragBoundFunc(
-      undefined as any as (oldPos: Vector2d, newPos: Vector2d, e: MouseEvent) => Vector2d
-    );
-    this.transformer.rotationSnaps(undefined as any as number[]);
   }
 
   protected removeEvents() {
@@ -556,13 +503,18 @@ export class SelectWidget extends BaseWidget {
   setBgColor(color: ColorLike) {
     const selected = this.transformer.nodes();
 
-    selected.forEach((s) => {
+    selected.forEach((s, index) => {
       if (s instanceof Shape) {
         // Ignore line
         if (s instanceof Line) {
           return;
         } else {
           s.fill(color);
+          s.draw();
+
+          if (index === selected.length -1) {
+            this.drawer.stage.fire('change');
+          }
         }
       }
     });
@@ -575,7 +527,7 @@ export class SelectWidget extends BaseWidget {
   setColor(color: ColorLike) {
     const selected = this.transformer.nodes();
 
-    selected.forEach((s) => {
+    selected.forEach((s, index) => {
       if (s instanceof Shape) {
         // line need to be filled
         if (s instanceof Line) {
@@ -585,6 +537,11 @@ export class SelectWidget extends BaseWidget {
           s.fill(color);
         } else {
           s.stroke(color);
+        }
+        s.draw();
+
+        if (index === selected.length -1) {
+          this.drawer.stage.fire('change');
         }
       }
     });
@@ -597,9 +554,14 @@ export class SelectWidget extends BaseWidget {
   setStrokeWidth(width: number) {
     const selected = this.transformer.nodes();
 
-    selected.forEach((s) => {
+    selected.forEach((s, index) => {
       if (s instanceof Shape) {
         s.strokeWidth(width);
+        s.draw();
+
+        if (index === selected.length -1) {
+          this.drawer.stage.fire('change');
+        }
       }
     });
   }
@@ -611,15 +573,21 @@ export class SelectWidget extends BaseWidget {
   setOpacity(opacity: number) {
     const selected = this.transformer.nodes();
 
-    selected.forEach((s) => {
+    selected.forEach((s, index) => {
       if (s instanceof Shape) {
         s.opacity(opacity);
+        s.draw();
+
+        if (index === selected.length -1) {
+          this.drawer.stage.fire('change');
+        }
       }
     });
   }
 
   toggleSnapping(active: boolean = true) {
     if (active && !this.snapping) {
+      if (this.drawer.grid) this.drawer.hideGrid();
       this.drawer.contextMenu.$snappingBtn.classList.add('active');
       this._initSnapEvents();
     } else if (!active && this.snapping) {
