@@ -26,6 +26,7 @@ import { Line } from 'konva/lib/shapes/Line';
 import { Toast } from './components/Toast/Toast';
 import { Group } from 'konva/lib/Group';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
+import { Vector2d } from 'konva/lib/types';
 
 /**
  * Drawer constructor. A drawer is used to draw multiple shapes
@@ -578,6 +579,75 @@ export class Drawer extends MicroEvent {
     this.contextMenu.$gridBtn.classList.add('active');
     this.setting.$toggleGridButton.classList.add('active');
     this._drawLines();
+    this._initSnapGridEvents();
+
+    const selectWidget = this.getWidget<SelectWidget>('selection');
+
+    if (selectWidget?.snapping) {
+      selectWidget.toggleSnapping(false);
+    }
+  }
+
+  private _initSnapGridEvents() {
+    const selectWidget = this.getWidget<SelectWidget>('selection');
+    const cellWidth = 40;
+    const cellHeight = 40;
+
+    // this.drawLayer.on('dragmove', (e) => {});
+    selectWidget?.transformer.anchorDragBoundFunc((oldPos, newPos) => {
+      // do not snap rotating point or if grid disabled
+      if (selectWidget.transformer.getActiveAnchor() === 'rotater' || !this.grid) {
+        return newPos;
+      }
+
+      const dist = Math.sqrt(Math.pow(newPos.x - oldPos.x, 2) + Math.pow(newPos.y - oldPos.y, 2));
+
+      // do not do any snapping with new absolute position (pointer position)
+      // is too far away from old position
+      if (dist > 10) {
+        return newPos;
+      }
+
+      const closestX = Math.round(newPos.x / cellWidth) * cellWidth;
+      const diffX = Math.abs(newPos.x - closestX);
+
+      const closestY = Math.round(newPos.y / cellHeight) * cellHeight;
+      const diffY = Math.abs(newPos.y - closestY);
+
+      const snappedX = diffX < 10;
+      const snappedY = diffY < 10;
+
+      // a bit different snap strategies based on snap direction
+      // we need to reuse old position for better UX
+      if (snappedX && !snappedY) {
+        return {
+          x: closestX,
+          y: oldPos.y,
+        };
+      } else if (snappedY && !snappedX) {
+        return {
+          x: oldPos.x,
+          y: closestY,
+        };
+      } else if (snappedX && snappedY) {
+        return {
+          x: closestX,
+          y: closestY,
+        };
+      }
+      return newPos;
+    });
+
+    selectWidget?.transformer.rotationSnaps([0, 90, 180, 270]);
+  }
+
+  private _removeSnapGridEvents() {
+    const selectWidget = this.getWidget<SelectWidget>('selection');
+
+    selectWidget?.transformer.anchorDragBoundFunc(
+      undefined as any as (oldPos: Vector2d, newPos: Vector2d, e: MouseEvent) => Vector2d
+    );
+    selectWidget?.transformer.rotationSnaps(undefined as any as number[]);
   }
 
   private _unScale(val: number) {
@@ -585,6 +655,11 @@ export class Drawer extends MicroEvent {
   }
 
   private _drawLines() {
+    // If children, lines already draw, so just show layer
+    if (this.gridLayer.children.length) {
+      this.gridLayer.visible(true);
+      return;
+    }
     this.gridLayer.clear();
     this.gridLayer.removeChildren();
     this.gridLayer.clipWidth(0);
@@ -649,6 +724,7 @@ export class Drawer extends MicroEvent {
           points: [0, 0, 0, ySize],
           stroke: 'rgba(0, 0, 0, 0.2)',
           strokeWidth: 1,
+          dash: [3, 3],
           name: shapeName.gridLine,
         })
       );
@@ -662,6 +738,7 @@ export class Drawer extends MicroEvent {
           points: [0, 0, xSize, 0],
           stroke: 'rgba(0, 0, 0, 0.2)',
           strokeWidth: 1,
+          dash: [3, 3],
           name: shapeName.gridLine,
         })
       );
@@ -675,8 +752,8 @@ export class Drawer extends MicroEvent {
     this.grid = false;
     this.setting.$toggleGridButton.classList.remove('active');
     this.contextMenu.$gridBtn.classList.remove('active');
-    this.gridLayer.clear();
-    this.gridLayer.removeChildren();
+    this.gridLayer.visible(false);
+    this._removeSnapGridEvents();
   }
 
   /**
@@ -690,5 +767,6 @@ export class Drawer extends MicroEvent {
    * Reset draw to default state (bgcolor, color, remove draw, etc.)
    */
   resetDraw() {
+    this.options = defaultOptions;
   }
 }
