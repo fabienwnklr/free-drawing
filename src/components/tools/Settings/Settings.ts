@@ -48,7 +48,7 @@ export class Settings extends Dropdown {
 
     this.$toggleGridButton = document.createElement('button');
     this.$toggleGridButton.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-dropdown-list-item');
-    this.$toggleGridButton.innerHTML = GridIcon + 'Toggle grid';
+    this.$toggleGridButton.innerHTML = GridIcon + 'Show grid';
     this.$toggleGridButton.role = 'button';
 
     this.$zenModeButton = document.createElement('button');
