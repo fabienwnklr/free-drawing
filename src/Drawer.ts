@@ -767,6 +767,7 @@ export class Drawer extends MicroEvent {
     this.setting.$toggleGridButton.classList.remove('active');
     this.contextMenu.$gridBtn.classList.remove('active');
     this.gridLayer.clear();
+    this.gridLayer.removeChildren();
     this._removeSnapGridEvents();
   }
 
