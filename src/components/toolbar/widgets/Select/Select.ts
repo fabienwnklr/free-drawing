@@ -594,6 +594,7 @@ export class SelectWidget extends BaseWidget {
       this._removeSnapEvents();
       this.drawer.contextMenu.$snappingBtn.classList.remove('active');
     }
+    this.drawer.stage.fire('change');
   }
 
   updateCursor(): void {
