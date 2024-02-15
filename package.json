@@ -31,24 +31,23 @@
   ],
   "scripts": {
     "prepare": "husky install",
-    "start": "concurrently \"npm:dev\" \"npm:dev:docs\"",
     "dev": "vite build --watch",
     "debug": "vite",
-    "dev:docs": "cd docs/ && npm run start",
     "build": "tsc && vite build",
-    "build:api": "npx typedoc --gitRevision master --excludePrivate --plugin typedoc-plugin-markdown --out docs/docs/api src/**/*.ts",
-    "build:docs": "cp dist/drawer.iife.js docs/static",
+    "build:api": "npx typedoc --gitRevision master --excludePrivate --plugin typedoc-plugin-markdown --out docs/api src/**/*.ts",
     "test": "vitest run",
     "test:watch": "vitest dev",
     "lint": "npx eslint src/**",
     "format": "prettier src/**/*.ts --write",
-    "docs": "cd docs && yarn start",
     "preview": "vite preview",
     "release": "npm run build && commit-and-tag-version && git push --follow-tags origin master && npm publish --access public",
     "release:patch": "npm run build && commit-and-tag-version --release-as patch && npm run publish",
     "release:minor": "npm run build && commit-and-tag-version --release-as minor && npm run publish",
     "release:major": "npm run build && commit-and-tag-version --release-as major && npm run publish",
-    "publish": "git push --follow-tags origin master && npm publish --access public"
+    "publish": "git push --follow-tags origin master && npm publish --access public",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.7.2",
@@ -70,11 +69,12 @@
     "typescript": "^5.0.2",
     "vite": "^4.4.5",
     "vite-plugin-dts": "^3.6.0",
+    "vitepress": "^1.0.0-rc.42",
+    "vite-svg-loader": "^5.1.0",
     "vitest": "^0.34.6"
   },
   "dependencies": {
     "konva": "^9.3.1",
-    "perfect-freehand": "^1.2.0",
-    "vite-svg-loader": "^5.1.0"
+    "perfect-freehand": "^1.2.0"
   }
 }
