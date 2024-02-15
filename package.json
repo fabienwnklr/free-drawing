@@ -34,6 +34,7 @@
     "dev": "vite build --watch",
     "debug": "vite",
     "build": "tsc && vite build",
+    "build:static": "tsc && vite build --mode static",
     "build:api": "npx typedoc --gitRevision master --excludePrivate --plugin typedoc-plugin-markdown --out docs/api src/**/*.ts",
     "test": "vitest run",
     "test:watch": "vitest dev",

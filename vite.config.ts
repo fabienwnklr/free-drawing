@@ -66,6 +66,15 @@ export default defineConfig(({ mode }) => {
     };
   } else {
     // Build static web site for sample
-    return {};
+    return {
+      build: {
+        outDir: './static',
+      },
+      resolve: {
+        alias: {
+          '@': resolve(__dirname, './src'),
+        },
+      },
+    };
   }
 });
