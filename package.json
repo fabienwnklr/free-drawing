@@ -1,7 +1,7 @@
 {
-  "name": "ts-vitejs-template",
+  "name": "free-drawing",
   "author": "Winkler Fabien <fabienwinkler@outlook.fr>",
-  "description": "Small description of your lib",
+  "description": "Infinite canvas",
   "contributors": [],
   "private": true,
   "version": "1.0.0",
@@ -21,7 +21,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/fabwcie/ts-vitejs-template.git"
+    "url": "git://github.com/fabienwnklr/free-drawing.git"
   },
   "keywords": [
     "typescript"
@@ -34,6 +34,7 @@
     "dev": "vite build --watch",
     "debug": "vite",
     "build": "tsc && vite build",
+    "build:watch": "tsc && vite build --watch",
     "build:static": "tsc && vite build --mode static",
     "build:api": "npx typedoc --gitRevision master --excludePrivate --plugin typedoc-plugin-markdown --out docs/api src/**/*.ts",
     "test": "vitest run",
@@ -48,7 +49,8 @@
     "publish": "git push --follow-tags origin master && npm publish --access public",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "docs:preview": "vitepress preview docs",
+    "docs:js": "cp dist/drawer.iife.js docs/js && cp dist/style.css docs/css"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.7.2",
