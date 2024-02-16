@@ -1,11 +1,8 @@
 /// <reference types="vitest" />
 import { defineConfig } from 'vite';
-import { resolve, isAbsolute } from 'node:path';
+import { resolve } from 'node:path';
+import { execSync } from 'child_process';
 import dts from 'vite-plugin-dts';
-
-function isExternal(id: string) {
-  return !id.startsWith('.') && !isAbsolute(id) && !id.startsWith('~/');
-}
 
 export default defineConfig(({ mode }) => {
   if (mode === 'production') {
@@ -22,7 +19,7 @@ export default defineConfig(({ mode }) => {
           formats: ['iife', 'cjs', 'es', 'umd'],
         },
         rollupOptions: {
-          external: isExternal,
+          external: ['konva', 'perfectFreehand'],
         },
       },
       plugins: [
@@ -30,6 +27,16 @@ export default defineConfig(({ mode }) => {
           insertTypesEntry: true,
           rollupTypes: true, // comment if you won't to merge all declarations into one file
         }),
+        {
+          name: 'postbuild-commands', // the name of your custom plugin. Could be anything.
+          closeBundle: async () => {
+            if (process.env.NODE_ENV !== 'test') {
+              console.log('Build docs...');
+              execSync('yarn docs:js'); // run during closeBundle hook. https://rollupjs.org/guide/en/#closebundle
+              console.log('Docs build !');
+            }
+          },
+        },
       ],
       resolve: {
         alias: {
