@@ -22,6 +22,16 @@
     border: 0;
     padding: 0.25rem 1rem 0.25rem 1.25rem;
 
+    &:is(:first-of-type) {
+      border-top-left-radius: $radius;
+      border-top-right-radius: $radius;
+    }
+
+    &:is(:last-of-type) {
+      border-bottom-left-radius: $radius;
+      border-bottom-right-radius: $radius;
+    }
+
     &.active::before {
       position: absolute;
       left: 6px;
@@ -33,6 +43,7 @@
       background-color: $bg-context-menu-item-hover;
       color: $bg-context-menu-item-hover-color;
     }
+
     .drawer-context-menu-item__label {
       margin-inline-end: 20px;
     }
