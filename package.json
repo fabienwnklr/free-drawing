@@ -31,6 +31,7 @@
   ],
   "scripts": {
     "prepare": "husky install",
+    "start": "concurrently \"yarn dev\" \"yarn docs:dev\"",
     "dev": "vite build --watch",
     "debug": "vite",
     "build": "tsc && vite build",
@@ -47,7 +48,7 @@
     "release:minor": "npm run build && commit-and-tag-version --release-as minor && npm run publish",
     "release:major": "npm run build && commit-and-tag-version --release-as major && npm run publish",
     "publish": "git push --follow-tags origin master && npm publish --access public",
-    "docs:dev": "vitepress dev docs",
+    "docs:dev": "vitepress dev docs --open",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
     "docs:js": "cp dist/drawer.iife.js docs/js && cp dist/style.css docs/css"
@@ -72,8 +73,8 @@
     "typescript": "^5.0.2",
     "vite": "^4.4.5",
     "vite-plugin-dts": "^3.6.0",
-    "vitepress": "^1.0.0-rc.42",
     "vite-svg-loader": "^5.1.0",
+    "vitepress": "^1.0.0-rc.42",
     "vitest": "^0.34.6"
   },
   "dependencies": {
