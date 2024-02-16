@@ -1,23 +1,23 @@
 @import './scss/variables';
-@import './scss/reboot';
-
-@font-face {
-  font-family: 'Ubuntu';
-  src: url('./fonts/Ubuntu-Regular.ttf') format('ttf'),
-       url('./fonts/Ubuntu-Medium.ttf') format('ttf');
-  font-weight: normal;
-  font-style: normal;
-}
 
 :root {
   --drawer-pointer-events: all;
 }
 
-* {
-  box-sizing: border-box;
-}
-
 .drawer-container {
+  @import './scss/reboot';
+
+  @font-face {
+    font-family: 'Ubuntu';
+    src: url('./fonts/Ubuntu-Regular.ttf') format('ttf');
+    font-weight: normal;
+    font-style: normal;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
   font-family:
     system-ui,
     -apple-system,
@@ -229,7 +229,8 @@
         width: $btn-size-default;
         height: $btn-size-default;
 
-        &.stroke-picker__button, &.font-picker__button {
+        &.stroke-picker__button,
+        &.font-picker__button {
           border: 1px solid $light;
           border-radius: $radius;
         }
