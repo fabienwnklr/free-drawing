@@ -32,7 +32,7 @@ import { Vector2d } from 'konva/lib/types';
  * Drawer constructor. A drawer is used to draw multiple shapes
  * @constructor
  * @memberof Drawer
- * @augments Konva.MicroEvent
+ * @augments Drawer.MicroEvent
  *
  * @example
  * const drawer = new Drawer(document.getElementById('draw'), {
@@ -93,6 +93,8 @@ export class Drawer extends MicroEvent {
     const toolSaved = localStorage.getItem(this.options.localStorageKey + '-tool');
     if (stageSaved) {
       this.stage = Node.create(stageSaved, this.$drawerContainer);
+      this.stage.width(width);
+      this.stage.height(height);
       this.bgLayer = this.stage.findOne('.background') as Layer;
       this.gridLayer = this.stage.findOne('.grid') as Layer;
       this.drawLayer = this.stage.findOne('.draw') as Layer;
@@ -599,7 +601,7 @@ export class Drawer extends MicroEvent {
         if (e.target instanceof Line) return;
         e.target.position({
           x: Math.round(e.target.x() / cellSize) * cellSize,
-          y: Math.round(e.target.y() / cellSize) * cellSize
+          y: Math.round(e.target.y() / cellSize) * cellSize,
         });
       }
     });
@@ -617,7 +619,7 @@ export class Drawer extends MicroEvent {
         return newPos;
       }
 
-      return calc(oldPos, newPos)
+      return calc(oldPos, newPos);
     });
 
     function calc(oldPos: Vector2d, newPos: Vector2d) {
