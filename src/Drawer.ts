@@ -105,8 +105,8 @@ export class Drawer extends MicroEvent {
     } else {
       this.stage = new Stage({
         container: this.$drawerContainer,
-        width: width,
-        height: height,
+        width,
+        height,
       });
       // Do not create more layer, if think it's necessary, maybe we should think about rethinking the logic
       // cf : https://konvajs.org/docs/performance/Layer_Management.html
