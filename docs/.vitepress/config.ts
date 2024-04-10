@@ -9,7 +9,7 @@ export default defineConfig({
     // https://vitepress.dev/reference/default-theme-config
     nav: [
       { text: 'Get started', link: '/get-started/' },
-      { text: 'API', link: '/api/modules' },
+      { text: 'API', link: '/api/README' },
       { text: 'Changelog', link: '/changelog' },
       { text: 'Demo', link: 'https://free-drawing.fabienwinkler.fr/', target: "_blank"},
     ],

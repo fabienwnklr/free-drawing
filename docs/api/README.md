@@ -1,4 +1,4 @@
-**free-drawing** • [Readme](README.md) \| API
+**free-drawing** • API
 
 ***
 

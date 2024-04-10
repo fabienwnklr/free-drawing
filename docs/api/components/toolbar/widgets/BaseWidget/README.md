@@ -1,4 +1,4 @@
-**free-drawing** • [Readme](../../../../README.md) \| [API](../../../../modules.md)
+**free-drawing** • [API](../../../../README.md)
 
 ***
 
