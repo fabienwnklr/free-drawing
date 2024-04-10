@@ -4,7 +4,7 @@
   "description": "Infinite canvas",
   "contributors": [],
   "private": true,
-  "version": "1.0.0",
+  "version": "0.0.0",
   "type": "module",
   "main": "src/Drawer.ts",
   "types": "./dist/index.d.ts",
