@@ -1,0 +1,13 @@
+**free-drawing** • [Readme](../../../../../README.md) \| [API](../../../../../modules.md)
+
+***
+
+[free-drawing](../../../../../README.md) / components/toolbar/widgets/Eraser/Eraser
+
+# components/toolbar/widgets/Eraser/Eraser
+
+## Index
+
+### Classes
+
+- [EraserWidget](classes/EraserWidget.md)

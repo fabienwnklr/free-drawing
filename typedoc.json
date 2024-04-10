@@ -1,0 +1,7 @@
+{
+  "plugin": ["typedoc-plugin-markdown"],
+  "gitRevision": "master",
+  "excludePrivate": true,
+  "out": "./docs/api",
+  "readme": "none"
+}

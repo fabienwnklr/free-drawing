@@ -5,21 +5,38 @@ layout: home
 hero:
   name: "free-drawing"
   text: "Free Drawing Docs"
-  tagline: Inspired from <a href="https://github.com/fabienwnklr/drawer/" target="_blank">Drawer</a> also inspired from Excalidraw and TlDraw, is totally rewritting and rethinking for better use to more complexe context. For simply use, i recommend to you to use <a href="https://github.com/fabienwnklr/drawer/" target="_blank">Drawer</a>
+  tagline: Inspired from <a href="https://github.com/fabienwnklr/drawer/" target="_blank">Drawer</a> also inspired from Excalidraw and TlDraw, is totally rewritting and rethinking for better use to more complexe context. Oppositely to Excalidraw or TLDraw, is build for native js environnement.
   actions:
     - theme: brand
-      text: Markdown Examples
-      link: /markdown-examples
+      text: Get started
+      link: /get-started/
     - theme: alt
-      text: API Examples
-      link: /api-examples
+      text: API documentation
+      link: /api/modules
 
 features:
-  - title: Feature A
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Feature B
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Feature C
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
+  - title: Easy to use
+    icon:
+      src: /img/easy_to_use.svg
+      width: 200
+      height: 200
+    details: <code>Free-drawing</code> was designed from the ground up to be easily instancied and used.
+  - title: Open source
+    icon:
+      src: /img/open_source.svg
+      width: 200
+      height: 200
+    details: is fully free and open source. This approach allows to have broader views and improve the base code
+  - title: Performant
+    icon:
+      src: /img/performant.svg
+      width: 200
+      height: 200
+    details: Lightweight and fast.
+  - title: For all devices
+    icon:
+      src: /img/for_all_devices.svg
+      width: 200
+      height: 200
+    details: is also designed for mobile.
 ---
-
