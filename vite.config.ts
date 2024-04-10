@@ -5,7 +5,19 @@ import { execSync } from 'child_process';
 import dts from 'vite-plugin-dts';
 
 export default defineConfig(({ mode }) => {
-  if (mode === 'production') {
+  if (mode === 'static') {
+    // Build static web site for sample
+    return {
+      build: {
+        outDir: './static',
+      },
+      resolve: {
+        alias: {
+          '@': resolve(__dirname, './src'),
+        },
+      },
+    };
+  } else {
     return {
       build: {
         cssMinify: true,
@@ -69,18 +81,6 @@ export default defineConfig(({ mode }) => {
           '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
           '**/e2e/**',
         ],
-      },
-    };
-  } else {
-    // Build static web site for sample
-    return {
-      build: {
-        outDir: './static',
-      },
-      resolve: {
-        alias: {
-          '@': resolve(__dirname, './src'),
-        },
       },
     };
   }
