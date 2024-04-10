@@ -3,8 +3,8 @@
 <!-- - add undo / redo button -->
 <!-- - add text button -->
 <!-- - add lock button ? not sure -->
-- add color and bg color button overlay when drawing for shape, bgcolor in setting menu (cf escalidraw)
-- add export button (png, svg, pdf, json, etc) with preview modal (cf excalidraw)
+<!-- - add color and bg color button overlay when drawing for shape, bgcolor in setting menu -->
+- add export button (png, svg, pdf, json, etc) with preview modal
 <!-- - create shortcut keyboard with doc -->
 <!-- - block zoom to min 10% max 3000% -->
 <!-- - add effect during draw with eraser : useless, codepen existing but not ended -->
