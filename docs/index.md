@@ -17,25 +17,25 @@ hero:
 features:
   - title: Easy to use
     icon:
-      src: /img/easy_to_use.svg
+      src: /easy_to_use.svg
       width: 200
       height: 200
     details: <code>Free-drawing</code> was designed from the ground up to be easily instancied and used.
   - title: Open source
     icon:
-      src: /img/open_source.svg
+      src: /open_source.svg
       width: 200
       height: 200
     details: is fully free and open source. This approach allows to have broader views and improve the base code
   - title: Performant
     icon:
-      src: /img/performant.svg
+      src: /performant.svg
       width: 200
       height: 200
     details: Lightweight and fast.
   - title: For all devices
     icon:
-      src: /img/for_all_devices.svg
+      src: /for_all_devices.svg
       width: 200
       height: 200
     details: is also designed for mobile.
