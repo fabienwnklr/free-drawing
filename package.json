@@ -50,7 +50,9 @@
     "publish": "git push --follow-tags origin master && npm publish --access public",
     "docs": "vitepress dev docs",
     "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "docs:preview": "vitepress preview docs",
+    "deploy:static": "sh script/deploy_static.sh",
+    "deploy:doc": "sh script/deploy_doc.sh"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.7.2",
