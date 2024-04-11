@@ -1,7 +1,6 @@
 /// <reference types="vitest" />
 import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
-import { execSync } from 'child_process';
 import dts from 'vite-plugin-dts';
 
 export default defineConfig(({ mode }) => {
