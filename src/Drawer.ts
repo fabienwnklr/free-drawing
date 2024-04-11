@@ -129,6 +129,7 @@ export class Drawer extends MicroEvent {
       this.stage.add(this.drawLayer);
       this.stage.add(this.selectionLayer);
     }
+
     this.$stageContainer = this.stage.content;
     this.$footerContainer = document.createElement('footer');
     this.$footerContainer.classList.add('drawer-footer-container');
@@ -787,7 +788,12 @@ export class Drawer extends MicroEvent {
   /**
    * Reset draw to default state (bgcolor, color, remove draw, etc.)
    */
-  resetDraw() {
+  resetDrawer() {
     this.options = defaultOptions;
+    this.clearCanvas();
+    this.setBgColor('#fff');
+    this.setStrokeWidth(this.options.strokeWidth);
+    this.setColor(this.options.strokeColor);
+    this.setOpacity(this.options.opacity);
   }
 }
