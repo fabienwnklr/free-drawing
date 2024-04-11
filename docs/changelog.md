@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.0.1-alpha.1](https://github.com/fabienwnklr/free-drawing/compare/v1.0.1...v1.0.1-alpha.1) (2024-04-11)
+
+## [1.0.1](https://github.com/fabienwnklr/free-drawing/compare/v1.0.0...v1.0.1) (2024-04-11)
+
+## [1.0.0](https://github.com/fabienwnklr/free-drawing/compare/v0.0.0...v1.0.0) (2024-04-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* rename `clearConfirmModal` and `clearStoredConfirmModal`
+
+### Features
+
+* create class for layout management ([2837ef6](https://github.com/fabienwnklr/free-drawing/commits/2837ef66a43b5f458bbf0238d22c4928a7470cd3))
+
+
+### Bug Fixes
+
+* rename `clearConfirmModal` and `clearStoredConfirmModal` ([eafe34c](https://github.com/fabienwnklr/free-drawing/commits/eafe34c2a637dc506e93d061dcb79b09c5490720))
+
 ## 0.0.0 (2024-04-10)
 
 
