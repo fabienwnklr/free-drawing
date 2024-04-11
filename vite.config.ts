@@ -39,16 +39,6 @@ export default defineConfig(({ mode }) => {
           insertTypesEntry: true,
           rollupTypes: true, // comment if you won't to merge all declarations into one file
         }),
-        {
-          name: 'postbuild-commands', // the name of your custom plugin. Could be anything.
-          closeBundle: async () => {
-            if (process.env.NODE_ENV !== 'test') {
-              console.log('Build docs...');
-              execSync('yarn docs:js'); // run during closeBundle hook. https://rollupjs.org/guide/en/#closebundle
-              console.log('Docs build !');
-            }
-          },
-        },
       ],
       resolve: {
         alias: {

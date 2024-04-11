@@ -50,8 +50,7 @@
     "publish": "git push --follow-tags origin master && npm publish --access public",
     "docs": "vitepress dev docs",
     "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs",
-    "docs:js": "cp dist/drawer.iife.js docs/js && cp dist/style.css docs/css"
+    "docs:preview": "vitepress preview docs"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.7.2",
