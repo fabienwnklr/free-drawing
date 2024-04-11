@@ -27,7 +27,6 @@ import { Toast } from './components/Toast/Toast';
 import { Group } from 'konva/lib/Group';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Vector2d } from 'konva/lib/types';
-import { DrawerLayout } from './DrawerLayout';
 
 /**
  * Drawer constructor. A drawer is used to draw multiple shapes
@@ -70,11 +69,8 @@ export class Drawer extends MicroEvent {
   grid: boolean = false;
   bgLayer: Layer;
 
-  drawerLayout: DrawerLayout;
-
   constructor($el: HTMLDivElement, options: Partial<DrawerOptions> = {}) {
     super();
-    this.drawerLayout = new DrawerLayout(this);
     this.$el = $el;
 
     this.options = deepMerge(defaultOptions, options);
