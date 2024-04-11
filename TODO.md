@@ -9,6 +9,7 @@
 - add beta prerelease script in package.json
 - migrate to np
 - (if np don't do) add action for publish release in gh
+- manage layout from DrawerLayout class
 <!-- - create shortcut keyboard with doc -->
 <!-- - block zoom to min 10% max 3000% -->
 <!-- - add effect during draw with eraser : useless, codepen existing but not ended -->
