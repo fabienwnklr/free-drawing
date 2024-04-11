@@ -6,6 +6,11 @@ export default defineConfig({
   description: 'Free Drawing Docs',
   head: [],
   themeConfig: {
+    logo: '/logo.svg',
+    footer: {
+      message: 'Released under the <a href="https://github.com/fabienwnklr/free-drawing/blob/main/LICENSE">MIT License</a.',
+      copyright: 'Copyright © 2023-present <a href="https://github.com/fabienwnklr">Fabien Winkler</a>'
+    },
     // https://vitepress.dev/reference/default-theme-config
     nav: [
       { text: 'Get started', link: '/get-started/' },
