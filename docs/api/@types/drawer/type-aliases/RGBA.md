@@ -1,8 +1,8 @@
-**free-drawing** • [API](../../../README.md)
+**@fabwcie/free-drawing** • [API](../../../README.md)
 
 ***
 
-[free-drawing](../../../README.md) / [@types/drawer](../README.md) / RGBA
+[@fabwcie/free-drawing](../../../README.md) / [@types/drawer](../README.md) / RGBA
 
 # Type alias: RGBA
 

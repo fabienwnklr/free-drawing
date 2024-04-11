@@ -1,8 +1,8 @@
-**free-drawing** • [API](../../../../README.md)
+**@fabwcie/free-drawing** • [API](../../../../README.md)
 
 ***
 
-[free-drawing](../../../../README.md) / components/tools/Zoom/Zoom
+[@fabwcie/free-drawing](../../../../README.md) / components/tools/Zoom/Zoom
 
 # components/tools/Zoom/Zoom
 

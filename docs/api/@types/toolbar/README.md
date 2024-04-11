@@ -1,8 +1,8 @@
-**free-drawing** • [API](../../README.md)
+**@fabwcie/free-drawing** • [API](../../README.md)
 
 ***
 
-[free-drawing](../../README.md) / @types/toolbar
+[@fabwcie/free-drawing](../../README.md) / @types/toolbar
 
 # @types/toolbar
 

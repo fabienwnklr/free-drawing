@@ -1,8 +1,8 @@
-**free-drawing** • [API](../../README.md)
+**@fabwcie/free-drawing** • [API](../../README.md)
 
 ***
 
-[free-drawing](../../README.md) / [Drawer](../README.md) / Drawer
+[@fabwcie/free-drawing](../../README.md) / [Drawer](../README.md) / Drawer
 
 # Class: Drawer
 
@@ -50,26 +50,6 @@ const drawer = new Drawer(document.getElementById('draw'), {
 [Drawer.ts:72](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L72)
 
 ## Properties
-
-### $clearConfirmModal
-
-> **$clearConfirmModal**: `null` \| [`ConfirmModal`](../../components/Modal/ConfirmModal/classes/ConfirmModal.md) = `null`
-
-#### Source
-
-[Drawer.ts:61](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L61)
-
-***
-
-### $clearStoredConfirmModal
-
-> **$clearStoredConfirmModal**: `null` \| [`ConfirmModal`](../../components/Modal/ConfirmModal/classes/ConfirmModal.md) = `null`
-
-#### Source
-
-[Drawer.ts:62](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L62)
-
-***
 
 ### $drawerContainer
 
@@ -176,6 +156,26 @@ const drawer = new Drawer(document.getElementById('draw'), {
 #### Source
 
 [Drawer.ts:70](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L70)
+
+***
+
+### clearConfirmModal
+
+> **clearConfirmModal**: `null` \| [`ConfirmModal`](../../components/Modal/ConfirmModal/classes/ConfirmModal.md) = `null`
+
+#### Source
+
+[Drawer.ts:61](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L61)
+
+***
+
+### clearStoredConfirmModal
+
+> **clearStoredConfirmModal**: `null` \| [`ConfirmModal`](../../components/Modal/ConfirmModal/classes/ConfirmModal.md) = `null`
+
+#### Source
+
+[Drawer.ts:62](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L62)
 
 ***
 
@@ -327,7 +327,7 @@ const drawer = new Drawer(document.getElementById('draw'), {
 
 #### Source
 
-[Drawer.ts:208](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L208)
+[Drawer.ts:209](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L209)
 
 ***
 
@@ -349,7 +349,7 @@ const drawer = new Drawer(document.getElementById('draw'), {
 
 #### Source
 
-[Drawer.ts:200](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L200)
+[Drawer.ts:201](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L201)
 
 ***
 
@@ -365,7 +365,7 @@ Update grid lines and bg position
 
 #### Source
 
-[Drawer.ts:219](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L219)
+[Drawer.ts:220](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L220)
 
 ***
 
@@ -387,7 +387,7 @@ Force clear (don't show confirm modal)
 
 #### Source
 
-[Drawer.ts:534](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L534)
+[Drawer.ts:535](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L535)
 
 ***
 
@@ -409,7 +409,7 @@ Force clear (don't show confirm modal)
 
 #### Source
 
-[Drawer.ts:561](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L561)
+[Drawer.ts:562](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L562)
 
 ***
 
@@ -425,7 +425,7 @@ Focus drawer div container (usefull for keyevent for example)
 
 #### Source
 
-[Drawer.ts:783](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L783)
+[Drawer.ts:784](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L784)
 
 ***
 
@@ -447,7 +447,7 @@ Shape type
 
 #### Source
 
-[Drawer.ts:192](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L192)
+[Drawer.ts:193](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L193)
 
 ***
 
@@ -463,7 +463,7 @@ Get all shape drawing
 
 #### Source
 
-[Drawer.ts:182](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L182)
+[Drawer.ts:183](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L183)
 
 ***
 
@@ -487,7 +487,7 @@ Get widget by name
 
 #### Source
 
-[Drawer.ts:381](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L381)
+[Drawer.ts:382](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L382)
 
 ***
 
@@ -503,7 +503,7 @@ Get zoom level
 
 #### Source
 
-[Drawer.ts:174](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L174)
+[Drawer.ts:175](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L175)
 
 ***
 
@@ -519,7 +519,7 @@ Hide grid
 
 #### Source
 
-[Drawer.ts:771](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L771)
+[Drawer.ts:772](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L772)
 
 ***
 
@@ -571,9 +571,9 @@ Hide grid
 
 ***
 
-### resetDraw()
+### resetDrawer()
 
-> **resetDraw**(): `void`
+> **resetDrawer**(): `void`
 
 Reset draw to default state (bgcolor, color, remove draw, etc.)
 
@@ -583,7 +583,7 @@ Reset draw to default state (bgcolor, color, remove draw, etc.)
 
 #### Source
 
-[Drawer.ts:790](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L790)
+[Drawer.ts:791](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L791)
 
 ***
 
@@ -599,7 +599,7 @@ Save current draw state to localstorage
 
 #### Source
 
-[Drawer.ts:440](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L440)
+[Drawer.ts:441](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L441)
 
 ***
 
@@ -619,7 +619,7 @@ Change background color
 
 #### Source
 
-[Drawer.ts:449](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L449)
+[Drawer.ts:450](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L450)
 
 ***
 
@@ -639,7 +639,7 @@ Set color for draw
 
 #### Source
 
-[Drawer.ts:465](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L465)
+[Drawer.ts:466](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L466)
 
 ***
 
@@ -659,7 +659,7 @@ Set opacity of shape 0 to 1
 
 #### Source
 
-[Drawer.ts:495](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L495)
+[Drawer.ts:496](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L496)
 
 ***
 
@@ -679,7 +679,7 @@ Set stroke width for draw
 
 #### Source
 
-[Drawer.ts:479](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L479)
+[Drawer.ts:480](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L480)
 
 ***
 
@@ -695,7 +695,7 @@ Show grid
 
 #### Source
 
-[Drawer.ts:581](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L581)
+[Drawer.ts:582](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L582)
 
 ***
 
@@ -721,7 +721,7 @@ Type of toast
 
 #### Source
 
-[Drawer.ts:512](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L512)
+[Drawer.ts:513](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L513)
 
 ***
 

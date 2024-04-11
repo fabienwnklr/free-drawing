@@ -1,8 +1,8 @@
-**free-drawing** • [API](../../../README.md)
+**@fabwcie/free-drawing** • [API](../../../README.md)
 
 ***
 
-[free-drawing](../../../README.md) / [@types/drawer](../README.md) / HEX
+[@fabwcie/free-drawing](../../../README.md) / [@types/drawer](../README.md) / HEX
 
 # Type alias: HEX
 

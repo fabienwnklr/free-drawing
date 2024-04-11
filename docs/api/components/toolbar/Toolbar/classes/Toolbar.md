@@ -1,8 +1,8 @@
-**free-drawing** • [API](../../../../README.md)
+**@fabwcie/free-drawing** • [API](../../../../README.md)
 
 ***
 
-[free-drawing](../../../../README.md) / [components/toolbar/Toolbar](../README.md) / Toolbar
+[@fabwcie/free-drawing](../../../../README.md) / [components/toolbar/Toolbar](../README.md) / Toolbar
 
 # Class: Toolbar
 

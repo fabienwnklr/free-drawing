@@ -1,8 +1,8 @@
-**free-drawing** • [API](../../../../../README.md)
+**@fabwcie/free-drawing** • [API](../../../../../README.md)
 
 ***
 
-[free-drawing](../../../../../README.md) / [components/tools/UndoRedo/History](../README.md) / History
+[@fabwcie/free-drawing](../../../../../README.md) / [components/tools/UndoRedo/History](../README.md) / History
 
 # Class: History
 

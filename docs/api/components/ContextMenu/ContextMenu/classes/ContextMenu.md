@@ -1,8 +1,8 @@
-**free-drawing** • [API](../../../../README.md)
+**@fabwcie/free-drawing** • [API](../../../../README.md)
 
 ***
 
-[free-drawing](../../../../README.md) / [components/ContextMenu/ContextMenu](../README.md) / ContextMenu
+[@fabwcie/free-drawing](../../../../README.md) / [components/ContextMenu/ContextMenu](../README.md) / ContextMenu
 
 # Class: ContextMenu
 

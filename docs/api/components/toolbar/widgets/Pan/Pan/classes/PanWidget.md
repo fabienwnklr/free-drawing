@@ -1,8 +1,8 @@
-**free-drawing** • [API](../../../../../../README.md)
+**@fabwcie/free-drawing** • [API](../../../../../../README.md)
 
 ***
 
-[free-drawing](../../../../../../README.md) / [components/toolbar/widgets/Pan/Pan](../README.md) / PanWidget
+[@fabwcie/free-drawing](../../../../../../README.md) / [components/toolbar/widgets/Pan/Pan](../README.md) / PanWidget
 
 # Class: PanWidget
 

@@ -1,8 +1,8 @@
-**free-drawing** • [API](../../../README.md)
+**@fabwcie/free-drawing** • [API](../../../README.md)
 
 ***
 
-[free-drawing](../../../README.md) / [utils/perf](../README.md) / ThrottledFunction
+[@fabwcie/free-drawing](../../../README.md) / [utils/perf](../README.md) / ThrottledFunction
 
 # Type alias: ThrottledFunction()\<T\>
 

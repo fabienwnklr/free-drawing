@@ -1,8 +1,8 @@
-**free-drawing** • [API](../../../README.md)
+**@fabwcie/free-drawing** • [API](../../../README.md)
 
 ***
 
-[free-drawing](../../../README.md) / components/Dropdown/Dropdown
+[@fabwcie/free-drawing](../../../README.md) / components/Dropdown/Dropdown
 
 # components/Dropdown/Dropdown
 

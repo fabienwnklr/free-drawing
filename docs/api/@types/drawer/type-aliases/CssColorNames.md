@@ -1,8 +1,8 @@
-**free-drawing** • [API](../../../README.md)
+**@fabwcie/free-drawing** • [API](../../../README.md)
 
 ***
 
-[free-drawing](../../../README.md) / [@types/drawer](../README.md) / CssColorNames
+[@fabwcie/free-drawing](../../../README.md) / [@types/drawer](../README.md) / CssColorNames
 
 # Type alias: CssColorNames
 
