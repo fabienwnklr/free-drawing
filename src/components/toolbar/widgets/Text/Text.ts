@@ -116,7 +116,7 @@ export class TextWidget extends BaseWidget {
     textarea.style.position = 'absolute';
     textarea.style.top = areaPosition.y + 2 + 'px';
     textarea.style.left = areaPosition.x + 'px';
-    textarea.style.width = (textNode.width() - textNode.padding() * 2) * this.drawer.stage.scaleX() + 'px';
+    textarea.style.width = ((textNode.width() - textNode.padding() * 2) * this.drawer.stage.scaleX()) * textNode.scaleX() + 'px';
     textarea.style.height = textNode.height() - textNode.padding() * 2 + 5 + 'px';
     textarea.style.fontSize = textNode.fontSize() * this.drawer.stage.scaleX() * textNode.scaleX() + 'px';
     textarea.style.border = 'none';
