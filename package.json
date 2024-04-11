@@ -1,9 +1,9 @@
 {
-  "name": "free-drawing",
+  "name": "@fabwcie/free-drawing",
   "author": "Winkler Fabien <fabienwinkler@outlook.fr>",
   "description": "Infinite canvas",
   "contributors": [],
-  "private": true,
+  "private": false,
   "version": "0.0.0",
   "type": "module",
   "main": "src/Drawer.ts",
