@@ -59,8 +59,8 @@ export class Drawer extends MicroEvent {
   zoom: Zoom | undefined;
   help: Help;
   setting: Settings;
-  $clearConfirmModal: ConfirmModal | null = null;
-  $clearStoredConfirmModal: ConfirmModal | null = null;
+  clearConfirmModal: ConfirmModal | null = null;
+  clearStoredConfirmModal: ConfirmModal | null = null;
 
   debug: boolean = false;
   undoRedo: UndoRedo;
@@ -537,12 +537,12 @@ export class Drawer extends MicroEvent {
    */
   clearCanvas(force: boolean = false) {
     if (!force) {
-      if (!this.$clearConfirmModal) {
-        this.$clearConfirmModal = new ConfirmModal(this, {
+      if (!this.clearConfirmModal) {
+        this.clearConfirmModal = new ConfirmModal(this, {
           message: 'Are you sure to remove all canvas draw ?',
         });
       }
-      this.$clearConfirmModal.show();
+      this.clearConfirmModal.show();
     } else {
       const shapes = this.getDrawingShapes();
 
@@ -564,8 +564,8 @@ export class Drawer extends MicroEvent {
    */
   clearStoredData(force: boolean = false) {
     if (!force) {
-      if (!this.$clearStoredConfirmModal) {
-        this.$clearStoredConfirmModal = new ConfirmModal(this, {
+      if (!this.clearStoredConfirmModal) {
+        this.clearStoredConfirmModal = new ConfirmModal(this, {
           message: 'Are you sure to remove all stored data ?',
           onConfirm: (modal) => {
             localStorage.removeItem(this.options.localStorageKey);
@@ -573,7 +573,7 @@ export class Drawer extends MicroEvent {
           },
         });
       }
-      this.$clearStoredConfirmModal.show();
+      this.clearStoredConfirmModal.show();
     } else {
       localStorage.removeItem(this.options.localStorageKey);
     }
