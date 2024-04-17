@@ -1,8 +1,8 @@
-**free-drawing** • [API](../../../../README.md)
+**@fabwcie/free-drawing** • [API](../../../../README.md)
 
 ***
 
-[free-drawing](../../../../README.md) / components/tools/Overlay/BaseOverlay
+[@fabwcie/free-drawing](../../../../README.md) / components/tools/Overlay/BaseOverlay
 
 # components/tools/Overlay/BaseOverlay
 

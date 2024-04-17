@@ -1,8 +1,8 @@
-**free-drawing** • [API](../../../../../../README.md)
+**@fabwcie/free-drawing** • [API](../../../../../../README.md)
 
 ***
 
-[free-drawing](../../../../../../README.md) / [components/toolbar/widgets/Eraser/Eraser](../README.md) / EraserWidget
+[@fabwcie/free-drawing](../../../../../../README.md) / [components/toolbar/widgets/Eraser/Eraser](../README.md) / EraserWidget
 
 # Class: EraserWidget
 

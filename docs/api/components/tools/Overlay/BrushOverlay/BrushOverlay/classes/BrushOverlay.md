@@ -1,8 +1,8 @@
-**free-drawing** • [API](../../../../../../README.md)
+**@fabwcie/free-drawing** • [API](../../../../../../README.md)
 
 ***
 
-[free-drawing](../../../../../../README.md) / [components/tools/Overlay/BrushOverlay/BrushOverlay](../README.md) / BrushOverlay
+[@fabwcie/free-drawing](../../../../../../README.md) / [components/tools/Overlay/BrushOverlay/BrushOverlay](../README.md) / BrushOverlay
 
 # Class: BrushOverlay
 

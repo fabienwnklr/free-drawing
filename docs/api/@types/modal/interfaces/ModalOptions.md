@@ -1,8 +1,8 @@
-**free-drawing** • [API](../../../README.md)
+**@fabwcie/free-drawing** • [API](../../../README.md)
 
 ***
 
-[free-drawing](../../../README.md) / [@types/modal](../README.md) / ModalOptions
+[@fabwcie/free-drawing](../../../README.md) / [@types/modal](../README.md) / ModalOptions
 
 # Interface: ModalOptions
 

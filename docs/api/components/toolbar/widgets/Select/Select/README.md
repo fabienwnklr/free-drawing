@@ -1,8 +1,8 @@
-**free-drawing** • [API](../../../../../README.md)
+**@fabwcie/free-drawing** • [API](../../../../../README.md)
 
 ***
 
-[free-drawing](../../../../../README.md) / components/toolbar/widgets/Select/Select
+[@fabwcie/free-drawing](../../../../../README.md) / components/toolbar/widgets/Select/Select
 
 # components/toolbar/widgets/Select/Select
 

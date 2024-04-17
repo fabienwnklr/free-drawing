@@ -1,8 +1,8 @@
-**free-drawing** • [API](../../../../README.md)
+**@fabwcie/free-drawing** • [API](../../../../README.md)
 
 ***
 
-[free-drawing](../../../../README.md) / [components/toolbar/constants](../README.md) / toolbarCSSPrefix
+[@fabwcie/free-drawing](../../../../README.md) / [components/toolbar/constants](../README.md) / toolbarCSSPrefix
 
 # Variable: toolbarCSSPrefix
 

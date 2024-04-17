@@ -2,9 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
-## [1.0.1-alpha.1](https://github.com/fabienwnklr/free-drawing/compare/v1.0.1...v1.0.1-alpha.1) (2024-04-11)
+## [2.0.0](https://github.com/fabienwnklr/free-drawing/compare/v1.0.1-alpha.1...v2.0.0) (2024-04-11)
 
-## [1.0.1](https://github.com/fabienwnklr/free-drawing/compare/v1.0.0...v1.0.1) (2024-04-11)
+
+### ⚠ BREAKING CHANGES
+
+* rename `resetDraw` to `resetDrawer` ([e8d9e04](https://github.com/fabienwnklr/free-drawing/commits/e8d9e04a46225b902f938b96158f1777de3a473f))
+
+
+### Bug Fixes
+
+* width for text node editing ([550bdc1](https://github.com/fabienwnklr/free-drawing/commits/550bdc1db1a900f05e1d892f02b96337cf9c5fcd))
 
 ## [1.0.0](https://github.com/fabienwnklr/free-drawing/compare/v0.0.0...v1.0.0) (2024-04-11)
 

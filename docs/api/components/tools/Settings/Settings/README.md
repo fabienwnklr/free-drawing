@@ -1,8 +1,8 @@
-**free-drawing** • [API](../../../../README.md)
+**@fabwcie/free-drawing** • [API](../../../../README.md)
 
 ***
 
-[free-drawing](../../../../README.md) / components/tools/Settings/Settings
+[@fabwcie/free-drawing](../../../../README.md) / components/tools/Settings/Settings
 
 # components/tools/Settings/Settings
 

@@ -1,8 +1,8 @@
-**free-drawing** • [API](../../../../../../README.md)
+**@fabwcie/free-drawing** • [API](../../../../../../README.md)
 
 ***
 
-[free-drawing](../../../../../../README.md) / [components/toolbar/widgets/Text/Text](../README.md) / TextWidget
+[@fabwcie/free-drawing](../../../../../../README.md) / [components/toolbar/widgets/Text/Text](../README.md) / TextWidget
 
 # Class: TextWidget
 

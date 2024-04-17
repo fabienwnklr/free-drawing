@@ -1,8 +1,8 @@
-**free-drawing** • [API](../../../../README.md)
+**@fabwcie/free-drawing** • [API](../../../../README.md)
 
 ***
 
-[free-drawing](../../../../README.md) / [components/Toast/Toast](../README.md) / Toast
+[@fabwcie/free-drawing](../../../../README.md) / [components/Toast/Toast](../README.md) / Toast
 
 # Class: Toast
 

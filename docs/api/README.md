@@ -1,14 +1,13 @@
-**free-drawing** • API
+**@fabwcie/free-drawing** • API
 
 ***
 
-# free-drawing
+# @fabwcie/free-drawing
 
 ## Modules
 
 - [@types/drawer](@types/drawer/README.md)
 - [@types/modal](@types/modal/README.md)
-- [@types/test](@types/test/README.md)
 - [@types/toolbar](@types/toolbar/README.md)
 - [Drawer](Drawer/README.md)
 - [components/ContextMenu/ContextMenu](components/ContextMenu/ContextMenu/README.md)
@@ -34,6 +33,7 @@
 - [components/tools/UndoRedo/UndoRedo](components/tools/UndoRedo/UndoRedo/README.md)
 - [components/tools/Zoom/Zoom](components/tools/Zoom/Zoom/README.md)
 - [constants](constants/README.md)
+- [utils/HotKey](utils/HotKey/README.md)
 - [utils/MicroEvent](utils/MicroEvent/README.md)
 - [utils/dom](utils/dom/README.md)
 - [utils/functions](utils/functions/README.md)

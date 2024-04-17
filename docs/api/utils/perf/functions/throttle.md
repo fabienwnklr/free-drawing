@@ -1,8 +1,8 @@
-**free-drawing** • [API](../../../README.md)
+**@fabwcie/free-drawing** • [API](../../../README.md)
 
 ***
 
-[free-drawing](../../../README.md) / [utils/perf](../README.md) / throttle
+[@fabwcie/free-drawing](../../../README.md) / [utils/perf](../README.md) / throttle
 
 # Function: throttle()
 

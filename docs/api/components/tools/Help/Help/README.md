@@ -1,8 +1,8 @@
-**free-drawing** • [API](../../../../README.md)
+**@fabwcie/free-drawing** • [API](../../../../README.md)
 
 ***
 
-[free-drawing](../../../../README.md) / components/tools/Help/Help
+[@fabwcie/free-drawing](../../../../README.md) / components/tools/Help/Help
 
 # components/tools/Help/Help
 

@@ -1,8 +1,8 @@
-**free-drawing** • [API](../../../README.md)
+**@fabwcie/free-drawing** • [API](../../../README.md)
 
 ***
 
-[free-drawing](../../../README.md) / [utils/functions](../README.md) / deepMerge
+[@fabwcie/free-drawing](../../../README.md) / [utils/functions](../README.md) / deepMerge
 
 # Function: deepMerge()
 

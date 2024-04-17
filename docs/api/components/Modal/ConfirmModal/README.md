@@ -1,8 +1,8 @@
-**free-drawing** • [API](../../../README.md)
+**@fabwcie/free-drawing** • [API](../../../README.md)
 
 ***
 
-[free-drawing](../../../README.md) / components/Modal/ConfirmModal
+[@fabwcie/free-drawing](../../../README.md) / components/Modal/ConfirmModal
 
 # components/Modal/ConfirmModal
 

@@ -27,7 +27,6 @@ import { Toast } from './components/Toast/Toast';
 import { Group } from 'konva/lib/Group';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Vector2d } from 'konva/lib/types';
-import { DrawerLayout } from './DrawerLayout';
 import { AvailableTypes } from './@types/toast';
 
 /**
@@ -71,11 +70,8 @@ export class Drawer extends MicroEvent {
   grid: boolean = false;
   bgLayer: Layer;
 
-  drawerLayout: DrawerLayout;
-
   constructor($el: HTMLDivElement, options: Partial<DrawerOptions> = {}) {
     super();
-    this.drawerLayout = new DrawerLayout(this);
     this.$el = $el;
 
     this.options = deepMerge(defaultOptions, options);
@@ -134,6 +130,7 @@ export class Drawer extends MicroEvent {
       this.stage.add(this.drawLayer);
       this.stage.add(this.selectionLayer);
     }
+
     this.$stageContainer = this.stage.content;
     this.$footerContainer = document.createElement('footer');
     this.$footerContainer.classList.add('drawer-footer-container');
@@ -792,7 +789,12 @@ export class Drawer extends MicroEvent {
   /**
    * Reset draw to default state (bgcolor, color, remove draw, etc.)
    */
-  resetDraw() {
+  resetDrawer() {
     this.options = defaultOptions;
+    this.clearCanvas();
+    this.setBgColor('#fff');
+    this.setStrokeWidth(this.options.strokeWidth);
+    this.setColor(this.options.strokeColor);
+    this.setOpacity(this.options.opacity);
   }
 }
