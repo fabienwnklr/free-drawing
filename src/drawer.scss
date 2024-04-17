@@ -80,6 +80,7 @@
 
     &:focus {
       box-shadow: 0 0 3px $primary-hover;
+      outline: 2px solid $primary;
     }
 
     &.active {
