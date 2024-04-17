@@ -143,6 +143,11 @@ export class Settings extends Dropdown {
     this.$clearStorageButton.addEventListener('click', () => {
       this.drawer.clearStoredData();
     });
+
+    // focus drawer on hide dropdown (no on toggle by click again on it)
+    this.on('fd.dropdown.hide', () => {
+      this.drawer.focus();
+    });
   }
 
   toggleZenMode() {
