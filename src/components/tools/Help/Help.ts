@@ -12,8 +12,8 @@ export class Help extends Modal {
 
     const data = /*html*/ `
     <div class="drawer-modal-help-links">
-      <a class="drawer-link" href="">Documentation${ExternalLink}</a>
-      <a class="drawer-link" href="https://github.com/fabienwnklr/free-drawing/" target="_blank">Found issue ? Please inform us !${ExternalLink}</a>
+      <a class="drawer-link" href="https://free-drawing-docs.fabienwinkler.fr/" target="_blank">Documentation${ExternalLink}</a>
+      <a class="drawer-link" href="https://github.com/fabienwnklr/free-drawing/issues/new" target="_blank">Found issue ? Please inform us !${ExternalLink}</a>
     </div>
     <h3>Keyboard shortcuts</h3>
     <div class="drawer-modal-help-grid">
