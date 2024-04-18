@@ -1,0 +1,241 @@
+@import 'variables';
+
+:root {
+  --drawer-pointer-events: all;
+}
+
+.drawer-container {
+  @import 'reboot';
+
+  @font-face {
+    font-family: 'Ubuntu';
+    src: url('./fonts/Ubuntu-Regular.ttf') format('ttf');
+    font-weight: normal;
+    font-style: normal;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    'Open Sans',
+    'Helvetica Neue',
+    sans-serif;
+  position: relative;
+  width: fit-content;
+  outline: none;
+
+  .tool {
+    border-radius: $radius;
+    z-index: 1;
+    box-shadow: $shadow;
+    background-color: #fff;
+    height: min-content;
+  }
+
+  .text-muted {
+    opacity: $text-muted-opacity;
+  }
+
+  .drawer-button {
+    pointer-events: var(--drawer-pointer-events);
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition:
+      background-color 0.3s ease,
+      color 0.3s ease;
+    border-radius: $radius;
+    user-select: none;
+    padding: 0.625rem;
+    width: $btn-size-lg;
+    height: $btn-size-lg;
+    box-sizing: border-box;
+    background-color: $btn-bg;
+    color: $btn-color;
+    border: 0;
+
+    &.disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    &:not(.disabled):not(.active):not(.drawer-button-danger):not(.drawer-button-neutral):hover {
+      background-color: $primary-hover;
+    }
+
+    &:focus {
+      box-shadow: 0 0 3px $primary-hover;
+      outline: 2px solid $primary;
+    }
+
+    &.active {
+      background-color: $primary-active;
+      color: $text-primary-active;
+    }
+  }
+
+  .drawer-button-neutral {
+    border: 1px solid $light;
+
+    &:not(.disabled):hover {
+      background-color: $light;
+    }
+
+    &.active {
+      background-color: darken($light, 5%);
+      color: $primary;
+    }
+  }
+
+  .drawer-button-danger {
+    color: $text-danger;
+    background-color: $danger;
+    &:hover {
+      background-color: $danger-hover;
+    }
+  }
+
+  .drawer-link {
+    text-decoration: none;
+    color: $light-color;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    padding: 0.4rem;
+    cursor: pointer;
+    border: 1px solid $light;
+    transition:
+      background-color 0.3s ease,
+      color 0.3s ease;
+    border-radius: $radius;
+    background-color: $light;
+
+    &.disabled {
+      pointer-events: none;
+    }
+
+    & > svg {
+      margin-left: 0.5rem;
+    }
+
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    &:hover {
+      background-color: $light-hover;
+    }
+
+    &:focus {
+      box-shadow: 0 0 3px $light-hover;
+    }
+  }
+
+  &:not(.is-full) .konvajs-content {
+    width: fit-content;
+    box-shadow: $shadow;
+    border-radius: $radius;
+    canvas {
+      border-radius: $radius;
+    }
+  }
+
+  .drawer-footer-container {
+    pointer-events: none;
+    position: absolute;
+    bottom: 1rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-gap: 3rem;
+    align-items: flex-end;
+    justify-content: space-between;
+    cursor: default;
+    box-sizing: border-box;
+    padding: 0 1rem;
+    width: 100%;
+
+    .drawer-footer-left {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-end;
+    }
+
+    .drawer-toolbar-root {
+      display: flex;
+      justify-content: center;
+    }
+
+    .drawer-help-container {
+      justify-self: flex-end;
+    }
+  }
+
+  hr {
+    border: 1px solid $light;
+  }
+
+  .title {
+    font-size: 0.8rem;
+    align-self: start;
+    margin-bottom: 0.4rem;
+  }
+
+  .overlay-picker-container {
+    display: flex;
+    align-items: center;
+    justify-content: left;
+    flex-direction: column;
+    width: 100%;
+    padding: 0.4rem;
+
+    .overlay-picker-btn-container {
+      display: flex;
+      gap: 0.4rem;
+      align-items: center;
+      width: 100%;
+      margin-top: 0.3rem;
+      margin-bottom: 0.3rem;
+
+      .overlay-picker__button {
+        width: 1.35rem;
+        height: 1.35rem;
+        border: 1px solid $light;
+        border-radius: $radius;
+        font-family: Ubuntu, sans-serif;
+        cursor: pointer;
+        pointer-events: var(--drawer-pointer-events);
+
+        &.active {
+          outline: 3px solid $primary;
+        }
+      }
+
+      .drawer-button {
+        width: $btn-size-default;
+        height: $btn-size-default;
+
+        &.stroke-picker__button,
+        &.font-picker__button {
+          border: 1px solid $light;
+          border-radius: $radius;
+        }
+      }
+    }
+  }
+}
