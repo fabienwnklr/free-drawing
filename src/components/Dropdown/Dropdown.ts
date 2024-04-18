@@ -48,6 +48,10 @@ export class Dropdown extends MicroEvent {
     this.trigger('fd.dropdown.hide');
   }
 
+  isShown() {
+    return this.$menu.classList.contains('show');
+  }
+
   private _initEvents() {
     this.$button.addEventListener('click', () => {
       this.$menu.classList.toggle('show');
@@ -59,7 +63,7 @@ export class Dropdown extends MicroEvent {
         if (event.target) {
           const openBtnClicked = this.$button.contains(event.target as Node);
 
-          if (!openBtnClicked) {
+          if (!openBtnClicked && this.isShown()) {
             this.hide();
           }
         }
