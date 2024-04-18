@@ -1,4 +1,4 @@
-import './drawer.scss';
+import './scss/drawer.scss';
 import { Stage } from 'konva/lib/Stage';
 import { Layer } from 'konva/lib/Layer';
 import { Toolbar } from './components/toolbar/Toolbar';
