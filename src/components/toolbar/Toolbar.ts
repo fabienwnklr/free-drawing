@@ -7,6 +7,10 @@ import { SelectWidget } from './widgets/Select/Select';
 import { AvailableTools } from '../../@types/toolbar';
 import { PanWidget } from './widgets/Pan/Pan';
 import { TextWidget } from './widgets/Text/Text';
+import { LineWidget } from './widgets/Line/Line';
+import { SquareWidget } from './widgets/Square/Square';
+import { CircleWidget } from './widgets/Circle/Circle';
+import { ArrowWidget } from './widgets/Arrow/Arrow';
 
 export class Toolbar {
   drawer: Drawer;
@@ -34,6 +38,10 @@ export class Toolbar {
     this.addWidget(new BrushWidget(this.drawer));
     this.addWidget(new EraserWidget(this.drawer));
     this.addWidget(new TextWidget(this.drawer));
+    this.addWidget(new LineWidget(this.drawer));
+    this.addWidget(new SquareWidget(this.drawer));
+    this.addWidget(new CircleWidget(this.drawer));
+    this.addWidget(new ArrowWidget(this.drawer));
   }
 
   addWidget(widget: BaseWidget) {
