@@ -1,9 +1,13 @@
 # free-drawing
 
+![image](https://github.com/fabienwnklr/free-drawing/assets/49644785/2a87f2dc-ee59-4cec-87a6-872f06e231fa)
+
 Inspired from [drawer](https://github.com/fabienwnklr/drawer/) is totally rewritting and rethinking for better use to more complexe context.
 For simply use, i recommend to you to use [drawer](https://github.com/fabienwnklr/drawer/)
 
-Check demo [here](https://free-drawing.fabienwinkler.fr/)
+📝 Check documentation [here](https://free-drawing-docs.fabienwinkler.fr/)
+
+<img src="./docs/public/logo.svg" width="17" /> Check demo [here](https://free-drawing.fabienwinkler.fr/)
 
 ## Dependencies
 

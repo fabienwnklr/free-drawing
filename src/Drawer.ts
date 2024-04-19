@@ -1,4 +1,4 @@
-import './drawer.scss';
+import './scss/drawer.scss';
 import { Stage } from 'konva/lib/Stage';
 import { Layer } from 'konva/lib/Layer';
 import { Toolbar } from './components/toolbar/Toolbar';
@@ -27,6 +27,7 @@ import { Toast } from './components/Toast/Toast';
 import { Group } from 'konva/lib/Group';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Vector2d } from 'konva/lib/types';
+import { AvailableTypes } from './@types/toast';
 
 /**
  * Drawer constructor. A drawer is used to draw multiple shapes
@@ -510,8 +511,8 @@ export class Drawer extends MicroEvent {
    * @param type Type of toast
    * @returns {Toast}
    */
-  toast(message: string, type?: 'info' | 'warning' | 'error' | 'neutral'): Toast {
-    const toast = new Toast(this, message, type);
+  toast(message: string, type?: AvailableTypes, timeout?: number, showIcon?: boolean): Toast {
+    const toast = new Toast(this, message, type, timeout, showIcon);
 
     toast.show();
 

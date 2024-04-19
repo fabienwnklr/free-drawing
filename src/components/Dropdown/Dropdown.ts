@@ -1,6 +1,7 @@
+import MicroEvent from '@/utils/MicroEvent';
 import './dropdown.scss';
 
-export class Dropdown {
+export class Dropdown extends MicroEvent {
   $dropdownContainer: HTMLDivElement;
   $button: HTMLButtonElement;
   $menu: HTMLDivElement;
@@ -8,6 +9,8 @@ export class Dropdown {
   $dropdownItem: HTMLLIElement;
 
   constructor() {
+    super();
+
     this.$button = document.createElement('button');
     this.$button.role = 'button';
     this.$button.classList.add('drawer-button', 'drawer-button-neutral', 'tool', 'drawer-button-dropdown');
@@ -41,6 +44,12 @@ export class Dropdown {
 
   hide() {
     this.$menu.classList.remove('show');
+
+    this.trigger('fd.dropdown.hide');
+  }
+
+  isShown() {
+    return this.$menu.classList.contains('show');
   }
 
   private _initEvents() {
@@ -54,7 +63,7 @@ export class Dropdown {
         if (event.target) {
           const openBtnClicked = this.$button.contains(event.target as Node);
 
-          if (!openBtnClicked) {
+          if (!openBtnClicked && this.isShown()) {
             this.hide();
           }
         }

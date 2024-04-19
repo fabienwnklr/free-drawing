@@ -1,11 +1,11 @@
-@import './scss/variables';
+@import 'variables';
 
 :root {
   --drawer-pointer-events: all;
 }
 
 .drawer-container {
-  @import './scss/reboot';
+  @import 'reboot';
 
   @font-face {
     font-family: 'Ubuntu';
@@ -80,6 +80,7 @@
 
     &:focus {
       box-shadow: 0 0 3px $primary-hover;
+      outline: 2px solid $primary;
     }
 
     &.active {

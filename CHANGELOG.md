@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [2.0.1](https://github.com/fabienwnklr/free-drawing/compare/v2.0.0...v2.0.1) (2024-04-18)
+
+
+### Features
+
+* add microevent to dropdown ([7310925](https://github.com/fabienwnklr/free-drawing/commits/731092578c4ec64ec5a0fd6df41fa80ec2a23b8f))
+* **toast:** add `MicroEvent` and icon ([1384cc4](https://github.com/fabienwnklr/free-drawing/commits/1384cc488a8220e1dabff65023cee4f1ca051dfe))
+
+
+### Bug Fixes
+
+* **dropdown:** trigger hide if is shown only ([8a66747](https://github.com/fabienwnklr/free-drawing/commits/8a667479dab69d9158f738d0f3cc994912ac0f85))
+
 ## [2.0.0](https://github.com/fabienwnklr/free-drawing/compare/v1.0.1-alpha.1...v2.0.0) (2024-04-11)
 
 
