@@ -3,6 +3,7 @@
 # abort on errors
 set -e
 
+rm -rf docs/.vitepress/dist
 # build
 yarn docs:build
 
@@ -12,7 +13,7 @@ cd docs/.vitepress/dist
 # if you are deploying to a custom domain
 # echo 'www.example.com' > CNAME
 
-git init
+git init --initial-branch=master
 git add -A
 git commit -m 'deploy'
 
