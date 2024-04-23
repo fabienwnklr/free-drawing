@@ -11,7 +11,7 @@ export class LineWidget extends BaseWidget {
   #lastLine: Line = new Line();
   constructor(drawer: Drawer) {
     const $LineIcon = stringToNode<SVGElement>(LineIcon);
-    super(drawer, 'pan', 'Pan', $LineIcon, 'h');
+    super(drawer, 'line', 'Line', $LineIcon, 'l');
   }
 
   protected onActive(): void {
