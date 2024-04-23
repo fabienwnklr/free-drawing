@@ -4,14 +4,11 @@ import LineIcon from '@/icons/line.svg?raw';
 import { Drawer } from '@/Drawer';
 import { shapeName } from '@/constants';
 import { Line } from 'konva/lib/shapes/Line';
-import getStroke from 'perfect-freehand';
 import { SelectWidget } from '../Select/Select';
 
 export class LineWidget extends BaseWidget {
   isPaint: boolean = false;
   #lastLine: Line = new Line();
-  #allPoints: {x: number, y: number}[] = [];
-  #firstPoint: number[] = [];
   constructor(drawer: Drawer) {
     const $LineIcon = stringToNode<SVGElement>(LineIcon);
     super(drawer, 'pan', 'Pan', $LineIcon, 'h');
@@ -20,9 +17,11 @@ export class LineWidget extends BaseWidget {
   protected onActive(): void {
     this.initEvents();
   }
+
   protected onDesactive(): void {
     this.removeEvents();
   }
+
   protected initEvents(): void {
     this.drawer.stage.on('mousedown touchstart', (e) => {
       if (e.evt.button === 2) return;
@@ -52,7 +51,6 @@ export class LineWidget extends BaseWidget {
       this.#lastLine.on('dragend', () => {
         this.drawer.stage.fire('change');
       });
-      this.#firstPoint = [realPos.x, realPos.y, realPos.x, realPos.y]
       this.drawer.drawLayer.add(this.#lastLine);
     });
 
@@ -69,7 +67,7 @@ export class LineWidget extends BaseWidget {
     this.drawer.stage.on('mouseup touchend', (e) => {
       if (e.evt.button === 2) return;
 
-      this._updateLine(true);
+      this._updateLine();
       this.isPaint = false;
       this.drawer.UIPointerEvents('all');
 
@@ -82,27 +80,20 @@ export class LineWidget extends BaseWidget {
     });
   }
 
-  private _updateLine(last?: boolean) {
-    const realPos = this.drawer._getRelativePointerPos();
-    this.#allPoints.push(realPos);
-    const points = getStroke(this.#allPoints, {
-      size: this.drawer.options.strokeWidth,
-      smoothing: 1,
-      thinning: 0.6,
-      easing: (t) => Math.sin((t * Math.PI) / 2),
-      last,
-    });
-
-    if (!this.#lastLine.closed()) this.#lastLine.closed(true);
-    const newPoints = points.flat();
+  private _updateLine() {
+    const { x, y } = this.drawer._getRelativePointerPos();
+    // Get 4 last points (start position)
+    const newPoints = this.#lastLine.points().slice(0, 4);
+    newPoints.push(x, y);
     this.#lastLine?.points(newPoints);
   }
+
   protected removeEvents(): void {
     this.drawer.stage.off('mousedown touchstart');
     this.drawer.stage.off('mousemove touchmove');
     this.drawer.stage.off('mouseup touchend');
   }
   public updateCursor(): void {
-    throw new Error('Method not implemented.');
+    return;
   }
 }

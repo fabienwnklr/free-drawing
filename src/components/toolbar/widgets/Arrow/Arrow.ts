@@ -10,18 +10,18 @@ export class ArrowWidget extends BaseWidget {
   }
 
   protected onActive(): void {
-    throw new Error('Method not implemented.');
+    return;
   }
   protected onDesactive(): void {
-    throw new Error('Method not implemented.');
+    return;
   }
   protected initEvents(): void {
-    throw new Error('Method not implemented.');
+    return;
   }
   protected removeEvents(): void {
-    throw new Error('Method not implemented.');
+    return;
   }
   public updateCursor(): void {
-    throw new Error('Method not implemented.');
+    return;
   }
 }
