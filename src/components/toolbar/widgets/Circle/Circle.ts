@@ -6,22 +6,26 @@ import { Drawer } from '@/Drawer';
 export class CircleWidget extends BaseWidget {
   constructor(drawer: Drawer) {
     const $CircleIcon = stringToNode<SVGElement>(CircleIcon);
-    super(drawer, 'pan', 'Pan', $CircleIcon, 'h');
+    super(drawer, 'circle', 'Circle', $CircleIcon, 'c');
   }
 
   protected onActive(): void {
-    throw new Error('Method not implemented.');
+    return;
   }
+
   protected onDesactive(): void {
-    throw new Error('Method not implemented.');
+    return;
   }
+
   protected initEvents(): void {
-    throw new Error('Method not implemented.');
+    return;
   }
+
   protected removeEvents(): void {
-    throw new Error('Method not implemented.');
+    return;
   }
+
   public updateCursor(): void {
-    throw new Error('Method not implemented.');
+    return;
   }
 }

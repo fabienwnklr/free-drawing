@@ -6,7 +6,7 @@ import { Drawer } from '@/Drawer';
 export class ArrowWidget extends BaseWidget {
   constructor(drawer: Drawer) {
     const $ArrowIcon = stringToNode<SVGElement>(ArrowIcon);
-    super(drawer, 'pan', 'Pan', $ArrowIcon, 'h');
+    super(drawer, 'arrow', 'Arrow', $ArrowIcon, 'a');
   }
 
   protected onActive(): void {

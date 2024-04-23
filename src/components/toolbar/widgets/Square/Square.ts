@@ -6,22 +6,26 @@ import { Drawer } from '@/Drawer';
 export class SquareWidget extends BaseWidget {
   constructor(drawer: Drawer) {
     const $SquareIcon = stringToNode<SVGElement>(SquareIcon);
-    super(drawer, 'pan', 'Pan', $SquareIcon, 'h');
+    super(drawer, 'square', 'Square', $SquareIcon, 'r');
   }
 
   protected onActive(): void {
-    throw new Error('Method not implemented.');
+    return;
   }
+
   protected onDesactive(): void {
-    throw new Error('Method not implemented.');
+    return;
   }
+
   protected initEvents(): void {
-    throw new Error('Method not implemented.');
+    return;
   }
+
   protected removeEvents(): void {
-    throw new Error('Method not implemented.');
+    return;
   }
+
   public updateCursor(): void {
-    throw new Error('Method not implemented.');
+    return;
   }
 }

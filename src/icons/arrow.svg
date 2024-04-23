@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 14 14">
+<svg style="transform: rotate(45deg);" xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 14 14">
     <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
         d="M7 13.5V.5M10.5 4L7 .5L3.5 4" />
 </svg>
