@@ -4,6 +4,13 @@ import { Toolbar } from '../src/components/toolbar/Toolbar';
 import { Zoom } from '../src/components/tools/Zoom/Zoom';
 import { Help } from '../src/components/tools/Help/Help';
 import { Settings } from '../src/components/tools/Settings/Settings';
+import { readdirSync, lstatSync } from 'fs';
+import { join } from 'path';
+
+const folderWidgets = "./src/components/toolbar/widgets";
+const widgets = readdirSync(folderWidgets).filter(fileName => !lstatSync(join(folderWidgets, fileName)).isFile());
+
+console.log(widgets);
 
 beforeAll(() => {
   function noOp () { }
@@ -26,7 +33,7 @@ describe('Basic integration', () => {
     expect(drawer.setting).instanceOf(Settings);
     expect(drawer.toolbar.$toolbarContent).instanceOf(HTMLDivElement);
     expect(drawer.toolbar.$toolbarRoot).instanceOf(HTMLDivElement);
-    expect(drawer.toolbar.widgets.size).eq(9);
+    expect(drawer.toolbar.widgets.size).eq(widgets.length);
     expect(drawer.activeWidget).not.toBe(null);
     expect(drawer.activeWidget.id).eq('brush');
     expect(drawer.activeWidget.$button.classList.contains('active')).eq(true);
