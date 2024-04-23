@@ -6,6 +6,7 @@ export const defaultOptions: DrawerOptions = {
   width: window.innerWidth,
   height: window.innerHeight,
   strokeWidth: 5,
+  strokeDash: undefined,
   strokeColor: '#000',
   zoom: true,
   zoomWidget: true,
@@ -22,4 +23,4 @@ export const shapeName = {
   guideLine: 'drawer-guide-line',
   gridLine: 'drawer-grid-line',
   background: 'drawer-background',
-}
+};

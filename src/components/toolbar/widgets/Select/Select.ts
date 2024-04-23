@@ -566,6 +566,21 @@ export class SelectWidget extends BaseWidget {
     });
   }
 
+  setStrokeStyle(dash: number[] | undefined) {
+    const selected = this.transformer.nodes();
+
+    selected.forEach((s, index) => {
+      if (s instanceof Shape) {
+        s.dash(dash);
+        s.draw();
+
+        if (index === selected.length -1) {
+          this.drawer.stage.fire('change');
+        }
+      }
+    });
+  }
+
   /**
    * Set opacity of shape 0 to 1
    * @param opacity

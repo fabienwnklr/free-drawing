@@ -6,6 +6,7 @@ export type DrawerOptions = {
   width: number;
   height: number;
   strokeWidth: number;
+  strokeDash: number[] | undefined,
   strokeColor: ColorLike;
   opacity: number;
   zoom: boolean;

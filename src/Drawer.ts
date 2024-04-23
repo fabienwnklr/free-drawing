@@ -490,6 +490,16 @@ export class Drawer extends MicroEvent {
     }
   }
 
+  setStrokeStyle(dashed: number[] | undefined) {
+    this.options.strokeDash = dashed;
+
+    const selectWidget = this.getWidget<SelectWidget>('selection');
+
+    if (selectWidget?.transformer.nodes().length) {
+      selectWidget?.setStrokeStyle(dashed);
+    }
+  }
+
   /**
    * Set opacity of shape 0 to 1
    * @param opacity

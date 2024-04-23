@@ -50,13 +50,13 @@
     pointer-events: var(--drawer-pointer-events);
     display: flex;
     align-items: center;
+    justify-content: center;
     cursor: pointer;
     transition:
       background-color 0.3s ease,
       color 0.3s ease;
     border-radius: $radius;
     user-select: none;
-    padding: 0.625rem;
     width: $btn-size-lg;
     height: $btn-size-lg;
     box-sizing: border-box;
