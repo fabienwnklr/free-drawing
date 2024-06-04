@@ -34,7 +34,6 @@ async function server() {
     }
 
     socket.on(socketEvents.DRAW, (data) => {
-      console.log('draw', data);
       // Emit to all connected clients (including the one who originally sent it)
       io.sockets.emit(socketEvents.DRAW, data);
     });
@@ -44,10 +43,6 @@ async function server() {
       delete connectedClients[socket.id];
     });
   });
-
-  setInterval(() => {
-    io.emit('message', new Date().toISOString());
-  }, 1000);
 
   httpServer.listen(3000);
   console.log('> Local: http://localhost:3000/');

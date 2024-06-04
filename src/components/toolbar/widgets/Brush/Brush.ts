@@ -79,14 +79,13 @@ export class BrushWidget extends BaseWidget {
       if (!this.isPaint) return;
 
       this._updateLine();
-      this.drawer.socket.emit(socketEvents.DRAW, this.#lastLine);
+      // this.drawer.socket.emit(socketEvents.DRAW, this.#lastLine);
     });
 
     this.drawer.stage.on('mouseup touchend', (e) => {
       if (e.evt.button === 2) return;
 
       this._updateLine(true);
-      console.log(this.getSvgPathFromStroke(getStroke(this.#allPoints)))
       this.isPaint = false;
       this.drawer.UIPointerEvents('all');
       this.#allPoints = [];
@@ -96,6 +95,7 @@ export class BrushWidget extends BaseWidget {
       const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
       selectWidget?.transformer.nodes([]);
       e.evt.preventDefault();
+      this.drawer.socket.emit(socketEvents.DRAW, this.#lastLine);
     });
   }
 
@@ -126,8 +126,10 @@ export class BrushWidget extends BaseWidget {
    * draw on our canvas whatever the other person draws
    *
    */
-  private _socketDraw(data: string) {
-    this.drawer.drawLayer.add(new Line(JSON.parse(data)));
+  _socketDraw(data: string) {
+    const line = new Line(JSON.parse(data));
+    if (JSON.stringify(this.#lastLine.points()) === JSON.stringify(line.points())) return;
+    this.drawer.drawLayer.add(line);
   }
 
   getSvgPathFromStroke(points: number[][]): string {

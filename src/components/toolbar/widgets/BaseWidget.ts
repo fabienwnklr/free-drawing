@@ -62,6 +62,7 @@ export abstract class BaseWidget {
   protected abstract onDesactive(): void;
   protected abstract initEvents(): void;
   protected abstract removeEvents(): void;
+  public abstract _socketDraw?(data: string): void;
   public abstract updateCursor(): void;
 
   private _initEvents() {
