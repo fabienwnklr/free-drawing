@@ -7,6 +7,11 @@ import { SelectWidget } from '../Select/Select';
 import { BrushOverlay } from '@/components/tools/Overlay/BrushOverlay/BrushOverlay';
 import { getStroke } from 'perfect-freehand';
 import { shapeName } from '@/constants';
+// import { socketEvents } from '../../../../../server/socket-events.js'
+const socketEvents = {
+  DRAW: 'DRAW',
+  DRAW_BEGIN_PATH: 'DRAW_BEGIN_PATH',
+};
 
 export class BrushWidget extends BaseWidget {
   #lastLine: Line = new Line();
@@ -19,6 +24,7 @@ export class BrushWidget extends BaseWidget {
     super(drawer, 'brush', 'Brush', $BrushIcon, 'b');
 
     this.overlay = new BrushOverlay(drawer);
+    this.drawer.socket.on(socketEvents.DRAW, this._socketDraw.bind(this));
   }
 
   protected onActive(): void {
@@ -73,13 +79,14 @@ export class BrushWidget extends BaseWidget {
       if (!this.isPaint) return;
 
       this._updateLine();
+      this.drawer.socket.emit(socketEvents.DRAW, this.#lastLine);
     });
 
     this.drawer.stage.on('mouseup touchend', (e) => {
       if (e.evt.button === 2) return;
 
       this._updateLine(true);
-      // console.log(this.getSvgPathFromStroke(getStroke(this.#allPoints)))
+      console.log(this.getSvgPathFromStroke(getStroke(this.#allPoints)))
       this.isPaint = false;
       this.drawer.UIPointerEvents('all');
       this.#allPoints = [];
@@ -88,7 +95,6 @@ export class BrushWidget extends BaseWidget {
 
       const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
       selectWidget?.transformer.nodes([]);
-
       e.evt.preventDefault();
     });
   }
@@ -115,8 +121,17 @@ export class BrushWidget extends BaseWidget {
     this.drawer.stage.off('mouseup touchend');
   }
 
+  /**
+   * Get the drawing data from the socket and basically
+   * draw on our canvas whatever the other person draws
+   *
+   */
+  private _socketDraw(data: string) {
+    this.drawer.drawLayer.add(new Line(JSON.parse(data)));
+  }
+
   getSvgPathFromStroke(points: number[][]): string {
-    const TO_FIXED_PRECISION = /(\s?[A-Z]?,?-?[0-9]*\.[0-9]{0,2})(([0-9]|e|-)*)/g;
+    const TO_FIXED_PRECISION = /(\s?[A-Z]?,?-?\d*\.\d{0,2})((\d|e|-)*)/g;
     if (!points.length) {
       return '';
     }

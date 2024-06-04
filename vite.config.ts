@@ -44,9 +44,6 @@ export default defineConfig(({ mode }) => {
           '@': resolve(__dirname, './src'),
         },
       },
-      server: {
-        open: process.env.NODE_ENV !== 'test',
-      },
       test: {
         server: {
           deps: {

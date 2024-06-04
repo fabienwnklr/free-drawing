@@ -9,11 +9,13 @@ import { deepMerge } from './utils/functions';
 import { defaultOptions, shapeName } from './constants';
 import { Zoom } from './components/tools/Zoom/Zoom';
 import { Help } from './components/tools/Help/Help';
-import { SelectWidget } from './components/toolbar/widgets/Select/Select';
-import { PanWidget } from './components/toolbar/widgets/Pan/Pan';
 import { BrushWidget } from './components/toolbar/widgets/Brush/Brush';
-import { EraserWidget } from './components/toolbar/widgets/Eraser/Eraser';
-import { BaseWidget } from './components/toolbar/widgets/BaseWidget';
+
+import type { SelectWidget } from './components/toolbar/widgets/Select/Select';
+import type { PanWidget } from './components/toolbar/widgets/Pan/Pan';
+import type { EraserWidget } from './components/toolbar/widgets/Eraser/Eraser';
+import type { BaseWidget } from './components/toolbar/widgets/BaseWidget';
+
 import { Settings } from './components/tools/Settings/Settings';
 import { Node } from 'konva/lib/Node';
 import MicroEvent from './utils/MicroEvent';
@@ -28,7 +30,13 @@ import { Group } from 'konva/lib/Group';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Vector2d } from 'konva/lib/types';
 import { AvailableTypes } from './@types/toast';
+import { io } from 'socket.io-client';
 
+const socket = io();
+
+socket.on('connect', () => {
+  console.log('🌍 Connected to server');
+});
 /**
  * Drawer constructor. A drawer is used to draw multiple shapes
  * @constructor
@@ -42,6 +50,7 @@ import { AvailableTypes } from './@types/toast';
  * });
  */
 export class Drawer extends MicroEvent {
+  socket = socket;
   $el: HTMLDivElement;
   $drawerContainer: HTMLDivElement;
   $stageContainer: HTMLDivElement;

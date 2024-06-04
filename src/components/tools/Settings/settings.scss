@@ -30,6 +30,7 @@
         border: 1px solid $light;
         cursor: pointer;
         pointer-events: var(--drawer-pointer-events);
+        border-radius: $radius;
 
         &.active {
           outline: 3px solid $primary;

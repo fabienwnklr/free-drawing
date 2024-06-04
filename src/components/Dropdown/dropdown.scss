@@ -7,10 +7,6 @@
   left: 10px;
   z-index: 2;
 
-  .drawer-button-dropdown {
-    width: fit-content;
-  }
-
   .drawer-dropdown {
     margin-top: 0.3rem;
     list-style: none;
@@ -25,12 +21,13 @@
     font-weight: 400;
 
     .drawer-dropdown-list {
-      margin-left: 0.3rem;
-      margin-right: 0.3rem;
+      margin: 0;
       .drawer-dropdown-list-item {
         width: 100%;
-        margin-top: 0.3rem;
-        margin-bottom: 0.3rem;
+        padding-top: 0.3rem;
+        padding-bottom: 0.3rem;
+        border-radius: 0;
+        justify-content: flex-start;
 
         svg {
           margin-right: 0.4rem;
