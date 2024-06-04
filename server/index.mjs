@@ -15,7 +15,7 @@ async function server() {
   if (!isProductionMode) {
     console.log('> Development Mode');
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: { middlewareMode: true, open: true },
     });
     app.use(vite.middlewares);
   } else {
@@ -34,7 +34,7 @@ async function server() {
     }
 
     socket.on(socketEvents.DRAW, (data) => {
-      console.log("draw", data)
+      console.log('draw', data);
       // Emit to all connected clients (including the one who originally sent it)
       io.sockets.emit(socketEvents.DRAW, data);
     });

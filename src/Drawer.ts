@@ -31,6 +31,7 @@ import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Vector2d } from 'konva/lib/types';
 import { AvailableTypes } from './@types/toast';
 import { io } from 'socket.io-client';
+import { debounce } from './utils/perf';
 
 const socket = io();
 
@@ -95,8 +96,17 @@ export class Drawer extends MicroEvent {
     const height = this.options.height;
     let activeTool = this.options.tool ?? 'brush';
 
-    if (width === window.innerWidth && height === window.innerHeight) {
+    if (width === document.documentElement.clientWidth && height === document.documentElement.clientHeight) {
       this.$drawerContainer.classList.add('is-full');
+
+      const resizeObserver = new ResizeObserver(
+        debounce(() => {
+          this.setSize(document.documentElement.clientWidth, document.documentElement.clientHeight);
+        }, 250)
+      );
+
+      //to attach to the whole document
+      resizeObserver.observe(document.documentElement);
     }
 
     const stageSaved = localStorage.getItem(this.options.localStorageKey);
@@ -815,5 +825,9 @@ export class Drawer extends MicroEvent {
     this.setStrokeWidth(this.options.strokeWidth);
     this.setColor(this.options.strokeColor);
     this.setOpacity(this.options.opacity);
+  }
+
+  setSize(width: number, height: number) {
+    this.stage.size({ width, height });
   }
 }
