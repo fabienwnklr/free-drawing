@@ -36,10 +36,8 @@
 
   .tool {
     border-radius: $radius;
-    z-index: 1;
     box-shadow: $shadow;
     background-color: #fff;
-    height: min-content;
   }
 
   .text-muted {
@@ -159,7 +157,7 @@
   .drawer-footer-container {
     pointer-events: none;
     position: absolute;
-    bottom: 1rem;
+    bottom: 0.1rem;
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     grid-gap: 3rem;
@@ -167,7 +165,7 @@
     justify-content: space-between;
     cursor: default;
     box-sizing: border-box;
-    padding: 0 1rem;
+    padding: 1rem;
     width: 100%;
     overflow-x: auto;
 
@@ -180,6 +178,9 @@
     .drawer-toolbar-root {
       display: flex;
       justify-content: center;
+      border-radius: $radius;
+      box-shadow: $shadow;
+      background-color: #fff;
     }
 
     .drawer-help-container {
