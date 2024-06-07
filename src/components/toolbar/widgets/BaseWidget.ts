@@ -62,8 +62,15 @@ export abstract class BaseWidget {
   protected abstract onDesactive(): void;
   protected abstract initEvents(): void;
   protected abstract removeEvents(): void;
-  public abstract _socketDraw?(data: string): void;
   public abstract updateCursor(): void;
+
+
+  /**
+   * Get the drawing data from the socket and basically
+   * draw on our canvas whatever the other person draws
+   *
+   */
+  public _socketDraw?(data: string): void;
 
   private _initEvents() {
     this.$button.addEventListener('click', () => {
