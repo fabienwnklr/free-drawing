@@ -6,7 +6,7 @@ import { Rect } from 'konva/lib/shapes/Rect';
 import { AvailableTools } from './@types/toolbar';
 import { ColorLike, DrawerOptions } from './@types/drawer';
 import { deepMerge } from './utils/functions';
-import { defaultOptions, shapeName } from './constants';
+import { dataAttributes, defaultOptions, shapeName } from './constants';
 import { Zoom } from './components/tools/Zoom/Zoom';
 import { Help } from './components/tools/Help/Help';
 import { BrushWidget } from './components/toolbar/widgets/Brush/Brush';
@@ -483,13 +483,21 @@ export class Drawer extends MicroEvent {
    * Set color for draw
    * @param {ColorLike} color
    */
-  setColor(color: ColorLike) {
+  setStrokeColor(color: ColorLike) {
     this.options.strokeColor = color;
 
     const selectWidget = this.getWidget<SelectWidget>('selection');
 
     if (selectWidget?.transformer.nodes().length) {
       selectWidget?.setColor(color);
+    }
+
+    const brushWidget = this.getWidget<BrushWidget>('brush');
+
+    if (brushWidget) {
+      brushWidget.overlay.$strokeColorBtnContainer
+        .querySelector<HTMLButtonElement>(`button[${dataAttributes.strokeColor}="${color}"]`)
+        ?.click();
     }
   }
 
@@ -507,6 +515,14 @@ export class Drawer extends MicroEvent {
     if (selectWidget?.transformer.nodes().length) {
       selectWidget?.setStrokeWidth(width);
     }
+
+    const brushWidget = this.getWidget<BrushWidget>('brush');
+
+    if (brushWidget) {
+      brushWidget.overlay.$strokeWidthBtnContainer
+        .querySelector<HTMLButtonElement>(`button[${dataAttributes.strokeWidth}="${width}"]`)
+        ?.click();
+    }
   }
 
   setStrokeStyle(dashed: number[] | undefined) {
@@ -516,6 +532,14 @@ export class Drawer extends MicroEvent {
 
     if (selectWidget?.transformer.nodes().length) {
       selectWidget?.setStrokeStyle(dashed);
+    }
+
+    const brushWidget = this.getWidget<BrushWidget>('brush');
+
+    if (brushWidget) {
+      brushWidget.overlay.$strokeWidthBtnContainer
+        .querySelector<HTMLButtonElement>(`button[${dataAttributes.strokeStyle}="${dashed?.join(',')}"]`)
+        ?.click();
     }
   }
 
@@ -530,6 +554,12 @@ export class Drawer extends MicroEvent {
 
     if (selectWidget?.transformer.nodes().length) {
       selectWidget?.setOpacity(opacity);
+    }
+
+    const brushWidget = this.getWidget<BrushWidget>('brush');
+
+    if (brushWidget) {
+      brushWidget.overlay.$opacityRange.value = (opacity * 10).toString();
     }
   }
 
@@ -823,7 +853,7 @@ export class Drawer extends MicroEvent {
     this.clearCanvas();
     this.setBgColor('#fff');
     this.setStrokeWidth(this.options.strokeWidth);
-    this.setColor(this.options.strokeColor);
+    this.setStrokeColor(this.options.strokeColor);
     this.setOpacity(this.options.opacity);
   }
 

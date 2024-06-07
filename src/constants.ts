@@ -24,3 +24,10 @@ export const shapeName = {
   gridLine: 'drawer-grid-line',
   background: 'drawer-background',
 };
+
+export const dataAttributes = {
+  strokeWidth: 'data-stroke-width',
+  strokeColor: 'data-stroke-color',
+  strokeStyle: 'data-stroke-style',
+  fontSize: 'data-font-size',
+};
