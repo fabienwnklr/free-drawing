@@ -571,7 +571,7 @@ export class SelectWidget extends BaseWidget {
 
     selected.forEach((s, index) => {
       if (s instanceof Shape) {
-        s.dash(dash);
+        s.dash(dash as number[]);
         s.draw();
 
         if (index === selected.length -1) {

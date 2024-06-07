@@ -2,7 +2,7 @@ import { Drawer } from '@/Drawer';
 import { stringToNode } from '@/utils/functions';
 import { BaseWidget } from '../BaseWidget';
 import BrushIcon from '@/icons/brush.svg?raw';
-import { Line } from 'konva/lib/shapes/Line';
+import { Line, LineConfig } from 'konva/lib/shapes/Line';
 import { SelectWidget } from '../Select/Select';
 import { BrushOverlay } from '@/components/tools/Overlay/BrushOverlay/BrushOverlay';
 import { getStroke } from 'perfect-freehand';
@@ -127,7 +127,8 @@ export class BrushWidget extends BaseWidget {
    *
    */
   _socketDraw(data: string) {
-    const line = new Line(JSON.parse(data));
+    const config: LineConfig = JSON.parse(data);
+    const line = new Line(config);
     if (JSON.stringify(this.#lastLine.points()) === JSON.stringify(line.points())) return;
     this.drawer.drawLayer.add(line);
   }
