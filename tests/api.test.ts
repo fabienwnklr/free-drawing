@@ -27,9 +27,12 @@ describe('Use drawer api', () => {
 
     expect(drawer.options.strokeColor).toBe(drawer.options.strokeColor);
 
-    drawer.setColor('#3ee551');
+    drawer.setStrokeColor('#2f9e44');
 
-    expect(drawer.options.strokeColor).toBe('#3ee551');
+    expect(drawer.options.strokeColor).toBe('#2f9e44');
+
+    // TODO: Write test button color width data-stroke-color=#2f9e44 on brush overlay is active
+    // (same for width style and opacity)
   });
 
 
