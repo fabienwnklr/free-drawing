@@ -4,9 +4,11 @@
 <!-- - add text button -->
 <!-- - add lock button ? not sure -->
 <!-- - add color and bg color button overlay when drawing for shape, bgcolor in setting menu -->
-- generate doc api
+<!-- - generate doc api -->
+- Send stage data on change instead drawend
 - add export button (png, svg, pdf, json, etc) with preview modal
 - add beta prerelease script in package.json
+- GroupWidgets
 - migrate to np
 - (if np don't do) add action for publish release in gh
 - manage layout from DrawerLayout class
