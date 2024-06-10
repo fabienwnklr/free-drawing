@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [2.1.0](https://github.com/fabienwnklr/free-drawing/compare/v2.0.1...v2.1.0) (2024-06-10)
+
+
+### Features
+
+* **line:** drawing line ([bcf2ada](https://github.com/fabienwnklr/free-drawing/commits/bcf2ada6431d7599dea6669f6db613372899a04c))
+* **line:** start creating line ([02e429b](https://github.com/fabienwnklr/free-drawing/commits/02e429be27afb75025150d41b7e18bf174f3d1b8))
+* **line:** update cursor ([6b293f6](https://github.com/fabienwnklr/free-drawing/commits/6b293f6b251e0d757e23b8b0efe29b05399874b5))
+* **shape:** add custom stroke style ([3e97e05](https://github.com/fabienwnklr/free-drawing/commits/3e97e05f97398c0022a24cec07272cbf2ad38dc6))
+* **socket:** start setup socket.io ([524c9e1](https://github.com/fabienwnklr/free-drawing/commits/524c9e1d018db67ce8273c395677c9f7c7c381cd))
+* **widgets:** add widgets ([14bca91](https://github.com/fabienwnklr/free-drawing/commits/14bca91cea3de075d0353b7b1aef465dbf3f1f1f))
+
+
+### Bug Fixes
+
+* centralise data attributes ([7a33480](https://github.com/fabienwnklr/free-drawing/commits/7a33480b474a136011995d1c5432b4d6cdaf5d55))
+* **line:** id/title ([b5dfbc7](https://github.com/fabienwnklr/free-drawing/commits/b5dfbc7a4dd46b9e3ef9178b5dedebb2d4f0d4c9))
+* optionnal `_sockerDraw` on abstract class `BaseWidget` ([f26aabf](https://github.com/fabienwnklr/free-drawing/commits/f26aabfe1ed728301dc24816f58a2bacc3d754e9))
+* resize when is full on window resizing ([fb5511c](https://github.com/fabienwnklr/free-drawing/commits/fb5511c89aeae01c28a46298b522052e6021f9f9))
+* same line draw multiple time ([6bf0dc0](https://github.com/fabienwnklr/free-drawing/commits/6bf0dc061a5d556271fc3cb0df80b33b8ab80c9a))
+* types error ([1415e22](https://github.com/fabienwnklr/free-drawing/commits/1415e22c0d6ee2d930a85fb43ba663ce8b244157))
+
 ## [2.0.1](https://github.com/fabienwnklr/free-drawing/compare/v2.0.0...v2.0.1) (2024-04-18)
 
 
