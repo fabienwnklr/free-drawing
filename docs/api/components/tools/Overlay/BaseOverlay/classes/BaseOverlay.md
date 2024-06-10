@@ -12,6 +12,7 @@ All common tool for all shape (color, opacity for now)
 
 - [`BrushOverlay`](../../BrushOverlay/BrushOverlay/classes/BrushOverlay.md)
 - [`SelectOverlay`](../../SelectOverlay/SelectOverlay/classes/SelectOverlay.md)
+- [`ShapeOverlay`](../../ShapeOverlay/ShapeOverlay/classes/ShapeOverlay.md)
 
 ## Constructors
 
@@ -29,7 +30,7 @@ All common tool for all shape (color, opacity for now)
 
 #### Source
 
-[components/tools/Overlay/BaseOverlay.ts:35](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Overlay/BaseOverlay.ts#L35)
+[components/tools/Overlay/BaseOverlay.ts:40](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Overlay/BaseOverlay.ts#L40)
 
 ## Properties
 
@@ -39,7 +40,7 @@ All common tool for all shape (color, opacity for now)
 
 #### Source
 
-[components/tools/Overlay/BaseOverlay.ts:24](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Overlay/BaseOverlay.ts#L24)
+[components/tools/Overlay/BaseOverlay.ts:29](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Overlay/BaseOverlay.ts#L29)
 
 ***
 
@@ -49,7 +50,7 @@ All common tool for all shape (color, opacity for now)
 
 #### Source
 
-[components/tools/Overlay/BaseOverlay.ts:23](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Overlay/BaseOverlay.ts#L23)
+[components/tools/Overlay/BaseOverlay.ts:28](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Overlay/BaseOverlay.ts#L28)
 
 ***
 
@@ -59,7 +60,7 @@ All common tool for all shape (color, opacity for now)
 
 #### Source
 
-[components/tools/Overlay/BaseOverlay.ts:26](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Overlay/BaseOverlay.ts#L26)
+[components/tools/Overlay/BaseOverlay.ts:31](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Overlay/BaseOverlay.ts#L31)
 
 ***
 
@@ -69,7 +70,7 @@ All common tool for all shape (color, opacity for now)
 
 #### Source
 
-[components/tools/Overlay/BaseOverlay.ts:27](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Overlay/BaseOverlay.ts#L27)
+[components/tools/Overlay/BaseOverlay.ts:32](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Overlay/BaseOverlay.ts#L32)
 
 ***
 
@@ -79,7 +80,7 @@ All common tool for all shape (color, opacity for now)
 
 #### Source
 
-[components/tools/Overlay/BaseOverlay.ts:14](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Overlay/BaseOverlay.ts#L14)
+[components/tools/Overlay/BaseOverlay.ts:16](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Overlay/BaseOverlay.ts#L16)
 
 ***
 
@@ -89,7 +90,7 @@ All common tool for all shape (color, opacity for now)
 
 #### Source
 
-[components/tools/Overlay/BaseOverlay.ts:18](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Overlay/BaseOverlay.ts#L18)
+[components/tools/Overlay/BaseOverlay.ts:20](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Overlay/BaseOverlay.ts#L20)
 
 ***
 
@@ -99,7 +100,27 @@ All common tool for all shape (color, opacity for now)
 
 #### Source
 
-[components/tools/Overlay/BaseOverlay.ts:17](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Overlay/BaseOverlay.ts#L17)
+[components/tools/Overlay/BaseOverlay.ts:19](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Overlay/BaseOverlay.ts#L19)
+
+***
+
+### $strokeStyleBtnContainer
+
+> **$strokeStyleBtnContainer**: `HTMLDivElement`
+
+#### Source
+
+[components/tools/Overlay/BaseOverlay.ts:26](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Overlay/BaseOverlay.ts#L26)
+
+***
+
+### $strokeStyleContainer
+
+> **$strokeStyleContainer**: `HTMLDivElement`
+
+#### Source
+
+[components/tools/Overlay/BaseOverlay.ts:25](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Overlay/BaseOverlay.ts#L25)
 
 ***
 
@@ -109,7 +130,7 @@ All common tool for all shape (color, opacity for now)
 
 #### Source
 
-[components/tools/Overlay/BaseOverlay.ts:21](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Overlay/BaseOverlay.ts#L21)
+[components/tools/Overlay/BaseOverlay.ts:23](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Overlay/BaseOverlay.ts#L23)
 
 ***
 
@@ -119,7 +140,7 @@ All common tool for all shape (color, opacity for now)
 
 #### Source
 
-[components/tools/Overlay/BaseOverlay.ts:20](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Overlay/BaseOverlay.ts#L20)
+[components/tools/Overlay/BaseOverlay.ts:22](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Overlay/BaseOverlay.ts#L22)
 
 ***
 
@@ -129,7 +150,7 @@ All common tool for all shape (color, opacity for now)
 
 #### Source
 
-[components/tools/Overlay/BaseOverlay.ts:15](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Overlay/BaseOverlay.ts#L15)
+[components/tools/Overlay/BaseOverlay.ts:17](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Overlay/BaseOverlay.ts#L17)
 
 ***
 
@@ -151,7 +172,7 @@ All common tool for all shape (color, opacity for now)
 
 #### Source
 
-[components/tools/Overlay/BaseOverlay.ts:29](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Overlay/BaseOverlay.ts#L29)
+[components/tools/Overlay/BaseOverlay.ts:34](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Overlay/BaseOverlay.ts#L34)
 
 ## Methods
 
@@ -169,7 +190,7 @@ All common tool for all shape (color, opacity for now)
 
 #### Source
 
-[components/tools/Overlay/BaseOverlay.ts:187](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Overlay/BaseOverlay.ts#L187)
+[components/tools/Overlay/BaseOverlay.ts:241](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Overlay/BaseOverlay.ts#L241)
 
 ***
 
@@ -183,7 +204,7 @@ All common tool for all shape (color, opacity for now)
 
 #### Source
 
-[components/tools/Overlay/BaseOverlay.ts:255](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Overlay/BaseOverlay.ts#L255)
+[components/tools/Overlay/BaseOverlay.ts:321](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Overlay/BaseOverlay.ts#L321)
 
 ***
 
@@ -201,4 +222,4 @@ All common tool for all shape (color, opacity for now)
 
 #### Source
 
-[components/tools/Overlay/BaseOverlay.ts:191](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Overlay/BaseOverlay.ts#L191)
+[components/tools/Overlay/BaseOverlay.ts:245](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Overlay/BaseOverlay.ts#L245)

@@ -6,11 +6,15 @@
 
 # Class: Toast
 
+## Extends
+
+- [`default`](../../../../utils/MicroEvent/classes/default.md)
+
 ## Constructors
 
-### new Toast(drawer, message, type, timeout)
+### new Toast(drawer, message, type, timeout, showIcon)
 
-> **new Toast**(`drawer`, `message`, `type`, `timeout`): [`Toast`](Toast.md)
+> **new Toast**(`drawer`, `message`, `type`, `timeout`, `showIcon`): [`Toast`](Toast.md)
 
 #### Parameters
 
@@ -18,17 +22,23 @@
 
 • **message**: `string`
 
-• **type**: `string`= `'neutral'`
+• **type**: `"error"` \| `"neutral"` \| `"info"` \| `"warning"` \| `"danger"`= `'neutral'`
 
-• **timeout**: `number`= `3000`
+• **timeout**: `number`= `5000`
+
+• **showIcon**: `boolean`= `true`
 
 #### Returns
 
 [`Toast`](Toast.md)
 
+#### Overrides
+
+[`default`](../../../../utils/MicroEvent/classes/default.md).[`constructor`](../../../../utils/MicroEvent/classes/default.md#constructors)
+
 #### Source
 
-[components/Toast/Toast.ts:8](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Toast/Toast.ts#L8)
+[components/Toast/Toast.ts:13](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Toast/Toast.ts#L13)
 
 ## Properties
 
@@ -38,17 +48,35 @@
 
 #### Source
 
-[components/Toast/Toast.ts:5](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Toast/Toast.ts#L5)
+[components/Toast/Toast.ts:10](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Toast/Toast.ts#L10)
+
+***
+
+### \_events
+
+> **\_events**: `object` = `{}`
+
+#### Index signature
+
+ \[`key`: `string`\]: `TCallback`[]
+
+#### Inherited from
+
+[`default`](../../../../utils/MicroEvent/classes/default.md).[`_events`](../../../../utils/MicroEvent/classes/default.md#_events)
+
+#### Source
+
+[utils/MicroEvent.ts:14](https://github.com/fabienwnklr/free-drawing/blob/master/src/utils/MicroEvent.ts#L14)
 
 ***
 
 ### timeout
 
-> **timeout**: `number` = `3000`
+> **timeout**: `number` = `5000`
 
 #### Source
 
-[components/Toast/Toast.ts:6](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Toast/Toast.ts#L6)
+[components/Toast/Toast.ts:11](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Toast/Toast.ts#L11)
 
 ## Methods
 
@@ -62,7 +90,7 @@
 
 #### Source
 
-[components/Toast/Toast.ts:36](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Toast/Toast.ts#L36)
+[components/Toast/Toast.ts:66](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Toast/Toast.ts#L66)
 
 ***
 
@@ -76,7 +104,55 @@
 
 #### Source
 
-[components/Toast/Toast.ts:28](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Toast/Toast.ts#L28)
+[components/Toast/Toast.ts:58](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Toast/Toast.ts#L58)
+
+***
+
+### off()
+
+> **off**(`events`, `fct`): `void`
+
+#### Parameters
+
+• **events**: `string`
+
+• **fct**: `TCallback`
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+[`default`](../../../../utils/MicroEvent/classes/default.md).[`off`](../../../../utils/MicroEvent/classes/default.md#off)
+
+#### Source
+
+[utils/MicroEvent.ts:28](https://github.com/fabienwnklr/free-drawing/blob/master/src/utils/MicroEvent.ts#L28)
+
+***
+
+### on()
+
+> **on**(`events`, `fct`): `void`
+
+#### Parameters
+
+• **events**: `string`
+
+• **fct**: `TCallback`
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+[`default`](../../../../utils/MicroEvent/classes/default.md).[`on`](../../../../utils/MicroEvent/classes/default.md#on)
+
+#### Source
+
+[utils/MicroEvent.ts:20](https://github.com/fabienwnklr/free-drawing/blob/master/src/utils/MicroEvent.ts#L20)
 
 ***
 
@@ -90,4 +166,28 @@
 
 #### Source
 
-[components/Toast/Toast.ts:18](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Toast/Toast.ts#L18)
+[components/Toast/Toast.ts:46](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Toast/Toast.ts#L46)
+
+***
+
+### trigger()
+
+> **trigger**(`events`, ...`args`): `void`
+
+#### Parameters
+
+• **events**: `string`
+
+• ...**args**: `any`
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+[`default`](../../../../utils/MicroEvent/classes/default.md).[`trigger`](../../../../utils/MicroEvent/classes/default.md#trigger)
+
+#### Source
+
+[utils/MicroEvent.ts:49](https://github.com/fabienwnklr/free-drawing/blob/master/src/utils/MicroEvent.ts#L49)

@@ -30,7 +30,7 @@
 
 #### Source
 
-[components/toolbar/widgets/Brush/Brush.ts:17](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Brush/Brush.ts#L17)
+[components/toolbar/widgets/Brush/Brush.ts:22](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Brush/Brush.ts#L22)
 
 ## Properties
 
@@ -72,7 +72,7 @@
 
 #### Source
 
-[components/toolbar/widgets/Brush/Brush.ts:17](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Brush/Brush.ts#L17)
+[components/toolbar/widgets/Brush/Brush.ts:22](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Brush/Brush.ts#L22)
 
 ***
 
@@ -96,7 +96,7 @@
 
 #### Source
 
-[components/toolbar/widgets/Brush/Brush.ts:13](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Brush/Brush.ts#L13)
+[components/toolbar/widgets/Brush/Brush.ts:18](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Brush/Brush.ts#L18)
 
 ***
 
@@ -106,7 +106,7 @@
 
 #### Source
 
-[components/toolbar/widgets/Brush/Brush.ts:15](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Brush/Brush.ts#L15)
+[components/toolbar/widgets/Brush/Brush.ts:20](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Brush/Brush.ts#L20)
 
 ***
 
@@ -123,6 +123,31 @@
 [components/toolbar/widgets/BaseWidget.ts:11](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/BaseWidget.ts#L11)
 
 ## Methods
+
+### \_socketDraw()
+
+> **\_socketDraw**(`data`): `void`
+
+Get the drawing data from the socket and basically
+draw on our canvas whatever the other person draws
+
+#### Parameters
+
+• **data**: `string`
+
+#### Returns
+
+`void`
+
+#### Overrides
+
+[`BaseWidget`](../../../BaseWidget/classes/BaseWidget.md).[`_socketDraw`](../../../BaseWidget/classes/BaseWidget.md#_socketdraw)
+
+#### Source
+
+[components/toolbar/widgets/Brush/Brush.ts:129](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Brush/Brush.ts#L129)
+
+***
 
 ### addTo()
 
@@ -165,7 +190,7 @@ Returns the element that was just added to `parent`.
 
 #### Source
 
-[components/toolbar/widgets/Brush/Brush.ts:118](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Brush/Brush.ts#L118)
+[components/toolbar/widgets/Brush/Brush.ts:136](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Brush/Brush.ts#L136)
 
 ***
 
@@ -183,7 +208,7 @@ Returns the element that was just added to `parent`.
 
 #### Source
 
-[components/toolbar/widgets/Brush/Brush.ts:35](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Brush/Brush.ts#L35)
+[components/toolbar/widgets/Brush/Brush.ts:41](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Brush/Brush.ts#L41)
 
 ***
 
@@ -203,7 +228,7 @@ Returns the element that was just added to `parent`.
 
 #### Source
 
-[components/toolbar/widgets/Brush/Brush.ts:142](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Brush/Brush.ts#L142)
+[components/toolbar/widgets/Brush/Brush.ts:160](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Brush/Brush.ts#L160)
 
 ***
 
@@ -221,7 +246,7 @@ Returns the element that was just added to `parent`.
 
 #### Source
 
-[components/toolbar/widgets/Brush/Brush.ts:24](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Brush/Brush.ts#L24)
+[components/toolbar/widgets/Brush/Brush.ts:30](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Brush/Brush.ts#L30)
 
 ***
 
@@ -239,7 +264,7 @@ Returns the element that was just added to `parent`.
 
 #### Source
 
-[components/toolbar/widgets/Brush/Brush.ts:30](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Brush/Brush.ts#L30)
+[components/toolbar/widgets/Brush/Brush.ts:36](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Brush/Brush.ts#L36)
 
 ***
 
@@ -257,7 +282,7 @@ Returns the element that was just added to `parent`.
 
 #### Source
 
-[components/toolbar/widgets/Brush/Brush.ts:112](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Brush/Brush.ts#L112)
+[components/toolbar/widgets/Brush/Brush.ts:118](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Brush/Brush.ts#L118)
 
 ***
 
@@ -279,7 +304,7 @@ Returns the element that was just added to `parent`.
 
 #### Source
 
-[components/toolbar/widgets/BaseWidget.ts:73](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/BaseWidget.ts#L73)
+[components/toolbar/widgets/BaseWidget.ts:81](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/BaseWidget.ts#L81)
 
 ***
 
@@ -315,4 +340,4 @@ Returns the element that was just added to `parent`.
 
 #### Source
 
-[components/toolbar/widgets/Brush/Brush.ts:146](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Brush/Brush.ts#L146)
+[components/toolbar/widgets/Brush/Brush.ts:164](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Brush/Brush.ts#L164)

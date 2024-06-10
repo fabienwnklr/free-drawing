@@ -38,6 +38,10 @@
 
 > **strokeColor**: [`ColorLike`](ColorLike.md)
 
+### strokeDash
+
+> **strokeDash**: `number`[] \| `undefined`
+
 ### strokeWidth
 
 > **strokeWidth**: `number`

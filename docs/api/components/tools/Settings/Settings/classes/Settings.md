@@ -64,7 +64,7 @@
 
 #### Source
 
-[components/Dropdown/Dropdown.ts:5](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Dropdown/Dropdown.ts#L5)
+[components/Dropdown/Dropdown.ts:6](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Dropdown/Dropdown.ts#L6)
 
 ***
 
@@ -98,7 +98,7 @@
 
 #### Source
 
-[components/Dropdown/Dropdown.ts:4](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Dropdown/Dropdown.ts#L4)
+[components/Dropdown/Dropdown.ts:5](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Dropdown/Dropdown.ts#L5)
 
 ***
 
@@ -112,7 +112,7 @@
 
 #### Source
 
-[components/Dropdown/Dropdown.ts:8](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Dropdown/Dropdown.ts#L8)
+[components/Dropdown/Dropdown.ts:9](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Dropdown/Dropdown.ts#L9)
 
 ***
 
@@ -126,7 +126,7 @@
 
 #### Source
 
-[components/Dropdown/Dropdown.ts:7](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Dropdown/Dropdown.ts#L7)
+[components/Dropdown/Dropdown.ts:8](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Dropdown/Dropdown.ts#L8)
 
 ***
 
@@ -160,7 +160,7 @@
 
 #### Source
 
-[components/Dropdown/Dropdown.ts:6](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Dropdown/Dropdown.ts#L6)
+[components/Dropdown/Dropdown.ts:7](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Dropdown/Dropdown.ts#L7)
 
 ***
 
@@ -191,6 +191,24 @@
 #### Source
 
 [components/tools/Settings/Settings.ts:22](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Settings/Settings.ts#L22)
+
+***
+
+### \_events
+
+> **\_events**: `object` = `{}`
+
+#### Index signature
+
+ \[`key`: `string`\]: `TCallback`[]
+
+#### Inherited from
+
+[`Dropdown`](../../../../Dropdown/Dropdown/classes/Dropdown.md).[`_events`](../../../../Dropdown/Dropdown/classes/Dropdown.md#_events)
+
+#### Source
+
+[utils/MicroEvent.ts:14](https://github.com/fabienwnklr/free-drawing/blob/master/src/utils/MicroEvent.ts#L14)
 
 ***
 
@@ -232,7 +250,73 @@
 
 #### Source
 
-[components/Dropdown/Dropdown.ts:42](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Dropdown/Dropdown.ts#L42)
+[components/Dropdown/Dropdown.ts:45](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Dropdown/Dropdown.ts#L45)
+
+***
+
+### isShown()
+
+> **isShown**(): `boolean`
+
+#### Returns
+
+`boolean`
+
+#### Inherited from
+
+[`Dropdown`](../../../../Dropdown/Dropdown/classes/Dropdown.md).[`isShown`](../../../../Dropdown/Dropdown/classes/Dropdown.md#isshown)
+
+#### Source
+
+[components/Dropdown/Dropdown.ts:51](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Dropdown/Dropdown.ts#L51)
+
+***
+
+### off()
+
+> **off**(`events`, `fct`): `void`
+
+#### Parameters
+
+• **events**: `string`
+
+• **fct**: `TCallback`
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+[`Dropdown`](../../../../Dropdown/Dropdown/classes/Dropdown.md).[`off`](../../../../Dropdown/Dropdown/classes/Dropdown.md#off)
+
+#### Source
+
+[utils/MicroEvent.ts:28](https://github.com/fabienwnklr/free-drawing/blob/master/src/utils/MicroEvent.ts#L28)
+
+***
+
+### on()
+
+> **on**(`events`, `fct`): `void`
+
+#### Parameters
+
+• **events**: `string`
+
+• **fct**: `TCallback`
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+[`Dropdown`](../../../../Dropdown/Dropdown/classes/Dropdown.md).[`on`](../../../../Dropdown/Dropdown/classes/Dropdown.md#on)
+
+#### Source
+
+[utils/MicroEvent.ts:20](https://github.com/fabienwnklr/free-drawing/blob/master/src/utils/MicroEvent.ts#L20)
 
 ***
 
@@ -254,7 +338,7 @@
 
 #### Source
 
-[components/Dropdown/Dropdown.ts:30](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Dropdown/Dropdown.ts#L30)
+[components/Dropdown/Dropdown.ts:33](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Dropdown/Dropdown.ts#L33)
 
 ***
 
@@ -272,7 +356,7 @@
 
 #### Source
 
-[components/Dropdown/Dropdown.ts:38](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Dropdown/Dropdown.ts#L38)
+[components/Dropdown/Dropdown.ts:41](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Dropdown/Dropdown.ts#L41)
 
 ***
 
@@ -286,7 +370,7 @@
 
 #### Source
 
-[components/tools/Settings/Settings.ts:170](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Settings/Settings.ts#L170)
+[components/tools/Settings/Settings.ts:175](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Settings/Settings.ts#L175)
 
 ***
 
@@ -300,7 +384,7 @@
 
 #### Source
 
-[components/tools/Settings/Settings.ts:162](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Settings/Settings.ts#L162)
+[components/tools/Settings/Settings.ts:167](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Settings/Settings.ts#L167)
 
 ***
 
@@ -314,4 +398,28 @@
 
 #### Source
 
-[components/tools/Settings/Settings.ts:148](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Settings/Settings.ts#L148)
+[components/tools/Settings/Settings.ts:153](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Settings/Settings.ts#L153)
+
+***
+
+### trigger()
+
+> **trigger**(`events`, ...`args`): `void`
+
+#### Parameters
+
+• **events**: `string`
+
+• ...**args**: `any`
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+[`Dropdown`](../../../../Dropdown/Dropdown/classes/Dropdown.md).[`trigger`](../../../../Dropdown/Dropdown/classes/Dropdown.md#trigger)
+
+#### Source
+
+[utils/MicroEvent.ts:49](https://github.com/fabienwnklr/free-drawing/blob/master/src/utils/MicroEvent.ts#L49)

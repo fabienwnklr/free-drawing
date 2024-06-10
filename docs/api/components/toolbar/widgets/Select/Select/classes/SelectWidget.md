@@ -174,6 +174,31 @@
 
 ## Methods
 
+### \_socketDraw()?
+
+> **`optional`** **\_socketDraw**(`data`): `void`
+
+Get the drawing data from the socket and basically
+draw on our canvas whatever the other person draws
+
+#### Parameters
+
+• **data**: `string`
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+[`BaseWidget`](../../../BaseWidget/classes/BaseWidget.md).[`_socketDraw`](../../../BaseWidget/classes/BaseWidget.md#_socketdraw)
+
+#### Source
+
+[components/toolbar/widgets/BaseWidget.ts:73](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/BaseWidget.ts#L73)
+
+***
+
 ### addTo()
 
 `Internal`
@@ -305,7 +330,7 @@ Returns the element that was just added to `parent`.
 
 #### Source
 
-[components/toolbar/widgets/BaseWidget.ts:73](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/BaseWidget.ts#L73)
+[components/toolbar/widgets/BaseWidget.ts:81](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/BaseWidget.ts#L81)
 
 ***
 
@@ -365,7 +390,25 @@ Set opacity of shape 0 to 1
 
 #### Source
 
-[components/toolbar/widgets/Select/Select.ts:573](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Select/Select.ts#L573)
+[components/toolbar/widgets/Select/Select.ts:588](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Select/Select.ts#L588)
+
+***
+
+### setStrokeStyle()
+
+> **setStrokeStyle**(`dash`): `void`
+
+#### Parameters
+
+• **dash**: `undefined` \| `number`[]
+
+#### Returns
+
+`void`
+
+#### Source
+
+[components/toolbar/widgets/Select/Select.ts:569](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Select/Select.ts#L569)
 
 ***
 
@@ -421,7 +464,7 @@ Set stroke width for draw
 
 #### Source
 
-[components/toolbar/widgets/Select/Select.ts:588](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Select/Select.ts#L588)
+[components/toolbar/widgets/Select/Select.ts:603](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Select/Select.ts#L603)
 
 ***
 
@@ -439,4 +482,4 @@ Set stroke width for draw
 
 #### Source
 
-[components/toolbar/widgets/Select/Select.ts:600](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Select/Select.ts#L600)
+[components/toolbar/widgets/Select/Select.ts:615](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Select/Select.ts#L615)

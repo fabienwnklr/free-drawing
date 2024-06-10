@@ -9,6 +9,8 @@
 ## Extended by
 
 - [`Drawer`](../../../Drawer/classes/Drawer.md)
+- [`Dropdown`](../../../components/Dropdown/Dropdown/classes/Dropdown.md)
+- [`Toast`](../../../components/Toast/Toast/classes/Toast.md)
 
 ## Constructors
 

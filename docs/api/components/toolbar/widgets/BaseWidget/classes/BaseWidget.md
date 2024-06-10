@@ -8,10 +8,14 @@
 
 ## Extended by
 
+- [`ArrowWidget`](../../Arrow/Arrow/classes/ArrowWidget.md)
 - [`BrushWidget`](../../Brush/Brush/classes/BrushWidget.md)
+- [`CircleWidget`](../../Circle/Circle/classes/CircleWidget.md)
 - [`EraserWidget`](../../Eraser/Eraser/classes/EraserWidget.md)
+- [`LineWidget`](../../Line/Line/classes/LineWidget.md)
 - [`PanWidget`](../../Pan/Pan/classes/PanWidget.md)
 - [`SelectWidget`](../../Select/Select/classes/SelectWidget.md)
+- [`SquareWidget`](../../Square/Square/classes/SquareWidget.md)
 - [`TextWidget`](../../Text/Text/classes/TextWidget.md)
 
 ## Constructors
@@ -91,6 +95,27 @@
 [components/toolbar/widgets/BaseWidget.ts:11](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/BaseWidget.ts#L11)
 
 ## Methods
+
+### \_socketDraw()?
+
+> **`optional`** **\_socketDraw**(`data`): `void`
+
+Get the drawing data from the socket and basically
+draw on our canvas whatever the other person draws
+
+#### Parameters
+
+• **data**: `string`
+
+#### Returns
+
+`void`
+
+#### Source
+
+[components/toolbar/widgets/BaseWidget.ts:73](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/BaseWidget.ts#L73)
+
+***
 
 ### addTo()
 
@@ -185,7 +210,7 @@ Returns the element that was just added to `parent`.
 
 #### Source
 
-[components/toolbar/widgets/BaseWidget.ts:73](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/BaseWidget.ts#L73)
+[components/toolbar/widgets/BaseWidget.ts:81](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/BaseWidget.ts#L81)
 
 ***
 

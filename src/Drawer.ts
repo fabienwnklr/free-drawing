@@ -119,7 +119,7 @@ export class Drawer extends MicroEvent {
       this.gridLayer = this.stage.findOne('.grid') as Layer;
       this.drawLayer = this.stage.findOne('.draw') as Layer;
       this.selectionLayer = this.stage.findOne('.selection') as Layer;
-      this.background = this.bgLayer.findOne('.' + shapeName.background) as Rect;
+      this.background = this.bgLayer.findOne(`.${shapeName.background}`) as Rect;
       this.grid = this.gridLayer.children.length > 0;
       activeTool = toolSaved ?? activeTool;
     } else {

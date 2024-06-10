@@ -47,7 +47,7 @@ const drawer = new Drawer(document.getElementById('draw'), {
 
 #### Source
 
-[Drawer.ts:72](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L72)
+[Drawer.ts:83](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L83)
 
 ## Properties
 
@@ -57,7 +57,7 @@ const drawer = new Drawer(document.getElementById('draw'), {
 
 #### Source
 
-[Drawer.ts:45](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L45)
+[Drawer.ts:56](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L56)
 
 ***
 
@@ -67,7 +67,7 @@ const drawer = new Drawer(document.getElementById('draw'), {
 
 #### Source
 
-[Drawer.ts:44](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L44)
+[Drawer.ts:55](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L55)
 
 ***
 
@@ -77,7 +77,7 @@ const drawer = new Drawer(document.getElementById('draw'), {
 
 #### Source
 
-[Drawer.ts:66](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L66)
+[Drawer.ts:77](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L77)
 
 ***
 
@@ -87,7 +87,7 @@ const drawer = new Drawer(document.getElementById('draw'), {
 
 #### Source
 
-[Drawer.ts:67](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L67)
+[Drawer.ts:78](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L78)
 
 ***
 
@@ -97,7 +97,7 @@ const drawer = new Drawer(document.getElementById('draw'), {
 
 #### Source
 
-[Drawer.ts:46](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L46)
+[Drawer.ts:57](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L57)
 
 ***
 
@@ -125,7 +125,7 @@ const drawer = new Drawer(document.getElementById('draw'), {
 
 #### Source
 
-[Drawer.ts:53](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L53)
+[Drawer.ts:64](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L64)
 
 ***
 
@@ -135,7 +135,7 @@ const drawer = new Drawer(document.getElementById('draw'), {
 
 #### Source
 
-[Drawer.ts:54](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L54)
+[Drawer.ts:65](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L65)
 
 ***
 
@@ -145,7 +145,7 @@ const drawer = new Drawer(document.getElementById('draw'), {
 
 #### Source
 
-[Drawer.ts:57](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L57)
+[Drawer.ts:68](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L68)
 
 ***
 
@@ -155,7 +155,7 @@ const drawer = new Drawer(document.getElementById('draw'), {
 
 #### Source
 
-[Drawer.ts:70](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L70)
+[Drawer.ts:81](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L81)
 
 ***
 
@@ -165,7 +165,7 @@ const drawer = new Drawer(document.getElementById('draw'), {
 
 #### Source
 
-[Drawer.ts:61](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L61)
+[Drawer.ts:72](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L72)
 
 ***
 
@@ -175,7 +175,7 @@ const drawer = new Drawer(document.getElementById('draw'), {
 
 #### Source
 
-[Drawer.ts:62](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L62)
+[Drawer.ts:73](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L73)
 
 ***
 
@@ -185,7 +185,7 @@ const drawer = new Drawer(document.getElementById('draw'), {
 
 #### Source
 
-[Drawer.ts:68](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L68)
+[Drawer.ts:79](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L79)
 
 ***
 
@@ -195,7 +195,7 @@ const drawer = new Drawer(document.getElementById('draw'), {
 
 #### Source
 
-[Drawer.ts:64](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L64)
+[Drawer.ts:75](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L75)
 
 ***
 
@@ -205,7 +205,7 @@ const drawer = new Drawer(document.getElementById('draw'), {
 
 #### Source
 
-[Drawer.ts:50](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L50)
+[Drawer.ts:61](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L61)
 
 ***
 
@@ -215,7 +215,7 @@ const drawer = new Drawer(document.getElementById('draw'), {
 
 #### Source
 
-[Drawer.ts:69](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L69)
+[Drawer.ts:80](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L80)
 
 ***
 
@@ -225,7 +225,7 @@ const drawer = new Drawer(document.getElementById('draw'), {
 
 #### Source
 
-[Drawer.ts:49](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L49)
+[Drawer.ts:60](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L60)
 
 ***
 
@@ -235,7 +235,7 @@ const drawer = new Drawer(document.getElementById('draw'), {
 
 #### Source
 
-[Drawer.ts:59](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L59)
+[Drawer.ts:70](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L70)
 
 ***
 
@@ -245,7 +245,7 @@ const drawer = new Drawer(document.getElementById('draw'), {
 
 #### Source
 
-[Drawer.ts:55](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L55)
+[Drawer.ts:66](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L66)
 
 ***
 
@@ -255,7 +255,7 @@ const drawer = new Drawer(document.getElementById('draw'), {
 
 #### Source
 
-[Drawer.ts:51](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L51)
+[Drawer.ts:62](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L62)
 
 ***
 
@@ -265,7 +265,17 @@ const drawer = new Drawer(document.getElementById('draw'), {
 
 #### Source
 
-[Drawer.ts:60](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L60)
+[Drawer.ts:71](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L71)
+
+***
+
+### socket
+
+> **socket**: `Socket`\<`DefaultEventsMap`, `DefaultEventsMap`\>
+
+#### Source
+
+[Drawer.ts:54](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L54)
 
 ***
 
@@ -275,7 +285,7 @@ const drawer = new Drawer(document.getElementById('draw'), {
 
 #### Source
 
-[Drawer.ts:47](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L47)
+[Drawer.ts:58](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L58)
 
 ***
 
@@ -285,7 +295,7 @@ const drawer = new Drawer(document.getElementById('draw'), {
 
 #### Source
 
-[Drawer.ts:52](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L52)
+[Drawer.ts:63](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L63)
 
 ***
 
@@ -295,7 +305,7 @@ const drawer = new Drawer(document.getElementById('draw'), {
 
 #### Source
 
-[Drawer.ts:65](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L65)
+[Drawer.ts:76](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L76)
 
 ***
 
@@ -305,7 +315,7 @@ const drawer = new Drawer(document.getElementById('draw'), {
 
 #### Source
 
-[Drawer.ts:58](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L58)
+[Drawer.ts:69](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L69)
 
 ## Methods
 
@@ -327,7 +337,7 @@ const drawer = new Drawer(document.getElementById('draw'), {
 
 #### Source
 
-[Drawer.ts:209](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L209)
+[Drawer.ts:229](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L229)
 
 ***
 
@@ -349,7 +359,7 @@ const drawer = new Drawer(document.getElementById('draw'), {
 
 #### Source
 
-[Drawer.ts:201](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L201)
+[Drawer.ts:221](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L221)
 
 ***
 
@@ -365,7 +375,7 @@ Update grid lines and bg position
 
 #### Source
 
-[Drawer.ts:220](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L220)
+[Drawer.ts:240](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L240)
 
 ***
 
@@ -387,7 +397,7 @@ Force clear (don't show confirm modal)
 
 #### Source
 
-[Drawer.ts:535](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L535)
+[Drawer.ts:595](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L595)
 
 ***
 
@@ -409,7 +419,7 @@ Force clear (don't show confirm modal)
 
 #### Source
 
-[Drawer.ts:562](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L562)
+[Drawer.ts:622](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L622)
 
 ***
 
@@ -425,7 +435,7 @@ Focus drawer div container (usefull for keyevent for example)
 
 #### Source
 
-[Drawer.ts:784](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L784)
+[Drawer.ts:844](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L844)
 
 ***
 
@@ -447,7 +457,7 @@ Shape type
 
 #### Source
 
-[Drawer.ts:193](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L193)
+[Drawer.ts:213](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L213)
 
 ***
 
@@ -463,7 +473,7 @@ Get all shape drawing
 
 #### Source
 
-[Drawer.ts:183](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L183)
+[Drawer.ts:203](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L203)
 
 ***
 
@@ -487,7 +497,7 @@ Get widget by name
 
 #### Source
 
-[Drawer.ts:382](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L382)
+[Drawer.ts:402](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L402)
 
 ***
 
@@ -503,7 +513,7 @@ Get zoom level
 
 #### Source
 
-[Drawer.ts:175](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L175)
+[Drawer.ts:195](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L195)
 
 ***
 
@@ -519,7 +529,7 @@ Hide grid
 
 #### Source
 
-[Drawer.ts:772](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L772)
+[Drawer.ts:832](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L832)
 
 ***
 
@@ -583,7 +593,7 @@ Reset draw to default state (bgcolor, color, remove draw, etc.)
 
 #### Source
 
-[Drawer.ts:791](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L791)
+[Drawer.ts:851](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L851)
 
 ***
 
@@ -599,7 +609,7 @@ Save current draw state to localstorage
 
 #### Source
 
-[Drawer.ts:441](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L441)
+[Drawer.ts:461](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L461)
 
 ***
 
@@ -619,27 +629,7 @@ Change background color
 
 #### Source
 
-[Drawer.ts:450](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L450)
-
-***
-
-### setColor()
-
-> **setColor**(`color`): `void`
-
-Set color for draw
-
-#### Parameters
-
-• **color**: [`ColorLike`](../../@types/drawer/type-aliases/ColorLike.md)
-
-#### Returns
-
-`void`
-
-#### Source
-
-[Drawer.ts:466](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L466)
+[Drawer.ts:470](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L470)
 
 ***
 
@@ -659,7 +649,65 @@ Set opacity of shape 0 to 1
 
 #### Source
 
-[Drawer.ts:496](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L496)
+[Drawer.ts:550](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L550)
+
+***
+
+### setSize()
+
+> **setSize**(`width`, `height`): `void`
+
+#### Parameters
+
+• **width**: `number`
+
+• **height**: `number`
+
+#### Returns
+
+`void`
+
+#### Source
+
+[Drawer.ts:860](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L860)
+
+***
+
+### setStrokeColor()
+
+> **setStrokeColor**(`color`): `void`
+
+Set color for draw
+
+#### Parameters
+
+• **color**: [`ColorLike`](../../@types/drawer/type-aliases/ColorLike.md)
+
+#### Returns
+
+`void`
+
+#### Source
+
+[Drawer.ts:486](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L486)
+
+***
+
+### setStrokeStyle()
+
+> **setStrokeStyle**(`dashed`): `void`
+
+#### Parameters
+
+• **dashed**: `undefined` \| `number`[]
+
+#### Returns
+
+`void`
+
+#### Source
+
+[Drawer.ts:528](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L528)
 
 ***
 
@@ -679,7 +727,7 @@ Set stroke width for draw
 
 #### Source
 
-[Drawer.ts:480](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L480)
+[Drawer.ts:508](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L508)
 
 ***
 
@@ -695,13 +743,13 @@ Show grid
 
 #### Source
 
-[Drawer.ts:582](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L582)
+[Drawer.ts:642](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L642)
 
 ***
 
 ### toast()
 
-> **toast**(`message`, `type`?): [`Toast`](../../components/Toast/Toast/classes/Toast.md)
+> **toast**(`message`, `type`?, `timeout`?, `showIcon`?): [`Toast`](../../components/Toast/Toast/classes/Toast.md)
 
 Show toast message for user
 
@@ -711,9 +759,13 @@ Show toast message for user
 
 Message to show
 
-• **type?**: `"error"` \| `"info"` \| `"warning"` \| `"neutral"`
+• **type?**: `"error"` \| `"neutral"` \| `"info"` \| `"warning"` \| `"danger"`
 
 Type of toast
+
+• **timeout?**: `number`
+
+• **showIcon?**: `boolean`
 
 #### Returns
 
@@ -721,7 +773,7 @@ Type of toast
 
 #### Source
 
-[Drawer.ts:513](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L513)
+[Drawer.ts:573](https://github.com/fabienwnklr/free-drawing/blob/master/src/Drawer.ts#L573)
 
 ***
 

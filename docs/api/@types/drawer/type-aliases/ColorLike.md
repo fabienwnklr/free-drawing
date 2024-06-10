@@ -10,4 +10,4 @@
 
 ## Source
 
-[@types/drawer.d.ts:171](https://github.com/fabienwnklr/free-drawing/blob/master/src/@types/drawer.d.ts#L171)
+[@types/drawer.d.ts:172](https://github.com/fabienwnklr/free-drawing/blob/master/src/@types/drawer.d.ts#L172)

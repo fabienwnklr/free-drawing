@@ -247,7 +247,7 @@ export class SelectWidget extends BaseWidget {
     this.snapping = true;
     this.drawer.drawLayer.on('dragmove', (e) => {
       // clear all previous lines on the screen
-      this.drawer.selectionLayer.find('.' + shapeName.guideLine).forEach((l) => l.destroy());
+      this.drawer.selectionLayer.find(`.${shapeName.guideLine}`).forEach((l) => l.destroy());
 
       // find possible snapping lines
       const lineGuideStops = this._getLineGuideStops(e.target);
@@ -290,7 +290,7 @@ export class SelectWidget extends BaseWidget {
 
     this.drawer.drawLayer.on('dragend', () => {
       // clear all previous lines on the screen
-      this.drawer.selectionLayer.find('.' + shapeName.guideLine).forEach((l) => l.destroy());
+      this.drawer.selectionLayer.find(`.${shapeName.guideLine}`).forEach((l) => l.destroy());
     });
   }
 

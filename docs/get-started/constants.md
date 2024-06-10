@@ -37,6 +37,7 @@ export const shapeName = {
 Used for filter shape by name, example:
 
 ```ts
+import { shapeName } from "path/to/constants";
 // Destroy guideline
-drawer.selectionLayer.find('.' + shapeName.guideLine).forEach((l) => l.destroy());
+drawer.selectionLayer.find(`.${shapeName.guideLine}`).forEach((l) => l.destroy());
 ```

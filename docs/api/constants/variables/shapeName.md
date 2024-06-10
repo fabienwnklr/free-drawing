@@ -36,4 +36,4 @@
 
 ## Source
 
-[constants.ts:18](https://github.com/fabienwnklr/free-drawing/blob/master/src/constants.ts#L18)
+[constants.ts:19](https://github.com/fabienwnklr/free-drawing/blob/master/src/constants.ts#L19)

@@ -22,7 +22,7 @@
 
 #### Source
 
-[components/toolbar/Toolbar.ts:17](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/Toolbar.ts#L17)
+[components/toolbar/Toolbar.ts:21](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/Toolbar.ts#L21)
 
 ## Properties
 
@@ -32,7 +32,7 @@
 
 #### Source
 
-[components/toolbar/Toolbar.ts:15](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/Toolbar.ts#L15)
+[components/toolbar/Toolbar.ts:19](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/Toolbar.ts#L19)
 
 ***
 
@@ -42,7 +42,7 @@
 
 #### Source
 
-[components/toolbar/Toolbar.ts:13](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/Toolbar.ts#L13)
+[components/toolbar/Toolbar.ts:17](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/Toolbar.ts#L17)
 
 ***
 
@@ -52,7 +52,7 @@
 
 #### Source
 
-[components/toolbar/Toolbar.ts:12](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/Toolbar.ts#L12)
+[components/toolbar/Toolbar.ts:16](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/Toolbar.ts#L16)
 
 ***
 
@@ -62,7 +62,7 @@
 
 #### Source
 
-[components/toolbar/Toolbar.ts:14](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/Toolbar.ts#L14)
+[components/toolbar/Toolbar.ts:18](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/Toolbar.ts#L18)
 
 ## Methods
 
@@ -80,7 +80,7 @@
 
 #### Source
 
-[components/toolbar/Toolbar.ts:39](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/Toolbar.ts#L39)
+[components/toolbar/Toolbar.ts:47](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/Toolbar.ts#L47)
 
 ***
 
@@ -102,7 +102,7 @@
 
 #### Source
 
-[components/toolbar/Toolbar.ts:49](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/Toolbar.ts#L49)
+[components/toolbar/Toolbar.ts:57](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/Toolbar.ts#L57)
 
 ***
 
@@ -116,7 +116,7 @@
 
 #### Source
 
-[components/toolbar/Toolbar.ts:31](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/Toolbar.ts#L31)
+[components/toolbar/Toolbar.ts:35](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/Toolbar.ts#L35)
 
 ***
 
@@ -134,4 +134,4 @@
 
 #### Source
 
-[components/toolbar/Toolbar.ts:44](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/Toolbar.ts#L44)
+[components/toolbar/Toolbar.ts:52](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/Toolbar.ts#L52)

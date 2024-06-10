@@ -3,5 +3,6 @@
   "gitRevision": "master",
   "excludePrivate": true,
   "out": "./docs/api",
-  "readme": "none"
+  "readme": "none",
+  "exclude": ["src/vite.env.d.ts"]
 }

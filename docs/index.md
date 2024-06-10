@@ -1,11 +1,12 @@
 ---
 # https://vitepress.dev/reference/default-theme-home-page
 layout: home
+pageClass: vp-doc
 
 hero:
   name: "free-drawing"
   text: "Free Drawing Docs"
-  tagline: Inspired from <a href="https://github.com/fabienwnklr/drawer/" target="_blank">Drawer</a> also inspired from Excalidraw and TlDraw, is totally rewritting and rethinking for better use to more complexe context. Oppositely to Excalidraw or TLDraw, is build for native js environnement.
+  tagline: Inspired from <a href="https://github.com/fabienwnklr/drawer/">Drawer</a> also inspired from Excalidraw and TlDraw, is totally rewritting and rethinking for better use to more complexe context. Oppositely to Excalidraw or TLDraw, is build for native js environnement.
   actions:
     - theme: brand
       text: Get started

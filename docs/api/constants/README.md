@@ -10,5 +10,6 @@
 
 ### Variables
 
+- [dataAttributes](variables/dataAttributes.md)
 - [defaultOptions](variables/defaultOptions.md)
 - [shapeName](variables/shapeName.md)
