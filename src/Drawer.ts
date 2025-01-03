@@ -12,7 +12,6 @@ import { Help } from './components/tools/Help/Help';
 import { BrushWidget } from './components/toolbar/widgets/Brush/Brush';
 
 import type { SelectWidget } from './components/toolbar/widgets/Select/Select';
-import type { PanWidget } from './components/toolbar/widgets/Pan/Pan';
 import type { EraserWidget } from './components/toolbar/widgets/Eraser/Eraser';
 import type { BaseWidget } from './components/toolbar/widgets/BaseWidget';
 
@@ -32,6 +31,7 @@ import { Vector2d } from 'konva/lib/types';
 import { AvailableTypes } from './@types/toast';
 import { io } from 'socket.io-client';
 import { debounce } from './utils/perf';
+import { HotKey } from './utils/HotKey';
 
 const socket = io();
 
@@ -79,6 +79,7 @@ export class Drawer extends MicroEvent {
   contextMenu: ContextMenu;
   grid: boolean = false;
   bgLayer: Layer;
+  hotKey!: HotKey;
 
   constructor($el: HTMLDivElement, options: Partial<DrawerOptions> = {}) {
     super();
@@ -269,130 +270,7 @@ export class Drawer extends MicroEvent {
   }
 
   private _initHotKey() {
-    const DELTA = 4;
-    this.$drawerContainer.addEventListener('keydown', (e) => {
-      if (this._duringAction()) return;
-
-      const selectWidget = this.getWidget<SelectWidget>('selection');
-      if (e.key === 'Backspace' || e.key === 'Delete') {
-        const allNodes = selectWidget?.transformer.nodes();
-
-        if (allNodes) {
-          allNodes.forEach((n) => n.destroy());
-          selectWidget?.transformer.nodes([]);
-          selectWidget?.overlay.hide();
-
-          if (this.activeWidget instanceof BrushWidget) {
-            this.activeWidget.overlay.show();
-          }
-          this.stage.fire('change');
-        }
-      }
-
-      if (e.ctrlKey && e.key === 'a') {
-        selectWidget?.selectAll();
-      }
-
-      if (selectWidget?.transformer.nodes().length) {
-        selectWidget?.transformer.nodes().forEach((shape) => {
-          if (e.key === 'ArrowLeft') {
-            shape.x(shape.x() - DELTA);
-          } else if (e.key === 'ArrowUp') {
-            shape.y(shape.y() - DELTA);
-          } else if (e.key === 'ArrowRight') {
-            shape.x(shape.x() + DELTA);
-          } else if (e.key === 'ArrowDown') {
-            shape.y(shape.y() + DELTA);
-          } else {
-            return;
-          }
-        });
-        e.preventDefault();
-      }
-
-      const panWidget = this.getWidget<PanWidget>('pan');
-
-      if (!e.altKey && e.key === 's') {
-        if (this._duringAction()) {
-          return;
-        }
-
-        selectWidget?.setActive(true);
-        selectWidget?.$button.focus();
-        return;
-      }
-
-      // Toolbar shortcut
-      if (e.key === 'h') {
-        if (this._duringAction()) {
-          return;
-        }
-
-        panWidget?.setActive(true);
-        panWidget?.$button.focus();
-        return;
-      }
-
-      if (e.altKey && e.key === 's') {
-        this.setting.toggleSnapping();
-      }
-
-      if (e.key === 'b') {
-        if (this._duringAction()) {
-          return;
-        }
-
-        const brushWidget = this.getWidget<BrushWidget>('brush');
-
-        brushWidget?.setActive(true);
-        brushWidget?.$button.focus();
-        return;
-      }
-
-      if (e.key === 'e') {
-        if (this._duringAction()) {
-          return;
-        }
-
-        const eraserWidget = this.getWidget<EraserWidget>('eraser');
-        eraserWidget?.setActive(true);
-        eraserWidget?.$button.focus();
-      }
-
-      if (e.key === 't') {
-        if (this._duringAction()) {
-          return;
-        }
-
-        const textWidget = this.getWidget<TextWidget>('text');
-        textWidget?.setActive(true);
-        textWidget?.$button.focus();
-      }
-
-      if (e.altKey && e.key === 'z') {
-        this.setting.toggleZenMode();
-      }
-
-      if (e.altKey && e.key === 'z') {
-        this.setting.toggleSnapping();
-      }
-
-      if (e.ctrlKey && e.key === 'Delete') {
-        this.clearCanvas();
-      }
-
-      if (e.ctrlKey && e.key === 'z') {
-        this.undoRedo.undo();
-      }
-
-      if (e.ctrlKey && e.key === 'y') {
-        this.undoRedo.redo();
-      }
-
-      if (e.altKey && e.key === 'g') {
-        this.setting.toggleGrid();
-      }
-    });
+    this.hotKey = new HotKey(this);
   }
 
   /**
@@ -403,7 +281,7 @@ export class Drawer extends MicroEvent {
     return this.toolbar.getWidget<T>(name);
   }
 
-  private _duringAction() {
+  _duringAction() {
     const eraserWidget = this.getWidget<EraserWidget>('eraser');
     const brushWidget = this.getWidget<BrushWidget>('brush');
     const selectionWidget = this.getWidget<SelectWidget>('selection');
