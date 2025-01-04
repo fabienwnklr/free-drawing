@@ -17,16 +17,17 @@
     border-radius: 5px;
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
     display: none;
-    font-size: 0.875rem;
+    font-size: 1rem;
     font-weight: 400;
 
     .drawer-dropdown-list {
-      margin: 0;
+      margin: 0.3rem;
       .drawer-dropdown-list-item {
         width: 100%;
         padding-top: 0.3rem;
         padding-bottom: 0.3rem;
-        border-radius: 0;
+        margin-bottom: 0.3rem;
+        border-radius: 5px;
         justify-content: flex-start;
 
         svg {
