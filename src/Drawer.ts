@@ -361,7 +361,7 @@ export class Drawer extends MicroEvent {
    * Set color for draw
    * @param {ColorLike} color
    */
-  setStrokeColor(color: ColorLike) {
+  setStrokeColor(color: ColorLike, triggerChange = true) {
     this.options.strokeColor = color;
 
     const selectWidget = this.getWidget<SelectWidget>('selection');
@@ -372,7 +372,7 @@ export class Drawer extends MicroEvent {
 
     const brushWidget = this.getWidget<BrushWidget>('brush');
 
-    if (brushWidget) {
+    if (brushWidget && triggerChange) {
       brushWidget.overlay.$strokeColorBtnContainer
         .querySelector<HTMLButtonElement>(`button[${dataAttributes.strokeColor}="${color}"]`)
         ?.click();
@@ -383,7 +383,7 @@ export class Drawer extends MicroEvent {
    * Set stroke width for draw
    * @param {Number | String} width
    */
-  setStrokeWidth(width: string | number) {
+  setStrokeWidth(width: string | number, triggerChange = true) {
     width = Number(width);
 
     this.options.strokeWidth = width;
@@ -396,14 +396,14 @@ export class Drawer extends MicroEvent {
 
     const brushWidget = this.getWidget<BrushWidget>('brush');
 
-    if (brushWidget) {
+    if (brushWidget && triggerChange) {
       brushWidget.overlay.$strokeWidthBtnContainer
         .querySelector<HTMLButtonElement>(`button[${dataAttributes.strokeWidth}="${width}"]`)
         ?.click();
     }
   }
 
-  setStrokeStyle(dashed: number[] | undefined) {
+  setStrokeStyle(dashed: number[] | undefined, triggerChange = true) {
     this.options.strokeDash = dashed;
 
     const selectWidget = this.getWidget<SelectWidget>('selection');
@@ -414,8 +414,8 @@ export class Drawer extends MicroEvent {
 
     const brushWidget = this.getWidget<BrushWidget>('brush');
 
-    if (brushWidget) {
-      brushWidget.overlay.$strokeWidthBtnContainer
+    if (brushWidget && triggerChange) {
+      brushWidget.overlay.$strokeStyleBtnContainer
         .querySelector<HTMLButtonElement>(`button[${dataAttributes.strokeStyle}="${dashed?.join(',')}"]`)
         ?.click();
     }
@@ -425,7 +425,7 @@ export class Drawer extends MicroEvent {
    * Set opacity of shape 0 to 1
    * @param opacity
    */
-  setOpacity(opacity: number) {
+  setOpacity(opacity: number, triggerChange = true) {
     this.options.opacity = opacity;
 
     const selectWidget = this.getWidget<SelectWidget>('selection');
@@ -436,7 +436,7 @@ export class Drawer extends MicroEvent {
 
     const brushWidget = this.getWidget<BrushWidget>('brush');
 
-    if (brushWidget) {
+    if (brushWidget && triggerChange) {
       brushWidget.overlay.$opacityRange.value = (opacity * 10).toString();
     }
   }
