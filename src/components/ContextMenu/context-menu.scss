@@ -2,7 +2,7 @@
 
 .drawer-context-menu {
   position: absolute;
-  display: none;
+  visibility: hidden;
   background-color: #fff;
   border-radius: $radius;
   box-shadow: $shadow;
@@ -10,7 +10,7 @@
   padding: 0.4rem 0 0.4rem 0;
 
   &.show {
-    display: block;
+    visibility: visible;
   }
 
   .drawer-context-menu-list-item.drawer-button.drawer-button-neutral {
