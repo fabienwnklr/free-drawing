@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [2.1.2](https://github.com/fabienwnklr/free-drawing/compare/v2.1.1...v2.1.2) (2025-01-04)
+
+
+### Bug Fixes
+
+* **brush:** prevent overlay click fire twice ([b2e4815](https://github.com/fabienwnklr/free-drawing/commits/b2e4815c905c84220d4d174a21e330d2c23f4dc2))
+
 ## [2.1.1](https://github.com/fabienwnklr/free-drawing/compare/v2.1.0...v2.1.1) (2025-01-03)
 
 ## [2.1.0](https://github.com/fabienwnklr/free-drawing/compare/v2.0.1...v2.1.0) (2024-06-10)
