@@ -37,7 +37,10 @@ export class BaseOverlay {
     button: 'overlay-picker__button',
   };
 
-  constructor(drawer: Drawer) {
+  options?: { styleBtns?: boolean };
+
+  constructor(drawer: Drawer, options?: Partial<{ styleBtns: boolean }>) {
+    this.options = options;
     this.drawer = drawer;
     this.$overlayContainer = document.createElement('div');
     this.$overlayContainer.classList.add('drawer-overlay-container', 'tool');
@@ -92,7 +95,7 @@ export class BaseOverlay {
       $btn.addEventListener('click', () => {
         this.$strokeColorBtnContainer.querySelector(`.${this.selectors.button}.active`)?.classList.remove('active');
         $btn.classList.add('active');
-        this.drawer.setStrokeColor(color);
+        this.drawer.setStrokeColor(color, false);
       });
       $strokeColorButtons.push($btn);
     });
@@ -170,12 +173,14 @@ export class BaseOverlay {
         this.$strokeStyleBtnContainer.querySelector(`.${this.selectors.button}.active`)?.classList.remove('active');
         $btn.classList.add('active');
         const data = !dashed.dash?.toString() ? undefined : dashed.dash;
-        this.drawer.setStrokeStyle(data);
+        this.drawer.setStrokeStyle(data, false);
       });
       $strokeWidthButtons.push($btn);
     });
     this.$strokeStyleBtnContainer.append(...$strokeWidthButtons);
     this.$strokeStyleContainer.append(this.$strokeStyleBtnContainer);
+
+    if (!this.options?.styleBtns) this.$strokeStyleContainer.style.display = 'none';
   }
 
   private _createFontsizeFields() {
@@ -207,7 +212,7 @@ export class BaseOverlay {
       $btn.addEventListener('click', () => {
         this.$fontSizeBtnContainer.querySelector(`.${this.selectors.button}.active`)?.classList.remove('active');
         $btn.classList.add('active');
-        this.drawer.setStrokeWidth(font.value.toString());
+        this.drawer.setStrokeWidth(font.value.toString(), false);
       });
       $fontsizeButtons.push($btn);
     });
@@ -232,7 +237,7 @@ export class BaseOverlay {
 
     this.$opacityRange.addEventListener('change', () => {
       const opacity = Number(this.$opacityRange.value) / 10;
-      this.drawer.setOpacity(opacity);
+      this.drawer.setOpacity(opacity, false);
     });
 
     this.$opacityContainer.append(this.$opacityRange);
