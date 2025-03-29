@@ -112,6 +112,7 @@ export class Drawer extends MicroEvent {
 
     const stageSaved = localStorage.getItem(this.options.localStorageKey);
     const toolSaved = localStorage.getItem(this.options.localStorageKey + '-tool');
+    let saved = false;
     if (stageSaved) {
       this.stage = Node.create(stageSaved, this.$drawerContainer);
       this.stage.width(width);
@@ -123,6 +124,7 @@ export class Drawer extends MicroEvent {
       this.background = this.bgLayer.findOne(`.${shapeName.background}`) as Rect;
       this.grid = this.gridLayer.children.length > 0;
       activeTool = toolSaved ?? activeTool;
+      saved = true;
     } else {
       this.stage = new Stage({
         container: this.$drawerContainer,
@@ -166,6 +168,10 @@ export class Drawer extends MicroEvent {
       this.zoom = new Zoom(this);
     }
     this.undoRedo = new UndoRedo(this);
+
+    if (saved) {
+      this.undoRedo.saveState(true);
+    }
     this.toolbar = new Toolbar(this);
     this.help = new Help(this);
 

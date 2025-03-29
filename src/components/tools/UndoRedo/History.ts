@@ -12,14 +12,22 @@ export class History {
     this.drawer = drawer;
   }
 
-  saveState() {
+  saveState(fromSaved = false) {
     const draw = this.drawer.getDrawingShapes();
     const state = draw.map((d) => {
       return { type: d.className, ...d.attrs };
     });
     this.appHistory = this.appHistory.slice(0, this.appHistoryStep + 1);
-    this.appHistory = this.appHistory.concat([state]);
-    this.appHistoryStep += 1;
+    if (fromSaved) {
+      // loop on state for add to history the first, first and second, first, second and third, etc.
+      for (let i = 0; i < state.length; i++) {
+        this.appHistory = this.appHistory.concat([state.slice(0, i + 1)]);
+      }
+      this.appHistoryStep = this.appHistory.length - 1;
+    } else {
+      this.appHistory = this.appHistory.concat([state]);
+      this.appHistoryStep = this.appHistory.length - 1;
+    }
   }
 
   canUndo() {
