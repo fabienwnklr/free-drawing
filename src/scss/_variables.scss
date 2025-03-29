@@ -9,8 +9,8 @@ $btn-color: #000;
 $btn-size-default: 2rem;
 $btn-size-lg: 2.45rem;
 
-$bg-context-menu-item-hover: #4049f3;
-$bg-context-menu-item-hover-color: #ececec;
+$bg-context-menu-item-hover: rgba(153, 158, 248, 0.2);
+$bg-context-menu-item-hover-color: #000;
 
 $primary-hover: lighten($primary, 20%);
 $primary-active: darken($primary, 2%);

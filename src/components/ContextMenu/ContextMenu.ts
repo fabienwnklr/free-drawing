@@ -7,17 +7,21 @@ import { Stage } from 'konva/lib/Stage';
 export class ContextMenu {
   drawer: Drawer;
   currentShape: Shape<ShapeConfig> | null = null;
-  $menu: HTMLDivElement;
-  $list: HTMLUListElement;
-
-  $pasteBtn: HTMLButtonElement;
-  $snappingBtn: HTMLButtonElement;
-  $gridBtn: HTMLButtonElement;
-  $lockShapeBtn: HTMLButtonElement;
+  $menu!: HTMLDivElement;
+  $list!: HTMLUListElement;
+  $pasteBtn!: HTMLButtonElement;
+  $snappingBtn!: HTMLButtonElement;
+  $gridBtn!: HTMLButtonElement;
+  $lockShapeBtn!: HTMLButtonElement;
   focusedShape: Stage | Shape<ShapeConfig> | null = null;
 
   constructor(drawer: Drawer) {
     this.drawer = drawer;
+    this._init();
+    this._initEvents();
+  }
+
+  private _init() {
     this.$menu = document.createElement('div');
     this.$menu.classList.add('drawer-context-menu');
 
@@ -51,9 +55,7 @@ export class ContextMenu {
 
     this.$menu.append(this.$list);
     this.drawer.$drawerContainer.append(this.$menu);
-    this._initEvents();
   }
-
   private _initEvents() {
     window.addEventListener('click', () => {
       this.hide();
