@@ -5,7 +5,7 @@
 Inspired from [drawer](https://github.com/fabienwnklr/drawer/) is totally rewritting and rethinking for better use to more complexe context.
 For simply use, i recommend to you to use [drawer](https://github.com/fabienwnklr/drawer/)
 
-📝 Check documentation [here](https://free-drawing-docs.fabienwinkler.fr/)
+📝 Check documentation [here](https://free-drawing-docs.netlify.app/)
 
 <img src="./docs/public/logo.svg" width="17" /> Check demo [here](https://free-drawing-demo.netlify.app/)
 
