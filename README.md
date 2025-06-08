@@ -7,7 +7,7 @@ For simply use, i recommend to you to use [drawer](https://github.com/fabienwnkl
 
 📝 Check documentation [here](https://free-drawing-docs.fabienwinkler.fr/)
 
-<img src="./docs/public/logo.svg" width="17" /> Check demo [here](https://free-drawing.fabienwinkler.fr/)
+<img src="./docs/public/logo.svg" width="17" /> Check demo [here](https://free-drawing-demo.netlify.app/)
 
 ## Dependencies
 
