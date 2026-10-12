@@ -9,11 +9,23 @@ export type DrawerOptions = {
   strokeDash: number[] | undefined,
   strokeColor: ColorLike;
   opacity: number;
+  textStyle: TextStyle;
   zoom: boolean;
   zoomWidget: boolean;
   scaling: number;
   autoSave: boolean;
   localStorageKey: string;
+};
+
+/**
+ * Text node style, keys match konva Text attributes
+ */
+export type TextStyle = {
+  fontFamily: string;
+  fontSize: number;
+  fontStyle: 'normal' | 'bold' | 'italic' | 'italic bold';
+  textDecoration: '' | 'underline' | 'line-through' | 'underline line-through';
+  align: 'left' | 'center' | 'right';
 };
 
 type RGB = `rgb(${number}, ${number}, ${number})`;

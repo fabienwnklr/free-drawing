@@ -1,0 +1,39 @@
+@import '../../../../scss/variables';
+
+.drawer-container {
+  .drawer-text-overlay {
+    overflow-y: auto;
+
+    .overlay-picker__select {
+      width: 100%;
+      padding: 0.3rem 0.4rem;
+      border: 1px solid $light;
+      border-radius: $radius;
+      background-color: $btn-bg;
+      color: $btn-color;
+      font-size: 0.9rem;
+      cursor: pointer;
+      pointer-events: var(--drawer-pointer-events);
+
+      &:focus {
+        outline: 2px solid $primary;
+      }
+    }
+
+    .text-style-bold {
+      font-weight: bold;
+    }
+
+    .text-style-italic {
+      font-style: italic;
+    }
+
+    .text-style-underline {
+      text-decoration: underline;
+    }
+
+    .text-style-line-through {
+      text-decoration: line-through;
+    }
+  }
+}

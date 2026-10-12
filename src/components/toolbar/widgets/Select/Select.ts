@@ -11,10 +11,12 @@ import { Context } from 'konva/lib/Context';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Stage } from 'konva/lib/Stage';
 import { shapeName } from '@/constants';
-import type { ColorLike } from '@/@types/drawer';
+import type { ColorLike, TextStyle } from '@/@types/drawer';
 import { SelectOverlay } from '@/components/tools/Overlay/SelectOverlay/SelectOverlay';
 import { BrushWidget } from '../Brush/Brush';
+import type { TextWidget } from '../Text/Text';
 import { Text } from 'konva/lib/shapes/Text';
+import { Group } from 'konva/lib/Group';
 
 export class SelectWidget extends BaseWidget {
   #x1: number = 0;
@@ -169,9 +171,9 @@ export class SelectWidget extends BaseWidget {
         this.transformer.enabledAnchors(this.defaultAnchors);
       }
       if (selected.length) {
-        this.overlay.show(selected);
+        this.showOverlay(selected);
       } else {
-        this.overlay.hide();
+        this.hideOverlay();
       }
       this.transformer.nodes(selected);
       this.$container.focus();
@@ -219,10 +221,32 @@ export class SelectWidget extends BaseWidget {
     });
   }
 
+  /**
+   * Show overlay for selected shapes, text overlay if selection contains only text
+   * @param {(Shape<ShapeConfig> | Group)[]} shapes
+   */
+  showOverlay(shapes: (Shape<ShapeConfig> | Group)[]) {
+    const textOverlay = this.drawer.getWidget<TextWidget>('text')?.overlay;
+    const onlyText = shapes.length > 0 && shapes.every((s) => s.hasName(shapeName.text));
+
+    if (textOverlay && onlyText) {
+      this.overlay.hide();
+      textOverlay.show(shapes);
+    } else {
+      textOverlay?.hide();
+      this.overlay.show(shapes);
+    }
+  }
+
+  hideOverlay() {
+    this.overlay.hide();
+    this.drawer.getWidget<TextWidget>('text')?.overlay.hide();
+  }
+
   selectAll() {
     const allNodes = this.drawer.getDrawingShapes();
     this.transformer.nodes(allNodes);
-    this.overlay.show(allNodes);
+    this.showOverlay(allNodes);
     this.drawer.focus();
 
     const brushWidget = this.drawer.getWidget<BrushWidget>('brush');
@@ -240,7 +264,7 @@ export class SelectWidget extends BaseWidget {
       d.draggable(false);
     });
     this.transformer.nodes([]);
-    this.overlay.hide();
+    this.hideOverlay();
   }
 
   private _initSnapEvents() {
@@ -598,6 +622,34 @@ export class SelectWidget extends BaseWidget {
         }
       }
     });
+  }
+
+  /**
+   * Set text style of selected text
+   * @param {Partial<TextStyle>} style
+   */
+  setTextStyle(style: Partial<TextStyle>) {
+    const texts = this.transformer.nodes().filter((s): s is Text => s instanceof Text);
+
+    if (!texts.length) return;
+
+    // font metrics change, so width must be updated to keep the same line breaks
+    const resize = 'fontFamily' in style || 'fontSize' in style || 'fontStyle' in style;
+
+    texts.forEach((text) => {
+      const lines = text.textArr.map((l) => l.text);
+
+      text.setAttrs(style);
+
+      // empty text has no line to measure
+      if (resize && text.text()) {
+        const width = Math.max(...lines.map((l) => text.measureSize(l).width));
+        text.width(Math.ceil(width) + text.padding() * 2);
+      }
+    });
+
+    this.transformer.forceUpdate();
+    this.drawer.stage.fire('change');
   }
 
   toggleSnapping(active: boolean = true) {

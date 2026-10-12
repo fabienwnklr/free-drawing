@@ -21,9 +21,9 @@ export class HotKey {
         if (allNodes) {
           allNodes.forEach((n) => n.destroy());
           selectWidget?.transformer.nodes([]);
-          selectWidget?.overlay.hide();
+          selectWidget?.hideOverlay();
 
-          if (this.drawer.activeWidget instanceof BrushWidget) {
+          if (this.drawer.activeWidget instanceof BrushWidget || this.drawer.activeWidget instanceof TextWidget) {
             this.drawer.activeWidget.overlay.show();
           }
           this.drawer.stage.fire('change');

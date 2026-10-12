@@ -6,11 +6,20 @@ import LineDashedIcon from '@/icons/line-dashed.svg?raw';
 import './overlay.scss';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Group } from 'konva/lib/Group';
-import { dataAttributes, shapeName } from '@/constants';
+import { dataAttributes } from '@/constants';
 
 /**
  * All common tool for all shape (color, opacity for now)
  */
+
+export type OverlayOptions = {
+  /** Show stroke style buttons (default false) */
+  styleBtns: boolean;
+  /** Show stroke width buttons (default true) */
+  widthBtns: boolean;
+  /** Title of color section (default 'Stroke') */
+  colorTitle: string;
+};
 
 export class BaseOverlay {
   $overlayContainer: HTMLDivElement;
@@ -25,9 +34,6 @@ export class BaseOverlay {
   $strokeStyleContainer!: HTMLDivElement;
   $strokeStyleBtnContainer!: HTMLDivElement;
 
-  $fontSizeContainer!: HTMLDivElement;
-  $fontSizeBtnContainer!: HTMLDivElement;
-
   $opacityContainer!: HTMLDivElement;
   $opacityRange!: HTMLInputElement;
 
@@ -37,9 +43,9 @@ export class BaseOverlay {
     button: 'overlay-picker__button',
   };
 
-  options?: { styleBtns?: boolean };
+  options?: Partial<OverlayOptions>;
 
-  constructor(drawer: Drawer, options?: Partial<{ styleBtns: boolean }>) {
+  constructor(drawer: Drawer, options?: Partial<OverlayOptions>) {
     this.options = options;
     this.drawer = drawer;
     this.$overlayContainer = document.createElement('div');
@@ -57,8 +63,6 @@ export class BaseOverlay {
     this._createStrokeWidthFields();
     // stroke style
     this._createStrokeStyleFields();
-    // font size for text node
-    this._createFontsizeFields();
     // opacity
     this._createOpacityField();
 
@@ -67,7 +71,6 @@ export class BaseOverlay {
       this.$strokeColorContainer,
       this.$strokeWidthContainer,
       this.$strokeStyleContainer,
-      this.$fontSizeContainer,
       this.$opacityContainer,
     ]);
   }
@@ -78,7 +81,7 @@ export class BaseOverlay {
 
     const $strokeTitle = document.createElement('h6');
     $strokeTitle.classList.add('title');
-    $strokeTitle.innerText = 'Stroke';
+    $strokeTitle.innerText = this.options?.colorTitle ?? 'Stroke';
     this.$strokeColorContainer.append($strokeTitle);
 
     this.$strokeColorBtnContainer = document.createElement('div');
@@ -133,6 +136,8 @@ export class BaseOverlay {
     });
     this.$strokeWidthBtnContainer.append(...$strokeWidthButtons);
     this.$strokeWidthContainer.append(this.$strokeWidthBtnContainer);
+
+    if (this.options?.widthBtns === false) this.$strokeWidthContainer.style.display = 'none';
   }
 
   private _createStrokeStyleFields() {
@@ -183,43 +188,6 @@ export class BaseOverlay {
     if (!this.options?.styleBtns) this.$strokeStyleContainer.style.display = 'none';
   }
 
-  private _createFontsizeFields() {
-    this.$fontSizeContainer = document.createElement('div');
-    this.$fontSizeContainer.classList.add(this.selectors.container);
-
-    const $fontsizeTitle = document.createElement('h6');
-    $fontsizeTitle.classList.add('title');
-    $fontsizeTitle.innerText = 'Font size';
-    this.$fontSizeContainer.append($fontsizeTitle);
-
-    this.$fontSizeBtnContainer = document.createElement('div');
-    this.$fontSizeBtnContainer.classList.add(this.selectors.buttonContainer);
-    const $fontsizeButtons: HTMLButtonElement[] = [];
-
-    const fontSize = [
-      { label: 'S', value: 10 },
-      { label: 'M', value: 15 },
-      { label: 'L', value: 20 },
-      { label: 'XL', value: 25 },
-    ];
-
-    fontSize.forEach((font) => {
-      const $btn = document.createElement('button');
-
-      $btn.innerHTML = font.label;
-      $btn.setAttribute(dataAttributes.fontSize, font.value.toString());
-      $btn.classList.add('drawer-button', this.selectors.button);
-      $btn.addEventListener('click', () => {
-        this.$fontSizeBtnContainer.querySelector(`.${this.selectors.button}.active`)?.classList.remove('active');
-        $btn.classList.add('active');
-        this.drawer.setStrokeWidth(font.value.toString(), false);
-      });
-      $fontsizeButtons.push($btn);
-    });
-    this.$fontSizeBtnContainer.append(...$fontsizeButtons);
-    this.$fontSizeContainer.append(this.$fontSizeBtnContainer);
-  }
-
   private _createOpacityField() {
     this.$opacityContainer = document.createElement('div');
     this.$opacityContainer.classList.add('opacity-container');
@@ -262,20 +230,23 @@ export class BaseOverlay {
 
     if (shape && shape[0] instanceof Shape) {
       data = {
-        color: shape[0].stroke() as ColorLike,
+        // text color is stored in fill
+        color: (shape[0].stroke() || shape[0].fill()) as ColorLike,
         strokeWidth: shape[0].strokeWidth(),
         strokeStyle: shape[0].dash(),
         opacity: shape[0].opacity(),
       };
     }
 
-    this._updateFields(data, shape);
+    this._updateFields(data);
   }
 
-  private _updateFields(
-    data: { color: ColorLike; strokeWidth: number; strokeStyle: undefined | number[]; opacity: number },
-    shape?: (Shape<ShapeConfig> | Group)[]
-  ) {
+  private _updateFields(data: {
+    color: ColorLike;
+    strokeWidth: number;
+    strokeStyle: undefined | number[];
+    opacity: number;
+  }) {
     this.$strokeColorBtnContainer.querySelector(`.${this.selectors.button}.active`)?.classList.remove('active');
     this.$strokeWidthBtnContainer.querySelector(`.${this.selectors.button}.active`)?.classList.remove('active');
 
@@ -285,13 +256,6 @@ export class BaseOverlay {
 
     if ($btnColor) {
       $btnColor.classList.add('active');
-    }
-
-    const hasText = shape?.filter((s) => s.hasName(shapeName.text));
-    if (hasText?.length && hasText?.length === shape?.length) {
-      this._setupTextOverlay();
-    } else {
-      this._setupShapeOverlay();
     }
 
     const $btnStrokeWidth = this.$strokeWidthBtnContainer.querySelector(
@@ -311,16 +275,6 @@ export class BaseOverlay {
     }
 
     this.$opacityRange.value = (data.opacity * 10).toString();
-  }
-
-  private _setupTextOverlay() {
-    this.$strokeWidthContainer.style.display = 'none';
-    this.$fontSizeContainer.style.display = '';
-  }
-
-  private _setupShapeOverlay() {
-    this.$strokeWidthContainer.style.display = '';
-    this.$fontSizeContainer.style.display = 'none';
   }
 
   hide() {

@@ -4,7 +4,7 @@ import { Layer } from 'konva/lib/Layer';
 import { Toolbar } from './components/toolbar/Toolbar';
 import { Rect } from 'konva/lib/shapes/Rect';
 import { AvailableTools } from './@types/toolbar';
-import { ColorLike, DrawerOptions } from './@types/drawer';
+import { ColorLike, DrawerOptions, TextStyle } from './@types/drawer';
 import { deepMerge } from './utils/functions';
 import { dataAttributes, defaultOptions, shapeName } from './constants';
 import { Zoom } from './components/tools/Zoom/Zoom';
@@ -182,7 +182,7 @@ export class Drawer extends MicroEvent {
 
     if (stageSaved) {
       const textWidget = this.getWidget<TextWidget>('text');
-      this.drawLayer.find('.text').forEach((t) => {
+      this.drawLayer.find('.drawer-text').forEach((t) => {
         if (t instanceof Text) {
           textWidget?.addTextNodeEvents(t);
         }
@@ -444,6 +444,26 @@ export class Drawer extends MicroEvent {
 
     if (brushWidget && triggerChange) {
       brushWidget.overlay.$opacityRange.value = (opacity * 10).toString();
+    }
+  }
+
+  /**
+   * Set text style (font family, size, style, decoration, align) of new and selected text
+   * @param {Partial<TextStyle>} style
+   */
+  setTextStyle(style: Partial<TextStyle>, triggerChange = true) {
+    this.options.textStyle = { ...this.options.textStyle, ...style };
+
+    const selectWidget = this.getWidget<SelectWidget>('selection');
+
+    if (selectWidget?.transformer.nodes().length) {
+      selectWidget?.setTextStyle(style);
+    }
+
+    const textWidget = this.getWidget<TextWidget>('text');
+
+    if (textWidget && triggerChange) {
+      textWidget.overlay.updateFields(style);
     }
   }
 

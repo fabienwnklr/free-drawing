@@ -4,21 +4,27 @@ import TextIcon from '@/icons/text.svg?raw';
 import { Text } from 'konva/lib/shapes/Text';
 import { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { shapeName } from '@/constants';
+import { TextOverlay } from '@/components/tools/Overlay/TextOverlay/TextOverlay';
 
 export class TextWidget extends BaseWidget {
   #lastText!: Text;
   isEditing: boolean = false;
+  overlay: TextOverlay;
 
   constructor(drawer: Drawer) {
     super(drawer, 'text', 'Text', TextIcon, 't');
+
+    this.overlay = new TextOverlay(drawer);
   }
 
   protected onActive(): void {
     this.initEvents();
     this.updateCursor();
+    this.overlay.show();
   }
   protected onDesactive(): void {
     this.removeEvents();
+    this.overlay.hide();
   }
 
   /**
@@ -29,17 +35,19 @@ export class TextWidget extends BaseWidget {
   addTextNode(text: string = '') {
     const { x, y } = this.drawer._getRelativePointerPos();
     const draggable = this.drawer.activeTool === 'selection';
+    const { textStyle } = this.drawer.options;
 
     const textNode = new Text({
+      ...textStyle,
       text,
       x,
       y,
-      fontFamily: 'Ubuntu',
-      fontSize: 15,
       name: shapeName.text,
       fill: this.drawer.options.strokeColor,
+      opacity: this.drawer.options.opacity,
       draggable,
-      width: 100,
+      // keep about the same number of characters per line whatever the font size
+      width: textStyle.fontSize * 6,
     });
 
     if (text) {
@@ -129,6 +137,10 @@ export class TextWidget extends BaseWidget {
     textarea.style.zIndex = '999';
     textarea.style.lineHeight = textNode.lineHeight().toString();
     textarea.style.fontFamily = textNode.fontFamily();
+    textarea.style.fontStyle = textNode.fontStyle().includes('italic') ? 'italic' : 'normal';
+    textarea.style.fontWeight = textNode.fontStyle().includes('bold') ? 'bold' : 'normal';
+    textarea.style.textDecoration = textNode.textDecoration();
+    textarea.style.opacity = textNode.opacity().toString();
     textarea.style.transformOrigin = 'left top';
     textarea.style.textAlign = textNode.align();
     textarea.style.color = textNode.fill();
@@ -138,10 +150,12 @@ export class TextWidget extends BaseWidget {
 
   private _initEventsTextarea(textNode: Text, textarea: HTMLTextAreaElement) {
     const removeTextarea = () => {
+      // keep focus on clicked element (e.g. font select of text overlay)
+      const hasFocus = document.activeElement === textarea;
       textarea.parentNode?.removeChild(textarea);
-      window.removeEventListener('click', handleOutsideClick);
+      window.removeEventListener('click', handleOutsideClick, true);
       this.isEditing = false;
-      this.drawer.focus();
+      if (hasFocus) this.drawer.focus();
       // Do not consider empty textarea
       if (textarea.value === '') {
         textNode.destroy();
@@ -179,7 +193,8 @@ export class TextWidget extends BaseWidget {
       }
     };
     setTimeout(() => {
-      window.addEventListener('click', handleOutsideClick);
+      // capture phase, so text is committed before the click is handled (e.g. text overlay buttons)
+      window.addEventListener('click', handleOutsideClick, true);
     });
   }
 

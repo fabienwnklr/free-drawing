@@ -14,6 +14,13 @@ export const defaultOptions: DrawerOptions = {
   autoSave: true,
   localStorageKey: 'free-drawing',
   opacity: 1,
+  textStyle: {
+    fontFamily: 'Ubuntu',
+    fontSize: 16,
+    fontStyle: 'normal',
+    textDecoration: '',
+    align: 'left',
+  },
 };
 
 export const shapeName = {
@@ -30,4 +37,7 @@ export const dataAttributes = {
   strokeColor: 'data-stroke-color',
   strokeStyle: 'data-stroke-style',
   fontSize: 'data-font-size',
+  fontStyle: 'data-font-style',
+  textDecoration: 'data-text-decoration',
+  textAlign: 'data-text-align',
 };
