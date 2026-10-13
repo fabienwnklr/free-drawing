@@ -1,6 +1,43 @@
 # Changelog
 
-All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
+All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
+
+## [3.0.0](https://github.com/fabienwnklr/free-drawing/compare/v2.1.2...v3.0.0) (2026-10-13)
+
+
+### ⚠ BREAKING CHANGES
+
+* `konva` is a peer dependency, install it with the package: `yarn add @fabwcie/free-drawing konva` ([9d075c1](https://github.com/fabienwnklr/free-drawing/commits/9d075c12707b5efa6b26802a9f8e5f78431a1d4c))
+* styles must be imported: `import '@fabwcie/free-drawing/style.css'` ([9d075c1](https://github.com/fabienwnklr/free-drawing/commits/9d075c12707b5efa6b26802a9f8e5f78431a1d4c))
+* iife and cjs builds are removed, use es (`import`) or umd (`require`) build ([9d075c1](https://github.com/fabienwnklr/free-drawing/commits/9d075c12707b5efa6b26802a9f8e5f78431a1d4c))
+* collaboration is disabled by default, enable it with `collaboration` option; `drawer.socket` is `null` without it ([9d075c1](https://github.com/fabienwnklr/free-drawing/commits/9d075c12707b5efa6b26802a9f8e5f78431a1d4c))
+* `triggerChange` parameter of setters, `TextWidget.addTextNodeEvents()` and `BrushWidget.getSvgPathFromStroke()` are removed ([55426b5](https://github.com/fabienwnklr/free-drawing/commits/55426b5705b1c30d962fea57dd804bba4b6bf5a4))
+* `undoRedo.appHistory` stores JSON strings and keeps the last 100 states ([d6c2604](https://github.com/fabienwnklr/free-drawing/commits/d6c26042cab71a0fc9c46093291df1d2d5b4d6d2))
+* `resetDrawer()` clears drawing without confirmation and restores drawing options given on init ([c055cf5](https://github.com/fabienwnklr/free-drawing/commits/c055cf590e08338c2f8ccee5badaac783c5983de))
+* canvas background color no longer fills selected shapes ([c055cf5](https://github.com/fabienwnklr/free-drawing/commits/c055cf590e08338c2f8ccee5badaac783c5983de))
+
+
+### Features
+
+* **text:** text overlay with font family, size, bold, italic, underline, strikethrough and align, `Drawer.setTextStyle()` and `textStyle` option ([d91f9c8](https://github.com/fabienwnklr/free-drawing/commits/d91f9c8c2e5a26e28abfc96414a82c4ade2108c0))
+* **shapes:** rectangle, ellipse and arrow tools, shift draws square, circle or 45° lines ([c055cf5](https://github.com/fabienwnklr/free-drawing/commits/c055cf590e08338c2f8ccee5badaac783c5983de))
+* `Drawer.setZoomLevel()` limited from 10% to 3000% ([866c33a](https://github.com/fabienwnklr/free-drawing/commits/866c33a9098763ec4f817c120a2980f7d47a2165))
+* `Drawer.addShape()` and `fd.options.change` event, all overlays stay in sync with options ([55426b5](https://github.com/fabienwnklr/free-drawing/commits/55426b5705b1c30d962fea57dd804bba4b6bf5a4))
+* tool shortcuts `L`, `R`, `C`, `A` and caps lock support ([55426b5](https://github.com/fabienwnklr/free-drawing/commits/55426b5705b1c30d962fea57dd804bba4b6bf5a4))
+* paste text with Ctrl / Cmd + V, Cmd shortcuts on Mac ([c055cf5](https://github.com/fabienwnklr/free-drawing/commits/c055cf590e08338c2f8ccee5badaac783c5983de))
+* lighter package and data: external dependencies, woff2 font, smaller saved data and history ([9d075c1](https://github.com/fabienwnklr/free-drawing/commits/9d075c12707b5efa6b26802a9f8e5f78431a1d4c), [d6c2604](https://github.com/fabienwnklr/free-drawing/commits/d6c26042cab71a0fc9c46093291df1d2d5b4d6d2), [c055cf5](https://github.com/fabienwnklr/free-drawing/commits/c055cf590e08338c2f8ccee5badaac783c5983de))
+
+
+### Bug Fixes
+
+* restore history from saved state ([e7e0175](https://github.com/fabienwnklr/free-drawing/commits/e7e017584fbdfe0dfabfed21937e18e4885fe348))
+* context menu position shows scrollbar ([1f84e44](https://github.com/fabienwnklr/free-drawing/commits/1f84e4492829649a66a92ea3df6da23837886243))
+* brush and line strokes altered by a mouseup started outside canvas, empty text kept on Escape, Alt+Z toggling snapping, keys blocked when shapes are selected, eraser and ctrl+wheel zoom ([4a7b13f](https://github.com/fabienwnklr/free-drawing/commits/4a7b13f92066959eebc0cd076748356559426f9a))
+* duplicated history entries, click selection after pan, text colored by background color, zoom buttons limits, duplicated transformer on reload ([866c33a](https://github.com/fabienwnklr/free-drawing/commits/866c33a9098763ec4f817c120a2980f7d47a2165))
+* moved text not saved, restored texts not editable, shapes draggable with other tools after reload ([55426b5](https://github.com/fabienwnklr/free-drawing/commits/55426b5705b1c30d962fea57dd804bba4b6bf5a4))
+* published types and package entries ([9d075c1](https://github.com/fabienwnklr/free-drawing/commits/9d075c12707b5efa6b26802a9f8e5f78431a1d4c))
+* grid hidden outside saved view after pan, corrupted or full localStorage ([d6c2604](https://github.com/fabienwnklr/free-drawing/commits/d6c26042cab71a0fc9c46093291df1d2d5b4d6d2))
+* undo / redo buttons state, toasts kept in page, arrow keys move not saved, several drawers on a page ([c055cf5](https://github.com/fabienwnklr/free-drawing/commits/c055cf590e08338c2f8ccee5badaac783c5983de))
 
 ## [2.1.2](https://github.com/fabienwnklr/free-drawing/compare/v2.1.1...v2.1.2) (2025-01-04)
 
