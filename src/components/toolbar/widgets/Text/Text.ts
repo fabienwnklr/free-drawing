@@ -51,9 +51,9 @@ export class TextWidget extends BaseWidget {
     });
 
     if (text) {
-      const split = text.split('\n');
-      const longest = split.toSorted((a, b) => b.length - a.length)[0];
-      textNode.width(textNode.measureSize(longest).width);
+      // fit width to the widest line (not the one with most characters)
+      const widths = text.split('\n').map((line) => textNode.measureSize(line).width);
+      textNode.width(Math.ceil(Math.max(...widths)));
     }
     this.addTextNodeEvents(textNode);
 
@@ -156,16 +156,20 @@ export class TextWidget extends BaseWidget {
       window.removeEventListener('click', handleOutsideClick, true);
       this.isEditing = false;
       if (hasFocus) this.drawer.focus();
-      // Do not consider empty textarea
-      if (textarea.value === '') {
+
+      const selectWidget = this.drawer.toolbar.getWidget<SelectWidget>('selection');
+      // hidden during edition
+      selectWidget?.transformer.show();
+
+      // Do not keep empty text (new text cancelled with Escape or validated empty)
+      if (textNode.text() === '') {
         textNode.destroy();
+        selectWidget?.transformer.nodes([]);
+        selectWidget?.hideOverlay();
         return;
       }
 
       textNode.show();
-
-      const selectWidget = this.drawer.toolbar.getWidget<SelectWidget>('selection');
-      selectWidget?.transformer.show();
       selectWidget?.transformer.forceUpdate();
 
       this.drawer.stage.fire('change');

@@ -11,6 +11,13 @@ export class HotKey {
     this.drawer = drawer;
 
     const DELTA = 4;
+    const arrowMoves: Record<string, { x: number; y: number }> = {
+      ArrowLeft: { x: -DELTA, y: 0 },
+      ArrowUp: { x: 0, y: -DELTA },
+      ArrowRight: { x: DELTA, y: 0 },
+      ArrowDown: { x: 0, y: DELTA },
+    };
+
     this.drawer.$drawerContainer.addEventListener('keydown', (e) => {
       if (this.drawer._duringAction()) return;
 
@@ -18,7 +25,7 @@ export class HotKey {
       if (e.key === 'Backspace' || e.key === 'Delete') {
         const allNodes = selectWidget?.transformer.nodes();
 
-        if (allNodes) {
+        if (allNodes?.length) {
           allNodes.forEach((n) => n.destroy());
           selectWidget?.transformer.nodes([]);
           selectWidget?.hideOverlay();
@@ -34,20 +41,11 @@ export class HotKey {
         selectWidget?.selectAll();
       }
 
-      if (selectWidget?.transformer.nodes().length) {
-        selectWidget?.transformer.nodes().forEach((shape) => {
-          if (e.key === 'ArrowLeft') {
-            shape.x(shape.x() - DELTA);
-          } else if (e.key === 'ArrowUp') {
-            shape.y(shape.y() - DELTA);
-          } else if (e.key === 'ArrowRight') {
-            shape.x(shape.x() + DELTA);
-          } else if (e.key === 'ArrowDown') {
-            shape.y(shape.y() + DELTA);
-          } else {
-            return;
-          }
-        });
+      const selectedNodes = selectWidget?.transformer.nodes() ?? [];
+
+      // only arrow keys, other keys keep their default behavior (F5, Tab...)
+      if (selectedNodes.length && e.key in arrowMoves) {
+        selectedNodes.forEach((shape) => shape.move(arrowMoves[e.key]));
         e.preventDefault();
       }
 
@@ -112,10 +110,6 @@ export class HotKey {
 
       if (e.altKey && e.key === 'z') {
         this.drawer.setting.toggleZenMode();
-      }
-
-      if (e.altKey && e.key === 'z') {
-        this.drawer.setting.toggleSnapping();
       }
 
       if (e.ctrlKey && e.key === 'Delete') {

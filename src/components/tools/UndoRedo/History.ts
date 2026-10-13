@@ -17,6 +17,12 @@ export class History {
     const state = draw.map((d) => {
       return { type: d.className, ...d.attrs };
     });
+
+    // ignore change without drawing modification (pan, grid...), also keeps redo available
+    if (!fromSaved && JSON.stringify(state) === JSON.stringify(this.appHistory[this.appHistoryStep])) {
+      return;
+    }
+
     this.appHistory = this.appHistory.slice(0, this.appHistoryStep + 1);
     if (fromSaved) {
       // loop on state for add to history the first, first and second, first, second and third, etc.

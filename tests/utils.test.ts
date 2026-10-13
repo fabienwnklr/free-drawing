@@ -1,5 +1,6 @@
 import { test, expect, describe } from 'vitest';
 import { deepMerge, isObject, isTruthy, stringToNode } from '../src/utils/functions';
+import MicroEvent from '../src/utils/MicroEvent';
 
 describe('utilities', () => {
   test('Convert string to HTML element', () => {
@@ -33,4 +34,15 @@ describe('utilities', () => {
     expect(isTruthy(() => {})).toBe(true);
     expect(isTruthy({ prop: 'value'})).toBe(true);
   })
+
+  test('MicroEvent off with unknown handler keeps other handlers', () => {
+    const emitter = new MicroEvent();
+    const calls: string[] = [];
+    emitter.on('foo', () => calls.push('a'));
+
+    emitter.off('foo', () => {});
+    emitter.trigger('foo');
+
+    expect(calls).toEqual(['a']);
+  });
 });

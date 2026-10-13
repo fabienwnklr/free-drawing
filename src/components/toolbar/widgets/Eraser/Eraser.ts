@@ -2,12 +2,12 @@ import { Drawer } from '@/Drawer';
 import { stringToNode } from '@/utils/functions';
 import { BaseWidget } from '../BaseWidget';
 import EraserIcon from '@/icons/eraser.svg?raw';
-import { Node, NodeConfig } from 'konva/lib/Node';
+import type { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { SelectWidget } from '../Select/Select';
 
 export class EraserWidget extends BaseWidget {
   isErasing: boolean = false;
-  #toRemoved: Node<NodeConfig>[] = [];
+  #toRemoved = new Set<Shape<ShapeConfig>>();
 
   constructor(protected drawer: Drawer) {
     const $EraserIcon = stringToNode<SVGElement>(EraserIcon);
@@ -32,17 +32,14 @@ export class EraserWidget extends BaseWidget {
       }
       // prevent scrolling on touch devices
       e.evt.preventDefault();
-      const shapes = this.drawer.getDrawingShapes();
-      const pos = this.drawer._getPointerPos();
-      const selected = shapes.filter((s) => s == this.drawer.stage.getIntersection(pos));
+      const target = this.drawer.stage.getIntersection(this.drawer._getPointerPos());
+      const shape = this.drawer.getDrawingShapes().find((s) => s === target);
 
-      selected.forEach((s) => {
-        if (s.opacity() === 0.5) {
-          return;
-        }
-        this.#toRemoved.push(s);
-        s.opacity(0.5);
-      });
+      if (!shape || this.#toRemoved.has(shape)) return;
+
+      this.#toRemoved.add(shape);
+      // visual feedback until mouseup
+      shape.opacity(0.5);
     });
 
     this.drawer.stage.on('mouseup touchend', (e) => {
@@ -54,9 +51,9 @@ export class EraserWidget extends BaseWidget {
 
       e.evt.preventDefault();
 
-      if (this.#toRemoved.length) {
+      if (this.#toRemoved.size) {
         this.#toRemoved.forEach((t) => t.destroy());
-        this.#toRemoved = [];
+        this.#toRemoved.clear();
         this.drawer.stage.fire('change');
       }
     });

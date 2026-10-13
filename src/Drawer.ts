@@ -308,7 +308,8 @@ export class Drawer extends MicroEvent {
         e.evt.preventDefault();
 
         const oldScale = this.stage.scaleX();
-        const pointer = this._getRelativePointerPos();
+        // absolute position, the computation below converts it in stage coordinates
+        const pointer = this._getPointerPos();
 
         const mousePointTo = {
           x: (pointer.x - this.stage.x()) / oldScale,

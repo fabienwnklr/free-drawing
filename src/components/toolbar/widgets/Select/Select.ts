@@ -459,9 +459,9 @@ export class SelectWidget extends BaseWidget {
 
     const guides = [];
 
-    // find closest snap
-    const minV = resultV.toSorted((a, b) => a.diff - b.diff)[0];
-    const minH = resultH.toSorted((a, b) => a.diff - b.diff)[0];
+    // find closest snap (local arrays, sort in place instead of toSorted not supported by older browsers)
+    const minV = resultV.sort((a, b) => a.diff - b.diff)[0];
+    const minH = resultH.sort((a, b) => a.diff - b.diff)[0];
     if (minV) {
       guides.push({
         lineGuide: minV.lineGuide,

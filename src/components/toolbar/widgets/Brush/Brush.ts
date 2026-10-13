@@ -83,7 +83,8 @@ export class BrushWidget extends BaseWidget {
     });
 
     this.drawer.stage.on('mouseup touchend', (e) => {
-      if (e.evt.button === 2) return;
+      // mouseup without mousedown on stage (e.g. started on overlay) must not alter last line
+      if (e.evt.button === 2 || !this.isPaint) return;
 
       this._updateLine(true);
       this.isPaint = false;

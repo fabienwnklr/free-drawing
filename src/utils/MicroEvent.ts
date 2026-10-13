@@ -41,7 +41,9 @@ export default class MicroEvent {
       const event_array = this._events[event];
       if (event_array === undefined) return;
 
-      event_array.splice(event_array.indexOf(fct), 1);
+      const index = event_array.indexOf(fct);
+      // indexOf returns -1 for unknown handler, splice(-1) would remove the last one
+      if (index !== -1) event_array.splice(index, 1);
       this._events[event] = event_array;
     });
   }
