@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [3.5.1](https://github.com/fabienwnklr/free-drawing/compare/v3.5.0...v3.5.1) (2026-10-14)
+
+
+### Bug Fixes
+
+* **text:** changing text style keeps width given to text box (scaled with font size) instead of fitting it to content, line breaks are kept
+
 ## [3.5.0](https://github.com/fabienwnklr/free-drawing/compare/v3.4.0...v3.5.0) (2026-10-14)
 
 

@@ -67,5 +67,22 @@ describe('Use drawer api', () => {
     expect(text.align()).toBe('center');
   });
 
+  it('setTextStyle keeps width given to text box, scaled with font size', () => {
+    const drawer = new Drawer(document.getElementById('test') as HTMLDivElement, { autoSave: false });
+    const text = drawer.getWidget<TextWidget>('text')!.addTextNode('Hello world');
+
+    drawer.getWidget<SelectWidget>('selection')!.transformer.nodes([text]);
+    // resized wider than its content with side anchors
+    text.width(400);
+
+    drawer.setTextStyle({ fontStyle: 'bold' });
+    drawer.setTextStyle({ fontFamily: 'Arial' });
+    expect(text.width()).toBe(400);
+
+    // same line breaks with a twice bigger font
+    drawer.setTextStyle({ fontSize: text.fontSize() * 2 });
+    expect(text.width()).toBe(800);
+  });
+
 
 });

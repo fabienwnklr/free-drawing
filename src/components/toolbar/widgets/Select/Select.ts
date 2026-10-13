@@ -635,20 +635,22 @@ export class SelectWidget extends BaseWidget {
    * @param {Partial<TextStyle>} style
    */
   setTextStyle(style: Partial<TextStyle>) {
-    // font metrics change, so width must be updated to keep the same line breaks
+    // font metrics change: width is updated to keep the same line breaks
     const resize = 'fontFamily' in style || 'fontSize' in style || 'fontStyle' in style;
 
     this._updateSelected((text) => {
       if (!(text instanceof Text)) return;
 
       const lines = text.textArr.map((l) => l.text);
+      // box width given by user (side anchors) is kept, scaled with font size
+      const width = text.width() * (style.fontSize ? style.fontSize / text.fontSize() : 1);
 
       text.setAttrs(style);
 
-      // empty text has no line to measure
-      if (resize && text.text()) {
-        const width = Math.max(...lines.map((l) => text.measureSize(l).width));
-        text.width(Math.ceil(width) + text.padding() * 2);
+      if (resize) {
+        // widened if lines are wider with new font (empty text has no line to measure)
+        const linesWidth = text.text() ? Math.max(...lines.map((l) => text.measureSize(l).width)) : 0;
+        text.width(Math.max(Math.round(width), Math.ceil(linesWidth) + text.padding() * 2));
       }
     });
 

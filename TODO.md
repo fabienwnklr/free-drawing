@@ -8,5 +8,5 @@
 <!-- - ajoute un effet de 'trainée' pendant l'effacement de l'outil eraser -->
 - ajoute un widget activable ou désactivable pour savoir la position x/y, pour pas se perdre si on se deplace dans trop pour ce rencentrer
 <!-- - améliore le style global (homogénéité, normes, etc.) -->
-- quand je change un style d'un texte la largeur attribué est modifié à la largeur du contenu
-- la couleur et la couleur de contour du texte diffère
+<!-- - quand je change un style d'un texte la largeur attribué est modifié à la largeur du contenu
+- la couleur et la couleur de contour du texte diffère -->
