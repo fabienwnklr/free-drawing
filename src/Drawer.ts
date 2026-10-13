@@ -7,6 +7,7 @@ import { AvailableTools } from './@types/toolbar';
 import { ColorLike, DrawerOptions, OptionsChange, TextStyle } from './@types/drawer';
 import { deepMerge } from './utils/functions';
 import { defaultOptions, gridSize, shapeName, socketEvents, zoomLimits } from './constants';
+import { setPressed } from './utils/dom';
 import { Zoom } from './components/tools/Zoom/Zoom';
 import { Help } from './components/tools/Help/Help';
 import { BrushWidget } from './components/toolbar/widgets/Brush/Brush';
@@ -103,7 +104,10 @@ export class Drawer extends MicroEvent {
     // Creating drawer container
     this.$drawerContainer = document.createElement('div');
     this.$drawerContainer.classList.add('drawer-container');
-    this.$drawerContainer.tabIndex = 1;
+    // in tab order, keys go to drawer shortcuts (not to screen reader commands)
+    this.$drawerContainer.tabIndex = 0;
+    this.$drawerContainer.setAttribute('role', 'application');
+    this.$drawerContainer.setAttribute('aria-label', 'Drawing board');
 
     this.$el.replaceChildren(this.$drawerContainer);
 
@@ -335,6 +339,7 @@ export class Drawer extends MicroEvent {
   private _initEvents() {
     this._initHotKey();
     this._initZoomWheel();
+    this._initKeyboardFocus();
 
     this.stage.on('dragmove', (e) => {
       // shapes drag events bubble to stage, only stage drag (pan) moves the view
@@ -359,6 +364,23 @@ export class Drawer extends MicroEvent {
       this.undoRedo.manageButtons();
       this.trigger('change', this);
     });
+  }
+
+  /**
+   * Focus frame on drawer only when focused with keyboard (Tab, Escape from a menu).
+   * Not with :focus-visible, which matches after programmatic focus (on load, after tool change...) for mouse users too.
+   */
+  private _initKeyboardFocus() {
+    const $container = this.$drawerContainer;
+    const className = 'drawer-keyboard-focus';
+    // last key was a navigation key, not a shortcut or Enter validating a text
+    let navigationKey = false;
+
+    document.addEventListener('keydown', (e) => (navigationKey = e.key === 'Tab' || e.key === 'Escape'), true);
+    document.addEventListener('pointerdown', () => (navigationKey = false), true);
+    $container.addEventListener('focus', () => $container.classList.toggle(className, navigationKey));
+    $container.addEventListener('blur', () => $container.classList.remove(className));
+    $container.addEventListener('pointerdown', () => $container.classList.remove(className));
   }
 
   private _initHotKey() {
@@ -595,8 +617,8 @@ export class Drawer extends MicroEvent {
    */
   showGrid() {
     this.grid = true;
-    this.contextMenu.$gridBtn.classList.add('active');
-    this.setting.$toggleGridButton.classList.add('active');
+    setPressed(this.contextMenu.$gridBtn, true);
+    setPressed(this.setting.$toggleGridButton, true);
     this._drawGrid();
     this._initSnapGridEvents();
 
@@ -737,8 +759,8 @@ export class Drawer extends MicroEvent {
    */
   hideGrid() {
     this.grid = false;
-    this.setting.$toggleGridButton.classList.remove('active');
-    this.contextMenu.$gridBtn.classList.remove('active');
+    setPressed(this.setting.$toggleGridButton, false);
+    setPressed(this.contextMenu.$gridBtn, false);
     this.gridLayer.destroyChildren();
     this._removeSnapGridEvents();
   }

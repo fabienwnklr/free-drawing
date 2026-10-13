@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [3.3.0](https://github.com/fabienwnklr/free-drawing/compare/v3.2.1...v3.3.0) (2026-10-13)
+
+
+### Features
+
+* **a11y:** keyboard navigation: one tab stop in toolbar with arrow keys, Home and End between tools, context menu with arrow keys (also opened with Shift+F10 or context menu key), Escape closes settings menu and context menu
+* **a11y:** help and confirmation dialogs: focus moves into dialog, stays in it with Tab, goes back to the opening element on close, drawer shortcuts are disabled while open
+* **a11y:** accessible names of icon buttons (tools, colors, widths, styles, zoom, undo / redo, help, menu), pressed, checked and expanded states, labelled groups of tool options, announced toasts
+* **a11y:** visible keyboard focus: frame around drawer when focused with keyboard, button outline only for keyboard focus (no more after a click)
+
+
+### Bug Fixes
+
+* **keyboard:** arrow keys in opacity slider no longer move selected shapes
+* **confirm:** cancel and confirm are focusable buttons, cancel is focused when shown
+* **a11y:** drawer is in the page tab order (`tabindex` 0 instead of 1)
+
 ## [3.2.1](https://github.com/fabienwnklr/free-drawing/compare/v3.2.0...v3.2.1) (2026-10-13)
 
 

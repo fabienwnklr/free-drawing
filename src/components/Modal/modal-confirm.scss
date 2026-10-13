@@ -8,6 +8,8 @@
     .drawer-modal-footer {
         .drawer-button {
             width: auto;
+            // buttons do not inherit font
+            font: inherit;
         }
     }
 }

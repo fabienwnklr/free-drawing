@@ -34,6 +34,15 @@
   width: fit-content;
   outline: none;
 
+  // keyboard focus (see Drawer._initKeyboardFocus), frame above canvas (an outline would be under it)
+  &.drawer-keyboard-focus:focus::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 2px solid $primary;
+    pointer-events: none;
+  }
+
   .tool {
     border-radius: $radius;
     box-shadow: $shadow;
@@ -77,7 +86,7 @@
       background-color: $primary-hover;
     }
 
-    &:focus {
+    &:focus-visible {
       box-shadow: 0 0 3px $primary-hover;
       outline: 2px solid $primary;
     }
@@ -141,7 +150,7 @@
       background-color: $light-hover;
     }
 
-    &:focus {
+    &:focus-visible {
       box-shadow: 0 0 3px $light-hover;
     }
   }
@@ -227,6 +236,12 @@
 
         &.active {
           outline: 3px solid $primary;
+        }
+
+        // keyboard focus, distinct from active color
+        &:focus-visible {
+          outline: 2px solid $primary;
+          outline-offset: 2px;
         }
       }
 

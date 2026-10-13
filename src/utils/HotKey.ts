@@ -40,8 +40,10 @@ export class HotKey {
         selectWidget?.selectAll();
       }
 
-      // only arrow keys, other keys keep their default behavior (F5, Tab...)
-      if (selectedNodes.length && e.key in arrowMoves) {
+      // only arrow keys, other keys keep their default behavior (F5, Tab...), not arrows of fields (opacity...)
+      const inField = (e.target as HTMLElement).matches('input, select, textarea');
+
+      if (selectedNodes.length && e.key in arrowMoves && !inField) {
         selectedNodes.forEach((shape) => shape.move(arrowMoves[e.key]));
         arrowMoved = true;
         e.preventDefault();

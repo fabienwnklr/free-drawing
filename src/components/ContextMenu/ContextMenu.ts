@@ -3,6 +3,7 @@ import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { TextWidget } from '../toolbar/widgets/Text/Text';
 import './context-menu.scss';
 import { Stage } from 'konva/lib/Stage';
+import { arrowNavigation, setPressed } from '@/utils/dom';
 
 export class ContextMenu {
   drawer: Drawer;
@@ -24,38 +25,42 @@ export class ContextMenu {
   private _init() {
     this.$menu = document.createElement('div');
     this.$menu.classList.add('drawer-context-menu');
+    this.$menu.setAttribute('role', 'menu');
 
     this.$list = document.createElement('ul');
+    this.$list.setAttribute('role', 'none');
 
-    this.$pasteBtn = document.createElement('button');
-    this.$pasteBtn.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-context-menu-list-item');
-    this.$pasteBtn.innerHTML =
-      '<span class="drawer-context-menu-item__label">Paste</span><kbd class="drawer-context-menu-item__shortcut">Ctrl+V</kbd>';
-    this.$pasteBtn.role = 'button';
-
-    this.$snappingBtn = document.createElement('button');
-    this.$snappingBtn.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-context-menu-list-item');
-    this.$snappingBtn.innerHTML =
-      '<span class="drawer-context-menu-item__label">Snap to object</span><kbd class="drawer-context-menu-item__shortcut">Alt+S</kbd>';
-    this.$snappingBtn.role = 'button';
-
-    this.$gridBtn = document.createElement('button');
-    this.$gridBtn.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-context-menu-list-item');
-    this.$gridBtn.innerHTML =
-      '<span class="drawer-context-menu-item__label">Show grid</span><kbd class="drawer-context-menu-item__shortcut">Alt+G</kbd>';
-    this.$gridBtn.role = 'button';
-
-    this.$lockShapeBtn = document.createElement('button');
-    this.$lockShapeBtn.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-context-menu-list-item');
-    this.$lockShapeBtn.innerHTML =
-      '<span class="drawer-context-menu-item__label">Lock</span><kbd class="drawer-context-menu-item__shortcut"></kbd>';
-    this.$lockShapeBtn.role = 'button';
+    this.$pasteBtn = this._createItem('Paste', 'Ctrl+V');
+    this.$snappingBtn = this._createItem('Snap to object', 'Alt+S', 'menuitemcheckbox');
+    this.$gridBtn = this._createItem('Show grid', 'Alt+G', 'menuitemcheckbox');
+    this.$lockShapeBtn = this._createItem('Lock', '');
 
     this.$list.append(...[this.$pasteBtn, this.$snappingBtn, this.$gridBtn]);
 
     this.$menu.append(this.$list);
     this.drawer.$drawerContainer.append(this.$menu);
   }
+
+  /**
+   * Menu item, focused with arrow keys
+   */
+  private _createItem(label: string, shortcut: string, role: 'menuitem' | 'menuitemcheckbox' = 'menuitem') {
+    const $item = document.createElement('button');
+
+    $item.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-context-menu-list-item');
+    $item.innerHTML = `<span class="drawer-context-menu-item__label">${label}</span><kbd class="drawer-context-menu-item__shortcut" aria-hidden="true">${shortcut}</kbd>`;
+    $item.setAttribute('role', role);
+    $item.tabIndex = -1;
+    if (shortcut) $item.setAttribute('aria-keyshortcuts', shortcut.replace('Ctrl', 'Control'));
+    if (role === 'menuitemcheckbox') setPressed($item, false);
+
+    return $item;
+  }
+
+  private _getItems() {
+    return Array.from(this.$list.querySelectorAll<HTMLElement>('[role^="menuitem"]'));
+  }
+
   private _initEvents() {
     window.addEventListener('click', () => {
       this.hide();
@@ -64,6 +69,28 @@ export class ContextMenu {
     // Disable native context menu on my own context menu.. contextmenuception
     this.$menu.addEventListener('contextmenu', (e) => {
       e.preventDefault();
+    });
+
+    arrowNavigation(this.$menu, () => this._getItems(), 'vertical');
+
+    this.$menu.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape' && e.key !== 'Tab') return;
+
+      e.preventDefault();
+      e.stopPropagation();
+      this.hide();
+    });
+
+    // keyboard (context menu key, Shift+F10) on focused drawer, menu in drawer center
+    this.drawer.$drawerContainer.addEventListener('contextmenu', (e) => {
+      if (e.target !== this.drawer.$drawerContainer) return;
+
+      e.preventDefault();
+      const scope = this.drawer.$drawerContainer;
+
+      this.$menu.style.top = Math.max(0, (scope.clientHeight - this.$menu.clientHeight) / 2) + 'px';
+      this.$menu.style.left = Math.max(0, (scope.clientWidth - this.$menu.clientWidth) / 2) + 'px';
+      this.show();
     });
 
     this.$pasteBtn.addEventListener('click', async () => {
@@ -138,16 +165,20 @@ export class ContextMenu {
   }
 
   /**
-   * Show the context menu
+   * Show the context menu, first item focused (keyboard navigation)
    */
   show() {
     this.$menu.classList.add('show');
+    this._getItems()[0]?.focus();
   }
 
   /**
-   * Hide the context menu
+   * Hide the context menu, focus back on drawer if it was in menu
    */
   hide() {
+    const hadFocus = this.$menu.contains(document.activeElement);
+
     this.$menu.classList.remove('show');
+    if (hadFocus) this.drawer.focus();
   }
 }

@@ -6,7 +6,7 @@ import type { KonvaEventListener } from 'konva/lib/Node';
 import type { Stage } from 'konva/lib/Stage';
 import type { BaseOverlay } from '@/components/tools/Overlay/BaseOverlay';
 import type { SelectWidget } from './Select/Select';
-import { disableElement, enableElement } from '@/utils/dom';
+import { disableElement, enableElement, setLabel, setPressed } from '@/utils/dom';
 
 export abstract class BaseWidget {
   protected readonly $container: HTMLElement;
@@ -43,12 +43,12 @@ export abstract class BaseWidget {
     );
     this.$button = document.createElement('button');
     this.$button.classList.add(`drawer-button`);
-    this.$button.setAttribute('role', 'button');
-    this.$button.tabIndex = 0;
-    this.$button.title = this.options.title ?? title ?? id;
+    setLabel(this.$button, this.options.title ?? title ?? id);
+    setPressed(this.$button, false);
     this.$icon = typeof $icon === 'string' ? stringToNode<SVGElement>($icon) : $icon;
     // compared to lower case key (caps lock), false disables shortcut
     this.shortcut = this.options.shortcut === false ? undefined : (this.options.shortcut ?? shortcut)?.toLowerCase();
+    if (this.shortcut) this.$button.setAttribute('aria-keyshortcuts', this.shortcut.toUpperCase());
 
     this._initEvents();
   }
@@ -65,7 +65,9 @@ export abstract class BaseWidget {
     if (this.shortcut) {
       const $shortcut = document.createElement('div');
       $shortcut.classList.add('tool-key-shortcut');
-      $shortcut.innerText = this.shortcut;
+      // announced with aria-keyshortcuts
+      $shortcut.setAttribute('aria-hidden', 'true');
+      $shortcut.textContent = this.shortcut;
       this.$button.append($shortcut);
     }
     parent.appendChild(this.$container);
@@ -169,7 +171,7 @@ export abstract class BaseWidget {
         this.drawer.activeWidget.setActive(false);
       }
       this.drawer.toolbar.setActiveWidget(this);
-      this.$button.classList.add('active');
+      setPressed(this.$button, true);
       this.initEvents();
       this.updateCursor();
       if (this.showOverlayOnActive) this.overlay?.show();
@@ -179,7 +181,7 @@ export abstract class BaseWidget {
       this.removeEvents();
       if (this.showOverlayOnActive) this.overlay?.hide();
       this.onDesactive();
-      this.$button.classList.remove('active');
+      setPressed(this.$button, false);
     }
   }
 }

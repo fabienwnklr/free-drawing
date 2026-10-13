@@ -7,6 +7,7 @@ import './overlay.scss';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Group } from 'konva/lib/Group';
 import { dataAttributes } from '@/constants';
+import { setLabel, setPressed, uniqueId } from '@/utils/dom';
 
 /**
  * All common tool for all shape (color, opacity for now)
@@ -19,6 +20,8 @@ export type OverlayOptions = {
   widthBtns: boolean;
   /** Title of color section (default 'Stroke') */
   colorTitle: string;
+  /** Accessible name of overlay (default 'Tool options') */
+  label: string;
 };
 
 export class BaseOverlay {
@@ -50,6 +53,8 @@ export class BaseOverlay {
     this.drawer = drawer;
     this.$overlayContainer = document.createElement('div');
     this.$overlayContainer.classList.add('drawer-overlay-container', 'tool');
+    this.$overlayContainer.setAttribute('role', 'region');
+    this.$overlayContainer.setAttribute('aria-label', options?.label ?? 'Tool options');
 
     this.drawer.$drawerContainer.append(this.$overlayContainer);
 
@@ -79,101 +84,83 @@ export class BaseOverlay {
   }
 
   private _createStrokeColorFields() {
-    this.$strokeColorContainer = document.createElement('div');
-    this.$strokeColorContainer.classList.add(this.selectors.container);
+    const { $container, $btnContainer } = this._createSection(this.options?.colorTitle ?? 'Stroke');
+    this.$strokeColorContainer = $container;
+    this.$strokeColorBtnContainer = $btnContainer;
 
-    const $strokeTitle = document.createElement('h6');
-    $strokeTitle.classList.add('title');
-    $strokeTitle.innerText = this.options?.colorTitle ?? 'Stroke';
-    this.$strokeColorContainer.append($strokeTitle);
+    const strokeColors: { color: ColorLike; label: string }[] = [
+      { color: '#000', label: 'Black' },
+      { color: '#e03131', label: 'Red' },
+      { color: '#2f9e44', label: 'Green' },
+      { color: '#1971c2', label: 'Blue' },
+      { color: '#f08c00', label: 'Orange' },
+    ];
 
-    this.$strokeColorBtnContainer = document.createElement('div');
-    this.$strokeColorBtnContainer.classList.add(this.selectors.buttonContainer);
-    const $strokeColorButtons: HTMLButtonElement[] = [];
-
-    const strokeColors = ['#000', '#e03131', '#2f9e44', '#1971c2', '#f08c00'] as ColorLike[];
-
-    strokeColors.forEach((color) => {
+    strokeColors.forEach(({ color, label }) => {
       const $btn = document.createElement('button');
       $btn.classList.add(this.selectors.button);
       $btn.style.backgroundColor = color;
       $btn.setAttribute(dataAttributes.strokeColor, color.toString());
+      setLabel($btn, label);
+      setPressed($btn, false);
       $btn.addEventListener('click', () => this.drawer.setStrokeColor(color));
-      $strokeColorButtons.push($btn);
+      this.$strokeColorBtnContainer.append($btn);
     });
-    this.$strokeColorBtnContainer.append(...$strokeColorButtons);
-    this.$strokeColorContainer.append(this.$strokeColorBtnContainer);
   }
 
   private _createStrokeWidthFields() {
-    this.$strokeWidthContainer = document.createElement('div');
-    this.$strokeWidthContainer.classList.add(this.selectors.container);
+    const { $container, $btnContainer } = this._createSection('Stroke width');
+    this.$strokeWidthContainer = $container;
+    this.$strokeWidthBtnContainer = $btnContainer;
 
-    const $widthTitle = document.createElement('h6');
-    $widthTitle.classList.add('title');
-    $widthTitle.innerText = 'Stroke width';
-    this.$strokeWidthContainer.append($widthTitle);
+    const strokeWidths = [
+      { width: 3, label: 'Thin' },
+      { width: 5, label: 'Medium' },
+      { width: 8, label: 'Thick' },
+      { width: 12, label: 'Extra thick' },
+    ];
 
-    this.$strokeWidthBtnContainer = document.createElement('div');
-    this.$strokeWidthBtnContainer.classList.add(this.selectors.buttonContainer);
-    const $strokeWidthButtons: HTMLButtonElement[] = [];
+    strokeWidths.forEach(({ width, label }) => {
+      const icon = LineIcon.replace('stroke-width="2.5"', `stroke-width="${width}"`);
+      const $btn = this._createButton(icon, dataAttributes.strokeWidth, width.toString(), label);
 
-    const strokeSize = [3, 5, 8, 12];
-
-    strokeSize.forEach((width) => {
-      const $btn = document.createElement('button');
-
-      $btn.innerHTML = LineIcon.replace('stroke-width="2.5"', `stroke-width="${width}"`);
-      $btn.setAttribute(dataAttributes.strokeWidth, width.toString());
-      $btn.classList.add('drawer-button', this.selectors.button);
       $btn.addEventListener('click', () => this.drawer.setStrokeWidth(width));
-      $strokeWidthButtons.push($btn);
+      this.$strokeWidthBtnContainer.append($btn);
     });
-    this.$strokeWidthBtnContainer.append(...$strokeWidthButtons);
-    this.$strokeWidthContainer.append(this.$strokeWidthBtnContainer);
 
     if (this.options?.widthBtns === false) this.$strokeWidthContainer.style.display = 'none';
   }
 
   private _createStrokeStyleFields() {
-    this.$strokeStyleContainer = document.createElement('div');
-    this.$strokeStyleContainer.classList.add(this.selectors.container);
-
-    const $styleTitle = document.createElement('h6');
-    $styleTitle.classList.add('title');
-    $styleTitle.innerText = 'Stroke style';
-    this.$strokeStyleContainer.append($styleTitle);
-
-    this.$strokeStyleBtnContainer = document.createElement('div');
-    this.$strokeStyleBtnContainer.classList.add(this.selectors.buttonContainer);
-    const $strokeWidthButtons: HTMLButtonElement[] = [];
+    const { $container, $btnContainer } = this._createSection('Stroke style');
+    this.$strokeStyleContainer = $container;
+    this.$strokeStyleBtnContainer = $btnContainer;
 
     const strokeDashed = [
       {
         icon: LineIcon,
         dash: undefined,
+        label: 'Solid',
       },
       {
         icon: LineDashedIcon,
         dash: [33, 10],
+        label: 'Dashed',
       },
       {
         icon: LineDashedSmIcon,
         dash: [33, 33],
+        label: 'Widely dashed',
       },
     ];
 
     strokeDashed.forEach((dashed) => {
-      const $btn = document.createElement('button');
+      const value = dashed.dash?.toString() ?? '';
+      const $btn = this._createButton(dashed.icon, dataAttributes.strokeStyle, value, dashed.label);
 
-      $btn.setAttribute(dataAttributes.strokeStyle, dashed.dash?.toString() ?? '');
-      $btn.classList.add('drawer-button', this.selectors.button);
-      $btn.innerHTML = dashed.icon;
       $btn.addEventListener('click', () => this.drawer.setStrokeStyle(dashed.dash));
-      $strokeWidthButtons.push($btn);
+      this.$strokeStyleBtnContainer.append($btn);
     });
-    this.$strokeStyleBtnContainer.append(...$strokeWidthButtons);
-    this.$strokeStyleContainer.append(this.$strokeStyleBtnContainer);
 
     this.toggleStyleBtns(!!this.options?.styleBtns);
   }
@@ -182,9 +169,7 @@ export class BaseOverlay {
     this.$opacityContainer = document.createElement('div');
     this.$opacityContainer.classList.add('opacity-container');
 
-    const $opacityTitle = document.createElement('h6');
-    $opacityTitle.classList.add('title');
-    $opacityTitle.innerText = 'Opacity';
+    const $opacityTitle = this._createTitle('Opacity');
     this.$opacityContainer.append($opacityTitle);
 
     this.$opacityRange = document.createElement('input');
@@ -192,13 +177,67 @@ export class BaseOverlay {
     this.$opacityRange.min = '0';
     this.$opacityRange.max = '10';
     this.$opacityRange.step = '1';
+    this.$opacityRange.setAttribute('aria-labelledby', $opacityTitle.id);
 
+    this.$opacityRange.addEventListener('input', () => this._updateOpacityText());
     this.$opacityRange.addEventListener('change', () => {
       const opacity = Number(this.$opacityRange.value) / 10;
       this.drawer.setOpacity(opacity);
     });
 
     this.$opacityContainer.append(this.$opacityRange);
+  }
+
+  /**
+   * Opacity announced as percentage (range is from 0 to 10)
+   */
+  private _updateOpacityText() {
+    this.$opacityRange.setAttribute('aria-valuetext', `${Number(this.$opacityRange.value) * 10}%`);
+  }
+
+  /**
+   * Section title, referenced by its fields
+   */
+  protected _createTitle(text: string) {
+    const $title = document.createElement('h6');
+
+    $title.classList.add('title');
+    $title.id = uniqueId('overlay-title');
+    $title.textContent = text;
+
+    return $title;
+  }
+
+  /**
+   * Group of fields named by its title
+   */
+  protected _createSection(title: string) {
+    const $container = document.createElement('div');
+    const $title = this._createTitle(title);
+    const $btnContainer = document.createElement('div');
+
+    $container.classList.add(this.selectors.container);
+    $container.setAttribute('role', 'group');
+    $container.setAttribute('aria-labelledby', $title.id);
+    $btnContainer.classList.add(this.selectors.buttonContainer);
+    $container.append($title, $btnContainer);
+
+    return { $container, $btnContainer };
+  }
+
+  /**
+   * Toggle button of a field, `label` is its accessible name (icon or short content)
+   */
+  protected _createButton(content: string, attr: string, value: string, label: string) {
+    const $btn = document.createElement('button');
+
+    $btn.innerHTML = content;
+    $btn.setAttribute(attr, value);
+    $btn.classList.add('drawer-button', this.selectors.button);
+    setLabel($btn, label);
+    setPressed($btn, false);
+
+    return $btn;
   }
 
   appendContent(elements: HTMLElement[]) {
@@ -228,8 +267,9 @@ export class BaseOverlay {
    * Set given button active in its container (null to only remove active one)
    */
   protected _setActiveBtn($btnContainer: HTMLDivElement, $btn: Element | null) {
-    $btnContainer.querySelector(`.${this.selectors.button}.active`)?.classList.remove('active');
-    $btn?.classList.add('active');
+    $btnContainer
+      .querySelectorAll<HTMLElement>(`.${this.selectors.button}`)
+      .forEach(($b) => setPressed($b, $b === $btn));
   }
 
   /**
@@ -263,6 +303,7 @@ export class BaseOverlay {
 
     if (change.opacity !== undefined) {
       this.$opacityRange.value = (change.opacity * 10).toString();
+      this._updateOpacityText();
     }
   }
 

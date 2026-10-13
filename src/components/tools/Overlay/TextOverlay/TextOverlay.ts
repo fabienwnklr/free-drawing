@@ -5,6 +5,7 @@ import { Group } from 'konva/lib/Group';
 import { Text } from 'konva/lib/shapes/Text';
 import { BaseOverlay } from '../BaseOverlay';
 import { dataAttributes } from '@/constants';
+import { setPressed } from '@/utils/dom';
 import AlignLeftIcon from '@/icons/align-left.svg?raw';
 import AlignCenterIcon from '@/icons/align-center.svg?raw';
 import AlignRightIcon from '@/icons/align-right.svg?raw';
@@ -13,10 +14,10 @@ import './text-overlay.scss';
 const fontFamilies = ['Ubuntu', 'Arial', 'Verdana', 'Georgia', 'Times New Roman', 'Courier New', 'Comic Sans MS'];
 
 const fontSizes = [
-  { label: 'S', value: 12 },
-  { label: 'M', value: 16 },
-  { label: 'L', value: 24 },
-  { label: 'XL', value: 32 },
+  { label: 'S', title: 'Small', value: 12 },
+  { label: 'M', title: 'Medium', value: 16 },
+  { label: 'L', title: 'Large', value: 24 },
+  { label: 'XL', title: 'Extra large', value: 32 },
 ];
 
 const fontStyles = [
@@ -49,7 +50,7 @@ export class TextOverlay extends BaseOverlay {
   $textAlignBtnContainer!: HTMLDivElement;
 
   constructor(drawer: Drawer) {
-    super(drawer, { widthBtns: false, colorTitle: 'Color' });
+    super(drawer, { widthBtns: false, colorTitle: 'Color', label: 'Text options' });
     this.$overlayContainer.classList.add('drawer-text-overlay');
 
     this._createFontFamilyField();
@@ -66,44 +67,18 @@ export class TextOverlay extends BaseOverlay {
     );
   }
 
-  private _createSection(title: string) {
-    const $container = document.createElement('div');
-    $container.classList.add(this.selectors.container);
-
-    const $title = document.createElement('h6');
-    $title.classList.add('title');
-    $title.innerText = title;
-
-    const $btnContainer = document.createElement('div');
-    $btnContainer.classList.add(this.selectors.buttonContainer);
-
-    $container.append($title, $btnContainer);
-
-    return { $container, $btnContainer };
-  }
-
-  private _createButton(content: string, attr: string, value: string, title?: string) {
-    const $btn = document.createElement('button');
-
-    $btn.innerHTML = content;
-    $btn.setAttribute(attr, value);
-    $btn.classList.add('drawer-button', this.selectors.button);
-    if (title) $btn.title = title;
-
-    return $btn;
-  }
-
   private _createFontFamilyField() {
     const { $container, $btnContainer } = this._createSection('Font family');
     this.$fontFamilyContainer = $container;
 
     this.$fontFamilySelect = document.createElement('select');
     this.$fontFamilySelect.classList.add('overlay-picker__select');
+    this.$fontFamilySelect.setAttribute('aria-labelledby', $container.getAttribute('aria-labelledby')!);
 
     fontFamilies.forEach((fontFamily) => {
       const $option = document.createElement('option');
       $option.value = fontFamily;
-      $option.innerText = fontFamily;
+      $option.textContent = fontFamily;
       // preview font in list
       $option.style.fontFamily = fontFamily;
       this.$fontFamilySelect.append($option);
@@ -126,7 +101,7 @@ export class TextOverlay extends BaseOverlay {
     this.$fontSizeBtnContainer = $btnContainer;
 
     fontSizes.forEach((size) => {
-      const $btn = this._createButton(size.label, dataAttributes.fontSize, size.value.toString());
+      const $btn = this._createButton(size.label, dataAttributes.fontSize, size.value.toString(), size.title);
       $btn.addEventListener('click', () => this.drawer.setTextStyle({ fontSize: size.value }));
       this.$fontSizeBtnContainer.append($btn);
     });
@@ -142,7 +117,7 @@ export class TextOverlay extends BaseOverlay {
       $btn.classList.add(`text-style-${style.value}`);
       $btn.addEventListener('click', () => {
         // toggle buttons, bold & italic (or underline & line-through) can be combined
-        $btn.classList.toggle('active');
+        setPressed($btn, !$btn.classList.contains('active'));
         this.drawer.setTextStyle(this._getToggledStyle(style.attr));
       });
       this.$fontStyleBtnContainer.append($btn);
@@ -222,17 +197,19 @@ export class TextOverlay extends BaseOverlay {
 
     if (fontStyle !== undefined) {
       ['bold', 'italic'].forEach((value) => {
-        this.$fontStyleBtnContainer
-          .querySelector(`[${dataAttributes.fontStyle}="${value}"]`)
-          ?.classList.toggle('active', fontStyle.includes(value));
+        const $btn = this.$fontStyleBtnContainer.querySelector<HTMLElement>(`[${dataAttributes.fontStyle}="${value}"]`);
+
+        if ($btn) setPressed($btn, fontStyle.includes(value));
       });
     }
 
     if (textDecoration !== undefined) {
       ['underline', 'line-through'].forEach((value) => {
-        this.$fontStyleBtnContainer
-          .querySelector(`[${dataAttributes.textDecoration}="${value}"]`)
-          ?.classList.toggle('active', textDecoration.includes(value));
+        const $btn = this.$fontStyleBtnContainer.querySelector<HTMLElement>(
+          `[${dataAttributes.textDecoration}="${value}"]`
+        );
+
+        if ($btn) setPressed($btn, textDecoration.includes(value));
       });
     }
 

@@ -10,6 +10,7 @@ import { Context } from 'konva/lib/Context';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Stage } from 'konva/lib/Stage';
 import { shapeName, strokeStyleShapes } from '@/constants';
+import { setPressed } from '@/utils/dom';
 import type { ColorLike, TextStyle } from '@/@types/drawer';
 import { SelectOverlay } from '@/components/tools/Overlay/SelectOverlay/SelectOverlay';
 import type { TextWidget } from '../Text/Text';
@@ -657,11 +658,11 @@ export class SelectWidget extends BaseWidget {
   toggleSnapping(active: boolean = true) {
     if (active && !this.snapping) {
       if (this.drawer.grid) this.drawer.hideGrid();
-      this.drawer.contextMenu.$snappingBtn.classList.add('active');
+      setPressed(this.drawer.contextMenu.$snappingBtn, true);
       this._initSnapEvents();
     } else if (!active && this.snapping) {
       this._removeSnapEvents();
-      this.drawer.contextMenu.$snappingBtn.classList.remove('active');
+      setPressed(this.drawer.contextMenu.$snappingBtn, false);
     }
     this.drawer.stage.fire('change');
   }

@@ -4,6 +4,7 @@ import { Modal } from '@/components/Modal/Modal';
 import HelpIcon from '@/icons/help.svg?raw';
 import ExternalLink from '@/icons/external-link.svg?raw';
 import { ShapeWidget } from '@/components/toolbar/widgets/ShapeWidget';
+import { setLabel } from '@/utils/dom';
 
 export class Help extends Modal {
   $button: HTMLButtonElement;
@@ -116,6 +117,8 @@ export class Help extends Modal {
     this.$button = document.createElement('button');
     this.$button.classList.add('drawer-button', 'drawer-button-neutral');
     this.$button.innerHTML = HelpIcon;
+    setLabel(this.$button, 'Help');
+    this.$button.setAttribute('aria-haspopup', 'dialog');
 
     this.$helpContainer.append(this.$button);
 

@@ -22,6 +22,11 @@ export class Toast extends MicroEvent {
     this.timeout = timeout;
     this.$toastContainer = document.createElement('div');
     this.$toastContainer.classList.add('drawer-toast', type);
+    // announced by screen readers, immediately for problems
+    this.$toastContainer.setAttribute(
+      'role',
+      type === 'error' || type === 'danger' || type === 'warning' ? 'alert' : 'status'
+    );
 
     // default is neutral, so no icon set
     let icon = '';

@@ -1,4 +1,5 @@
 import MicroEvent from '@/utils/MicroEvent';
+import { uniqueId } from '@/utils/dom';
 import './dropdown.scss';
 
 export class Dropdown extends MicroEvent {
@@ -12,10 +13,13 @@ export class Dropdown extends MicroEvent {
     super();
 
     this.$button = document.createElement('button');
-    this.$button.role = 'button';
     this.$button.classList.add('drawer-button', 'drawer-button-neutral', 'tool', 'drawer-button-dropdown');
     this.$menu = document.createElement('div');
     this.$menu.classList.add('drawer-dropdown');
+    this.$menu.id = uniqueId('dropdown');
+    // disclosure: button shows / hides menu content
+    this.$button.setAttribute('aria-expanded', 'false');
+    this.$button.setAttribute('aria-controls', this.$menu.id);
 
     this.$dropdownContainer = document.createElement('div');
     this.$dropdownContainer.classList.add('drawer-dropdown-container');
@@ -39,11 +43,11 @@ export class Dropdown extends MicroEvent {
   }
 
   show() {
-    this.$menu.classList.add('show');
+    this._setShown(true);
   }
 
   hide() {
-    this.$menu.classList.remove('show');
+    this._setShown(false);
 
     this.trigger('fd.dropdown.hide');
   }
@@ -52,9 +56,24 @@ export class Dropdown extends MicroEvent {
     return this.$menu.classList.contains('show');
   }
 
+  private _setShown(shown: boolean) {
+    this.$menu.classList.toggle('show', shown);
+    this.$button.setAttribute('aria-expanded', String(shown));
+  }
+
   private _initEvents() {
     this.$button.addEventListener('click', () => {
-      this.$menu.classList.toggle('show');
+      // no hide event, focus stays on button
+      this._setShown(!this.isShown());
+    });
+
+    // Escape closes menu, focus goes back to its button
+    this.$dropdownContainer.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape' || !this.isShown()) return;
+
+      event.stopPropagation();
+      this.hide();
+      this.$button.focus();
     });
 
     document.addEventListener(

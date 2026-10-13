@@ -1,4 +1,4 @@
-<svg width="24" height="24" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+<svg aria-hidden="true" focusable="false" width="24" height="24" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
     <path fill="currentColor"
         d="M27.14 34H8.86A2.93 2.93 0 0 1 6 31V11.23h2V31a.93.93 0 0 0 .86 1h18.28a.93.93 0 0 0 .86-1V11.23h2V31a2.93 2.93 0 0 1-2.86 3"
         class="clr-i-outline clr-i-outline-path-1" />

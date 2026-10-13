@@ -3,6 +3,7 @@ import { Modal } from './Modal';
 import { deepMerge } from '@/utils/functions';
 import { confirmModalDefaultOpts } from './constants';
 import type { ConfirmModalOptions } from '@/@types/modal';
+import { uniqueId } from '@/utils/dom';
 
 import './modal-confirm.scss';
 
@@ -16,11 +17,15 @@ export class ConfirmModal extends Modal {
   confirmLabel: string;
   onConfirm: (modal: ConfirmModal) => void;
   _options: ConfirmModalOptions;
+  #messageId = uniqueId('confirm-message');
 
   constructor(drawer: Drawer, options: Partial<ConfirmModalOptions> = {}) {
     super(drawer, { showHeader: false });
 
     this.$modal.classList.add('drawer-modal-confirm');
+    // confirmation interrupts user, named by its message
+    this.$modal.setAttribute('role', 'alertdialog');
+    this.$modal.setAttribute('aria-labelledby', this.#messageId);
     this._options = deepMerge<ConfirmModalOptions>(confirmModalDefaultOpts, options);
     this.drawer = drawer;
     this.message = this._options.message;
@@ -35,9 +40,10 @@ export class ConfirmModal extends Modal {
   }
 
   fill() {
-    this.setBodyContent(`<p class="p-2">${this.message}</p>`);
+    this.setBodyContent(`<p class="p-2" id="${this.#messageId}">${this.message}</p>`);
+    // cancel first: focused on show
     this.setFooterContent(
-      /*html*/ `<div class="drawer-button drawer-button-neutral">${this.cancelLabel}</div><div class="drawer-button drawer-button-danger">${this.confirmLabel}</div>`
+      /*html*/ `<button type="button" class="drawer-button drawer-button-neutral">${this.cancelLabel}</button><button type="button" class="drawer-button drawer-button-danger">${this.confirmLabel}</button>`
     );
   }
 

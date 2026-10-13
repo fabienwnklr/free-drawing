@@ -3,6 +3,7 @@ import { Drawer } from '@/Drawer';
 import MinusIcon from '@/icons/minus.svg?raw';
 import PlusIcon from '@/icons/plus.svg?raw';
 import ZoomReset from '@/icons/zoom-reset.svg?raw';
+import { setLabel } from '@/utils/dom';
 
 export class Zoom {
   drawer: Drawer;
@@ -16,26 +17,23 @@ export class Zoom {
 
     this.$zoomContainer = document.createElement('div');
     this.$zoomContainer.classList.add('drawer-zoom-container', 'tool');
+    this.$zoomContainer.setAttribute('role', 'group');
+    this.$zoomContainer.setAttribute('aria-label', 'Zoom');
 
     this.$btnMinus = document.createElement('button');
     this.$btnReset = document.createElement('button');
     this.$btnPlus = document.createElement('button');
 
-    this.$btnMinus.role = 'button';
     this.$btnMinus.classList.add('drawer-button', 'drawer-button-neutral');
-    this.$btnMinus.tabIndex = 0;
     this.$btnMinus.innerHTML = MinusIcon;
+    setLabel(this.$btnMinus, 'Zoom out');
 
-    this.$btnReset.role = 'button';
     this.$btnReset.classList.add('drawer-button', 'drawer-button-neutral', 'reset-zoom');
-    this.$btnReset.tabIndex = 0;
-    this.$btnReset.title = 'Reset zoom';
-    this.$btnReset.innerHTML = ZoomReset + this._formatPercentage();
+    this._updateResetButton();
 
-    this.$btnPlus.role = 'button';
     this.$btnPlus.classList.add('drawer-button', 'drawer-button-neutral');
-    this.$btnPlus.tabIndex = 0;
     this.$btnPlus.innerHTML = PlusIcon;
+    setLabel(this.$btnPlus, 'Zoom in');
 
     this.$zoomContainer.append(...[this.$btnMinus, this.$btnReset, this.$btnPlus]);
 
@@ -67,8 +65,18 @@ export class Zoom {
   }
 
   update() {
-    this.$btnReset.innerHTML = ZoomReset + this._formatPercentage();
+    this._updateResetButton();
     this.drawer._update();
+  }
+
+  /**
+   * Reset button shows zoom level
+   */
+  private _updateResetButton() {
+    const percentage = this._formatPercentage();
+
+    this.$btnReset.innerHTML = ZoomReset + percentage;
+    setLabel(this.$btnReset, `Reset zoom (${percentage})`);
   }
 
   private _formatPercentage() {

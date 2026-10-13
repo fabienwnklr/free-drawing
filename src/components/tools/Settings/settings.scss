@@ -35,6 +35,12 @@
         &.active {
           outline: 3px solid $primary;
         }
+
+        // keyboard focus, distinct from active color
+        &:focus-visible {
+          outline: 2px solid $primary;
+          outline-offset: 2px;
+        }
       }
 
       .drawer-button {

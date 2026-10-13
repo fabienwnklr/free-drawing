@@ -4,6 +4,6 @@ import './brush-overlay.scss';
 
 export class BrushOverlay extends BaseOverlay {
   constructor(drawer: Drawer) {
-    super(drawer, { styleBtns: false });
+    super(drawer, { styleBtns: false, label: 'Brush options' });
   }
 }

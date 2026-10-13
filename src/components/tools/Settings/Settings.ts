@@ -11,6 +11,7 @@ import ZenIcon from '@/icons/zen.svg?raw';
 import StoreIcon from '@/icons/store.svg?raw';
 import { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import type { ColorLike } from '@/@types/drawer';
+import { setLabel, setPressed, uniqueId } from '@/utils/dom';
 
 export class Settings extends Dropdown {
   drawer: Drawer;
@@ -30,58 +31,69 @@ export class Settings extends Dropdown {
     this.drawer = drawer;
     this.$dropdownContainer.classList.add('drawer-dropdown-setting');
     this.$button.innerHTML = SettingIcon;
+    setLabel(this.$button, 'Menu');
+    // buttons, separators and colors, not list items
+    this.$dropdownList.setAttribute('role', 'none');
 
     this.$openButton = document.createElement('button');
     this.$openButton.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-dropdown-list-item');
     this.$openButton.innerHTML = OpenIcon + 'Open';
-    this.$openButton.role = 'button';
 
     this.$exportButton = document.createElement('button');
     this.$exportButton.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-dropdown-list-item');
     this.$exportButton.innerHTML = ExportIcon + 'Export to...';
-    this.$exportButton.role = 'button';
 
     this.$clearCanvasButton = document.createElement('button');
     this.$clearCanvasButton.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-dropdown-list-item');
     this.$clearCanvasButton.innerHTML = TrashIcon + 'Clear canvas';
-    this.$clearCanvasButton.role = 'button';
 
     this.$toggleGridButton = document.createElement('button');
     this.$toggleGridButton.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-dropdown-list-item');
     this.$toggleGridButton.innerHTML = GridIcon + 'Show grid';
-    this.$toggleGridButton.role = 'button';
+    this.$toggleGridButton.setAttribute('aria-keyshortcuts', 'Alt+G');
+    setPressed(this.$toggleGridButton, false);
 
     this.$zenModeButton = document.createElement('button');
     this.$zenModeButton.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-dropdown-list-item');
-    this.$zenModeButton.innerHTML = ZenIcon + 'Zen mode <span class="text-muted">Alt+Z</span>';
-    this.$zenModeButton.role = 'button';
+    this.$zenModeButton.innerHTML = ZenIcon + 'Zen mode <span class="text-muted" aria-hidden="true">Alt+Z</span>';
+    this.$zenModeButton.setAttribute('aria-keyshortcuts', 'Alt+Z');
+    setPressed(this.$zenModeButton, false);
 
     this.$githubButton = document.createElement('button');
     this.$githubButton.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-dropdown-list-item');
     this.$githubButton.innerHTML = GithubIcon + 'Github';
-    this.$githubButton.role = 'button';
 
     this.$clearStorageButton = document.createElement('button');
     this.$clearStorageButton.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-dropdown-list-item');
     this.$clearStorageButton.innerHTML = StoreIcon + 'Clear stored data';
-    this.$clearStorageButton.role = 'button';
 
     this.$bgColorContainer = document.createElement('div');
     this.$bgColorContainer.classList.add('color-picker-container');
     const $bgColorTitle = document.createElement('h6');
     $bgColorTitle.classList.add('title');
-    $bgColorTitle.innerText = 'Background color';
+    $bgColorTitle.textContent = 'Background color';
+    $bgColorTitle.id = uniqueId('bg-color-title');
     this.$bgColorContainer.append($bgColorTitle);
+    this.$bgColorContainer.setAttribute('role', 'group');
+    this.$bgColorContainer.setAttribute('aria-labelledby', $bgColorTitle.id);
 
     this.$bgColorBtnContainer = document.createElement('div');
     this.$bgColorBtnContainer.classList.add('color-picker-btn-container');
     const $bgColorButtons: HTMLButtonElement[] = [];
 
-    const bgColors = ['#fff', '#f8f9fa', '#f5faff', '#fffce8', '#fdf8f6'] as ColorLike[];
+    const bgColors: { color: ColorLike; label: string }[] = [
+      { color: '#fff', label: 'White' },
+      { color: '#f8f9fa', label: 'Light gray' },
+      { color: '#f5faff', label: 'Light blue' },
+      { color: '#fffce8', label: 'Light yellow' },
+      { color: '#fdf8f6', label: 'Light beige' },
+    ];
 
-    bgColors.forEach((color) => {
+    bgColors.forEach(({ color, label }) => {
       const $btn = document.createElement('button');
       $btn.classList.add('color-picker__button');
+      setLabel($btn, label);
+      setPressed($btn, false);
       $btn.style.backgroundColor = color;
       $btn.dataset.bgColor = color;
       $btn.addEventListener('click', () => {
@@ -119,8 +131,9 @@ export class Settings extends Dropdown {
    * @param {ColorLike} color
    */
   updateBgColor(color: ColorLike) {
-    this.$bgColorBtnContainer.querySelector('.color-picker__button.active')?.classList.remove('active');
-    this.$bgColorBtnContainer.querySelector(`[data-bg-color="${color}"]`)?.classList.add('active');
+    this.$bgColorBtnContainer
+      .querySelectorAll<HTMLElement>('.color-picker__button')
+      .forEach(($btn) => setPressed($btn, $btn.dataset.bgColor === color));
   }
 
   getSeparator() {
@@ -150,16 +163,18 @@ export class Settings extends Dropdown {
       this.drawer.clearStoredData();
     });
 
-    // focus drawer on hide dropdown (no on toggle by click again on it)
+    // focus drawer on hide dropdown (no on toggle by click again on it), unless focus is in a dialog opened from menu
     this.on('fd.dropdown.hide', () => {
-      this.drawer.focus();
+      if (!document.activeElement?.closest('[aria-modal="true"]')) this.drawer.focus();
     });
   }
 
   toggleZenMode() {
-    this.$zenModeButton.classList.toggle('active');
+    const zen = !this.$zenModeButton.classList.contains('active');
 
-    if (this.$zenModeButton.classList.contains('active')) {
+    setPressed(this.$zenModeButton, zen);
+
+    if (zen) {
       if (this.drawer.zoom) this.drawer.zoom.$zoomContainer.style.display = 'none';
       this.drawer.help.$helpContainer.style.display = 'none';
       this.drawer.undoRedo.$undoRedoContainer.style.display = 'none';

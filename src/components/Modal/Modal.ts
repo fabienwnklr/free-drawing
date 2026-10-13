@@ -4,6 +4,10 @@ import { stringToNode } from '@/utils/functions';
 import type { Drawer } from '@/Drawer';
 import type { ModalOptions } from '@/@types/modal';
 import CloseIcon from '@/icons/close.svg?raw';
+import { uniqueId } from '@/utils/dom';
+
+const focusableSelector =
+  'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 export class Modal {
   $modal!: HTMLDivElement;
@@ -13,6 +17,8 @@ export class Modal {
   options: ModalOptions;
   drawer: Drawer;
   $backdrop!: HTMLDivElement;
+  /** Element focused before showing modal, focused again on hide */
+  #opener: HTMLElement | null = null;
 
   constructor(drawer: Drawer, options?: Partial<ModalOptions>) {
     try {
@@ -27,13 +33,18 @@ export class Modal {
 
   private _init() {
     this._createModal();
+    this.$modal.setAttribute('role', 'dialog');
+    this.$modal.setAttribute('aria-modal', 'true');
 
     if (this.options.showHeader) {
+      const titleId = uniqueId('modal-title');
+
       this.setHeaderContent(
-        `<h2 class="drawer-modal-title">${
+        `<h2 class="drawer-modal-title" id="${titleId}">${
           this.options.title ?? 'Modal'
-        }</h2><button title="Close" class="btn-close" data-modal="close">${CloseIcon}</button>`
+        }</h2><button type="button" title="Close" aria-label="Close" class="btn-close" data-modal="close">${CloseIcon}</button>`
       );
+      this.$modal.setAttribute('aria-labelledby', titleId);
     } else {
       this.$modalHeader.remove();
     }
@@ -51,6 +62,8 @@ export class Modal {
       });
     }
 
+    // keys typed in modal do not trigger drawer shortcuts
+    this.$modal.addEventListener('keydown', (event) => event.stopPropagation());
   }
 
   // document listeners, added only while modal is visible
@@ -59,8 +72,34 @@ export class Modal {
   };
 
   #onDocumentKeydown = (event: KeyboardEvent) => {
-    if (event.key === 'Escape') this.hide();
+    if (event.key === 'Escape' && this.options.closeOnEsc) {
+      event.stopPropagation();
+      this.hide();
+    } else if (event.key === 'Tab') {
+      this._trapFocus(event);
+    }
   };
+
+  /**
+   * Tab and Shift+Tab cycle in modal
+   */
+  private _trapFocus(event: KeyboardEvent) {
+    const $focusables = this._getFocusables();
+    const $first = $focusables[0];
+    const $last = $focusables[$focusables.length - 1];
+    const $active = document.activeElement;
+
+    if (!$first) {
+      event.preventDefault();
+    } else if (!this.$modal.contains($active) || $active === (event.shiftKey ? $first : $last)) {
+      event.preventDefault();
+      (event.shiftKey ? $last : $first).focus();
+    }
+  }
+
+  private _getFocusables() {
+    return Array.from(this.$modal.querySelectorAll<HTMLElement>(focusableSelector));
+  }
 
   private _createModal() {
     this.$modal = stringToNode<HTMLDivElement>(/*html*/ `
@@ -105,29 +144,44 @@ export class Modal {
   }
 
   show() {
+    if (!this.isVisible()) {
+      const $active = document.activeElement;
+      this.#opener = $active instanceof HTMLElement && $active !== document.body ? $active : null;
+    }
+
     if (this.$backdrop) {
       this.$backdrop.classList.add('show');
     }
     this.$modal.classList.add('show');
+
+    // keyboard focus in modal (first button, link or field)
+    this._getFocusables()[0]?.focus();
+    // capture: before drawer shortcuts and focused element
+    document.addEventListener('keydown', this.#onDocumentKeydown, true);
 
     // after current event, so the click opening the modal (any button) does not close it
     setTimeout(() => {
       if (!this.isVisible()) return;
 
       if (this.options.closeOnClickOutside) document.addEventListener('click', this.#onDocumentClick);
-      if (this.options.closeOnEsc) document.addEventListener('keydown', this.#onDocumentKeydown);
     });
   }
 
   hide() {
     document.removeEventListener('click', this.#onDocumentClick);
-    document.removeEventListener('keydown', this.#onDocumentKeydown);
+    document.removeEventListener('keydown', this.#onDocumentKeydown, true);
 
     if (this.$backdrop) {
       this.$backdrop.classList.remove('show');
     }
     this.$modal.classList.remove('show');
-    this.drawer.focus();
+
+    // focus back on element which opened modal (not if hidden since, e.g. menu item), else drawer
+    const $opener = this.#opener;
+
+    this.#opener = null;
+    $opener?.focus();
+    if (!$opener || document.activeElement !== $opener) this.drawer.focus();
   }
 
   isVisible(): boolean {

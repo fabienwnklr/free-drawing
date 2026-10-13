@@ -3,6 +3,6 @@ import { BaseOverlay } from "../BaseOverlay"
 
 export class SelectOverlay extends BaseOverlay {
     constructor(drawer: Drawer) {
-        super(drawer);
+        super(drawer, { label: 'Selection options' });
     }
 }
