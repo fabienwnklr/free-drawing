@@ -6,7 +6,7 @@ import { Rect } from 'konva/lib/shapes/Rect';
 import { AvailableTools } from './@types/toolbar';
 import { ColorLike, DrawerOptions, TextStyle } from './@types/drawer';
 import { deepMerge } from './utils/functions';
-import { dataAttributes, defaultOptions, shapeName } from './constants';
+import { dataAttributes, defaultOptions, shapeName, zoomLimits } from './constants';
 import { Zoom } from './components/tools/Zoom/Zoom';
 import { Help } from './components/tools/Help/Help';
 import { BrushWidget } from './components/toolbar/widgets/Brush/Brush';
@@ -121,6 +121,8 @@ export class Drawer extends MicroEvent {
       this.gridLayer = this.stage.findOne('.grid') as Layer;
       this.drawLayer = this.stage.findOne('.draw') as Layer;
       this.selectionLayer = this.stage.findOne('.selection') as Layer;
+      // saved transformer, selection rectangle and guides are recreated by selection widget
+      this.selectionLayer.destroyChildren();
       this.background = this.bgLayer.findOne(`.${shapeName.background}`) as Rect;
       this.grid = this.gridLayer.children.length > 0;
       activeTool = toolSaved ?? activeTool;
@@ -201,6 +203,34 @@ export class Drawer extends MicroEvent {
    */
   getZoomLevel(): number {
     return this.stage.scaleX();
+  }
+
+  /**
+   * Set zoom level, limited from 10% to 3000%
+   * @param {number} scale Zoom level (1 = 100%)
+   * @param {Vector2d} point Absolute position that stays in place, stage center by default
+   */
+  setZoomLevel(scale: number, point: Vector2d = { x: this.stage.width() / 2, y: this.stage.height() / 2 }) {
+    const oldScale = this.getZoomLevel();
+    const newScale = Math.min(Math.max(scale, zoomLimits.min), zoomLimits.max);
+
+    // point in stage coordinates
+    const pointTo = {
+      x: (point.x - this.stage.x()) / oldScale,
+      y: (point.y - this.stage.y()) / oldScale,
+    };
+
+    this.stage.scale({ x: newScale, y: newScale });
+    this.stage.position({
+      x: point.x - pointTo.x * newScale,
+      y: point.y - pointTo.y * newScale,
+    });
+
+    if (this.zoom) {
+      this.zoom.update();
+    } else {
+      this._update();
+    }
   }
 
   /**
@@ -307,35 +337,12 @@ export class Drawer extends MicroEvent {
         // stop default scrolling
         e.evt.preventDefault();
 
-        const oldScale = this.stage.scaleX();
-        // absolute position, the computation below converts it in stage coordinates
-        const pointer = this._getPointerPos();
-
-        const mousePointTo = {
-          x: (pointer.x - this.stage.x()) / oldScale,
-          y: (pointer.y - this.stage.y()) / oldScale,
-        };
-
+        const oldScale = this.getZoomLevel();
         // how to scale? Zoom in? Or zoom out?
-        const direction = e.evt.deltaY > 0 ? -1 : 1;
-        let newScale = direction > 0 ? oldScale * this.options.scaling : oldScale / this.options.scaling;
+        const newScale = e.evt.deltaY > 0 ? oldScale / this.options.scaling : oldScale * this.options.scaling;
 
-        // limit min scale to 10%
-        if (newScale <= 0.1) {
-          newScale = 0.1;
-        } else if (newScale >= 30) {
-          // limit max scale to 3000%
-          newScale = 30;
-        }
-
-        this.stage.scale({ x: newScale, y: newScale });
-
-        const newPos = {
-          x: pointer.x - mousePointTo.x * newScale,
-          y: pointer.y - mousePointTo.y * newScale,
-        };
-        this.stage.position(newPos);
-        this.zoom?.update();
+        // keep point under cursor in place
+        this.setZoomLevel(newScale, this._getPointerPos());
       });
     }
   }

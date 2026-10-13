@@ -53,31 +53,7 @@ export class Zoom {
   }
 
   zoomMinus() {
-    const oldScale = this.drawer.stage.scaleX();
-
-    const center = {
-      x: this.drawer.stage.width() / 2,
-      y: this.drawer.stage.height() / 2,
-    };
-
-    const relatedTo = {
-      x: (center.x - this.drawer.stage.x()) / oldScale,
-      y: (center.y - this.drawer.stage.y()) / oldScale,
-    };
-
-    const newScale = this.drawer.getZoomLevel() / this.drawer.options.scaling;
-
-    this.drawer.stage.scale({ x: newScale, y: newScale });
-
-    const newPos = {
-      x: center.x - relatedTo.x * newScale,
-      y: center.y - relatedTo.y * newScale,
-    };
-    this.drawer.stage.position({
-      x: newPos.x,
-      y: newPos.y,
-    });
-    this.update();
+    this.drawer.setZoomLevel(this.drawer.getZoomLevel() / this.drawer.options.scaling);
   }
 
   resetZoom() {
@@ -87,31 +63,7 @@ export class Zoom {
   }
 
   zoomPlus() {
-    const oldScale = this.drawer.stage.scaleX();
-
-    const center = {
-      x: this.drawer.stage.width() / 2,
-      y: this.drawer.stage.height() / 2,
-    };
-
-    const relatedTo = {
-      x: (center.x - this.drawer.stage.x()) / oldScale,
-      y: (center.y - this.drawer.stage.y()) / oldScale,
-    };
-
-    const newScale = this.drawer.getZoomLevel() * this.drawer.options.scaling;
-
-    this.drawer.stage.scale({ x: newScale, y: newScale });
-
-    const newPos = {
-      x: center.x - relatedTo.x * newScale,
-      y: center.y - relatedTo.y * newScale,
-    };
-    this.drawer.stage.position({
-      x: newPos.x,
-      y: newPos.y,
-    });
-    this.update();
+    this.drawer.setZoomLevel(this.drawer.getZoomLevel() * this.drawer.options.scaling);
   }
 
   update() {

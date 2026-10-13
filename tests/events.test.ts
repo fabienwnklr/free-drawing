@@ -4,6 +4,7 @@ import { SelectWidget } from '../src/components/toolbar/widgets/Select/Select';
 import type { TextWidget } from '../src/components/toolbar/widgets/Text/Text';
 import type { LineWidget } from '../src/components/toolbar/widgets/Line/Line';
 import type { EraserWidget } from '../src/components/toolbar/widgets/Eraser/Eraser';
+import type { BrushWidget } from '../src/components/toolbar/widgets/Brush/Brush';
 import type { Line } from 'konva/lib/shapes/Line';
 
 beforeAll(() => {
@@ -177,5 +178,71 @@ describe('Test drawer event', () => {
     expect(drawer.getZoomLevel()).toBeGreaterThan(2);
     expect(pointUnderCursor().x).toBeCloseTo(before.x);
     expect(pointUnderCursor().y).toBeCloseTo(before.y);
+  });
+
+  it('Zoom buttons respect zoom limits', () => {
+    const drawer = createDrawer();
+
+    for (let i = 0; i < 40; i++) drawer.zoom!.zoomMinus();
+    expect(drawer.getZoomLevel()).toBeCloseTo(0.1);
+
+    for (let i = 0; i < 100; i++) drawer.zoom!.zoomPlus();
+    expect(drawer.getZoomLevel()).toBeCloseTo(30);
+  });
+
+  it('Transform fires a single change whatever the number of selection activations', () => {
+    const drawer = createDrawer();
+    const selectWidget = drawer.getWidget<SelectWidget>('selection')!;
+    const brushWidget = drawer.getWidget<BrushWidget>('brush')!;
+    for (let i = 0; i < 3; i++) {
+      selectWidget.setActive(true);
+      brushWidget.setActive(true);
+    }
+    const onChange = vi.fn();
+    drawer.on('change', onChange);
+
+    selectWidget.transformer.fire('transformend');
+
+    expect(onChange).toHaveBeenCalledTimes(1);
+  });
+
+  it('Click selects shape after panning', () => {
+    const drawer = createDrawer();
+    const text = drawer.getWidget<TextWidget>('text')!.addTextNode('hello');
+    text.setAttrs({ x: 100, y: 100, width: 100 });
+    drawer.stage.position({ x: 150, y: 100 });
+
+    // click on text (absolute position: 250, 200)
+    setPointer(drawer, 260, 205);
+    text.fire('mousedown', { evt: { button: 0, preventDefault() {} } }, true);
+    drawer.stage.fire('mouseup', { evt: { button: 0, preventDefault() {} } });
+
+    expect(drawer.getWidget<SelectWidget>('selection')!.transformer.nodes()).toEqual([text]);
+  });
+
+  it('Background color does not change selected text color', () => {
+    const drawer = createDrawer();
+    const text = drawer.getWidget<TextWidget>('text')!.addTextNode('hello');
+    drawer.getWidget<SelectWidget>('selection')!.transformer.nodes([text]);
+    const fill = text.fill();
+
+    drawer.setBgColor('#fffce8');
+
+    expect(drawer.background.fill()).toBe('#fffce8');
+    expect(text.fill()).toBe(fill);
+  });
+
+  it('Reload does not duplicate transformer', () => {
+    const localStorageKey = 'test-' + Math.random();
+    const create = () => new Drawer(document.getElementById('test') as HTMLDivElement, { localStorageKey });
+
+    const first = create();
+    first.getWidget<TextWidget>('text')!.addTextNode('hello');
+    first.stage.fire('change');
+    create().stage.fire('change');
+    const third = create();
+
+    expect(third.selectionLayer.find('Transformer').length).toBe(1);
+    expect(third.getDrawingShapeByName('text').length).toBe(1);
   });
 });

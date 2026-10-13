@@ -23,6 +23,11 @@ export const defaultOptions: DrawerOptions = {
   },
 };
 
+export const zoomLimits = {
+  min: 0.1,
+  max: 30,
+};
+
 export const shapeName = {
   line: 'drawer-line',
   text: 'drawer-text',

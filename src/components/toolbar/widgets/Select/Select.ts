@@ -75,6 +75,11 @@ export class SelectWidget extends BaseWidget {
       }
     });
 
+    // in constructor, not in initEvents, else a listener is added on each activation
+    this.transformer.on('transformend dragend', () => {
+      this.drawer.stage.fire('change');
+    });
+
     this.drawer.selectionLayer.add(this.transformer);
     this.overlay = new SelectOverlay(drawer);
   }
@@ -133,16 +138,11 @@ export class SelectWidget extends BaseWidget {
       // update visibility in timeout, so we can check it in click event
       this.selectionRectangle.visible(false);
       const shapes = this.drawer.getDrawingShapes();
-      const box = this.selectionRectangle.getClientRect();
+      // no rectangle drawn (click on a shape or on empty stage): select under pointer
+      const isClick = !this.selectionRectangle.width() && !this.selectionRectangle.height();
       const { x, y } = this.drawer._getPointerPos();
-      let selected = shapes.filter((shape) => shape.listening() && Util.haveIntersection(box, shape.getClientRect()));
-
-      // For get object on click, force width/height to 1
-      if (box.x < 0 && box.y < 0) {
-        selected = shapes.filter(
-          (shape) => shape.listening() && Util.haveIntersection({ x, y, width: 1, height: 1 }, shape.getClientRect())
-        );
-      }
+      const box = isClick ? { x, y, width: 1, height: 1 } : this.selectionRectangle.getClientRect();
+      const selected = shapes.filter((shape) => shape.listening() && Util.haveIntersection(box, shape.getClientRect()));
 
       this._restoreHit();
 
@@ -184,10 +184,6 @@ export class SelectWidget extends BaseWidget {
         width: 0,
         height: 0,
       });
-    });
-
-    this.transformer.on('transformend dragend', () => {
-      this.drawer.stage.fire('change');
     });
   }
 
@@ -529,8 +525,8 @@ export class SelectWidget extends BaseWidget {
 
     selected.forEach((s, index) => {
       if (s instanceof Shape) {
-        // Ignore line
-        if (s instanceof Line) {
+        // Ignore line and text, their fill is their color
+        if (s instanceof Line || s instanceof Text) {
           return;
         } else {
           s.fill(color);
