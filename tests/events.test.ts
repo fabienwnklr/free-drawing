@@ -6,6 +6,7 @@ import type { LineWidget } from '../src/components/toolbar/widgets/Line/Line';
 import type { EraserWidget } from '../src/components/toolbar/widgets/Eraser/Eraser';
 import type { BrushWidget } from '../src/components/toolbar/widgets/Brush/Brush';
 import type { Line } from 'konva/lib/shapes/Line';
+import { createDrawer, fireMouse, keydown, setPointer } from './helpers';
 
 beforeAll(() => {
   function noOp() {}
@@ -17,24 +18,6 @@ beforeAll(() => {
 
 describe('Test drawer event', () => {
   document.body.innerHTML = `<div id="test"></div>`;
-
-  // isolated drawer: no saved state loaded, nothing saved
-  const createDrawer = () =>
-    new Drawer(document.getElementById('test') as HTMLDivElement, {
-      autoSave: false,
-      localStorageKey: 'test-' + Math.random(),
-    });
-
-  const keydown = (drawer: Drawer, init: KeyboardEventInit) =>
-    drawer.$drawerContainer.dispatchEvent(new KeyboardEvent('keydown', { cancelable: true, ...init }));
-
-  const setPointer = (drawer: Drawer, clientX: number, clientY: number) =>
-    drawer.stage.setPointersPositions(new MouseEvent('mousemove', { clientX, clientY }));
-
-  const fireMouse = (drawer: Drawer, type: string, x: number, y: number) => {
-    setPointer(drawer, x, y);
-    drawer.stage.fire(type, { evt: { button: 0, preventDefault() {} } });
-  };
 
   it('Ctrl + A selects all shapes', () => {
     const drawer = createDrawer();

@@ -1,5 +1,4 @@
 import { Drawer } from '@/Drawer';
-import { stringToNode } from '@/utils/functions';
 import { BaseWidget } from '../BaseWidget';
 import SelectIcon from '@/icons/select.svg?raw';
 import { Transformer } from 'konva/lib/shapes/Transformer';
@@ -61,9 +60,8 @@ export class SelectWidget extends BaseWidget {
   snapping: boolean = false;
   overlay: SelectOverlay;
 
-  constructor(protected drawer: Drawer) {
-    const $SelectIcon = stringToNode<SVGElement>(SelectIcon);
-    super(drawer, 'selection', 'Select', $SelectIcon, 's');
+  constructor(drawer: Drawer) {
+    super(drawer, 'selection', 'Select', SelectIcon, 's');
 
     this.transformer.on('transformstart dragstart', () => {
       if (this.drawer.activeTool !== 'selection') {
@@ -85,7 +83,7 @@ export class SelectWidget extends BaseWidget {
   }
 
   protected initEvents(): void {
-    this.drawer.stage.on('mousedown touchstart', (e) => {
+    this.onStage('mousedown touchstart', (e) => {
       // do nothing if we mousedown on any shape
       if (e.target !== this.drawer.stage || e.evt.button === 2) {
         return;
@@ -103,7 +101,7 @@ export class SelectWidget extends BaseWidget {
       this.drawer.UIPointerEvents('none');
     });
 
-    this.drawer.stage.on('mousemove touchmove', (e) => {
+    this.onStage('mousemove touchmove', (e) => {
       if (!this.isSelecting) {
         // Don't change cursor on anchor or on transforming
         if (e.target.hasName('_anchor') || this.transformer.isTransforming()) return;
@@ -130,7 +128,7 @@ export class SelectWidget extends BaseWidget {
       });
     });
 
-    this.drawer.stage.on('mouseup touchend', (e) => {
+    this.onStage('mouseup touchend', (e) => {
       if (e.evt.button === 2) return;
       this.isSelecting = false;
       this.drawer.UIPointerEvents('all');
@@ -208,8 +206,6 @@ export class SelectWidget extends BaseWidget {
     });
 
     this.drawer.selectionLayer.add(this.selectionRectangle);
-    this.initEvents();
-    this.updateCursor();
     const shapes = this.drawer.getDrawingShapes();
 
     shapes.forEach((d) => {
@@ -252,7 +248,6 @@ export class SelectWidget extends BaseWidget {
 
   protected onDesactive(): void {
     this.selectionRectangle.destroy();
-    this.removeEvents();
     this._restoreHit();
     const draw = this.drawer.getDrawingShapes();
 
@@ -265,7 +260,8 @@ export class SelectWidget extends BaseWidget {
 
   private _initSnapEvents() {
     this.snapping = true;
-    this.drawer.drawLayer.on('dragmove', (e) => {
+    // namespaced, grid snapping and change saving also listen drag events of draw layer
+    this.drawer.drawLayer.on('dragmove.snap', (e) => {
       // clear all previous lines on the screen
       this.drawer.selectionLayer.find(`.${shapeName.guideLine}`).forEach((l) => l.destroy());
 
@@ -308,7 +304,7 @@ export class SelectWidget extends BaseWidget {
       e.target.absolutePosition(absPos);
     });
 
-    this.drawer.drawLayer.on('dragend', () => {
+    this.drawer.drawLayer.on('dragend.snap', () => {
       // clear all previous lines on the screen
       this.drawer.selectionLayer.find(`.${shapeName.guideLine}`).forEach((l) => l.destroy());
     });
@@ -316,14 +312,7 @@ export class SelectWidget extends BaseWidget {
 
   private _removeSnapEvents() {
     this.snapping = false;
-    this.drawer.drawLayer.off('dragmove');
-    this.drawer.drawLayer.off('dragend');
-  }
-
-  protected removeEvents() {
-    this.drawer.stage.off('mousedown touchstart');
-    this.drawer.stage.off('mousemove touchmove');
-    this.drawer.stage.off('mouseup touchend');
+    this.drawer.drawLayer.off('.snap');
   }
 
   private _getLineGuideStops(skipShape: Shape<ShapeConfig> | Stage): { vertical: number[]; horizontal: number[] } {
@@ -517,26 +506,26 @@ export class SelectWidget extends BaseWidget {
   }
 
   /**
+   * Apply update on each selected shape, then fire change once
+   * @param update
+   */
+  private _updateSelected(update: (shape: Shape<ShapeConfig>) => void) {
+    const shapes = this.transformer.nodes().filter((s): s is Shape<ShapeConfig> => s instanceof Shape);
+
+    if (!shapes.length) return;
+
+    shapes.forEach(update);
+    this.drawer.stage.fire('change');
+  }
+
+  /**
    * Change background color
    * @param {ColorLike} color
    */
   setBgColor(color: ColorLike) {
-    const selected = this.transformer.nodes();
-
-    selected.forEach((s, index) => {
-      if (s instanceof Shape) {
-        // Ignore line and text, their fill is their color
-        if (s instanceof Line || s instanceof Text) {
-          return;
-        } else {
-          s.fill(color);
-          s.draw();
-
-          if (index === selected.length -1) {
-            this.drawer.stage.fire('change');
-          }
-        }
-      }
+    this._updateSelected((s) => {
+      // Ignore line and text, their fill is their color
+      if (!(s instanceof Line) && !(s instanceof Text)) s.fill(color);
     });
   }
 
@@ -545,60 +534,29 @@ export class SelectWidget extends BaseWidget {
    * @param {ColorLike} color
    */
   setColor(color: ColorLike) {
-    const selected = this.transformer.nodes();
-
-    selected.forEach((s, index) => {
-      if (s instanceof Shape) {
-        // line need to be filled
-        if (s instanceof Line) {
-          s.fill(color);
-          s.stroke(color);
-        } else if (s instanceof Text) {
-          s.fill(color);
-        } else {
-          s.stroke(color);
-        }
-        s.draw();
-
-        if (index === selected.length -1) {
-          this.drawer.stage.fire('change');
-        }
+    this._updateSelected((s) => {
+      // line need to be filled
+      if (s instanceof Line) {
+        s.fill(color);
+        s.stroke(color);
+      } else if (s instanceof Text) {
+        s.fill(color);
+      } else {
+        s.stroke(color);
       }
     });
   }
 
   /**
    * Set stroke width for draw
-   * @param {Number | String} width
+   * @param {Number} width
    */
   setStrokeWidth(width: number) {
-    const selected = this.transformer.nodes();
-
-    selected.forEach((s, index) => {
-      if (s instanceof Shape) {
-        s.strokeWidth(width);
-        s.draw();
-
-        if (index === selected.length -1) {
-          this.drawer.stage.fire('change');
-        }
-      }
-    });
+    this._updateSelected((s) => s.strokeWidth(width));
   }
 
   setStrokeStyle(dash: number[] | undefined) {
-    const selected = this.transformer.nodes();
-
-    selected.forEach((s, index) => {
-      if (s instanceof Shape) {
-        s.dash(dash as number[]);
-        s.draw();
-
-        if (index === selected.length -1) {
-          this.drawer.stage.fire('change');
-        }
-      }
-    });
+    this._updateSelected((s) => s.dash(dash as number[]));
   }
 
   /**
@@ -606,18 +564,7 @@ export class SelectWidget extends BaseWidget {
    * @param opacity
    */
   setOpacity(opacity: number) {
-    const selected = this.transformer.nodes();
-
-    selected.forEach((s, index) => {
-      if (s instanceof Shape) {
-        s.opacity(opacity);
-        s.draw();
-
-        if (index === selected.length -1) {
-          this.drawer.stage.fire('change');
-        }
-      }
-    });
+    this._updateSelected((s) => s.opacity(opacity));
   }
 
   /**
@@ -625,14 +572,12 @@ export class SelectWidget extends BaseWidget {
    * @param {Partial<TextStyle>} style
    */
   setTextStyle(style: Partial<TextStyle>) {
-    const texts = this.transformer.nodes().filter((s): s is Text => s instanceof Text);
-
-    if (!texts.length) return;
-
     // font metrics change, so width must be updated to keep the same line breaks
     const resize = 'fontFamily' in style || 'fontSize' in style || 'fontStyle' in style;
 
-    texts.forEach((text) => {
+    this._updateSelected((text) => {
+      if (!(text instanceof Text)) return;
+
       const lines = text.textArr.map((l) => l.text);
 
       text.setAttrs(style);
@@ -645,7 +590,6 @@ export class SelectWidget extends BaseWidget {
     });
 
     this.transformer.forceUpdate();
-    this.drawer.stage.fire('change');
   }
 
   toggleSnapping(active: boolean = true) {
@@ -658,9 +602,5 @@ export class SelectWidget extends BaseWidget {
       this.drawer.contextMenu.$snappingBtn.classList.remove('active');
     }
     this.drawer.stage.fire('change');
-  }
-
-  updateCursor(): void {
-    this.drawer.$stageContainer.style.cursor = 'default';
   }
 }

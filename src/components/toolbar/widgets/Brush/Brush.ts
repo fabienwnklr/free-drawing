@@ -1,12 +1,11 @@
 import { Drawer } from '@/Drawer';
-import { stringToNode } from '@/utils/functions';
 import { BaseWidget } from '../BaseWidget';
 import BrushIcon from '@/icons/brush.svg?raw';
 import { Line, LineConfig } from 'konva/lib/shapes/Line';
 import { SelectWidget } from '../Select/Select';
 import { BrushOverlay } from '@/components/tools/Overlay/BrushOverlay/BrushOverlay';
 import { getStroke } from 'perfect-freehand';
-import { shapeName } from '@/constants';
+import { crosshairCursor, shapeName } from '@/constants';
 // import { socketEvents } from '../../../../../server/socket-events.js'
 const socketEvents = {
   DRAW: 'DRAW',
@@ -19,27 +18,23 @@ export class BrushWidget extends BaseWidget {
   #allPoints: { x: number; y: number }[] = [];
   overlay: BrushOverlay;
 
-  constructor(protected drawer: Drawer) {
-    const $BrushIcon = stringToNode<SVGElement>(BrushIcon);
-    super(drawer, 'brush', 'Brush', $BrushIcon, 'b');
+  constructor(drawer: Drawer) {
+    super(drawer, 'brush', 'Brush', BrushIcon, 'b');
 
     this.overlay = new BrushOverlay(drawer);
     this.drawer.socket.on(socketEvents.DRAW, this._socketDraw.bind(this));
   }
 
   protected onActive(): void {
-    this.initEvents();
-    this.updateCursor();
     this.overlay.show();
   }
 
   protected onDesactive(): void {
-    this.removeEvents();
     this.overlay.hide();
   }
 
   protected initEvents(): void {
-    this.drawer.stage.on('mousedown touchstart', (e) => {
+    this.onStage('mousedown touchstart', (e) => {
       if (e.evt.button === 2) return;
       e.evt.preventDefault();
 
@@ -64,15 +59,11 @@ export class BrushWidget extends BaseWidget {
         name: shapeName.line,
       });
 
-      this.#lastLine.on('dragend', () => {
-        this.drawer.stage.fire('change');
-      });
-
-      this.drawer.drawLayer.add(this.#lastLine);
+      this.drawer.addShape(this.#lastLine);
     });
 
     // and core function - drawing
-    this.drawer.stage.on('mousemove touchmove', (e) => {
+    this.onStage('mousemove touchmove', (e) => {
       // prevent scrolling on touch devices
       e.evt.preventDefault();
 
@@ -82,7 +73,7 @@ export class BrushWidget extends BaseWidget {
       // this.drawer.socket.emit(socketEvents.DRAW, this.#lastLine);
     });
 
-    this.drawer.stage.on('mouseup touchend', (e) => {
+    this.onStage('mouseup touchend', (e) => {
       // mouseup without mousedown on stage (e.g. started on overlay) must not alter last line
       if (e.evt.button === 2 || !this.isPaint) return;
 
@@ -116,12 +107,6 @@ export class BrushWidget extends BaseWidget {
     this.#lastLine?.points(newPoints);
   }
 
-  protected removeEvents(): void {
-    this.drawer.stage.off('mousedown touchstart');
-    this.drawer.stage.off('mousemove touchmove');
-    this.drawer.stage.off('mouseup touchend');
-  }
-
   /**
    * Get the drawing data from the socket and basically
    * draw on our canvas whatever the other person draws
@@ -131,38 +116,10 @@ export class BrushWidget extends BaseWidget {
     const config: LineConfig = JSON.parse(data);
     const line = new Line(config);
     if (JSON.stringify(this.#lastLine.points()) === JSON.stringify(line.points())) return;
-    this.drawer.drawLayer.add(line);
-  }
-
-  getSvgPathFromStroke(points: number[][]): string {
-    const TO_FIXED_PRECISION = /(\s?[A-Z]?,?-?\d*\.\d{0,2})((\d|e|-)*)/g;
-    if (!points.length) {
-      return '';
-    }
-
-    const max = points.length - 1;
-
-    return points
-      .reduce(
-        (acc, point, i, arr) => {
-          if (i === max) {
-            acc.push(point, this.med(point, arr[0]), 'L', arr[0], 'Z');
-          } else {
-            acc.push(point, this.med(point, arr[i + 1]));
-          }
-          return acc;
-        },
-        ['M', points[0], 'Q']
-      )
-      .join(' ')
-      .replace(TO_FIXED_PRECISION, '$1');
-  }
-
-  med(A: number[], B: number[]) {
-    return [(A[0] + B[0]) / 2, (A[1] + B[1]) / 2];
+    this.drawer.addShape(line);
   }
 
   updateCursor() {
-    this.drawer.$stageContainer.style.cursor = `url("data:image/svg+xml,<svg height='32' width='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg' style='color: black;'><defs><filter id='shadow' y='-40%' x='-40%' width='180px' height='180%' color-interpolation-filters='sRGB'><feDropShadow dx='1' dy='1' stdDeviation='1.2' flood-opacity='.5'/></filter></defs><g fill='none' transform='rotate(0 16 16)' filter='url(%23shadow)'><path d='m25 16h-6.01v-6h-2.98v6h-6.01v3h6.01v6h2.98v-6h6.01z' fill='white'/><path d='m23.9902 17.0103h-6v-6.01h-.98v6.01h-6v.98h6v6.01h.98v-6.01h6z' fill='%23231f1f'/></g></svg>") 16 16, crosshair`;
+    this.drawer.$stageContainer.style.cursor = crosshairCursor;
   }
 }

@@ -15,15 +15,20 @@ export class TextWidget extends BaseWidget {
     super(drawer, 'text', 'Text', TextIcon, 't');
 
     this.overlay = new TextOverlay(drawer);
+
+    // listen on layer, so any text is editable (created, loaded, restored from history...)
+    this.drawer.drawLayer.on('dblclick.edit dbltap.edit', (e) => {
+      if (e.target instanceof Text && e.target.hasName(shapeName.text)) {
+        this.editTextNode(e.target);
+      }
+    });
   }
 
   protected onActive(): void {
-    this.initEvents();
-    this.updateCursor();
     this.overlay.show();
   }
+
   protected onDesactive(): void {
-    this.removeEvents();
     this.overlay.hide();
   }
 
@@ -34,7 +39,6 @@ export class TextWidget extends BaseWidget {
    */
   addTextNode(text: string = '') {
     const { x, y } = this.drawer._getRelativePointerPos();
-    const draggable = this.drawer.activeTool === 'selection';
     const { textStyle } = this.drawer.options;
 
     const textNode = new Text({
@@ -45,7 +49,6 @@ export class TextWidget extends BaseWidget {
       name: shapeName.text,
       fill: this.drawer.options.strokeColor,
       opacity: this.drawer.options.opacity,
-      draggable,
       // keep about the same number of characters per line whatever the font size
       width: textStyle.fontSize * 6,
     });
@@ -55,9 +58,8 @@ export class TextWidget extends BaseWidget {
       const widths = text.split('\n').map((line) => textNode.measureSize(line).width);
       textNode.width(Math.ceil(Math.max(...widths)));
     }
-    this.addTextNodeEvents(textNode);
 
-    this.drawer.drawLayer.add(textNode);
+    this.drawer.addShape(textNode);
 
     const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
     selectWidget?.setActive(true);
@@ -65,14 +67,8 @@ export class TextWidget extends BaseWidget {
     return textNode;
   }
 
-  addTextNodeEvents(textNode: Text) {
-    textNode.on('dblclick', (e) => {
-      this.editTextNode(e.target as Text);
-    });
-  }
-
   protected initEvents(): void {
-    this.drawer.stage.on('click tap', () => {
+    this.onStage('click tap', () => {
       this.#lastText = this.addTextNode();
       this.editTextNode(this.#lastText);
     });
@@ -202,9 +198,6 @@ export class TextWidget extends BaseWidget {
     });
   }
 
-  protected removeEvents(): void {
-    this.drawer.stage.off('click tap');
-  }
   public updateCursor(): void {
     this.drawer.$stageContainer.style.cursor = 'text';
   }

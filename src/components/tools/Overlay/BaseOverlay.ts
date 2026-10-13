@@ -1,5 +1,5 @@
 import type { Drawer } from '@/Drawer';
-import type { ColorLike } from '@/@types/drawer';
+import type { ColorLike, OptionsChange } from '@/@types/drawer';
 import LineIcon from '@/icons/line.svg?raw';
 import LineDashedSmIcon from '@/icons/line-dashed-sm.svg?raw';
 import LineDashedIcon from '@/icons/line-dashed.svg?raw';
@@ -54,6 +54,9 @@ export class BaseOverlay {
     this.drawer.$drawerContainer.append(this.$overlayContainer);
 
     this._init();
+
+    // keep fields in sync with options, whatever changes them (any overlay, API...)
+    this.drawer.on('fd.options.change', (change: OptionsChange) => this.updateFields(change));
   }
 
   private _init() {
@@ -95,11 +98,7 @@ export class BaseOverlay {
       $btn.classList.add(this.selectors.button);
       $btn.style.backgroundColor = color;
       $btn.setAttribute(dataAttributes.strokeColor, color.toString());
-      $btn.addEventListener('click', () => {
-        this.$strokeColorBtnContainer.querySelector(`.${this.selectors.button}.active`)?.classList.remove('active');
-        $btn.classList.add('active');
-        this.drawer.setStrokeColor(color, false);
-      });
+      $btn.addEventListener('click', () => this.drawer.setStrokeColor(color));
       $strokeColorButtons.push($btn);
     });
     this.$strokeColorBtnContainer.append(...$strokeColorButtons);
@@ -127,11 +126,7 @@ export class BaseOverlay {
       $btn.innerHTML = LineIcon.replace('stroke-width="2.5"', `stroke-width="${width}"`);
       $btn.setAttribute(dataAttributes.strokeWidth, width.toString());
       $btn.classList.add('drawer-button', this.selectors.button);
-      $btn.addEventListener('click', () => {
-        this.$strokeWidthBtnContainer.querySelector(`.${this.selectors.button}.active`)?.classList.remove('active');
-        $btn.classList.add('active');
-        this.drawer.setStrokeWidth(width);
-      });
+      $btn.addEventListener('click', () => this.drawer.setStrokeWidth(width));
       $strokeWidthButtons.push($btn);
     });
     this.$strokeWidthBtnContainer.append(...$strokeWidthButtons);
@@ -174,12 +169,7 @@ export class BaseOverlay {
       $btn.setAttribute(dataAttributes.strokeStyle, dashed.dash?.toString() ?? '');
       $btn.classList.add('drawer-button', this.selectors.button);
       $btn.innerHTML = dashed.icon;
-      $btn.addEventListener('click', () => {
-        this.$strokeStyleBtnContainer.querySelector(`.${this.selectors.button}.active`)?.classList.remove('active');
-        $btn.classList.add('active');
-        const data = !dashed.dash?.toString() ? undefined : dashed.dash;
-        this.drawer.setStrokeStyle(data, false);
-      });
+      $btn.addEventListener('click', () => this.drawer.setStrokeStyle(dashed.dash));
       $strokeWidthButtons.push($btn);
     });
     this.$strokeStyleBtnContainer.append(...$strokeWidthButtons);
@@ -205,7 +195,7 @@ export class BaseOverlay {
 
     this.$opacityRange.addEventListener('change', () => {
       const opacity = Number(this.$opacityRange.value) / 10;
-      this.drawer.setOpacity(opacity, false);
+      this.drawer.setOpacity(opacity);
     });
 
     this.$opacityContainer.append(this.$opacityRange);
@@ -218,63 +208,62 @@ export class BaseOverlay {
   show(shape?: (Shape<ShapeConfig> | Group)[]) {
     this.$overlayContainer.classList.add('show');
 
-    this.$strokeColorBtnContainer.querySelector(`.${this.selectors.button}.active`)?.classList.remove('active');
-    this.$strokeWidthBtnContainer.querySelector(`.${this.selectors.button}.active`)?.classList.remove('active');
-
-    let data = {
-      color: this.drawer.options.strokeColor,
-      strokeWidth: this.drawer.options.strokeWidth,
-      opacity: this.drawer.options.opacity,
-      strokeStyle: this.drawer.options.strokeDash,
-    };
+    const { strokeColor, strokeWidth, strokeDash, opacity } = this.drawer.options;
+    let data: OptionsChange = { strokeColor, strokeWidth, strokeDash, opacity };
 
     if (shape && shape[0] instanceof Shape) {
       data = {
         // text color is stored in fill
-        color: (shape[0].stroke() || shape[0].fill()) as ColorLike,
+        strokeColor: (shape[0].stroke() || shape[0].fill()) as ColorLike,
         strokeWidth: shape[0].strokeWidth(),
-        strokeStyle: shape[0].dash(),
+        strokeDash: shape[0].dash(),
         opacity: shape[0].opacity(),
       };
     }
 
-    this._updateFields(data);
+    this.updateFields(data);
   }
 
-  private _updateFields(data: {
-    color: ColorLike;
-    strokeWidth: number;
-    strokeStyle: undefined | number[];
-    opacity: number;
-  }) {
-    this.$strokeColorBtnContainer.querySelector(`.${this.selectors.button}.active`)?.classList.remove('active');
-    this.$strokeWidthBtnContainer.querySelector(`.${this.selectors.button}.active`)?.classList.remove('active');
+  /**
+   * Set given button active in its container (null to only remove active one)
+   */
+  protected _setActiveBtn($btnContainer: HTMLDivElement, $btn: Element | null) {
+    $btnContainer.querySelector(`.${this.selectors.button}.active`)?.classList.remove('active');
+    $btn?.classList.add('active');
+  }
 
-    const $btnColor = this.$strokeColorBtnContainer.querySelector(
-      `.${this.selectors.button}[${dataAttributes.strokeColor}="${data.color}"]`
-    );
-
-    if ($btnColor) {
-      $btnColor.classList.add('active');
+  /**
+   * Update fields state, only given keys are updated
+   * @param {OptionsChange} change
+   */
+  updateFields(change: OptionsChange) {
+    if (change.strokeColor !== undefined) {
+      this._setActiveBtn(
+        this.$strokeColorBtnContainer,
+        this.$strokeColorBtnContainer.querySelector(`[${dataAttributes.strokeColor}="${change.strokeColor}"]`)
+      );
     }
 
-    const $btnStrokeWidth = this.$strokeWidthBtnContainer.querySelector(
-      `.${this.selectors.button}[${dataAttributes.strokeWidth}="${data.strokeWidth}"]`
-    );
-
-    if ($btnStrokeWidth) {
-      $btnStrokeWidth.classList.add('active');
+    if (change.strokeWidth !== undefined) {
+      this._setActiveBtn(
+        this.$strokeWidthBtnContainer,
+        this.$strokeWidthBtnContainer.querySelector(`[${dataAttributes.strokeWidth}="${change.strokeWidth}"]`)
+      );
     }
 
-    const $btnStrokeStyle = this.$strokeStyleBtnContainer.querySelector(
-      `.${this.selectors.button}[${dataAttributes.strokeStyle}="${data.strokeStyle?.toString() ?? ''}"]`
-    );
-
-    if ($btnStrokeStyle) {
-      $btnStrokeStyle.classList.add('active');
+    // undefined dash is a solid line
+    if ('strokeDash' in change) {
+      this._setActiveBtn(
+        this.$strokeStyleBtnContainer,
+        this.$strokeStyleBtnContainer.querySelector(
+          `[${dataAttributes.strokeStyle}="${change.strokeDash?.toString() ?? ''}"]`
+        )
+      );
     }
 
-    this.$opacityRange.value = (data.opacity * 10).toString();
+    if (change.opacity !== undefined) {
+      this.$opacityRange.value = (change.opacity * 10).toString();
+    }
   }
 
   hide() {

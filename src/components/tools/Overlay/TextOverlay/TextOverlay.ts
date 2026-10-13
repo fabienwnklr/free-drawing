@@ -1,5 +1,5 @@
 import type { Drawer } from '@/Drawer';
-import type { TextStyle } from '@/@types/drawer';
+import type { OptionsChange, TextStyle } from '@/@types/drawer';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Group } from 'konva/lib/Group';
 import { Text } from 'konva/lib/shapes/Text';
@@ -93,11 +93,6 @@ export class TextOverlay extends BaseOverlay {
     return $btn;
   }
 
-  private _setActiveBtn($btnContainer: HTMLDivElement, $btn: Element | null) {
-    $btnContainer.querySelector(`.${this.selectors.button}.active`)?.classList.remove('active');
-    $btn?.classList.add('active');
-  }
-
   private _createFontFamilyField() {
     const { $container, $btnContainer } = this._createSection('Font family');
     this.$fontFamilyContainer = $container;
@@ -115,9 +110,7 @@ export class TextOverlay extends BaseOverlay {
     });
 
     this.$fontFamilySelect.addEventListener('change', () => {
-      const fontFamily = this.$fontFamilySelect.value;
-      this.$fontFamilySelect.style.fontFamily = fontFamily;
-      this.drawer.setTextStyle({ fontFamily }, false);
+      this.drawer.setTextStyle({ fontFamily: this.$fontFamilySelect.value });
       this.drawer.focus();
     });
 
@@ -134,10 +127,7 @@ export class TextOverlay extends BaseOverlay {
 
     fontSizes.forEach((size) => {
       const $btn = this._createButton(size.label, dataAttributes.fontSize, size.value.toString());
-      $btn.addEventListener('click', () => {
-        this._setActiveBtn(this.$fontSizeBtnContainer, $btn);
-        this.drawer.setTextStyle({ fontSize: size.value }, false);
-      });
+      $btn.addEventListener('click', () => this.drawer.setTextStyle({ fontSize: size.value }));
       this.$fontSizeBtnContainer.append($btn);
     });
   }
@@ -153,7 +143,7 @@ export class TextOverlay extends BaseOverlay {
       $btn.addEventListener('click', () => {
         // toggle buttons, bold & italic (or underline & line-through) can be combined
         $btn.classList.toggle('active');
-        this.drawer.setTextStyle(this._getToggledStyle(style.attr), false);
+        this.drawer.setTextStyle(this._getToggledStyle(style.attr));
       });
       this.$fontStyleBtnContainer.append($btn);
     });
@@ -182,10 +172,7 @@ export class TextOverlay extends BaseOverlay {
 
     textAligns.forEach((align) => {
       const $btn = this._createButton(align.icon, dataAttributes.textAlign, align.value, align.title);
-      $btn.addEventListener('click', () => {
-        this._setActiveBtn(this.$textAlignBtnContainer, $btn);
-        this.drawer.setTextStyle({ align: align.value }, false);
-      });
+      $btn.addEventListener('click', () => this.drawer.setTextStyle({ align: align.value }));
       this.$textAlignBtnContainer.append($btn);
     });
   }
@@ -195,7 +182,7 @@ export class TextOverlay extends BaseOverlay {
 
     const text = shape?.find((s): s is Text => s instanceof Text);
 
-    this.updateFields(text ? this._getTextStyle(text) : this.drawer.options.textStyle);
+    this.updateTextFields(text ? this._getTextStyle(text) : this.drawer.options.textStyle);
   }
 
   private _getTextStyle(text: Text): TextStyle {
@@ -208,11 +195,17 @@ export class TextOverlay extends BaseOverlay {
     };
   }
 
+  updateFields(change: OptionsChange) {
+    super.updateFields(change);
+
+    if (change.textStyle) this.updateTextFields(change.textStyle);
+  }
+
   /**
-   * Update fields state, only given style keys are updated
+   * Update text fields state, only given style keys are updated
    * @param {Partial<TextStyle>} style
    */
-  updateFields(style: Partial<TextStyle>) {
+  updateTextFields(style: Partial<TextStyle>) {
     const { fontFamily, fontSize, fontStyle, textDecoration, align } = style;
 
     if (fontFamily !== undefined) {

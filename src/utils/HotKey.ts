@@ -1,6 +1,4 @@
 import { BrushWidget } from '@/components/toolbar/widgets/Brush/Brush';
-import { EraserWidget } from '@/components/toolbar/widgets/Eraser/Eraser';
-import { PanWidget } from '@/components/toolbar/widgets/Pan/Pan';
 import { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import { Drawer } from '../Drawer';
@@ -49,63 +47,21 @@ export class HotKey {
         e.preventDefault();
       }
 
-      const panWidget = this.drawer.getWidget<PanWidget>('pan');
+      // Toolbar shortcut, the letter displayed on widget button (whatever caps lock)
+      if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+        const widget = Array.from(this.drawer.toolbar.widgets.values()).find(
+          (w) => w.shortcut === e.key.toLowerCase()
+        );
 
-      if (!e.altKey && e.key === 's') {
-        if (this.drawer._duringAction()) {
+        if (widget) {
+          widget.setActive(true);
+          widget.$button.focus();
           return;
         }
-
-        selectWidget?.setActive(true);
-        selectWidget?.$button.focus();
-        return;
-      }
-
-      // Toolbar shortcut
-      if (e.key === 'h') {
-        if (this.drawer._duringAction()) {
-          return;
-        }
-
-        panWidget?.setActive(true);
-        panWidget?.$button.focus();
-        return;
       }
 
       if (e.altKey && e.key === 's') {
         this.drawer.setting.toggleSnapping();
-      }
-
-      if (e.key === 'b') {
-        if (this.drawer._duringAction()) {
-          return;
-        }
-
-        const brushWidget = this.drawer.getWidget<BrushWidget>('brush');
-
-        brushWidget?.setActive(true);
-        brushWidget?.$button.focus();
-        return;
-      }
-
-      if (e.key === 'e') {
-        if (this.drawer._duringAction()) {
-          return;
-        }
-
-        const eraserWidget = this.drawer.getWidget<EraserWidget>('eraser');
-        eraserWidget?.setActive(true);
-        eraserWidget?.$button.focus();
-      }
-
-      if (e.key === 't') {
-        if (this.drawer._duringAction()) {
-          return;
-        }
-
-        const textWidget = this.drawer.getWidget<TextWidget>('text');
-        textWidget?.setActive(true);
-        textWidget?.$button.focus();
       }
 
       if (e.altKey && e.key === 'z') {

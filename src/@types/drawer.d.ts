@@ -28,6 +28,13 @@ export type TextStyle = {
   align: 'left' | 'center' | 'right';
 };
 
+/**
+ * Options changed by Drawer setters, sent with `fd.options.change` event (only changed keys)
+ */
+export type OptionsChange = Partial<Pick<DrawerOptions, 'strokeColor' | 'strokeWidth' | 'strokeDash' | 'opacity'>> & {
+  textStyle?: Partial<TextStyle>;
+};
+
 type RGB = `rgb(${number}, ${number}, ${number})`;
 type RGBA = `rgba(${number}, ${number}, ${number}, ${number})`;
 type HEX = `#${string}`;

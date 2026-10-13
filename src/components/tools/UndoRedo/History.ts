@@ -1,10 +1,15 @@
 import type { Drawer } from '@/Drawer';
-import { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
-import { Line } from 'konva/lib/shapes/Line';
-import { Text } from 'konva/lib/shapes/Text';
+import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
+import { Node } from 'konva/lib/Node';
+import type { Shape, ShapeConfig } from 'konva/lib/Shape';
+
+/**
+ * Serialized drawing shape (konva `toObject` format), any shape type can be restored
+ */
+type ShapeState = { attrs: Record<string, unknown>; className: string };
 
 export class History {
-  appHistory: { type: string }[][] = [[]];
+  appHistory: ShapeState[][] = [[]];
   appHistoryStep: number = 0;
   drawer: Drawer;
 
@@ -13,9 +18,11 @@ export class History {
   }
 
   saveState(fromSaved = false) {
-    const draw = this.drawer.getDrawingShapes();
-    const state = draw.map((d) => {
-      return { type: d.className, ...d.attrs };
+    const state = this.drawer.getDrawingShapes().map((shape): ShapeState => {
+      const { attrs, className } = shape.toObject();
+      // depends on active tool, not on drawing
+      delete attrs.draggable;
+      return { attrs, className };
     });
 
     // ignore change without drawing modification (pan, grid...), also keeps redo available
@@ -39,32 +46,12 @@ export class History {
   canUndo() {
     return !!this.appHistory[this.appHistoryStep - 1];
   }
-  undo() {
-    try {
-      const state = this.appHistory[this.appHistoryStep - 1];
-      if (state) {
-        const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
-        selectWidget?.transformer.nodes([]);
-        this.appHistoryStep -= 1;
-        this.drawer.getDrawingShapes().forEach((c) => c.destroy());
-        state.forEach((shape) => {
-          if (shape.type === 'Line') {
-            const line = new Line(shape);
-            line.draggable(true);
-            line.on('dragend', () => {
-              this.drawer.stage.fire('change');
-            });
-            this.drawer.drawLayer.add(line);
-          }
 
-          if (shape.type === 'Text') {
-            this.drawer.drawLayer.add(new Text(shape));
-          }
-        });
-      }
-    } catch (error: any) {
-      throw new Error(error.message);
-    }
+  undo() {
+    if (!this.canUndo()) return;
+
+    this.appHistoryStep -= 1;
+    this._restoreState(this.appHistory[this.appHistoryStep]);
   }
 
   canRedo() {
@@ -72,20 +59,23 @@ export class History {
   }
 
   redo() {
-    try {
-      const state = this.appHistory[this.appHistoryStep + 1];
-      if (state) {
-        const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
-        selectWidget?.transformer.nodes([]);
-        this.appHistoryStep += 1;
-        this.drawer.getDrawingShapes().forEach((c) => c.destroy());
-        state.forEach((shape) => {
-          if (shape.type === 'Line') this.drawer.drawLayer.add(new Line(shape));
-          if (shape.type === 'Text') this.drawer.drawLayer.add(new Text(shape));
-        });
-      }
-    } catch (error: any) {
-      throw new Error(error.message);
-    }
+    if (!this.canRedo()) return;
+
+    this.appHistoryStep += 1;
+    this._restoreState(this.appHistory[this.appHistoryStep]);
+  }
+
+  /**
+   * Replace drawing by given state
+   * @param state
+   */
+  private _restoreState(state: ShapeState[]) {
+    this.drawer.getWidget<SelectWidget>('selection')?.transformer.nodes([]);
+    this.drawer.getDrawingShapes().forEach((shape) => shape.destroy());
+
+    state.forEach((shape) => {
+      // from JSON, so restored shape does not share attributes (points...) with history
+      this.drawer.addShape(Node.create(JSON.stringify(shape)) as Shape<ShapeConfig>);
+    });
   }
 }

@@ -1,6 +1,8 @@
 import type { AvailableTools } from '@/@types/toolbar';
 import { Drawer } from '@/Drawer';
 import { stringToNode } from '@/utils/functions';
+import type { KonvaEventListener } from 'konva/lib/Node';
+import type { Stage } from 'konva/lib/Stage';
 
 export abstract class BaseWidget {
   protected readonly $container: HTMLElement;
@@ -58,12 +60,46 @@ export abstract class BaseWidget {
     this.$button.classList.add('disabled');
   }
 
-  protected abstract onActive(): void;
-  protected abstract onDesactive(): void;
-  protected abstract initEvents(): void;
-  protected abstract removeEvents(): void;
-  public abstract updateCursor(): void;
+  /**
+   * Listen stage events while widget is active.
+   * Events are namespaced with widget id, so they are removed on deactivation without removing other listeners.
+   * @param events Space separated event names
+   * @param handler
+   */
+  protected onStage(events: string, handler: KonvaEventListener<Stage, any>) {
+    const namespaced = events
+      .split(' ')
+      .map((event) => `${event}.${this.id}`)
+      .join(' ');
 
+    this.drawer.stage.on(namespaced, handler);
+  }
+
+  /**
+   * Add widget events (with `onStage`), called on activation
+   */
+  protected initEvents(): void {}
+
+  /**
+   * Remove widget events, called on deactivation
+   */
+  protected removeEvents(): void {
+    this.drawer.stage.off(`.${this.id}`);
+  }
+
+  /**
+   * Called on activation, after events and cursor setup
+   */
+  protected onActive(): void {}
+
+  /**
+   * Called on deactivation, after events removal
+   */
+  protected onDesactive(): void {}
+
+  public updateCursor(): void {
+    this.drawer.$stageContainer.style.cursor = 'default';
+  }
 
   /**
    * Get the drawing data from the socket and basically
@@ -85,9 +121,12 @@ export abstract class BaseWidget {
       }
       this.drawer.toolbar.setActiveWidget(this);
       this.$button.classList.add('active');
+      this.initEvents();
+      this.updateCursor();
       this.onActive();
       this.drawer.focus();
     } else {
+      this.removeEvents();
       this.onDesactive();
       this.$button.classList.remove('active');
     }

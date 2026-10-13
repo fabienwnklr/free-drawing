@@ -4,9 +4,9 @@ import { Layer } from 'konva/lib/Layer';
 import { Toolbar } from './components/toolbar/Toolbar';
 import { Rect } from 'konva/lib/shapes/Rect';
 import { AvailableTools } from './@types/toolbar';
-import { ColorLike, DrawerOptions, TextStyle } from './@types/drawer';
+import { ColorLike, DrawerOptions, OptionsChange, TextStyle } from './@types/drawer';
 import { deepMerge } from './utils/functions';
-import { dataAttributes, defaultOptions, shapeName, zoomLimits } from './constants';
+import { defaultOptions, shapeName, zoomLimits } from './constants';
 import { Zoom } from './components/tools/Zoom/Zoom';
 import { Help } from './components/tools/Help/Help';
 import { BrushWidget } from './components/toolbar/widgets/Brush/Brush';
@@ -22,7 +22,6 @@ import { ConfirmModal } from './components/Modal/ConfirmModal';
 import { UndoRedo } from './components/tools/UndoRedo/UndoRedo';
 import { ContextMenu } from './components/ContextMenu/ContextMenu';
 import { TextWidget } from './components/toolbar/widgets/Text/Text';
-import { Text } from 'konva/lib/shapes/Text';
 import { Line } from 'konva/lib/shapes/Line';
 import { Toast } from './components/Toast/Toast';
 import { Group } from 'konva/lib/Group';
@@ -123,6 +122,8 @@ export class Drawer extends MicroEvent {
       this.selectionLayer = this.stage.findOne('.selection') as Layer;
       // saved transformer, selection rectangle and guides are recreated by selection widget
       this.selectionLayer.destroyChildren();
+      // draggable depends on active tool, set on its activation
+      this.drawLayer.getChildren().forEach((shape) => shape.draggable(false));
       this.background = this.bgLayer.findOne(`.${shapeName.background}`) as Rect;
       this.grid = this.gridLayer.children.length > 0;
       activeTool = toolSaved ?? activeTool;
@@ -182,15 +183,6 @@ export class Drawer extends MicroEvent {
     const activeWidget = this.getWidget<BaseWidget>(activeTool);
     activeWidget?.setActive(true);
 
-    if (stageSaved) {
-      const textWidget = this.getWidget<TextWidget>('text');
-      this.drawLayer.find('.drawer-text').forEach((t) => {
-        if (t instanceof Text) {
-          textWidget?.addTextNodeEvents(t);
-        }
-      });
-    }
-
     this.$drawerContainer.appendChild(this.$footerContainer);
     this.focus();
     this.undoRedo.manageButtons();
@@ -243,6 +235,19 @@ export class Drawer extends MicroEvent {
   }
 
   /**
+   * Add drawing shape to draw layer, draggable only with selection tool.
+   * Every drawing shape must be added with this method (tools, history, collaboration...)
+   * @param {Shape<ShapeConfig>} shape
+   * @returns {Shape<ShapeConfig>} added shape
+   */
+  addShape<T extends Shape<ShapeConfig>>(shape: T): T {
+    shape.draggable(this.activeTool === 'selection');
+    this.drawLayer.add(shape);
+
+    return shape;
+  }
+
+  /**
    * Get all drawing shape by name
    * @param {keyof typeof shapeName} shapeType Shape type
    * @returns {(Group | Shape<ShapeConfig>)[]}
@@ -292,6 +297,11 @@ export class Drawer extends MicroEvent {
 
     this.stage.on('wheel', () => {
       this._update();
+    });
+
+    // shape moved, listened on layer so any shape is concerned (created, loaded, restored from history...)
+    this.drawLayer.on('dragend.change', () => {
+      this.stage.fire('change');
     });
 
     this.stage.on('change', () => {
@@ -372,107 +382,63 @@ export class Drawer extends MicroEvent {
   }
 
   /**
+   * Notify overlays (and any listener) that options changed
+   * @param {OptionsChange} change Changed options only
+   */
+  private _triggerOptionsChange(change: OptionsChange) {
+    this.trigger('fd.options.change', change);
+  }
+
+  /**
    * Set color for draw
    * @param {ColorLike} color
    */
-  setStrokeColor(color: ColorLike, triggerChange = true) {
+  setStrokeColor(color: ColorLike) {
     this.options.strokeColor = color;
-
-    const selectWidget = this.getWidget<SelectWidget>('selection');
-
-    if (selectWidget?.transformer.nodes().length) {
-      selectWidget?.setColor(color);
-    }
-
-    const brushWidget = this.getWidget<BrushWidget>('brush');
-
-    if (brushWidget && triggerChange) {
-      brushWidget.overlay.$strokeColorBtnContainer
-        .querySelector<HTMLButtonElement>(`button[${dataAttributes.strokeColor}="${color}"]`)
-        ?.click();
-    }
+    this.getWidget<SelectWidget>('selection')?.setColor(color);
+    this._triggerOptionsChange({ strokeColor: color });
   }
 
   /**
    * Set stroke width for draw
    * @param {Number | String} width
    */
-  setStrokeWidth(width: string | number, triggerChange = true) {
+  setStrokeWidth(width: string | number) {
     width = Number(width);
 
     this.options.strokeWidth = width;
-
-    const selectWidget = this.getWidget<SelectWidget>('selection');
-
-    if (selectWidget?.transformer.nodes().length) {
-      selectWidget?.setStrokeWidth(width);
-    }
-
-    const brushWidget = this.getWidget<BrushWidget>('brush');
-
-    if (brushWidget && triggerChange) {
-      brushWidget.overlay.$strokeWidthBtnContainer
-        .querySelector<HTMLButtonElement>(`button[${dataAttributes.strokeWidth}="${width}"]`)
-        ?.click();
-    }
+    this.getWidget<SelectWidget>('selection')?.setStrokeWidth(width);
+    this._triggerOptionsChange({ strokeWidth: width });
   }
 
-  setStrokeStyle(dashed: number[] | undefined, triggerChange = true) {
+  /**
+   * Set stroke style (dash) for draw
+   * @param {number[] | undefined} dashed Dash array, undefined for solid line
+   */
+  setStrokeStyle(dashed: number[] | undefined) {
     this.options.strokeDash = dashed;
-
-    const selectWidget = this.getWidget<SelectWidget>('selection');
-
-    if (selectWidget?.transformer.nodes().length) {
-      selectWidget?.setStrokeStyle(dashed);
-    }
-
-    const brushWidget = this.getWidget<BrushWidget>('brush');
-
-    if (brushWidget && triggerChange) {
-      brushWidget.overlay.$strokeStyleBtnContainer
-        .querySelector<HTMLButtonElement>(`button[${dataAttributes.strokeStyle}="${dashed?.join(',')}"]`)
-        ?.click();
-    }
+    this.getWidget<SelectWidget>('selection')?.setStrokeStyle(dashed);
+    this._triggerOptionsChange({ strokeDash: dashed });
   }
 
   /**
    * Set opacity of shape 0 to 1
    * @param opacity
    */
-  setOpacity(opacity: number, triggerChange = true) {
+  setOpacity(opacity: number) {
     this.options.opacity = opacity;
-
-    const selectWidget = this.getWidget<SelectWidget>('selection');
-
-    if (selectWidget?.transformer.nodes().length) {
-      selectWidget?.setOpacity(opacity);
-    }
-
-    const brushWidget = this.getWidget<BrushWidget>('brush');
-
-    if (brushWidget && triggerChange) {
-      brushWidget.overlay.$opacityRange.value = (opacity * 10).toString();
-    }
+    this.getWidget<SelectWidget>('selection')?.setOpacity(opacity);
+    this._triggerOptionsChange({ opacity });
   }
 
   /**
    * Set text style (font family, size, style, decoration, align) of new and selected text
    * @param {Partial<TextStyle>} style
    */
-  setTextStyle(style: Partial<TextStyle>, triggerChange = true) {
+  setTextStyle(style: Partial<TextStyle>) {
     this.options.textStyle = { ...this.options.textStyle, ...style };
-
-    const selectWidget = this.getWidget<SelectWidget>('selection');
-
-    if (selectWidget?.transformer.nodes().length) {
-      selectWidget?.setTextStyle(style);
-    }
-
-    const textWidget = this.getWidget<TextWidget>('text');
-
-    if (textWidget && triggerChange) {
-      textWidget.overlay.updateFields(style);
-    }
+    this.getWidget<SelectWidget>('selection')?.setTextStyle(style);
+    this._triggerOptionsChange({ textStyle: style });
   }
 
   /**
@@ -569,7 +535,8 @@ export class Drawer extends MicroEvent {
     const selectWidget = this.getWidget<SelectWidget>('selection');
     const cellSize = 40;
 
-    this.drawLayer.on('dragmove', (e) => {
+    // namespaced, object snapping and change saving also listen drag events of draw layer
+    this.drawLayer.on('dragmove.grid', (e) => {
       if (e.target instanceof Shape) {
         if (e.target instanceof Line) return;
         e.target.position({
@@ -645,7 +612,7 @@ export class Drawer extends MicroEvent {
     );
     selectWidget?.transformer.rotationSnaps(undefined as any as number[]);
 
-    this.drawLayer.off('dragmove');
+    this.drawLayer.off('.grid');
   }
 
   private _unScale(val: number) {
