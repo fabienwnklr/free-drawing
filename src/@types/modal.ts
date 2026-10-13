@@ -1,3 +1,5 @@
+import type { ConfirmModal } from '@/components/Modal/ConfirmModal';
+
 export interface ModalOptions {
   id?: string;
   title?: string;

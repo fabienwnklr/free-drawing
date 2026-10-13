@@ -21,13 +21,16 @@ See [Contribute guide](https://github.com/fabienwnklr/free-drawing/blob/master/C
 ## Install
 
 ```bash
-yarn add @fabwcie/free-drawing
+yarn add @fabwcie/free-drawing konva
 ```
+
+`konva` is a peer dependency, install it with the package.
 
 ## Use it
 
 ```js
 import { Drawer } from '@fabwcie/free-drawing';
+import '@fabwcie/free-drawing/style.css';
 
 const $el = document.getElementById('drawer-container');
 const drawer = new Drawer($el, {
@@ -44,6 +47,7 @@ const drawer = new Drawer($el, {
   width: window.innerWidth, // width of drawer
   height: window.innerHeight, // height of drawer
   strokeWidth: 5, // width for drawing stroke
+  strokeDash: undefined, // dash array of drawing stroke, undefined for solid line
   strokeColor: '#000', // color for drawing stroke
   zoom: true, // enable/disable zoom on draw
   zoomWidget: true, // enable/disable zoom ui widget
@@ -51,5 +55,20 @@ const drawer = new Drawer($el, {
   autoSave: true, // for save draw state on localStorage automatically
   localStorageKey: 'free-drawing', // localStorage key used for store data
   opacity: 1, // opacity of draw
+  textStyle: {
+    // style of new text
+    fontFamily: 'Ubuntu',
+    fontSize: 16,
+    fontStyle: 'normal', // 'normal' | 'bold' | 'italic' | 'italic bold'
+    textDecoration: '', // '' | 'underline' | 'line-through' | 'underline line-through'
+    align: 'left', // 'left' | 'center' | 'right'
+  },
+  collaboration: false, // real time collaboration: false, true (socket.io server on same origin) or server url
 };
 ```
+
+## Collaboration
+
+With `collaboration` option, `socket.io-client` is loaded and brush strokes are sent to a [socket.io](https://socket.io/) server, which relays `DRAW` events to other clients (see [server/index.mjs](./server/index.mjs)).
+
+In this repository, run `yarn serve` then open `http://localhost:3000/?collaboration` in several windows.

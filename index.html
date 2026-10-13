@@ -22,7 +22,10 @@
     <script type="module">
       import { Drawer } from '/src/Drawer.ts';
 
-      window.drawer = new Drawer(document.getElementById('app'));
+      window.drawer = new Drawer(document.getElementById('app'), {
+        // http://localhost:3000/?collaboration with `yarn serve` (socket.io server)
+        collaboration: new URLSearchParams(location.search).has('collaboration'),
+      });
     </script>
   </body>
 </html>

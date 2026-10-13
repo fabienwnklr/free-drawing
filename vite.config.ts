@@ -27,10 +27,20 @@ export default defineConfig(({ mode }) => {
           name: 'Drawer', // for iife and umd
           // the proper extensions will be added
           fileName: 'drawer',
-          formats: ['iife', 'cjs', 'es', 'umd'],
+          // formats used by package.json exports (import / require)
+          formats: ['es', 'umd'],
         },
         rollupOptions: {
-          external: ['konva', 'perfectFreehand'],
+          // installed with the package (konva as peer dependency), imported with subpaths (konva/lib/...)
+          external: [/^konva(\/|$)/, 'perfect-freehand', 'socket.io-client'],
+          output: {
+            // umd global names
+            globals: (id: string) => {
+              if (id.startsWith('konva')) return 'Konva';
+              if (id === 'socket.io-client') return 'io';
+              return 'PerfectFreehand';
+            },
+          },
         },
       },
       plugins: [

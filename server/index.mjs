@@ -34,8 +34,8 @@ async function server() {
     }
 
     socket.on(socketEvents.DRAW, (data) => {
-      // Emit to all connected clients (including the one who originally sent it)
-      io.sockets.emit(socketEvents.DRAW, data);
+      // Emit to other connected clients (author already has the line)
+      socket.broadcast.emit(socketEvents.DRAW, data);
     });
 
     socket.on('disconnect', () => {

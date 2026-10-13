@@ -1,16 +1,12 @@
 import { Drawer } from '@/Drawer';
 import { BaseWidget } from '../BaseWidget';
 import BrushIcon from '@/icons/brush.svg?raw';
-import { Line, LineConfig } from 'konva/lib/shapes/Line';
+import { Line } from 'konva/lib/shapes/Line';
+import { Node } from 'konva/lib/Node';
 import { SelectWidget } from '../Select/Select';
 import { BrushOverlay } from '@/components/tools/Overlay/BrushOverlay/BrushOverlay';
 import { getStroke } from 'perfect-freehand';
-import { crosshairCursor, shapeName } from '@/constants';
-// import { socketEvents } from '../../../../../server/socket-events.js'
-const socketEvents = {
-  DRAW: 'DRAW',
-  DRAW_BEGIN_PATH: 'DRAW_BEGIN_PATH',
-};
+import { crosshairCursor, shapeName, socketEvents } from '@/constants';
 
 export class BrushWidget extends BaseWidget {
   #lastLine: Line = new Line();
@@ -22,7 +18,6 @@ export class BrushWidget extends BaseWidget {
     super(drawer, 'brush', 'Brush', BrushIcon, 'b');
 
     this.overlay = new BrushOverlay(drawer);
-    this.drawer.socket.on(socketEvents.DRAW, this._socketDraw.bind(this));
   }
 
   protected onActive(): void {
@@ -87,7 +82,8 @@ export class BrushWidget extends BaseWidget {
       const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
       selectWidget?.transformer.nodes([]);
       e.evt.preventDefault();
-      this.drawer.socket.emit(socketEvents.DRAW, this.#lastLine);
+      // serialized line (konva JSON), only with collaboration enabled
+      this.drawer.socket?.emit(socketEvents.DRAW, this.#lastLine.toJSON());
     });
   }
 
@@ -113,10 +109,8 @@ export class BrushWidget extends BaseWidget {
    *
    */
   _socketDraw(data: string) {
-    const config: LineConfig = JSON.parse(data);
-    const line = new Line(config);
-    if (JSON.stringify(this.#lastLine.points()) === JSON.stringify(line.points())) return;
-    this.drawer.addShape(line);
+    // konva JSON of the line, server does not send it back to its author
+    this.drawer.addShape(Node.create(data) as Line);
   }
 
   updateCursor() {

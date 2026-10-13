@@ -6,7 +6,7 @@ import { Rect } from 'konva/lib/shapes/Rect';
 import { AvailableTools } from './@types/toolbar';
 import { ColorLike, DrawerOptions, OptionsChange, TextStyle } from './@types/drawer';
 import { deepMerge } from './utils/functions';
-import { defaultOptions, shapeName, zoomLimits } from './constants';
+import { defaultOptions, shapeName, socketEvents, zoomLimits } from './constants';
 import { Zoom } from './components/tools/Zoom/Zoom';
 import { Help } from './components/tools/Help/Help';
 import { BrushWidget } from './components/toolbar/widgets/Brush/Brush';
@@ -28,15 +28,10 @@ import { Group } from 'konva/lib/Group';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Vector2d } from 'konva/lib/types';
 import { AvailableTypes } from './@types/toast';
-import { io } from 'socket.io-client';
+import type { Socket } from 'socket.io-client';
 import { debounce } from './utils/perf';
 import { HotKey } from './utils/HotKey';
 
-const socket = io();
-
-socket.on('connect', () => {
-  console.log('🌍 Connected to server');
-});
 /**
  * Drawer constructor. A drawer is used to draw multiple shapes
  * @constructor
@@ -50,7 +45,8 @@ socket.on('connect', () => {
  * });
  */
 export class Drawer extends MicroEvent {
-  socket = socket;
+  /** Collaboration socket, connected only with `collaboration` option */
+  socket: Socket | null = null;
   $el: HTMLDivElement;
   $drawerContainer: HTMLDivElement;
   $stageContainer: HTMLDivElement;
@@ -110,7 +106,7 @@ export class Drawer extends MicroEvent {
     }
 
     const stageSaved = localStorage.getItem(this.options.localStorageKey);
-    const toolSaved = localStorage.getItem(this.options.localStorageKey + '-tool');
+    const toolSaved = localStorage.getItem(this.options.localStorageKey + '-tool') as AvailableTools | null;
     let saved = false;
     if (stageSaved) {
       this.stage = Node.create(stageSaved, this.$drawerContainer);
@@ -187,6 +183,31 @@ export class Drawer extends MicroEvent {
     this.focus();
     this.undoRedo.manageButtons();
     this._initEvents();
+
+    if (this.options.collaboration) {
+      this._initCollaboration()
+        .then(() => this.toast('Collaboration available', 'info'))
+        .catch((error) => {
+          this.toast(`Collaboration unavailable: ${error.message}`, 'error');
+        });
+    }
+  }
+
+  /**
+   * Connect to collaboration server, socket.io client is loaded only when `collaboration` option is enabled
+   */
+  private async _initCollaboration() {
+    const { collaboration } = this.options;
+    const { io } = await import('socket.io-client');
+
+    // true: server on same origin, string: server url
+    this.socket = typeof collaboration === 'string' ? io(collaboration) : io();
+    this.socket.on('connect', () => {
+      if (this.debug) console.log('🌍 Connected to collaboration server');
+    });
+    this.socket.on(socketEvents.DRAW, (data: string) => {
+      this.getWidget<BrushWidget>('brush')?._socketDraw(data);
+    });
   }
 
   /**

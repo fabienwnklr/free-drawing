@@ -1,4 +1,4 @@
-export declare interface Drawer {}
+import type { AvailableTools } from './toolbar';
 
 export type DrawerOptions = {
   id: string;
@@ -10,6 +10,8 @@ export type DrawerOptions = {
   strokeColor: ColorLike;
   opacity: number;
   textStyle: TextStyle;
+  /** Real time collaboration with socket.io server: false (default), true (same origin) or server url */
+  collaboration: boolean | string;
   zoom: boolean;
   zoomWidget: boolean;
   scaling: number;

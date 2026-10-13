@@ -14,6 +14,7 @@ export const defaultOptions: DrawerOptions = {
   autoSave: true,
   localStorageKey: 'free-drawing',
   opacity: 1,
+  collaboration: false,
   textStyle: {
     fontFamily: 'Ubuntu',
     fontSize: 16,
@@ -40,6 +41,14 @@ export const shapeName = {
   guideLine: 'drawer-guide-line',
   gridLine: 'drawer-grid-line',
   background: 'drawer-background',
+};
+
+/**
+ * Collaboration events, same as server/socket-events.js
+ */
+export const socketEvents = {
+  DRAW: 'DRAW',
+  DRAW_BEGIN_PATH: 'DRAW_BEGIN_PATH',
 };
 
 export const dataAttributes = {
