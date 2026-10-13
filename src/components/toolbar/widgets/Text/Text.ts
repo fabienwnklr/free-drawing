@@ -22,6 +22,29 @@ export class TextWidget extends BaseWidget {
         this.editTextNode(e.target);
       }
     });
+
+    this._loadFonts();
+  }
+
+  /**
+   * A font is loaded by browser when first used in page: texts measured (width, line breaks) or drawn before
+   * use a fallback font. Load fonts of texts (default one and saved texts ones), then layout texts again.
+   */
+  private async _loadFonts() {
+    if (!document.fonts) return;
+
+    const texts = () => this.drawer.drawLayer.find<Text>(`.${shapeName.text}`);
+    const fontFamilies = new Set([this.drawer.options.textStyle.fontFamily, ...texts().map((t) => t.fontFamily())]);
+
+    try {
+      await Promise.all([...fontFamilies].map((fontFamily) => document.fonts.load(`16px "${fontFamily}"`)));
+    } catch {
+      // font unavailable, fallback font is kept
+      return;
+    }
+
+    texts().forEach((text) => text._setTextData());
+    this.drawer.drawLayer.batchDraw();
   }
 
   protected onActive(): void {
@@ -107,24 +130,54 @@ export class TextWidget extends BaseWidget {
     this._initEventsTextarea(textNode, textarea);
   }
 
+  /**
+   * Vertical offset between canvas text and textarea text (unscaled): konva centers the middle of the em box
+   * in each line, css centers the font box (ascent + descent). Negative when canvas text is higher.
+   * @param {Text} textNode
+   */
+  private _baselineOffset(textNode: Text) {
+    const ctx = document.createElement('canvas').getContext('2d');
+
+    if (!ctx) return 0;
+
+    ctx.font = textNode._getContextFont();
+    ctx.textBaseline = 'alphabetic';
+    const { fontBoundingBoxAscent: ascent, fontBoundingBoxDescent: descent } = ctx.measureText('M');
+    ctx.textBaseline = 'middle';
+    const middleAboveBaseline = ascent - ctx.measureText('M').fontBoundingBoxAscent;
+    const offset = middleAboveBaseline - (ascent - descent) / 2;
+
+    // font box metrics not supported (old browsers)
+    return Number.isFinite(offset) ? offset : 0;
+  }
+
   private _createTextarea(textNode: Text) {
+    const scale = this.drawer.stage.scaleX() * textNode.scaleX();
+    const fontSize = textNode.fontSize() * scale;
+    // room around text: glyphs higher than line height (accents) or italic overhang would be cut by textarea,
+    // textarea is moved back by the same amount so text stays exactly on canvas text
+    const spacing = Math.ceil(fontSize * 0.25);
     const textPosition = textNode.absolutePosition();
-    const areaPosition = {
-      x: this.drawer.stage.container().offsetLeft + textPosition.x,
-      y: this.drawer.stage.container().offsetTop + textPosition.y + 5,
-    };
+    const textPadding = textNode.padding() * scale;
     const textarea = document.createElement('textarea');
     this.drawer.$drawerContainer.appendChild(textarea);
 
     textarea.value = textNode.text();
     textarea.style.position = 'absolute';
-    textarea.style.top = areaPosition.y + 2 + 'px';
-    textarea.style.left = areaPosition.x + 'px';
-    textarea.style.width = (textNode.width() * textNode.scaleX() - textNode.padding() * 2) * this.drawer.stage.scaleX() + 'px';
-    textarea.style.height = textNode.height() - textNode.padding() * 2 + 5 + 'px';
-    textarea.style.fontSize = textNode.fontSize() * this.drawer.stage.scaleX() * textNode.scaleX() + 'px';
+    textarea.style.top =
+      this.drawer.stage.container().offsetTop +
+      textPosition.y +
+      textPadding -
+      spacing +
+      this._baselineOffset(textNode) * scale +
+      'px';
+    textarea.style.left = this.drawer.stage.container().offsetLeft + textPosition.x + textPadding - spacing + 'px';
+    // content width is text width (border-box), so lines wrap the same way
+    textarea.style.width = (textNode.width() - textNode.padding() * 2) * scale + spacing * 2 + 'px';
+    textarea.style.height = (textNode.height() - textNode.padding() * 2) * scale + spacing * 2 + 'px';
+    textarea.style.fontSize = fontSize + 'px';
     textarea.style.border = 'none';
-    textarea.style.padding = '0px';
+    textarea.style.padding = spacing + 'px';
     textarea.style.margin = '0px';
     textarea.style.overflow = 'hidden';
     textarea.style.background = 'none';
@@ -137,7 +190,8 @@ export class TextWidget extends BaseWidget {
     textarea.style.fontWeight = textNode.fontStyle().includes('bold') ? 'bold' : 'normal';
     textarea.style.textDecoration = textNode.textDecoration();
     textarea.style.opacity = textNode.opacity().toString();
-    textarea.style.transformOrigin = 'left top';
+    // rotation around text position, not textarea corner
+    textarea.style.transformOrigin = `${spacing}px ${spacing}px`;
     textarea.style.textAlign = textNode.align();
     textarea.style.color = textNode.fill();
 

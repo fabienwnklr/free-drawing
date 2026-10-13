@@ -104,6 +104,25 @@ describe('Test drawer event', () => {
     expect(text.text()).toBe('hello');
   });
 
+  it('Text editing area is on text, with room around glyphs', () => {
+    const drawer = createDrawer();
+    const textWidget = drawer.getWidget<TextWidget>('text')!;
+    const text = textWidget.addTextNode('hello');
+    text.position({ x: 300, y: 200 });
+    textWidget.editTextNode(text);
+
+    const textarea = drawer.$drawerContainer.querySelector('textarea')!;
+    const spacing = parseFloat(textarea.style.padding);
+
+    // room for accents / italic, not cut by textarea
+    expect(spacing).toBeGreaterThan(0);
+    // text inside textarea is at text position (no shift)
+    expect(parseFloat(textarea.style.top) + spacing).toBe(200);
+    expect(parseFloat(textarea.style.left) + spacing).toBe(300);
+    // same width as text, so lines wrap the same way
+    expect(parseFloat(textarea.style.width) - spacing * 2).toBeCloseTo(text.width());
+  });
+
   it('Brush ignores mouseup without mousedown', () => {
     const drawer = createDrawer();
     fireMouse(drawer, 'mousedown', 10, 10);

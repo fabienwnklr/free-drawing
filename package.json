@@ -4,7 +4,7 @@
   "description": "Infinite canvas",
   "contributors": [],
   "private": false,
-  "version": "3.0.2",
+  "version": "3.0.3",
   "type": "module",
   "main": "./dist/drawer.umd.cjs",
   "module": "./dist/drawer.js",
