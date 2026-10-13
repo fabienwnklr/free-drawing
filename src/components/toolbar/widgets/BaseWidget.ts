@@ -1,6 +1,7 @@
-import type { AvailableTools } from '@/@types/toolbar';
+import type { AvailableTools, WidgetOptions } from '@/@types/toolbar';
 import { Drawer } from '@/Drawer';
 import { stringToNode } from '@/utils/functions';
+import { getWidgetOptions } from '@/utils/widgets';
 import type { KonvaEventListener } from 'konva/lib/Node';
 import type { Stage } from 'konva/lib/Stage';
 import type { BaseOverlay } from '@/components/tools/Overlay/BaseOverlay';
@@ -15,6 +16,8 @@ export abstract class BaseWidget {
   shortcut: string | undefined;
   /** Options of the tool (color, width...), shown by the widget while active */
   declare overlay?: BaseOverlay;
+  /** Widget options given with drawer `widgets` option */
+  readonly options: WidgetOptions;
 
   constructor(
     protected drawer: Drawer,
@@ -24,6 +27,7 @@ export abstract class BaseWidget {
     shortcut?: string
   ) {
     this.id = id;
+    this.options = getWidgetOptions(drawer.options.widgets, id);
     this.$container = document.createElement('div');
     this.$container.classList.add(
       `drawer-tool-container`,
@@ -34,9 +38,10 @@ export abstract class BaseWidget {
     this.$button.classList.add(`drawer-button`);
     this.$button.setAttribute('role', 'button');
     this.$button.tabIndex = 0;
-    this.$button.title = title ?? id;
+    this.$button.title = this.options.title ?? title ?? id;
     this.$icon = typeof $icon === 'string' ? stringToNode<SVGElement>($icon) : $icon;
-    this.shortcut = shortcut;
+    // compared to lower case key (caps lock), false disables shortcut
+    this.shortcut = this.options.shortcut === false ? undefined : (this.options.shortcut ?? shortcut)?.toLowerCase();
 
     this._initEvents();
   }

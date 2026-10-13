@@ -1,4 +1,20 @@
 import { DrawerOptions } from './@types/drawer';
+import type { WidgetName } from './@types/toolbar';
+
+/**
+ * Widgets of toolbar, default order
+ */
+export const widgetNames: WidgetName[] = [
+  'pan',
+  'selection',
+  'brush',
+  'eraser',
+  'text',
+  'line',
+  'square',
+  'circle',
+  'arrow',
+];
 
 export const defaultOptions: DrawerOptions = {
   id: 'drawer-' + Date.now(),
@@ -15,6 +31,7 @@ export const defaultOptions: DrawerOptions = {
   localStorageKey: 'free-drawing',
   opacity: 1,
   collaboration: false,
+  widgets: widgetNames,
   textStyle: {
     fontFamily: 'Ubuntu',
     fontSize: 16,

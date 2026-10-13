@@ -1,0 +1,8 @@
+{
+  // tests are type-checked with src (alias @/*), separately from build (root tsconfig only includes src)
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": ["./**/*.ts", "../src"]
+}

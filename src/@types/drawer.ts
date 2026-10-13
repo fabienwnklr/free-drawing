@@ -1,4 +1,4 @@
-import type { AvailableTools } from './toolbar';
+import type { AvailableTools, WidgetsOptions } from './toolbar';
 
 export type DrawerOptions = {
   id: string;
@@ -12,6 +12,8 @@ export type DrawerOptions = {
   textStyle: TextStyle;
   /** Real time collaboration with socket.io server: false (default), true (same origin) or server url */
   collaboration: boolean | string;
+  /** Widgets of toolbar: list (e.g. `['brush', 'eraser']`) or object with widget options (e.g. `{ brush: {} }`) */
+  widgets: WidgetsOptions;
   zoom: boolean;
   zoomWidget: boolean;
   scaling: number;

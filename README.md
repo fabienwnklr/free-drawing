@@ -64,8 +64,40 @@ const drawer = new Drawer($el, {
     align: 'left', // 'left' | 'center' | 'right'
   },
   collaboration: false, // real time collaboration: false, true (socket.io server on same origin) or server url
+  widgets: ['pan', 'selection', 'brush', 'eraser', 'text', 'line', 'square', 'circle', 'arrow'], // toolbar widgets, see below
 };
 ```
+
+## Widgets
+
+`widgets` option chooses the toolbar widgets, in the given order. Without it, every widget is available.
+
+```js
+// list of widgets
+new Drawer($el, { widgets: ['brush', 'eraser'] });
+
+// or object of widgets with their options (an empty object keeps default options)
+new Drawer($el, {
+  widgets: {
+    brush: { title: 'Pinceau', shortcut: 'p', thinning: 0 },
+    eraser: {},
+    text: { shortcut: false },
+  },
+});
+```
+
+Options of every widget:
+
+- `title`: button tooltip (e.g. translation)
+- `shortcut`: keyboard shortcut (a key), `false` to disable it
+
+Brush options (freehand stroke, see [perfect-freehand](https://github.com/steveruizok/perfect-freehand)):
+
+- `thinning`: effect of drawing speed on stroke width, from -1 to 1 (`0.6` by default, `0` for constant width)
+- `smoothing`: softness of stroke edges, from 0 to 1 (`1` by default)
+- `streamline`: how much stroke is stabilized, from 0 to 1 (`0.5` by default)
+
+If `tool` option (or the tool saved in localStorage) is not in `widgets`, the first widget is activated.
 
 ## Collaboration
 

@@ -86,7 +86,9 @@ export class Drawer extends MicroEvent {
     super();
     this.$el = $el;
 
-    this.options = deepMerge(
+    const { widgets, ...otherOptions } = options;
+
+    this.options = deepMerge<DrawerOptions>(
       {
         ...defaultOptions,
         // per instance, not when module is loaded
@@ -94,8 +96,10 @@ export class Drawer extends MicroEvent {
         width: window.innerWidth,
         height: window.innerHeight,
       },
-      options
+      otherOptions
     );
+    // list or object, replaces default list (not merged)
+    if (widgets) this.options.widgets = widgets;
     // copy (setters replace values), restored by resetDrawer
     this.#initialOptions = { ...this.options, textStyle: { ...this.options.textStyle } };
     // Creating drawer container
@@ -201,7 +205,8 @@ export class Drawer extends MicroEvent {
 
     if (this.grid) this.showGrid();
 
-    const activeWidget = this.getWidget<BaseWidget>(activeTool);
+    // initial (or saved) tool may not be in widgets option: first widget of toolbar
+    const activeWidget = this.getWidget<BaseWidget>(activeTool) ?? this.toolbar.widgets.values().next().value;
     activeWidget?.setActive(true);
 
     this.$drawerContainer.appendChild(this.$footerContainer);

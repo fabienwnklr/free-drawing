@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [3.2.0](https://github.com/fabienwnklr/free-drawing/compare/v3.1.0...v3.2.0) (2026-10-13)
+
+
+### Features
+
+* **options:** `widgets` option, list (`['brush', 'eraser']`) or object of widgets options (`{ brush: {} }`), toolbar keeps the given order
+* **widgets:** `title` and `shortcut` options for every widget, `thinning`, `smoothing` and `streamline` options for brush
+* **help:** shortcuts list shows available widgets with their shortcuts
+
 ## [3.1.0](https://github.com/fabienwnklr/free-drawing/compare/v3.0.3...v3.1.0) (2026-10-13)
 
 

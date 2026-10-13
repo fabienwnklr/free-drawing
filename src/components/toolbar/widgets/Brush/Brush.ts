@@ -7,12 +7,19 @@ import { SelectWidget } from '../Select/Select';
 import { BrushOverlay } from '@/components/tools/Overlay/BrushOverlay/BrushOverlay';
 import { getStroke } from 'perfect-freehand';
 import { crosshairCursor, shapeName, socketEvents } from '@/constants';
+import type { BrushWidgetOptions } from '@/@types/toolbar';
+
+/**
+ * Freehand stroke settings used when not given in brush widget options
+ */
+const freehandDefaults = { thinning: 0.6, smoothing: 1, streamline: 0.5 };
 
 export class BrushWidget extends BaseWidget {
   #lastLine: Line = new Line();
   isPaint: boolean = false;
   #allPoints: { x: number; y: number }[] = [];
   overlay: BrushOverlay;
+  declare readonly options: BrushWidgetOptions;
 
   constructor(drawer: Drawer) {
     super(drawer, 'brush', 'Brush', BrushIcon, 'b');
@@ -90,10 +97,12 @@ export class BrushWidget extends BaseWidget {
   private _updateLine(last?: boolean) {
     const realPos = this.drawer._getRelativePointerPos();
     this.#allPoints.push(realPos);
+    const { thinning, smoothing, streamline } = { ...freehandDefaults, ...this.options };
     const points = getStroke(this.#allPoints, {
       size: this.drawer.options.strokeWidth,
-      smoothing: 1,
-      thinning: 0.6,
+      thinning,
+      smoothing,
+      streamline,
       easing: (t) => Math.sin((t * Math.PI) / 2),
       last,
     });

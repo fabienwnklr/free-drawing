@@ -4,13 +4,26 @@ import { BaseWidget } from './widgets/BaseWidget';
 import { BrushWidget } from './widgets/Brush/Brush';
 import { EraserWidget } from './widgets/Eraser/Eraser';
 import { SelectWidget } from './widgets/Select/Select';
-import { AvailableTools } from '../../@types/toolbar';
+import type { AvailableTools, WidgetName } from '../../@types/toolbar';
 import { PanWidget } from './widgets/Pan/Pan';
 import { TextWidget } from './widgets/Text/Text';
 import { LineWidget } from './widgets/Line/Line';
 import { SquareWidget } from './widgets/Square/Square';
 import { CircleWidget } from './widgets/Circle/Circle';
 import { ArrowWidget } from './widgets/Arrow/Arrow';
+import { getWidgetNames } from '@/utils/widgets';
+
+const widgetClasses: Record<WidgetName, new (drawer: Drawer) => BaseWidget> = {
+  pan: PanWidget,
+  selection: SelectWidget,
+  brush: BrushWidget,
+  eraser: EraserWidget,
+  text: TextWidget,
+  line: LineWidget,
+  square: SquareWidget,
+  circle: CircleWidget,
+  arrow: ArrowWidget,
+};
 
 export class Toolbar {
   drawer: Drawer;
@@ -33,15 +46,8 @@ export class Toolbar {
   }
 
   init() {
-    this.addWidget(new PanWidget(this.drawer));
-    this.addWidget(new SelectWidget(this.drawer));
-    this.addWidget(new BrushWidget(this.drawer));
-    this.addWidget(new EraserWidget(this.drawer));
-    this.addWidget(new TextWidget(this.drawer));
-    this.addWidget(new LineWidget(this.drawer));
-    this.addWidget(new SquareWidget(this.drawer));
-    this.addWidget(new CircleWidget(this.drawer));
-    this.addWidget(new ArrowWidget(this.drawer));
+    // widgets option (list or object), in given order
+    getWidgetNames(this.drawer.options.widgets).forEach((name) => this.addWidget(new widgetClasses[name](this.drawer)));
   }
 
   addWidget(widget: BaseWidget) {
