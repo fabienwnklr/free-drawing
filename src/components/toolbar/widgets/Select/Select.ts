@@ -59,6 +59,8 @@ export class SelectWidget extends BaseWidget {
     anchorCornerRadius: 3,
   });
   isSelecting: boolean = false;
+  // press on transformer anchor (resize, rotate), its release must not change selection
+  #pressOnTransformer: boolean = false;
   snapping: boolean = false;
   overlay: SelectOverlay;
 
@@ -80,12 +82,34 @@ export class SelectWidget extends BaseWidget {
       this.drawer.stage.fire('change');
     });
 
+    // side anchors resize text box (line breaks) instead of stretching text: horizontal stretch becomes width
+    this.transformer.on('transform', (e) => {
+      const anchor = this.transformer.getActiveAnchor();
+
+      if (!(e.target instanceof Text) || (anchor !== 'middle-left' && anchor !== 'middle-right')) return;
+
+      const text = e.target;
+      // keep scale given by corners (same on both axes)
+      text.setAttrs({ width: text.width() * (text.scaleX() / text.scaleY()), scaleX: text.scaleY() });
+    });
+
+    // text box minimal width, also prevents flip
+    this.transformer.boundBoxFunc((_oldBox, newBox) => {
+      if (this.transformer.nodes().every((node) => node instanceof Text)) {
+        newBox.width = Math.max(30, newBox.width);
+      }
+
+      return newBox;
+    });
+
     this.drawer.selectionLayer.add(this.transformer);
     this.overlay = new SelectOverlay(drawer);
   }
 
   protected initEvents(): void {
     this.onStage('mousedown touchstart', (e) => {
+      this.#pressOnTransformer = e.target.getParent() === this.transformer;
+
       // do nothing if we mousedown on any shape
       if (e.target !== this.drawer.stage || e.evt.button === 2) {
         return;
@@ -132,6 +156,14 @@ export class SelectWidget extends BaseWidget {
 
     this.onStage('mouseup touchend', (e) => {
       if (e.evt.button === 2) return;
+
+      // end of anchor drag (resize, rotate): pointer may be outside of shapes, selection is kept
+      // (konva ends transform before this event, transformer.isTransforming() is already false)
+      if (this.#pressOnTransformer) {
+        this.#pressOnTransformer = false;
+        return;
+      }
+
       this.isSelecting = false;
       this.drawer.UIPointerEvents('all');
       e.evt.preventDefault();
@@ -160,16 +192,7 @@ export class SelectWidget extends BaseWidget {
         }
       });
 
-      const textShapes = selected.filter((s) => s.hasName(shapeName.text));
-      if (textShapes.length > 0 && textShapes.length === selected.length) {
-        this.transformer.enabledAnchors(['top-left', 'top-right', 'bottom-left', 'bottom-right']);
-        this.transformer.boundBoxFunc(function (_oldBox, newBox) {
-          newBox.width = Math.max(30, newBox.width);
-          return newBox;
-        });
-      } else {
-        this.transformer.enabledAnchors(this.defaultAnchors);
-      }
+      this._setupAnchors(selected);
       if (selected.length) {
         this.showOverlay(selected);
       } else {
@@ -250,8 +273,24 @@ export class SelectWidget extends BaseWidget {
     if (this.drawer.activeWidget !== this) this.drawer.activeWidget?.overlay?.show();
   }
 
+  /**
+   * Anchors of selected shapes: text has no top / bottom anchors (it would be stretched), its side anchors
+   * resize text box and its corners scale it
+   * @param {(Shape<ShapeConfig> | Group)[]} shapes
+   */
+  private _setupAnchors(shapes: (Shape<ShapeConfig> | Group)[]) {
+    const onlyText = shapes.length > 0 && shapes.every((s) => s.hasName(shapeName.text));
+
+    this.transformer.enabledAnchors(
+      onlyText
+        ? ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'middle-left', 'middle-right']
+        : this.defaultAnchors
+    );
+  }
+
   selectAll() {
     const allNodes = this.drawer.getDrawingShapes();
+    this._setupAnchors(allNodes);
     this.transformer.nodes(allNodes);
     this.showOverlay(allNodes);
     this.drawer.focus();

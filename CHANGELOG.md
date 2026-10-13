@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [3.1.0](https://github.com/fabienwnklr/free-drawing/compare/v3.0.3...v3.1.0) (2026-10-13)
+
+
+### Features
+
+* **text:** side handles resize the text box (line breaks) without changing text size, corners still scale text
+
+
+### Bug Fixes
+
+* **selection:** shapes stay selected after a resize or rotation released outside of them
+* **text:** select all on texts no longer shows top / bottom handles which stretched text
+
 ## [3.0.3](https://github.com/fabienwnklr/free-drawing/compare/v3.0.2...v3.0.3) (2026-10-13)
 
 

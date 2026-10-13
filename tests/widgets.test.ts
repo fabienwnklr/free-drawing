@@ -5,7 +5,7 @@ import type { TextWidget } from '../src/components/toolbar/widgets/Text/Text';
 import type { BrushWidget } from '../src/components/toolbar/widgets/Brush/Brush';
 import type { Text } from 'konva/lib/shapes/Text';
 import type { BaseWidget } from '../src/components/toolbar/widgets/BaseWidget';
-import { createDrawer, fireMouse, keydown } from './helpers';
+import { createDrawer, fireMouse, keydown, setPointer } from './helpers';
 
 beforeAll(() => {
   function noOp() {}
@@ -147,5 +147,70 @@ describe('Widgets', () => {
 
     fireMouse(drawer, 'mouseup', 10, 10);
     expect(cursor().endsWith('grab')).toBe(true);
+  });
+
+  it('Text selection has side anchors to resize text box, shapes keep all anchors', () => {
+    const drawer = createDrawer();
+    const textWidget = drawer.getWidget<TextWidget>('text')!;
+    textWidget.addTextNode('hello');
+    textWidget.addTextNode('world');
+    const selectWidget = drawer.getWidget<SelectWidget>('selection')!;
+
+    selectWidget.selectAll();
+    expect(selectWidget.transformer.enabledAnchors()).toEqual(
+      expect.arrayContaining(['middle-left', 'middle-right', 'top-left', 'bottom-right'])
+    );
+    expect(selectWidget.transformer.enabledAnchors()).not.toContain('top-center');
+
+    drawer.getWidget<BrushWidget>('brush')!.setActive(true);
+    fireMouse(drawer, 'mousedown', 10, 10);
+    fireMouse(drawer, 'mouseup', 50, 50);
+    selectWidget.selectAll();
+    expect(selectWidget.transformer.enabledAnchors()).toEqual(selectWidget.defaultAnchors);
+  });
+
+  it('Selection is kept at the end of a transform, wherever the pointer is', () => {
+    const drawer = createDrawer();
+    const text = drawer.getWidget<TextWidget>('text')!.addTextNode('hello');
+    const transformer = drawer.getWidget<SelectWidget>('selection')!.transformer;
+    transformer.nodes([text]);
+
+    // anchor pressed, then released outside of the text
+    setPointer(drawer, 50, 50);
+    transformer.findOne('.bottom-right')!.fire('mousedown', { evt: { button: 0, preventDefault() {} } }, true);
+    fireMouse(drawer, 'mouseup', 900, 600);
+    transformer.stopTransform();
+
+    expect(transformer.nodes()).toEqual([text]);
+
+    // a click outside still unselects
+    fireMouse(drawer, 'mousedown', 900, 600);
+    fireMouse(drawer, 'mouseup', 900, 600);
+    expect(transformer.nodes()).toEqual([]);
+  });
+
+  it('Side anchors resize text box without scaling text, corners scale it', () => {
+    const drawer = createDrawer();
+    const text = drawer.getWidget<TextWidget>('text')!.addTextNode('hello world');
+    const transformer = drawer.getWidget<SelectWidget>('selection')!.transformer;
+    const anchor = vi.spyOn(transformer, 'getActiveAnchor');
+    text.setAttrs({ width: 100, fontSize: 16 });
+
+    // stretched by side anchor
+    anchor.mockReturnValue('middle-right');
+    text.scaleX(2);
+    transformer.fire('transform', { target: text });
+    expect(text.getAttrs()).toMatchObject({ width: 200, scaleX: 1, fontSize: 16 });
+
+    // text already scaled by corners keeps its scale
+    text.setAttrs({ scaleX: 3, scaleY: 1.5 });
+    transformer.fire('transform', { target: text });
+    expect(text.getAttrs()).toMatchObject({ width: 400, scaleX: 1.5, scaleY: 1.5 });
+
+    // corners scale text
+    anchor.mockReturnValue('bottom-right');
+    text.setAttrs({ scaleX: 2, scaleY: 2 });
+    transformer.fire('transform', { target: text });
+    expect(text.getAttrs()).toMatchObject({ width: 400, scaleX: 2, scaleY: 2 });
   });
 });
