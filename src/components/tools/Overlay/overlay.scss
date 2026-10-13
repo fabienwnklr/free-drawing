@@ -1,26 +1,63 @@
-@import '../../../scss/variables';
+@use '../../../scss/variables' as *;
+@use '../../../scss/mixins' as *;
 
-.drawer-overlay-container {
-  user-select: none;
+.drawer-container .drawer-overlay-container {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  flex-direction: column;
-  min-width: 100px;
-  width: fit-content;
-  max-height: 70%;
+  top: $edge;
+  right: $edge;
   display: none;
+  flex-direction: column;
+  gap: $space-1;
+  width: fit-content;
+  min-width: 100px;
+  max-height: 70%;
+  padding: $space-2;
+  user-select: none;
+  // ignored during a pointer action: pointer up over it reaches canvas
+  pointer-events: var(--drawer-pointer-events);
 
   &.show {
     display: flex;
   }
 
+  .overlay-picker-container,
   .opacity-container {
-    padding: 0.4rem;
+    @include picker;
+  }
 
-    input[type='range'] {
-      appearance: auto;
-      width: 97%;
+  .overlay-picker-btn-container {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    width: 100%;
+  }
+
+  .overlay-picker__button {
+    font-family: Ubuntu, sans-serif;
+
+    // colors
+    &:not(.drawer-button) {
+      @include swatch;
     }
+
+    &.drawer-button {
+      width: $btn-size-default;
+      height: $btn-size-default;
+      border: 1px solid $border;
+
+      &.active {
+        border-color: $primary-active;
+      }
+    }
+  }
+
+  input[type='range'] {
+    width: 100%;
+    margin: 0;
+    appearance: auto;
+    accent-color: $primary;
+    cursor: pointer;
+
+    @include focus-ring;
   }
 }

@@ -45,7 +45,15 @@ export class Toast extends MicroEvent {
       this.$toastContainer.innerHTML = message;
     }
 
-    drawer.$drawerContainer.append(this.$toastContainer);
+    // stacked with other toasts at top of drawer
+    let $toasts = drawer.$drawerContainer.querySelector<HTMLDivElement>('.drawer-toasts');
+
+    if (!$toasts) {
+      $toasts = document.createElement('div');
+      $toasts.classList.add('drawer-toasts');
+      drawer.$drawerContainer.append($toasts);
+    }
+    $toasts.append(this.$toastContainer);
   }
 
   show() {

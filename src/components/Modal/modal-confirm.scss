@@ -1,15 +1,16 @@
-.drawer-modal-confirm {
-    .drawer-modal-body {
-        .p-2 {
-            padding: 1rem;
-        }
-    }
+@use '../../scss/variables' as *;
 
-    .drawer-modal-footer {
-        .drawer-button {
-            width: auto;
-            // buttons do not inherit font
-            font: inherit;
-        }
-    }
+.drawer-container .drawer-modal-confirm {
+  .p-2 {
+    padding: $space-2;
+  }
+
+  .drawer-modal-footer .drawer-button {
+    width: auto;
+    padding: $space-2 $space-4;
+  }
+
+  .drawer-button-neutral {
+    border: 1px solid $border;
+  }
 }

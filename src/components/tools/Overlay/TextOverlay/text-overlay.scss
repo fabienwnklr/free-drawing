@@ -1,39 +1,35 @@
-@import '../../../../scss/variables';
+@use '../../../../scss/variables' as *;
+@use '../../../../scss/mixins' as *;
 
-.drawer-container {
-  .drawer-text-overlay {
-    overflow-y: auto;
+.drawer-container .drawer-text-overlay {
+  overflow-y: auto;
 
-    .overlay-picker__select {
-      width: 100%;
-      padding: 0.3rem 0.4rem;
-      border: 1px solid $light;
-      border-radius: $radius;
-      background-color: $btn-bg;
-      color: $btn-color;
-      font-size: 0.9rem;
-      cursor: pointer;
-      pointer-events: var(--drawer-pointer-events);
+  .overlay-picker__select {
+    width: 100%;
+    padding: $space-1 $space-2;
+    border: 1px solid $border;
+    border-radius: $radius;
+    background-color: $surface;
+    color: $text;
+    cursor: pointer;
+    pointer-events: var(--drawer-pointer-events);
 
-      &:focus {
-        outline: 2px solid $primary;
-      }
-    }
+    @include focus-ring;
+  }
 
-    .text-style-bold {
-      font-weight: bold;
-    }
+  .text-style-bold {
+    font-weight: bold;
+  }
 
-    .text-style-italic {
-      font-style: italic;
-    }
+  .text-style-italic {
+    font-style: italic;
+  }
 
-    .text-style-underline {
-      text-decoration: underline;
-    }
+  .text-style-underline {
+    text-decoration: underline;
+  }
 
-    .text-style-line-through {
-      text-decoration: line-through;
-    }
+  .text-style-line-through {
+    text-decoration: line-through;
   }
 }

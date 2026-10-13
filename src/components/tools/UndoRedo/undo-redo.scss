@@ -1,21 +1,5 @@
-@import '../../../scss/variables';
+@use '../../../scss/mixins' as *;
 
-.drawer-container {
-  .drawer-undoredo-container {
-    display: flex;
-    align-items: center;
-    width: fit-content;
-    height: 100%;
-
-    .drawer-button {
-      &:first-of-type {
-        border-top-right-radius: 0;
-        border-bottom-right-radius: 0;
-      }
-      &:last-of-type {
-        border-top-left-radius: 0;
-        border-bottom-left-radius: 0;
-      }
-    }
-  }
+.drawer-container .drawer-undoredo-container {
+  @include button-group;
 }

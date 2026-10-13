@@ -1,43 +1,40 @@
-@import '../../scss/variables';
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
 
-.drawer-dropdown-container {
-  pointer-events: none;
+.drawer-container .drawer-dropdown-container {
   position: absolute;
-  top: 10px;
-  left: 10px;
+  top: $edge;
+  left: $edge;
   z-index: 2;
+  pointer-events: none;
+
+  // button is the panel
+  .drawer-button-dropdown {
+    border-radius: $radius-lg;
+  }
 
   .drawer-dropdown {
-    margin-top: 0.3rem;
-    list-style: none;
-    padding: 0;
-    width: fit-content;
-    overflow: auto;
-    background-color: #fff;
-    border-radius: 5px;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+    @include surface($shadow-lg);
+
     display: none;
-    font-size: 1rem;
-    font-weight: 400;
-
-    .drawer-dropdown-list {
-      margin: 0.3rem;
-      .drawer-dropdown-list-item {
-        width: 100%;
-        padding-top: 0.3rem;
-        padding-bottom: 0.3rem;
-        margin-bottom: 0.3rem;
-        border-radius: 5px;
-        justify-content: flex-start;
-
-        svg {
-          margin-right: 0.4rem;
-        }
-      }
-    }
+    width: fit-content;
+    margin-top: $space-2;
+    padding: $space-1;
+    overflow: auto;
+    pointer-events: var(--drawer-pointer-events);
 
     &.show {
       display: block;
     }
+  }
+
+  .drawer-dropdown-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .drawer-dropdown-list-item {
+    @include menu-item;
   }
 }

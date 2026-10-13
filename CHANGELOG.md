@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [3.5.0](https://github.com/fabienwnklr/free-drawing/compare/v3.4.0...v3.5.0) (2026-10-14)
+
+
+### Features
+
+* **ui:** consistent style: same colors, radius, shadows, spacing and font sizes for panels, menus, dialogs and toasts, drawer font in menus and buttons, visible icon of active tool, opacity slider in primary color, confirmation actions on the right
+
+
+### Bug Fixes
+
+* **toast:** toasts are stacked instead of overlapping and shown in drawer (were fixed to the page when drawer is not full page), with readable colors
+* **ui:** help button no longer cut in a small drawer
+* **ui:** pointer up over tool options ends the pointer action (tool stayed in action, shortcuts disabled)
+* **a11y:** contrast of tool shortcut letters, 24px color buttons, same keyboard focus outline for every control
+* **css:** drawer styles no longer apply to the page (`.backdrop`, toast animations)
+
 ## [3.4.0](https://github.com/fabienwnklr/free-drawing/compare/v3.3.2...v3.4.0) (2026-10-14)
 
 

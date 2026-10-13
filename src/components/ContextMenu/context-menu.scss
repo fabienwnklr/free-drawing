@@ -1,58 +1,46 @@
-@import '../../scss/variables';
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
 
-.drawer-context-menu {
+.drawer-container .drawer-context-menu {
+  @include surface($shadow-lg);
+
   position: absolute;
   top: 0;
   left: 0;
+  z-index: 2;
   visibility: hidden;
-  background-color: #fff;
-  border-radius: $radius;
-  box-shadow: $shadow;
-  min-width: 250px;
-  padding: 0.4rem 0 0.4rem 0;
+  min-width: 220px;
+  padding: $space-1;
 
   &.show {
     visibility: visible;
   }
 
-  .drawer-context-menu-list-item.drawer-button.drawer-button-neutral {
+  ul {
     display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .drawer-context-menu-list-item {
+    @include menu-item;
+
+    position: relative;
     justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    border-radius: 0;
-    border: 0;
-    padding: 0.25rem 1rem 0.25rem 1.25rem;
-
-    &:is(:first-of-type) {
-      border-top-left-radius: $radius;
-      border-top-right-radius: $radius;
-    }
-
-    &:is(:last-of-type) {
-      border-bottom-left-radius: $radius;
-      border-bottom-right-radius: $radius;
-    }
+    // room for check mark
+    padding-left: 1.75rem;
 
     &.active::before {
-      position: absolute;
-      left: 6px;
-      margin-bottom: 1px;
       content: '✓';
+      position: absolute;
+      left: $space-2;
     }
+  }
 
-    &:hover {
-      background-color: $bg-context-menu-item-hover;
-      color: $bg-context-menu-item-hover-color;
-    }
-
-    .drawer-context-menu-item__label {
-      margin-inline-end: 20px;
-    }
-    .drawer-context-menu-item__shortcut {
-      opacity: 0.6;
-      font-family: inherit;
-      font-size: 0.7rem;
-    }
+  .drawer-context-menu-item__shortcut {
+    padding-left: $space-4;
+    color: $text-muted;
+    font-family: inherit;
+    font-size: $font-size-sm;
   }
 }

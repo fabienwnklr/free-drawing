@@ -1,58 +1,26 @@
-@import '../../../scss/variables';
+@use '../../../scss/variables' as *;
+@use '../../../scss/mixins' as *;
 
-.drawer-dropdown-setting {
-  .drawer-button-neutral {
-    border: 0;
-  }
+.drawer-container .drawer-dropdown-setting {
+  // shortcut at the end of item, as in context menu
   .text-muted {
-    margin-left: 0.5rem;
+    margin-left: auto;
+    padding-left: $space-4;
+    font-size: $font-size-sm;
   }
 
   .color-picker-container {
+    @include picker;
+
+    padding: $space-2 $space-3;
+  }
+
+  .color-picker-btn-container {
     display: flex;
-    align-items: center;
-    justify-content: left;
-    flex-direction: column;
-    width: 100%;
-    padding: 0.4rem;
+    gap: $space-2;
+  }
 
-    .color-picker-btn-container {
-      display: flex;
-      gap: 0.4rem;
-      align-items: center;
-      width: 100%;
-      margin-top: 0.3rem;
-      margin-bottom: 0.3rem;
-
-      .color-picker__button {
-        width: 1.35rem;
-        height: 1.35rem;
-        border: 1px solid $light;
-        cursor: pointer;
-        pointer-events: var(--drawer-pointer-events);
-        border-radius: $radius;
-
-        &.active {
-          outline: 3px solid $primary;
-        }
-
-        // keyboard focus, distinct from active color
-        &:focus-visible {
-          outline: 2px solid $primary;
-          outline-offset: 2px;
-        }
-      }
-
-      .drawer-button {
-        width: $btn-size-default;
-        height: $btn-size-default;
-
-        &.stroke-picker__button,
-        &.font-picker__button {
-          border: 1px solid $light;
-          border-radius: $radius;
-        }
-      }
-    }
+  .color-picker__button {
+    @include swatch;
   }
 }

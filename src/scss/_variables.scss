@@ -1,30 +1,49 @@
-$radius: 5px;
+@use 'sass:color';
+
+// Colors
 $primary: #646cff;
-$primary-light: lighten($primary, 20%);
-$text-primary: #cccccc;
+$primary-active: color.adjust($primary, $lightness: -2%);
+// primary text on light backgrounds (contrast)
+$primary-text: color.adjust($primary, $lightness: -15%);
+$on-primary: #fff;
+$hover-bg: color.mix($primary, #fff, 15%);
 
-$btn-bg: #fff;
-$btn-color: #000;
-
-$btn-size-default: 2rem;
-$btn-size-lg: 2.45rem;
-
-$bg-context-menu-item-hover: rgba(153, 158, 248, 0.2);
-$bg-context-menu-item-hover-color: #000;
-
-$primary-hover: lighten($primary, 20%);
-$primary-active: darken($primary, 2%);
-$text-primary-active: #e0e0e0;
-
-$bg-light: #f3f3f3;
-$light: #eeeeee;
-$light-hover: darken($light, 10%);
-$light-color: #383838;
+$text: #1e1e1e;
+// 5.3:1 contrast on white
+$text-muted: #6b6b6b;
+$surface: #fff;
+$subtle-bg: #f3f3f6;
+$border: #e4e4e9;
 
 $danger: #bb4040;
-$danger-hover: darken($danger, 5%);
-$text-danger: #fefefe;
+$danger-hover: color.adjust($danger, $lightness: -5%);
+$on-danger: #fff;
 
-$text-muted-opacity: .5;
+$toast-neutral: #343a40;
+$toast-info: #1971c2;
+$toast-warning: #f59f00;
 
-$shadow: 0 0 3px rgba(0, 0, 0, 0.4);
+// Shapes
+$radius: 6px;
+$radius-lg: 8px;
+$shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+$shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.16);
+
+// Sizes
+$space-1: 0.25rem;
+$space-2: 0.5rem;
+$space-3: 0.75rem;
+$space-4: 1rem;
+// distance of interface from drawer edges
+$edge: 0.75rem;
+
+$font-size-sm: 0.75rem;
+$font-size: 0.875rem;
+$font-size-lg: 1.125rem;
+
+$btn-size-default: 2rem;
+$btn-size-lg: 2.5rem;
+// minimum target size (WCAG 2.5.8)
+$swatch-size: 1.5rem;
+
+$transition: 0.15s ease;

@@ -1,23 +1,25 @@
-@import 'variables';
+@use 'variables' as *;
+@use 'mixins' as *;
+@use 'reboot';
 
 :root {
   --drawer-pointer-events: all;
 }
 
+@font-face {
+  font-family: 'Ubuntu';
+  src: url('../fonts/Ubuntu-Regular.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+
 .drawer-container {
-  @import 'reboot';
+  @include reboot.reboot;
 
-  @font-face {
-    font-family: 'Ubuntu';
-    src: url('../fonts/Ubuntu-Regular.woff2') format('woff2');
-    font-weight: normal;
-    font-style: normal;
-  }
-
-  * {
-    box-sizing: border-box;
-  }
-
+  position: relative;
+  width: fit-content;
+  outline: none;
+  color: $text;
   font-family:
     system-ui,
     -apple-system,
@@ -30,9 +32,7 @@
     'Open Sans',
     'Helvetica Neue',
     sans-serif;
-  position: relative;
-  width: fit-content;
-  outline: none;
+  font-size: $font-size;
 
   // keyboard focus (see Drawer._initKeyboardFocus), frame above canvas (an outline would be under it)
   &.drawer-keyboard-focus:focus::after {
@@ -43,218 +43,148 @@
     pointer-events: none;
   }
 
+  // panel of interface
   .tool {
-    border-radius: $radius;
-    box-shadow: $shadow;
-    background-color: #fff;
+    @include surface;
   }
 
   .text-muted {
-    opacity: $text-muted-opacity;
+    color: $text-muted;
+  }
+
+  .title {
+    align-self: start;
+    color: $text-muted;
+    font-size: $font-size-sm;
+    font-weight: 500;
+  }
+
+  hr {
+    width: 100%;
+    margin: $space-1 0;
+    border: 0;
+    border-top: 1px solid $border;
   }
 
   .drawer-button {
-    padding: 0.4rem;
-    pointer-events: var(--drawer-pointer-events);
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
-    transition:
-      background-color 0.3s ease,
-      color 0.3s ease;
-    border-radius: $radius;
-    user-select: none;
     width: $btn-size-lg;
     height: $btn-size-lg;
-    box-sizing: border-box;
-    background-color: $btn-bg;
-    color: $btn-color;
+    padding: $space-2;
     border: 0;
-
-    &.disabled {
-      cursor: not-allowed;
-      opacity: 0.5;
-    }
+    border-radius: $radius;
+    background-color: $surface;
+    color: $text;
+    cursor: pointer;
+    user-select: none;
+    pointer-events: var(--drawer-pointer-events);
+    transition:
+      background-color $transition,
+      color $transition;
 
     svg {
+      flex-shrink: 0;
       width: 18px;
       height: 18px;
     }
 
-    &:not(.disabled):not(.active):not(.drawer-button-danger):not(.drawer-button-neutral):hover {
-      background-color: $primary-hover;
-    }
-
-    &:focus-visible {
-      box-shadow: 0 0 3px $primary-hover;
-      outline: 2px solid $primary;
+    &:hover:not(.disabled, .active) {
+      background-color: $hover-bg;
     }
 
     &.active {
       background-color: $primary-active;
-      color: $text-primary-active;
+      color: $on-primary;
     }
+
+    &.disabled {
+      cursor: not-allowed;
+      opacity: 0.4;
+    }
+
+    @include focus-ring;
   }
 
-  .drawer-button-neutral {
-    border: 1px solid $light;
-
-    &:not(.disabled):hover {
-      background-color: $light;
-    }
-
-    &.active {
-      background-color: darken($light, 5%);
-      color: $primary;
-    }
+  // toggle in a list (menus): light selected state
+  .drawer-button-neutral.active {
+    background-color: $hover-bg;
+    color: $primary-text;
   }
 
   .drawer-button-danger {
-    color: $text-danger;
     background-color: $danger;
-    &:hover {
+    color: $on-danger;
+
+    &:hover:not(.disabled) {
       background-color: $danger-hover;
     }
   }
 
   .drawer-link {
-    text-decoration: none;
-    color: $light-color;
-    height: 100%;
     display: flex;
     align-items: center;
-    padding: 0.4rem;
-    cursor: pointer;
-    border: 1px solid $light;
-    transition:
-      background-color 0.3s ease,
-      color 0.3s ease;
+    gap: $space-2;
+    padding: $space-2 $space-3;
     border-radius: $radius;
-    background-color: $light;
+    background-color: $subtle-bg;
+    color: $text;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color $transition;
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    &:hover {
+      background-color: $hover-bg;
+    }
 
     &.disabled {
       pointer-events: none;
     }
 
-    & > svg {
-      margin-left: 0.5rem;
-    }
-
-    svg {
-      width: 18px;
-      height: 18px;
-    }
-
-    &:hover {
-      background-color: $light-hover;
-    }
-
-    &:focus-visible {
-      box-shadow: 0 0 3px $light-hover;
-    }
+    @include focus-ring;
   }
 
   &:not(.is-full) .konvajs-content {
     width: fit-content;
+    border-radius: $radius-lg;
     box-shadow: $shadow;
-    border-radius: $radius;
+
     canvas {
-      border-radius: $radius;
+      border-radius: $radius-lg;
     }
   }
 
   .drawer-footer-container {
-    pointer-events: none;
     position: absolute;
-    bottom: 0.1rem;
+    bottom: 0;
+    left: 0;
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    grid-gap: 3rem;
-    align-items: flex-end;
-    justify-content: space-between;
-    cursor: default;
-    box-sizing: border-box;
-    padding: 1rem;
+    // toolbar centered, side parts share remaining width
+    grid-template-columns: 1fr auto 1fr;
+    gap: $space-3;
+    align-items: end;
     width: 100%;
+    padding: $edge;
     overflow-x: auto;
+    cursor: default;
+    pointer-events: none;
 
     .drawer-footer-left {
       display: flex;
-      gap: 0.75rem;
+      gap: $space-3;
       align-items: flex-end;
     }
 
-    .drawer-toolbar-root {
-      display: flex;
-      justify-content: center;
-      border-radius: $radius;
-      box-shadow: $shadow;
-      background-color: #fff;
-    }
-
     .drawer-help-container {
-      justify-self: flex-end;
-    }
-  }
+      @include button-group;
 
-  hr {
-    border: 1px solid $light;
-    width: 100%;
-  }
-
-  .title {
-    font-size: 0.8rem;
-    align-self: start;
-    margin-bottom: 0.4rem;
-  }
-
-  .overlay-picker-container {
-    display: flex;
-    align-items: center;
-    justify-content: left;
-    flex-direction: column;
-    width: 100%;
-    padding: 0.4rem;
-
-    .overlay-picker-btn-container {
-      display: flex;
-      gap: 0.4rem;
-      align-items: center;
-      width: 100%;
-      margin-top: 0.3rem;
-      margin-bottom: 0.3rem;
-
-      .overlay-picker__button {
-        width: 1.35rem;
-        height: 1.35rem;
-        border: 1px solid $light;
-        border-radius: $radius;
-        font-family: Ubuntu, sans-serif;
-        cursor: pointer;
-        pointer-events: var(--drawer-pointer-events);
-
-        &.active {
-          outline: 3px solid $primary;
-        }
-
-        // keyboard focus, distinct from active color
-        &:focus-visible {
-          outline: 2px solid $primary;
-          outline-offset: 2px;
-        }
-      }
-
-      .drawer-button {
-        width: $btn-size-default;
-        height: $btn-size-default;
-
-        &.stroke-picker__button,
-        &.font-picker__button {
-          border: 1px solid $light;
-          border-radius: $radius;
-        }
-      }
+      justify-self: end;
     }
   }
 }

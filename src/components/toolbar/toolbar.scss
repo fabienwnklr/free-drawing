@@ -1,27 +1,30 @@
+@use '../../scss/variables' as *;
+
 .drawer-container {
   .drawer-toolbar-container {
     display: flex;
     align-items: center;
     justify-content: center;
+  }
 
-    .drawer-toolbar-root {
-      width: fit-content;
+  .drawer-toolbar-root {
+    display: flex;
+    gap: $space-1;
+    width: fit-content;
+    padding: $space-1;
 
-      .drawer-button {
-        margin: 0.2rem;
-        position: relative;
+    .drawer-button {
+      position: relative;
+    }
 
-        .tool-key-shortcut {
-          position: absolute;
-          bottom: 0px;
-          right: 3px;
-          color: #b8b8b8;
-        }
-
-        &.active .tool-key-shortcut {
-          // color: #000;
-        }
-      }
+    .tool-key-shortcut {
+      position: absolute;
+      right: 3px;
+      bottom: 2px;
+      font-size: 0.6875rem;
+      line-height: 1;
+      // follows button color, also on active tool
+      opacity: 0.65;
     }
   }
 }

@@ -1,0 +1,87 @@
+@use 'variables' as *;
+
+// Keyboard focus, same for every control
+@mixin focus-ring {
+  &:focus-visible {
+    outline: 2px solid $primary;
+    outline-offset: 2px;
+  }
+}
+
+// Floating surface: panels, menus, modals
+@mixin surface($shadow: $shadow) {
+  background-color: $surface;
+  border-radius: $radius-lg;
+  box-shadow: $shadow;
+}
+
+// Item of settings menu and context menu
+@mixin menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: $space-2;
+  width: 100%;
+  height: auto;
+  padding: $space-2 $space-3;
+  border: 0;
+  border-radius: $radius;
+  background-color: transparent;
+  text-align: start;
+  white-space: nowrap;
+}
+
+// Color button: selected with a ring, keyboard focus outside it
+@mixin swatch {
+  width: $swatch-size;
+  height: $swatch-size;
+  padding: 0;
+  border: 1px solid $border;
+  border-radius: $radius;
+  cursor: pointer;
+  pointer-events: var(--drawer-pointer-events);
+
+  &.active {
+    border: 2px solid $surface;
+    box-shadow: 0 0 0 2px $primary;
+  }
+
+  @include focus-ring;
+}
+
+// Section of tool options: title then buttons
+@mixin picker {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: $space-1;
+
+  .title {
+    margin-bottom: $space-2;
+  }
+}
+
+// Buttons side by side in one panel
+@mixin button-group {
+  display: flex;
+  align-items: center;
+  width: fit-content;
+
+  .drawer-button {
+    border-radius: 0;
+
+    & + .drawer-button {
+      border-left: 1px solid $border;
+    }
+
+    &:first-child {
+      border-top-left-radius: $radius-lg;
+      border-bottom-left-radius: $radius-lg;
+    }
+
+    &:last-child {
+      border-top-right-radius: $radius-lg;
+      border-bottom-right-radius: $radius-lg;
+    }
+  }
+}
