@@ -2,6 +2,7 @@ import type { Drawer } from '@/Drawer';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { Node } from 'konva/lib/Node';
 import type { Shape, ShapeConfig } from 'konva/lib/Shape';
+import { historyLimit } from '@/constants';
 
 /**
  * Serialized drawing shape (konva `toObject` format), any shape type can be restored
@@ -9,7 +10,10 @@ import type { Shape, ShapeConfig } from 'konva/lib/Shape';
 type ShapeState = { attrs: Record<string, unknown>; className: string };
 
 export class History {
-  appHistory: ShapeState[][] = [[]];
+  /**
+   * Drawing states, JSON of shapes array (string is lighter than objects and compared without serializing again)
+   */
+  appHistory: string[] = ['[]'];
   appHistoryStep: number = 0;
   drawer: Drawer;
 
@@ -18,29 +22,42 @@ export class History {
   }
 
   saveState(fromSaved = false) {
-    const state = this.drawer.getDrawingShapes().map((shape): ShapeState => {
+    const shapes = this.drawer.getDrawingShapes().map((shape) => {
       const { attrs, className } = shape.toObject();
       // depends on active tool, not on drawing
       delete attrs.draggable;
-      return { attrs, className };
+      return JSON.stringify({ attrs, className } satisfies ShapeState);
     });
 
-    // ignore change without drawing modification (pan, grid...), also keeps redo available
-    if (!fromSaved && JSON.stringify(state) === JSON.stringify(this.appHistory[this.appHistoryStep])) {
+    if (fromSaved) {
+      // add the first, first and second, first, second and third, etc. (only last ones, history is limited)
+      for (let i = Math.max(0, shapes.length - historyLimit); i < shapes.length; i++) {
+        this._push(`[${shapes.slice(0, i + 1).join(',')}]`);
+      }
       return;
     }
 
+    const state = `[${shapes.join(',')}]`;
+
+    // ignore change without drawing modification (pan, grid...), also keeps redo available
+    if (state === this.appHistory[this.appHistoryStep]) return;
+
+    this._push(state);
+  }
+
+  /**
+   * Add state after current one (removes redo states), keeps the last `historyLimit` states
+   * @param state
+   */
+  private _push(state: string) {
     this.appHistory = this.appHistory.slice(0, this.appHistoryStep + 1);
-    if (fromSaved) {
-      // loop on state for add to history the first, first and second, first, second and third, etc.
-      for (let i = 0; i < state.length; i++) {
-        this.appHistory = this.appHistory.concat([state.slice(0, i + 1)]);
-      }
-      this.appHistoryStep = this.appHistory.length - 1;
-    } else {
-      this.appHistory = this.appHistory.concat([state]);
-      this.appHistoryStep = this.appHistory.length - 1;
+    this.appHistory.push(state);
+
+    if (this.appHistory.length > historyLimit) {
+      this.appHistory = this.appHistory.slice(-historyLimit);
     }
+
+    this.appHistoryStep = this.appHistory.length - 1;
   }
 
   canUndo() {
@@ -69,13 +86,12 @@ export class History {
    * Replace drawing by given state
    * @param state
    */
-  private _restoreState(state: ShapeState[]) {
+  private _restoreState(state: string) {
     this.drawer.getWidget<SelectWidget>('selection')?.transformer.nodes([]);
     this.drawer.getDrawingShapes().forEach((shape) => shape.destroy());
 
-    state.forEach((shape) => {
-      // from JSON, so restored shape does not share attributes (points...) with history
-      this.drawer.addShape(Node.create(JSON.stringify(shape)) as Shape<ShapeConfig>);
+    (JSON.parse(state) as ShapeState[]).forEach((shape) => {
+      this.drawer.addShape(Node.create(shape) as Shape<ShapeConfig>);
     });
   }
 }

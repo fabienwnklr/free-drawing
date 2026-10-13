@@ -6,7 +6,7 @@ import { Rect } from 'konva/lib/shapes/Rect';
 import { AvailableTools } from './@types/toolbar';
 import { ColorLike, DrawerOptions, OptionsChange, TextStyle } from './@types/drawer';
 import { deepMerge } from './utils/functions';
-import { defaultOptions, shapeName, socketEvents, zoomLimits } from './constants';
+import { defaultOptions, gridSize, shapeName, socketEvents, zoomLimits } from './constants';
 import { Zoom } from './components/tools/Zoom/Zoom';
 import { Help } from './components/tools/Help/Help';
 import { BrushWidget } from './components/toolbar/widgets/Brush/Brush';
@@ -68,6 +68,7 @@ export class Drawer extends MicroEvent {
   clearStoredConfirmModal: ConfirmModal | null = null;
 
   debug: boolean = false;
+  #saveFailed = false;
   undoRedo: UndoRedo;
   $footerContainer: HTMLElement;
   $footerLeftElement: HTMLDivElement;
@@ -105,24 +106,32 @@ export class Drawer extends MicroEvent {
       resizeObserver.observe(document.documentElement);
     }
 
-    const stageSaved = localStorage.getItem(this.options.localStorageKey);
-    const toolSaved = localStorage.getItem(this.options.localStorageKey + '-tool') as AvailableTools | null;
+    const stageSaved = this._loadSavedStage();
     let saved = false;
     if (stageSaved) {
-      this.stage = Node.create(stageSaved, this.$drawerContainer);
+      this.stage = stageSaved;
       this.stage.width(width);
       this.stage.height(height);
       this.bgLayer = this.stage.findOne('.background') as Layer;
-      this.gridLayer = this.stage.findOne('.grid') as Layer;
       this.drawLayer = this.stage.findOne('.draw') as Layer;
       this.selectionLayer = this.stage.findOne('.selection') as Layer;
+      // not interactive, saved as listening by previous versions
+      this.bgLayer.listening(false);
+      // grid layer only contains grid, it is rebuilt: previous versions saved lines and a clip
+      // (view at save time) which hid grid outside of it after pan
+      const savedGridLayer = this.stage.findOne('.grid') as Layer;
+      this.grid = savedGridLayer.children.length > 0;
+      savedGridLayer.destroy();
+      this.gridLayer = new Layer({ name: 'grid', listening: false });
+      this.stage.add(this.gridLayer);
+      // between background and drawing
+      this.gridLayer.zIndex(this.bgLayer.zIndex() + 1);
       // saved transformer, selection rectangle and guides are recreated by selection widget
       this.selectionLayer.destroyChildren();
       // draggable depends on active tool, set on its activation
       this.drawLayer.getChildren().forEach((shape) => shape.draggable(false));
       this.background = this.bgLayer.findOne(`.${shapeName.background}`) as Rect;
-      this.grid = this.gridLayer.children.length > 0;
-      activeTool = toolSaved ?? activeTool;
+      activeTool = (this._getStorageItem(this.options.localStorageKey + '-tool') as AvailableTools | null) ?? activeTool;
       saved = true;
     } else {
       this.stage = new Stage({
@@ -132,8 +141,8 @@ export class Drawer extends MicroEvent {
       });
       // Do not create more layer, if think it's necessary, maybe we should think about rethinking the logic
       // cf : https://konvajs.org/docs/performance/Layer_Management.html
-      this.bgLayer = new Layer({ name: 'background' });
-      this.gridLayer = new Layer({ name: 'grid' });
+      this.bgLayer = new Layer({ name: 'background', listening: false });
+      this.gridLayer = new Layer({ name: 'grid', listening: false });
       this.drawLayer = new Layer({ name: ' draw' });
       this.selectionLayer = new Layer({ name: 'selection' });
 
@@ -298,13 +307,9 @@ export class Drawer extends MicroEvent {
   }
 
   /**
-   * Update grid lines and bg position
+   * Update bg position (grid is redrawn with stage)
    */
   _update() {
-    if (this.grid) {
-      this._drawLines();
-    }
-
     this.bgLayer.position({ x: -this._unScale(this.stage.position().x), y: -this._unScale(this.stage.position().y) });
   }
 
@@ -312,8 +317,9 @@ export class Drawer extends MicroEvent {
     this._initHotKey();
     this._initZoomWheel();
 
-    this.stage.on('dragmove', () => {
-      this._update();
+    this.stage.on('dragmove', (e) => {
+      // shapes drag events bubble to stage, only stage drag (pan) moves the view
+      if (e.target === this.stage) this._update();
     });
 
     this.stage.on('wheel', () => {
@@ -382,8 +388,53 @@ export class Drawer extends MicroEvent {
    * Save current draw state to localstorage
    */
   save() {
-    localStorage.setItem(this.options.localStorageKey, this.stage.toJSON());
-    localStorage.setItem(this.options.localStorageKey + '-tool', this.activeTool);
+    try {
+      localStorage.setItem(this.options.localStorageKey, this.stage.toJSON());
+      localStorage.setItem(this.options.localStorageKey + '-tool', this.activeTool);
+    } catch (error) {
+      // storage full or unavailable: drawing stays in page, warn only once
+      if (!this.#saveFailed) {
+        this.#saveFailed = true;
+        this.toast(`Drawing can't be saved: ${(error as Error).message}`, 'warning');
+      }
+    }
+  }
+
+  /**
+   * Read localStorage item, null if storage is unavailable (blocked cookies, sandboxed iframe...)
+   * @param {string} key
+   */
+  private _getStorageItem(key: string): string | null {
+    try {
+      return localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Stage saved in localStorage, null if none or invalid (corrupted, other app data...)
+   */
+  private _loadSavedStage(): Stage | null {
+    const json = this._getStorageItem(this.options.localStorageKey);
+
+    if (!json) return null;
+
+    try {
+      const stage = Node.create(json, this.$drawerContainer);
+      const required = ['.background', '.grid', '.draw', '.selection', `.${shapeName.background}`];
+
+      if (stage instanceof Stage && required.every((selector) => stage.findOne(selector))) {
+        return stage;
+      }
+
+      stage.destroy();
+    } catch {
+      // invalid JSON
+    }
+
+    console.warn(`[free-drawing] invalid saved data "${this.options.localStorageKey}" ignored`);
+    return null;
   }
 
   /**
@@ -542,7 +593,7 @@ export class Drawer extends MicroEvent {
     this.grid = true;
     this.contextMenu.$gridBtn.classList.add('active');
     this.setting.$toggleGridButton.classList.add('active');
-    this._drawLines();
+    this._drawGrid();
     this._initSnapGridEvents();
 
     const selectWidget = this.getWidget<SelectWidget>('selection');
@@ -554,15 +605,14 @@ export class Drawer extends MicroEvent {
 
   private _initSnapGridEvents() {
     const selectWidget = this.getWidget<SelectWidget>('selection');
-    const cellSize = 40;
 
     // namespaced, object snapping and change saving also listen drag events of draw layer
     this.drawLayer.on('dragmove.grid', (e) => {
       if (e.target instanceof Shape) {
         if (e.target instanceof Line) return;
         e.target.position({
-          x: Math.round(e.target.x() / cellSize) * cellSize,
-          y: Math.round(e.target.y() / cellSize) * cellSize,
+          x: Math.round(e.target.x() / gridSize) * gridSize,
+          y: Math.round(e.target.y() / gridSize) * gridSize,
         });
       }
     });
@@ -592,10 +642,10 @@ export class Drawer extends MicroEvent {
         return newPos;
       }
 
-      const closestX = Math.round(newPos.x / cellSize) * cellSize;
+      const closestX = Math.round(newPos.x / gridSize) * gridSize;
       const diffX = Math.abs(newPos.x - closestX);
 
-      const closestY = Math.round(newPos.y / cellSize) * cellSize;
+      const closestY = Math.round(newPos.y / gridSize) * gridSize;
       const diffY = Math.abs(newPos.y - closestY);
 
       const snappedX = diffX < 10;
@@ -640,90 +690,42 @@ export class Drawer extends MicroEvent {
     return val / this.getZoomLevel();
   }
 
-  private _drawLines() {
-    this.gridLayer.clear();
-    this.gridLayer.removeChildren();
-    this.gridLayer.clipWidth(0);
-    const stepSize = 40;
+  /**
+   * Draw grid: one shape drawing lines of visible area, redrawn with stage (pan, zoom) without creating nodes
+   */
+  private _drawGrid() {
+    this.gridLayer.destroyChildren();
+    this.gridLayer.add(
+      new Shape({
+        name: shapeName.gridLine,
+        stroke: 'rgba(0, 0, 0, 0.2)',
+        strokeWidth: 1,
+        dash: [3, 3],
+        listening: false,
+        sceneFunc: (ctx, shape) => {
+          const scale = this.getZoomLevel();
+          // visible area in stage coordinates
+          const x1 = -this.stage.x() / scale;
+          const y1 = -this.stage.y() / scale;
+          const x2 = x1 + this.stage.width() / scale;
+          const y2 = y1 + this.stage.height() / scale;
+          // lines start on grid, so dashes don't move with view
+          const startX = Math.floor(x1 / gridSize) * gridSize;
+          const startY = Math.floor(y1 / gridSize) * gridSize;
 
-    const stageRect = {
-      x1: 0,
-      y1: 0,
-      x2: this.stage.width(),
-      y2: this.stage.height(),
-      offset: {
-        x: this._unScale(this.stage.position().x),
-        y: this._unScale(this.stage.position().y),
-      },
-    };
-    const viewRect = {
-      x1: -stageRect.offset.x,
-      y1: -stageRect.offset.y,
-      x2: this._unScale(this.stage.width()) - stageRect.offset.x,
-      y2: this._unScale(this.stage.height()) - stageRect.offset.y,
-    };
-    // and find the largest rectangle that bounds both the stage and view rect.
-    // This is the rect we will draw on.
-    const gridOffset = {
-      x: Math.ceil(this._unScale(this.stage.position().x) / stepSize) * stepSize,
-      y: Math.ceil(this._unScale(this.stage.position().y) / stepSize) * stepSize,
-    };
-    const gridRect = {
-      x1: -gridOffset.x,
-      y1: -gridOffset.y,
-      x2: this._unScale(this.stage.width()) - gridOffset.x + stepSize,
-      y2: this._unScale(this.stage.height()) - gridOffset.y + stepSize,
-    };
-    const gridFullRect = {
-      x1: Math.min(stageRect.x1, gridRect.x1),
-      y1: Math.min(stageRect.y1, gridRect.y1),
-      x2: Math.max(stageRect.x2, gridRect.x2),
-      y2: Math.max(stageRect.y2, gridRect.y2),
-    };
+          // one stroke per line: browsers optimize dashes of a straight line, not of a path with many lines
+          const strokeLine = (fromX: number, fromY: number, toX: number, toY: number) => {
+            ctx.beginPath();
+            ctx.moveTo(fromX, fromY);
+            ctx.lineTo(toX, toY);
+            ctx.strokeShape(shape);
+          };
 
-    // set clip function to stop leaking lines into non-viewable space.
-    this.gridLayer.clip({
-      x: viewRect.x1,
-      y: viewRect.y1,
-      width: viewRect.x2 - viewRect.x1,
-      height: viewRect.y2 - viewRect.y1,
-    });
-
-    // find the x & y size of the grid
-    const xSize = gridFullRect.x2 - gridFullRect.x1,
-      ySize = gridFullRect.y2 - gridFullRect.y1,
-      // compute the number of steps required on each axis.
-      xSteps = Math.round(xSize / stepSize),
-      ySteps = Math.round(ySize / stepSize);
-
-    // draw vertical lines
-    for (let i = 0; i <= xSteps; i++) {
-      this.gridLayer.add(
-        new Line({
-          x: gridFullRect.x1 + i * stepSize,
-          y: gridFullRect.y1,
-          points: [0, 0, 0, ySize],
-          stroke: 'rgba(0, 0, 0, 0.2)',
-          strokeWidth: 1,
-          dash: [3, 3],
-          name: shapeName.gridLine,
-        })
-      );
-    }
-    //draw Horizontal lines
-    for (let i = 0; i <= ySteps; i++) {
-      this.gridLayer.add(
-        new Line({
-          x: gridFullRect.x1,
-          y: gridFullRect.y1 + i * stepSize,
-          points: [0, 0, xSize, 0],
-          stroke: 'rgba(0, 0, 0, 0.2)',
-          strokeWidth: 1,
-          dash: [3, 3],
-          name: shapeName.gridLine,
-        })
-      );
-    }
+          for (let x = startX; x <= x2; x += gridSize) strokeLine(x, startY, x, y2);
+          for (let y = startY; y <= y2; y += gridSize) strokeLine(startX, y, x2, y);
+        },
+      })
+    );
   }
 
   /**
@@ -733,8 +735,7 @@ export class Drawer extends MicroEvent {
     this.grid = false;
     this.setting.$toggleGridButton.classList.remove('active');
     this.contextMenu.$gridBtn.classList.remove('active');
-    this.gridLayer.clear();
-    this.gridLayer.removeChildren();
+    this.gridLayer.destroyChildren();
     this._removeSnapGridEvents();
   }
 

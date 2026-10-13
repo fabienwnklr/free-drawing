@@ -99,7 +99,8 @@ export class BrushWidget extends BaseWidget {
     });
 
     if (!this.#lastLine.closed()) this.#lastLine.closed(true);
-    const newPoints = points.flat();
+    // 2 decimals are enough to draw, and saved data / history are about 3 times lighter
+    const newPoints = points.flat().map((n) => Math.round(n * 100) / 100);
     this.#lastLine?.points(newPoints);
   }
 
