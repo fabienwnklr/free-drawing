@@ -26,7 +26,7 @@ Git hooks (husky): `commit-msg` runs commitlint (conventional commits), `pre-pus
   - `drawLayer` (named `' draw'`, with a leading space: select it with `.draw`): the drawing shapes;
   - `selectionLayer`: transformer, selection rectangle, snapping guides (transient, cleared on load).
 - Constructor order matters: options → saved stage or new stage → context menu, settings, zoom, undo / redo → `Toolbar` (widgets) → `Help` (reads toolbar widgets) → active tool → events → optional collaboration.
-- **UI components** are plain DOM classes appended to `drawer.$drawerContainer`: `ContextMenu`, `Settings` (dropdown), `Zoom`, `Position`, `UndoRedo`, `Help` (modal), `Toast`, `Modal` / `ConfirmModal`, overlays. Top left ones go in `$headerContainer` (settings menu, position), bottom ones in `$footerContainer`. `Drawer._update()` runs after each view move or zoom (background, position).
+- **UI components** are plain DOM classes appended to `drawer.$drawerContainer`: `ContextMenu`, `Settings` (dropdown), `Zoom`, `Position`, `UndoRedo`, `Help` (modal), `Toast`, `Modal` / `ConfirmModal`, overlays. Color choices use [ColorPicker](src/components/ColorPicker/ColorPicker.ts) (palette, custom color input, optional transparent), colors are compared with `normalizeColor` ([utils/color](src/utils/color.ts)). Background color (`fillColor`) only applies to `fillShapes` (rectangle, ellipse), transparent is no fill (`toFill`). Top left ones go in `$headerContainer` (settings menu, position), bottom ones in `$footerContainer`. `Drawer._update()` runs after each view move or zoom (background, position).
 
 ### Widgets (toolbar tools)
 
