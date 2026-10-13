@@ -6,6 +6,8 @@ import type { Vector2d } from 'konva/lib/types';
 import { ShapeWidget, dragBox } from '../ShapeWidget';
 
 export class CircleWidget extends ShapeWidget<Ellipse> {
+  protected hasFill = true;
+
   constructor(drawer: Drawer) {
     super(drawer, 'circle', 'Ellipse', CircleIcon, 'c');
   }

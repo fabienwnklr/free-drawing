@@ -12,6 +12,7 @@ export const defaultOptions = {
   height: window.innerHeight,
   strokeWidth: 5,
   strokeColor: '#000',
+  fillColor: 'transparent',
   zoom: true,
   zoomWidget: true,
   positionWidget: true,

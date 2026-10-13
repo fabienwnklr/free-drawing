@@ -8,6 +8,8 @@ export type DrawerOptions = {
   strokeWidth: number;
   strokeDash: number[] | undefined,
   strokeColor: ColorLike;
+  /** Background color of new rectangles and ellipses, `'transparent'` for none (default) */
+  fillColor: ColorLike;
   opacity: number;
   textStyle: TextStyle;
   /** Real time collaboration with socket.io server: false (default), true (same origin) or server url */
@@ -37,7 +39,9 @@ export type TextStyle = {
 /**
  * Options changed by Drawer setters, sent with `fd.options.change` event (only changed keys)
  */
-export type OptionsChange = Partial<Pick<DrawerOptions, 'strokeColor' | 'strokeWidth' | 'strokeDash' | 'opacity'>> & {
+export type OptionsChange = Partial<
+  Pick<DrawerOptions, 'strokeColor' | 'fillColor' | 'strokeWidth' | 'strokeDash' | 'opacity'>
+> & {
   textStyle?: Partial<TextStyle>;
 };
 
@@ -194,4 +198,4 @@ type CssColorNames =
   | 'Yellow'
   | 'YellowGreen';
 
-export type ColorLike = RGB | RGBA | HEX | CssColorNames;
+export type ColorLike = RGB | RGBA | HEX | CssColorNames | 'transparent';

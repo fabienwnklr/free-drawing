@@ -1,0 +1,49 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+.drawer-container {
+  // white with red diagonal: no color
+  .drawer-color-transparent {
+    background:
+      linear-gradient(
+        to top right,
+        transparent calc(50% - 1px),
+        $danger calc(50% - 1px),
+        $danger calc(50% + 1px),
+        transparent calc(50% + 1px)
+      ),
+      $surface;
+  }
+
+  // rainbow while current color is in palette, else current color
+  .drawer-color-input {
+    @include swatch;
+
+    appearance: none;
+    background: conic-gradient(#e03131, #f08c00, #fab005, #2f9e44, #1971c2, #9c36b5, #e03131);
+
+    &::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+
+    &::-webkit-color-swatch {
+      border: 0;
+      border-radius: 3px;
+      opacity: 0;
+    }
+
+    &::-moz-color-swatch {
+      border: 0;
+      border-radius: 3px;
+      opacity: 0;
+    }
+
+    &.active::-webkit-color-swatch {
+      opacity: 1;
+    }
+
+    &.active::-moz-color-swatch {
+      opacity: 1;
+    }
+  }
+}

@@ -9,7 +9,8 @@ import { NodeConfig } from 'konva/lib/Node';
 import { Context } from 'konva/lib/Context';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Stage } from 'konva/lib/Stage';
-import { shapeName, strokeStyleShapes } from '@/constants';
+import { fillShapes, shapeName, strokeStyleShapes } from '@/constants';
+import { toFill } from '@/utils/color';
 import { setPressed } from '@/utils/dom';
 import type { ColorLike, TextStyle } from '@/@types/drawer';
 import { SelectOverlay } from '@/components/tools/Overlay/SelectOverlay/SelectOverlay';
@@ -252,6 +253,7 @@ export class SelectWidget extends BaseWidget {
       textOverlay?.hide();
       // dash only for outline shapes (not brush lines)
       this.overlay.toggleStyleBtns(shapes.every((s) => strokeStyleShapes.some((name) => s.hasName(name))));
+      this.overlay.toggleFillBtns(shapes.every((s) => fillShapes.some((name) => s.hasName(name))));
       this.overlay.show(shapes);
     }
   }
@@ -574,14 +576,21 @@ export class SelectWidget extends BaseWidget {
   }
 
   /**
-   * Change background color
-   * @param {ColorLike} color
+   * Change background color of selected rectangles and ellipses
+   * @param {ColorLike} color `'transparent'` for none
+   */
+  setFillColor(color: ColorLike) {
+    this._updateSelected((s) => {
+      // setAttr: fill(undefined) would be the getter
+      if (fillShapes.some((name) => s.hasName(name))) s.setAttr('fill', toFill(color));
+    });
+  }
+
+  /**
+   * @deprecated use `setFillColor`
    */
   setBgColor(color: ColorLike) {
-    this._updateSelected((s) => {
-      // Ignore line and text, their fill is their color
-      if (!(s instanceof Line) && !(s instanceof Text)) s.fill(color);
-    });
+    this.setFillColor(color);
   }
 
   /**

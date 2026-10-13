@@ -24,6 +24,7 @@ export const defaultOptions: DrawerOptions = {
   strokeWidth: 5,
   strokeDash: undefined,
   strokeColor: '#000',
+  fillColor: 'transparent',
   zoom: true,
   zoomWidget: true,
   positionWidget: true,
@@ -88,6 +89,11 @@ export const shapeName = {
 export const strokeStyleShapes = [shapeName.straightLine, shapeName.rect, shapeName.ellipse, shapeName.arrow];
 
 /**
+ * Shapes with a background color (fill), other shapes fill is their color (brush line, text) or none
+ */
+export const fillShapes = [shapeName.rect, shapeName.ellipse];
+
+/**
  * Collaboration events, same as server/socket-events.js
  */
 export const socketEvents = {
@@ -98,6 +104,7 @@ export const socketEvents = {
 export const dataAttributes = {
   strokeWidth: 'data-stroke-width',
   strokeColor: 'data-stroke-color',
+  fillColor: 'data-fill-color',
   strokeStyle: 'data-stroke-style',
   fontSize: 'data-font-size',
   fontStyle: 'data-font-style',

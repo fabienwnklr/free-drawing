@@ -6,7 +6,8 @@ import LineDashedIcon from '@/icons/line-dashed.svg?raw';
 import './overlay.scss';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Group } from 'konva/lib/Group';
-import { dataAttributes } from '@/constants';
+import { dataAttributes, fillShapes } from '@/constants';
+import { ColorPicker } from '@/components/ColorPicker/ColorPicker';
 import { createButton, setLabel, setPressed, uniqueId } from '@/utils/dom';
 
 /**
@@ -18,6 +19,8 @@ export type OverlayOptions = {
   styleBtns: boolean;
   /** Show stroke width buttons (default true) */
   widthBtns: boolean;
+  /** Show background color buttons, for rectangle and ellipse (default false) */
+  fillBtns: boolean;
   /** Title of color section (default 'Stroke') */
   colorTitle: string;
   /** Accessible name of overlay (default 'Tool options') */
@@ -30,6 +33,11 @@ export class BaseOverlay {
 
   $strokeColorContainer!: HTMLDivElement;
   $strokeColorBtnContainer!: HTMLDivElement;
+  strokeColorPicker!: ColorPicker;
+
+  $fillColorContainer!: HTMLDivElement;
+  $fillColorBtnContainer!: HTMLDivElement;
+  fillColorPicker!: ColorPicker;
 
   $strokeWidthContainer!: HTMLDivElement;
   $strokeWidthBtnContainer!: HTMLDivElement;
@@ -67,6 +75,8 @@ export class BaseOverlay {
   private _init() {
     // stroke color
     this._createStrokeColorFields();
+    // background color
+    this._createFillColorFields();
     // stroke width
     this._createStrokeWidthFields();
     // stroke style
@@ -77,6 +87,7 @@ export class BaseOverlay {
     // Then append to dom
     this.appendContent([
       this.$strokeColorContainer,
+      this.$fillColorContainer,
       this.$strokeWidthContainer,
       this.$strokeStyleContainer,
       this.$opacityContainer,
@@ -96,15 +107,34 @@ export class BaseOverlay {
       { color: '#f08c00', label: 'Orange' },
     ];
 
-    strokeColors.forEach(({ color, label }) => {
-      const $btn = createButton(this.selectors.button);
-      $btn.style.backgroundColor = color;
-      $btn.setAttribute(dataAttributes.strokeColor, color.toString());
-      setLabel($btn, label);
-      setPressed($btn, false);
-      $btn.addEventListener('click', () => this.drawer.setStrokeColor(color));
-      this.$strokeColorBtnContainer.append($btn);
+    // no transparent color: drawing would be invisible
+    this.strokeColorPicker = new ColorPicker(this.$strokeColorBtnContainer, {
+      colors: strokeColors,
+      attr: dataAttributes.strokeColor,
+      buttonClass: this.selectors.button,
+      onChange: (color) => this.drawer.setStrokeColor(color),
     });
+  }
+
+  private _createFillColorFields() {
+    const { $container, $btnContainer } = this._createSection('Background');
+    this.$fillColorContainer = $container;
+    this.$fillColorBtnContainer = $btnContainer;
+
+    this.fillColorPicker = new ColorPicker(this.$fillColorBtnContainer, {
+      colors: [
+        { color: '#ffc9c9', label: 'Light red' },
+        { color: '#b2f2bb', label: 'Light green' },
+        { color: '#a5d8ff', label: 'Light blue' },
+        { color: '#ffec99', label: 'Light yellow' },
+      ],
+      attr: dataAttributes.fillColor,
+      buttonClass: this.selectors.button,
+      transparent: true,
+      onChange: (color) => this.drawer.setFillColor(color),
+    });
+
+    this.toggleFillBtns(!!this.options?.fillBtns);
   }
 
   private _createStrokeWidthFields() {
@@ -245,13 +275,17 @@ export class BaseOverlay {
   show(shape?: (Shape<ShapeConfig> | Group)[]) {
     this.$overlayContainer.classList.add('show');
 
-    const { strokeColor, strokeWidth, strokeDash, opacity } = this.drawer.options;
-    let data: OptionsChange = { strokeColor, strokeWidth, strokeDash, opacity };
+    const { strokeColor, fillColor, strokeWidth, strokeDash, opacity } = this.drawer.options;
+    let data: OptionsChange = { strokeColor, fillColor, strokeWidth, strokeDash, opacity };
 
     if (shape && shape[0] instanceof Shape) {
+      const hasFill = fillShapes.some((name) => shape[0].hasName(name));
+
       data = {
         // text color is stored in fill
         strokeColor: (shape[0].stroke() || shape[0].fill()) as ColorLike,
+        // no fill is transparent
+        fillColor: hasFill ? ((shape[0].fill() || 'transparent') as ColorLike) : fillColor,
         strokeWidth: shape[0].strokeWidth(),
         strokeDash: shape[0].dash(),
         opacity: shape[0].opacity(),
@@ -276,10 +310,11 @@ export class BaseOverlay {
    */
   updateFields(change: OptionsChange) {
     if (change.strokeColor !== undefined) {
-      this._setActiveBtn(
-        this.$strokeColorBtnContainer,
-        this.$strokeColorBtnContainer.querySelector(`[${dataAttributes.strokeColor}="${change.strokeColor}"]`)
-      );
+      this.strokeColorPicker.setColor(change.strokeColor);
+    }
+
+    if (change.fillColor !== undefined) {
+      this.fillColorPicker.setColor(change.fillColor);
     }
 
     if (change.strokeWidth !== undefined) {
@@ -311,6 +346,14 @@ export class BaseOverlay {
    */
   toggleStyleBtns(visible: boolean) {
     this.$strokeStyleContainer.style.display = visible ? '' : 'none';
+  }
+
+  /**
+   * Show / hide background color buttons, only relevant for rectangle and ellipse
+   * @param {boolean} visible
+   */
+  toggleFillBtns(visible: boolean) {
+    this.$fillColorContainer.style.display = visible ? '' : 'none';
   }
 
   hide() {

@@ -7,7 +7,7 @@ import type { Text } from 'konva/lib/shapes/Text';
 import type { BaseWidget } from '../src/components/toolbar/widgets/BaseWidget';
 import type { EraserWidget } from '../src/components/toolbar/widgets/Eraser/Eraser';
 import { crosshairCursor } from '../src/constants';
-import { createDrawer, fireMouse, keydown, setPointer } from './helpers';
+import { createDrawer, drag, fireMouse, keydown, setPointer } from './helpers';
 
 beforeAll(() => {
   function noOp() {}
@@ -288,5 +288,58 @@ describe('Widgets', () => {
     keydown(drawer, { key: 'a', ctrlKey: true });
     expect(shown(square)).toBe(false);
     expect(shown(selectWidget)).toBe(true);
+  });
+
+  it('Rectangles and ellipses have a background color, transparent by default', () => {
+    const drawer = createDrawer();
+    const square = drawer.getWidget<BaseWidget>('square')!;
+    const selectWidget = drawer.getWidget<SelectWidget>('selection')!;
+    const fillShown = (widget: BaseWidget) => widget.overlay!.$fillColorContainer.style.display !== 'none';
+    const fillPressed = (widget: BaseWidget) =>
+      widget.overlay!.$fillColorBtnContainer.querySelector('[aria-pressed="true"]')?.getAttribute('data-fill-color');
+
+    // shared overlay of shape tools: background only for rectangle and ellipse
+    square.setActive(true);
+    expect(fillShown(square)).toBe(true);
+    expect(fillPressed(square)).toBe('transparent');
+    drawer.getWidget<BaseWidget>('line')!.setActive(true);
+    expect(fillShown(square)).toBe(false);
+    drawer.getWidget<BaseWidget>('circle')!.setActive(true);
+    expect(fillShown(square)).toBe(true);
+
+    // transparent: no fill, inside is not hit
+    square.setActive(true);
+    drag(drawer, [10, 10], [100, 80]);
+    const empty = drawer.getDrawingShapes()[0];
+    expect(empty.fill()).toBeUndefined();
+
+    drawer.setFillColor('#a5d8ff');
+    drag(drawer, [200, 10], [300, 80]);
+    const filled = drawer.getDrawingShapes()[1];
+    expect(filled.fill()).toBe('#a5d8ff');
+    expect(fillPressed(square)).toBe('#a5d8ff');
+
+    // selection: applied to rectangles and ellipses only
+    drawer.getWidget<BaseWidget>('brush')!.setActive(true);
+    fireMouse(drawer, 'mousedown', 10, 300);
+    fireMouse(drawer, 'mouseup', 150, 380);
+    const brushLine = drawer.getDrawingShapes()[2];
+    selectWidget.setActive(true);
+    selectWidget.transformer.nodes([filled]);
+    selectWidget.showOverlay([filled]);
+    expect(fillShown(selectWidget)).toBe(true);
+    expect(fillPressed(selectWidget)).toBe('#a5d8ff');
+
+    drawer.setFillColor('transparent');
+    expect(filled.fill()).toBeUndefined();
+    expect(filled.toObject().attrs.fill).toBeUndefined();
+
+    selectWidget.transformer.nodes([filled, brushLine]);
+    selectWidget.showOverlay([filled, brushLine]);
+    expect(fillShown(selectWidget)).toBe(false);
+    const brushColor = brushLine.fill();
+    drawer.setFillColor('#ffc9c9');
+    expect(brushLine.fill()).toBe(brushColor);
+    expect(filled.fill()).toBe('#ffc9c9');
   });
 });

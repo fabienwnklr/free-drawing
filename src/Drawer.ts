@@ -513,6 +513,16 @@ export class Drawer extends MicroEvent {
   }
 
   /**
+   * Set background color of rectangles and ellipses (new and selected ones)
+   * @param {ColorLike} color `'transparent'` for none
+   */
+  setFillColor(color: ColorLike) {
+    this.options.fillColor = color;
+    this.getWidget<SelectWidget>('selection')?.setFillColor(color);
+    this._triggerOptionsChange({ fillColor: color });
+  }
+
+  /**
    * Set stroke width for draw
    * @param {Number | String} width
    */
@@ -789,11 +799,12 @@ export class Drawer extends MicroEvent {
    * and drawing options given on init (color, width, opacity, text style...)
    */
   resetDrawer() {
-    const { strokeColor, strokeWidth, strokeDash, opacity, textStyle } = this.#initialOptions;
+    const { strokeColor, fillColor, strokeWidth, strokeDash, opacity, textStyle } = this.#initialOptions;
 
     this.clearCanvas(true);
     this.setBgColor('#fff');
     this.setStrokeColor(strokeColor);
+    this.setFillColor(fillColor);
     this.setStrokeWidth(strokeWidth);
     this.setStrokeStyle(strokeDash);
     this.setOpacity(opacity);

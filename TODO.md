@@ -10,4 +10,5 @@
 <!-- - améliore le style global (homogénéité, normes, etc.) -->
 <!-- - quand je change un style d'un texte la largeur attribué est modifié à la largeur du contenu
 - la couleur et la couleur de contour du texte diffère -->
-- dans tout les choix de couleur ajoute un input pour choisir une couleur personnalisé, dont une couleur blank (transparent)
+<!-- - dans tout les choix de couleur ajoute un input pour choisir une couleur personnalisé, dont une couleur blank (transparent) -->
+- position object (reculer d'un plan, en arrièere plan, idem pour devant)

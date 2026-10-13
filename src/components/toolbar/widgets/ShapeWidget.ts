@@ -5,6 +5,7 @@ import type { Vector2d } from 'konva/lib/types';
 import { BaseWidget } from './BaseWidget';
 import { ShapeOverlay } from '@/components/tools/Overlay/ShapeOverlay/ShapeOverlay';
 import { crosshairCursor } from '@/constants';
+import { toFill } from '@/utils/color';
 
 // one overlay shared by shape tools of a drawer
 const overlays = new WeakMap<Drawer, ShapeOverlay>();
@@ -54,6 +55,8 @@ export abstract class ShapeWidget<T extends Shape<ShapeConfig>> extends BaseWidg
   protected cursor = crosshairCursor;
   #shape: T | null = null;
   #start: Vector2d = { x: 0, y: 0 };
+  /** Shapes of tool have a background color (rectangle, ellipse) */
+  protected hasFill: boolean = false;
 
   constructor(drawer: Drawer, id: AvailableTools, title: string, icon: string, shortcut: string) {
     super(drawer, id, title, icon, shortcut);
@@ -91,16 +94,22 @@ export abstract class ShapeWidget<T extends Shape<ShapeConfig>> extends BaseWidg
    * Style of new shapes, from drawer options
    */
   protected get shapeStyle() {
-    const { strokeColor, strokeWidth, strokeDash, opacity } = this.drawer.options;
+    const { strokeColor, fillColor, strokeWidth, strokeDash, opacity } = this.drawer.options;
 
     return {
       stroke: strokeColor,
+      fill: this.hasFill ? toFill(fillColor) : undefined,
       strokeWidth,
       dash: strokeDash,
       opacity,
       // easier to select / erase than the stroke only
       hitStrokeWidth: Math.max(20, strokeWidth),
     };
+  }
+
+  // overlay shared by shape tools: background color only for shapes having one
+  protected onActive(): void {
+    this.overlay.toggleFillBtns(this.hasFill);
   }
 
   protected initEvents(): void {

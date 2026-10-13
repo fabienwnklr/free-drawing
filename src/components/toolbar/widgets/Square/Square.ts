@@ -6,6 +6,8 @@ import type { Vector2d } from 'konva/lib/types';
 import { ShapeWidget, dragBox } from '../ShapeWidget';
 
 export class SquareWidget extends ShapeWidget<Rect> {
+  protected hasFill = true;
+
   constructor(drawer: Drawer) {
     super(drawer, 'square', 'Rectangle', SquareIcon, 'r');
   }

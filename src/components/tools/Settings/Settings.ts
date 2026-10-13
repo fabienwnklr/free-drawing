@@ -12,6 +12,7 @@ import StoreIcon from '@/icons/store.svg?raw';
 import { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import type { ColorLike } from '@/@types/drawer';
 import { createButton, setLabel, setPressed, uniqueId } from '@/utils/dom';
+import { ColorPicker } from '@/components/ColorPicker/ColorPicker';
 
 export class Settings extends Dropdown {
   drawer: Drawer;
@@ -24,6 +25,7 @@ export class Settings extends Dropdown {
   $clearStorageButton: HTMLButtonElement;
   $bgColorContainer: HTMLDivElement;
   $bgColorBtnContainer: HTMLDivElement;
+  bgColorPicker: ColorPicker;
 
   constructor(drawer: Drawer) {
     super();
@@ -70,7 +72,6 @@ export class Settings extends Dropdown {
 
     this.$bgColorBtnContainer = document.createElement('div');
     this.$bgColorBtnContainer.classList.add('color-picker-btn-container');
-    const $bgColorButtons: HTMLButtonElement[] = [];
 
     const bgColors: { color: ColorLike; label: string }[] = [
       { color: '#fff', label: 'White' },
@@ -80,20 +81,17 @@ export class Settings extends Dropdown {
       { color: '#fdf8f6', label: 'Light beige' },
     ];
 
-    bgColors.forEach(({ color, label }) => {
-      const $btn = createButton('color-picker__button');
-      setLabel($btn, label);
-      setPressed($btn, false);
-      $btn.style.backgroundColor = color;
-      $btn.dataset.bgColor = color;
-      $btn.addEventListener('click', () => {
+    this.bgColorPicker = new ColorPicker(this.$bgColorBtnContainer, {
+      colors: bgColors,
+      attr: 'data-bg-color',
+      buttonClass: 'color-picker__button',
+      transparent: true,
+      onChange: (color) => {
         // active button updated by drawer
         this.drawer.setBgColor(color);
         this.drawer.focus();
-      });
-      $bgColorButtons.push($btn);
+      },
     });
-    this.$bgColorBtnContainer.append(...$bgColorButtons);
     this.$bgColorContainer.append(this.$bgColorBtnContainer);
     this.updateBgColor(this.drawer.background.fill() as ColorLike);
 
@@ -121,9 +119,7 @@ export class Settings extends Dropdown {
    * @param {ColorLike} color
    */
   updateBgColor(color: ColorLike) {
-    this.$bgColorBtnContainer
-      .querySelectorAll<HTMLElement>('.color-picker__button')
-      .forEach(($btn) => setPressed($btn, $btn.dataset.bgColor === color));
+    this.bgColorPicker.setColor(color);
   }
 
   /**

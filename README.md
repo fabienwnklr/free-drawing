@@ -49,6 +49,7 @@ const drawer = new Drawer($el, {
   strokeWidth: 5, // width for drawing stroke
   strokeDash: undefined, // dash array of drawing stroke, undefined for solid line
   strokeColor: '#000', // color for drawing stroke
+  fillColor: 'transparent', // background color of rectangles and ellipses, 'transparent' for none
   zoom: true, // enable/disable zoom on draw
   zoomWidget: true, // enable/disable zoom ui widget
   positionWidget: true, // enable/disable position ui widget (x / y of view, button back to origin)

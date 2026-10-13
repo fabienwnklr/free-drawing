@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [3.7.0](https://github.com/fabienwnklr/free-drawing/compare/v3.6.0...v3.7.0) (2026-10-14)
+
+
+### Features
+
+* **colors:** custom color input (browser color picker) in every color choice: stroke, text and background colors
+* **colors:** transparent background color, `setBgColor('transparent')`
+* **shapes:** background color of rectangles and ellipses (transparent by default), in shape tools and selection options, `fillColor` option and `setFillColor` method
+
 ## [3.6.0](https://github.com/fabienwnklr/free-drawing/compare/v3.5.1...v3.6.0) (2026-10-14)
 
 

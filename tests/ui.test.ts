@@ -3,6 +3,7 @@ import { Drawer } from '../src/Drawer';
 import type { SelectWidget } from '../src/components/toolbar/widgets/Select/Select';
 import type { TextWidget } from '../src/components/toolbar/widgets/Text/Text';
 import type { LineWidget } from '../src/components/toolbar/widgets/Line/Line';
+import type { BrushWidget } from '../src/components/toolbar/widgets/Brush/Brush';
 import { defaultOptions } from '../src/constants';
 import { createDrawer, keydown } from './helpers';
 
@@ -83,6 +84,54 @@ describe('User interface', () => {
     drawer.setBgColor('#f8f9fa');
     expect(activeBg()).toBe('#f8f9fa');
     expect(drawer.setting.$zenModeButton.textContent).toContain('Alt+Z');
+  });
+
+  it('Color choices have a custom color input', () => {
+    const drawer = createDrawer();
+    const overlay = drawer.getWidget<BrushWidget>('brush')!.overlay;
+    const $input = overlay.$strokeColorBtnContainer.querySelector<HTMLInputElement>('input[type="color"]')!;
+    const pressed = () => overlay.$strokeColorBtnContainer.querySelectorAll('[aria-pressed="true"]').length;
+
+    expect($input.getAttribute('aria-label')).toBe('Custom color');
+    // no transparent stroke (invisible drawing)
+    expect(overlay.$strokeColorBtnContainer.querySelector('[data-stroke-color="transparent"]')).toBeNull();
+
+    $input.value = '#123456';
+    $input.dispatchEvent(new Event('change'));
+    expect(drawer.options.strokeColor).toBe('#123456');
+    expect($input.classList.contains('active')).toBe(true);
+    expect(pressed()).toBe(0);
+
+    // palette color, same as one of buttons whatever its notation
+    drawer.setStrokeColor('#000000');
+    expect(overlay.$strokeColorBtnContainer.querySelector('[data-stroke-color="#000"]')?.getAttribute('aria-pressed')).toBe(
+      'true'
+    );
+    expect($input.classList.contains('active')).toBe(false);
+    // picker opens on current color
+    expect($input.value).toBe('#000000');
+  });
+
+  it('Background color can be transparent or custom, menu stays open while picking', () => {
+    const drawer = createDrawer();
+    const setting = drawer.setting;
+    const $transparent = setting.$bgColorBtnContainer.querySelector<HTMLButtonElement>('[data-bg-color="transparent"]')!;
+    const $input = setting.$bgColorBtnContainer.querySelector<HTMLInputElement>('input[type="color"]')!;
+
+    expect($transparent.getAttribute('aria-label')).toBe('Transparent');
+    $transparent.click();
+    expect(drawer.background.fill()).toBe('transparent');
+    expect($transparent.getAttribute('aria-pressed')).toBe('true');
+
+    setting.show();
+    $input.click();
+    expect(setting.isShown()).toBe(true);
+
+    $input.value = '#abcdef';
+    $input.dispatchEvent(new Event('change'));
+    expect(drawer.background.fill()).toBe('#abcdef');
+    expect($input.classList.contains('active')).toBe(true);
+    expect($transparent.getAttribute('aria-pressed')).toBe('false');
   });
 
   it('Arrow keys move is saved once, on key release', () => {
