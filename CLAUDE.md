@@ -53,7 +53,7 @@ Git hooks (husky): `commit-msg` runs commitlint (conventional commits), `pre-pus
 
 - TypeScript strict, `@/` alias for `src/`. Prettier: single quotes, 120 columns, 2 spaces. Short English comments.
 - Konva is a peer dependency imported by subpath (`konva/lib/...`); the build externalizes `konva`, `perfect-freehand` and `socket.io-client`.
-- Accessibility: name icon buttons with `setLabel` and update toggle buttons with `setPressed` (`active` class + `aria-pressed`, or `aria-checked` for menu items), from [utils/dom](src/utils/dom.ts). Lists of buttons use `arrowNavigation` (toolbar, context menu). `HotKey` listens keydown on `$drawerContainer`: keys handled by a component (menu, dialog) must not propagate to it. New icons need `aria-hidden="true" focusable="false"`.
+- Accessibility: create buttons with `createButton` (`type="button"`), name icon buttons with `setLabel` and update toggle buttons with `setPressed` (`active` class + `aria-pressed`, or `aria-checked` for menu items), from [utils/dom](src/utils/dom.ts). Lists of buttons use `arrowNavigation` (toolbar, context menu). `HotKey` listens keydown on `$drawerContainer`: keys handled by a component (menu, dialog) must not propagate to it. New icons need `aria-hidden="true" focusable="false"`.
 - Icons are SVG files imported with `?raw`. In library mode vite inlines assets in `style.css` (the Ubuntu font is woff2 for that reason).
 - Tests: use [tests/helpers.ts](tests/helpers.ts) (`createDrawer` with an isolated localStorage key and no autosave, `keydown`, `fireMouse`, `drag`). jsdom has no hit canvas (mock `stage.getIntersection`), no layout and no `document.fonts`: check rendering, pointer and font behavior in a real browser.
 - Working copy files use CRLF (`core.autocrlf=true`).
