@@ -1,11 +1,9 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
+// placed by its parent (drawer header)
 .drawer-container .drawer-dropdown-container {
-  position: absolute;
-  top: $edge;
-  left: $edge;
-  z-index: 2;
+  position: relative;
   pointer-events: none;
 
   // button is the panel
@@ -16,8 +14,12 @@
   .drawer-dropdown {
     @include surface($shadow-lg);
 
+    // under button, out of layout: next elements do not move when shown
+    position: absolute;
+    top: 100%;
+    left: 0;
     display: none;
-    width: fit-content;
+    width: max-content;
     margin-top: $space-2;
     padding: $space-1;
     overflow: auto;

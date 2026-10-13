@@ -51,6 +51,7 @@ const drawer = new Drawer($el, {
   strokeColor: '#000', // color for drawing stroke
   zoom: true, // enable/disable zoom on draw
   zoomWidget: true, // enable/disable zoom ui widget
+  positionWidget: true, // enable/disable position ui widget (x / y of view, button back to origin)
   scaling: 1.11, // scaling on zoom
   autoSave: true, // for save draw state on localStorage automatically
   localStorageKey: 'free-drawing', // localStorage key used for store data, use a different key for each drawer of a page

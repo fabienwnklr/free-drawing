@@ -14,6 +14,7 @@ export const defaultOptions = {
   strokeColor: '#000',
   zoom: true,
   zoomWidget: true,
+  positionWidget: true,
   scaling: 1.11,
   autoSave: true,
   localStorageKey: 'free-drawing',

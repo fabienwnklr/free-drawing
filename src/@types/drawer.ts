@@ -16,6 +16,8 @@ export type DrawerOptions = {
   widgets: WidgetsOptions;
   zoom: boolean;
   zoomWidget: boolean;
+  /** Show view position (x / y) with a button back to origin, not to get lost when moving (default true) */
+  positionWidget: boolean;
   scaling: number;
   autoSave: boolean;
   localStorageKey: string;

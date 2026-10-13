@@ -9,6 +9,7 @@ import { deepMerge } from './utils/functions';
 import { defaultOptions, gridSize, shapeName, socketEvents, zoomLimits } from './constants';
 import { setPressed } from './utils/dom';
 import { Zoom } from './components/tools/Zoom/Zoom';
+import { Position } from './components/tools/Position/Position';
 import { Help } from './components/tools/Help/Help';
 import { BrushWidget } from './components/toolbar/widgets/Brush/Brush';
 
@@ -65,6 +66,7 @@ export class Drawer extends MicroEvent {
 
   background: Rect;
   zoom: Zoom | undefined;
+  position: Position | undefined;
   help: Help;
   setting: Settings;
   clearConfirmModal: ConfirmModal | null = null;
@@ -74,6 +76,8 @@ export class Drawer extends MicroEvent {
   #saveFailed = false;
   #initialOptions: DrawerOptions;
   undoRedo: UndoRedo;
+  /** Top left interface: settings menu, position */
+  $headerContainer: HTMLDivElement;
   $footerContainer: HTMLElement;
   $footerLeftElement: HTMLDivElement;
   contextMenu: ContextMenu;
@@ -184,6 +188,10 @@ export class Drawer extends MicroEvent {
     }
 
     this.$stageContainer = this.stage.content;
+    this.$headerContainer = document.createElement('div');
+    this.$headerContainer.classList.add('drawer-header-container');
+    this.$drawerContainer.append(this.$headerContainer);
+
     this.$footerContainer = document.createElement('footer');
     this.$footerContainer.classList.add('drawer-footer-container');
 
@@ -196,6 +204,9 @@ export class Drawer extends MicroEvent {
 
     if (this.options.zoomWidget) {
       this.zoom = new Zoom(this);
+    }
+    if (this.options.positionWidget) {
+      this.position = new Position(this);
     }
     this.undoRedo = new UndoRedo(this);
 
@@ -330,10 +341,11 @@ export class Drawer extends MicroEvent {
   }
 
   /**
-   * Update bg position (grid is redrawn with stage)
+   * Update bg position (grid is redrawn with stage) and position widget, after view move or zoom
    */
   _update() {
     this.bgLayer.position({ x: -this._unScale(this.stage.position().x), y: -this._unScale(this.stage.position().y) });
+    this.position?.update();
   }
 
   private _initEvents() {

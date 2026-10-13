@@ -166,4 +166,46 @@ describe('User interface', () => {
     expect(document.documentElement.style.getPropertyValue('--drawer-pointer-events')).toBe('');
     expect(first.options.id).not.toBe(second.options.id);
   });
+
+  it('Position widget shows view position, back to origin with its button', () => {
+    const drawer = createDrawer();
+    const position = drawer.position!;
+    const text = () => position.$coordinates.textContent?.replace(/\s+/g, ' ').trim();
+
+    expect(position.$positionContainer.isConnected).toBe(true);
+    expect(text()).toBe('x 0 y 0');
+    expect(position.$btnRecenter.getAttribute('aria-label')).toBe('Back to origin');
+
+    // pan: view moved by 200, -100
+    drawer.stage.position({ x: -200, y: 100 });
+    drawer.stage.fire('dragmove');
+    expect(text()).toBe('x 200 y −100');
+    expect(position.getPosition()).toEqual({ x: 200, y: -100 });
+
+    // zoom (buttons, keyboard): on view center, position does not change
+    drawer.setZoomLevel(2);
+    expect(text()).toBe('x 200 y −100');
+    drawer.setZoomLevel(0.5);
+    expect(position.getPosition()).toEqual({ x: 200, y: -100 });
+
+    position.$btnRecenter.click();
+    expect(position.getPosition()).toEqual({ x: 0, y: 0 });
+    expect(drawer.getZoomLevel()).toBe(0.5);
+    expect(text()).toBe('x 0 y 0');
+
+    // reset zoom of zoom widget is also at origin
+    drawer.zoom!.resetZoom();
+    expect(text()).toBe('x 0 y 0');
+
+    // hidden in zen mode
+    drawer.setting.toggleZenMode();
+    expect(position.$positionContainer.style.display).toBe('none');
+  });
+
+  it('Position widget can be disabled', () => {
+    const drawer = createDrawer({ positionWidget: false });
+
+    expect(drawer.position).toBeUndefined();
+    expect(drawer.$drawerContainer.querySelector('.drawer-position-container')).toBeNull();
+  });
 });

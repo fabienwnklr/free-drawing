@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [3.6.0](https://github.com/fabienwnklr/free-drawing/compare/v3.5.1...v3.6.0) (2026-10-14)
+
+
+### Features
+
+* **position:** position widget at top left, shows x / y of view center (0, 0 at origin, not changed by zoom on view center) while moving, with a button back to origin keeping zoom, `positionWidget` option (default `true`), hidden in zen mode
+
 ## [3.5.1](https://github.com/fabienwnklr/free-drawing/compare/v3.5.0...v3.5.1) (2026-10-14)
 
 

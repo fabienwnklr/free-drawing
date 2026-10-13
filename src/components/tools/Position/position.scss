@@ -1,0 +1,27 @@
+@use '../../../scss/variables' as *;
+
+.drawer-container .drawer-position-container {
+  display: flex;
+  align-items: center;
+  height: $btn-size-lg;
+
+  .drawer-position-coordinates {
+    display: flex;
+    align-items: baseline;
+    gap: $space-1;
+    padding: 0 $space-3;
+    white-space: nowrap;
+    // no width change while moving
+    font-variant-numeric: tabular-nums;
+  }
+
+  // x 120  y -340
+  .drawer-position-value {
+    min-width: 4ch;
+  }
+
+  .drawer-button {
+    border-left: 1px solid $border;
+    border-radius: 0 $radius-lg $radius-lg 0;
+  }
+}

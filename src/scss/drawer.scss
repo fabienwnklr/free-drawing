@@ -160,6 +160,19 @@
     }
   }
 
+  // top left: settings menu, position
+  .drawer-header-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    display: flex;
+    align-items: flex-start;
+    gap: $space-2;
+    padding: $edge;
+    pointer-events: none;
+  }
+
   .drawer-footer-container {
     position: absolute;
     bottom: 0;

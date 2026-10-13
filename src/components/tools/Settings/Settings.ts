@@ -111,7 +111,7 @@ export class Settings extends Dropdown {
         this.$bgColorContainer
       ]
     );
-    this.drawer.$drawerContainer.append(this.$dropdownContainer);
+    this.drawer.$headerContainer.append(this.$dropdownContainer);
 
     this.initEvents();
   }
@@ -175,15 +175,16 @@ export class Settings extends Dropdown {
 
     setPressed(this.$zenModeButton, zen);
 
-    if (zen) {
-      if (this.drawer.zoom) this.drawer.zoom.$zoomContainer.style.display = 'none';
-      this.drawer.help.$helpContainer.style.display = 'none';
-      this.drawer.undoRedo.$undoRedoContainer.style.display = 'none';
-    } else {
-      if (this.drawer.zoom) this.drawer.zoom.$zoomContainer.style.display = '';
-      this.drawer.help.$helpContainer.style.display = '';
-      this.drawer.undoRedo.$undoRedoContainer.style.display = '';
-    }
+    const $containers = [
+      this.drawer.zoom?.$zoomContainer,
+      this.drawer.position?.$positionContainer,
+      this.drawer.help.$helpContainer,
+      this.drawer.undoRedo.$undoRedoContainer,
+    ];
+
+    $containers.forEach(($container) => {
+      if ($container) $container.style.display = zen ? 'none' : '';
+    });
   }
 
   toggleSnapping() {
