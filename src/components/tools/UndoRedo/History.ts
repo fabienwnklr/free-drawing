@@ -87,7 +87,7 @@ export class History {
    * @param state
    */
   private _restoreState(state: string) {
-    this.drawer.getWidget<SelectWidget>('selection')?.transformer.nodes([]);
+    this.drawer.getWidget<SelectWidget>('selection')?.clearSelection();
     this.drawer.getDrawingShapes().forEach((shape) => shape.destroy());
 
     (JSON.parse(state) as ShapeState[]).forEach((shape) => {

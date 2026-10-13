@@ -42,7 +42,7 @@ const drawer = new Drawer($el, {
 
 ```js
 {
-  id: 'drawer-' + Date.now(), // id for drawer
+  id: 'drawer-1', // id for drawer (unique for each drawer of the page)
   tool: 'brush', // activate tool on init
   width: window.innerWidth, // width of drawer
   height: window.innerHeight, // height of drawer
@@ -53,7 +53,7 @@ const drawer = new Drawer($el, {
   zoomWidget: true, // enable/disable zoom ui widget
   scaling: 1.11, // scaling on zoom
   autoSave: true, // for save draw state on localStorage automatically
-  localStorageKey: 'free-drawing', // localStorage key used for store data
+  localStorageKey: 'free-drawing', // localStorage key used for store data, use a different key for each drawer of a page
   opacity: 1, // opacity of draw
   textStyle: {
     // style of new text

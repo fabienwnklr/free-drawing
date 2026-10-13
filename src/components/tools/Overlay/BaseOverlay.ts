@@ -175,7 +175,7 @@ export class BaseOverlay {
     this.$strokeStyleBtnContainer.append(...$strokeWidthButtons);
     this.$strokeStyleContainer.append(this.$strokeStyleBtnContainer);
 
-    if (!this.options?.styleBtns) this.$strokeStyleContainer.style.display = 'none';
+    this.toggleStyleBtns(!!this.options?.styleBtns);
   }
 
   private _createOpacityField() {
@@ -264,6 +264,14 @@ export class BaseOverlay {
     if (change.opacity !== undefined) {
       this.$opacityRange.value = (change.opacity * 10).toString();
     }
+  }
+
+  /**
+   * Show / hide stroke style buttons (dash), only relevant for outline shapes
+   * @param {boolean} visible
+   */
+  toggleStyleBtns(visible: boolean) {
+    this.$strokeStyleContainer.style.display = visible ? '' : 'none';
   }
 
   hide() {

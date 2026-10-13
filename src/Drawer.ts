@@ -22,6 +22,7 @@ import { ConfirmModal } from './components/Modal/ConfirmModal';
 import { UndoRedo } from './components/tools/UndoRedo/UndoRedo';
 import { ContextMenu } from './components/ContextMenu/ContextMenu';
 import { TextWidget } from './components/toolbar/widgets/Text/Text';
+import { ShapeWidget } from './components/toolbar/widgets/ShapeWidget';
 import { Line } from 'konva/lib/shapes/Line';
 import { Toast } from './components/Toast/Toast';
 import { Group } from 'konva/lib/Group';
@@ -31,6 +32,9 @@ import { AvailableTypes } from './@types/toast';
 import type { Socket } from 'socket.io-client';
 import { debounce } from './utils/perf';
 import { HotKey } from './utils/HotKey';
+
+// default id of each drawer of the page
+let drawerCount = 0;
 
 /**
  * Drawer constructor. A drawer is used to draw multiple shapes
@@ -69,6 +73,7 @@ export class Drawer extends MicroEvent {
 
   debug: boolean = false;
   #saveFailed = false;
+  #initialOptions: DrawerOptions;
   undoRedo: UndoRedo;
   $footerContainer: HTMLElement;
   $footerLeftElement: HTMLDivElement;
@@ -81,7 +86,18 @@ export class Drawer extends MicroEvent {
     super();
     this.$el = $el;
 
-    this.options = deepMerge(defaultOptions, options);
+    this.options = deepMerge(
+      {
+        ...defaultOptions,
+        // per instance, not when module is loaded
+        id: 'drawer-' + ++drawerCount,
+        width: window.innerWidth,
+        height: window.innerHeight,
+      },
+      options
+    );
+    // copy (setters replace values), restored by resetDrawer
+    this.#initialOptions = { ...this.options, textStyle: { ...this.options.textStyle } };
     // Creating drawer container
     this.$drawerContainer = document.createElement('div');
     this.$drawerContainer.classList.add('drawer-container');
@@ -364,6 +380,11 @@ export class Drawer extends MicroEvent {
       return true;
     }
 
+    // line, rectangle, ellipse, arrow
+    if (this.activeWidget instanceof ShapeWidget && this.activeWidget.isPaint) {
+      return true;
+    }
+
     return false;
   }
 
@@ -442,13 +463,9 @@ export class Drawer extends MicroEvent {
    * @param {ColorLike} color
    */
   setBgColor(color: ColorLike) {
+    // canvas background only, selected shapes fill is not changed
     this.background.fill(color);
-
-    const selectWidget = this.getWidget<SelectWidget>('selection');
-
-    if (selectWidget?.transformer.nodes().length) {
-      selectWidget?.setBgColor(color);
-    }
+    this.setting.updateBgColor(color);
 
     this.stage.fire('change');
   }
@@ -535,7 +552,8 @@ export class Drawer extends MicroEvent {
    * @param state
    */
   UIPointerEvents(state: 'all' | 'none') {
-    document.getElementsByTagName('html')[0].style.setProperty('--drawer-pointer-events', state);
+    // on drawer container, other drawers of the page are not concerned
+    this.$drawerContainer.style.setProperty('--drawer-pointer-events', state);
   }
 
   /**
@@ -553,15 +571,11 @@ export class Drawer extends MicroEvent {
     } else {
       const shapes = this.getDrawingShapes();
 
-      if (shapes) {
-        shapes.forEach((l, index) => {
-          l.destroy();
+      if (!shapes.length) return;
 
-          if (index === shapes.length - 1) {
-            this.stage.fire('change');
-          }
-        });
-      }
+      this.getWidget<SelectWidget>('selection')?.clearSelection();
+      shapes.forEach((shape) => shape.destroy());
+      this.stage.fire('change');
     }
   }
 
@@ -747,15 +761,19 @@ export class Drawer extends MicroEvent {
   }
 
   /**
-   * Reset draw to default state (bgcolor, color, remove draw, etc.)
+   * Reset drawer to its initial state: remove drawing (without confirmation), white background
+   * and drawing options given on init (color, width, opacity, text style...)
    */
   resetDrawer() {
-    this.options = defaultOptions;
-    this.clearCanvas();
+    const { strokeColor, strokeWidth, strokeDash, opacity, textStyle } = this.#initialOptions;
+
+    this.clearCanvas(true);
     this.setBgColor('#fff');
-    this.setStrokeWidth(this.options.strokeWidth);
-    this.setStrokeColor(this.options.strokeColor);
-    this.setOpacity(this.options.opacity);
+    this.setStrokeColor(strokeColor);
+    this.setStrokeWidth(strokeWidth);
+    this.setStrokeStyle(strokeDash);
+    this.setOpacity(opacity);
+    this.setTextStyle({ ...textStyle });
   }
 
   setSize(width: number, height: number) {

@@ -53,7 +53,7 @@ export class Settings extends Dropdown {
 
     this.$zenModeButton = document.createElement('button');
     this.$zenModeButton.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-dropdown-list-item');
-    this.$zenModeButton.innerHTML = ZenIcon + 'Zen mode <span class="text-muted">Altr+Z</span>';
+    this.$zenModeButton.innerHTML = ZenIcon + 'Zen mode <span class="text-muted">Alt+Z</span>';
     this.$zenModeButton.role = 'button';
 
     this.$githubButton = document.createElement('button');
@@ -75,28 +75,25 @@ export class Settings extends Dropdown {
 
     this.$bgColorBtnContainer = document.createElement('div');
     this.$bgColorBtnContainer.classList.add('color-picker-btn-container');
-    const $strokeColorButtons: HTMLButtonElement[] = [];
+    const $bgColorButtons: HTMLButtonElement[] = [];
 
-    const strokeColors = ['#fff', '#f8f9fa', '#f5faff', '#fffce8', '#fdf8f6'] as ColorLike[];
+    const bgColors = ['#fff', '#f8f9fa', '#f5faff', '#fffce8', '#fdf8f6'] as ColorLike[];
 
-    strokeColors.forEach((color) => {
+    bgColors.forEach((color) => {
       const $btn = document.createElement('button');
       $btn.classList.add('color-picker__button');
       $btn.style.backgroundColor = color;
+      $btn.dataset.bgColor = color;
       $btn.addEventListener('click', () => {
-        this.$bgColorBtnContainer.querySelector('.color-picker__button.active')?.classList.remove('active');
-        $btn.classList.add('active');
+        // active button updated by drawer
         this.drawer.setBgColor(color);
         this.drawer.focus();
       });
-
-      if (this.drawer.options.strokeColor === color) {
-        $btn.classList.add('active');
-      }
-      $strokeColorButtons.push($btn);
+      $bgColorButtons.push($btn);
     });
-    this.$bgColorBtnContainer.append(...$strokeColorButtons);
+    this.$bgColorBtnContainer.append(...$bgColorButtons);
     this.$bgColorContainer.append(this.$bgColorBtnContainer);
+    this.updateBgColor(this.drawer.background.fill() as ColorLike);
 
     this.$dropdownList.append(
       ...[
@@ -115,6 +112,15 @@ export class Settings extends Dropdown {
     this.drawer.$drawerContainer.append(this.$dropdownContainer);
 
     this.initEvents();
+  }
+
+  /**
+   * Set active background color button
+   * @param {ColorLike} color
+   */
+  updateBgColor(color: ColorLike) {
+    this.$bgColorBtnContainer.querySelector('.color-picker__button.active')?.classList.remove('active');
+    this.$bgColorBtnContainer.querySelector(`[data-bg-color="${color}"]`)?.classList.add('active');
   }
 
   getSeparator() {

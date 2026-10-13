@@ -67,10 +67,17 @@ export class ContextMenu {
     });
 
     this.$pasteBtn.addEventListener('click', async () => {
-      const text = await navigator.clipboard.readText();
-      const textWidget = this.drawer.getWidget<TextWidget>('text');
+      try {
+        // needs clipboard permission (asked by browser), Ctrl / Cmd + V does not
+        const text = await navigator.clipboard.readText();
 
-      textWidget?.addTextNode(text);
+        if (!text) return;
+
+        this.drawer.getWidget<TextWidget>('text')?.addTextNode(text);
+        this.drawer.stage.fire('change');
+      } catch (error) {
+        this.drawer.toast(`Clipboard unavailable: ${(error as Error).message}`, 'warning');
+      }
     });
 
     this.$snappingBtn.addEventListener('click', () => {

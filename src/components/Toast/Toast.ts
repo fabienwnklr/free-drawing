@@ -56,10 +56,8 @@ export class Toast extends MicroEvent {
   }
 
   hide() {
-    this.$toastContainer.addEventListener('animationend', () => {
-      this.$toastContainer.classList.remove('show', 'hide');
-      this.$toastContainer.classList.remove();
-    });
+    // removed from page at the end of hide animation, a new toast is created for each message
+    this.$toastContainer.addEventListener('animationend', () => this.destroy(), { once: true });
     this.$toastContainer.classList.add('hide');
   }
 

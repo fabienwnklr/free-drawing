@@ -51,35 +51,16 @@ export class Modal {
       });
     }
 
-    // Close modal when clickin outside
-    if (this.options.closeOnClickOutside) {
-      document.addEventListener(
-        'click',
-        (event) => {
-          if (event.target) {
-            const outsideClick =
-              !this.drawer.setting.$clearCanvasButton.contains(event.target as Node) &&
-              !this.drawer.setting.$clearStorageButton.contains(event.target as Node) &&
-              !this.drawer.help.$button.contains(event.target as Node) &&
-              !this.$modal.contains(event.target as Node);
-
-            if (outsideClick && this.isVisible()) {
-              this.hide();
-            }
-          }
-        },
-        false
-      );
-    }
-
-    if (this.options.closeOnEsc) {
-      document.addEventListener('keydown', (e) => {
-        if (e.key === "Escape" && this.isVisible()) {
-          this.hide();
-        }
-      })
-    }
   }
+
+  // document listeners, added only while modal is visible
+  #onDocumentClick = (event: MouseEvent) => {
+    if (!this.$modal.contains(event.target as Node)) this.hide();
+  };
+
+  #onDocumentKeydown = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') this.hide();
+  };
 
   private _createModal() {
     this.$modal = stringToNode<HTMLDivElement>(/*html*/ `
@@ -128,9 +109,20 @@ export class Modal {
       this.$backdrop.classList.add('show');
     }
     this.$modal.classList.add('show');
+
+    // after current event, so the click opening the modal (any button) does not close it
+    setTimeout(() => {
+      if (!this.isVisible()) return;
+
+      if (this.options.closeOnClickOutside) document.addEventListener('click', this.#onDocumentClick);
+      if (this.options.closeOnEsc) document.addEventListener('keydown', this.#onDocumentKeydown);
+    });
   }
 
   hide() {
+    document.removeEventListener('click', this.#onDocumentClick);
+    document.removeEventListener('keydown', this.#onDocumentKeydown);
+
     if (this.$backdrop) {
       this.$backdrop.classList.remove('show');
     }
@@ -144,6 +136,6 @@ export class Modal {
 
   destroy() {
     this.hide();
-    this.$modal.remove();
+    (this.$backdrop ?? this.$modal).remove();
   }
 }

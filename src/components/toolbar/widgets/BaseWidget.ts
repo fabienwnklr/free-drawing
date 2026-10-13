@@ -3,6 +3,8 @@ import { Drawer } from '@/Drawer';
 import { stringToNode } from '@/utils/functions';
 import type { KonvaEventListener } from 'konva/lib/Node';
 import type { Stage } from 'konva/lib/Stage';
+import type { BaseOverlay } from '@/components/tools/Overlay/BaseOverlay';
+import { disableElement, enableElement } from '@/utils/dom';
 
 export abstract class BaseWidget {
   protected readonly $container: HTMLElement;
@@ -11,6 +13,8 @@ export abstract class BaseWidget {
   $button: HTMLButtonElement;
   id: AvailableTools;
   shortcut: string | undefined;
+  /** Options of the tool (color, width...), shown by the widget while active */
+  declare overlay?: BaseOverlay;
 
   constructor(
     protected drawer: Drawer,
@@ -55,9 +59,17 @@ export abstract class BaseWidget {
     parent.appendChild(this.$container);
   }
 
+  /**
+   * Disable / enable widget, a disabled widget can not be activated
+   */
   toggleDisable() {
     this.disabled = !this.disabled;
-    this.$button.classList.add('disabled');
+
+    if (this.disabled) {
+      disableElement(this.$button);
+    } else {
+      enableElement(this.$button);
+    }
   }
 
   /**
@@ -116,6 +128,8 @@ export abstract class BaseWidget {
 
   setActive(active: boolean) {
     if (active) {
+      if (this.disabled) return;
+
       if (this.drawer.activeWidget) {
         this.drawer.activeWidget.setActive(false);
       }

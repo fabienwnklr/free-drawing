@@ -80,7 +80,7 @@ export class BrushWidget extends BaseWidget {
       this.drawer.stage.fire('change');
 
       const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
-      selectWidget?.transformer.nodes([]);
+      selectWidget?.clearSelection();
       e.evt.preventDefault();
       // serialized line (konva JSON), only with collaboration enabled
       this.drawer.socket?.emit(socketEvents.DRAW, this.#lastLine.toJSON());

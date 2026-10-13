@@ -37,6 +37,24 @@ export class Help extends Modal {
             <li class="drawer-modal-help-shortcut">
             Eraser <kbd class="drawer-modal-help-kdb">E</kbd>
             </li>
+            <li class="drawer-modal-help-shortcut">
+            Text <kbd class="drawer-modal-help-kdb">T</kbd>
+            </li>
+            <li class="drawer-modal-help-shortcut">
+            Line <kbd class="drawer-modal-help-kdb">L</kbd>
+            </li>
+            <li class="drawer-modal-help-shortcut">
+            Rectangle <kbd class="drawer-modal-help-kdb">R</kbd>
+            </li>
+            <li class="drawer-modal-help-shortcut">
+            Ellipse <kbd class="drawer-modal-help-kdb">C</kbd>
+            </li>
+            <li class="drawer-modal-help-shortcut">
+            Arrow <kbd class="drawer-modal-help-kdb">A</kbd>
+            </li>
+            <li class="drawer-modal-help-shortcut">
+            Square, circle, 45° line (while drawing) <kbd class="drawer-modal-help-kdb">Shift</kbd>
+            </li>
           </ul>
         </div>
 
@@ -47,6 +65,7 @@ export class Help extends Modal {
               Undo
               <span>
                 <kbd class="drawer-modal-help-kdb">Ctrl+Z</kbd>
+              </span>
             </li>
             <li class="drawer-modal-help-shortcut">
               Redo
@@ -68,6 +87,24 @@ export class Help extends Modal {
                 <kbd class="drawer-modal-help-kdb">Ctrl+A</kbd>
               </span>
             </li>
+            <li class="drawer-modal-help-shortcut">
+              Delete selection
+              <span>
+                <kbd class="drawer-modal-help-kdb">Delete</kbd>
+              </span>
+            </li>
+            <li class="drawer-modal-help-shortcut">
+              Move selection
+              <span>
+                <kbd class="drawer-modal-help-kdb">Arrows</kbd>
+              </span>
+            </li>
+            <li class="drawer-modal-help-shortcut">
+              Paste text
+              <span>
+                <kbd class="drawer-modal-help-kdb">Ctrl+V</kbd>
+              </span>
+            </li>
           </ul>
         </div>
 
@@ -78,6 +115,24 @@ export class Help extends Modal {
               Zen mode
               <span>
                 <kbd class="drawer-modal-help-kdb">Alt+Z</kbd>
+              </span>
+            </li>
+            <li class="drawer-modal-help-shortcut">
+              Grid
+              <span>
+                <kbd class="drawer-modal-help-kdb">Alt+G</kbd>
+              </span>
+            </li>
+            <li class="drawer-modal-help-shortcut">
+              Snap to objects
+              <span>
+                <kbd class="drawer-modal-help-kdb">Alt+S</kbd>
+              </span>
+            </li>
+            <li class="drawer-modal-help-shortcut">
+              Zoom
+              <span>
+                <kbd class="drawer-modal-help-kdb">Ctrl+Wheel</kbd>
               </span>
             </li>
           </ul>

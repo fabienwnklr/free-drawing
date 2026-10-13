@@ -46,12 +46,21 @@ export const zoomLimits = {
 
 export const shapeName = {
   line: 'drawer-line',
+  straightLine: 'drawer-straight-line',
+  rect: 'drawer-rect',
+  ellipse: 'drawer-ellipse',
+  arrow: 'drawer-arrow',
   text: 'drawer-text',
   selection: 'drawer-selection',
   guideLine: 'drawer-guide-line',
   gridLine: 'drawer-grid-line',
   background: 'drawer-background',
 };
+
+/**
+ * Shapes drawn with an outline, which can be dashed (brush line is a filled outline)
+ */
+export const strokeStyleShapes = [shapeName.straightLine, shapeName.rect, shapeName.ellipse, shapeName.arrow];
 
 /**
  * Collaboration events, same as server/socket-events.js

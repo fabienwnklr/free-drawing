@@ -1,4 +1,3 @@
-import { BrushWidget } from '@/components/toolbar/widgets/Brush/Brush';
 import { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import { Drawer } from '../Drawer';
@@ -15,40 +14,41 @@ export class HotKey {
       ArrowRight: { x: DELTA, y: 0 },
       ArrowDown: { x: 0, y: DELTA },
     };
+    // selection moved with arrow keys, saved on key release (not on each repeated keydown)
+    let arrowMoved = false;
 
     this.drawer.$drawerContainer.addEventListener('keydown', (e) => {
       if (this.drawer._duringAction()) return;
 
+      // Ctrl on Windows / Linux, Cmd on Mac
+      const mod = e.ctrlKey || e.metaKey;
       const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
+      const selectedNodes = selectWidget?.transformer.nodes() ?? [];
+
       if (e.key === 'Backspace' || e.key === 'Delete') {
-        const allNodes = selectWidget?.transformer.nodes();
-
-        if (allNodes?.length) {
-          allNodes.forEach((n) => n.destroy());
-          selectWidget?.transformer.nodes([]);
-          selectWidget?.hideOverlay();
-
-          if (this.drawer.activeWidget instanceof BrushWidget || this.drawer.activeWidget instanceof TextWidget) {
-            this.drawer.activeWidget.overlay.show();
-          }
+        if (mod) {
+          // asks confirmation, selection is kept if canceled
+          this.drawer.clearCanvas();
+        } else if (selectedNodes.length) {
+          selectWidget?.clearSelection();
+          selectedNodes.forEach((n) => n.destroy());
           this.drawer.stage.fire('change');
         }
       }
 
-      if (e.ctrlKey && e.key === 'a') {
+      if (mod && e.key === 'a') {
         selectWidget?.selectAll();
       }
-
-      const selectedNodes = selectWidget?.transformer.nodes() ?? [];
 
       // only arrow keys, other keys keep their default behavior (F5, Tab...)
       if (selectedNodes.length && e.key in arrowMoves) {
         selectedNodes.forEach((shape) => shape.move(arrowMoves[e.key]));
+        arrowMoved = true;
         e.preventDefault();
       }
 
       // Toolbar shortcut, the letter displayed on widget button (whatever caps lock)
-      if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+      if (!mod && !e.altKey) {
         const widget = Array.from(this.drawer.toolbar.widgets.values()).find(
           (w) => w.shortcut === e.key.toLowerCase()
         );
@@ -68,20 +68,36 @@ export class HotKey {
         this.drawer.setting.toggleZenMode();
       }
 
-      if (e.ctrlKey && e.key === 'Delete') {
-        this.drawer.clearCanvas();
-      }
-
-      if (e.ctrlKey && e.key === 'z') {
+      if (mod && e.key === 'z') {
         this.drawer.undoRedo.undo();
       }
 
-      if (e.ctrlKey && e.key === 'y') {
+      if (mod && e.key === 'y') {
         this.drawer.undoRedo.redo();
       }
 
       if (e.altKey && e.key === 'g') {
         this.drawer.setting.toggleGrid();
+      }
+    });
+
+    this.drawer.$drawerContainer.addEventListener('keyup', (e) => {
+      if (arrowMoved && e.key in arrowMoves) {
+        arrowMoved = false;
+        this.drawer.stage.fire('change');
+      }
+    });
+
+    // Ctrl / Cmd + V, clipboard data is available without permission (unlike navigator.clipboard)
+    this.drawer.$drawerContainer.addEventListener('paste', (e) => {
+      if (this.drawer._duringAction()) return;
+
+      const text = e.clipboardData?.getData('text');
+
+      if (text) {
+        e.preventDefault();
+        this.drawer.getWidget<TextWidget>('text')?.addTextNode(text);
+        this.drawer.stage.fire('change');
       }
     });
   }

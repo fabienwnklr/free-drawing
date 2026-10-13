@@ -9,13 +9,15 @@ import { NodeConfig } from 'konva/lib/Node';
 import { Context } from 'konva/lib/Context';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Stage } from 'konva/lib/Stage';
-import { shapeName } from '@/constants';
+import { shapeName, strokeStyleShapes } from '@/constants';
 import type { ColorLike, TextStyle } from '@/@types/drawer';
 import { SelectOverlay } from '@/components/tools/Overlay/SelectOverlay/SelectOverlay';
 import { BrushWidget } from '../Brush/Brush';
 import type { TextWidget } from '../Text/Text';
 import { Text } from 'konva/lib/shapes/Text';
 import { Group } from 'konva/lib/Group';
+import { Arrow } from 'konva/lib/shapes/Arrow';
+import { arrowPointerSize } from '../Arrow/Arrow';
 
 export class SelectWidget extends BaseWidget {
   #x1: number = 0;
@@ -226,6 +228,8 @@ export class SelectWidget extends BaseWidget {
       textOverlay.show(shapes);
     } else {
       textOverlay?.hide();
+      // dash only for outline shapes (not brush lines)
+      this.overlay.toggleStyleBtns(shapes.every((s) => strokeStyleShapes.some((name) => s.hasName(name))));
       this.overlay.show(shapes);
     }
   }
@@ -233,6 +237,17 @@ export class SelectWidget extends BaseWidget {
   hideOverlay() {
     this.overlay.hide();
     this.drawer.getWidget<TextWidget>('text')?.overlay.hide();
+  }
+
+  /**
+   * Unselect shapes and hide selection overlays, overlay of active tool (brush, text...) is shown again
+   */
+  clearSelection() {
+    this._restoreHit();
+    this.transformer.nodes([]);
+    this.hideOverlay();
+
+    if (this.drawer.activeWidget !== this) this.drawer.activeWidget?.overlay?.show();
   }
 
   selectAll() {
@@ -248,14 +263,8 @@ export class SelectWidget extends BaseWidget {
 
   protected onDesactive(): void {
     this.selectionRectangle.destroy();
-    this._restoreHit();
-    const draw = this.drawer.getDrawingShapes();
-
-    draw.forEach((d) => {
-      d.draggable(false);
-    });
-    this.transformer.nodes([]);
-    this.hideOverlay();
+    this.clearSelection();
+    this.drawer.getDrawingShapes().forEach((d) => d.draggable(false));
   }
 
   private _initSnapEvents() {
@@ -552,7 +561,15 @@ export class SelectWidget extends BaseWidget {
    * @param {Number} width
    */
   setStrokeWidth(width: number) {
-    this._updateSelected((s) => s.strokeWidth(width));
+    this._updateSelected((s) => {
+      s.strokeWidth(width);
+
+      // head size follows stroke width
+      if (s instanceof Arrow) {
+        s.pointerLength(arrowPointerSize(width));
+        s.pointerWidth(arrowPointerSize(width));
+      }
+    });
   }
 
   setStrokeStyle(dash: number[] | undefined) {

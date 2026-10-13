@@ -35,17 +35,19 @@ export class UndoRedo extends History {
   }
 
   private _initEvents() {
-    this.$btnUndo.addEventListener('click', () => {
-      this.undo();
+    this.$btnUndo.addEventListener('click', () => this.undo());
+    this.$btnRedo.addEventListener('click', () => this.redo());
+  }
 
-      this.manageButtons();
-    });
+  // buttons state updated whatever the trigger (buttons, keyboard, API)
+  undo() {
+    super.undo();
+    this.manageButtons();
+  }
 
-    this.$btnRedo.addEventListener('click', () => {
-      this.redo();
-
-      this.manageButtons();
-    });
+  redo() {
+    super.redo();
+    this.manageButtons();
   }
 
   manageUndoBtn() {
