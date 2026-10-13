@@ -47,7 +47,7 @@ const drawer = new Drawer($el, {
   width: window.innerWidth, // width of drawer
   height: window.innerHeight, // height of drawer
   strokeWidth: 5, // width for drawing stroke
-  strokeDash: undefined, // dash array of drawing stroke, undefined for solid line
+  strokeStyle: 'solid', // 'solid' | 'dashed' | 'dotted', stroke of lines, arrows, rectangles and ellipses
   strokeColor: '#000', // color for drawing stroke
   fillColor: 'transparent', // background color of rectangles and ellipses, 'transparent' for none
   zoom: true, // enable/disable zoom on draw

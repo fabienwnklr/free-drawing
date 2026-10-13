@@ -6,7 +6,10 @@ export type DrawerOptions = {
   width: number;
   height: number;
   strokeWidth: number;
-  strokeDash: number[] | undefined,
+  /** Stroke style of lines, arrows, rectangles and ellipses (default 'solid'), dashes and dots follow stroke width */
+  strokeStyle: StrokeStyle;
+  /** @deprecated use `strokeStyle` (a dash array gives 'dashed') */
+  strokeDash?: number[];
   strokeColor: ColorLike;
   /** Background color of new rectangles and ellipses, `'transparent'` for none (default) */
   fillColor: ColorLike;
@@ -25,6 +28,8 @@ export type DrawerOptions = {
   localStorageKey: string;
 };
 
+export type StrokeStyle = 'solid' | 'dashed' | 'dotted';
+
 /**
  * Text node style, keys match konva Text attributes
  */
@@ -40,7 +45,7 @@ export type TextStyle = {
  * Options changed by Drawer setters, sent with `fd.options.change` event (only changed keys)
  */
 export type OptionsChange = Partial<
-  Pick<DrawerOptions, 'strokeColor' | 'fillColor' | 'strokeWidth' | 'strokeDash' | 'opacity'>
+  Pick<DrawerOptions, 'strokeColor' | 'fillColor' | 'strokeWidth' | 'strokeStyle' | 'opacity'>
 > & {
   textStyle?: Partial<TextStyle>;
 };

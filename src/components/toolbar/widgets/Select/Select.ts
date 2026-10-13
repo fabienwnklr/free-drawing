@@ -11,8 +11,9 @@ import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Stage } from 'konva/lib/Stage';
 import { fillShapes, shapeName, strokeStyleShapes } from '@/constants';
 import { toFill } from '@/utils/color';
+import { getDash, getStrokeStyle } from '@/utils/stroke';
 import { setPressed } from '@/utils/dom';
-import type { ColorLike, TextStyle } from '@/@types/drawer';
+import type { ColorLike, StrokeStyle, TextStyle } from '@/@types/drawer';
 import { SelectOverlay } from '@/components/tools/Overlay/SelectOverlay/SelectOverlay';
 import type { TextWidget } from '../Text/Text';
 import { Text } from 'konva/lib/shapes/Text';
@@ -619,6 +620,9 @@ export class SelectWidget extends BaseWidget {
     this._updateSelected((s) => {
       s.strokeWidth(width);
 
+      // dashes and dots follow stroke width
+      if (s.dash()?.length) s.dash(getDash(getStrokeStyle(s.dash()), width) as number[]);
+
       // head size follows stroke width
       if (s instanceof Arrow) {
         s.pointerLength(arrowPointerSize(width));
@@ -627,8 +631,17 @@ export class SelectWidget extends BaseWidget {
     });
   }
 
-  setStrokeStyle(dash: number[] | undefined) {
-    this._updateSelected((s) => s.dash(dash as number[]));
+  /**
+   * Set stroke style of selected outline shapes (not brush lines, which are filled outlines)
+   * @param {StrokeStyle} style
+   */
+  setStrokeStyle(style: StrokeStyle) {
+    this._updateSelected((s) => {
+      // setAttrs: dash(undefined) would be the getter, round caps as drawn shapes (previous versions: butt)
+      if (strokeStyleShapes.some((name) => s.hasName(name))) {
+        s.setAttrs({ dash: getDash(style, s.strokeWidth()), lineCap: 'round' });
+      }
+    });
   }
 
   /**

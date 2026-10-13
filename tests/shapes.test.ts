@@ -17,7 +17,7 @@ beforeAll(() => {
 });
 
 const drawerWithTool = (tool: AvailableTools) => {
-  const drawer = createDrawer({ strokeColor: '#1971c2', strokeWidth: 8, strokeDash: [33, 10] });
+  const drawer = createDrawer({ strokeColor: '#1971c2', strokeWidth: 8, strokeStyle: 'dashed' });
   drawer.getWidget<BaseWidget>(tool)!.setActive(true);
   return drawer;
 };
@@ -36,7 +36,9 @@ describe('Shape tools', () => {
     expect(rect.getAttrs()).toMatchObject({ x: 10, y: 10, width: 100, height: 50 });
     expect(rect.stroke()).toBe('#1971c2');
     expect(rect.strokeWidth()).toBe(8);
-    expect(rect.dash()).toEqual([33, 10]);
+    // dash proportional to stroke width
+    expect(rect.dash()).toEqual([16, 24]);
+    expect(rect.lineCap()).toBe('round');
     expect(square.getAttrs()).toMatchObject({ x: 200, y: 200, width: 100, height: 100 });
   });
 
@@ -139,5 +141,56 @@ describe('Shape tools', () => {
 
     expect(drawer.background.fill()).toBe('#f5faff');
     expect(rect.fill()).toBeUndefined();
+  });
+
+  it('Stroke styles: dashes and dots follow stroke width', () => {
+    const drawer = drawerWithTool('line');
+    const overlay = drawer.getWidget<BaseWidget>('line')!.overlay!;
+    const pressedStyle = () =>
+      overlay.$strokeStyleBtnContainer.querySelector('[aria-pressed="true"]')?.getAttribute('data-stroke-style');
+    const styles = Array.from(overlay.$strokeStyleBtnContainer.querySelectorAll('[data-stroke-style]'));
+
+    expect(styles.map((b) => [b.getAttribute('data-stroke-style'), b.getAttribute('aria-label')])).toEqual([
+      ['solid', 'Solid'],
+      ['dashed', 'Dashed'],
+      ['dotted', 'Dotted'],
+    ]);
+    expect(pressedStyle()).toBe('dashed');
+
+    // dots: zero length dashes with round caps
+    drawer.setStrokeStyle('dotted');
+    drawer.setStrokeWidth(5);
+    drag(drawer, [10, 10], [200, 10]);
+    const line = drawer.getDrawingShapes()[0] as Line;
+    expect(line.dash()).toEqual([0, 10]);
+    expect(pressedStyle()).toBe('dotted');
+
+    // selected shape: style and width change its dash
+    const selectWidget = drawer.getWidget<SelectWidget>('selection')!;
+    selectWidget.setActive(true);
+    selectWidget.transformer.nodes([line]);
+    drawer.setStrokeWidth(12);
+    expect(line.dash()).toEqual([0, 24]);
+    drawer.setStrokeStyle('dashed');
+    expect(line.dash()).toEqual([24, 36]);
+    drawer.setStrokeStyle('solid');
+    expect(line.dash()).toBeUndefined();
+  });
+
+  it('Dash arrays of previous versions give dashed style', () => {
+    const drawer = createDrawer({ strokeDash: [33, 10] });
+
+    expect(drawer.options.strokeStyle).toBe('dashed');
+    drawer.setStrokeStyle([]);
+    expect(drawer.options.strokeStyle).toBe('solid');
+    drawer.setStrokeStyle([33, 33]);
+    expect(drawer.options.strokeStyle).toBe('dashed');
+
+    // shape of a previous version: dash recomputed with its style when width changes
+    const rect = drawer.addShape(new Rect({ name: 'drawer-rect', width: 50, height: 50, stroke: '#000', dash: [33, 10] }));
+    const selectWidget = drawer.getWidget<SelectWidget>('selection')!;
+    selectWidget.transformer.nodes([rect]);
+    drawer.setStrokeWidth(3);
+    expect(rect.dash()).toEqual([6, 9]);
   });
 });

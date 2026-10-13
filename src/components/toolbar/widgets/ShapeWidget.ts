@@ -6,6 +6,7 @@ import { BaseWidget } from './BaseWidget';
 import { ShapeOverlay } from '@/components/tools/Overlay/ShapeOverlay/ShapeOverlay';
 import { crosshairCursor } from '@/constants';
 import { toFill } from '@/utils/color';
+import { getDash } from '@/utils/stroke';
 
 // one overlay shared by shape tools of a drawer
 const overlays = new WeakMap<Drawer, ShapeOverlay>();
@@ -94,13 +95,15 @@ export abstract class ShapeWidget<T extends Shape<ShapeConfig>> extends BaseWidg
    * Style of new shapes, from drawer options
    */
   protected get shapeStyle() {
-    const { strokeColor, fillColor, strokeWidth, strokeDash, opacity } = this.drawer.options;
+    const { strokeColor, fillColor, strokeWidth, strokeStyle, opacity } = this.drawer.options;
 
     return {
       stroke: strokeColor,
       fill: this.hasFill ? toFill(fillColor) : undefined,
       strokeWidth,
-      dash: strokeDash,
+      dash: getDash(strokeStyle, strokeWidth),
+      // dashes and dots ends
+      lineCap: 'round' as const,
       opacity,
       // easier to select / erase than the stroke only
       hitStrokeWidth: Math.max(20, strokeWidth),

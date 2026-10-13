@@ -22,7 +22,7 @@ export const defaultOptions: DrawerOptions = {
   width: window.innerWidth,
   height: window.innerHeight,
   strokeWidth: 5,
-  strokeDash: undefined,
+  strokeStyle: 'solid',
   strokeColor: '#000',
   fillColor: 'transparent',
   zoom: true,

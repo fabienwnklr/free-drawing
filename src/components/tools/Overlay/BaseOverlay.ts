@@ -1,7 +1,7 @@
 import type { Drawer } from '@/Drawer';
-import type { ColorLike, OptionsChange } from '@/@types/drawer';
+import type { ColorLike, OptionsChange, StrokeStyle } from '@/@types/drawer';
 import LineIcon from '@/icons/line.svg?raw';
-import LineDashedSmIcon from '@/icons/line-dashed-sm.svg?raw';
+import LineDottedIcon from '@/icons/line-dotted.svg?raw';
 import LineDashedIcon from '@/icons/line-dashed.svg?raw';
 import './overlay.scss';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
@@ -9,6 +9,7 @@ import { Group } from 'konva/lib/Group';
 import { dataAttributes, fillShapes } from '@/constants';
 import { ColorPicker } from '@/components/ColorPicker/ColorPicker';
 import { createButton, setLabel, setPressed, uniqueId } from '@/utils/dom';
+import { getStrokeStyle } from '@/utils/stroke';
 
 /**
  * All common tool for all shape (color, opacity for now)
@@ -165,29 +166,16 @@ export class BaseOverlay {
     this.$strokeStyleContainer = $container;
     this.$strokeStyleBtnContainer = $btnContainer;
 
-    const strokeDashed = [
-      {
-        icon: LineIcon,
-        dash: undefined,
-        label: 'Solid',
-      },
-      {
-        icon: LineDashedIcon,
-        dash: [33, 10],
-        label: 'Dashed',
-      },
-      {
-        icon: LineDashedSmIcon,
-        dash: [33, 33],
-        label: 'Widely dashed',
-      },
+    const strokeStyles: { icon: string; style: StrokeStyle; label: string }[] = [
+      { icon: LineIcon, style: 'solid', label: 'Solid' },
+      { icon: LineDashedIcon, style: 'dashed', label: 'Dashed' },
+      { icon: LineDottedIcon, style: 'dotted', label: 'Dotted' },
     ];
 
-    strokeDashed.forEach((dashed) => {
-      const value = dashed.dash?.toString() ?? '';
-      const $btn = this._createButton(dashed.icon, dataAttributes.strokeStyle, value, dashed.label);
+    strokeStyles.forEach(({ icon, style, label }) => {
+      const $btn = this._createButton(icon, dataAttributes.strokeStyle, style, label);
 
-      $btn.addEventListener('click', () => this.drawer.setStrokeStyle(dashed.dash));
+      $btn.addEventListener('click', () => this.drawer.setStrokeStyle(style));
       this.$strokeStyleBtnContainer.append($btn);
     });
 
@@ -275,8 +263,8 @@ export class BaseOverlay {
   show(shape?: (Shape<ShapeConfig> | Group)[]) {
     this.$overlayContainer.classList.add('show');
 
-    const { strokeColor, fillColor, strokeWidth, strokeDash, opacity } = this.drawer.options;
-    let data: OptionsChange = { strokeColor, fillColor, strokeWidth, strokeDash, opacity };
+    const { strokeColor, fillColor, strokeWidth, strokeStyle, opacity } = this.drawer.options;
+    let data: OptionsChange = { strokeColor, fillColor, strokeWidth, strokeStyle, opacity };
 
     if (shape && shape[0] instanceof Shape) {
       const hasFill = fillShapes.some((name) => shape[0].hasName(name));
@@ -287,7 +275,7 @@ export class BaseOverlay {
         // no fill is transparent
         fillColor: hasFill ? ((shape[0].fill() || 'transparent') as ColorLike) : fillColor,
         strokeWidth: shape[0].strokeWidth(),
-        strokeDash: shape[0].dash(),
+        strokeStyle: getStrokeStyle(shape[0].dash()),
         opacity: shape[0].opacity(),
       };
     }
@@ -324,13 +312,10 @@ export class BaseOverlay {
       );
     }
 
-    // undefined dash is a solid line
-    if ('strokeDash' in change) {
+    if (change.strokeStyle !== undefined) {
       this._setActiveBtn(
         this.$strokeStyleBtnContainer,
-        this.$strokeStyleBtnContainer.querySelector(
-          `[${dataAttributes.strokeStyle}="${change.strokeDash?.toString() ?? ''}"]`
-        )
+        this.$strokeStyleBtnContainer.querySelector(`[${dataAttributes.strokeStyle}="${change.strokeStyle}"]`)
       );
     }
 

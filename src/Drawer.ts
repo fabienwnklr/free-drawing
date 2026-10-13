@@ -4,10 +4,11 @@ import { Layer } from 'konva/lib/Layer';
 import { Toolbar } from './components/toolbar/Toolbar';
 import { Rect } from 'konva/lib/shapes/Rect';
 import { AvailableTools } from './@types/toolbar';
-import { ColorLike, DrawerOptions, OptionsChange, TextStyle } from './@types/drawer';
+import { ColorLike, DrawerOptions, OptionsChange, StrokeStyle, TextStyle } from './@types/drawer';
 import { deepMerge } from './utils/functions';
 import { defaultOptions, gridSize, shapeName, socketEvents, zoomLimits } from './constants';
 import { setPressed } from './utils/dom';
+import { getStrokeStyle } from './utils/stroke';
 import { Zoom } from './components/tools/Zoom/Zoom';
 import { Position } from './components/tools/Position/Position';
 import { Help } from './components/tools/Help/Help';
@@ -101,6 +102,8 @@ export class Drawer extends MicroEvent {
       },
       otherOptions
     );
+    // dash array of previous versions
+    if (!options.strokeStyle && options.strokeDash) this.options.strokeStyle = getStrokeStyle(options.strokeDash);
     // list or object, replaces default list (not merged)
     if (widgets) this.options.widgets = widgets;
     // copy (setters replace values), restored by resetDrawer
@@ -535,13 +538,15 @@ export class Drawer extends MicroEvent {
   }
 
   /**
-   * Set stroke style (dash) for draw
-   * @param {number[] | undefined} dashed Dash array, undefined for solid line
+   * Set stroke style of lines, arrows, rectangles and ellipses (new and selected ones)
+   * @param {StrokeStyle} style 'solid', 'dashed' or 'dotted' (deprecated dash array gives 'dashed', undefined 'solid')
    */
-  setStrokeStyle(dashed: number[] | undefined) {
-    this.options.strokeDash = dashed;
-    this.getWidget<SelectWidget>('selection')?.setStrokeStyle(dashed);
-    this._triggerOptionsChange({ strokeDash: dashed });
+  setStrokeStyle(style: StrokeStyle | number[] | undefined) {
+    const strokeStyle = typeof style === 'string' ? style : getStrokeStyle(style);
+
+    this.options.strokeStyle = strokeStyle;
+    this.getWidget<SelectWidget>('selection')?.setStrokeStyle(strokeStyle);
+    this._triggerOptionsChange({ strokeStyle });
   }
 
   /**
@@ -799,14 +804,14 @@ export class Drawer extends MicroEvent {
    * and drawing options given on init (color, width, opacity, text style...)
    */
   resetDrawer() {
-    const { strokeColor, fillColor, strokeWidth, strokeDash, opacity, textStyle } = this.#initialOptions;
+    const { strokeColor, fillColor, strokeWidth, strokeStyle, opacity, textStyle } = this.#initialOptions;
 
     this.clearCanvas(true);
     this.setBgColor('#fff');
     this.setStrokeColor(strokeColor);
     this.setFillColor(fillColor);
     this.setStrokeWidth(strokeWidth);
-    this.setStrokeStyle(strokeDash);
+    this.setStrokeStyle(strokeStyle);
     this.setOpacity(opacity);
     this.setTextStyle({ ...textStyle });
   }

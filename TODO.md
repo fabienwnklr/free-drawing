@@ -12,3 +12,5 @@
 - la couleur et la couleur de contour du texte diffère -->
 <!-- - dans tout les choix de couleur ajoute un input pour choisir une couleur personnalisé, dont une couleur blank (transparent) -->
 - position object (reculer d'un plan, en arrièere plan, idem pour devant)
+- use alias instead absolute path (replace ../../ or ./ with @/) where isn't already set and used
+- event namespace (fd?) utiliser une signature identique pour tout les events, par ex drawer.options.change, drawer.change, drawer.saved, etc.

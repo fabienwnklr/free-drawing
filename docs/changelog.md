@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [3.8.0](https://github.com/fabienwnklr/free-drawing/compare/v3.7.0...v3.8.0) (2026-10-14)
+
+
+### Features
+
+* **shapes:** stroke styles solid, dashed and dotted (round dots), dashes and dots follow stroke width, `strokeStyle` option and `setStrokeStyle('dashed')`
+
+
+### Bug Fixes
+
+* **shapes:** dashes of thick lines and arrows no longer look solid, same dash ends for lines, arrows, rectangles and ellipses
+
+
+### Deprecations
+
+* `strokeDash` option and dash array of `setStrokeStyle`: still accepted, a dash array gives `'dashed'` style (`fd.options.change` event sends `strokeStyle` instead of `strokeDash`)
+
 ## [3.7.0](https://github.com/fabienwnklr/free-drawing/compare/v3.6.0...v3.7.0) (2026-10-14)
 
 
