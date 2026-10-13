@@ -4,6 +4,7 @@ import EraserIcon from '@/icons/eraser.svg?raw';
 import type { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Text } from 'konva/lib/shapes/Text';
 import { crosshairCursor } from '@/constants';
+import { Trail } from './Trail';
 
 /**
  * Outline color of shapes to erase
@@ -14,9 +15,13 @@ export class EraserWidget extends BaseWidget {
   /** Shapes erased on pointer up, with their outline shown meanwhile */
   #toRemoved = new Map<Shape<ShapeConfig>, Shape<ShapeConfig>>();
   protected cursor = crosshairCursor;
+  /** Trail behind pointer while erasing */
+  #trail: Trail;
 
   constructor(drawer: Drawer) {
     super(drawer, 'eraser', 'Eraser', EraserIcon, 'e');
+
+    this.#trail = new Trail(drawer.selectionLayer);
   }
 
   /**
@@ -34,6 +39,8 @@ export class EraserWidget extends BaseWidget {
       e.evt.preventDefault();
 
       this.startAction();
+      this.#trail.start();
+      this._addTrailPoint();
     });
 
     // and core function - drawing
@@ -43,6 +50,7 @@ export class EraserWidget extends BaseWidget {
       }
       // prevent scrolling on touch devices
       e.evt.preventDefault();
+      this._addTrailPoint();
       const target = this.drawer.stage.getIntersection(this.drawer._getPointerPos());
       const shape = this.drawer.getDrawingShapes().find((s) => s === target);
 
@@ -53,6 +61,7 @@ export class EraserWidget extends BaseWidget {
 
     this.onStage('mouseup touchend', (e) => {
       this.endAction();
+      this.#trail.stop();
       this.clearSelection();
 
       e.evt.preventDefault();
@@ -72,6 +81,12 @@ export class EraserWidget extends BaseWidget {
         e.target.destroy();
       }
     });
+  }
+
+  private _addTrailPoint() {
+    const { x, y } = this.drawer._getRelativePointerPos();
+
+    this.#trail.add(x, y);
   }
 
   /**
@@ -110,5 +125,6 @@ export class EraserWidget extends BaseWidget {
       shape.show();
     });
     this.#toRemoved.clear();
+    this.#trail.destroy();
   }
 }

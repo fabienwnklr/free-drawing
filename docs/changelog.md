@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [3.4.0](https://github.com/fabienwnklr/free-drawing/compare/v3.3.2...v3.4.0) (2026-10-14)
+
+
+### Features
+
+* **eraser:** trail behind pointer while erasing, thinner towards its tail and fading out
+
 ## [3.3.2](https://github.com/fabienwnklr/free-drawing/compare/v3.3.1...v3.3.2) (2026-10-14)
 
 

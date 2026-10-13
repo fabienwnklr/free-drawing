@@ -167,6 +167,25 @@ describe('Test drawer event', () => {
     expect(drawer.selectionLayer.find('.erasing').length).toBe(0);
   });
 
+  it('Eraser shows a trail behind pointer, faded out after pointer up', async () => {
+    const drawer = createDrawer();
+    const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+    const trail = () => drawer.selectionLayer.findOne<Line>('.trail');
+    drawer.getWidget<EraserWidget>('eraser')!.setActive(true);
+
+    fireMouse(drawer, 'mousedown', 10, 10);
+    fireMouse(drawer, 'mousemove', 50, 30);
+    fireMouse(drawer, 'mousemove', 90, 50);
+    await wait(50);
+    expect(trail()?.points().length).toBeGreaterThan(0);
+    // not found by eraser hit detection
+    expect(trail()?.listening()).toBe(false);
+
+    fireMouse(drawer, 'mouseup', 90, 50);
+    await wait(400);
+    expect(trail()).toBeUndefined();
+  });
+
   it('Eraser shows shapes to erase as outline, restored if erasing stops', () => {
     const drawer = createDrawer();
     fireMouse(drawer, 'mousedown', 10, 10);
