@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [3.0.2](https://github.com/fabienwnklr/free-drawing/compare/v3.0.1...v3.0.2) (2026-10-13)
+
+
+### Bug Fixes
+
+* **pan:** hand cursor visible on white canvas
+
 ## [3.0.1](https://github.com/fabienwnklr/free-drawing/compare/v3.0.0...v3.0.1) (2026-10-13)
 
 

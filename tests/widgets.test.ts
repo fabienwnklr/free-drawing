@@ -4,6 +4,7 @@ import type { SelectWidget } from '../src/components/toolbar/widgets/Select/Sele
 import type { TextWidget } from '../src/components/toolbar/widgets/Text/Text';
 import type { BrushWidget } from '../src/components/toolbar/widgets/Brush/Brush';
 import type { Text } from 'konva/lib/shapes/Text';
+import type { BaseWidget } from '../src/components/toolbar/widgets/BaseWidget';
 import { createDrawer, fireMouse, keydown } from './helpers';
 
 beforeAll(() => {
@@ -131,5 +132,20 @@ describe('Widgets', () => {
     }
     expect(brushOverlay.$strokeWidthBtnContainer.querySelector('.active')?.getAttribute('data-stroke-width')).toBe('8');
     expect(textOverlay.$textAlignBtnContainer.querySelector('.active')?.getAttribute('data-text-align')).toBe('right');
+  });
+
+  it('Pan uses visible hand cursors, system ones as fallback', () => {
+    const drawer = createDrawer();
+    drawer.getWidget<BaseWidget>('pan')!.setActive(true);
+    const cursor = () => drawer.$stageContainer.style.cursor;
+
+    expect(cursor()).toContain('data:image/svg+xml');
+    expect(cursor().endsWith('grab')).toBe(true);
+
+    fireMouse(drawer, 'mousedown', 10, 10);
+    expect(cursor().endsWith('grabbing')).toBe(true);
+
+    fireMouse(drawer, 'mouseup', 10, 10);
+    expect(cursor().endsWith('grab')).toBe(true);
   });
 });
