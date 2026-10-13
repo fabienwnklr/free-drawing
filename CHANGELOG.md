@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [3.0.1](https://github.com/fabienwnklr/free-drawing/compare/v3.0.0...v3.0.1) (2026-10-13)
+
+
+### Build System
+
+* `yarn release` publishes the current version, version and changelog are updated by each commit
+
 ## [3.0.0](https://github.com/fabienwnklr/free-drawing/compare/v2.1.2...v3.0.0) (2026-10-13)
 
 
