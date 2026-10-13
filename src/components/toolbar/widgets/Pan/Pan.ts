@@ -4,23 +4,28 @@ import PanIcon from '@/icons/pan.svg?raw';
 import { grabCursor, grabbingCursor } from '@/constants';
 
 export class PanWidget extends BaseWidget {
-  isGrabbing: boolean = false;
   hasMoved: boolean = false;
+  protected cursor = grabCursor;
 
   constructor(drawer: Drawer) {
     super(drawer, 'pan', 'Pan', PanIcon, 'h');
   }
 
+  /**
+   * @deprecated use `inAction`
+   */
+  get isGrabbing() {
+    return this.inAction;
+  }
+
   protected initEvents(): void {
     this.onStage('mousedown touchstart', () => {
-      this.isGrabbing = true;
-      this.drawer.UIPointerEvents('none');
-
+      this.startAction();
       this.drawer.$stageContainer.style.cursor = grabbingCursor;
     });
 
     this.onStage('mousemove touchmove', (e) => {
-      if (e.target !== this.drawer.stage || !this.isGrabbing) return;
+      if (e.target !== this.drawer.stage || !this.inAction) return;
       this.hasMoved = true;
 
       this.drawer.$stageContainer.style.cursor = grabbingCursor;
@@ -30,10 +35,9 @@ export class PanWidget extends BaseWidget {
       if (this.hasMoved) {
         this.drawer.stage.fire('change');
       }
-      this.isGrabbing = false;
-      this.drawer.UIPointerEvents('all');
+      this.endAction();
       this.hasMoved = false;
-      this.drawer.$stageContainer.style.cursor = grabCursor;
+      this.updateCursor();
     });
   }
 
@@ -43,9 +47,5 @@ export class PanWidget extends BaseWidget {
 
   protected onDesactive(): void {
     this.drawer.stage.draggable(false);
-  }
-
-  updateCursor() {
-    this.drawer.$stageContainer.style.cursor = grabCursor;
   }
 }

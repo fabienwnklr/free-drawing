@@ -5,6 +5,8 @@ import type { TextWidget } from '../src/components/toolbar/widgets/Text/Text';
 import type { BrushWidget } from '../src/components/toolbar/widgets/Brush/Brush';
 import type { Text } from 'konva/lib/shapes/Text';
 import type { BaseWidget } from '../src/components/toolbar/widgets/BaseWidget';
+import type { EraserWidget } from '../src/components/toolbar/widgets/Eraser/Eraser';
+import { crosshairCursor } from '../src/constants';
 import { createDrawer, fireMouse, keydown, setPointer } from './helpers';
 
 beforeAll(() => {
@@ -212,5 +214,79 @@ describe('Widgets', () => {
     text.setAttrs({ scaleX: 2, scaleY: 2 });
     transformer.fire('transform', { target: text });
     expect(text.getAttrs()).toMatchObject({ width: 400, scaleX: 2, scaleY: 2 });
+  });
+
+  it('Active widget shows its overlay and cursor, selection overlay only for selected shapes', () => {
+    const drawer = createDrawer();
+    const widget = (id: Parameters<Drawer['getWidget']>[0]) => drawer.getWidget<BaseWidget>(id)!;
+    const shown = (id: Parameters<Drawer['getWidget']>[0]) =>
+      !!widget(id).overlay?.$overlayContainer.classList.contains('show');
+    const cursor = () => drawer.$stageContainer.style.cursor;
+
+    widget('brush').setActive(true);
+    expect(shown('brush')).toBe(true);
+    expect(cursor()).toBe(crosshairCursor);
+
+    widget('text').setActive(true);
+    expect(shown('brush')).toBe(false);
+    expect(shown('text')).toBe(true);
+    expect(cursor()).toBe('text');
+
+    widget('square').setActive(true);
+    expect(shown('text')).toBe(false);
+    expect(shown('square')).toBe(true);
+
+    widget('eraser').setActive(true);
+    expect(shown('square')).toBe(false);
+    expect(cursor()).toBe(crosshairCursor);
+
+    widget('selection').setActive(true);
+    expect(shown('selection')).toBe(false);
+    expect(cursor()).toBe('default');
+  });
+
+  it('Pointer action of active widget disables shortcuts and UI pointer events', () => {
+    const drawer = createDrawer();
+    const brush = drawer.getWidget<BrushWidget>('brush')!;
+    const pointerEvents = () => drawer.$drawerContainer.style.getPropertyValue('--drawer-pointer-events');
+
+    fireMouse(drawer, 'mousedown', 10, 10);
+    expect(brush.inAction).toBe(true);
+    // previous name kept
+    expect(brush.isPaint).toBe(true);
+    expect(drawer._duringAction()).toBe(true);
+    expect(pointerEvents()).toBe('none');
+
+    fireMouse(drawer, 'mouseup', 50, 50);
+    expect(brush.inAction).toBe(false);
+    expect(drawer._duringAction()).toBe(false);
+    expect(pointerEvents()).toBe('all');
+
+    const eraser = drawer.getWidget<EraserWidget>('eraser')!;
+    eraser.setActive(true);
+    fireMouse(drawer, 'mousedown', 300, 300);
+    expect(eraser.inAction).toBe(true);
+    expect(eraser.isErasing).toBe(true);
+    expect(drawer._duringAction()).toBe(true);
+  });
+
+  it('Select all replaces active tool overlay by selection overlay', () => {
+    const drawer = createDrawer();
+    const square = drawer.getWidget<BaseWidget>('square')!;
+    const selectWidget = drawer.getWidget<SelectWidget>('selection')!;
+    const shown = (widget: BaseWidget) => !!widget.overlay?.$overlayContainer.classList.contains('show');
+    square.setActive(true);
+
+    // nothing to select
+    keydown(drawer, { key: 'a', ctrlKey: true });
+    expect(shown(square)).toBe(true);
+    expect(shown(selectWidget)).toBe(false);
+
+    fireMouse(drawer, 'mousedown', 10, 10);
+    fireMouse(drawer, 'mousemove', 100, 80);
+    fireMouse(drawer, 'mouseup', 100, 80);
+    keydown(drawer, { key: 'a', ctrlKey: true });
+    expect(shown(square)).toBe(false);
+    expect(shown(selectWidget)).toBe(true);
   });
 });

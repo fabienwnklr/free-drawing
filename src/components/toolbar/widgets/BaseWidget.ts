@@ -5,6 +5,7 @@ import { getWidgetOptions } from '@/utils/widgets';
 import type { KonvaEventListener } from 'konva/lib/Node';
 import type { Stage } from 'konva/lib/Stage';
 import type { BaseOverlay } from '@/components/tools/Overlay/BaseOverlay';
+import type { SelectWidget } from './Select/Select';
 import { disableElement, enableElement } from '@/utils/dom';
 
 export abstract class BaseWidget {
@@ -14,10 +15,16 @@ export abstract class BaseWidget {
   $button: HTMLButtonElement;
   id: AvailableTools;
   shortcut: string | undefined;
-  /** Options of the tool (color, width...), shown by the widget while active */
+  /** Options of the tool (color, width...), shown while widget is active (see `showOverlayOnActive`) */
   declare overlay?: BaseOverlay;
   /** Widget options given with drawer `widgets` option */
   readonly options: WidgetOptions;
+  /** Pointer action in progress (drawing, erasing, selecting...), see `startAction` / `endAction` */
+  inAction: boolean = false;
+  /** Show `overlay` while widget is active (false when overlay depends on something else, e.g. selection) */
+  protected showOverlayOnActive: boolean = true;
+  /** Stage cursor while widget is active */
+  protected cursor: string = 'default';
 
   constructor(
     protected drawer: Drawer,
@@ -105,17 +112,40 @@ export abstract class BaseWidget {
   }
 
   /**
-   * Called on activation, after events and cursor setup
+   * Called on activation, after events, cursor and overlay setup
    */
   protected onActive(): void {}
 
   /**
-   * Called on deactivation, after events removal
+   * Called on deactivation, after events removal and overlay hidden
    */
   protected onDesactive(): void {}
 
   public updateCursor(): void {
-    this.drawer.$stageContainer.style.cursor = 'default';
+    this.drawer.$stageContainer.style.cursor = this.cursor;
+  }
+
+  /**
+   * Pointer action starts (pointer down): shortcuts are disabled and UI (toolbar, overlays...) ignores pointer
+   */
+  protected startAction() {
+    this.inAction = true;
+    this.drawer.UIPointerEvents('none');
+  }
+
+  /**
+   * Pointer action ends (pointer up)
+   */
+  protected endAction() {
+    this.inAction = false;
+    this.drawer.UIPointerEvents('all');
+  }
+
+  /**
+   * Unselect shapes, with selection widget (implemented by it)
+   */
+  clearSelection() {
+    this.drawer.getWidget<SelectWidget>('selection')?.clearSelection();
   }
 
   /**
@@ -142,10 +172,12 @@ export abstract class BaseWidget {
       this.$button.classList.add('active');
       this.initEvents();
       this.updateCursor();
+      if (this.showOverlayOnActive) this.overlay?.show();
       this.onActive();
       this.drawer.focus();
     } else {
       this.removeEvents();
+      if (this.showOverlayOnActive) this.overlay?.hide();
       this.onDesactive();
       this.$button.classList.remove('active');
     }

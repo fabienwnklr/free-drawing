@@ -12,7 +12,6 @@ import { Help } from './components/tools/Help/Help';
 import { BrushWidget } from './components/toolbar/widgets/Brush/Brush';
 
 import type { SelectWidget } from './components/toolbar/widgets/Select/Select';
-import type { EraserWidget } from './components/toolbar/widgets/Eraser/Eraser';
 import type { BaseWidget } from './components/toolbar/widgets/BaseWidget';
 
 import { Settings } from './components/tools/Settings/Settings';
@@ -22,7 +21,6 @@ import { ConfirmModal } from './components/Modal/ConfirmModal';
 import { UndoRedo } from './components/tools/UndoRedo/UndoRedo';
 import { ContextMenu } from './components/ContextMenu/ContextMenu';
 import { TextWidget } from './components/toolbar/widgets/Text/Text';
-import { ShapeWidget } from './components/toolbar/widgets/ShapeWidget';
 import { Line } from 'konva/lib/shapes/Line';
 import { Toast } from './components/Toast/Toast';
 import { Group } from 'konva/lib/Group';
@@ -376,21 +374,8 @@ export class Drawer extends MicroEvent {
   }
 
   _duringAction() {
-    const eraserWidget = this.getWidget<EraserWidget>('eraser');
-    const brushWidget = this.getWidget<BrushWidget>('brush');
-    const selectionWidget = this.getWidget<SelectWidget>('selection');
-    const textWidget = this.getWidget<TextWidget>('text');
-
-    if (eraserWidget?.isErasing || selectionWidget?.isSelecting || brushWidget?.isPaint || textWidget?.isEditing) {
-      return true;
-    }
-
-    // line, rectangle, ellipse, arrow
-    if (this.activeWidget instanceof ShapeWidget && this.activeWidget.isPaint) {
-      return true;
-    }
-
-    return false;
+    // pointer action of active tool (drawing, erasing, selecting...) or text edition
+    return !!this.activeWidget?.inAction || !!this.getWidget<TextWidget>('text')?.isEditing;
   }
 
   private _initZoomWheel() {

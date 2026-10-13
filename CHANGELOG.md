@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [3.2.1](https://github.com/fabienwnklr/free-drawing/compare/v3.2.0...v3.2.1) (2026-10-13)
+
+
+### Bug Fixes
+
+* **selection:** select all hides overlay of active tool (shapes, text...), and does nothing without shapes
+
+
+### Deprecations
+
+* widgets `isPaint`, `isErasing`, `isSelecting` and `isGrabbing` are replaced by `inAction` (read only)
+
 ## [3.2.0](https://github.com/fabienwnklr/free-drawing/compare/v3.1.0...v3.2.0) (2026-10-13)
 
 

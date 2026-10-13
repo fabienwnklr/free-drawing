@@ -3,7 +3,6 @@ import { BaseWidget } from '../BaseWidget';
 import BrushIcon from '@/icons/brush.svg?raw';
 import { Line } from 'konva/lib/shapes/Line';
 import { Node } from 'konva/lib/Node';
-import { SelectWidget } from '../Select/Select';
 import { BrushOverlay } from '@/components/tools/Overlay/BrushOverlay/BrushOverlay';
 import { getStroke } from 'perfect-freehand';
 import { crosshairCursor, shapeName, socketEvents } from '@/constants';
@@ -16,10 +15,10 @@ const freehandDefaults = { thinning: 0.6, smoothing: 1, streamline: 0.5 };
 
 export class BrushWidget extends BaseWidget {
   #lastLine: Line = new Line();
-  isPaint: boolean = false;
   #allPoints: { x: number; y: number }[] = [];
   overlay: BrushOverlay;
   declare readonly options: BrushWidgetOptions;
+  protected cursor = crosshairCursor;
 
   constructor(drawer: Drawer) {
     super(drawer, 'brush', 'Brush', BrushIcon, 'b');
@@ -27,12 +26,11 @@ export class BrushWidget extends BaseWidget {
     this.overlay = new BrushOverlay(drawer);
   }
 
-  protected onActive(): void {
-    this.overlay.show();
-  }
-
-  protected onDesactive(): void {
-    this.overlay.hide();
+  /**
+   * @deprecated use `inAction`
+   */
+  get isPaint() {
+    return this.inAction;
   }
 
   protected initEvents(): void {
@@ -40,8 +38,7 @@ export class BrushWidget extends BaseWidget {
       if (e.evt.button === 2) return;
       e.evt.preventDefault();
 
-      this.isPaint = true;
-      this.drawer.UIPointerEvents('none');
+      this.startAction();
 
       const realPos = this.drawer._getRelativePointerPos();
       this.#lastLine = new Line({
@@ -69,7 +66,7 @@ export class BrushWidget extends BaseWidget {
       // prevent scrolling on touch devices
       e.evt.preventDefault();
 
-      if (!this.isPaint) return;
+      if (!this.inAction) return;
 
       this._updateLine();
       // this.drawer.socket.emit(socketEvents.DRAW, this.#lastLine);
@@ -77,17 +74,15 @@ export class BrushWidget extends BaseWidget {
 
     this.onStage('mouseup touchend', (e) => {
       // mouseup without mousedown on stage (e.g. started on overlay) must not alter last line
-      if (e.evt.button === 2 || !this.isPaint) return;
+      if (e.evt.button === 2 || !this.inAction) return;
 
       this._updateLine(true);
-      this.isPaint = false;
-      this.drawer.UIPointerEvents('all');
+      this.endAction();
       this.#allPoints = [];
 
       this.drawer.stage.fire('change');
 
-      const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
-      selectWidget?.clearSelection();
+      this.clearSelection();
       e.evt.preventDefault();
       // serialized line (konva JSON), only with collaboration enabled
       this.drawer.socket?.emit(socketEvents.DRAW, this.#lastLine.toJSON());
@@ -121,9 +116,5 @@ export class BrushWidget extends BaseWidget {
   _socketDraw(data: string) {
     // konva JSON of the line, server does not send it back to its author
     this.drawer.addShape(Node.create(data) as Line);
-  }
-
-  updateCursor() {
-    this.drawer.$stageContainer.style.cursor = crosshairCursor;
   }
 }

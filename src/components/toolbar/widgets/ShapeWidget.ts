@@ -3,7 +3,6 @@ import type { Drawer } from '@/Drawer';
 import type { Shape, ShapeConfig } from 'konva/lib/Shape';
 import type { Vector2d } from 'konva/lib/types';
 import { BaseWidget } from './BaseWidget';
-import type { SelectWidget } from './Select/Select';
 import { ShapeOverlay } from '@/components/tools/Overlay/ShapeOverlay/ShapeOverlay';
 import { crosshairCursor } from '@/constants';
 
@@ -51,8 +50,8 @@ export function dragBox(start: Vector2d, end: Vector2d, square: boolean) {
  * Tool drawing a shape by drag (line, rectangle, ellipse, arrow), shift key constrains the shape
  */
 export abstract class ShapeWidget<T extends Shape<ShapeConfig>> extends BaseWidget {
-  isPaint: boolean = false;
   overlay: ShapeOverlay;
+  protected cursor = crosshairCursor;
   #shape: T | null = null;
   #start: Vector2d = { x: 0, y: 0 };
 
@@ -67,6 +66,13 @@ export abstract class ShapeWidget<T extends Shape<ShapeConfig>> extends BaseWidg
     }
 
     this.overlay = overlay;
+  }
+
+  /**
+   * @deprecated use `inAction`
+   */
+  get isPaint() {
+    return this.inAction;
   }
 
   /**
@@ -97,27 +103,18 @@ export abstract class ShapeWidget<T extends Shape<ShapeConfig>> extends BaseWidg
     };
   }
 
-  protected onActive(): void {
-    this.overlay.show();
-  }
-
-  protected onDesactive(): void {
-    this.overlay.hide();
-  }
-
   protected initEvents(): void {
     this.onStage('mousedown touchstart', (e) => {
       if (e.evt.button === 2) return;
       e.evt.preventDefault();
 
-      this.isPaint = true;
-      this.drawer.UIPointerEvents('none');
+      this.startAction();
       this.#start = this.drawer._getRelativePointerPos();
       this.#shape = this.drawer.addShape(this.createShape(this.#start));
     });
 
     this.onStage('mousemove touchmove', (e) => {
-      if (!this.isPaint || !this.#shape) return;
+      if (!this.inAction || !this.#shape) return;
       // prevent scrolling on touch devices
       e.evt.preventDefault();
 
@@ -126,14 +123,13 @@ export abstract class ShapeWidget<T extends Shape<ShapeConfig>> extends BaseWidg
 
     this.onStage('mouseup touchend', (e) => {
       // mouseup without mousedown on stage (e.g. started on overlay) must not alter last shape
-      if (e.evt.button === 2 || !this.isPaint || !this.#shape) return;
+      if (e.evt.button === 2 || !this.inAction || !this.#shape) return;
       e.evt.preventDefault();
 
       const shape = this.#shape;
       const end = this.drawer._getRelativePointerPos();
-      this.isPaint = false;
       this.#shape = null;
-      this.drawer.UIPointerEvents('all');
+      this.endAction();
 
       // simple click, nothing drawn
       if (Math.hypot(end.x - this.#start.x, end.y - this.#start.y) < 2) {
@@ -142,12 +138,8 @@ export abstract class ShapeWidget<T extends Shape<ShapeConfig>> extends BaseWidg
       }
 
       this.updateShape(shape, this.#start, end, !!e.evt.shiftKey);
-      this.drawer.getWidget<SelectWidget>('selection')?.clearSelection();
+      this.clearSelection();
       this.drawer.stage.fire('change');
     });
-  }
-
-  updateCursor(): void {
-    this.drawer.$stageContainer.style.cursor = crosshairCursor;
   }
 }

@@ -2,15 +2,21 @@ import { Drawer } from '@/Drawer';
 import { BaseWidget } from '../BaseWidget';
 import EraserIcon from '@/icons/eraser.svg?raw';
 import type { Shape, ShapeConfig } from 'konva/lib/Shape';
-import { SelectWidget } from '../Select/Select';
 import { crosshairCursor } from '@/constants';
 
 export class EraserWidget extends BaseWidget {
-  isErasing: boolean = false;
   #toRemoved = new Set<Shape<ShapeConfig>>();
+  protected cursor = crosshairCursor;
 
   constructor(drawer: Drawer) {
     super(drawer, 'eraser', 'Eraser', EraserIcon, 'e');
+  }
+
+  /**
+   * @deprecated use `inAction`
+   */
+  get isErasing() {
+    return this.inAction;
   }
 
   protected initEvents(): void {
@@ -20,13 +26,12 @@ export class EraserWidget extends BaseWidget {
       }
       e.evt.preventDefault();
 
-      this.isErasing = true;
-      this.drawer.UIPointerEvents('none');
+      this.startAction();
     });
 
     // and core function - drawing
     this.onStage('mousemove touchmove', (e) => {
-      if (!this.isErasing) {
+      if (!this.inAction) {
         return;
       }
       // prevent scrolling on touch devices
@@ -42,11 +47,8 @@ export class EraserWidget extends BaseWidget {
     });
 
     this.onStage('mouseup touchend', (e) => {
-      this.isErasing = false;
-      this.drawer.UIPointerEvents('all');
-
-      const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
-      selectWidget?.clearSelection();
+      this.endAction();
+      this.clearSelection();
 
       e.evt.preventDefault();
 
@@ -62,9 +64,5 @@ export class EraserWidget extends BaseWidget {
         e.target.destroy();
       }
     });
-  }
-
-  updateCursor(): void {
-    this.drawer.$stageContainer.style.cursor = crosshairCursor;
   }
 }

@@ -1,0 +1,72 @@
+# CLAUDE.md
+
+Guide for working on this repository: `@fabwcie/free-drawing`, an infinite canvas drawing library (TypeScript + [Konva](https://konvajs.org/)). Usage: `new Drawer($el, options)` + `import '@fabwcie/free-drawing/style.css'`. User documentation: [README.md](README.md), changelog: [CHANGELOG.md](CHANGELOG.md).
+
+## Commands
+
+| Command | Purpose |
+| --- | --- |
+| `yarn dev` | Demo (`index.html`) with vite. Add `?collaboration` only with `yarn serve` |
+| `yarn serve` | Express + vite middleware + socket.io server on `http://localhost:3000` (collaboration) |
+| `yarn test` / `npx vitest run tests/x.test.ts` | Unit tests (vitest, jsdom, jest-canvas-mock) |
+| `npx tsc --noEmit -p .` | Type check `src` (root tsconfig only includes `src`) |
+| `npx tsc -p tests` | Type check tests (`tests/tsconfig.json`, needed for the `@/` alias in the IDE) |
+| `yarn lint` | ESLint on `src` and `tests` (no type checking) |
+| `yarn build` | Library build in `dist/`: `drawer.js` (es), `drawer.umd.cjs`, `index.d.ts`, `style.css` |
+| `yarn build:static` | Demo site in `static/` |
+| `yarn docs` | VitePress docs (`docs/`) |
+
+Git hooks (husky): `commit-msg` runs commitlint (conventional commits), `pre-push` runs `lint` and `test`. CI runs `npm run test` on push / PR to `master`.
+
+## Architecture
+
+- **`Drawer`** ([src/Drawer.ts](src/Drawer.ts)) is the entry point and public API, extends `MicroEvent` (`on` / `off` / `trigger`). It builds a Konva `Stage` with 4 layers, in this order:
+  - `bgLayer` (`background`, not listening): background `Rect` named `drawer-background`;
+  - `gridLayer` (`grid`, not listening): one `Shape` with a `sceneFunc` drawing the visible grid;
+  - `drawLayer` (named `' draw'`, with a leading space: select it with `.draw`): the drawing shapes;
+  - `selectionLayer`: transformer, selection rectangle, snapping guides (transient, cleared on load).
+- Constructor order matters: options → saved stage or new stage → context menu, settings, zoom, undo / redo → `Toolbar` (widgets) → `Help` (reads toolbar widgets) → active tool → events → optional collaboration.
+- **UI components** are plain DOM classes appended to `drawer.$drawerContainer`: `ContextMenu`, `Settings` (dropdown), `Zoom`, `UndoRedo`, `Help` (modal), `Toast`, `Modal` / `ConfirmModal`, overlays.
+
+### Widgets (toolbar tools)
+
+- [BaseWidget](src/components/toolbar/widgets/BaseWidget.ts) is the common base of all widgets: behavior shared by several widgets belongs there (or in an intermediate base such as `ShapeWidget`), not duplicated in each widget. It handles button, shortcut, options (`title`, `shortcut` from `options.widgets`) and lifecycle: `setActive(true)` deactivates the previous widget, then calls `initEvents()` → `updateCursor()` → `onActive()`; deactivation calls `removeEvents()` → `onDesactive()`.
+- Register stage events with `this.onStage('mousedown touchstart', handler)`: they are namespaced with the widget id and removed on deactivation. Do not call `stage.on` / `stage.off` directly in widgets.
+- [ShapeWidget](src/components/toolbar/widgets/ShapeWidget.ts): drag-to-draw base (`line`, `square` → Rect, `circle` → Ellipse, `arrow`). Implement `createShape(start)` and `updateShape(shape, start, end, constrain)`; shift constrains (square, circle, 45°). One `ShapeOverlay` shared by shape tools.
+- [Toolbar](src/components/toolbar/Toolbar.ts) creates widgets from `options.widgets` (list or object of widget options) with the `widgetClasses` map. Adding a widget: class + folder in `src/components/toolbar/widgets/` + `WidgetName` type + `widgetNames` ([constants](src/constants.ts)) + `widgetClasses`. `tests/basic.test.ts` compares widget folders count with toolbar widgets.
+- [SelectWidget](src/components/toolbar/widgets/Select/Select.ts) owns the Konva `Transformer` (others use `getWidget<SelectWidget>('selection')?.transformer`, the widget may be disabled), the selection overlay (`showOverlay`, `hideOverlay`, `clearSelection`), setters applying styles to selected shapes (`_updateSelected`), snapping, text anchors (side anchors resize text width, corners scale).
+- [TextWidget](src/components/toolbar/widgets/Text/Text.ts): text nodes, textarea editing (`editTextNode`), double click listened on `drawLayer` (any text is editable), font preload.
+
+### Shapes, options, events
+
+- Add drawing shapes only with `drawer.addShape(shape)` (draggable only with selection tool). Shapes are identified by names from `shapeName` ([constants](src/constants.ts)), e.g. `shape.hasName(shapeName.text)`.
+- Options: `DrawerOptions` ([src/@types/drawer.ts](src/@types/drawer.ts)), defaults in `defaultOptions` ([src/constants.ts](src/constants.ts)). Setters (`setStrokeColor`, `setStrokeWidth`, `setStrokeStyle`, `setOpacity`, `setTextStyle`) update options, apply to the selection, then trigger `fd.options.change` with the changed keys. Overlays ([BaseOverlay](src/components/tools/Overlay/BaseOverlay.ts) and subclasses) listen to it to update their fields: overlay buttons only call setters.
+- After any drawing modification, call `drawer.stage.fire('change')`: it saves to localStorage (`autoSave`), adds a history state and triggers drawer `change` event. Shape drags are listened on `drawLayer` (`dragend.change`).
+- Konva listeners on layers are namespaced (`.grid`, `.snap`, `.change`, `.edit`) so they can be removed separately.
+- [History](src/components/tools/UndoRedo/History.ts): states are JSON strings of drawing shapes (Konva `toObject`, without `draggable`), identical states are skipped, `historyLimit` (100) states are kept, restore uses `Node.create` + `addShape`.
+- Persistence: full stage JSON in localStorage (`options.localStorageKey`, tool in `<key>-tool`). `_loadSavedStage` ignores invalid data; on load the grid layer is rebuilt and the selection layer cleared. Keep loading compatible with saves of previous versions.
+- [HotKey](src/utils/HotKey.ts): keydown on `$drawerContainer`; tool shortcuts come from widgets; `mod = ctrlKey || metaKey`; nothing runs while `drawer._duringAction()`.
+- Collaboration (optional `collaboration` option): `socket.io-client` is loaded with a dynamic import, the brush sends `line.toJSON()`, the server ([server/index.mjs](server/index.mjs)) broadcasts to other clients.
+
+## Conventions
+
+- TypeScript strict, `@/` alias for `src/`. Prettier: single quotes, 120 columns, 2 spaces. Short English comments.
+- Konva is a peer dependency imported by subpath (`konva/lib/...`); the build externalizes `konva`, `perfect-freehand` and `socket.io-client`.
+- Icons are SVG files imported with `?raw`. In library mode vite inlines assets in `style.css` (the Ubuntu font is woff2 for that reason).
+- Tests: use [tests/helpers.ts](tests/helpers.ts) (`createDrawer` with an isolated localStorage key and no autosave, `keydown`, `fireMouse`, `drag`). jsdom has no hit canvas (mock `stage.getIntersection`), no layout and no `document.fonts`: check rendering, pointer and font behavior in a real browser.
+- Working copy files use CRLF (`core.autocrlf=true`).
+
+## Versioning and commits
+
+- Each commit changing the library for its users adds its entry at the top of `CHANGELOG.md` (`## [X.Y.Z](compare link) (date)` then `### Features` / `### Bug Fixes`...), copies it to `docs/changelog.md` (`yarn doc:changelog`) and bumps `version` in `package.json` (major for breaking changes, minor for features, patch otherwise). Each version gets an annotated tag `vX.Y.Z`.
+- Documentation and development changes (docs, CLAUDE.md, tests, tooling, refactoring without visible change) have no changelog entry and no version bump.
+- `yarn release` builds, pushes with tags and publishes the current version (no bump).
+- Claude: never commit or push. Prepare the code, changelog entry, docs copy and version bump, then propose a short conventional commit message without co-author trailer. Tag versions (`git tag -a vX.Y.Z <commit> -m "vX.Y.Z"`) once the maintainer has committed them.
+
+## Pitfalls
+
+- Fonts load when first used: measure or draw texts after `document.fonts.load` (see `TextWidget._loadFonts`). The editing textarea compensates the baseline difference between canvas and CSS (`_baselineOffset`).
+- Konva `Transformer` ends a transform on window `mouseup` (capture phase), before the stage `mouseup`: `isTransforming()` is already false there (see `#pressOnTransformer` in `SelectWidget`).
+- Grid: one stroke per line. A single path with hundreds of dashed lines is very slow in Chromium.
+- `deepMerge` does not merge arrays: `widgets` option is replaced, not merged. Never mutate `defaultOptions` (setters replace nested objects such as `textStyle`).
+- `GroupWidget` is not used yet (see [TODO.md](TODO.md)).

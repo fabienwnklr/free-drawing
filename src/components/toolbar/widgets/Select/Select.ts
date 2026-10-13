@@ -12,7 +12,6 @@ import { Stage } from 'konva/lib/Stage';
 import { shapeName, strokeStyleShapes } from '@/constants';
 import type { ColorLike, TextStyle } from '@/@types/drawer';
 import { SelectOverlay } from '@/components/tools/Overlay/SelectOverlay/SelectOverlay';
-import { BrushWidget } from '../Brush/Brush';
 import type { TextWidget } from '../Text/Text';
 import { Text } from 'konva/lib/shapes/Text';
 import { Group } from 'konva/lib/Group';
@@ -58,11 +57,12 @@ export class SelectWidget extends BaseWidget {
     },
     anchorCornerRadius: 3,
   });
-  isSelecting: boolean = false;
   // press on transformer anchor (resize, rotate), its release must not change selection
   #pressOnTransformer: boolean = false;
   snapping: boolean = false;
   overlay: SelectOverlay;
+  // overlay of selected shapes, not of the tool
+  protected showOverlayOnActive = false;
 
   constructor(drawer: Drawer) {
     super(drawer, 'selection', 'Select', SelectIcon, 's');
@@ -123,12 +123,11 @@ export class SelectWidget extends BaseWidget {
 
       this.selectionRectangle.width(0);
       this.selectionRectangle.height(0);
-      this.isSelecting = true;
-      this.drawer.UIPointerEvents('none');
+      this.startAction();
     });
 
     this.onStage('mousemove touchmove', (e) => {
-      if (!this.isSelecting) {
+      if (!this.inAction) {
         // Don't change cursor on anchor or on transforming
         if (e.target.hasName('_anchor') || this.transformer.isTransforming()) return;
         if (e.target !== this.drawer.stage) {
@@ -164,8 +163,7 @@ export class SelectWidget extends BaseWidget {
         return;
       }
 
-      this.isSelecting = false;
-      this.drawer.UIPointerEvents('all');
+      this.endAction();
       e.evt.preventDefault();
       // update visibility in timeout, so we can check it in click event
       this.selectionRectangle.visible(false);
@@ -288,16 +286,24 @@ export class SelectWidget extends BaseWidget {
     );
   }
 
+  /**
+   * @deprecated use `inAction`
+   */
+  get isSelecting() {
+    return this.inAction;
+  }
+
   selectAll() {
     const allNodes = this.drawer.getDrawingShapes();
+
+    if (!allNodes.length) return;
+
     this._setupAnchors(allNodes);
     this.transformer.nodes(allNodes);
+    // overlay of active tool (brush, shapes...) replaced by selection one
+    if (this.drawer.activeWidget !== this) this.drawer.activeWidget?.overlay?.hide();
     this.showOverlay(allNodes);
     this.drawer.focus();
-
-    const brushWidget = this.drawer.getWidget<BrushWidget>('brush');
-
-    brushWidget?.overlay.hide();
   }
 
   protected onDesactive(): void {

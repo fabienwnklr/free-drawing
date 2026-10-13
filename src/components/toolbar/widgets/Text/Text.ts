@@ -10,6 +10,7 @@ export class TextWidget extends BaseWidget {
   #lastText!: Text;
   isEditing: boolean = false;
   overlay: TextOverlay;
+  protected cursor = 'text';
 
   constructor(drawer: Drawer) {
     super(drawer, 'text', 'Text', TextIcon, 't');
@@ -45,14 +46,6 @@ export class TextWidget extends BaseWidget {
 
     texts().forEach((text) => text._setTextData());
     this.drawer.drawLayer.batchDraw();
-  }
-
-  protected onActive(): void {
-    this.overlay.show();
-  }
-
-  protected onDesactive(): void {
-    this.overlay.hide();
   }
 
   /**
@@ -250,9 +243,5 @@ export class TextWidget extends BaseWidget {
       // capture phase, so text is committed before the click is handled (e.g. text overlay buttons)
       window.addEventListener('click', handleOutsideClick, true);
     });
-  }
-
-  public updateCursor(): void {
-    this.drawer.$stageContainer.style.cursor = 'text';
   }
 }
