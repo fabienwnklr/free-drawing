@@ -59,6 +59,8 @@ describe('Accessibility', () => {
     const icons = Array.from(drawer.$drawerContainer.querySelectorAll('svg'));
 
     expect(unnamed.map((btn) => btn.outerHTML.slice(0, 100))).toEqual([]);
+    // no form submit when drawer is in a form
+    expect(buttons.filter((btn) => btn.type !== 'button').map((btn) => btn.outerHTML.slice(0, 100))).toEqual([]);
     expect(icons.filter((svg) => svg.getAttribute('aria-hidden') !== 'true').length).toBe(0);
     drawer.clearConfirmModal!.hide();
   });
@@ -163,6 +165,18 @@ describe('Accessibility', () => {
     expect(setting.isShown()).toBe(false);
     expect(setting.$button.getAttribute('aria-expanded')).toBe('false');
     expect(document.activeElement).toBe(setting.$button);
+  });
+
+  it('Settings menu items expose what they do', () => {
+    const drawer = createDrawer();
+    const setting = drawer.setting;
+
+    expect(setting.$clearCanvasButton.getAttribute('aria-haspopup')).toBe('dialog');
+    expect(setting.$clearCanvasButton.getAttribute('aria-keyshortcuts')).toBe('Control+Delete');
+    expect(setting.$clearStorageButton.getAttribute('aria-haspopup')).toBe('dialog');
+    expect(setting.$toggleGridButton.getAttribute('aria-keyshortcuts')).toBe('Alt+G');
+    expect(setting.$zenModeButton.getAttribute('aria-keyshortcuts')).toBe('Alt+Z');
+    expect(label(setting.$githubButton)).toBe('Github (opens in a new tab)');
   });
 
   it('Toggles of settings and context menu expose their state', () => {

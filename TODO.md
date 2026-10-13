@@ -1,19 +1,10 @@
-<!-- - for line width < 10 -> hit: 20 -->
-<!-- - update hitFunc to his rect zone on selected shape only (for all shapes) -> ok, but when unselected, update to draw zone + 20 px ? -->
-<!-- - add undo / redo button -->
-<!-- - add text button -->
-<!-- - add lock button ? not sure -->
-<!-- - add color and bg color button overlay when drawing for shape, bgcolor in setting menu -->
-<!-- - generate doc api -->
 - Send stage data on change instead drawend
 - add export button (png, svg, pdf, json, etc) with preview modal
 - add beta prerelease script in package.json
-- GroupWidgets
-- migrate to np
-- (if np don't do) add action for publish release in gh
+- GroupWidgets, pouvoir créer un groupe de widget avec un icone générique de base mais personnalisable (liste d'icones dispo ou un code svg), l'idée est simple pouvoir rassembler à la demande via option simplement tout dans un groupe ou bien niveau dev créer un group de widget existant ou non; par ex en option je veux un groupe avec ligne/rect/cercle/fleche -> je peux configurer via option, en dev je veux créer un groupe pour des widget que je veux créer, j'utilise GroupWidget en créant également les widgets indépendemment et je l'ai utilise dans le group
 - manage layout from DrawerLayout class
-<!-- - create shortcut keyboard with doc -->
-<!-- - block zoom to min 10% max 3000% -->
-<!-- - add effect during draw with eraser : useless, codepen existing but not ended -->
-<!-- - focus on init -->
-<!-- - context menu -->
+- améliore l'accessibilité (navigation, aria attribute, etc.)
+- si on efface un element qui a déjà 0.5 d'opacité, comment on peux faire? ajouter un effet propre ?
+- ajoute un effet de 'trainée' pendant l'effacement de l'outil eraser
+- ajoute un widget activable ou désactivable pour savoir la position x/y, pour pas se perdre si on se deplace dans trop pour ce rencentrer
+- améliore le style global (homogénéité, normes, etc.)

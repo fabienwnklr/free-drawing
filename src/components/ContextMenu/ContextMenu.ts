@@ -3,7 +3,7 @@ import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { TextWidget } from '../toolbar/widgets/Text/Text';
 import './context-menu.scss';
 import { Stage } from 'konva/lib/Stage';
-import { arrowNavigation, setPressed } from '@/utils/dom';
+import { arrowNavigation, createButton, setPressed } from '@/utils/dom';
 
 export class ContextMenu {
   drawer: Drawer;
@@ -45,9 +45,8 @@ export class ContextMenu {
    * Menu item, focused with arrow keys
    */
   private _createItem(label: string, shortcut: string, role: 'menuitem' | 'menuitemcheckbox' = 'menuitem') {
-    const $item = document.createElement('button');
+    const $item = createButton('drawer-button', 'drawer-button-neutral', 'drawer-context-menu-list-item');
 
-    $item.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-context-menu-list-item');
     $item.innerHTML = `<span class="drawer-context-menu-item__label">${label}</span><kbd class="drawer-context-menu-item__shortcut" aria-hidden="true">${shortcut}</kbd>`;
     $item.setAttribute('role', role);
     $item.tabIndex = -1;

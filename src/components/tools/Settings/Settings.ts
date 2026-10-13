@@ -11,7 +11,7 @@ import ZenIcon from '@/icons/zen.svg?raw';
 import StoreIcon from '@/icons/store.svg?raw';
 import { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import type { ColorLike } from '@/@types/drawer';
-import { setLabel, setPressed, uniqueId } from '@/utils/dom';
+import { createButton, setLabel, setPressed, uniqueId } from '@/utils/dom';
 
 export class Settings extends Dropdown {
   drawer: Drawer;
@@ -35,37 +35,28 @@ export class Settings extends Dropdown {
     // buttons, separators and colors, not list items
     this.$dropdownList.setAttribute('role', 'none');
 
-    this.$openButton = document.createElement('button');
-    this.$openButton.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-dropdown-list-item');
-    this.$openButton.innerHTML = OpenIcon + 'Open';
+    this.$openButton = this._createItem(OpenIcon, 'Open');
+    this.$exportButton = this._createItem(ExportIcon, 'Export to...');
 
-    this.$exportButton = document.createElement('button');
-    this.$exportButton.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-dropdown-list-item');
-    this.$exportButton.innerHTML = ExportIcon + 'Export to...';
+    // asks confirmation
+    this.$clearCanvasButton = this._createItem(TrashIcon, 'Clear canvas');
+    this.$clearCanvasButton.setAttribute('aria-haspopup', 'dialog');
+    this.$clearCanvasButton.setAttribute('aria-keyshortcuts', 'Control+Delete');
 
-    this.$clearCanvasButton = document.createElement('button');
-    this.$clearCanvasButton.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-dropdown-list-item');
-    this.$clearCanvasButton.innerHTML = TrashIcon + 'Clear canvas';
-
-    this.$toggleGridButton = document.createElement('button');
-    this.$toggleGridButton.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-dropdown-list-item');
-    this.$toggleGridButton.innerHTML = GridIcon + 'Show grid';
+    this.$toggleGridButton = this._createItem(GridIcon, 'Show grid');
     this.$toggleGridButton.setAttribute('aria-keyshortcuts', 'Alt+G');
     setPressed(this.$toggleGridButton, false);
 
-    this.$zenModeButton = document.createElement('button');
-    this.$zenModeButton.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-dropdown-list-item');
-    this.$zenModeButton.innerHTML = ZenIcon + 'Zen mode <span class="text-muted" aria-hidden="true">Alt+Z</span>';
+    this.$zenModeButton = this._createItem(ZenIcon, 'Zen mode <span class="text-muted" aria-hidden="true">Alt+Z</span>');
     this.$zenModeButton.setAttribute('aria-keyshortcuts', 'Alt+Z');
     setPressed(this.$zenModeButton, false);
 
-    this.$githubButton = document.createElement('button');
-    this.$githubButton.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-dropdown-list-item');
-    this.$githubButton.innerHTML = GithubIcon + 'Github';
+    this.$githubButton = this._createItem(GithubIcon, 'Github');
+    setLabel(this.$githubButton, 'Github (opens in a new tab)');
 
-    this.$clearStorageButton = document.createElement('button');
-    this.$clearStorageButton.classList.add('drawer-button', 'drawer-button-neutral', 'drawer-dropdown-list-item');
-    this.$clearStorageButton.innerHTML = StoreIcon + 'Clear stored data';
+    // asks confirmation
+    this.$clearStorageButton = this._createItem(StoreIcon, 'Clear stored data');
+    this.$clearStorageButton.setAttribute('aria-haspopup', 'dialog');
 
     this.$bgColorContainer = document.createElement('div');
     this.$bgColorContainer.classList.add('color-picker-container');
@@ -90,8 +81,7 @@ export class Settings extends Dropdown {
     ];
 
     bgColors.forEach(({ color, label }) => {
-      const $btn = document.createElement('button');
-      $btn.classList.add('color-picker__button');
+      const $btn = createButton('color-picker__button');
       setLabel($btn, label);
       setPressed($btn, false);
       $btn.style.backgroundColor = color;
@@ -134,6 +124,17 @@ export class Settings extends Dropdown {
     this.$bgColorBtnContainer
       .querySelectorAll<HTMLElement>('.color-picker__button')
       .forEach(($btn) => setPressed($btn, $btn.dataset.bgColor === color));
+  }
+
+  /**
+   * Menu item: icon and label (html)
+   */
+  private _createItem(icon: string, label: string) {
+    const $item = createButton('drawer-button', 'drawer-button-neutral', 'drawer-dropdown-list-item');
+
+    $item.innerHTML = icon + label;
+
+    return $item;
   }
 
   getSeparator() {

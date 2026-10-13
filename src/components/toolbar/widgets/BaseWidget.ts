@@ -6,7 +6,7 @@ import type { KonvaEventListener } from 'konva/lib/Node';
 import type { Stage } from 'konva/lib/Stage';
 import type { BaseOverlay } from '@/components/tools/Overlay/BaseOverlay';
 import type { SelectWidget } from './Select/Select';
-import { disableElement, enableElement, setLabel, setPressed } from '@/utils/dom';
+import { createButton, disableElement, enableElement, setLabel, setPressed } from '@/utils/dom';
 
 export abstract class BaseWidget {
   protected readonly $container: HTMLElement;
@@ -41,8 +41,7 @@ export abstract class BaseWidget {
       `drawer-tool-button-container`,
       `drawer-internal-widgetId--${id.replace(/\W/g, '-')}`
     );
-    this.$button = document.createElement('button');
-    this.$button.classList.add(`drawer-button`);
+    this.$button = createButton('drawer-button');
     setLabel(this.$button, this.options.title ?? title ?? id);
     setPressed(this.$button, false);
     this.$icon = typeof $icon === 'string' ? stringToNode<SVGElement>($icon) : $icon;

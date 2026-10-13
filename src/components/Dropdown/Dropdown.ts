@@ -1,5 +1,5 @@
 import MicroEvent from '@/utils/MicroEvent';
-import { uniqueId } from '@/utils/dom';
+import { createButton, uniqueId } from '@/utils/dom';
 import './dropdown.scss';
 
 export class Dropdown extends MicroEvent {
@@ -12,8 +12,7 @@ export class Dropdown extends MicroEvent {
   constructor() {
     super();
 
-    this.$button = document.createElement('button');
-    this.$button.classList.add('drawer-button', 'drawer-button-neutral', 'tool', 'drawer-button-dropdown');
+    this.$button = createButton('drawer-button', 'drawer-button-neutral', 'tool', 'drawer-button-dropdown');
     this.$menu = document.createElement('div');
     this.$menu.classList.add('drawer-dropdown');
     this.$menu.id = uniqueId('dropdown');

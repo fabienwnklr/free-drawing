@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [3.3.1](https://github.com/fabienwnklr/free-drawing/compare/v3.3.0...v3.3.1) (2026-10-13)
+
+
+### Bug Fixes
+
+* **a11y:** settings menu items expose their shortcut, the confirmation dialog they open (clear canvas, clear stored data) and the new tab opened by Github
+* drawer buttons no longer submit a form of the page when drawer is inside a form (`type="button"`)
+
 ## [3.3.0](https://github.com/fabienwnklr/free-drawing/compare/v3.2.1...v3.3.0) (2026-10-13)
 
 

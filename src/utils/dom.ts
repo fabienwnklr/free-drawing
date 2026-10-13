@@ -16,6 +16,18 @@ export function enableElement($el: HTMLElement) {
   }
 }
 
+/**
+ * Button with given classes, `type="button"`: default type `submit` would submit a form of the page
+ */
+export function createButton(...classNames: string[]) {
+  const $btn = document.createElement('button');
+
+  $btn.type = 'button';
+  $btn.classList.add(...classNames);
+
+  return $btn;
+}
+
 let lastId = 0;
 
 /**

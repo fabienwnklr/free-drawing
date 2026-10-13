@@ -3,7 +3,7 @@ import { Drawer } from '@/Drawer';
 import MinusIcon from '@/icons/minus.svg?raw';
 import PlusIcon from '@/icons/plus.svg?raw';
 import ZoomReset from '@/icons/zoom-reset.svg?raw';
-import { setLabel } from '@/utils/dom';
+import { createButton, setLabel } from '@/utils/dom';
 
 export class Zoom {
   drawer: Drawer;
@@ -20,18 +20,15 @@ export class Zoom {
     this.$zoomContainer.setAttribute('role', 'group');
     this.$zoomContainer.setAttribute('aria-label', 'Zoom');
 
-    this.$btnMinus = document.createElement('button');
-    this.$btnReset = document.createElement('button');
-    this.$btnPlus = document.createElement('button');
+    this.$btnMinus = createButton('drawer-button', 'drawer-button-neutral');
+    this.$btnReset = createButton('drawer-button', 'drawer-button-neutral', 'reset-zoom');
+    this.$btnPlus = createButton('drawer-button', 'drawer-button-neutral');
 
-    this.$btnMinus.classList.add('drawer-button', 'drawer-button-neutral');
     this.$btnMinus.innerHTML = MinusIcon;
     setLabel(this.$btnMinus, 'Zoom out');
 
-    this.$btnReset.classList.add('drawer-button', 'drawer-button-neutral', 'reset-zoom');
     this._updateResetButton();
 
-    this.$btnPlus.classList.add('drawer-button', 'drawer-button-neutral');
     this.$btnPlus.innerHTML = PlusIcon;
     setLabel(this.$btnPlus, 'Zoom in');
 

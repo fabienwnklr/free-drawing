@@ -3,7 +3,7 @@ import { History } from './History';
 import UndoIcon from '@/icons/undo.svg?raw';
 import RedoIcon from '@/icons/redo.svg?raw';
 import './undo-redo.scss';
-import { disableElement, enableElement, setLabel } from '@/utils/dom';
+import { createButton, disableElement, enableElement, setLabel } from '@/utils/dom';
 
 export class UndoRedo extends History {
   $undoRedoContainer: HTMLDivElement;
@@ -17,14 +17,12 @@ export class UndoRedo extends History {
     this.$undoRedoContainer.setAttribute('role', 'group');
     this.$undoRedoContainer.setAttribute('aria-label', 'History');
 
-    this.$btnUndo = document.createElement('button');
-    this.$btnUndo.classList.add('drawer-button', 'drawer-button-neutral');
+    this.$btnUndo = createButton('drawer-button', 'drawer-button-neutral');
     this.$btnUndo.innerHTML = UndoIcon;
     setLabel(this.$btnUndo, 'Undo');
     this.$btnUndo.setAttribute('aria-keyshortcuts', 'Control+Z');
 
-    this.$btnRedo = document.createElement('button');
-    this.$btnRedo.classList.add('drawer-button', 'drawer-button-neutral');
+    this.$btnRedo = createButton('drawer-button', 'drawer-button-neutral');
     this.$btnRedo.innerHTML = RedoIcon;
     setLabel(this.$btnRedo, 'Redo');
     this.$btnRedo.setAttribute('aria-keyshortcuts', 'Control+Y');

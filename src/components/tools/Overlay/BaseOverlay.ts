@@ -7,7 +7,7 @@ import './overlay.scss';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Group } from 'konva/lib/Group';
 import { dataAttributes } from '@/constants';
-import { setLabel, setPressed, uniqueId } from '@/utils/dom';
+import { createButton, setLabel, setPressed, uniqueId } from '@/utils/dom';
 
 /**
  * All common tool for all shape (color, opacity for now)
@@ -97,8 +97,7 @@ export class BaseOverlay {
     ];
 
     strokeColors.forEach(({ color, label }) => {
-      const $btn = document.createElement('button');
-      $btn.classList.add(this.selectors.button);
+      const $btn = createButton(this.selectors.button);
       $btn.style.backgroundColor = color;
       $btn.setAttribute(dataAttributes.strokeColor, color.toString());
       setLabel($btn, label);
@@ -229,11 +228,10 @@ export class BaseOverlay {
    * Toggle button of a field, `label` is its accessible name (icon or short content)
    */
   protected _createButton(content: string, attr: string, value: string, label: string) {
-    const $btn = document.createElement('button');
+    const $btn = createButton('drawer-button', this.selectors.button);
 
     $btn.innerHTML = content;
     $btn.setAttribute(attr, value);
-    $btn.classList.add('drawer-button', this.selectors.button);
     setLabel($btn, label);
     setPressed($btn, false);
 
