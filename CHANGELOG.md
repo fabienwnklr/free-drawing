@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [3.3.2](https://github.com/fabienwnklr/free-drawing/compare/v3.3.1...v3.3.2) (2026-10-14)
+
+
+### Bug Fixes
+
+* **eraser:** shapes to erase are shown as a thin red outline until pointer up (struck out for texts), visible whatever their color and opacity, and come back unchanged if erasing stops before pointer up
+* **widgets:** changing tool during a pointer action ends it (shortcuts and interface usable again)
+
 ## [3.3.1](https://github.com/fabienwnklr/free-drawing/compare/v3.3.0...v3.3.1) (2026-10-13)
 
 

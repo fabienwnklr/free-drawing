@@ -177,6 +177,8 @@ export abstract class BaseWidget {
       this.onActive();
       this.drawer.focus();
     } else {
+      // pointer action stopped by tool change: shortcuts and UI usable again
+      if (this.inAction) this.endAction();
       this.removeEvents();
       if (this.showOverlayOnActive) this.overlay?.hide();
       this.onDesactive();

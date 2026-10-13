@@ -164,6 +164,36 @@ describe('Test drawer event', () => {
     fireMouse(drawer, 'mouseup', 50, 30);
 
     expect(drawer.drawLayer.children.length).toBe(0);
+    expect(drawer.selectionLayer.find('.erasing').length).toBe(0);
+  });
+
+  it('Eraser shows shapes to erase as outline, restored if erasing stops', () => {
+    const drawer = createDrawer();
+    fireMouse(drawer, 'mousedown', 10, 10);
+    fireMouse(drawer, 'mouseup', 150, 80);
+    const line = drawer.drawLayer.children[0] as Line;
+    const eraser = drawer.getWidget<EraserWidget>('eraser')!;
+    const outlines = () => drawer.selectionLayer.find('.erasing');
+    line.opacity(0.3);
+
+    eraser.setActive(true);
+    // no hit canvas in jsdom
+    vi.spyOn(drawer.stage, 'getIntersection').mockReturnValue(line);
+    fireMouse(drawer, 'mousedown', 10, 10);
+    fireMouse(drawer, 'mousemove', 50, 30);
+    // outline instead of shape, visible whatever shape opacity
+    expect(line.visible()).toBe(false);
+    expect(outlines().length).toBe(1);
+    expect(outlines()[0].opacity()).toBe(1);
+    expect(line.opacity()).toBe(0.3);
+
+    // tool changed before pointer up: shape kept as it was, action ended
+    drawer.getWidget<BrushWidget>('brush')!.setActive(true);
+    expect(line.visible()).toBe(true);
+    expect(outlines().length).toBe(0);
+    expect(drawer.drawLayer.children.length).toBe(1);
+    expect(eraser.inAction).toBe(false);
+    expect(drawer.$drawerContainer.style.getPropertyValue('--drawer-pointer-events')).toBe('all');
   });
 
   it('Ctrl + wheel zoom keeps the point under cursor', () => {

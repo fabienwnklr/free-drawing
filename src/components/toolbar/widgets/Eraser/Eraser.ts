@@ -2,10 +2,17 @@ import { Drawer } from '@/Drawer';
 import { BaseWidget } from '../BaseWidget';
 import EraserIcon from '@/icons/eraser.svg?raw';
 import type { Shape, ShapeConfig } from 'konva/lib/Shape';
+import { Text } from 'konva/lib/shapes/Text';
 import { crosshairCursor } from '@/constants';
 
+/**
+ * Outline color of shapes to erase
+ */
+const erasingColor = '#e03131';
+
 export class EraserWidget extends BaseWidget {
-  #toRemoved = new Set<Shape<ShapeConfig>>();
+  /** Shapes erased on pointer up, with their outline shown meanwhile */
+  #toRemoved = new Map<Shape<ShapeConfig>, Shape<ShapeConfig>>();
   protected cursor = crosshairCursor;
 
   constructor(drawer: Drawer) {
@@ -41,9 +48,7 @@ export class EraserWidget extends BaseWidget {
 
       if (!shape || this.#toRemoved.has(shape)) return;
 
-      this.#toRemoved.add(shape);
-      // visual feedback until mouseup
-      shape.opacity(0.5);
+      this.#toRemoved.set(shape, this._showOutline(shape));
     });
 
     this.onStage('mouseup touchend', (e) => {
@@ -53,7 +58,10 @@ export class EraserWidget extends BaseWidget {
       e.evt.preventDefault();
 
       if (this.#toRemoved.size) {
-        this.#toRemoved.forEach((t) => t.destroy());
+        this.#toRemoved.forEach((outline, shape) => {
+          outline.destroy();
+          shape.destroy();
+        });
         this.#toRemoved.clear();
         this.drawer.stage.fire('change');
       }
@@ -64,5 +72,43 @@ export class EraserWidget extends BaseWidget {
         e.target.destroy();
       }
     });
+  }
+
+  /**
+   * Shape replaced by its thin outline until pointer up: visible whatever shape color and opacity, shape unchanged
+   * @returns outline, in selection layer
+   */
+  private _showOutline(shape: Shape<ShapeConfig>) {
+    const outline = shape.clone({
+      name: 'erasing',
+      stroke: erasingColor,
+      strokeWidth: 1.5,
+      // same width whatever zoom
+      strokeScaleEnabled: false,
+      fillEnabled: false,
+      dash: undefined,
+      opacity: 1,
+      listening: false,
+      draggable: false,
+    }) as Shape<ShapeConfig>;
+
+    if (outline instanceof Text) {
+      // struck out, decoration line is drawn with fill color
+      outline.setAttrs({ fill: erasingColor, strokeWidth: 1, textDecoration: 'line-through' });
+    }
+
+    this.drawer.selectionLayer.add(outline);
+    shape.hide();
+
+    return outline;
+  }
+
+  // erasing stopped before pointer up (tool changed): shapes kept as they were
+  protected onDesactive(): void {
+    this.#toRemoved.forEach((outline, shape) => {
+      outline.destroy();
+      shape.show();
+    });
+    this.#toRemoved.clear();
   }
 }
