@@ -95,7 +95,8 @@ export class TextWidget extends BaseWidget {
     const selectWidget = this.drawer.toolbar.getWidget<SelectWidget>('selection');
     selectWidget?.transformer.hide();
     const textarea = this._createTextarea(textNode);
-    const rotation = textNode.rotation();
+    // rotation of its groups too
+    const rotation = textNode.getAbsoluteRotation();
     let transform = '';
     if (rotation) {
       transform += 'rotateZ(' + rotation + 'deg)';
@@ -145,7 +146,8 @@ export class TextWidget extends BaseWidget {
   }
 
   private _createTextarea(textNode: Text) {
-    const scale = this.drawer.stage.scaleX() * textNode.scaleX();
+    // zoom and scale of text and its groups
+    const scale = textNode.getAbsoluteScale().x;
     const fontSize = textNode.fontSize() * scale;
     // room around text: glyphs higher than line height (accents) or italic overhang would be cut by textarea,
     // textarea is moved back by the same amount so text stays exactly on canvas text

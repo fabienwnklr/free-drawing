@@ -1,28 +1,31 @@
 import type { Drawer } from '@/Drawer';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { Node } from 'konva/lib/Node';
-import type { Shape, ShapeConfig } from 'konva/lib/Shape';
+import type { DrawingShape } from '@/@types/drawer';
 import { historyLimit } from '@/constants';
 
 /**
- * Serialized drawing shape (konva `toObject` format), any shape type can be restored
+ * Serialized drawing shape (konva `toObject` format), any shape type can be restored, groups with their shapes
  */
-export type ShapeState = { attrs: Record<string, unknown>; className: string };
+export type ShapeState = { attrs: Record<string, unknown>; className: string; children?: ShapeState[] };
 
 /**
- * State of a drawing shape (history, collaboration, files), without `draggable` which depends on active tool
+ * State of a drawing shape or group (history, collaboration, files), without `draggable` which depends on active tool
  */
-export function getShapeState(shape: Shape<ShapeConfig>): ShapeState {
-  const { attrs, className } = shape.toObject();
+export function getShapeState(shape: DrawingShape): ShapeState {
+  return toState(shape.toObject());
+}
 
+function toState({ attrs, className, children }: ShapeState): ShapeState {
   delete attrs.draggable;
-  return { attrs, className };
+
+  return children ? { attrs, className, children: children.map(toState) } : { attrs, className };
 }
 
 /**
  * JSON of a drawing shape state
  */
-export function serializeShape(shape: Shape<ShapeConfig>): string {
+export function serializeShape(shape: DrawingShape): string {
   return JSON.stringify(getShapeState(shape));
 }
 
@@ -103,7 +106,7 @@ export class History {
     this.drawer.getDrawingShapes().forEach((shape) => shape.destroy());
 
     (JSON.parse(state) as ShapeState[]).forEach((shape) => {
-      this.drawer.addShape(Node.create(shape) as Shape<ShapeConfig>);
+      this.drawer.addShape(Node.create(shape) as DrawingShape);
     });
   }
 }

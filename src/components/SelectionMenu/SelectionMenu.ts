@@ -6,6 +6,9 @@ import DuplicateIcon from '@/icons/duplicate.svg?raw';
 import SendBackwardIcon from '@/icons/send-backward.svg?raw';
 import BringForwardIcon from '@/icons/bring-forward.svg?raw';
 import TrashIcon from '@/icons/trash.svg?raw';
+import GroupIcon from '@/icons/group.svg?raw';
+import UngroupIcon from '@/icons/ungroup.svg?raw';
+import { Group } from 'konva/lib/Group';
 import { arrowNavigation, createButton, setLabel } from '@/utils/dom';
 
 /** Space between selection and menu, between menu and drawer edges (px) */
@@ -19,6 +22,8 @@ export class SelectionMenu {
   drawer: Drawer;
   $menu: HTMLDivElement;
   $duplicateBtn: HTMLButtonElement;
+  $groupBtn: HTMLButtonElement;
+  $ungroupBtn: HTMLButtonElement;
   $backwardBtn: HTMLButtonElement;
   $forwardBtn: HTMLButtonElement;
   $deleteBtn: HTMLButtonElement;
@@ -38,6 +43,8 @@ export class SelectionMenu {
     this.$forwardBtn = this._createButton(BringForwardIcon, 'Bring forward', 'Ctrl+Up', () =>
       this.drawer.reorderShapes('forward')
     );
+    this.$groupBtn = this._createButton(GroupIcon, 'Group', 'Ctrl+G', () => this.drawer.groupShapes());
+    this.$ungroupBtn = this._createButton(UngroupIcon, 'Ungroup', 'Ctrl+Shift+G', () => this.drawer.ungroupShapes());
     this.$deleteBtn = this._createButton(TrashIcon, 'Delete', 'Delete', () => this.drawer.deleteShapes());
     this.$deleteBtn.classList.add('drawer-selection-menu-delete');
 
@@ -46,7 +53,15 @@ export class SelectionMenu {
     $separator.classList.add('drawer-selection-menu-separator');
     $separator.setAttribute('aria-hidden', 'true');
 
-    this.$menu.append(this.$duplicateBtn, this.$backwardBtn, this.$forwardBtn, $separator, this.$deleteBtn);
+    this.$menu.append(
+      this.$duplicateBtn,
+      this.$groupBtn,
+      this.$ungroupBtn,
+      this.$backwardBtn,
+      this.$forwardBtn,
+      $separator,
+      this.$deleteBtn
+    );
     arrowNavigation(this.$menu, () => [...this.$menu.querySelectorAll('button')], 'horizontal');
     this.drawer.$drawerContainer.append(this.$menu);
 
@@ -122,6 +137,12 @@ export class SelectionMenu {
     }
 
     this.$menu.classList.add('show');
+
+    const shapes = this.drawer.getSelectedShapes();
+
+    // group 2 shapes at least, ungroup groups
+    this.$groupBtn.hidden = !this.drawer.canGroupShapes(shapes);
+    this.$ungroupBtn.hidden = !shapes.some((shape) => shape instanceof Group);
 
     const { offsetWidth: width, offsetHeight: height } = this.$menu;
     // above toolbar of footer

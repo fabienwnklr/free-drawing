@@ -67,6 +67,19 @@ export class Help extends Modal {
               </span>
             </li>
             <li class="drawer-modal-help-shortcut">
+              Group / ungroup selection
+              <span>
+                <kbd class="drawer-modal-help-kdb">Ctrl+G</kbd>
+                <kbd class="drawer-modal-help-kdb">Ctrl+Shift+G</kbd>
+              </span>
+            </li>
+            <li class="drawer-modal-help-shortcut">
+              Select shape in a group
+              <span>
+                <kbd class="drawer-modal-help-kdb">Ctrl+Click</kbd>
+              </span>
+            </li>
+            <li class="drawer-modal-help-shortcut">
               Move selection
               <span>
                 <kbd class="drawer-modal-help-kdb">Arrows</kbd>

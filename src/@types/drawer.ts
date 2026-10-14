@@ -1,4 +1,11 @@
 import type { AvailableTools, WidgetsOptions } from './toolbar';
+import type { Shape, ShapeConfig } from 'konva/lib/Shape';
+import type { Group } from 'konva/lib/Group';
+
+/**
+ * Node of drawing: a shape or a group of drawing nodes
+ */
+export type DrawingShape = Shape<ShapeConfig> | Group;
 
 export type DrawerOptions = {
   id: string;

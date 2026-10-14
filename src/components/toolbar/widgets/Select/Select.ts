@@ -18,7 +18,9 @@ import { Group } from 'konva/lib/Group';
 import { Arrow } from 'konva/lib/shapes/Arrow';
 import { arrowPointerSize } from '../Arrow/Arrow';
 import type { Vector2d } from 'konva/lib/types';
-import { isInsideOutline, rectContains } from '@/utils/hit';
+import { getShapes, isDrawnAt, isInsideNode, isInsideOutline, rectContains } from '@/utils/hit';
+import type { DrawingShape } from '@/@types/drawer';
+import type { Node } from 'konva/lib/Node';
 
 /** Pointer move under which a press is a click (px) */
 const clickTolerance = 3;
@@ -64,8 +66,17 @@ export class SelectWidget extends BaseWidget {
   });
   // press on transformer anchor (resize, rotate), its release must not change selection
   #pressOnTransformer: boolean = false;
-  // press on stage: position, shape pressed, selected at once (dragged with selection), in selection box (dragged)
-  #press: { pos: Vector2d; shape: Shape<ShapeConfig> | null; selected: boolean; inSelection: boolean } | null = null;
+  // press on stage: position, shape pressed, selected at once (dragged with selection), in selection box (dragged),
+  // in a group (Ctrl / Cmd)
+  #press: {
+    pos: Vector2d;
+    shape: DrawingShape | null;
+    selected: boolean;
+    inSelection: boolean;
+    deep: boolean;
+  } | null = null;
+  // selected shapes of groups, dragged alone while selected
+  #nested: DrawingShape[] = [];
   snapping: boolean = false;
   overlay: SelectOverlay;
   // overlay of selected shapes, not of the tool
@@ -120,19 +131,19 @@ export class SelectWidget extends BaseWidget {
 
       if (e.evt.button === 2 || this.#pressOnTransformer) return;
 
-      const { shiftKey, altKey } = e.evt as MouseEvent;
-      // shape drawn under pointer (konva hit)
-      const shape =
-        e.target !== this.drawer.stage && e.target.getLayer() === this.drawer.drawLayer
-          ? (e.target as Shape<ShapeConfig>)
-          : null;
+      const { shiftKey, altKey, ctrlKey, metaKey } = e.evt as MouseEvent;
+      // with Ctrl / Cmd, shape of a group instead of the group
+      const deep = ctrlKey || metaKey;
+      // shape drawn under pointer (konva hit), or its group
+      const hit = e.target !== this.drawer.stage && e.target.getLayer() === this.drawer.drawLayer ? e.target : null;
+      const shape = hit && (deep ? (hit as DrawingShape) : this._getDrawingShape(hit));
 
       // other nodes of selection layer
       if (!shape && e.target !== this.drawer.stage) return;
 
       const nodes = this._getSelected();
 
-      this.#press = { pos: this.drawer._getPointerPos(), shape, selected: false, inSelection: false };
+      this.#press = { pos: this.drawer._getPointerPos(), shape, selected: false, inSelection: false, deep };
 
       if (shape) {
         // pressed shape selected at once: dragged alone, or with selection with Shift (Alt selects on click)
@@ -229,7 +240,9 @@ export class SelectWidget extends BaseWidget {
       }
 
       // click (after a drag, selection is kept), unless pressed shape was selected on press
-      if (!moved && !press.selected) this._selectAt(pos, press.shape, { shiftKey, altKey }, press.inSelection);
+      if (!moved && !press.selected) {
+        this._selectAt(pos, press.shape, { shiftKey, altKey, deep: press.deep }, press.inSelection);
+      }
       this.$container.focus();
       this.selectionRectangle.setAttrs({
         visible: true,
@@ -246,8 +259,8 @@ export class SelectWidget extends BaseWidget {
    * @param {(Shape<ShapeConfig> | Group)[]} shapes
    */
   select(shapes: (Shape<ShapeConfig> | Group)[]) {
-    // locked and hidden shapes are not selectable
-    const selectable = shapes.filter((shape) => shape.listening() && shape.isVisible());
+    // locked and hidden shapes (or groups) are not selectable
+    const selectable = shapes.filter((shape) => shape.isListening() && shape.isVisible());
 
     if (!selectable.length) {
       this.clearSelection();
@@ -256,6 +269,7 @@ export class SelectWidget extends BaseWidget {
 
     this._setupAnchors(selectable);
     this.transformer.nodes(selectable);
+    this._setNested(selectable.filter((shape) => shape.getParent() !== this.drawer.drawLayer));
     // overlay of active tool (brush, shapes...) replaced by selection one
     if (this.drawer.activeWidget !== this) this.drawer.activeWidget?.overlay?.hide();
     this.showOverlay(selectable);
@@ -263,28 +277,47 @@ export class SelectWidget extends BaseWidget {
   }
 
   /**
-   * Shapes under a point (absolute position), from top to bottom: drawn there (fill, stroke, text box), then
-   * rectangles and ellipses without background around it, smallest first
+   * Shapes (or groups) under a point (absolute position), from top to bottom: drawn there (fill, stroke, text box),
+   * then rectangles and ellipses without background around it, smallest first
    * @param {Vector2d} pos
-   * @param {Shape<ShapeConfig> | null} hit Shape drawn on top (konva hit of pointer event), none by default
+   * @param {DrawingShape | null} hit Shape drawn on top (konva hit of pointer event, or its group), none by default
+   * @param {boolean} deep Shapes of groups instead of groups
    */
-  getShapesAt(pos: Vector2d, hit: Shape<ShapeConfig> | null = null): Shape<ShapeConfig>[] {
-    const shapes = this.drawer
-      .getDrawingShapes()
-      .filter((shape) => shape.listening() && shape.isVisible())
+  getShapesAt(pos: Vector2d, hit: DrawingShape | null = null, deep: boolean = false): DrawingShape[] {
+    const shapes = (deep ? this.drawer.getDrawingShapes().flatMap(getShapes) : this.drawer.getDrawingShapes())
+      .filter((shape) => shape.isListening() && shape.isVisible())
       .reverse();
     // drawn under hit shape
     const below = hit
-      ? shapes.slice(shapes.indexOf(hit) + 1).filter((shape) => shape !== hit && shape.intersects(pos))
+      ? shapes.slice(shapes.indexOf(hit) + 1).filter((shape) => shape !== hit && isDrawnAt(shape, pos))
       : [];
     const drawn = hit ? [hit, ...below] : [];
-    const area = (shape: Shape<ShapeConfig>) => shape.getClientRect().width * shape.getClientRect().height;
+    const area = (shape: DrawingShape) => shape.getClientRect().width * shape.getClientRect().height;
     const around = shapes
-      .filter((shape) => !drawn.includes(shape) && fillShapes.some((name) => shape.hasName(name)))
-      .filter((shape) => isInsideOutline(shape, pos))
+      .filter((shape) => !drawn.includes(shape) && isInsideNode(shape, pos))
       .sort((a, b) => area(a) - area(b));
 
     return [...drawn, ...around];
+  }
+
+  /**
+   * Drawing shape (or group) of a node of draw layer: the node itself or its top group
+   */
+  private _getDrawingShape(node: Node): DrawingShape {
+    let shape = node;
+
+    while (shape.getParent() && shape.getParent() !== this.drawer.drawLayer) shape = shape.getParent()!;
+
+    return shape as DrawingShape;
+  }
+
+  /**
+   * Selected shapes of groups are dragged alone (shapes of groups are moved with their group)
+   */
+  private _setNested(shapes: DrawingShape[]) {
+    this.#nested.forEach((shape) => shape.draggable(false));
+    this.#nested = shapes;
+    this.#nested.forEach((shape) => shape.draggable(this.drawer.activeTool === 'selection'));
   }
 
   /**
@@ -309,13 +342,13 @@ export class SelectWidget extends BaseWidget {
    */
   private _selectAt(
     pos: Vector2d,
-    hit: Shape<ShapeConfig> | null,
-    { shiftKey = false, altKey = false } = {},
+    hit: DrawingShape | null,
+    { shiftKey = false, altKey = false, deep = false } = {},
     keep = false
   ) {
-    const shapes = this.getShapesAt(pos, hit);
+    const shapes = this.getShapesAt(pos, hit, deep);
     const nodes = this._getSelected();
-    const current = nodes.length === 1 ? shapes.indexOf(nodes[0] as Shape<ShapeConfig>) : -1;
+    const current = nodes.length === 1 ? shapes.indexOf(nodes[0]) : -1;
     // behind selected shape, back to top after the last one
     const shape = altKey && current !== -1 ? shapes[(current + 1) % shapes.length] : shapes[0];
 
@@ -349,8 +382,10 @@ export class SelectWidget extends BaseWidget {
    * Show overlay for selected shapes, text overlay if selection contains only text
    * @param {(Shape<ShapeConfig> | Group)[]} shapes
    */
-  showOverlay(shapes: (Shape<ShapeConfig> | Group)[]) {
+  showOverlay(nodes: (Shape<ShapeConfig> | Group)[]) {
     const textOverlay = this.drawer.getWidget<TextWidget>('text')?.overlay;
+    // shapes of groups
+    const shapes = nodes.flatMap(getShapes);
     const onlyText = shapes.length > 0 && shapes.every((s) => s.hasName(shapeName.text));
 
     if (textOverlay && onlyText) {
@@ -375,6 +410,7 @@ export class SelectWidget extends BaseWidget {
    */
   clearSelection() {
     this.transformer.nodes([]);
+    this._setNested([]);
     this.hideOverlay();
 
     if (this.drawer.activeWidget !== this) this.drawer.activeWidget?.overlay?.show();
@@ -670,7 +706,8 @@ export class SelectWidget extends BaseWidget {
    * @param update
    */
   private _updateSelected(update: (shape: Shape<ShapeConfig>) => void) {
-    const shapes = this.transformer.nodes().filter((s): s is Shape<ShapeConfig> => s instanceof Shape);
+    // shapes of groups too
+    const shapes = this.transformer.nodes().flatMap(getShapes);
 
     if (!shapes.length) return;
 

@@ -1,7 +1,7 @@
 import type { Drawer } from '@/Drawer';
 import type { Socket } from 'socket.io-client';
 import { Node } from 'konva/lib/Node';
-import type { Shape, ShapeConfig } from 'konva/lib/Shape';
+import type { ShapeConfig } from 'konva/lib/Shape';
 import type { Vector2d } from 'konva/lib/types';
 import { Group } from 'konva/lib/Group';
 import { Line } from 'konva/lib/shapes/Line';
@@ -11,6 +11,7 @@ import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { serializeShape } from '@/components/tools/UndoRedo/History';
 import { socketEvents } from '@/constants';
 import { applyOrder } from '@/utils/order';
+import type { DrawingShape } from '@/@types/drawer';
 
 /**
  * Drawing change sent to other clients: shapes added or updated (konva JSON), ids of removed shapes,
@@ -77,7 +78,7 @@ export class Collaboration {
   /** Changes received during a pointer action of this client, applied when it ends */
   #pending: DrawingChange[] = [];
   /** Shapes being drawn or moved, sent at next live message */
-  #live = new Set<Shape<ShapeConfig>>();
+  #live = new Set<DrawingShape>();
   #pointer: Vector2d | null = null;
   /** Messages waiting for live interval */
   #timers: Record<string, ReturnType<typeof setTimeout> | undefined> = {};
@@ -154,8 +155,13 @@ export class Collaboration {
   /**
    * Shapes being drawn or moved shown to other users while drawing, final state is sent by `send` on change
    */
-  sendLive(shapes: Shape<ShapeConfig>[]) {
-    shapes.forEach((shape) => this.#live.add(shape));
+  sendLive(shapes: DrawingShape[]) {
+    // shapes of groups: whole group
+    shapes.forEach((shape) => {
+      const drawingShape = this.drawer.getDrawingShapes().find((s) => s === shape || s.isAncestorOf(shape));
+
+      if (drawingShape) this.#live.add(drawingShape);
+    });
     this._schedule('live', () => {
       const upsert = [...this.#live].filter((shape) => shape.getLayer()).map(serializeShape);
 
@@ -268,10 +274,14 @@ export class Collaboration {
     const current = new Map(this.drawer.getDrawingShapes().map((shape) => [shape.id(), serializeShape(shape)]));
     const upsert = [...current].filter(([id, json]) => this.#synced.get(id) !== json).map(([, json]) => json);
     const remove = [...this.#synced.keys()].filter((id) => !current.has(id));
-    // stacking order of known shapes changed (reorder, undo...), new shapes are added on top by others
+    const ids = [...current.keys()];
+    const added = ids.filter((id) => !this.#synced.has(id));
+    // stacking order of known shapes changed (reorder, undo...), or new shapes not on top (group, ungroup...):
+    // new shapes are added on top by others
     const reordered =
-      [...current.keys()].filter((id) => this.#synced.has(id)).join() !==
-      [...this.#synced.keys()].filter((id) => current.has(id)).join();
+      ids.filter((id) => this.#synced.has(id)).join() !==
+        [...this.#synced.keys()].filter((id) => current.has(id)).join() ||
+      added.join() !== ids.slice(ids.length - added.length).join();
     const change: DrawingChange = { upsert, remove, ...(reordered && { order: [...current.keys()] }) };
 
     this.#synced = current;
@@ -322,10 +332,21 @@ export class Collaboration {
     });
 
     upsert.forEach((json) => {
-      const { attrs } = JSON.parse(json) as { attrs: ShapeConfig };
+      const { attrs, className } = JSON.parse(json) as { attrs: ShapeConfig; className: string };
       let shape = shapes.get(attrs.id as string);
 
-      if (shape) {
+      // groups replaced with their shapes, at same place, still selected
+      if (shape && (shape instanceof Group || className === 'Group')) {
+        const index = shape.zIndex();
+        const selected = this.drawer.getSelectedShapes();
+
+        shape.destroy();
+        shape = this.drawer.addShape(Node.create(json) as DrawingShape);
+        shape.zIndex(index);
+        if (selected.some((node) => !node.getLayer())) {
+          this.drawer.getWidget<SelectWidget>('selection')?.select([...selected.filter((node) => node.getLayer()), shape]);
+        }
+      } else if (shape) {
         // same node (kept in selection): attributes removed by other client are removed, not local ones (draggable,
         // hit function)
         Object.keys(shape.attrs)
@@ -333,7 +354,7 @@ export class Collaboration {
           .forEach((key) => shape!.setAttr(key, undefined));
         shape.setAttrs(attrs);
       } else {
-        shape = this.drawer.addShape(Node.create(json) as Shape<ShapeConfig>);
+        shape = this.drawer.addShape(Node.create(json) as DrawingShape);
       }
       // as serialized here, not to send it back
       this.#synced.set(shape.id(), serializeShape(shape));

@@ -43,7 +43,7 @@ Git hooks (husky): `commit-msg` runs commitlint (conventional commits), `pre-pus
 
 ### Shapes, options, events
 
-- Add drawing shapes only with `drawer.addShape(shape)` (draggable only with selection tool). Shapes are identified by names from `shapeName` ([constants](src/constants.ts)), e.g. `shape.hasName(shapeName.text)`.
+- Add drawing shapes only with `drawer.addShape(shape)` (draggable only with selection tool). Drawing shapes are konva shapes or groups (`DrawingShape`, `shapeName.group`): code reading shape attributes uses `getShapes(node)` ([utils/hit](src/utils/hit.ts)) for shapes of groups. Shapes of groups have ids but are not draggable (moved with their group, except when selected alone with Ctrl+click or layers panel); collaboration, history and files handle top nodes (`getShapeState` keeps children), a changed group is replaced by collaboration. Shapes are identified by names from `shapeName` ([constants](src/constants.ts)), e.g. `shape.hasName(shapeName.text)`.
 - Options: `DrawerOptions` ([src/@types/drawer.ts](src/@types/drawer.ts)), defaults in `defaultOptions` ([src/constants.ts](src/constants.ts)). Setters (`setStrokeColor`, `setStrokeWidth`, `setStrokeStyle`, `setOpacity`, `setTextStyle`) update options, apply to the selection, then trigger `fd.options.change` with the changed keys. Overlays ([BaseOverlay](src/components/tools/Overlay/BaseOverlay.ts) and subclasses) listen to it to update their fields: overlay buttons only call setters.
 - Stroke styles are names (`strokeStyle`: solid, dashed, dotted): the dash is computed from stroke width with `getDash` ([utils/stroke](src/utils/stroke.ts)) and recomputed when width changes, the style of a shape is read from its dash (`getStrokeStyle`).
 - After any drawing modification, call `drawer.stage.fire('change')`: it saves to localStorage (`autoSave`), adds a history state and triggers drawer `change` event. Shape drags are listened on `drawLayer` (`dragend.change`).
@@ -79,4 +79,4 @@ Git hooks (husky): `commit-msg` runs commitlint (conventional commits), `pre-pus
 - Konva `Transformer` ends a transform on window `mouseup` (capture phase), before the stage `mouseup`: `isTransforming()` is already false there (see `#pressOnTransformer` in `SelectWidget`).
 - Grid: one stroke per line. A single path with hundreds of dashed lines is very slow in Chromium.
 - `deepMerge` does not merge arrays: `widgets` option is replaced, not merged. Never mutate `defaultOptions` (setters replace nested objects such as `textStyle`).
-- `GroupWidget` is not used yet (see [TODO.md](TODO.md)).
+- `GroupWidget` (group of toolbar widgets) is not used yet, unrelated to groups of shapes (see [TODO.md](TODO.md)).

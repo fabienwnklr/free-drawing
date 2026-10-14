@@ -1,17 +1,29 @@
 import './layers-panel.scss';
 import type { Drawer } from '@/Drawer';
-import type { Shape, ShapeConfig } from 'konva/lib/Shape';
+import { Group } from 'konva/lib/Group';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
+import type { DrawingShape } from '@/@types/drawer';
 import { shapeName } from '@/constants';
-import { arrowNavigation, createButton, disableElement, setLabel, setPressed, uniqueId } from '@/utils/dom';
+import {
+  arrowNavigation,
+  createButton,
+  disableElement,
+  enableElement,
+  setLabel,
+  setPressed,
+  uniqueId,
+} from '@/utils/dom';
 import LayersIcon from '@/icons/layers.svg?raw';
 import CloseIcon from '@/icons/close.svg?raw';
 import GripIcon from '@/icons/grip.svg?raw';
+import ChevronIcon from '@/icons/chevron.svg?raw';
 import EyeIcon from '@/icons/eye.svg?raw';
 import EyeOffIcon from '@/icons/eye-off.svg?raw';
 import LockIcon from '@/icons/lock.svg?raw';
 import UnlockIcon from '@/icons/unlock.svg?raw';
 import TrashIcon from '@/icons/trash.svg?raw';
+import GroupIcon from '@/icons/group.svg?raw';
+import UngroupIcon from '@/icons/ungroup.svg?raw';
 import BrushIcon from '@/icons/brush.svg?raw';
 import LineIcon from '@/icons/line2.svg?raw';
 import SquareIcon from '@/icons/square.svg?raw';
@@ -27,23 +39,29 @@ const typeIcons: Record<string, string> = {
   [shapeName.ellipse]: CircleIcon,
   [shapeName.arrow]: ArrowIcon,
   [shapeName.text]: TextIcon,
+  [shapeName.group]: GroupIcon,
 };
 
 /**
- * Panel listing drawing shapes, top one first: select them (Shift adds), rename (double click, F2), reorder (drag
- * handle, Alt + arrows), hide, lock and delete them
+ * Panel listing drawing shapes, top one first, shapes of groups under them (expanded): select them (Shift adds),
+ * rename (double click, F2), reorder in their group (drag handle, Alt + arrows), hide, lock and delete them,
+ * group and ungroup selection
  */
 export class LayersPanel {
   drawer: Drawer;
   $buttonContainer: HTMLDivElement;
   $button: HTMLButtonElement;
   $panel: HTMLDivElement;
+  $groupButton: HTMLButtonElement;
+  $ungroupButton: HTMLButtonElement;
   $closeButton: HTMLButtonElement;
   $list: HTMLUListElement;
   $empty: HTMLParagraphElement;
   /** Rename or drag in progress: list updated after it */
   #busy = false;
   #outdated = false;
+  /** Ids of expanded groups */
+  #expanded = new Set<string>();
 
   constructor(drawer: Drawer) {
     this.drawer = drawer;
@@ -70,17 +88,23 @@ export class LayersPanel {
 
     const $header = document.createElement('div');
     const $title = document.createElement('h2');
+    const $actions = document.createElement('div');
 
     $header.classList.add('drawer-layers-header');
     $title.classList.add('drawer-layers-title');
     $title.id = uniqueId('layers-title');
     $title.textContent = 'Layers';
     this.$panel.setAttribute('aria-labelledby', $title.id);
-    this.$closeButton = createButton('drawer-button', 'drawer-button-neutral');
-    this.$closeButton.innerHTML = CloseIcon;
-    setLabel(this.$closeButton, 'Close layers');
-    this.$closeButton.addEventListener('click', () => this._close());
-    $header.append($title, this.$closeButton);
+    this.$groupButton = this._createHeaderButton(GroupIcon, 'Group selection', 'Ctrl+G', () =>
+      this.drawer.groupShapes()
+    );
+    this.$ungroupButton = this._createHeaderButton(UngroupIcon, 'Ungroup', 'Ctrl+Shift+G', () =>
+      this.drawer.ungroupShapes()
+    );
+    this.$closeButton = this._createHeaderButton(CloseIcon, 'Close layers', '', () => this._close());
+    $actions.classList.add('drawer-layers-header-actions');
+    $actions.append(this.$groupButton, this.$ungroupButton, this.$closeButton);
+    $header.append($title, $actions);
 
     this.$list = document.createElement('ul');
     this.$list.classList.add('drawer-layers-list');
@@ -103,7 +127,7 @@ export class LayersPanel {
     });
 
     this.drawer.on('change', () => this.update());
-    this.drawer.on('fd.selection.change', () => this.updateSelection());
+    this.drawer.on('fd.selection.change', () => this._onSelectionChange());
     this.drawer.on('fd.readonly.change', () => this.update());
   }
 
@@ -127,6 +151,29 @@ export class LayersPanel {
     this.$button.focus();
   }
 
+  private _createHeaderButton(icon: string, label: string, shortcut: string, action: () => void) {
+    const $btn = createButton('drawer-button', 'drawer-button-neutral');
+
+    $btn.innerHTML = icon;
+    setLabel($btn, label);
+    if (shortcut) {
+      $btn.title = `${label} (${shortcut})`;
+      $btn.setAttribute('aria-keyshortcuts', shortcut.replace('Ctrl', 'Control'));
+    }
+    $btn.addEventListener('click', action);
+
+    return $btn;
+  }
+
+  /**
+   * Expand or collapse a group
+   */
+  setExpanded(group: Group, expanded: boolean) {
+    if (expanded) this.#expanded.add(group.id());
+    else this.#expanded.delete(group.id());
+    this.update();
+  }
+
   /**
    * List shapes again (after drawing changes), focus kept on same control
    */
@@ -140,18 +187,17 @@ export class LayersPanel {
     const $focused = this.$list.contains(document.activeElement) ? (document.activeElement as HTMLElement) : null;
     const $focusedItem = $focused?.closest('li');
     const focusedIndex = $focusedItem ? [...this.$list.children].indexOf($focusedItem) : -1;
-    const shapes = this.drawer.getDrawingShapes().reverse();
+    const $items = this._createItems(this.drawer.getDrawingShapes(), 0);
 
     this.#outdated = false;
     this.$panel.classList.toggle('read-only', this.drawer.readOnly);
-    this.$list.replaceChildren(...shapes.map((shape) => this._createItem(shape)));
-    this.$empty.hidden = shapes.length > 0;
+    this.$list.replaceChildren(...$items);
+    this.$empty.hidden = $items.length > 0;
     this.updateSelection();
 
     if (!$focusedItem) return;
 
     // same control of same shape, else row at same place (shape removed)
-    const $items = [...this.$list.children] as HTMLElement[];
     const $item = $items.find(($el) => $el.dataset.id === $focusedItem.dataset.id);
     const $target = $item
       ? $item.querySelector<HTMLElement>(`[data-part="${$focused?.dataset.part}"]`)
@@ -161,11 +207,13 @@ export class LayersPanel {
   }
 
   /**
-   * Rows of selected shapes highlighted, first one scrolled into view
+   * Rows of selected shapes highlighted, first one scrolled into view, group buttons enabled
    */
   updateSelection() {
-    const selected = this.drawer.getSelectedShapes().map((shape) => shape.id());
+    const shapes = this.drawer.getSelectedShapes();
+    const selected = shapes.map((shape) => shape.id());
     const $items = [...this.$list.children] as HTMLElement[];
+    const edit = !this.drawer.readOnly;
 
     $items.forEach(($item) => {
       const isSelected = selected.includes($item.dataset.id!);
@@ -173,6 +221,9 @@ export class LayersPanel {
       $item.classList.toggle('is-selected', isSelected);
       setPressed($item.querySelector('.drawer-layers-name')!, isSelected);
     });
+
+    (edit && this.drawer.canGroupShapes(shapes) ? enableElement : disableElement)(this.$groupButton);
+    (edit && shapes.some((shape) => shape instanceof Group) ? enableElement : disableElement)(this.$ungroupButton);
 
     const $selected = $items.find(($item) => $item.classList.contains('is-selected'));
 
@@ -189,6 +240,25 @@ export class LayersPanel {
   }
 
   /**
+   * Groups of shapes selected in a group (Ctrl + click on canvas) expanded
+   */
+  private _onSelectionChange() {
+    const count = this.#expanded.size;
+
+    this.drawer.getSelectedShapes().forEach((shape) => {
+      let parent = shape.getParent();
+
+      while (parent instanceof Group) {
+        this.#expanded.add(parent.id());
+        parent = parent.getParent();
+      }
+    });
+
+    if (this.#expanded.size !== count) this.update();
+    else this.updateSelection();
+  }
+
+  /**
    * Row reached with Tab (roving tab index), others with arrows
    */
   private _setCurrent($current: Element | null | undefined) {
@@ -197,10 +267,24 @@ export class LayersPanel {
     });
   }
 
-  private _createItem(shape: Shape<ShapeConfig>) {
+  /**
+   * Rows of shapes, top one first, followed by rows of shapes of expanded groups
+   */
+  private _createItems(shapes: DrawingShape[], depth: number): HTMLLIElement[] {
+    return [...shapes].reverse().flatMap((shape) => {
+      const $item = this._createItem(shape, depth);
+
+      if (!(shape instanceof Group) || !this.#expanded.has(shape.id())) return [$item];
+
+      return [$item, ...this._createItems(shape.getChildren() as DrawingShape[], depth + 1)];
+    });
+  }
+
+  private _createItem(shape: DrawingShape, depth: number) {
     const label = this.drawer.getShapeLabel(shape);
     const hidden = !shape.visible();
     const locked = !shape.listening();
+    const parent = shape.getParent();
     const type = Object.keys(typeIcons).find((name) => shape.hasName(name));
     const $item = document.createElement('li');
     const $grip = document.createElement('span');
@@ -210,7 +294,11 @@ export class LayersPanel {
     $item.classList.add('drawer-layers-item');
     $item.classList.toggle('is-hidden', hidden);
     $item.classList.toggle('is-locked', locked);
+    // hidden or locked with its group
+    $item.classList.toggle('is-muted', !shape.isVisible() || !shape.isListening());
     $item.dataset.id = shape.id();
+    $item.dataset.parent = parent === this.drawer.drawLayer ? '' : parent?.id();
+    $item.style.setProperty('--depth', String(depth));
 
     // pointer only, Alt + arrows with keyboard
     $grip.classList.add('drawer-layers-grip');
@@ -218,6 +306,25 @@ export class LayersPanel {
     $grip.setAttribute('aria-hidden', 'true');
     $grip.title = 'Drag to reorder';
     $grip.addEventListener('pointerdown', (e) => this._drag(e, shape, $item));
+    $item.append($grip);
+
+    if (shape instanceof Group) {
+      const $toggle = createButton('drawer-layers-toggle');
+      const expanded = this.#expanded.has(shape.id());
+
+      $toggle.dataset.part = 'toggle';
+      $toggle.innerHTML = ChevronIcon;
+      setLabel($toggle, `Shapes of ${label}`);
+      $toggle.setAttribute('aria-expanded', String(expanded));
+      $toggle.addEventListener('click', () => this.setExpanded(shape, !expanded));
+      $item.append($toggle);
+    } else {
+      // aligned with groups names
+      const $space = document.createElement('span');
+
+      $space.classList.add('drawer-layers-toggle');
+      $item.append($space);
+    }
 
     $name.dataset.part = 'name';
     $name.title = label;
@@ -239,7 +346,7 @@ export class LayersPanel {
       this.drawer.deleteShapes([shape])
     );
 
-    $item.append($grip, $name, $visibility, $lock, $delete);
+    $item.append($name, $visibility, $lock, $delete);
 
     return $item;
   }
@@ -260,13 +367,29 @@ export class LayersPanel {
     return $btn;
   }
 
-  private _onNameKeydown(e: KeyboardEvent, shape: Shape<ShapeConfig>, $name: HTMLButtonElement) {
-    const index = this.drawer.getDrawingShapes().length - 1 - shape.zIndex();
+  /**
+   * Row of a shape
+   */
+  private _getItem(shape: DrawingShape) {
+    return ([...this.$list.children] as HTMLElement[]).find(($item) => $item.dataset.id === shape.id());
+  }
+
+  private _onNameKeydown(e: KeyboardEvent, shape: DrawingShape, $name: HTMLButtonElement) {
+    const siblings = shape.getParent()?.children.length ?? 0;
+    const parent = shape.getParent();
+    const expanded = shape instanceof Group && this.#expanded.has(shape.id());
 
     if (e.key === 'F2') {
       this._rename(shape, $name);
     } else if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
-      this.moveShape(shape, index + (e.key === 'ArrowUp' ? -1 : 1));
+      this.moveShape(shape, siblings - 1 - shape.zIndex() + (e.key === 'ArrowUp' ? -1 : 1));
+    } else if (e.key === 'ArrowRight' && shape instanceof Group && !expanded) {
+      this.setExpanded(shape, true);
+    } else if (e.key === 'ArrowLeft' && expanded) {
+      this.setExpanded(shape as Group, false);
+    } else if (e.key === 'ArrowLeft' && parent instanceof Group) {
+      // row of its group
+      this._getItem(parent)?.querySelector<HTMLElement>('[data-part="name"]')?.focus();
     } else if ((e.key === 'Delete' || e.key === 'Backspace') && !this.drawer.readOnly) {
       this.drawer.deleteShapes([shape]);
     } else {
@@ -281,10 +404,10 @@ export class LayersPanel {
   /**
    * Select shape of a row (Shift adds or removes it), with selection tool: locked and hidden shapes are not
    */
-  private _select(shape: Shape<ShapeConfig>, add: boolean) {
+  private _select(shape: DrawingShape, add: boolean) {
     const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
 
-    if (!selectWidget || this.drawer.readOnly || !shape.listening() || !shape.visible()) return;
+    if (!selectWidget || this.drawer.readOnly || !shape.isListening() || !shape.isVisible()) return;
 
     const selected = this.drawer.getSelectedShapes();
 
@@ -296,7 +419,7 @@ export class LayersPanel {
   /**
    * Name field instead of name of a row: Enter or leaving it saves, Escape cancels, empty gives back default name
    */
-  private _rename(shape: Shape<ShapeConfig>, $name: HTMLButtonElement) {
+  private _rename(shape: DrawingShape, $name: HTMLButtonElement) {
     if (this.drawer.readOnly) return;
 
     const $input = document.createElement('input');
@@ -334,11 +457,11 @@ export class LayersPanel {
   }
 
   /**
-   * Move a shape to a place of the list (0: top of drawing)
+   * Move a shape to a place of its group (or drawing): 0 is top
    * @returns {boolean} true if it moved (change saved)
    */
-  moveShape(shape: Shape<ShapeConfig>, index: number): boolean {
-    const count = this.drawer.getDrawingShapes().length;
+  moveShape(shape: DrawingShape, index: number): boolean {
+    const count = shape.getParent()?.children.length ?? 0;
     const zIndex = Math.min(Math.max(count - 1 - index, 0), count - 1);
 
     if (!shape.getLayer() || shape.zIndex() === zIndex) return false;
@@ -350,14 +473,16 @@ export class LayersPanel {
   }
 
   /**
-   * Drag of a row by its handle: drop place shown between rows
+   * Drag of a row by its handle, among rows of the same group: drop place shown between rows
    */
-  private _drag(e: PointerEvent, shape: Shape<ShapeConfig>, $item: HTMLElement) {
+  private _drag(e: PointerEvent, shape: DrawingShape, $item: HTMLElement) {
     if (this.drawer.readOnly || e.button !== 0) return;
 
     e.preventDefault();
 
-    const $items = [...this.$list.children] as HTMLElement[];
+    const $items = ([...this.$list.children] as HTMLElement[]).filter(
+      ($el) => $el.dataset.parent === $item.dataset.parent
+    );
     const from = $items.indexOf($item);
     let to = from;
 
@@ -370,15 +495,16 @@ export class LayersPanel {
       });
 
       to = index === -1 ? $items.length : index;
-      $items.forEach(($el, i) => $el.classList.toggle('drop-before', i === to && to !== from && to !== from + 1));
-      this.$list.classList.toggle('drop-end', to === $items.length && from !== $items.length - 1);
+      $items.forEach(($el, i) => {
+        $el.classList.toggle('drop-before', i === to && to !== from && to !== from + 1);
+        $el.classList.toggle('drop-after', i === $items.length - 1 && to === $items.length && from !== i);
+      });
     };
     const end = (event: PointerEvent) => {
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', end);
       window.removeEventListener('pointercancel', end);
-      $items.forEach(($el) => $el.classList.remove('drop-before', 'is-dragged'));
-      this.$list.classList.remove('drop-end');
+      $items.forEach(($el) => $el.classList.remove('drop-before', 'drop-after', 'is-dragged'));
       this.#busy = false;
 
       // place once removed from list

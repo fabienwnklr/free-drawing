@@ -165,10 +165,10 @@ describe('Layers panel', () => {
       .querySelector('.drawer-layers-grip')!
       .dispatchEvent(new MouseEvent('pointerdown', { button: 0, bubbles: true }));
     window.dispatchEvent(new MouseEvent('pointermove', { clientY: 10 }));
-    expect(drawer.layersPanel!.$list.classList.contains('drop-end')).toBe(true);
+    expect(drawer.layersPanel!.$list.lastElementChild!.classList.contains('drop-after')).toBe(true);
     window.dispatchEvent(new MouseEvent('pointerup', { clientY: 10 }));
     expect(rows(drawer)).toEqual(['Rectangle', 'Freehand', 'Hello']);
-    expect(drawer.layersPanel!.$list.classList.contains('drop-end')).toBe(false);
+    expect(drawer.layersPanel!.$list.querySelector('.drop-after')).toBeNull();
 
     part(drawer, 0, 'name').focus();
     part(drawer, 0, 'name').dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete', bubbles: true }));

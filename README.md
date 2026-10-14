@@ -132,6 +132,17 @@ drawer.setShapesHidden(true, [shape]); // selected shapes by default
 drawer.setShapesLocked(true, [shape]);
 ```
 
+### Groups
+
+Ctrl+G (or group button of selection menu or layers panel) groups selected shapes, Ctrl+Shift+G ungroups them. A group is moved, transformed, ordered, renamed, hidden, locked, duplicated and deleted as one shape, groups can contain groups. A click selects the group of a shape, Ctrl+click (or its row in layers panel, under its expanded group) selects the shape alone.
+
+```js
+const group = drawer.groupShapes([first, second]); // selected shapes by default, of the same group
+drawer.ungroupShapes([group]); // shapes keep their look (group transform, hidden, locked)
+```
+
+Drawing shapes are konva shapes or groups (`DrawingShape` type): `getDrawingShapes()` and `getSelectedShapes()` may return groups, their shapes are their children.
+
 ## Stacking order
 
 "Layers" buttons of selection options (or Ctrl+Up / Ctrl+Down, with Shift to front / back) move selected shapes in front of or behind other shapes:

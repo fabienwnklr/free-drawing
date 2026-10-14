@@ -17,7 +17,7 @@
   z-index: 1;
   display: none;
   flex-direction: column;
-  width: 16rem;
+  width: 18rem;
   max-width: calc(100% - #{$edge} * 2);
   // above footer toolbar
   max-height: calc(100% - #{$btn-size-lg} * 2 - #{$edge} * 5);
@@ -38,6 +38,11 @@
       width: $btn-size-default;
       height: $btn-size-default;
     }
+  }
+
+  .drawer-layers-header-actions {
+    display: flex;
+    gap: $space-1;
   }
 
   .drawer-layers-title {
@@ -68,7 +73,8 @@
     display: flex;
     align-items: center;
     gap: $space-1;
-    padding: 0 $space-1;
+    // shapes of groups under their group
+    padding: 0 $space-1 0 calc(#{$space-1} + var(--depth, 0) * #{$space-3});
     border-radius: $radius;
 
     &:hover {
@@ -88,14 +94,47 @@
       box-shadow: inset 0 2px 0 $primary;
     }
 
+    &.drop-after {
+      box-shadow: inset 0 -2px 0 $primary;
+    }
+
+    // hidden or locked, itself or with its group
     &.is-hidden .drawer-layers-name,
-    &.is-locked .drawer-layers-name {
+    &.is-locked .drawer-layers-name,
+    &.is-muted .drawer-layers-name {
       color: $text-muted;
     }
   }
 
-  .drawer-layers-list.drop-end .drawer-layers-item:last-child {
-    box-shadow: inset 0 -2px 0 $primary;
+  // expand / collapse group, same space for shapes
+  .drawer-layers-toggle {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 1rem;
+    height: $btn-size-default;
+    padding: 0;
+    border: 0;
+    border-radius: $radius;
+    background-color: transparent;
+    color: $text-muted;
+
+    svg {
+      width: 14px;
+      height: 14px;
+      transition: transform $transition;
+    }
+
+    &[aria-expanded='true'] svg {
+      transform: rotate(90deg);
+    }
+
+    @include focus-ring;
+  }
+
+  button.drawer-layers-toggle {
+    cursor: pointer;
   }
 
   .drawer-layers-grip {

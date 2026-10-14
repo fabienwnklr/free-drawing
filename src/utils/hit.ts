@@ -1,6 +1,7 @@
 import type { Node } from 'konva/lib/Node';
 import type { Context } from 'konva/lib/Context';
 import { Shape, type ShapeConfig } from 'konva/lib/Shape';
+import { Group } from 'konva/lib/Group';
 import { Line } from 'konva/lib/shapes/Line';
 import type { IRect, Vector2d } from 'konva/lib/types';
 import { fillShapes, shapeName } from '@/constants';
@@ -21,9 +22,10 @@ function outlineHitFunc(context: Context, shape: Shape<ShapeConfig>) {
 }
 
 /**
- * Hit region of a drawing shape (shapes added, loaded...): as drawn, strokes wider
+ * Hit region of a drawing shape (shapes added, loaded...), shapes of a group: as drawn, strokes wider
  */
 export function setupHit(node: Node) {
+  if (node instanceof Group) node.getChildren().forEach(setupHit);
   if (!(node instanceof Shape)) return;
 
   if (fillShapes.some((name) => node.hasName(name))) node.hitFunc(outlineHitFunc);
@@ -31,6 +33,31 @@ export function setupHit(node: Node) {
   if (node instanceof Line && node.hitStrokeWidth() === 'auto') {
     node.hitStrokeWidth(Math.max(hitStrokeWidth, node.strokeWidth()));
   }
+}
+
+/**
+ * Shapes of a node: itself, or shapes of a group and its groups
+ */
+export function getShapes(node: Node): Shape<ShapeConfig>[] {
+  if (node instanceof Shape) return [node];
+
+  return node instanceof Group ? node.find<Shape<ShapeConfig>>((child: Node) => child instanceof Shape) : [];
+}
+
+/**
+ * A visible shape of a node is drawn at a point (absolute position): fill, stroke, text box
+ */
+export function isDrawnAt(node: Node, point: Vector2d): boolean {
+  return getShapes(node).some((shape) => shape.isVisible() && shape.intersects(point));
+}
+
+/**
+ * Point is inside outline of a rectangle or an ellipse of a node (shape or group)
+ */
+export function isInsideNode(node: Node, point: Vector2d): boolean {
+  return getShapes(node).some(
+    (shape) => shape.isVisible() && fillShapes.some((name) => shape.hasName(name)) && isInsideOutline(shape, point)
+  );
 }
 
 /**

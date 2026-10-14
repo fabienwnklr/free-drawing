@@ -134,7 +134,7 @@ describe('Shape tools', () => {
   it('Canvas background does not fill selected shapes', () => {
     const drawer = drawerWithTool('square');
     drag(drawer, [10, 10], [110, 60]);
-    const [rect] = drawer.getDrawingShapes();
+    const rect = drawer.getDrawingShapes()[0] as Rect;
     drawer.getWidget<SelectWidget>('selection')!.transformer.nodes([rect]);
 
     drawer.setBgColor('#f5faff');

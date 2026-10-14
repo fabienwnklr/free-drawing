@@ -80,6 +80,7 @@ export const shapeName = {
   ellipse: 'drawer-ellipse',
   arrow: 'drawer-arrow',
   text: 'drawer-text',
+  group: 'drawer-group',
   selection: 'drawer-selection',
   guideLine: 'drawer-guide-line',
   gridLine: 'drawer-grid-line',
@@ -106,6 +107,7 @@ export const shapeLabels: Record<string, string> = {
   [shapeName.ellipse]: 'Ellipse',
   [shapeName.arrow]: 'Arrow',
   [shapeName.text]: 'Text',
+  [shapeName.group]: 'Group',
 };
 
 /**

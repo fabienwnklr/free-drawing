@@ -18,6 +18,11 @@
   .drawer-button {
     width: $btn-size-default;
     height: $btn-size-default;
+
+    // group / ungroup when possible
+    &[hidden] {
+      display: none;
+    }
   }
 
   .drawer-selection-menu-separator {

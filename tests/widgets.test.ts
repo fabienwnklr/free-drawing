@@ -4,6 +4,7 @@ import type { SelectWidget } from '../src/components/toolbar/widgets/Select/Sele
 import type { TextWidget } from '../src/components/toolbar/widgets/Text/Text';
 import type { BrushWidget } from '../src/components/toolbar/widgets/Brush/Brush';
 import type { Text } from 'konva/lib/shapes/Text';
+import type { Shape, ShapeConfig } from 'konva/lib/Shape';
 import type { BaseWidget } from '../src/components/toolbar/widgets/BaseWidget';
 import type { EraserWidget } from '../src/components/toolbar/widgets/Eraser/Eraser';
 import { crosshairCursor } from '../src/constants';
@@ -310,12 +311,12 @@ describe('Widgets', () => {
     // transparent: no fill, inside is not hit
     square.setActive(true);
     drag(drawer, [10, 10], [100, 80]);
-    const empty = drawer.getDrawingShapes()[0];
+    const empty = drawer.getDrawingShapes()[0] as Shape<ShapeConfig>;
     expect(empty.fill()).toBeUndefined();
 
     drawer.setFillColor('#a5d8ff');
     drag(drawer, [200, 10], [300, 80]);
-    const filled = drawer.getDrawingShapes()[1];
+    const filled = drawer.getDrawingShapes()[1] as Shape<ShapeConfig>;
     expect(filled.fill()).toBe('#a5d8ff');
     expect(fillPressed(square)).toBe('#a5d8ff');
 
@@ -323,7 +324,7 @@ describe('Widgets', () => {
     drawer.getWidget<BaseWidget>('brush')!.setActive(true);
     fireMouse(drawer, 'mousedown', 10, 300);
     fireMouse(drawer, 'mouseup', 150, 380);
-    const brushLine = drawer.getDrawingShapes()[2];
+    const brushLine = drawer.getDrawingShapes()[2] as Shape<ShapeConfig>;
     selectWidget.setActive(true);
     selectWidget.transformer.nodes([filled]);
     selectWidget.showOverlay([filled]);

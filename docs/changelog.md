@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [6.0.0](https://github.com/fabienwnklr/free-drawing/compare/v5.7.0...v6.0.0) (2026-10-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* drawing shapes may be groups (konva `Group`, `DrawingShape` type): `getDrawingShapes`, `getSelectedShapes`, `duplicateShapes` and `ungroupShapes` return shapes or groups, shape methods (`fill`, `stroke`...) need a check
+
+### Features
+
+* groups of shapes (Ctrl+G, Ctrl+Shift+G, selection menu, layers panel), moved, transformed, ordered, renamed, hidden, locked, duplicated and deleted together, groups of groups, `groupShapes`, `ungroupShapes` and `canGroupShapes` methods
+* click selects group of a shape, Ctrl+click selects the shape alone
+* layers panel: shapes of groups under their expanded group (arrow button, Right / Left arrows), reordered in their group
+* groups saved, in history, files, links, exports and live collaboration
+
+### Bug Fixes
+
+* eraser click on a shape saves the change (history, autosave, collaboration)
+
 ## [5.7.0](https://github.com/fabienwnklr/free-drawing/compare/v5.6.0...v5.7.0) (2026-10-14)
 
 

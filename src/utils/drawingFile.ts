@@ -16,8 +16,28 @@ export type DrawingFile = {
   shapes: ShapeState[];
 };
 
-// files and links can come from anyone: only drawing shapes are created
+// files and links can come from anyone: only drawing shapes and groups of them are created
 const shapeClasses = ['Line', 'Arrow', 'Rect', 'Ellipse', 'Text'];
+
+/**
+ * Drawing shape or group of a file, null for other nodes
+ */
+function parseShape(shape: ShapeState): ShapeState | null {
+  if (typeof shape?.attrs !== 'object' || shape.attrs === null) return null;
+
+  if (shape.className === 'Group') {
+    const children = Array.isArray(shape.children) ? shape.children.map(parseShape) : [];
+
+    return {
+      attrs: shape.attrs,
+      className: 'Group',
+      children: children.filter((child): child is ShapeState => !!child),
+    };
+  }
+
+  // no children (konva would add them)
+  return shapeClasses.includes(shape.className) ? { attrs: shape.attrs, className: shape.className } : null;
+}
 
 /**
  * Drawing file from its JSON, shapes other than drawing ones are ignored
@@ -32,10 +52,7 @@ export function parseDrawingFile(json: string): DrawingFile {
     type: 'free-drawing',
     version: 1,
     background: typeof data.background === 'string' ? data.background : '#fff',
-    shapes: data.shapes
-      .filter((shape: ShapeState) => shapeClasses.includes(shape?.className) && typeof shape.attrs === 'object')
-      // no children (konva would add them)
-      .map(({ attrs, className }: ShapeState) => ({ attrs, className })),
+    shapes: data.shapes.map(parseShape).filter((shape: ShapeState | null): shape is ShapeState => !!shape),
   };
 }
 

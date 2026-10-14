@@ -27,6 +27,8 @@ describe('Selection menu', () => {
     expect(menu.$menu.getAttribute('aria-label')).toBe('Selection actions');
     expect([...menu.$menu.querySelectorAll('button')].map(($btn) => $btn.getAttribute('aria-label'))).toEqual([
       'Duplicate',
+      'Group',
+      'Ungroup',
       'Send backward',
       'Bring forward',
       'Delete',
@@ -68,7 +70,7 @@ describe('Selection menu', () => {
       { x: 120, y: 120 },
     ]);
     expect(copies[0].id()).not.toBe(first.id());
-    expect(copies[0].fill()).toBe('#a5d8ff');
+    expect((copies[0] as Rect).fill()).toBe('#a5d8ff');
     expect(first.position()).toEqual({ x: 10, y: 10 });
 
     // same offset on screen

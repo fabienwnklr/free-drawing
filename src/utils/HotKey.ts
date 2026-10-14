@@ -58,6 +58,13 @@ export class HotKey {
         this.drawer.duplicateShapes();
       }
 
+      // instead of browser find next
+      if (edit && mod && e.key.toLowerCase() === 'g' && selectedNodes.length && !inField) {
+        e.preventDefault();
+        if (e.shiftKey) this.drawer.ungroupShapes();
+        else this.drawer.groupShapes();
+      }
+
       const order = mod ? orderKeys[`${e.shiftKey ? 'Shift+' : ''}${e.key}`] : undefined;
 
       if (edit && selectedNodes.length && order && !inField) {

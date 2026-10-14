@@ -1,9 +1,11 @@
 import { Drawer } from '@/Drawer';
 import { BaseWidget } from '../BaseWidget';
 import EraserIcon from '@/icons/eraser.svg?raw';
-import type { Shape, ShapeConfig } from 'konva/lib/Shape';
+import type { Node } from 'konva/lib/Node';
 import { Text } from 'konva/lib/shapes/Text';
 import { crosshairCursor } from '@/constants';
+import { getShapes } from '@/utils/hit';
+import type { DrawingShape } from '@/@types/drawer';
 import { Trail } from './Trail';
 
 /**
@@ -13,7 +15,7 @@ const erasingColor = '#e03131';
 
 export class EraserWidget extends BaseWidget {
   /** Shapes erased on pointer up, with their outline shown meanwhile */
-  #toRemoved = new Map<Shape<ShapeConfig>, Shape<ShapeConfig>>();
+  #toRemoved = new Map<DrawingShape, DrawingShape>();
   protected cursor = crosshairCursor;
   /** Trail behind pointer while erasing */
   #trail: Trail;
@@ -51,8 +53,7 @@ export class EraserWidget extends BaseWidget {
       // prevent scrolling on touch devices
       e.evt.preventDefault();
       this._addTrailPoint();
-      const target = this.drawer.stage.getIntersection(this.drawer._getPointerPos());
-      const shape = this.drawer.getDrawingShapes().find((s) => s === target);
+      const shape = this._getDrawingShape(this.drawer.stage.getIntersection(this.drawer._getPointerPos()));
 
       if (!shape || this.#toRemoved.has(shape)) return;
 
@@ -76,11 +77,24 @@ export class EraserWidget extends BaseWidget {
       }
     });
 
+    // click on a shape (not an erasing move)
     this.onStage('click tap', (e) => {
-      if (e.target !== this.drawer.stage && !e.target.hasName('background') && !e.target.hasName('selection')) {
-        e.target.destroy();
-      }
+      const shape = this._getDrawingShape(e.target);
+
+      if (!shape) return;
+
+      shape.destroy();
+      this.drawer.stage.fire('change');
     });
+  }
+
+  /**
+   * Drawing shape of a node (shape of a group: whole group is erased)
+   */
+  private _getDrawingShape(node: Node | null): DrawingShape | undefined {
+    return node
+      ? this.drawer.getDrawingShapes().find((shape) => shape === node || shape.isAncestorOf(node))
+      : undefined;
   }
 
   private _addTrailPoint() {
@@ -93,24 +107,26 @@ export class EraserWidget extends BaseWidget {
    * Shape replaced by its thin outline until pointer up: visible whatever shape color and opacity, shape unchanged
    * @returns outline, in selection layer
    */
-  private _showOutline(shape: Shape<ShapeConfig>) {
-    const outline = shape.clone({
-      name: 'erasing',
-      stroke: erasingColor,
-      strokeWidth: 1.5,
-      // same width whatever zoom
-      strokeScaleEnabled: false,
-      fillEnabled: false,
-      dash: undefined,
-      opacity: 1,
-      listening: false,
-      draggable: false,
-    }) as Shape<ShapeConfig>;
+  private _showOutline(shape: DrawingShape) {
+    const outline = shape.clone({ name: 'erasing', opacity: 1, listening: false, draggable: false }) as DrawingShape;
 
-    if (outline instanceof Text) {
-      // struck out, decoration line is drawn with fill color
-      outline.setAttrs({ fill: erasingColor, strokeWidth: 1, textDecoration: 'line-through' });
-    }
+    // shapes of groups too
+    getShapes(outline).forEach((s) => {
+      s.setAttrs({
+        stroke: erasingColor,
+        strokeWidth: 1.5,
+        // same width whatever zoom
+        strokeScaleEnabled: false,
+        fillEnabled: false,
+        dash: undefined,
+        opacity: 1,
+      });
+
+      if (s instanceof Text) {
+        // struck out, decoration line is drawn with fill color
+        s.setAttrs({ fill: erasingColor, strokeWidth: 1, textDecoration: 'line-through' });
+      }
+    });
 
     this.drawer.selectionLayer.add(outline);
     shape.hide();

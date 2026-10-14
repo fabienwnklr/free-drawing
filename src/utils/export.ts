@@ -1,5 +1,7 @@
-import type { Shape, ShapeConfig } from 'konva/lib/Shape';
+import { Shape } from 'konva/lib/Shape';
 import type { Container } from 'konva/lib/Container';
+import type { Node } from 'konva/lib/Node';
+import { Group } from 'konva/lib/Group';
 import { Stage } from 'konva/lib/Stage';
 import { Layer } from 'konva/lib/Layer';
 import { Rect } from 'konva/lib/shapes/Rect';
@@ -8,6 +10,8 @@ import { Arrow } from 'konva/lib/shapes/Arrow';
 import { Ellipse } from 'konva/lib/shapes/Ellipse';
 import { Text } from 'konva/lib/shapes/Text';
 import { normalizeColor } from './color';
+import { getShapes } from './hit';
+import type { DrawingShape } from '@/@types/drawer';
 
 export type ImageFormat = 'png' | 'svg' | 'pdf';
 
@@ -28,7 +32,7 @@ const padding = 16;
 /**
  * Box of shapes with padding, in coordinates of their layer, null without shapes
  */
-export function getExportBox(shapes: Shape<ShapeConfig>[], layer: Container): Box | null {
+export function getExportBox(shapes: DrawingShape[], layer: Container): Box | null {
   const rects = shapes.map((shape) => shape.getClientRect({ relativeTo: layer }));
 
   if (!rects.length) return null;
@@ -75,7 +79,14 @@ function colorOf(color: unknown, dark?: boolean): string | undefined {
 /**
  * Shapes rendered on a canvas (png, pdf, clipboard), same rendering as drawer
  */
-export function renderCanvas(shapes: Shape<ShapeConfig>[], box: Box, options: ImageOptions = {}): HTMLCanvasElement {
+/**
+ * Transform of a node in its layer: shapes of groups exported alone are placed as drawn
+ */
+function layerTransform(node: Node) {
+  return node.getAbsoluteTransform(node.getLayer() ?? undefined);
+}
+
+export function renderCanvas(shapes: DrawingShape[], box: Box, options: ImageOptions = {}): HTMLCanvasElement {
   const { background, dark, scale = 2 } = options;
   // not in page
   const stage = new Stage({ container: document.createElement('div'), width: box.width, height: box.height });
@@ -85,9 +96,16 @@ export function renderCanvas(shapes: Shape<ShapeConfig>[], box: Box, options: Im
   if (background) layer.add(new Rect({ ...box, fill: colorOf(background, dark) }));
 
   shapes.forEach((shape) => {
-    const clone = shape.clone({ draggable: false }) as Shape<ShapeConfig>;
+    const clone = shape.clone({ draggable: false }) as DrawingShape;
 
-    if (dark) clone.setAttrs({ fill: colorOf(shape.fill(), dark), stroke: colorOf(shape.stroke(), dark) });
+    // shape of a group exported alone
+    if (shape.getParent() !== shape.getLayer()) {
+      clone.setAttrs({ ...layerTransform(shape).decompose(), offsetX: 0, offsetY: 0 });
+    }
+    // shapes of groups too
+    if (dark) {
+      getShapes(clone).forEach((s) => s.setAttrs({ fill: colorOf(s.fill(), dark), stroke: colorOf(s.stroke(), dark) }));
+    }
     layer.add(clone);
   });
 
@@ -139,14 +157,23 @@ function linePath(line: Line): string {
 }
 
 /**
- * Svg element of a drawing shape, in its layer coordinates
+ * Svg element of a drawing shape or group, in its parent coordinates (`matrix`: transform in another one)
  */
-function shapeToSvg(shape: Shape<ShapeConfig>, dark?: boolean): string {
-  const [a, b, c, d, e, f] = shape.getTransform().getMatrix();
+function shapeToSvg(shape: Node, dark?: boolean, matrix = shape.getTransform().getMatrix()): string {
+  const [a, b, c, d, e, f] = matrix;
   const group = attrs({
     transform: `matrix(${[a, b, c, d, e, f].map(num).join(' ')})`,
     opacity: shape.opacity() !== 1 ? shape.opacity() : undefined,
   });
+
+  if (shape instanceof Group) {
+    const children = shape.getChildren().filter((child) => child.visible());
+
+    return `<g${group}>${children.map((child) => shapeToSvg(child, dark)).join('')}</g>`;
+  }
+
+  if (!(shape instanceof Shape)) return '';
+
   const stroke = shape.strokeEnabled() ? colorOf(shape.stroke(), dark) : undefined;
   const strokeAttrs = (dash = true) =>
     attrs({
@@ -231,7 +258,7 @@ function shapeToSvg(shape: Shape<ShapeConfig>, dark?: boolean): string {
 /**
  * Shapes as svg (vector) image
  */
-export function renderSvg(shapes: Shape<ShapeConfig>[], box: Box, options: ImageOptions = {}): string {
+export function renderSvg(shapes: DrawingShape[], box: Box, options: ImageOptions = {}): string {
   const { background, dark } = options;
   const size = attrs({ width: box.width, height: box.height });
   const backgroundRect = background ? `<rect${attrs({ ...box, fill: colorOf(background, dark) })}/>` : '';
@@ -239,7 +266,7 @@ export function renderSvg(shapes: Shape<ShapeConfig>[], box: Box, options: Image
   return (
     `<svg xmlns="http://www.w3.org/2000/svg"${size}${attrs({ viewBox: [box.x, box.y, box.width, box.height].join(' ') })}>` +
     backgroundRect +
-    shapes.map((shape) => shapeToSvg(shape, dark)).join('') +
+    shapes.map((shape) => shapeToSvg(shape, dark, layerTransform(shape).getMatrix())).join('') +
     '</svg>'
   );
 }

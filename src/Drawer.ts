@@ -4,7 +4,7 @@ import { Layer } from 'konva/lib/Layer';
 import { Toolbar } from './components/toolbar/Toolbar';
 import { Rect } from 'konva/lib/shapes/Rect';
 import { AvailableTools } from './@types/toolbar';
-import { ColorLike, DrawerOptions, OptionsChange, ShapeOrder, StrokeStyle, TextStyle } from './@types/drawer';
+import { ColorLike, DrawerOptions, DrawingShape, OptionsChange, ShapeOrder, StrokeStyle, TextStyle } from './@types/drawer';
 import { createId, deepMerge } from './utils/functions';
 import { defaultOptions, gridSize, shapeLabels, shapeName, zoomLimits } from './constants';
 import { setPressed } from './utils/dom';
@@ -20,7 +20,7 @@ import {
   pickFile,
   saveFile,
 } from './utils/drawingFile';
-import { getShapeState } from './components/tools/UndoRedo/History';
+import { type ShapeState, getShapeState } from './components/tools/UndoRedo/History';
 import { type ImageFormat, canvasToBlob, createPdf, getExportBox, renderCanvas, renderSvg } from './utils/export';
 import { toHexColor } from './utils/color';
 import { ExportModal } from './components/ExportModal/ExportModal';
@@ -201,9 +201,8 @@ export class Drawer extends MicroEvent {
       // draggable depends on active tool, set on its activation
       this.drawLayer.getChildren().forEach((shape) => {
         shape.draggable(false);
-        setupHit(shape);
-        // saves of previous versions
-        if (!shape.id()) shape.id(createId());
+        // ids: saves of previous versions
+        this._setupShape(shape as DrawingShape);
       });
       this.background = this.bgLayer.findOne(`.${shapeName.background}`) as Rect;
       activeTool = (this._getStorageItem(this.options.localStorageKey + '-tool') as AvailableTools | null) ?? activeTool;
@@ -560,25 +559,38 @@ export class Drawer extends MicroEvent {
    * Get all shape drawing
    * @returns {Shape<ShapeConfig>[]}
    */
-  getDrawingShapes(): Shape<ShapeConfig>[] {
+  getDrawingShapes(): DrawingShape[] {
     // Return clone of array, else clean doesn't work
-    return [...this.drawLayer.children] as Shape<ShapeConfig>[];
+    return [...this.drawLayer.children] as DrawingShape[];
   }
 
   /**
-   * Add drawing shape to draw layer, draggable only with selection tool.
+   * Add drawing shape (or group) to draw layer, draggable only with selection tool.
    * Every drawing shape must be added with this method (tools, history, collaboration...)
-   * @param {Shape<ShapeConfig>} shape
-   * @returns {Shape<ShapeConfig>} added shape
+   * @param {DrawingShape} shape
+   * @returns {DrawingShape} added shape
    */
-  addShape<T extends Shape<ShapeConfig>>(shape: T): T {
+  addShape<T extends DrawingShape>(shape: T): T {
     shape.draggable(this.activeTool === 'selection');
-    // shape identity for collaboration (kept in history and saves)
-    if (!shape.id()) shape.id(createId());
-    setupHit(shape);
+    this._setupShape(shape);
     this.drawLayer.add(shape);
 
     return shape;
+  }
+
+  /**
+   * Shape identity for collaboration and layers panel (kept in history and saves), also of shapes in groups (moved
+   * with their group, not alone), hit region
+   */
+  private _setupShape(shape: DrawingShape) {
+    if (!shape.id()) shape.id(createId());
+    if (shape instanceof Group) {
+      shape.find(() => true).forEach((node) => {
+        if (!node.id()) node.id(createId());
+        node.draggable(false);
+      });
+    }
+    setupHit(shape);
   }
 
   /**
@@ -642,7 +654,9 @@ export class Drawer extends MicroEvent {
     const sendLive = (target: unknown) => {
       const selected = this.getSelectedShapes();
 
-      this.collaboration?.sendLive(selected.length ? selected : target instanceof Shape ? [target] : []);
+      this.collaboration?.sendLive(
+        selected.length ? selected : target instanceof Shape || target instanceof Group ? [target] : []
+      );
     };
 
     this.drawLayer.on('dragmove.live', (e) => sendLive(e.target));
@@ -769,7 +783,7 @@ export class Drawer extends MicroEvent {
   /**
    * Drawing as file content (`.freedrawing` file, link): background color and drawing shapes
    */
-  getDrawingFile(shapes: Shape<ShapeConfig>[] = this.getDrawingShapes()): DrawingFile {
+  getDrawingFile(shapes: DrawingShape[] = this.getDrawingShapes()): DrawingFile {
     return {
       type: 'free-drawing',
       version: 1,
@@ -781,29 +795,33 @@ export class Drawer extends MicroEvent {
   /**
    * Drawing shapes selected with selection tool
    */
-  getSelectedShapes(): Shape<ShapeConfig>[] {
+  getSelectedShapes(): DrawingShape[] {
     const nodes = this.getWidget<SelectWidget>('selection')?.transformer.nodes() ?? [];
 
-    return nodes.filter((node): node is Shape<ShapeConfig> => node instanceof Shape);
+    return nodes.filter((node): node is DrawingShape => node instanceof Shape || node instanceof Group);
   }
 
   /**
    * Copy shapes (selected ones by default) a little further, copies are selected
-   * @param {Shape<ShapeConfig>[]} shapes
-   * @returns {Shape<ShapeConfig>[]} copies, on top of drawing (change saved)
+   * @param {DrawingShape[]} shapes
+   * @returns {DrawingShape[]} copies, on top of drawing (change saved)
    */
-  duplicateShapes(shapes: Shape<ShapeConfig>[] = this.getSelectedShapes()): Shape<ShapeConfig>[] {
+  duplicateShapes(shapes: DrawingShape[] = this.getSelectedShapes()): DrawingShape[] {
     // same offset on screen whatever zoom
     const offset = 20 / this.getZoomLevel();
     const copies = shapes
       .filter((shape) => shape.getLayer())
       .sort((a, b) => a.zIndex() - b.zIndex())
       .map((shape) => {
-        const { attrs, className } = getShapeState(shape);
+        const state = getShapeState(shape);
+        // new ids given by addShape
+        const removeIds = ({ attrs, children }: ShapeState) => {
+          delete attrs.id;
+          children?.forEach(removeIds);
+        };
 
-        // new id given by addShape
-        delete attrs.id;
-        const copy = this.addShape(Node.create({ attrs, className }) as Shape<ShapeConfig>);
+        removeIds(state);
+        const copy = this.addShape(Node.create(state) as DrawingShape);
 
         copy.move({ x: offset, y: offset });
         return copy;
@@ -822,24 +840,116 @@ export class Drawer extends MicroEvent {
    * @param {Shape<ShapeConfig>[]} shapes
    * @returns {boolean} true if a shape was removed (change saved)
    */
-  deleteShapes(shapes: Shape<ShapeConfig>[] = this.getSelectedShapes()): boolean {
+  deleteShapes(shapes: DrawingShape[] = this.getSelectedShapes()): boolean {
     const removed = shapes.filter((shape) => shape.getLayer());
     const selectWidget = this.getWidget<SelectWidget>('selection');
 
     if (!removed.length) return false;
 
     selectWidget?.select(this.getSelectedShapes().filter((shape) => !removed.includes(shape)));
-    removed.forEach((shape) => shape.destroy());
+    removed.forEach((shape) => {
+      let parent = shape.getParent();
+
+      shape.destroy();
+      // empty groups removed
+      while (parent instanceof Group && !parent.hasChildren()) {
+        const group = parent;
+
+        parent = group.getParent();
+        group.destroy();
+      }
+    });
     this.stage.fire('change');
 
     return true;
   }
 
   /**
+   * Group shapes (selected ones by default, 2 at least, of the same group): moved, transformed, hidden, locked,
+   * ordered and named together. The group takes place of top shape and is selected
+   * @param {DrawingShape[]} shapes
+   * @returns {Group | null} group (change saved)
+   */
+  groupShapes(shapes: DrawingShape[] = this.getSelectedShapes()): Group | null {
+    const parent = shapes[0]?.getParent();
+    const members = [...shapes].sort((a, b) => a.zIndex() - b.zIndex());
+
+    if (!parent || !this.canGroupShapes(shapes)) return null;
+
+    // place of top shape once others are in group
+    const index = members[members.length - 1].zIndex() - (members.length - 1);
+    const group = new Group({ name: shapeName.group });
+
+    members.forEach((member) => {
+      member.draggable(false);
+      member.moveTo(group);
+    });
+    if (parent === this.drawLayer) {
+      this.addShape(group);
+    } else {
+      this._setupShape(group);
+      parent.add(group);
+    }
+    group.zIndex(index);
+    this.getWidget<SelectWidget>('selection')?.select([group]);
+    this.stage.fire('change');
+
+    return group;
+  }
+
+  /**
+   * Shapes can be grouped: 2 at least, of the same group (or drawing)
+   * @param {DrawingShape[]} shapes Selected shapes by default
+   */
+  canGroupShapes(shapes: DrawingShape[] = this.getSelectedShapes()): boolean {
+    const parent = shapes[0]?.getParent();
+
+    return !!parent && shapes.length > 1 && shapes.every((shape) => shape.getParent() === parent);
+  }
+
+  /**
+   * Ungroup groups (selected ones by default): their shapes take their place with the same look (transform,
+   * hidden, locked) and are selected
+   * @param {DrawingShape[]} shapes
+   * @returns {DrawingShape[]} shapes of groups (change saved)
+   */
+  ungroupShapes(shapes: DrawingShape[] = this.getSelectedShapes()): DrawingShape[] {
+    const groups = shapes.filter((shape): shape is Group => shape instanceof Group && !!shape.getParent());
+    const ungrouped = groups.flatMap((group) => {
+      const parent = group.getParent()!;
+      const index = group.zIndex();
+      const children = [...group.getChildren()] as DrawingShape[];
+
+      children.forEach((child, i) => {
+        // group transform applied to shape (no offset in drawing shapes)
+        const transform = group.getTransform().copy().multiply(child.getTransform());
+
+        child.setAttrs({ ...transform.decompose(), offsetX: 0, offsetY: 0 });
+        if (!group.visible()) child.visible(false);
+        if (!group.listening()) child.listening(false);
+        if (group.opacity() !== 1) child.opacity(child.opacity() * group.opacity());
+        child.moveTo(parent);
+        child.zIndex(index + i);
+        child.draggable(parent === this.drawLayer && this.activeTool === 'selection');
+      });
+      group.destroy();
+
+      return children;
+    });
+
+    if (ungrouped.length) {
+      this.getWidget<SelectWidget>('selection')?.select(ungrouped);
+      this.stage.fire('change');
+    }
+
+    return ungrouped;
+  }
+
+  /**
    * Name of a shape (layers panel): name given by user, else first line of a text, else type of shape
    * @param {Shape<ShapeConfig>} shape
    */
-  getShapeLabel(shape: Shape<ShapeConfig>): string {
+  getShapeLabel(shape: DrawingShape): string {
     const text = shape.hasName(shapeName.text) ? String(shape.getAttr('text') ?? '').trim().split('\n')[0] : '';
     const type = Object.keys(shapeLabels).find((name) => shape.hasName(name));
 
@@ -852,7 +962,7 @@ export class Drawer extends MicroEvent {
    * @param {string} label
    * @returns {boolean} true if name changed (change saved)
    */
-  setShapeLabel(shape: Shape<ShapeConfig>, label: string): boolean {
+  setShapeLabel(shape: DrawingShape, label: string): boolean {
     const value = label.trim() || undefined;
 
     if (shape.getAttr('label') === value) return false;
@@ -869,7 +979,7 @@ export class Drawer extends MicroEvent {
    * @param {Shape<ShapeConfig>[]} shapes
    * @returns {boolean} true if a shape changed (change saved)
    */
-  setShapesLocked(locked: boolean, shapes: Shape<ShapeConfig>[] = this.getSelectedShapes()): boolean {
+  setShapesLocked(locked: boolean, shapes: DrawingShape[] = this.getSelectedShapes()): boolean {
     return this._setShapesState(
       shapes.filter((shape) => shape.listening() === locked),
       (shape) => shape.listening(!locked)
@@ -882,14 +992,14 @@ export class Drawer extends MicroEvent {
    * @param {Shape<ShapeConfig>[]} shapes
    * @returns {boolean} true if a shape changed (change saved)
    */
-  setShapesHidden(hidden: boolean, shapes: Shape<ShapeConfig>[] = this.getSelectedShapes()): boolean {
+  setShapesHidden(hidden: boolean, shapes: DrawingShape[] = this.getSelectedShapes()): boolean {
     return this._setShapesState(
       shapes.filter((shape) => shape.visible() === hidden),
       (shape) => shape.visible(!hidden)
     );
   }
 
-  private _setShapesState(changed: Shape<ShapeConfig>[], apply: (shape: Shape<ShapeConfig>) => void) {
+  private _setShapesState(changed: DrawingShape[], apply: (shape: DrawingShape) => void) {
     const shapes = changed.filter((shape) => shape.getLayer());
     const selected = this.getSelectedShapes();
 
@@ -910,7 +1020,7 @@ export class Drawer extends MicroEvent {
    * @param {Shape<ShapeConfig>[]} shapes Selected shapes by default
    * @returns {boolean} true if a shape moved (change saved)
    */
-  reorderShapes(order: ShapeOrder, shapes: Shape<ShapeConfig>[] = this.getSelectedShapes()): boolean {
+  reorderShapes(order: ShapeOrder, shapes: DrawingShape[] = this.getSelectedShapes()): boolean {
     const moved = reorderShapes(shapes, order);
 
     if (moved) this.stage.fire('change');
@@ -922,7 +1032,7 @@ export class Drawer extends MicroEvent {
    * Shapes to export: selected ones when there is a selection, else all drawing shapes
    * @param {boolean} selected Selected shapes only
    */
-  getExportShapes(selected: boolean = true): Shape<ShapeConfig>[] {
+  getExportShapes(selected: boolean = true): DrawingShape[] {
     const selection = selected ? this.getSelectedShapes() : [];
 
     return selection.length ? selection : this.getDrawingShapes().filter((shape) => shape.visible());

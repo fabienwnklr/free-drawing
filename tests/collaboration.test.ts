@@ -11,6 +11,7 @@ import {
 import { createDrawer, fireMouse, keydown, setPointer } from './helpers';
 import type { BaseWidget } from '../src/components/toolbar/widgets/BaseWidget';
 import type { Group } from 'konva/lib/Group';
+import type { Shape, ShapeConfig } from 'konva/lib/Shape';
 import type { Text } from 'konva/lib/shapes/Text';
 
 const tick = () => new Promise((resolve) => setTimeout(resolve));
@@ -177,7 +178,9 @@ const addText = (drawer: Drawer, text: string) => {
   return node;
 };
 
-const byId = (drawer: Drawer, id: string) => drawer.getDrawingShapes().find((s) => s.id() === id);
+// shapes of these tests
+const byId = (drawer: Drawer, id: string) =>
+  drawer.getDrawingShapes().find((s) => s.id() === id) as Shape<ShapeConfig> | undefined;
 
 describe('Collaboration', () => {
   document.body.innerHTML = `<div id="test"></div>`;
@@ -617,5 +620,33 @@ describe('Collaboration', () => {
     a.stage.fire('change');
     expect(copy.x()).toBe(50);
     expect(copy.hitFunc()).toBeTypeOf('function');
+  });
+
+  it('Groups are sent at their place, replaced when their shapes change', () => {
+    const connect = createServer();
+    const a = createDrawer();
+    const b = createDrawer();
+    connect(a);
+    connect(b);
+    const first = a.addShape(new Rect({ name: 'drawer-rect', width: 10, height: 10 }));
+    const second = a.addShape(new Rect({ name: 'drawer-rect', x: 20, width: 10, height: 10 }));
+    const top = a.addShape(new Rect({ name: 'drawer-rect', x: 40, width: 10, height: 10 }));
+    const classNames = (drawer: Drawer) => drawer.getDrawingShapes().map((shape) => shape.getClassName());
+
+    a.stage.fire('change');
+    const group = a.groupShapes([first, second])!;
+    // new group under top shape
+    expect(classNames(b)).toEqual(['Group', 'Rect']);
+    expect(b.getDrawingShapes()[1].id()).toBe(top.id());
+
+    second.x(100);
+    a.stage.fire('change');
+    const copy = b.getDrawingShapes()[0] as Group;
+    expect(copy.id()).toBe(group.id());
+    expect(copy.getChildren()[1].x()).toBe(100);
+
+    a.ungroupShapes([group]);
+    expect(classNames(b)).toEqual(['Rect', 'Rect', 'Rect']);
+    expect(b.getDrawingShapes().map((shape) => shape.id())).toEqual([first.id(), second.id(), top.id()]);
   });
 });
