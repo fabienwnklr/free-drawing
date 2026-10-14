@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [6.2.0](https://github.com/fabienwnklr/free-drawing/compare/v6.1.0...v6.2.0) (2026-10-14)
+
+
+### Features
+
+* Shift pressed or released while drawing applies at once (square, circle, 45° line or arrow), without moving pointer
+* brush draws a straight stroke from its start with Shift
+* selected shapes resized freely by corners, proportions kept with Shift (texts always keep them): before, corners always kept proportions
+* Shift while rotating rotates by 15°, while moving moves horizontally or vertically
+
 ## [6.1.0](https://github.com/fabienwnklr/free-drawing/compare/v6.0.0...v6.1.0) (2026-10-14)
 
 

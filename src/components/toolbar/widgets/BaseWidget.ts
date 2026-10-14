@@ -131,6 +131,12 @@ export abstract class BaseWidget {
    */
   protected onDesactive(): void {}
 
+  /**
+   * Shift pressed or released during a pointer action (square, circle, straight line...), without pointer move
+   * @param constrain Shift pressed
+   */
+  protected onConstrainChange?(constrain: boolean): void;
+
   public updateCursor(): void {
     this.drawer.$stageContainer.style.cursor = this.cursor;
   }
@@ -170,6 +176,15 @@ export abstract class BaseWidget {
     this.$button.addEventListener('click', () => {
       this.setActive(true);
     });
+
+    const onShift = (e: KeyboardEvent) => {
+      if (e.key === 'Shift' && this.inAction && this.drawer.activeWidget === this) {
+        this.onConstrainChange?.(e.type === 'keydown');
+      }
+    };
+
+    this.drawer.$drawerContainer.addEventListener('keydown', onShift);
+    this.drawer.$drawerContainer.addEventListener('keyup', onShift);
   }
 
   setActive(active: boolean) {

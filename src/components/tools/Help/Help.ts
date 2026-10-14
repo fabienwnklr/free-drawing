@@ -80,6 +80,20 @@ export class Help extends Modal {
               </span>
             </li>
             <li class="drawer-modal-help-shortcut">
+              Square, circle, 45° line, straight stroke
+              <span>
+                <kbd class="drawer-modal-help-kdb">Shift</kbd>
+                while drawing
+              </span>
+            </li>
+            <li class="drawer-modal-help-shortcut">
+              Keep proportions, rotate by 15°, move straight
+              <span>
+                <kbd class="drawer-modal-help-kdb">Shift</kbd>
+                while resizing, rotating, moving
+              </span>
+            </li>
+            <li class="drawer-modal-help-shortcut">
               Move selection
               <span>
                 <kbd class="drawer-modal-help-kdb">Arrows</kbd>

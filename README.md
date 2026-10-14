@@ -134,6 +134,17 @@ With the selection tool:
 - a selection rectangle selects shapes entirely in it (Shift adds them): drawn in a big shape, it selects the small shapes on it;
 - a pressed shape is selected and dragged alone, the selection is dragged from any place of its box.
 
+Shift constrains drawing and selected shapes, also pressed or released without moving pointer:
+
+| Action | With Shift |
+| --- | --- |
+| Draw a rectangle / an ellipse | Square / circle |
+| Draw a line / an arrow | Horizontal, vertical or 45° |
+| Draw with brush | Straight stroke from its start |
+| Resize (corners) | Proportions kept (texts always keep them) |
+| Rotate | By 15° |
+| Move | Horizontally or vertically |
+
 A menu next to selected shapes duplicates them (Ctrl+D), brings them forward, sends them backward or deletes them (`selectionMenu` option). It is under the selection, above it near the bottom of the drawer, and hidden while shapes are moved.
 
 ```js

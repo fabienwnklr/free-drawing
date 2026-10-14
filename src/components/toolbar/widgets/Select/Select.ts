@@ -25,6 +25,9 @@ import type { Node } from 'konva/lib/Node';
 /** Pointer move under which a press is a click (px) */
 const clickTolerance = 3;
 
+/** Rotation angles with Shift (degrees) */
+const rotationSteps = Array.from({ length: 24 }, (_, i) => i * 15);
+
 export class SelectWidget extends BaseWidget {
   #x1: number = 0;
   #y1: number = 0;
@@ -47,7 +50,8 @@ export class SelectWidget extends BaseWidget {
     borderStroke: this.color,
     anchorStroke: this.color,
     enabledAnchors: this.defaultAnchors,
-    keepRatio: true,
+    // free resize, proportions kept with Shift (texts: always, see `_setupAnchors`)
+    keepRatio: false,
     anchorStyleFunc(anchor) {
       if (anchor.hasName('top-center') || anchor.hasName('bottom-center')) {
         anchor.height(6);
@@ -94,6 +98,8 @@ export class SelectWidget extends BaseWidget {
         }
       }
     });
+
+    this._initShiftEvents();
 
     // in constructor, not in initEvents, else a listener is added on each activation
     this.transformer.on('transformend dragend', () => {
@@ -418,6 +424,46 @@ export class SelectWidget extends BaseWidget {
   }
 
   /**
+   * Shift while rotating: by 15 degrees, while moving: horizontally or vertically (resize: see `keepRatio`)
+   */
+  private _initShiftEvents() {
+    // rotation snaps without Shift (grid)
+    let snaps: number[] = [];
+    // read before transformer handles pointer move (capture phase)
+    const onMove = (e: MouseEvent) => {
+      this.transformer.rotationSnaps(e.shiftKey ? rotationSteps : snaps);
+      this.transformer.rotationSnapTolerance(e.shiftKey ? 7.5 : 5);
+    };
+
+    this.transformer.on('transformstart', (e) => {
+      snaps = this.transformer.rotationSnaps();
+      onMove(e.evt);
+      window.addEventListener('mousemove', onMove, true);
+    });
+    this.transformer.on('transformend', () => {
+      window.removeEventListener('mousemove', onMove, true);
+      this.transformer.rotationSnaps(snaps);
+      this.transformer.rotationSnapTolerance(5);
+    });
+
+    this.drawer.drawLayer.on('dragstart.axis', (e) => {
+      const start = e.target.absolutePosition();
+
+      // along the axis of the longest move
+      e.target.dragBoundFunc((pos, evt?: MouseEvent) => {
+        if (!evt?.shiftKey) return pos;
+
+        return Math.abs(pos.x - start.x) > Math.abs(pos.y - start.y)
+          ? { x: pos.x, y: start.y }
+          : { x: start.x, y: pos.y };
+      });
+    });
+    this.drawer.drawLayer.on('dragend.axis', (e) => {
+      e.target.dragBoundFunc(undefined as unknown as (pos: Vector2d) => Vector2d);
+    });
+  }
+
+  /**
    * Anchors of selected shapes: text has no top / bottom anchors (it would be stretched), its side anchors
    * resize text box and its corners scale it
    * @param {(Shape<ShapeConfig> | Group)[]} shapes
@@ -430,6 +476,8 @@ export class SelectWidget extends BaseWidget {
         ? ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'middle-left', 'middle-right']
         : this.defaultAnchors
     );
+    // texts scaled by corners keep their proportions
+    this.transformer.keepRatio(onlyText);
   }
 
   /**

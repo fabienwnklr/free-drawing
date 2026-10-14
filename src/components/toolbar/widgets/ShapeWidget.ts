@@ -110,6 +110,11 @@ export abstract class ShapeWidget<T extends Shape<ShapeConfig>> extends BaseWidg
     };
   }
 
+  // Shift pressed or released while drawing
+  protected onConstrainChange(constrain: boolean): void {
+    if (this.#shape) this.updateShape(this.#shape, this.#start, this.drawer._getRelativePointerPos(), constrain);
+  }
+
   // overlay shared by shape tools: background color only for shapes having one
   protected onActive(): void {
     this.overlay.toggleFillBtns(this.hasFill);
