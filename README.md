@@ -53,6 +53,7 @@ const drawer = new Drawer($el, {
   zoom: true, // enable/disable zoom on draw
   zoomWidget: true, // enable/disable zoom ui widget
   positionWidget: true, // enable/disable position ui widget (x / y of view, button back to origin)
+  selectionMenu: true, // enable/disable menu next to selected shapes (duplicate, bring forward, send backward, delete)
   readOnly: false, // drawing can't be modified by user (only pan, zoom, view options, export), API still modifies it
   scaling: 1.11, // scaling on zoom
   autoSave: true, // for save draw state on localStorage automatically
@@ -101,6 +102,15 @@ Brush options (freehand stroke, see [perfect-freehand](https://github.com/stever
 - `streamline`: how much stroke is stabilized, from 0 to 1 (`0.5` by default)
 
 If `tool` option (or the tool saved in localStorage) is not in `widgets`, the first widget is activated.
+
+## Selection
+
+A menu next to selected shapes duplicates them (Ctrl+D), brings them forward, sends them backward or deletes them (`selectionMenu` option). It is under the selection, above it near the bottom of the drawer, and hidden while shapes are moved.
+
+```js
+const copies = drawer.duplicateShapes(); // selected shapes by default, copies are selected
+drawer.deleteShapes([shape]);
+```
 
 ## Stacking order
 

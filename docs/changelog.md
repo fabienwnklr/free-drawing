@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [5.5.0](https://github.com/fabienwnklr/free-drawing/compare/v5.4.0...v5.5.0) (2026-10-14)
+
+
+### Features
+
+* menu next to selected shapes: duplicate, bring forward, send backward and delete (`selectionMenu` option)
+* duplicate selection with Ctrl+D, `duplicateShapes` and `deleteShapes` methods
+
 ## [5.4.0](https://github.com/fabienwnklr/free-drawing/compare/v5.3.0...v5.4.0) (2026-10-14)
 
 

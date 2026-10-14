@@ -177,29 +177,7 @@ export class SelectWidget extends BaseWidget {
       const box = isClick ? { x, y, width: 1, height: 1 } : this.selectionRectangle.getClientRect();
       const selected = shapes.filter((shape) => shape.listening() && Util.haveIntersection(box, shape.getClientRect()));
 
-      this._restoreHit();
-
-      // now apply hit detection
-      selected.forEach((s) => {
-        if (s instanceof Line) {
-          s.hitFunc((context, shape) => {
-            const { x, y, width, height } = shape.getSelfRect();
-            context.beginPath();
-            context.rect(x, y, width, height);
-            context.closePath();
-            context.fillStrokeShape(shape);
-          });
-          s.hitStrokeWidth('auto');
-        }
-      });
-
-      this._setupAnchors(selected);
-      if (selected.length) {
-        this.showOverlay(selected);
-      } else {
-        this.hideOverlay();
-      }
-      this.transformer.nodes(selected);
+      this.select(selected);
       this.$container.focus();
       this.selectionRectangle.setAttrs({
         visible: true,
@@ -209,6 +187,39 @@ export class SelectWidget extends BaseWidget {
         height: 0,
       });
     });
+  }
+
+  /**
+   * Select shapes (none clears selection): transformer, anchors, selection options instead of options of active tool
+   * @param {(Shape<ShapeConfig> | Group)[]} shapes
+   */
+  select(shapes: (Shape<ShapeConfig> | Group)[]) {
+    if (!shapes.length) {
+      this.clearSelection();
+      return;
+    }
+
+    this._restoreHit();
+
+    // selected lines are hit on their whole box (drag from inside)
+    shapes.forEach((s) => {
+      if (s instanceof Line) {
+        s.hitFunc((context, shape) => {
+          const { x, y, width, height } = shape.getSelfRect();
+          context.beginPath();
+          context.rect(x, y, width, height);
+          context.closePath();
+          context.fillStrokeShape(shape);
+        });
+        s.hitStrokeWidth('auto');
+      }
+    });
+
+    this._setupAnchors(shapes);
+    this.transformer.nodes(shapes);
+    // overlay of active tool (brush, shapes...) replaced by selection one
+    if (this.drawer.activeWidget !== this) this.drawer.activeWidget?.overlay?.hide();
+    this.showOverlay(shapes);
   }
 
   /**
@@ -302,11 +313,7 @@ export class SelectWidget extends BaseWidget {
 
     if (!allNodes.length) return;
 
-    this._setupAnchors(allNodes);
-    this.transformer.nodes(allNodes);
-    // overlay of active tool (brush, shapes...) replaced by selection one
-    if (this.drawer.activeWidget !== this) this.drawer.activeWidget?.overlay?.hide();
-    this.showOverlay(allNodes);
+    this.select(allNodes);
     this.drawer.focus();
   }
 

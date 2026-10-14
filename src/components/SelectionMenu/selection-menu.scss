@@ -1,0 +1,34 @@
+@use '../../scss/variables' as *;
+
+// Actions next to selected shapes
+.drawer-container .drawer-selection-menu {
+  position: absolute;
+  // under context menu and dialogs
+  z-index: 1;
+  display: none;
+  align-items: center;
+  gap: $space-1;
+  padding: $space-1;
+  pointer-events: var(--drawer-pointer-events);
+
+  &.show {
+    display: flex;
+  }
+
+  .drawer-button {
+    width: $btn-size-default;
+    height: $btn-size-default;
+  }
+
+  .drawer-selection-menu-separator {
+    align-self: stretch;
+    width: 1px;
+    margin: $space-1 0;
+    background-color: $border;
+  }
+
+  .drawer-selection-menu-delete:hover:not(.disabled) {
+    background-color: $danger-hover-bg;
+    color: $danger;
+  }
+}

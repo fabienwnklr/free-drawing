@@ -41,10 +41,8 @@ export class HotKey {
         if (mod) {
           // asks confirmation, selection is kept if canceled
           this.drawer.clearCanvas();
-        } else if (selectedNodes.length) {
-          selectWidget?.clearSelection();
-          selectedNodes.forEach((n) => n.destroy());
-          this.drawer.stage.fire('change');
+        } else {
+          this.drawer.deleteShapes();
         }
       }
 
@@ -52,6 +50,12 @@ export class HotKey {
         if (edit) selectWidget?.selectAll();
         // shapes, not page text (browser select all)
         e.preventDefault();
+      }
+
+      // instead of browser bookmark
+      if (edit && mod && e.key === 'd' && selectedNodes.length && !inField) {
+        e.preventDefault();
+        this.drawer.duplicateShapes();
       }
 
       const order = mod ? orderKeys[`${e.shiftKey ? 'Shift+' : ''}${e.key}`] : undefined;

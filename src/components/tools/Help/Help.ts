@@ -61,6 +61,12 @@ export class Help extends Modal {
               </span>
             </li>
             <li class="drawer-modal-help-shortcut">
+              Duplicate selection
+              <span>
+                <kbd class="drawer-modal-help-kdb">Ctrl+D</kbd>
+              </span>
+            </li>
+            <li class="drawer-modal-help-shortcut">
               Move selection
               <span>
                 <kbd class="drawer-modal-help-kdb">Arrows</kbd>

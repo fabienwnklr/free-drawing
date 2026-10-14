@@ -23,6 +23,8 @@ export type DrawerOptions = {
   zoomWidget: boolean;
   /** Show view position (x / y) with a button back to origin, not to get lost when moving (default true) */
   positionWidget: boolean;
+  /** Show a menu next to selected shapes: duplicate, bring forward, send backward, delete (default true) */
+  selectionMenu: boolean;
   /** Drawing can't be modified by user (only pan, zoom, view options, export), API methods still modify it (default false) */
   readOnly: boolean;
   scaling: number;

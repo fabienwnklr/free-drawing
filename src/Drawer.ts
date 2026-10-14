@@ -49,6 +49,7 @@ import MicroEvent from './utils/MicroEvent';
 import { ConfirmModal } from './components/Modal/ConfirmModal';
 import { UndoRedo } from './components/tools/UndoRedo/UndoRedo';
 import { ContextMenu } from './components/ContextMenu/ContextMenu';
+import { SelectionMenu } from './components/SelectionMenu/SelectionMenu';
 import { TextWidget } from './components/toolbar/widgets/Text/Text';
 import { Line } from 'konva/lib/shapes/Line';
 import { Toast } from './components/Toast/Toast';
@@ -101,6 +102,8 @@ export class Drawer extends MicroEvent {
   background: Rect;
   zoom: Zoom | undefined;
   position: Position | undefined;
+  /** Menu next to selected shapes (`selectionMenu` option) */
+  selectionMenu: SelectionMenu | undefined;
   help: Help;
   setting: Settings;
   clearConfirmModal: ConfirmModal | null = null;
@@ -256,6 +259,10 @@ export class Drawer extends MicroEvent {
     }
     this.toolbar = new Toolbar(this);
     this.help = new Help(this);
+    // actions on selection of selection widget
+    if (this.options.selectionMenu && this.getWidget('selection')) {
+      this.selectionMenu = new SelectionMenu(this);
+    }
 
     if (this.grid) this.showGrid();
 
@@ -769,6 +776,54 @@ export class Drawer extends MicroEvent {
     const nodes = this.getWidget<SelectWidget>('selection')?.transformer.nodes() ?? [];
 
     return nodes.filter((node): node is Shape<ShapeConfig> => node instanceof Shape);
+  }
+
+  /**
+   * Copy shapes (selected ones by default) a little further, copies are selected
+   * @param {Shape<ShapeConfig>[]} shapes
+   * @returns {Shape<ShapeConfig>[]} copies, on top of drawing (change saved)
+   */
+  duplicateShapes(shapes: Shape<ShapeConfig>[] = this.getSelectedShapes()): Shape<ShapeConfig>[] {
+    // same offset on screen whatever zoom
+    const offset = 20 / this.getZoomLevel();
+    const copies = shapes
+      .filter((shape) => shape.getLayer())
+      .sort((a, b) => a.zIndex() - b.zIndex())
+      .map((shape) => {
+        const { attrs, className } = getShapeState(shape);
+
+        // new id given by addShape
+        delete attrs.id;
+        const copy = this.addShape(Node.create({ attrs, className }) as Shape<ShapeConfig>);
+
+        copy.move({ x: offset, y: offset });
+        return copy;
+      });
+
+    if (copies.length) {
+      this.getWidget<SelectWidget>('selection')?.select(copies);
+      this.stage.fire('change');
+    }
+
+    return copies;
+  }
+
+  /**
+   * Remove shapes (selected ones by default), removed from selection
+   * @param {Shape<ShapeConfig>[]} shapes
+   * @returns {boolean} true if a shape was removed (change saved)
+   */
+  deleteShapes(shapes: Shape<ShapeConfig>[] = this.getSelectedShapes()): boolean {
+    const removed = shapes.filter((shape) => shape.getLayer());
+    const selectWidget = this.getWidget<SelectWidget>('selection');
+
+    if (!removed.length) return false;
+
+    selectWidget?.select(this.getSelectedShapes().filter((shape) => !removed.includes(shape)));
+    removed.forEach((shape) => shape.destroy());
+    this.stage.fire('change');
+
+    return true;
   }
 
   /**

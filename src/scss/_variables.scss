@@ -17,6 +17,7 @@ $border: #e4e4e9;
 
 $danger: #bb4040;
 $danger-hover: color.adjust($danger, $lightness: -5%);
+$danger-hover-bg: color.mix($danger, #fff, 12%);
 $on-danger: #fff;
 
 $toast-neutral: #343a40;
