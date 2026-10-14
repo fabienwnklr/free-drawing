@@ -68,6 +68,7 @@ export class BrushWidget extends BaseWidget {
       if (!this.inAction) return;
 
       this._updateLine();
+      this.shareLive(this.#lastLine);
     });
 
     this.onStage('mouseup touchend', (e) => {

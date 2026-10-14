@@ -485,6 +485,7 @@ export class Drawer extends MicroEvent {
   _update() {
     this.bgLayer.position({ x: -this._unScale(this.stage.position().x), y: -this._unScale(this.stage.position().y) });
     this.position?.update();
+    this.collaboration?.updateCursors();
   }
 
   private _initEvents() {
@@ -506,6 +507,15 @@ export class Drawer extends MicroEvent {
       this.stage.fire('change');
     });
 
+    // moved or transformed shapes shown to collaborators while moving (selected ones move together)
+    const sendLive = (target: unknown) => {
+      const selected = this.getSelectedShapes();
+
+      this.collaboration?.sendLive(selected.length ? selected : target instanceof Shape ? [target] : []);
+    };
+
+    this.drawLayer.on('dragmove.live', (e) => sendLive(e.target));
+    this.getWidget<SelectWidget>('selection')?.transformer.on('transform.live', (e) => sendLive(e.target));
     this.stage.on('change', () => {
       // collaborators changes received during a pointer action, then this one
       this.collaboration?.flush();

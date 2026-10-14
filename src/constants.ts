@@ -105,6 +105,10 @@ export const socketEvents = {
   USERS: 'USERS',
   /** Drawing change (`DrawingChange`): shapes added or updated, ids of removed shapes */
   CHANGE: 'CHANGE',
+  /** Pointer of a user: canvas position (null out of drawer), with user id and name from server */
+  POINTER: 'POINTER',
+  /** User left the room (id, sent by server) */
+  LEAVE: 'LEAVE',
 };
 
 export const dataAttributes = {

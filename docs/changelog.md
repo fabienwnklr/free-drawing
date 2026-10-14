@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [5.1.0](https://github.com/fabienwnklr/free-drawing/compare/v5.0.0...v5.1.0) (2026-10-14)
+
+
+### Features
+
+* **collaboration:** cursor of each other user with their name, same size whatever zoom, hidden out of drawer
+* **collaboration:** shapes are shown to other users while they are drawn, moved or transformed (every 50 ms at most), not only at the end
+
 ## [5.0.0](https://github.com/fabienwnklr/free-drawing/compare/v4.2.0...v5.0.0) (2026-10-14)
 
 

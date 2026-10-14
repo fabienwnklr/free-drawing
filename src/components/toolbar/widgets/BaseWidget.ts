@@ -4,6 +4,7 @@ import { stringToNode } from '@/utils/functions';
 import { getWidgetOptions } from '@/utils/widgets';
 import type { KonvaEventListener } from 'konva/lib/Node';
 import type { Stage } from 'konva/lib/Stage';
+import type { Shape, ShapeConfig } from 'konva/lib/Shape';
 import type { BaseOverlay } from '@/components/tools/Overlay/BaseOverlay';
 import type { SelectWidget } from './Select/Select';
 import { createButton, disableElement, enableElement, setLabel, setPressed } from '@/utils/dom';
@@ -141,6 +142,13 @@ export abstract class BaseWidget {
     this.inAction = false;
     this.drawer.UIPointerEvents('all');
     this.drawer._onActionEnd();
+  }
+
+  /**
+   * Shapes being drawn shown to collaborators while drawing (final state is sent on change)
+   */
+  protected shareLive(...shapes: Shape<ShapeConfig>[]) {
+    this.drawer.collaboration?.sendLive(shapes);
   }
 
   /**

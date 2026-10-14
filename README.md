@@ -137,6 +137,8 @@ drawer.stopCollaboration();
 drawer.showCollaboration(); // dialog
 ```
 
-Socket events: `JOIN` (`{ room, name }`), `NAME`, `USERS` (names of users of the room, sent by server) and `CHANGE`: `{ upsert, remove }`, JSON of shapes added or updated (konva `toObject`, with their `id`) and ids of removed shapes, so concurrent drawings are merged. The server keeps the drawing of each room and sends it to users joining it.
+Users see the cursor of each other user with their name, and shapes while they are drawn or moved (sent every 50 ms at most, final state sent at the end).
+
+Socket events: `JOIN` (`{ room, name }`), `NAME`, `USERS` (names of users of the room, sent by server), `POINTER` (position in drawing, null out of drawer, relayed with user `id` and `name`), `LEAVE` (id of user leaving, sent by server) and `CHANGE`: `{ upsert, remove, live }`, JSON of shapes added or updated (konva `toObject`, with their `id`) and ids of removed shapes, so concurrent drawings are merged, `live` for previews of shapes being drawn. The server keeps the drawing of each room and sends it to users joining it.
 
 In this repository, run `yarn serve`, open `http://localhost:3000`, start a session from the menu and open its link in other windows.

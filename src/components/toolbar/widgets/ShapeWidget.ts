@@ -131,6 +131,7 @@ export abstract class ShapeWidget<T extends Shape<ShapeConfig>> extends BaseWidg
       e.evt.preventDefault();
 
       this.updateShape(this.#shape, this.#start, this.drawer._getRelativePointerPos(), !!e.evt.shiftKey);
+      this.shareLive(this.#shape);
     });
 
     this.onStage('mouseup touchend', (e) => {

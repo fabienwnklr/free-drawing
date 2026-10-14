@@ -8,9 +8,13 @@ import {
   type CollaborationSocket,
   type DrawingChange,
 } from '../src/components/Collaboration/Collaboration';
-import { createDrawer, fireMouse } from './helpers';
+import { createDrawer, fireMouse, setPointer } from './helpers';
+import type { Group } from 'konva/lib/Group';
+import type { Text } from 'konva/lib/shapes/Text';
 
 const tick = () => new Promise((resolve) => setTimeout(resolve));
+// after live messages interval
+const wait = () => new Promise((resolve) => setTimeout(resolve, 80));
 
 beforeAll(() => {
   function noOp() {}
@@ -26,6 +30,7 @@ type FakeSocket = CollaborationSocket & {
   disconnect: ReturnType<typeof vi.fn>;
   room?: string;
   name?: string;
+  id: string;
 };
 
 /**
@@ -35,6 +40,7 @@ type FakeSocket = CollaborationSocket & {
 const createServer = () => {
   const sockets: FakeSocket[] = [];
   const rooms = new Map<string, Map<string, string>>();
+  let lastId = 0;
   const inRoom = (room?: string) => sockets.filter((s) => s.room === room);
   const sendUsers = (room?: string) =>
     inRoom(room).forEach((s) => s.receive('USERS', inRoom(room).map((user) => user.name || 'Anonymous')));
@@ -48,6 +54,7 @@ const createServer = () => {
       receive: (event: string, data?: unknown) => handlers[event]?.forEach((handler) => handler(data)),
       disconnect: vi.fn(() => {
         sockets.splice(sockets.indexOf(socket), 1);
+        inRoom(socket.room).forEach((s) => s.receive('LEAVE', socket.id));
         sendUsers(socket.room);
       }),
       emit: vi.fn((event: string, data: unknown) => {
@@ -62,6 +69,10 @@ const createServer = () => {
         } else if (event === 'NAME') {
           socket.name = data as string;
           sendUsers(socket.room);
+        } else if (event === 'POINTER') {
+          inRoom(socket.room)
+            .filter((s) => s !== socket)
+            .forEach((s) => s.receive(event, { id: socket.id, name: socket.name, position: data }));
         } else if (event === 'CHANGE') {
           const change = data as DrawingChange;
           const shapes = rooms.get(socket.room!)!;
@@ -75,6 +86,8 @@ const createServer = () => {
       }),
     } as unknown as FakeSocket;
 
+    socket.id = `socket-${++lastId}`;
+    Object.assign(socket, { volatile: { emit: (event: string, data: unknown) => socket.emit(event, data) } });
     sockets.push(socket);
     return socket;
   };
@@ -294,5 +307,59 @@ describe('Collaboration', () => {
     await expect(drawer.startCollaboration()).rejects.toThrow('server unreachable (xhr poll error)');
     expect(drawer.collaboration).toBeNull();
     expect(socket.disconnect).toHaveBeenCalled();
+  });
+  it('Shapes being drawn are shown live to other users, saved with final change', async () => {
+    const connect = createServer();
+    const a = createDrawer();
+    const b = createDrawer();
+    connect(a);
+    connect(b);
+
+    fireMouse(a, 'mousedown', 10, 10);
+    fireMouse(a, 'mousemove', 50, 30);
+    await wait();
+    const line = a.getDrawingShapes()[0];
+    const copy = byId(b, line.id())!;
+    expect(copy.getClassName()).toBe('Line');
+    // preview: not in history nor saved
+    expect(b.undoRedo.canUndo()).toBe(false);
+
+    // shown even while other user draws
+    fireMouse(b, 'mousedown', 300, 300);
+    fireMouse(a, 'mousemove', 120, 90);
+    await wait();
+    expect(byId(b, line.id())!.getAttr('points')).toEqual(line.getAttr('points'));
+    fireMouse(b, 'mouseup', 300, 300);
+
+    fireMouse(a, 'mouseup', 120, 90);
+    expect(byId(b, line.id())!.getAttr('points')).toEqual(line.getAttr('points'));
+    expect(b.undoRedo.canUndo()).toBe(true);
+  });
+
+  it('Cursors of other users with their name, hidden out of drawer, removed when they leave', async () => {
+    const connect = createServer();
+    const alice = createDrawer();
+    const bob = createDrawer();
+    connect(alice, 'room', 'Alice');
+    connect(bob, 'room', 'Bob');
+    const cursors = () => bob.selectionLayer.find<Group>('.collaborator-cursor');
+
+    setPointer(alice, 100, 50);
+    alice.stage.fire('pointermove');
+    await wait();
+    expect(cursors()).toHaveLength(1);
+    expect(cursors()[0].findOne<Text>('Text')!.text()).toBe('Alice');
+    expect(cursors()[0].position()).toEqual({ x: 100, y: 50 });
+
+    // same size on screen whatever zoom
+    bob.setZoomLevel(2);
+    expect(cursors()[0].scaleX()).toBe(0.5);
+
+    alice.stage.fire('mouseleave');
+    await wait();
+    expect(cursors()[0].visible()).toBe(false);
+
+    alice.stopCollaboration();
+    expect(cursors()).toHaveLength(0);
   });
 });

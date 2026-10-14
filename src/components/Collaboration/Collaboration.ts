@@ -2,16 +2,32 @@ import type { Drawer } from '@/Drawer';
 import type { Socket } from 'socket.io-client';
 import { Node } from 'konva/lib/Node';
 import type { Shape, ShapeConfig } from 'konva/lib/Shape';
+import type { Vector2d } from 'konva/lib/types';
+import { Group } from 'konva/lib/Group';
+import { Line } from 'konva/lib/shapes/Line';
+import { Label, Tag } from 'konva/lib/shapes/Label';
+import { Text } from 'konva/lib/shapes/Text';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { serializeShape } from '@/components/tools/UndoRedo/History';
 import { socketEvents } from '@/constants';
 
 /**
- * Drawing change sent to other clients: shapes added or updated (konva JSON), ids of removed shapes
+ * Drawing change sent to other clients: shapes added or updated (konva JSON), ids of removed shapes,
+ * `live`: preview of shapes being drawn or moved (final change follows)
  */
-export type DrawingChange = { upsert: string[]; remove: string[] };
+export type DrawingChange = { upsert: string[]; remove: string[]; live?: boolean };
 
-export type CollaborationSocket = Pick<Socket, 'on' | 'once' | 'emit' | 'disconnect'>;
+/**
+ * Pointer of another user, position in drawing (null out of drawer)
+ */
+export type RemotePointer = { id: string; name?: string; position: Vector2d | null };
+
+export type CollaborationSocket = Pick<Socket, 'on' | 'once' | 'emit' | 'disconnect' | 'volatile'>;
+
+/** Minimum interval of pointer and live drawing messages (ms) */
+const liveInterval = 50;
+
+const cursorColors = ['#e03131', '#2f9e44', '#1971c2', '#f08c00', '#9c36b5', '#0c8599', '#c2255c'];
 
 /**
  * Real time collaboration in a room: changes of drawing (any tool, undo...) are sent shape by shape to other users
@@ -29,6 +45,14 @@ export class Collaboration {
   #synced = new Map<string, string>();
   /** Changes received during a pointer action of this client, applied when it ends */
   #pending: DrawingChange[] = [];
+  /** Shapes being drawn or moved, sent at next live message */
+  #live = new Set<Shape<ShapeConfig>>();
+  #pointer: Vector2d | null = null;
+  /** Messages waiting for live interval */
+  #timers: Record<string, ReturnType<typeof setTimeout> | undefined> = {};
+  #lastSent: Record<string, number> = {};
+  /** Cursors of other users, by user id */
+  #cursors = new Map<string, Group>();
 
   constructor(drawer: Drawer, socket: CollaborationSocket, { room, name }: { room: string; name: string }) {
     this.drawer = drawer;
@@ -48,6 +72,105 @@ export class Collaboration {
       this.users = users;
       this.drawer.trigger('fd.collaboration.change');
     });
+    this.socket.on(socketEvents.POINTER, (pointer: RemotePointer) => this._showCursor(pointer));
+    this.socket.on(socketEvents.LEAVE, (id: string) => {
+      this.#cursors.get(id)?.destroy();
+      this.#cursors.delete(id);
+    });
+
+    // pointer shown to other users
+    this.drawer.stage.on('pointermove.collaboration', () => this._sendPointer(this.drawer.stage.getRelativePointerPosition()));
+    this.drawer.stage.on('mouseleave.collaboration', () => this._sendPointer(null));
+  }
+
+  /**
+   * Send a message after live interval at most (latest state is read when sent)
+   */
+  private _schedule(key: string, send: () => void) {
+    if (this.#timers[key]) return;
+
+    const wait = Math.max(0, liveInterval - (Date.now() - (this.#lastSent[key] ?? 0)));
+
+    this.#timers[key] = setTimeout(() => {
+      this.#timers[key] = undefined;
+      this.#lastSent[key] = Date.now();
+      send();
+    }, wait);
+  }
+
+  private _sendPointer(position: Vector2d | null) {
+    this.#pointer = position && { x: Math.round(position.x), y: Math.round(position.y) };
+    // dropped rather than delayed when connection is slow
+    this._schedule('pointer', () => this.socket.volatile.emit(socketEvents.POINTER, this.#pointer));
+  }
+
+  /**
+   * Shapes being drawn or moved shown to other users while drawing, final state is sent by `send` on change
+   */
+  sendLive(shapes: Shape<ShapeConfig>[]) {
+    shapes.forEach((shape) => this.#live.add(shape));
+    this._schedule('live', () => {
+      const upsert = [...this.#live].filter((shape) => shape.getLayer()).map(serializeShape);
+
+      this.#live.clear();
+      if (upsert.length) {
+        this.socket.volatile.emit(socketEvents.CHANGE, { upsert, remove: [], live: true } satisfies DrawingChange);
+      }
+    });
+  }
+
+  /**
+   * Cursor of another user with name, created on first position
+   */
+  private _showCursor({ id, name, position }: RemotePointer) {
+    let cursor = this.#cursors.get(id);
+
+    if (!position) {
+      cursor?.hide();
+      return;
+    }
+
+    if (!cursor) {
+      cursor = this._createCursor(id);
+      this.#cursors.set(id, cursor);
+      this.drawer.selectionLayer.add(cursor);
+    }
+
+    cursor.findOne<Text>('Text')?.text(name || 'Anonymous');
+    cursor.setAttrs({ ...position, visible: true });
+    // above selection, guides...
+    cursor.moveToTop();
+  }
+
+  private _createCursor(id: string) {
+    const color = cursorColors[[...id].reduce((sum, char) => sum + char.charCodeAt(0), 0) % cursorColors.length];
+    const cursor = new Group({ name: 'collaborator-cursor', listening: false });
+    const label = new Label({ x: 12, y: 18 });
+
+    // arrow pointing to position
+    cursor.add(
+      new Line({ points: [0, 0, 0, 17, 4.5, 13, 7.5, 20, 10, 19, 7, 12, 12.5, 12], closed: true, fill: color, stroke: '#fff', strokeWidth: 1.5, lineJoin: 'round' })
+    );
+    label.add(new Tag({ fill: color, cornerRadius: 4 }));
+    label.add(new Text({ fontFamily: 'system-ui, sans-serif', fontSize: 12, padding: 4, fill: '#fff' }));
+    cursor.add(label);
+    this._scaleCursor(cursor);
+
+    return cursor;
+  }
+
+  // same size on screen whatever zoom
+  private _scaleCursor(cursor: Group) {
+    const scale = 1 / this.drawer.getZoomLevel();
+
+    cursor.scale({ x: scale, y: scale });
+  }
+
+  /**
+   * Cursors size kept after zoom
+   */
+  updateCursors() {
+    this.#cursors.forEach((cursor) => this._scaleCursor(cursor));
   }
 
   /**
@@ -59,10 +182,14 @@ export class Collaboration {
   }
 
   /**
-   * Leave room
+   * Leave room, cursors of other users removed
    */
   stop() {
     this.socket.disconnect();
+    this.drawer.stage.off('.collaboration');
+    Object.values(this.#timers).forEach((timer) => clearTimeout(timer));
+    this.#cursors.forEach((cursor) => cursor.destroy());
+    this.#cursors.clear();
   }
 
   /**
@@ -74,6 +201,8 @@ export class Collaboration {
     const remove = [...this.#synced.keys()].filter((id) => !current.has(id));
 
     this.#synced = current;
+    // final state sent, previews useless
+    this.#live.clear();
     if (upsert.length || remove.length) this.socket.emit(socketEvents.CHANGE, { upsert, remove } satisfies DrawingChange);
   }
 
@@ -81,6 +210,12 @@ export class Collaboration {
    * Apply change of another client, after current pointer action (not to alter shape being drawn)
    */
   receive(change: DrawingChange) {
+    // preview of other users drawing: shown at once, not saved nor added to history (final change follows)
+    if (change.live) {
+      this._apply(change);
+      return;
+    }
+
     if (this.drawer._duringAction()) {
       this.#pending.push(change);
       return;

@@ -52,6 +52,8 @@ async function server() {
     if (!room) return;
     socket.leave(room);
     socket.data.room = undefined;
+    // cursor removed
+    io.to(room).emit(socketEvents.LEAVE, socket.id);
     // last user gone: drawing removed (users send theirs when they join again)
     if (!io.sockets.adapter.rooms.get(room)?.size) rooms.delete(room);
     else sendUsers(room);
@@ -94,8 +96,15 @@ async function server() {
         console.warn(`Invalid change (id: ${socket.id}): ${error.message}`);
         return;
       }
-      // to other users of the room, author already has it
-      socket.to(room).emit(socketEvents.CHANGE, change);
+      // to other users of the room, author already has it (live preview: dropped rather than delayed)
+      (change.live ? socket.to(room).volatile : socket.to(room)).emit(socketEvents.CHANGE, change);
+    });
+
+    // pointer position in drawing (null out of drawer), not kept
+    socket.on(socketEvents.POINTER, (position) => {
+      const { room, name } = socket.data;
+
+      if (room) socket.to(room).volatile.emit(socketEvents.POINTER, { id: socket.id, name, position });
     });
 
     socket.on('disconnect', () => {
