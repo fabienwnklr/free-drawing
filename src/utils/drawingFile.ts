@@ -83,20 +83,23 @@ export async function decodeLinkData(data: string): Promise<string> {
 type SaveFilePicker = (options: {
   suggestedName: string;
   types: { description: string; accept: Record<string, string[]> }[];
-}) => Promise<{ createWritable(): Promise<{ write(data: string): Promise<void>; close(): Promise<void> }> }>;
+}) => Promise<{ createWritable(): Promise<{ write(data: Blob | string): Promise<void>; close(): Promise<void> }> }>;
 
 /**
- * Save text in a file: browser save dialog when available (Chromium), else download
+ * Save content in a file: browser save dialog when available (Chromium), else download
+ * @param name File name with extension
+ * @param type Mime type of content
  * @throws {DOMException} `AbortError` when dialog is canceled
  */
-export async function saveFile(name: string, content: string) {
+export async function saveFile(name: string, content: Blob | string, type: string = 'application/json') {
+  const extension = name.slice(name.lastIndexOf('.'));
   const showSaveFilePicker = (window as unknown as { showSaveFilePicker?: SaveFilePicker }).showSaveFilePicker;
 
   if (showSaveFilePicker) {
     try {
       const handle = await showSaveFilePicker({
         suggestedName: name,
-        types: [{ description: 'Drawing', accept: { 'application/json': [drawingFileExtension] } }],
+        types: [{ description: `${extension.slice(1).toUpperCase()} file`, accept: { [type]: [extension] } }],
       });
       const writable = await handle.createWritable();
 
@@ -109,7 +112,7 @@ export async function saveFile(name: string, content: string) {
     }
   }
 
-  const url = URL.createObjectURL(new Blob([content], { type: 'application/json' }));
+  const url = URL.createObjectURL(content instanceof Blob ? content : new Blob([content], { type }));
   const $link = document.createElement('a');
 
   $link.href = url;

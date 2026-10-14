@@ -115,6 +115,17 @@ await drawer.copyLink();
 
 No server is needed for links: the drawing is in the url hash. A drawer whose `id` is in the hash of the page loads its drawing (undo restores the saved one) and removes it from the url.
 
+## Export
+
+"Export image" of settings menu (Ctrl+Shift+E) opens a dialog with a preview: png, svg or pdf image, `.freedrawing` file or png copied to clipboard. Selected shapes are exported when there is a selection (whole drawing can be chosen in dialog), with or without background, in dark mode or not.
+
+```js
+drawer.showExport(); // export dialog
+const blob = await drawer.exportImage('png', { selected: true, background: true, dark: false, scale: 2 }); // 'png' | 'svg' | 'pdf'
+```
+
+Svg is vector (shapes, texts), pdf contains a png quality image of the drawing (jpeg, always with a background).
+
 ## Collaboration
 
 With `collaboration` option, `socket.io-client` is loaded and every drawing change (any tool, eraser, moves, styles, undo / redo...) is sent to a [socket.io](https://socket.io/) server, which relays it to other clients (see [server/index.mjs](./server/index.mjs)).

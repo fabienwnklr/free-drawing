@@ -19,6 +19,20 @@ import {
   saveFile,
 } from './utils/drawingFile';
 import { getShapeState } from './components/tools/UndoRedo/History';
+import { type ImageFormat, canvasToBlob, createPdf, getExportBox, renderCanvas, renderSvg } from './utils/export';
+import { toHexColor } from './utils/color';
+import { ExportModal } from './components/ExportModal/ExportModal';
+
+export type ExportImageOptions = {
+  /** Selected shapes only, when there is a selection (default true) */
+  selected?: boolean;
+  /** With background color (default true), pdf always has a background */
+  background?: boolean;
+  /** Dark mode colors (default false) */
+  dark?: boolean;
+  /** Pixel ratio of png and pdf (default 2) */
+  scale?: number;
+};
 import { Zoom } from './components/tools/Zoom/Zoom';
 import { Position } from './components/tools/Position/Position';
 import { Help } from './components/tools/Help/Help';
@@ -84,6 +98,7 @@ export class Drawer extends MicroEvent {
   setting: Settings;
   clearConfirmModal: ConfirmModal | null = null;
   clearStoredConfirmModal: ConfirmModal | null = null;
+  exportModal: ExportModal | null = null;
 
   debug: boolean = false;
   #saveFailed = false;
@@ -514,13 +529,93 @@ export class Drawer extends MicroEvent {
   /**
    * Drawing as file content (`.freedrawing` file, link): background color and drawing shapes
    */
-  getDrawingFile(): DrawingFile {
+  getDrawingFile(shapes: Shape<ShapeConfig>[] = this.getDrawingShapes()): DrawingFile {
     return {
       type: 'free-drawing',
       version: 1,
       background: this.background.fill() as ColorLike,
-      shapes: this.getDrawingShapes().map(getShapeState),
+      shapes: shapes.map(getShapeState),
     };
+  }
+
+  /**
+   * Drawing shapes selected with selection tool
+   */
+  getSelectedShapes(): Shape<ShapeConfig>[] {
+    const nodes = this.getWidget<SelectWidget>('selection')?.transformer.nodes() ?? [];
+
+    return nodes.filter((node): node is Shape<ShapeConfig> => node instanceof Shape);
+  }
+
+  /**
+   * Shapes to export: selected ones when there is a selection, else all drawing shapes
+   * @param {boolean} selected Selected shapes only
+   */
+  getExportShapes(selected: boolean = true): Shape<ShapeConfig>[] {
+    const selection = selected ? this.getSelectedShapes() : [];
+
+    return selection.length ? selection : this.getDrawingShapes().filter((shape) => shape.visible());
+  }
+
+  /**
+   * Drawing (or selected shapes) as png, svg or pdf image
+   * @throws {Error} nothing to export
+   */
+  async exportImage(format: ImageFormat, options: ExportImageOptions = {}): Promise<Blob> {
+    const image = this._prepareExport(format, options);
+
+    if (!image) throw new Error('nothing to export');
+
+    const { shapes, box, imageOptions } = image;
+    const { scale } = imageOptions;
+
+    if (format === 'svg') return new Blob([renderSvg(shapes, box, imageOptions)], { type: 'image/svg+xml' });
+
+    const canvas = renderCanvas(shapes, box, imageOptions);
+
+    if (format === 'png') return canvasToBlob(canvas);
+
+    const jpeg = new Uint8Array(await (await canvasToBlob(canvas, 'image/jpeg', 0.92)).arrayBuffer());
+
+    return createPdf(jpeg, canvas.width, canvas.height, scale);
+  }
+
+  /**
+   * Drawing (or selected shapes) rendered on a canvas as exported in png, synchronous (preview), null if nothing to export
+   */
+  exportCanvas(options: ExportImageOptions = {}): HTMLCanvasElement | null {
+    const image = this._prepareExport('png', options);
+
+    return image && renderCanvas(image.shapes, image.box, image.imageOptions);
+  }
+
+  /**
+   * Shapes, their box and image options of an export, null if nothing to export
+   */
+  private _prepareExport(format: ImageFormat, options: ExportImageOptions) {
+    const { selected = true, background = true, dark = false, scale = 2 } = options;
+    const shapes = this.getExportShapes(selected);
+    const box = getExportBox(shapes, this.drawLayer);
+
+    if (!box) return null;
+
+    const color = background ? (this.background.fill() as string) : undefined;
+    // pdf image (jpeg) has no transparency
+    const imageOptions = {
+      background: format === 'pdf' && !(color && toHexColor(color)) ? '#fff' : color,
+      dark,
+      scale,
+    };
+
+    return { shapes, box, imageOptions };
+  }
+
+  /**
+   * Export dialog: preview, png, svg, pdf, drawing file, copy to clipboard
+   */
+  showExport() {
+    this.exportModal ??= new ExportModal(this);
+    this.exportModal.show();
   }
 
   /**

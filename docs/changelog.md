@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [4.2.0](https://github.com/fabienwnklr/free-drawing/compare/v4.1.0...v4.2.0) (2026-10-14)
+
+
+### Features
+
+* **export:** export dialog from settings menu (Ctrl+Shift+E) with preview: png, svg (vector), pdf and `.freedrawing` file, image copied to clipboard
+* **export:** selected shapes or whole drawing (chosen in dialog), with or without background, dark mode, png and pdf scale, `exportImage` and `showExport` methods
+
 ## [4.1.0](https://github.com/fabienwnklr/free-drawing/compare/v4.0.1...v4.1.0) (2026-10-14)
 
 

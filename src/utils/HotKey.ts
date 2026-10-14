@@ -87,6 +87,11 @@ export class HotKey {
         this.drawer.open();
       }
 
+      if (mod && e.shiftKey && e.key.toLowerCase() === 'e') {
+        e.preventDefault();
+        this.drawer.showExport();
+      }
+
       if (mod && e.key === 'y') {
         this.drawer.undoRedo.redo();
       }

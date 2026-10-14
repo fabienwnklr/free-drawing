@@ -46,7 +46,12 @@ export class Settings extends Dropdown {
     this.$saveAsButton = this._createItem(SaveIcon, 'Save as... <span class="text-muted" aria-hidden="true">Ctrl+S</span>');
     this.$saveAsButton.setAttribute('aria-keyshortcuts', 'Control+S');
     this.$copyLinkButton = this._createItem(LinkIcon, 'Copy link');
-    this.$exportButton = this._createItem(ExportIcon, 'Export to...');
+    this.$exportButton = this._createItem(
+      ExportIcon,
+      'Export image... <span class="text-muted" aria-hidden="true">Ctrl+Shift+E</span>'
+    );
+    this.$exportButton.setAttribute('aria-haspopup', 'dialog');
+    this.$exportButton.setAttribute('aria-keyshortcuts', 'Control+Shift+E');
 
     // asks confirmation
     this.$clearCanvasButton = this._createItem(TrashIcon, 'Clear canvas');
@@ -108,7 +113,7 @@ export class Settings extends Dropdown {
         this.$openButton,
         this.$saveAsButton,
         this.$copyLinkButton,
-        // this.$exportButton,
+        this.$exportButton,
         this.getSeparator(),
         this.$clearCanvasButton,
         this.$toggleGridButton,
@@ -154,6 +159,7 @@ export class Settings extends Dropdown {
     this.$openButton.addEventListener('click', () => this.drawer.open());
     this.$saveAsButton.addEventListener('click', () => this.drawer.saveAs());
     this.$copyLinkButton.addEventListener('click', () => this.drawer.copyLink());
+    this.$exportButton.addEventListener('click', () => this.drawer.showExport());
 
     this.$clearCanvasButton.addEventListener('click', () => {
       this.drawer.clearCanvas();

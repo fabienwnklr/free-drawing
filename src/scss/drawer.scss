@@ -115,6 +115,15 @@
     color: $primary-text;
   }
 
+  .drawer-button-primary {
+    background-color: $primary-active;
+    color: $on-primary;
+
+    &:hover:not(.disabled) {
+      background-color: $primary-text;
+    }
+  }
+
   .drawer-button-danger {
     background-color: $danger;
     color: $on-danger;

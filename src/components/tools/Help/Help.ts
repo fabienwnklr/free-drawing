@@ -84,6 +84,12 @@ export class Help extends Modal {
                 <kbd class="drawer-modal-help-kdb">Ctrl+S</kbd>
               </span>
             </li>
+            <li class="drawer-modal-help-shortcut">
+              Export image
+              <span>
+                <kbd class="drawer-modal-help-kdb">Ctrl+Shift+E</kbd>
+              </span>
+            </li>
           </ul>
         </div>
 
