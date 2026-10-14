@@ -1,0 +1,184 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+.drawer-container .drawer-layers-button-container {
+  display: flex;
+
+  .drawer-button {
+    border-radius: $radius-lg;
+  }
+}
+
+// Shapes list, under header on the left
+.drawer-container .drawer-layers-panel {
+  position: absolute;
+  top: calc(#{$btn-size-lg} + #{$edge} * 2);
+  left: $edge;
+  z-index: 1;
+  display: none;
+  flex-direction: column;
+  width: 16rem;
+  max-width: calc(100% - #{$edge} * 2);
+  // above footer toolbar
+  max-height: calc(100% - #{$btn-size-lg} * 2 - #{$edge} * 5);
+  padding: $space-2;
+  pointer-events: var(--drawer-pointer-events);
+
+  &.show {
+    display: flex;
+  }
+
+  .drawer-layers-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 0 $space-2 $space-2;
+
+    .drawer-button {
+      width: $btn-size-default;
+      height: $btn-size-default;
+    }
+  }
+
+  .drawer-layers-title {
+    margin: 0;
+    font-size: $font-size;
+    font-weight: 600;
+  }
+
+  .drawer-layers-list {
+    // offset of rows (scroll to selection)
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+  }
+
+  .drawer-layers-empty {
+    margin: 0;
+    padding: $space-2;
+    font-size: $font-size-sm;
+  }
+
+  .drawer-layers-item {
+    display: flex;
+    align-items: center;
+    gap: $space-1;
+    padding: 0 $space-1;
+    border-radius: $radius;
+
+    &:hover {
+      background-color: $subtle-bg;
+    }
+
+    &.is-selected {
+      background-color: $hover-bg;
+    }
+
+    &.is-dragged {
+      opacity: 0.5;
+    }
+
+    // drop place
+    &.drop-before {
+      box-shadow: inset 0 2px 0 $primary;
+    }
+
+    &.is-hidden .drawer-layers-name,
+    &.is-locked .drawer-layers-name {
+      color: $text-muted;
+    }
+  }
+
+  .drawer-layers-list.drop-end .drawer-layers-item:last-child {
+    box-shadow: inset 0 -2px 0 $primary;
+  }
+
+  .drawer-layers-grip {
+    display: flex;
+    flex-shrink: 0;
+    color: $text-muted;
+    cursor: grab;
+    // dragged with pointer, not scrolled
+    touch-action: none;
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  &.read-only .drawer-layers-grip {
+    visibility: hidden;
+  }
+
+  .drawer-layers-name {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: $space-2;
+    min-width: 0;
+    height: $btn-size-default;
+    padding: 0 $space-1;
+    border: 0;
+    border-radius: $radius;
+    background-color: transparent;
+    color: $text;
+    font: inherit;
+    font-size: $font-size;
+    text-align: start;
+    cursor: pointer;
+
+    @include focus-ring;
+  }
+
+  .drawer-layers-icon {
+    display: flex;
+    flex-shrink: 0;
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  .drawer-layers-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .drawer-layers-input {
+    flex: 1;
+    min-width: 0;
+    height: $btn-size-default;
+    padding: 0 $space-1;
+    border: 1px solid $primary;
+    border-radius: $radius;
+    font: inherit;
+    font-size: $font-size;
+  }
+
+  .drawer-layers-action {
+    flex-shrink: 0;
+    width: $btn-size-default;
+    height: $btn-size-default;
+    background-color: transparent;
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  // actions shown on hover or focus of their row, hidden and locked states always
+  @media (hover: hover) {
+    .drawer-layers-item:not(:hover, :focus-within) .drawer-layers-action:not(.active) {
+      opacity: 0;
+    }
+  }
+}

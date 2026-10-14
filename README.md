@@ -54,6 +54,7 @@ const drawer = new Drawer($el, {
   zoomWidget: true, // enable/disable zoom ui widget
   positionWidget: true, // enable/disable position ui widget (x / y of view, button back to origin)
   selectionMenu: true, // enable/disable menu next to selected shapes (duplicate, bring forward, send backward, delete)
+  layersPanel: true, // enable/disable layers panel (list of shapes) and its button in header
   readOnly: false, // drawing can't be modified by user (only pan, zoom, view options, export), API still modifies it
   scaling: 1.11, // scaling on zoom
   autoSave: true, // for save draw state on localStorage automatically
@@ -117,6 +118,18 @@ A menu next to selected shapes duplicates them (Ctrl+D), brings them forward, se
 ```js
 const copies = drawer.duplicateShapes(); // selected shapes by default, copies are selected
 drawer.deleteShapes([shape]);
+```
+
+## Layers
+
+The layers button of header (Alt+L) shows the list of shapes, top one first. A row selects its shape (Shift adds it), a double click (or F2) renames it, its handle (or Alt + Up / Down) moves it in stacking order, its buttons hide, lock or delete it. Hidden shapes are not drawn nor exported, locked shapes can't be selected, moved nor erased on canvas. Names, hidden and locked states are saved with shapes.
+
+```js
+drawer.layersPanel?.toggle(); // show / hide panel
+drawer.setShapeLabel(shape, 'Background'); // empty name gives back default name (text, type)
+drawer.getShapeLabel(shape);
+drawer.setShapesHidden(true, [shape]); // selected shapes by default
+drawer.setShapesLocked(true, [shape]);
 ```
 
 ## Stacking order

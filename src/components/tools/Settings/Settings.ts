@@ -218,6 +218,8 @@ export class Settings extends Dropdown {
       this.drawer.position?.$positionContainer,
       this.drawer.help.$helpContainer,
       this.drawer.undoRedo.$undoRedoContainer,
+      this.drawer.layersPanel?.$buttonContainer,
+      this.drawer.layersPanel?.$panel,
     ];
 
     $containers.forEach(($container) => {

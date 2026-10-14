@@ -118,6 +118,10 @@ export class HotKey {
       if (e.altKey && e.key === 'g') {
         this.drawer.setting.toggleGrid();
       }
+
+      if (e.altKey && e.key === 'l') {
+        this.drawer.layersPanel?.toggle();
+      }
     });
 
     this.drawer.$drawerContainer.addEventListener('keyup', (e) => {

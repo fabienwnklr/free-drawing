@@ -129,6 +129,12 @@ export class Help extends Modal {
               </span>
             </li>
             <li class="drawer-modal-help-shortcut">
+              Layers panel
+              <span>
+                <kbd class="drawer-modal-help-kdb">Alt+L</kbd>
+              </span>
+            </li>
+            <li class="drawer-modal-help-shortcut">
               Snap to objects
               <span>
                 <kbd class="drawer-modal-help-kdb">Alt+S</kbd>

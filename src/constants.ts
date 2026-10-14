@@ -29,6 +29,7 @@ export const defaultOptions: DrawerOptions = {
   zoomWidget: true,
   positionWidget: true,
   selectionMenu: true,
+  layersPanel: true,
   readOnly: false,
   scaling: 1.11,
   autoSave: true,
@@ -94,6 +95,18 @@ export const strokeStyleShapes = [shapeName.straightLine, shapeName.rect, shapeN
  * Shapes with a background color (fill), other shapes fill is their color (brush line, text) or none
  */
 export const fillShapes = [shapeName.rect, shapeName.ellipse];
+
+/**
+ * Type names of drawing shapes (layers panel)
+ */
+export const shapeLabels: Record<string, string> = {
+  [shapeName.line]: 'Freehand',
+  [shapeName.straightLine]: 'Line',
+  [shapeName.rect]: 'Rectangle',
+  [shapeName.ellipse]: 'Ellipse',
+  [shapeName.arrow]: 'Arrow',
+  [shapeName.text]: 'Text',
+};
 
 /**
  * Collaboration events, same as server/socket-events.js

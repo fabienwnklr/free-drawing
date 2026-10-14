@@ -246,16 +246,20 @@ export class SelectWidget extends BaseWidget {
    * @param {(Shape<ShapeConfig> | Group)[]} shapes
    */
   select(shapes: (Shape<ShapeConfig> | Group)[]) {
-    if (!shapes.length) {
+    // locked and hidden shapes are not selectable
+    const selectable = shapes.filter((shape) => shape.listening() && shape.isVisible());
+
+    if (!selectable.length) {
       this.clearSelection();
       return;
     }
 
-    this._setupAnchors(shapes);
-    this.transformer.nodes(shapes);
+    this._setupAnchors(selectable);
+    this.transformer.nodes(selectable);
     // overlay of active tool (brush, shapes...) replaced by selection one
     if (this.drawer.activeWidget !== this) this.drawer.activeWidget?.overlay?.hide();
-    this.showOverlay(shapes);
+    this.showOverlay(selectable);
+    this.drawer.trigger('fd.selection.change', selectable);
   }
 
   /**
@@ -374,6 +378,7 @@ export class SelectWidget extends BaseWidget {
     this.hideOverlay();
 
     if (this.drawer.activeWidget !== this) this.drawer.activeWidget?.overlay?.show();
+    this.drawer.trigger('fd.selection.change', []);
   }
 
   /**

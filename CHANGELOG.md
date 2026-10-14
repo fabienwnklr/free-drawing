@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [5.7.0](https://github.com/fabienwnklr/free-drawing/compare/v5.6.0...v5.7.0) (2026-10-14)
+
+
+### Features
+
+* layers panel (button in header, Alt+L): list of shapes, top one first, to select, rename, reorder (drag handle, Alt + arrows), hide, lock and delete them (`layersPanel` option)
+* shapes names, hidden and locked states, saved with shapes: `setShapeLabel`, `getShapeLabel`, `setShapesHidden` and `setShapesLocked` methods, hidden and locked shapes are not selectable
+
 ## [5.6.0](https://github.com/fabienwnklr/free-drawing/compare/v5.5.0...v5.6.0) (2026-10-14)
 
 

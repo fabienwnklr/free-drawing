@@ -6,7 +6,7 @@ import { Rect } from 'konva/lib/shapes/Rect';
 import { AvailableTools } from './@types/toolbar';
 import { ColorLike, DrawerOptions, OptionsChange, ShapeOrder, StrokeStyle, TextStyle } from './@types/drawer';
 import { createId, deepMerge } from './utils/functions';
-import { defaultOptions, gridSize, shapeName, zoomLimits } from './constants';
+import { defaultOptions, gridSize, shapeLabels, shapeName, zoomLimits } from './constants';
 import { setPressed } from './utils/dom';
 import { getStrokeStyle } from './utils/stroke';
 import { reorderShapes } from './utils/order';
@@ -51,6 +51,7 @@ import { ConfirmModal } from './components/Modal/ConfirmModal';
 import { UndoRedo } from './components/tools/UndoRedo/UndoRedo';
 import { ContextMenu } from './components/ContextMenu/ContextMenu';
 import { SelectionMenu } from './components/SelectionMenu/SelectionMenu';
+import { LayersPanel } from './components/LayersPanel/LayersPanel';
 import { TextWidget } from './components/toolbar/widgets/Text/Text';
 import { Line } from 'konva/lib/shapes/Line';
 import { Toast } from './components/Toast/Toast';
@@ -105,6 +106,8 @@ export class Drawer extends MicroEvent {
   position: Position | undefined;
   /** Menu next to selected shapes (`selectionMenu` option) */
   selectionMenu: SelectionMenu | undefined;
+  /** Panel listing shapes (`layersPanel` option) */
+  layersPanel: LayersPanel | undefined;
   help: Help;
   setting: Settings;
   clearConfirmModal: ConfirmModal | null = null;
@@ -264,6 +267,9 @@ export class Drawer extends MicroEvent {
     // actions on selection of selection widget
     if (this.options.selectionMenu && this.getWidget('selection')) {
       this.selectionMenu = new SelectionMenu(this);
+    }
+    if (this.options.layersPanel) {
+      this.layersPanel = new LayersPanel(this);
     }
 
     if (this.grid) this.showGrid();
@@ -824,6 +830,74 @@ export class Drawer extends MicroEvent {
 
     selectWidget?.select(this.getSelectedShapes().filter((shape) => !removed.includes(shape)));
     removed.forEach((shape) => shape.destroy());
+    this.stage.fire('change');
+
+    return true;
+  }
+
+  /**
+   * Name of a shape (layers panel): name given by user, else first line of a text, else type of shape
+   * @param {Shape<ShapeConfig>} shape
+   */
+  getShapeLabel(shape: Shape<ShapeConfig>): string {
+    const text = shape.hasName(shapeName.text) ? String(shape.getAttr('text') ?? '').trim().split('\n')[0] : '';
+    const type = Object.keys(shapeLabels).find((name) => shape.hasName(name));
+
+    return shape.getAttr('label') || text || (type ? shapeLabels[type] : shape.getClassName());
+  }
+
+  /**
+   * Give a name to a shape (saved with it), an empty name gives back its default name
+   * @param {Shape<ShapeConfig>} shape
+   * @param {string} label
+   * @returns {boolean} true if name changed (change saved)
+   */
+  setShapeLabel(shape: Shape<ShapeConfig>, label: string): boolean {
+    const value = label.trim() || undefined;
+
+    if (shape.getAttr('label') === value) return false;
+
+    shape.setAttr('label', value);
+    this.stage.fire('change');
+
+    return true;
+  }
+
+  /**
+   * Lock shapes (selected ones by default): not selected, moved nor erased on canvas
+   * @param {boolean} locked
+   * @param {Shape<ShapeConfig>[]} shapes
+   * @returns {boolean} true if a shape changed (change saved)
+   */
+  setShapesLocked(locked: boolean, shapes: Shape<ShapeConfig>[] = this.getSelectedShapes()): boolean {
+    return this._setShapesState(
+      shapes.filter((shape) => shape.listening() === locked),
+      (shape) => shape.listening(!locked)
+    );
+  }
+
+  /**
+   * Hide shapes (selected ones by default): not drawn, selected nor exported
+   * @param {boolean} hidden
+   * @param {Shape<ShapeConfig>[]} shapes
+   * @returns {boolean} true if a shape changed (change saved)
+   */
+  setShapesHidden(hidden: boolean, shapes: Shape<ShapeConfig>[] = this.getSelectedShapes()): boolean {
+    return this._setShapesState(
+      shapes.filter((shape) => shape.visible() === hidden),
+      (shape) => shape.visible(!hidden)
+    );
+  }
+
+  private _setShapesState(changed: Shape<ShapeConfig>[], apply: (shape: Shape<ShapeConfig>) => void) {
+    const shapes = changed.filter((shape) => shape.getLayer());
+    const selected = this.getSelectedShapes();
+
+    if (!shapes.length) return false;
+
+    shapes.forEach(apply);
+    // locked and hidden shapes are unselected
+    if (shapes.some((shape) => selected.includes(shape))) this.getWidget<SelectWidget>('selection')?.select(selected);
     this.stage.fire('change');
 
     return true;
