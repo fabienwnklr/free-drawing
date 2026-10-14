@@ -5,7 +5,7 @@ import { Modal } from '@/components/Modal/Modal';
 import { type Language, languages } from '@/i18n/I18n';
 import type { TranslationKey } from '@/i18n/en';
 import { drawerEvents } from '@/constants';
-import { uniqueId } from '@/utils/dom';
+import { createSwitch, uniqueId } from '@/utils/dom';
 
 const themes: { value: Theme; label: TranslationKey }[] = [
   { value: 'light', label: 'preferences.light' },
@@ -40,7 +40,7 @@ export class PreferencesModal extends Modal {
     $themes.className = 'drawer-preferences-themes';
     $themes.append($themesLegend);
     this.$themes = themes.map(({ value, label }) => {
-      const $radio = this._createCheckable($themes, label, 'radio');
+      const $radio = this._createRadio($themes, label);
 
       $radio.name = themesName;
       $radio.value = value;
@@ -55,15 +55,15 @@ export class PreferencesModal extends Modal {
     );
     this.$language.addEventListener('change', () => drawer.setLanguage(this.$language.value as Language | 'auto'));
     $appearance.append($themes, this._createField('menu.language', this.$language));
-    this.$zen = this._createCheckable($appearance, 'menu.zenMode', 'checkbox', 'Alt+Z');
+    this.$zen = this._createSwitch($appearance, 'menu.zenMode', 'Alt+Z');
     this.$zen.addEventListener('change', () => drawer.setPreferences({ zen: this.$zen.checked }));
 
     // drawing: grid, snapping (exclude each other)
     const $drawing = this._createSection('preferences.drawing');
 
-    this.$grid = this._createCheckable($drawing, 'menu.showGrid', 'checkbox', 'Alt+G');
+    this.$grid = this._createSwitch($drawing, 'menu.showGrid', 'Alt+G');
     this.$grid.addEventListener('change', () => drawer.setPreferences({ grid: this.$grid.checked }));
-    this.$snapping = this._createCheckable($drawing, 'context.snap', 'checkbox', 'Alt+S');
+    this.$snapping = this._createSwitch($drawing, 'context.snap', 'Alt+S');
     this.$snapping.addEventListener('change', () => drawer.setPreferences({ snapping: this.$snapping.checked }));
 
     this.$modalBody.append($appearance, $drawing);
@@ -140,26 +140,38 @@ export class PreferencesModal extends Modal {
   }
 
   /**
-   * Checkbox or radio with its label, and shortcut doing the same
+   * Radio with its label
    */
-  private _createCheckable($container: HTMLElement, label: TranslationKey, type: 'checkbox' | 'radio', shortcut = '') {
+  private _createRadio($container: HTMLElement, label: TranslationKey) {
     const $label = document.createElement('label');
-    const $input = document.createElement('input');
+    const $radio = document.createElement('input');
     const $text = document.createElement('span');
 
-    $input.type = type;
-    $label.append($input, $text);
-    if (shortcut) {
-      const $shortcut = document.createElement('kbd');
-
-      $shortcut.className = 'drawer-preferences-shortcut';
-      $shortcut.textContent = shortcut;
-      $input.setAttribute('aria-keyshortcuts', shortcut);
-      $label.append($shortcut);
-    }
+    $radio.type = 'radio';
+    $label.append($radio, $text);
     $container.append($label);
     this.drawer.i18n.translate((t) => ($text.textContent = t(label)));
 
-    return $input;
+    return $radio;
+  }
+
+  /**
+   * Switch at the end of its row: label, shortcut doing the same
+   */
+  private _createSwitch($container: HTMLElement, label: TranslationKey, shortcut: string) {
+    const $label = document.createElement('label');
+    const $text = document.createElement('span');
+    const $shortcut = document.createElement('kbd');
+    const $switch = createSwitch();
+
+    $label.className = 'drawer-preferences-switch';
+    $shortcut.className = 'drawer-preferences-shortcut';
+    $shortcut.textContent = shortcut;
+    $switch.setAttribute('aria-keyshortcuts', shortcut);
+    $label.append($text, $shortcut, $switch);
+    $container.append($label);
+    this.drawer.i18n.translate((t) => ($text.textContent = t(label)));
+
+    return $switch;
   }
 }

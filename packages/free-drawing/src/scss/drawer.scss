@@ -89,6 +89,11 @@
     border-top: 1px solid $border;
   }
 
+  // checkboxes of interface are switches
+  input[role='switch'] {
+    @include switch;
+  }
+
   .drawer-button {
     display: flex;
     align-items: center;

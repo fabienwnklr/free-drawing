@@ -8,6 +8,45 @@
   }
 }
 
+// On / off switch: checkbox with role switch (`createSwitch`), its thumb moves to the end when on.
+// Thumb is a background (no pseudo-element on inputs in every browser), native checkbox in forced colors mode.
+@mixin switch {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 1.125rem;
+  margin: 0;
+  border-radius: 1rem;
+  background: radial-gradient(circle closest-side, $surface calc(100% - 3px), transparent calc(100% - 2px)) left center /
+    1.125rem 1.125rem no-repeat $text-muted;
+  cursor: pointer;
+  appearance: none;
+  transition:
+    background-color $transition,
+    background-position $transition;
+
+  &:checked {
+    background-image: radial-gradient(circle closest-side, $on-primary calc(100% - 3px), transparent calc(100% - 2px));
+    background-color: $primary;
+    background-position: right center;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  @include focus-ring;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+
+  @media (forced-colors: active) {
+    appearance: auto;
+    background: none;
+  }
+}
+
 // Floating surface: panels, menus, modals
 @mixin surface($shadow: $shadow) {
   background-color: $surface;

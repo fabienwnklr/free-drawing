@@ -28,6 +28,19 @@ export function createButton(...classNames: string[]) {
   return $btn;
 }
 
+/**
+ * On / off switch: checkbox announced as a switch (state read as on / off), keyboard (Space) and pointer as a checkbox
+ */
+export function createSwitch(checked = false) {
+  const $switch = document.createElement('input');
+
+  $switch.type = 'checkbox';
+  $switch.setAttribute('role', 'switch');
+  $switch.checked = checked;
+
+  return $switch;
+}
+
 let lastId = 0;
 
 /**

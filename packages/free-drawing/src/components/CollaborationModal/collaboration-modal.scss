@@ -89,17 +89,8 @@
     label {
       display: flex;
       align-items: center;
-      gap: $space-1;
+      gap: $space-2;
       cursor: pointer;
-    }
-
-    input[type='checkbox'] {
-      margin: 0;
-      appearance: auto;
-      accent-color: $primary;
-      cursor: pointer;
-
-      @include focus-ring;
     }
   }
 

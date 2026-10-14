@@ -50,7 +50,7 @@
   label {
     display: flex;
     align-items: center;
-    gap: $space-1;
+    gap: $space-2;
     cursor: pointer;
 
     &[hidden] {
@@ -58,7 +58,6 @@
     }
   }
 
-  input[type='checkbox'],
   input[type='radio'] {
     margin: 0;
     appearance: auto;

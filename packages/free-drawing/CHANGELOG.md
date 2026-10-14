@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [6.11.0](https://github.com/fabienwnklr/free-drawing/compare/v6.10.0...v6.11.0) (2026-10-15)
+
+
+### Features
+
+* switches instead of checkboxes in preferences, export and collaboration dialogs: on / off state announced by screen readers, keyboard (Space) and pointer as before, native checkboxes in high contrast mode
+
 ## [6.10.0](https://github.com/fabienwnklr/free-drawing/compare/v6.9.0...v6.10.0) (2026-10-15)
 
 

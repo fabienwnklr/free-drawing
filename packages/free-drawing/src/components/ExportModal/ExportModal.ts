@@ -3,7 +3,7 @@ import type { Drawer, ExportImageOptions } from '@/Drawer';
 import { Modal } from '@/components/Modal/Modal';
 import type { ImageFormat } from '@/utils/export';
 import { drawingFileExtension, saveFile } from '@/utils/drawingFile';
-import { createButton, setLabel, uniqueId } from '@/utils/dom';
+import { createButton, createSwitch, setLabel, uniqueId } from '@/utils/dom';
 import type { TranslationKey } from '@/i18n/en';
 
 /**
@@ -36,9 +36,9 @@ export class ExportModal extends Modal {
 
     $options.classList.add('drawer-export-options');
     $options.setAttribute('role', 'group');
-    this.$selected = this._createCheckbox($options, 'export.selected');
-    this.$background = this._createCheckbox($options, 'export.background', true);
-    this.$dark = this._createCheckbox($options, 'export.dark');
+    this.$selected = this._createSwitch($options, 'export.selected');
+    this.$background = this._createSwitch($options, 'export.background', true);
+    this.$dark = this._createSwitch($options, 'export.dark');
 
     const $scales = document.createElement('div');
     const scaleName = uniqueId('export-scale');
@@ -102,18 +102,16 @@ export class ExportModal extends Modal {
     });
   }
 
-  private _createCheckbox($container: HTMLElement, text: TranslationKey, checked = false) {
+  private _createSwitch($container: HTMLElement, text: TranslationKey, checked = false) {
     const $label = document.createElement('label');
-    const $checkbox = document.createElement('input');
+    const $switch = createSwitch(checked);
     const $text = document.createTextNode('');
 
-    $checkbox.type = 'checkbox';
-    $checkbox.checked = checked;
-    $label.append($checkbox, $text);
+    $label.append($switch, $text);
     $container.append($label);
     this.drawer.i18n.translate((t) => ($text.data = t(text)));
 
-    return $checkbox;
+    return $switch;
   }
 
   /**

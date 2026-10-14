@@ -242,6 +242,35 @@ describe('Accessibility', () => {
     expect(document.activeElement).toBe(drawer.$drawerContainer);
   });
 
+  it('Options of dialogs are switches, named by their label', () => {
+    const drawer = createDrawer({ language: 'en' });
+
+    drawer.showPreferences();
+    drawer.showExport();
+
+    const preferences = drawer.preferencesModal!;
+    const exportModal = drawer.exportModal!;
+    const switches = [
+      ...preferences.$modal.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'),
+      ...exportModal.$modal.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'),
+    ];
+
+    expect(switches).toHaveLength(6);
+    switches.forEach(($switch) => {
+      expect($switch.getAttribute('role')).toBe('switch');
+      expect($switch.closest('label')!.textContent!.trim()).not.toBe('');
+    });
+    expect(preferences.$grid.closest('label')!.textContent).toContain('Show grid');
+
+    // still toggled as checkboxes
+    preferences.$grid.click();
+    expect(drawer.grid).toBe(true);
+    exportModal.$background.click();
+    expect(exportModal.exportOptions.background).toBe(false);
+    preferences.hide();
+    exportModal.hide();
+  });
+
   it('Toasts are announced', () => {
     const drawer = createDrawer();
 

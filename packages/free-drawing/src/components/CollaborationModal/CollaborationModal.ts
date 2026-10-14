@@ -1,7 +1,7 @@
 import '@/components/CollaborationModal/collaboration-modal.scss';
 import type { Drawer } from '@/Drawer';
 import { Modal } from '@/components/Modal/Modal';
-import { createButton, uniqueId } from '@/utils/dom';
+import { createButton, createSwitch, uniqueId } from '@/utils/dom';
 import { drawerEvents } from '@/constants';
 import type { TranslationKey } from '@/i18n/en';
 
@@ -203,10 +203,8 @@ export class CollaborationModal extends Modal {
 
         if (isOwner && !member.owner) {
           const $label = document.createElement('label');
-          const $canEdit = document.createElement('input');
+          const $canEdit = createSwitch(member.canEdit);
 
-          $canEdit.type = 'checkbox';
-          $canEdit.checked = member.canEdit;
           $canEdit.setAttribute('aria-label', t('collab.canDrawLabel', { name: member.name }));
           $canEdit.addEventListener('change', () => collaboration.setRight(member.id, $canEdit.checked));
           $label.append($canEdit, t('collab.canDraw'));
