@@ -1,4 +1,23 @@
+import { deprecatedEvents } from '@/constants';
+
 type TCallback = (...args: any) => any;
+
+const warned = new Set<string>();
+
+/**
+ * Current name of an event: names of previous versions are deprecated (warned once)
+ */
+function eventName(event: string): string {
+  const name = deprecatedEvents[event];
+
+  if (!name) return event;
+  if (!warned.has(event)) {
+    warned.add(event);
+    console.warn(`free-drawing: "${event}" event is deprecated, use "${name}"`);
+  }
+
+  return name;
+}
 
 /**
  * Execute callback for each event in space separated list of event names
@@ -6,7 +25,7 @@ type TCallback = (...args: any) => any;
  */
 function forEvents(events: string, callback: (event: string) => any) {
   events.split(/\s+/).forEach((event) => {
-    callback(event);
+    callback(eventName(event));
   });
 }
 

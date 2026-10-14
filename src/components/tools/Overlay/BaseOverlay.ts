@@ -10,7 +10,7 @@ import BringToFrontIcon from '@/icons/bring-to-front.svg?raw';
 import '@/components/tools/Overlay/overlay.scss';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Group } from 'konva/lib/Group';
-import { dataAttributes, fillShapes } from '@/constants';
+import { dataAttributes, drawerEvents, fillShapes } from '@/constants';
 import { ColorPicker } from '@/components/ColorPicker/ColorPicker';
 import { createButton, setLabel, setPressed, uniqueId } from '@/utils/dom';
 import { getStrokeStyle } from '@/utils/stroke';
@@ -76,7 +76,7 @@ export class BaseOverlay {
     this._init();
 
     // keep fields in sync with options, whatever changes them (any overlay, API...)
-    this.drawer.on('fd.options.change', (change: OptionsChange) => this.updateFields(change));
+    this.drawer.on(drawerEvents.optionsChange, (change: OptionsChange) => this.updateFields(change));
   }
 
   private _init() {

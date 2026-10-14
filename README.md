@@ -73,6 +73,27 @@ const drawer = new Drawer($el, {
 };
 ```
 
+## Events
+
+Events are named `drawer.<subject>.<action>`:
+
+```js
+drawer.on('drawer.change', (drawer) => {
+  // drawing changed
+});
+drawer.off('drawer.change', callback);
+```
+
+| Event | Arguments | Description |
+| --- | --- | --- |
+| `drawer.change` | drawer | Drawing changed (shapes, background, undo / redo, changes of collaborators...) |
+| `drawer.options.change` | changed options | Drawing options changed (color, width, style, opacity, text style) |
+| `drawer.selection.change` | selected shapes | Selection changed |
+| `drawer.readonly.change` | read only state | Read only mode changed |
+| `drawer.collaboration.change` | | Collaboration started or stopped, users or rights changed |
+
+Components trigger `drawer.dropdown.hide` (dropdown menu) and `drawer.toast.hide` (`drawer.toast()` result). Names of previous versions (`change`, `fd.options.change`...) still work, with a warning in console.
+
 ## Widgets
 
 `widgets` option chooses the toolbar widgets, in the given order. Without it, every widget is available.

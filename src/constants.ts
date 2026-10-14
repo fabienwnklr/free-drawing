@@ -113,6 +113,39 @@ export const shapeLabels: Record<string, string> = {
 /**
  * Collaboration events, same as server/socket-events.js
  */
+/**
+ * Events of drawer (`drawer.on(event, callback)`) and of its components, named `drawer.<subject>.<action>`
+ */
+export const drawerEvents = {
+  /** Drawing changed (shapes, background...), with drawer */
+  change: 'drawer.change',
+  /** Drawing options changed (setters, overlays...), with changed options */
+  optionsChange: 'drawer.options.change',
+  /** Read only mode changed, with read only state */
+  readOnlyChange: 'drawer.readonly.change',
+  /** Selected shapes changed, with selected shapes */
+  selectionChange: 'drawer.selection.change',
+  /** Collaboration started or stopped, users or rights changed */
+  collaborationChange: 'drawer.collaboration.change',
+  /** Dropdown menu hidden (event of dropdown) */
+  dropdownHide: 'drawer.dropdown.hide',
+  /** Toast hidden (event of toast) */
+  toastHide: 'drawer.toast.hide',
+} as const;
+
+/**
+ * Event names of previous versions (deprecated), listened and triggered as current ones
+ */
+export const deprecatedEvents: Record<string, string> = {
+  change: drawerEvents.change,
+  'fd.options.change': drawerEvents.optionsChange,
+  'fd.readonly.change': drawerEvents.readOnlyChange,
+  'fd.selection.change': drawerEvents.selectionChange,
+  'fd.collaboration.change': drawerEvents.collaborationChange,
+  'fd.dropdown.hide': drawerEvents.dropdownHide,
+  'fd.toast.hide': drawerEvents.toastHide,
+};
+
 export const socketEvents = {
   /** Join a room: `{ room, name }` */
   JOIN: 'JOIN',

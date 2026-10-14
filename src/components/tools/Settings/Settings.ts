@@ -16,6 +16,7 @@ import { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import type { ColorLike } from '@/@types/drawer';
 import { createButton, disableElement, enableElement, setLabel, setPressed, uniqueId } from '@/utils/dom';
 import { ColorPicker } from '@/components/ColorPicker/ColorPicker';
+import { drawerEvents } from '@/constants';
 
 export class Settings extends Dropdown {
   drawer: Drawer;
@@ -168,13 +169,13 @@ export class Settings extends Dropdown {
     this.$exportButton.addEventListener('click', () => this.drawer.showExport());
     this.$collaborationButton.addEventListener('click', () => this.drawer.showCollaboration());
     // read only: no item modifying drawing
-    this.drawer.on('fd.readonly.change', (readOnly: boolean) =>
+    this.drawer.on(drawerEvents.readOnlyChange, (readOnly: boolean) =>
       [this.$openButton, this.$clearCanvasButton].forEach(($item) =>
         readOnly ? disableElement($item) : enableElement($item)
       )
     );
     // session state shown in menu
-    this.drawer.on('fd.collaboration.change', () => {
+    this.drawer.on(drawerEvents.collaborationChange, () => {
       const users = this.drawer.collaboration?.users.length;
 
       this.$collaborationButton.querySelector('.text-muted')!.textContent = this.drawer.collaboration
@@ -203,7 +204,7 @@ export class Settings extends Dropdown {
     });
 
     // focus drawer on hide dropdown (no on toggle by click again on it), unless focus is in a dialog opened from menu
-    this.on('fd.dropdown.hide', () => {
+    this.on(drawerEvents.dropdownHide, () => {
       if (!document.activeElement?.closest('[aria-modal="true"]')) this.drawer.focus();
     });
   }

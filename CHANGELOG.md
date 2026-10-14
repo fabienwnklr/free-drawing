@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [6.1.0](https://github.com/fabienwnklr/free-drawing/compare/v6.0.0...v6.1.0) (2026-10-14)
+
+
+### Features
+
+* events named `drawer.<subject>.<action>`: `drawer.change`, `drawer.options.change`, `drawer.selection.change`, `drawer.readonly.change` and `drawer.collaboration.change` (drawer), `drawer.dropdown.hide` and `drawer.toast.hide` (components)
+
+### Deprecations
+
+* events `change`, `fd.options.change`, `fd.selection.change`, `fd.readonly.change`, `fd.collaboration.change`, `fd.dropdown.hide` and `fd.toast.hide`: still listened and triggered, with a warning in console, use `drawer.*` names
+
 ## [6.0.0](https://github.com/fabienwnklr/free-drawing/compare/v5.7.0...v6.0.0) (2026-10-14)
 
 

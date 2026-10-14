@@ -60,7 +60,7 @@ export type TextStyle = {
 };
 
 /**
- * Options changed by Drawer setters, sent with `fd.options.change` event (only changed keys)
+ * Options changed by Drawer setters, sent with `drawer.options.change` event (only changed keys)
  */
 export type OptionsChange = Partial<
   Pick<DrawerOptions, 'strokeColor' | 'fillColor' | 'strokeWidth' | 'strokeStyle' | 'opacity'>

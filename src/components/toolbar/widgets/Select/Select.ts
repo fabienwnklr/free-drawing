@@ -6,7 +6,7 @@ import { Rect } from 'konva/lib/shapes/Rect';
 import { Line } from 'konva/lib/shapes/Line';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Stage } from 'konva/lib/Stage';
-import { fillShapes, shapeName, strokeStyleShapes } from '@/constants';
+import { drawerEvents, fillShapes, shapeName, strokeStyleShapes } from '@/constants';
 import { toFill } from '@/utils/color';
 import { getDash, getStrokeStyle } from '@/utils/stroke';
 import { setPressed } from '@/utils/dom';
@@ -273,7 +273,7 @@ export class SelectWidget extends BaseWidget {
     // overlay of active tool (brush, shapes...) replaced by selection one
     if (this.drawer.activeWidget !== this) this.drawer.activeWidget?.overlay?.hide();
     this.showOverlay(selectable);
-    this.drawer.trigger('fd.selection.change', selectable);
+    this.drawer.trigger(drawerEvents.selectionChange, selectable);
   }
 
   /**
@@ -414,7 +414,7 @@ export class SelectWidget extends BaseWidget {
     this.hideOverlay();
 
     if (this.drawer.activeWidget !== this) this.drawer.activeWidget?.overlay?.show();
-    this.drawer.trigger('fd.selection.change', []);
+    this.drawer.trigger(drawerEvents.selectionChange, []);
   }
 
   /**

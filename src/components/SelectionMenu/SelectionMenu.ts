@@ -10,6 +10,7 @@ import GroupIcon from '@/icons/group.svg?raw';
 import UngroupIcon from '@/icons/ungroup.svg?raw';
 import { Group } from 'konva/lib/Group';
 import { arrowNavigation, createButton, setLabel } from '@/utils/dom';
+import { drawerEvents } from '@/constants';
 
 /** Space between selection and menu, between menu and drawer edges (px) */
 const gap = 12;
@@ -70,7 +71,7 @@ export class SelectionMenu {
     // end of move: no draw after it
     this.drawer.drawLayer.on('dragend.selectionmenu', () => this.update());
     this.transformer?.on('transformend.selectionmenu', () => this.update());
-    this.drawer.on('fd.readonly.change', () => this.update());
+    this.drawer.on(drawerEvents.readOnlyChange, () => this.update());
   }
 
   private get transformer() {

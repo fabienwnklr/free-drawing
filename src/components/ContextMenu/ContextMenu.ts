@@ -4,6 +4,7 @@ import { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import '@/components/ContextMenu/context-menu.scss';
 import { Stage } from 'konva/lib/Stage';
 import { arrowNavigation, createButton, disableElement, enableElement, setPressed } from '@/utils/dom';
+import { drawerEvents } from '@/constants';
 
 export class ContextMenu {
   drawer: Drawer;
@@ -93,7 +94,7 @@ export class ContextMenu {
     });
 
     // read only: no paste
-    this.drawer.on('fd.readonly.change', (readOnly: boolean) =>
+    this.drawer.on(drawerEvents.readOnlyChange, (readOnly: boolean) =>
       readOnly ? disableElement(this.$pasteBtn) : enableElement(this.$pasteBtn)
     );
 

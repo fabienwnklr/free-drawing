@@ -251,7 +251,7 @@ describe('Test drawer event', () => {
       brushWidget.setActive(true);
     }
     const onChange = vi.fn();
-    drawer.on('change', onChange);
+    drawer.on('drawer.change', onChange);
 
     selectWidget.transformer.fire('transformend');
 
@@ -296,5 +296,43 @@ describe('Test drawer event', () => {
 
     expect(third.selectionLayer.find('Transformer').length).toBe(1);
     expect(third.getDrawingShapeByName('text').length).toBe(1);
+  });
+
+  it('Events are named drawer.<subject>.<action>, names of previous versions are still listened with a warning', () => {
+    const drawer = createDrawer();
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    // not konva warnings
+    const deprecations = () => warn.mock.calls.map(([message]) => message).filter((m) => m.startsWith('free-drawing'));
+    const onSelection = vi.fn();
+    const onReadOnly = vi.fn();
+    const onChange = vi.fn();
+    const onOptions = vi.fn();
+    const text = drawer.getWidget<TextWidget>('text')!.addTextNode('hello');
+
+    drawer.on('drawer.selection.change', onSelection);
+    drawer.on('drawer.readonly.change', onReadOnly);
+    drawer.getWidget<SelectWidget>('selection')!.select([text]);
+    drawer.setReadOnly(true);
+    expect(onSelection).toHaveBeenCalledWith([text]);
+    expect(onReadOnly).toHaveBeenCalledWith(true);
+    expect(deprecations()).toEqual([]);
+
+    drawer.on('change', onChange);
+    drawer.on('fd.options.change', onOptions);
+    drawer.stage.fire('change');
+    drawer.setStrokeWidth(8);
+    expect(onChange).toHaveBeenCalledWith(drawer);
+    expect(onOptions).toHaveBeenCalledWith(expect.objectContaining({ strokeWidth: 8 }));
+    expect(deprecations()).toEqual([
+      'free-drawing: "change" event is deprecated, use "drawer.change"',
+      'free-drawing: "fd.options.change" event is deprecated, use "drawer.options.change"',
+    ]);
+
+    // removed with previous name too, warned once
+    drawer.off('change', onChange);
+    drawer.stage.fire('change');
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(deprecations().length).toBe(2);
+    warn.mockRestore();
   });
 });

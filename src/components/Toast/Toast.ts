@@ -5,6 +5,7 @@ import { AvailableTypes } from '@/@types/toast';
 import InfoIcon from '@/icons/info.svg?raw';
 import WarningIcon from '@/icons/warning.svg?raw';
 import ErrorIcon from '@/icons/error.svg?raw';
+import { drawerEvents } from '@/constants';
 
 export class Toast extends MicroEvent {
   $toastContainer: HTMLDivElement;
@@ -63,7 +64,7 @@ export class Toast extends MicroEvent {
       setTimeout(() => {
         this.hide();
 
-        this.trigger('fd.toast.hide');
+        this.trigger(drawerEvents.toastHide);
       }, this.timeout);
     }
   }

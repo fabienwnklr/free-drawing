@@ -131,7 +131,7 @@ describe('Groups', () => {
     const onChange = vi.fn();
 
     drawer.groupShapes([rect, ellipse]);
-    drawer.on('change', onChange);
+    drawer.on('drawer.change', onChange);
     drawer.getWidget<EraserWidget>('eraser')!.setActive(true);
     rect.fire('click', { evt: {} }, true);
 

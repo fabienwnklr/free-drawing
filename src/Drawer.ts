@@ -14,7 +14,7 @@ import {
   TextStyle,
 } from '@/@types/drawer';
 import { createId, deepMerge } from '@/utils/functions';
-import { defaultOptions, gridSize, shapeLabels, shapeName, zoomLimits } from '@/constants';
+import { defaultOptions, drawerEvents, gridSize, shapeLabels, shapeName, zoomLimits } from '@/constants';
 import { setPressed } from '@/utils/dom';
 import { getStrokeStyle } from '@/utils/stroke';
 import { reorderShapes } from '@/utils/order';
@@ -336,7 +336,7 @@ export class Drawer extends MicroEvent {
     }
 
     this.undoRedo.manageButtons();
-    this.trigger('fd.readonly.change', readOnly);
+    this.trigger(drawerEvents.readOnlyChange, readOnly);
   }
 
   /**
@@ -376,7 +376,7 @@ export class Drawer extends MicroEvent {
       ownerKey,
       invitedBy,
     });
-    this.trigger('fd.collaboration.change');
+    this.trigger(drawerEvents.collaborationChange);
 
     try {
       await this._connected(this.socket);
@@ -389,7 +389,7 @@ export class Drawer extends MicroEvent {
 
     // reloading page joins the room again, page url shared by this user is known as shared by them
     window.history.replaceState(null, '', link);
-    this.trigger('fd.collaboration.change');
+    this.trigger(drawerEvents.collaborationChange);
 
     return link;
   }
@@ -408,7 +408,7 @@ export class Drawer extends MicroEvent {
     if (window.location.hash.startsWith('#room=')) {
       window.history.replaceState(null, '', window.location.pathname + window.location.search);
     }
-    this.trigger('fd.collaboration.change');
+    this.trigger(drawerEvents.collaborationChange);
   }
 
   /**
@@ -680,7 +680,7 @@ export class Drawer extends MicroEvent {
 
       this.undoRedo.saveState();
       this.undoRedo.manageButtons();
-      this.trigger('change', this);
+      this.trigger(drawerEvents.change, this);
     });
   }
 
@@ -1212,7 +1212,7 @@ export class Drawer extends MicroEvent {
    * @param {OptionsChange} change Changed options only
    */
   private _triggerOptionsChange(change: OptionsChange) {
-    this.trigger('fd.options.change', change);
+    this.trigger(drawerEvents.optionsChange, change);
   }
 
   /**

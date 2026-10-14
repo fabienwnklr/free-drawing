@@ -2,6 +2,7 @@ import '@/components/CollaborationModal/collaboration-modal.scss';
 import type { Drawer } from '@/Drawer';
 import { Modal } from '@/components/Modal/Modal';
 import { createButton, uniqueId } from '@/utils/dom';
+import { drawerEvents } from '@/constants';
 
 /**
  * Live collaboration dialog: start a session, join one from a link (name required), session link with copy button
@@ -89,7 +90,7 @@ export class CollaborationModal extends Modal {
     this.$stopButton.addEventListener('click', () => this.drawer.stopCollaboration());
     this.$modalFooter.append(this.$cancelButton, this.$startButton, this.$joinButton, this.$stopButton);
 
-    this.drawer.on('fd.collaboration.change', () => this.update());
+    this.drawer.on(drawerEvents.collaborationChange, () => this.update());
   }
 
   /**

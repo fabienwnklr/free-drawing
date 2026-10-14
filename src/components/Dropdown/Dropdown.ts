@@ -1,6 +1,7 @@
 import MicroEvent from '@/utils/MicroEvent';
 import { createButton, uniqueId } from '@/utils/dom';
 import '@/components/Dropdown/dropdown.scss';
+import { drawerEvents } from '@/constants';
 
 export class Dropdown extends MicroEvent {
   $dropdownContainer: HTMLDivElement;
@@ -48,7 +49,7 @@ export class Dropdown extends MicroEvent {
   hide() {
     this._setShown(false);
 
-    this.trigger('fd.dropdown.hide');
+    this.trigger(drawerEvents.dropdownHide);
   }
 
   isShown() {

@@ -3,7 +3,7 @@ import type { Drawer } from '@/Drawer';
 import { Group } from 'konva/lib/Group';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import type { DrawingShape } from '@/@types/drawer';
-import { shapeName } from '@/constants';
+import { drawerEvents, shapeName } from '@/constants';
 import {
   arrowNavigation,
   createButton,
@@ -126,9 +126,9 @@ export class LayersPanel {
       this._close();
     });
 
-    this.drawer.on('change', () => this.update());
-    this.drawer.on('fd.selection.change', () => this._onSelectionChange());
-    this.drawer.on('fd.readonly.change', () => this.update());
+    this.drawer.on(drawerEvents.change, () => this.update());
+    this.drawer.on(drawerEvents.selectionChange, () => this._onSelectionChange());
+    this.drawer.on(drawerEvents.readOnlyChange, () => this.update());
   }
 
   isVisible() {

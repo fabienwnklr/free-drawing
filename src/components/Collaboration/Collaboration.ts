@@ -9,7 +9,7 @@ import { Label, Tag } from 'konva/lib/shapes/Label';
 import { Text } from 'konva/lib/shapes/Text';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { serializeShape } from '@/components/tools/UndoRedo/History';
-import { socketEvents } from '@/constants';
+import { drawerEvents, socketEvents } from '@/constants';
 import { applyOrder } from '@/utils/order';
 import type { DrawingShape } from '@/@types/drawer';
 
@@ -118,7 +118,7 @@ export class Collaboration {
       );
       this.users = this.members.map((member) => member.name);
       if (this.canEdit !== canEdit) this.drawer._onCollaborationRight(this.canEdit);
-      this.drawer.trigger('fd.collaboration.change');
+      this.drawer.trigger(drawerEvents.collaborationChange);
     });
     this.socket.on(socketEvents.POINTER, (pointer: RemotePointer) => this._showCursor(pointer));
     this.socket.on(socketEvents.LEAVE, (id: string) => {
