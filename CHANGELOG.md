@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [5.3.0](https://github.com/fabienwnklr/free-drawing/compare/v5.2.0...v5.3.0) (2026-10-14)
+
+
+### Features
+
+* **collaboration:** users who joined a session only see their name in the dialog (no link, QR code, users nor stop button), kept for the owner
+* **collaboration:** owner sees who invited each user: links and page URL contain the id of the user sharing them (`#room=<id>&by=<user id>`)
+
 ## [5.2.0](https://github.com/fabienwnklr/free-drawing/compare/v5.1.0...v5.2.0) (2026-10-14)
 
 

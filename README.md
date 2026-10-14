@@ -129,7 +129,7 @@ Svg is vector (shapes, texts), pdf contains a png quality image of the drawing (
 
 ## Collaboration
 
-`collaboration` option adds "Live collaboration" to settings menu: a dialog to choose a name, start a session in a new room, share its link (or QR code to scan) and stop the session. Opening a room link (`#room=<id>`) joins the room. Every drawing change (any tool, eraser, moves, styles, undo / redo...) is sent to the other users of the room through a [socket.io](https://socket.io/) server (see [server/index.mjs](./server/index.mjs)), `socket.io-client` and the QR code generator are loaded only then.
+`collaboration` option adds "Live collaboration" to settings menu: a dialog to choose a name, start a session in a new room, share its link (or QR code to scan) and stop the session. Opening a room link (`#room=<id>&by=<user id>`) joins the room. Every drawing change (any tool, eraser, moves, styles, undo / redo...) is sent to the other users of the room through a [socket.io](https://socket.io/) server (see [server/index.mjs](./server/index.mjs)), `socket.io-client` and the QR code generator are loaded only then.
 
 ```js
 const link = await drawer.startCollaboration(); // new room (or given room id), name of user saved for next sessions
@@ -140,8 +140,10 @@ drawer.showCollaboration(); // dialog
 
 Users see the cursor of each other user with their name, and shapes while they are drawn or moved (sent every 50 ms at most, final state sent at the end).
 
-A user opening a room link enters a name before joining. The user who created the room is its owner (secret kept in browser, so reloading the page joins the room again): in the dialog, the owner gives or removes the right to draw of each user. Users without the right are in read only mode (`drawer.setReadOnly`), their changes are ignored by the server.
+A user opening a room link enters a name before joining. The user who created the room is its owner (secret kept in browser, so reloading the page joins the room again): in the dialog, the owner shares the link, gives or removes the right to draw of each user and stops the session. Other users only change their name in the dialog. Users without the right are in read only mode (`drawer.setReadOnly`), their changes are ignored by the server.
 
-Socket events: `JOIN` (`{ room, name, userId, ownerKey }`), `NAME`, `USERS` (users of the room `{ id, name, owner, canEdit }`, sent by server), `RIGHTS` (`{ userId, canEdit }`, from owner), `POINTER` (position in drawing, null out of drawer, relayed with user `id` and `name`), `LEAVE` (id of user leaving, sent by server) and `CHANGE`: `{ upsert, remove, live }`, JSON of shapes added or updated (konva `toObject`, with their `id`) and ids of removed shapes, so concurrent drawings are merged, `live` for previews of shapes being drawn. The server keeps the drawing of each room and sends it to users joining it.
+Links contain the id of the user sharing them (`by`), the page URL of each user too: the owner sees who invited each user, even with a link copied from the address bar.
+
+Socket events: `JOIN` (`{ room, name, userId, ownerKey, invitedBy }`), `NAME`, `USERS` (users of the room `{ id, name, owner, canEdit, invitedBy }`, `invitedBy` is the name of the user who shared the link, sent by server), `RIGHTS` (`{ userId, canEdit }`, from owner), `POINTER` (position in drawing, null out of drawer, relayed with user `id` and `name`), `LEAVE` (id of user leaving, sent by server) and `CHANGE`: `{ upsert, remove, live }`, JSON of shapes added or updated (konva `toObject`, with their `id`) and ids of removed shapes, so concurrent drawings are merged, `live` for previews of shapes being drawn. The server keeps the drawing of each room and sends it to users joining it.
 
 In this repository, run `yarn serve`, open `http://localhost:3000`, start a session from the menu and open its link in other windows.

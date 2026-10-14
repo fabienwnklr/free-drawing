@@ -27,7 +27,14 @@ export type CollaborationSocket = Pick<Socket, 'on' | 'once' | 'emit' | 'disconn
 /**
  * User of a room (sent by server): owner (created the room) gives or removes the right to draw
  */
-export type CollaborationMember = { id: string; name: string; owner: boolean; canEdit: boolean };
+export type CollaborationMember = {
+  id: string;
+  name: string;
+  owner: boolean;
+  canEdit: boolean;
+  /** Name of user who shared the link used to join */
+  invitedBy?: string;
+};
 
 export type CollaborationOptions = {
   room: string;
@@ -37,6 +44,8 @@ export type CollaborationOptions = {
   userId?: string;
   /** Secret of owner of the room, given when the room is created */
   ownerKey?: string;
+  /** Id of user who shared the link used to join */
+  invitedBy?: string;
 };
 
 /** Minimum interval of pointer and live drawing messages (ms) */
@@ -59,6 +68,7 @@ export class Collaboration {
   members: CollaborationMember[] = [];
   readonly userId: string;
   readonly ownerKey?: string;
+  readonly invitedBy?: string;
   private readonly drawer: Drawer;
   /** Shapes as other clients know them, by id */
   #synced = new Map<string, string>();
@@ -73,17 +83,24 @@ export class Collaboration {
   /** Cursors of other users, by user id */
   #cursors = new Map<string, Group>();
 
-  constructor(drawer: Drawer, socket: CollaborationSocket, { room, name, userId = '', ownerKey }: CollaborationOptions) {
+  constructor(
+    drawer: Drawer,
+    socket: CollaborationSocket,
+    { room, name, userId = '', ownerKey, invitedBy }: CollaborationOptions
+  ) {
     this.drawer = drawer;
     this.socket = socket;
     this.room = room;
     this.name = name;
     this.userId = userId;
     this.ownerKey = ownerKey;
+    this.invitedBy = invitedBy;
 
     this.socket.on('connect', () => {
       if (this.drawer.debug) console.log('🌍 Connected to collaboration server');
-      this.socket.emit(socketEvents.JOIN, { room: this.room, name: this.name, userId: this.userId, ownerKey: this.ownerKey });
+      const { room, name, userId, ownerKey, invitedBy } = this;
+
+      this.socket.emit(socketEvents.JOIN, { room, name, userId, ownerKey, invitedBy });
       // (re)connected: whole drawing sent, merged with other ones of the room
       this.#synced.clear();
       this.send();
@@ -205,7 +222,8 @@ export class Collaboration {
    * This user created the room: gives or removes the right to draw
    */
   get isOwner(): boolean {
-    return !!this.members.find((member) => member.id === this.userId)?.owner;
+    // owner secret: known before users list
+    return !!this.members.find((member) => member.id === this.userId)?.owner || (!this.members.length && !!this.ownerKey);
   }
 
   /**

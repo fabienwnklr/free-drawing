@@ -271,8 +271,8 @@ export class Drawer extends MicroEvent {
 
     if (this.options.readOnly) this.setReadOnly(true);
 
-    // room link (see `getCollaborationLink`)
-    const room = window.location.hash.match(/^#room=([\w-]+)$/)?.[1];
+    // room link (see `getCollaborationLink`), with id of user who shared it
+    const [, room, invitedBy] = window.location.hash.match(/^#room=([\w-]+)(?:&by=([\w-]+))?$/) ?? [];
 
     if (this.options.collaboration && room) {
       if (this._getOwnerKey(room)) {
@@ -282,7 +282,7 @@ export class Drawer extends MicroEvent {
         });
       } else {
         // invited user gives a name before joining
-        this.showCollaboration(room);
+        this.showCollaboration(room, invitedBy);
       }
     }
   }
@@ -331,9 +331,10 @@ export class Drawer extends MicroEvent {
    * Start a live collaboration session in a room (`collaboration` option gives the server), current session is stopped
    * @param {string} room Room id, new room by default
    * @param {string} name Name shown to other users, saved for next sessions
+   * @param {string} invitedBy Id of user who shared the link (see `getCollaborationLink`), shown to owner
    * @returns {Promise<string>} Link to join the room
    */
-  async startCollaboration(room?: string, name: string = this.getUserName()): Promise<string> {
+  async startCollaboration(room?: string, name: string = this.getUserName(), invitedBy?: string): Promise<string> {
     if (!this.options.collaboration) throw new Error('collaboration option is disabled');
 
     // new room: this user is its owner (secret kept for next sessions)
@@ -345,7 +346,13 @@ export class Drawer extends MicroEvent {
     this.stopCollaboration();
     this.setUserName(name);
     this.socket = await this._createSocket();
-    this.collaboration = new Collaboration(this, this.socket, { room, name, userId: this.getUserId(), ownerKey });
+    this.collaboration = new Collaboration(this, this.socket, {
+      room,
+      name,
+      userId: this.getUserId(),
+      ownerKey,
+      invitedBy,
+    });
     this.trigger('fd.collaboration.change');
 
     try {
@@ -357,7 +364,7 @@ export class Drawer extends MicroEvent {
 
     const link = this.getCollaborationLink(room);
 
-    // reloading page joins the room again
+    // reloading page joins the room again, page url shared by this user is known as shared by them
     window.history.replaceState(null, '', link);
     this.trigger('fd.collaboration.change');
 
@@ -382,23 +389,26 @@ export class Drawer extends MicroEvent {
   }
 
   /**
-   * Link to join a room: current page with `#room=<id>`
+   * Link to join a room: current page with `#room=<id>&by=<user id>`, owner knows who shared it
    * @param {string} room Room id, room of current session by default
    */
   getCollaborationLink(room: string | undefined = this.collaboration?.room): string {
     const url = new URL(window.location.href);
 
-    url.hash = room ? `room=${room}` : '';
+    url.hash = room ? `room=${room}&by=${this.getUserId()}` : '';
 
     return url.toString();
   }
 
   /**
-   * Live collaboration dialog: name, start / stop session, link and QR code to join it
+   * Live collaboration dialog: owner starts / stops session, shares link and QR code, gives rights;
+   * other users give their name
+   * @param {string} joinRoom Room of a link, joined once user gave a name
+   * @param {string} invitedBy Id of user who shared the link
    */
-  showCollaboration(joinRoom: string | null = null) {
+  showCollaboration(joinRoom: string | null = null, invitedBy?: string) {
     this.collaborationModal ??= new CollaborationModal(this);
-    this.collaborationModal.show(joinRoom);
+    this.collaborationModal.show(joinRoom, invitedBy);
   }
 
   /**

@@ -33,6 +33,7 @@ type FakeSocket = CollaborationSocket & {
   name?: string;
   id: string;
   userId?: string;
+  invitedBy?: string;
 };
 
 /**
@@ -41,7 +42,13 @@ type FakeSocket = CollaborationSocket & {
  */
 const createServer = () => {
   const sockets: FakeSocket[] = [];
-  type Room = { shapes: Map<string, string>; ownerKey?: string; ownerId?: string; viewers: Set<string> };
+  type Room = {
+    shapes: Map<string, string>;
+    ownerKey?: string;
+    ownerId?: string;
+    viewers: Set<string>;
+    names: Map<string, string>;
+  };
   const rooms = new Map<string, Room>();
   let lastId = 0;
   const inRoom = (room?: string) => sockets.filter((s) => s.room === room);
@@ -52,6 +59,7 @@ const createServer = () => {
       name: user.name || 'Anonymous',
       owner: user.userId === data.ownerId,
       canEdit: !data.viewers.has(user.userId!),
+      invitedBy: user.invitedBy && data.names.get(user.invitedBy),
     }));
 
     inRoom(room).forEach((s) => s.receive('USERS', users));
@@ -71,11 +79,22 @@ const createServer = () => {
       }),
       emit: vi.fn((event: string, data: unknown) => {
         if (event === 'JOIN') {
-          const { room, name, userId, ownerKey } = data as { room: string; name: string; userId: string; ownerKey?: string };
-          const roomData = rooms.get(room) ?? { shapes: new Map<string, string>(), viewers: new Set<string>() };
+          const { room, name, userId, ownerKey, invitedBy } = data as {
+            room: string;
+            name: string;
+            userId: string;
+            ownerKey?: string;
+            invitedBy?: string;
+          };
+          const roomData = rooms.get(room) ?? {
+            shapes: new Map<string, string>(),
+            viewers: new Set<string>(),
+            names: new Map<string, string>(),
+          };
 
-          Object.assign(socket, { room, name, userId: userId || socket.id });
+          Object.assign(socket, { room, name, userId: userId || socket.id, invitedBy });
           rooms.set(room, roomData);
+          roomData.names.set(socket.userId!, name);
           if (ownerKey) {
             roomData.ownerKey ??= ownerKey;
             if (roomData.ownerKey === ownerKey) roomData.ownerId = socket.userId;
@@ -92,6 +111,7 @@ const createServer = () => {
           sendUsers(socket.room);
         } else if (event === 'NAME') {
           socket.name = data as string;
+          rooms.get(socket.room!)!.names.set(socket.userId!, socket.name);
           sendUsers(socket.room);
         } else if (event === 'POINTER') {
           inRoom(socket.room)
@@ -120,7 +140,12 @@ const createServer = () => {
   };
 
   /** Drawer collaborating in a room */
-  const connect = (drawer: Drawer, room = 'room', name = '', ids: { userId?: string; ownerKey?: string } = {}) => {
+  const connect = (
+    drawer: Drawer,
+    room = 'room',
+    name = '',
+    ids: { userId?: string; ownerKey?: string; invitedBy?: string } = {}
+  ) => {
     const socket = createSocket();
 
     drawer.collaboration = new Collaboration(drawer, socket, { room, name, ...ids });
@@ -285,7 +310,7 @@ describe('Collaboration', () => {
 
     const room = drawer.collaboration!.room;
     expect(drawer.collaboration!.name).toBe('Alice');
-    expect(window.location.hash).toBe(`#room=${room}`);
+    expect(window.location.hash).toBe(`#room=${room}&by=${drawer.getUserId()}`);
     expect(modal.$link.value).toBe(drawer.getCollaborationLink());
     expect(modal.$users.textContent).toBe('Connected (1)');
     // creator of the room is its owner
@@ -330,7 +355,22 @@ describe('Collaboration', () => {
     await tick();
     expect(drawer.collaboration?.room).toBe('abc123');
     expect(drawer.collaboration?.name).toBe('Bob');
+    // link of the room shared by this user
+    expect(drawer.getCollaborationLink()).toBe(`${window.location.origin}${window.location.pathname}#room=abc123&by=${drawer.getUserId()}`);
+    expect(window.location.hash).toBe(`#room=abc123&by=${drawer.getUserId()}`);
     drawer.stopCollaboration();
+
+    // link with user who shared it
+    window.location.hash = '#room=xyz&by=alice';
+    const invited = createDrawer({ collaboration: true });
+    await tick();
+    invited.collaborationModal!.$name.value = 'Carol';
+    invited.collaborationModal!.$name.dispatchEvent(new Event('input'));
+    invited.collaborationModal!.$joinButton.click();
+    await tick();
+    await tick();
+    expect(socket.emit).toHaveBeenCalledWith('JOIN', expect.objectContaining({ room: 'xyz', invitedBy: 'alice' }));
+    invited.stopCollaboration();
 
     // owner (room created in this browser): back in the room without dialog
     const owner = createDrawer({ collaboration: true });
@@ -482,5 +522,38 @@ describe('Collaboration', () => {
     drawer.setReadOnly(false);
     expect(widgets.every((w) => !w.isDisabled)).toBe(true);
     expect(drawer.undoRedo.$btnUndo.disabled).toBe(false);
+  });
+  it('Users who joined only give their name, owner knows who shared the link they used', () => {
+    const connect = createServer();
+    const alice = createDrawer();
+    const bob = createDrawer();
+    const carol = createDrawer();
+    connect(alice, 'room', 'Alice', { userId: 'alice', ownerKey: 'secret' });
+    connect(bob, 'room', 'Bob', { userId: 'bob', invitedBy: 'alice' });
+    // page url of Bob shared
+    connect(carol, 'room', 'Carol', { userId: 'carol', invitedBy: 'bob' });
+
+    expect(alice.collaboration!.members.map((m) => [m.name, m.invitedBy])).toEqual([
+      ['Alice', undefined],
+      ['Bob', 'Alice'],
+      ['Carol', 'Bob'],
+    ]);
+
+    alice.showCollaboration();
+    const ownerModal = alice.collaborationModal!;
+    expect(ownerModal.$session.hidden).toBe(false);
+    expect(ownerModal.$stopButton.hidden).toBe(false);
+    expect(ownerModal.$members.textContent).toContain('Carolinvited by Bob');
+    ownerModal.hide();
+
+    // other users: name only, no link, QR code nor button
+    bob.showCollaboration();
+    const modal = bob.collaborationModal!;
+    expect(modal.$intro.textContent).toBe('You joined the live collaboration session of Alice.');
+    expect(modal.$name.closest('.drawer-collaboration-field')!.hasAttribute('hidden')).toBe(false);
+    expect(modal.$session.hidden).toBe(true);
+    expect([modal.$stopButton, modal.$startButton, modal.$joinButton, modal.$cancelButton].every(($btn) => $btn.hidden)).toBe(
+      true
+    );
   });
 });

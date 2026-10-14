@@ -21,6 +21,8 @@ export class CollaborationModal extends Modal {
   $stopButton: HTMLButtonElement;
   /** Room of a link, joined once user gives a name */
   joinRoom: string | null = null;
+  /** Id of user who shared the link */
+  invitedBy?: string;
 
   constructor(drawer: Drawer) {
     super(drawer, { title: 'Live collaboration' });
@@ -111,9 +113,11 @@ export class CollaborationModal extends Modal {
   /**
    * Show dialog
    * @param joinRoom Room of a link: user gives a name before joining it
+   * @param invitedBy Id of user who shared the link
    */
-  show(joinRoom: string | null = null) {
+  show(joinRoom: string | null = null, invitedBy?: string) {
     this.joinRoom = joinRoom;
+    this.invitedBy = invitedBy;
     this.$name.value = this.drawer.getUserName();
     this.update();
     super.show();
@@ -134,7 +138,7 @@ export class CollaborationModal extends Modal {
 
     this.joinRoom = null;
     try {
-      await this.drawer.startCollaboration(room, this.$name.value);
+      await this.drawer.startCollaboration(room, this.$name.value, this.invitedBy);
     } catch (error) {
       this.drawer.toast(`Collaboration unavailable: ${(error as Error).message}`, 'error');
     }
@@ -177,6 +181,15 @@ export class CollaborationModal extends Modal {
         $name.textContent = member.name + (member.id === userId ? ' (you)' : '');
         $member.append($name);
 
+        // who shared the link (also page url of a user)
+        if (member.invitedBy) {
+          const $invitedBy = document.createElement('small');
+
+          $invitedBy.classList.add('text-muted');
+          $invitedBy.textContent = `invited by ${member.invitedBy}`;
+          $name.append(document.createElement('br'), $invitedBy);
+        }
+
         if (isOwner && !member.owner) {
           const $label = document.createElement('label');
           const $canEdit = document.createElement('input');
@@ -201,24 +214,31 @@ export class CollaborationModal extends Modal {
   }
 
   /**
-   * Show session (link, QR code, users), join form or start button
+   * Owner: session (link, QR code, users and rights, stop), other users: their name only,
+   * else join form or start button
    */
   async update() {
     const { collaboration } = this.drawer;
     const joining = !collaboration && !!this.joinRoom;
+    const owner = !!collaboration?.isOwner;
+    const ownerName = collaboration?.members.find((member) => member.owner)?.name;
 
-    this.$intro.textContent = joining
-      ? 'You are invited to draw together: enter your name to join the session.'
-      : 'Draw with other people in real time: everyone with the link joins this drawing.';
+    if (joining) {
+      this.$intro.textContent = 'You are invited to draw together: enter your name to join the session.';
+    } else if (collaboration && !owner) {
+      this.$intro.textContent = `You joined the live collaboration session${ownerName ? ` of ${ownerName}` : ''}.`;
+    } else {
+      this.$intro.textContent = 'Draw with other people in real time: everyone with the link joins this drawing.';
+    }
     this.$name.required = joining;
     this.$joinButton.disabled = !this.$name.value.trim();
-    this.$session.hidden = !collaboration;
+    this.$session.hidden = !owner;
     this.$startButton.hidden = !!collaboration || joining;
     this.$joinButton.hidden = !joining;
     this.$cancelButton.hidden = !joining;
-    this.$stopButton.hidden = !collaboration;
+    this.$stopButton.hidden = !owner;
 
-    if (!collaboration) return;
+    if (!owner) return;
 
     this._updateMembers();
 

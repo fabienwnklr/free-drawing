@@ -48,11 +48,13 @@ async function server() {
     const users = [...(io.sockets.adapter.rooms.get(room) ?? [])]
       .map((id) => io.sockets.sockets.get(id)?.data)
       .filter(Boolean)
-      .map(({ userId, name }) => ({
+      .map(({ userId, name, invitedBy }) => ({
         id: userId,
         name,
         owner: !!userId && userId === data?.ownerId,
         canEdit: !data?.viewers.has(userId),
+        // user who shared the link (name as now)
+        invitedBy: invitedBy && (data?.names.get(invitedBy) ?? 'unknown user'),
       }));
 
     io.to(room).emit(socketEvents.USERS, users);
@@ -73,18 +75,22 @@ async function server() {
   io.on('connection', (socket) => {
     console.log(`A client has connected (id: ${socket.id})`);
 
-    socket.on(socketEvents.JOIN, ({ room, name, userId, ownerKey } = {}) => {
+    socket.on(socketEvents.JOIN, ({ room, name, userId, ownerKey, invitedBy } = {}) => {
       if (!isId(room)) return;
 
       leaveRoom(socket);
       socket.data.room = room;
       socket.data.name = userName(name);
       socket.data.userId = isId(userId) ? userId : socket.id;
+      socket.data.invitedBy = isId(invitedBy) && invitedBy !== socket.data.userId ? invitedBy : undefined;
       socket.join(room);
-      if (!rooms.has(room)) rooms.set(room, { shapes: new Map(), viewers: new Set() });
+      if (!rooms.has(room)) rooms.set(room, { shapes: new Map(), viewers: new Set(), names: new Map() });
 
       const data = rooms.get(room);
       const { shapes } = data;
+
+      // names of users who came, for who invited who
+      data.names.set(socket.data.userId, socket.data.name);
 
       // first secret given (room creation) makes its user owner
       if (typeof ownerKey === 'string' && ownerKey) {
@@ -101,7 +107,10 @@ async function server() {
 
     socket.on(socketEvents.NAME, (name) => {
       socket.data.name = userName(name);
-      if (socket.data.room) sendUsers(socket.data.room);
+      if (socket.data.room) {
+        rooms.get(socket.data.room).names.set(socket.data.userId, socket.data.name);
+        sendUsers(socket.data.room);
+      }
     });
 
     // owner gives or removes the right to draw
