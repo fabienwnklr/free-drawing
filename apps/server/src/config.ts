@@ -5,10 +5,10 @@ import { fileURLToPath } from 'node:url';
  */
 export type ServerConfig = {
   port: number;
-  /** Development: demo served by vite middleware, default secret allowed */
+  /** Development: web app served by vite middleware, default secret allowed */
   dev: boolean;
-  /** Demo page served (apps/web): vite middleware in development, its build in production */
-  demo: boolean;
+  /** Web app served (apps/web): vite middleware in development, its build in production */
+  web: boolean;
   /** SQLite database file, `:memory:` for tests */
   databasePath: string;
   /** Public URL of the server: auth cookies and callbacks */
@@ -35,7 +35,7 @@ export function getConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
   return {
     port,
     dev,
-    demo: true,
+    web: true,
     databasePath: env.DATABASE_PATH ?? fileURLToPath(new URL('../data/free-drawing.db', import.meta.url)),
     baseURL: env.BASE_URL ?? `http://localhost:${port}`,
     secret,

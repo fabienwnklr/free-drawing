@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [6.9.0](https://github.com/fabienwnklr/free-drawing/compare/v6.8.1...v6.9.0) (2026-10-14)
+
+
+### Features
+
+* types exported for apps: `DrawerOptions`, `DrawerStorage`, `DrawerUser`, `Preferences`, `CollaborationOptions`, `DrawingFile`, `Theme`, `Language`, `CustomTranslations`, `TranslationKey` and types of drawing options (`ColorLike`, `StrokeStyle`, `Edges`, `TextStyle`...)
+
 ## [6.8.1](https://github.com/fabienwnklr/free-drawing/compare/v6.8.0...v6.8.1) (2026-10-14)
 
 

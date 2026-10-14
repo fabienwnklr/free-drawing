@@ -1,13 +1,14 @@
 {
   "name": "@free-drawing/web",
-  "description": "Demo of free-drawing",
+  "description": "Web app of free-drawing: accounts and drawings with the server, demo without it",
   "private": true,
   "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "typecheck": "tsc -p ."
   },
   "dependencies": {
     "@fabwcie/free-drawing": "*",
@@ -15,6 +16,7 @@
   },
   "devDependencies": {
     "sass": "^1.69.1",
+    "typescript": "^5.9.3",
     "vite": "^4.4.5"
   }
 }

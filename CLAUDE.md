@@ -8,8 +8,8 @@ Yarn 1 workspaces (root `package.json` is private, `yarn.lock` at root):
 
 - [packages/free-drawing](packages/free-drawing): the library published on npm (`src/`, `tests/`, its vite / vitest / tsconfig / eslint configs, README, CHANGELOG, LICENCE copy). Paths below without a folder are in it (`src/...`, `tests/...`).
 - [packages/protocol](packages/protocol) (`@free-drawing/protocol`, private): socket events of live collaboration (`socketEvents`, JS + `index.d.ts`), imported by the library (bundled in its build, dev dependency) and the server.
-- [apps/server](apps/server) (`@free-drawing/server`, [README](apps/server/README.md)): TypeScript run with tsx (`src/index.ts`, `createServer` in `src/app.ts` for tests). Express 4: Better Auth accounts (email + password, session cookie) under `/api/auth` (`src/auth.ts`), API of logged in users `/api/me`, `/api/preferences`, `/api/drawings` (`src/api.ts`, own drawings only, 404 for others), socket.io rooms (`src/collaboration.ts`), demo (vite middleware sharing the HTTP server for HMR in development, `apps/web/dist` in production). SQLite of Node (`node:sqlite`) with Kysely (`src/db.ts`): Better Auth tables migrated by its `getMigrations` before creating it, app tables (`drawing`, `preferences`) by a Kysely `Migrator` (add a migration, never change one). Settings from environment (`src/config.ts`). Tests: vitest + supertest on an in-memory database.
-- [apps/web](apps/web) (`@free-drawing/web`): demo page, its vite config aliases `@fabwcie/free-drawing` and `@/` to library sources.
+- [apps/server](apps/server) (`@free-drawing/server`, [README](apps/server/README.md)): TypeScript run with tsx (`src/index.ts`, `createServer` in `src/app.ts` for tests). Express 4: Better Auth accounts (email + password, session cookie) under `/api/auth` (`src/auth.ts`), API of logged in users `/api/me`, `/api/preferences`, `/api/drawings` (`src/api.ts`, own drawings only, 404 for others), socket.io rooms (`src/collaboration.ts`), web app (`serveWeb`: vite middleware sharing the HTTP server for HMR in development, `apps/web/dist` in production). SQLite of Node (`node:sqlite`) with Kysely (`src/db.ts`): Better Auth tables migrated by its `getMigrations` before creating it, app tables (`drawing`, `preferences`) by a Kysely `Migrator` (add a migration, never change one). Settings from environment (`src/config.ts`). Tests: vitest + supertest on an in-memory database.
+- [apps/web](apps/web) (`@free-drawing/web`): web app, its vite config (and tsconfig `paths`) aliases `@fabwcie/free-drawing` and `@/` to library sources. Served by the server (metas `api-server`, `collaboration-server` injected in its page, also in production): `App` (`src/App.ts`) adds an app bar (drawing name, save state, "My drawings", account) above the drawer and a `storage` adapter: drawing of logged in user on server (`src/api.ts`), else in browser (`src/local.ts`, also reads the stage saved by the demo, never keeps a drawing of an account). Switching drawing (`_open`), login and logout: `drawer.save()` first, then `loadFromStorage()` right after changing `drawing` (a change in between would be saved in the new drawing), account preferences applied after loading (grid and snapping fire changes). Dialogs are native `<dialog>` (`AccountDialog`, `DrawingsDialog`), texts in `src/texts.ts` follow `drawer.language`, colors follow `drawer.isDarkMode()`. Without these metas (`yarn dev`, static site): demo drawer only.
 - [docs](docs): VitePress site, `yarn doc:changelog` / `doc:get-started` copy the library CHANGELOG / README into it.
 
 ## Commands
@@ -18,15 +18,15 @@ Run at the root (scripts delegate with `yarn workspace <name> <script>`):
 
 | Command | Purpose |
 | --- | --- |
-| `yarn dev` | Demo (`apps/web`) with vite (no collaboration server) |
-| `yarn serve` | Express + vite middleware + socket.io server on `http://localhost:3000`, demo with live collaboration (meta `collaboration-server` injected in page) |
+| `yarn dev` | Demo (`apps/web` without server: no accounts nor collaboration) with vite |
+| `yarn serve` | Server on `http://localhost:3000`: web app with accounts, drawings saved on server and live collaboration (vite middleware, hot reload) |
 | `yarn test` / `yarn workspace @fabwcie/free-drawing vitest run tests/x.test.ts` | Tests of the library (vitest, jsdom, jest-canvas-mock), then of the server (`yarn workspace @free-drawing/server test`) |
-| `yarn typecheck` | Type check of the library (`src`, `tests`) and the server |
+| `yarn typecheck` | Type check of the library (`src`, `tests`), the server and the web app |
 | `yarn workspace @fabwcie/free-drawing tsc --noEmit -p .` | Type check library `src` (its tsconfig only includes `src`) |
 | `yarn workspace @fabwcie/free-drawing tsc -p tests` | Type check tests (`tests/tsconfig.json`, needed for the `@/` alias in the IDE) |
 | `yarn lint` | ESLint on library `src` and `tests` (no type checking) |
 | `yarn build` | Library build in `packages/free-drawing/dist/`: `drawer.js` (es), `drawer.umd.cjs`, `index.d.ts`, `style.css` |
-| `yarn build:static` | Demo site in `apps/web/dist/` (deployed by `yarn deploy:static`) |
+| `yarn build:static` | Web app in `apps/web/dist/` (static demo deployed by `yarn deploy:static`, served by the server in production) |
 | `yarn docs` | VitePress docs (`docs/`) |
 
 Git hooks (husky, at root): `commit-msg` runs commitlint (conventional commits), `pre-push` runs `lint` and `test`. CI runs `yarn test` on push / PR to `master`.
@@ -59,6 +59,7 @@ Git hooks (husky, at root): `commit-msg` runs commitlint (conventional commits),
 ### Shapes, options, events
 
 - Add drawing shapes only with `drawer.addShape(shape)` (draggable only with selection tool). Drawing shapes are konva shapes or groups (`DrawingShape`, `shapeName.group`): code reading shape attributes uses `getShapes(node)` ([utils/hit](packages/free-drawing/src/utils/hit.ts)) for shapes of groups. Shapes of groups have ids but are not draggable (moved with their group, except when selected alone with Ctrl+click or layers panel); collaboration, history and files handle top nodes (`getShapeState` keeps children), a changed group is replaced by collaboration. Shapes are identified by names from `shapeName` ([constants](packages/free-drawing/src/constants.ts)), e.g. `shape.hasName(shapeName.text)`.
+- Types used by apps are exported by the entry (`Drawer.ts`: `DrawerOptions`, `DrawerStorage`, `Preferences`, `DrawingFile`...): export new public types there too.
 - Options: `DrawerOptions` ([src/@types/drawer.ts](packages/free-drawing/src/@types/drawer.ts)), defaults in `defaultOptions` ([src/constants.ts](packages/free-drawing/src/constants.ts)). Setters (`setStrokeColor`, `setStrokeWidth`, `setStrokeStyle`, `setEdges`, `setOpacity`, `setTextStyle`) update options, apply to the selection, then trigger `drawer.options.change` with the changed keys. Overlays ([BaseOverlay](packages/free-drawing/src/components/tools/Overlay/BaseOverlay.ts) and subclasses) listen to it to update their fields: overlay buttons only call setters.
 - Stroke styles are names (`strokeStyle`: solid, dashed, dotted): the dash is computed from stroke width with `getDash` ([utils/stroke](packages/free-drawing/src/utils/stroke.ts)) and recomputed when width changes, the style of a shape is read from its dash (`getStrokeStyle`).
 - After any drawing modification, call `drawer.stage.fire('change')`: it saves to localStorage (`autoSave`), adds a history state and triggers `drawer.change` event. Shape drags are listened on `drawLayer` (`dragend.change`).

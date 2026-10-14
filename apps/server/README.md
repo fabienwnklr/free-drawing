@@ -1,6 +1,6 @@
 # @free-drawing/server
 
-Server of free-drawing: accounts, drawings and preferences of users, live collaboration ([socket.io](https://socket.io/)) and the demo page.
+Server of free-drawing: accounts, drawings and preferences of users, live collaboration ([socket.io](https://socket.io/)) and the web app ([apps/web](../web)). Its page gets metas `api-server` and `collaboration-server`: the app shows accounts and drawings of the server, and enables live collaboration.
 
 - TypeScript run with [tsx](https://tsx.is/), [express](https://expressjs.com/) 4.
 - Accounts and sessions (cookie) with [Better Auth](https://www.better-auth.com/): email and password.
@@ -20,7 +20,7 @@ yarn workspace @free-drawing/server start   # production (NODE_ENV=production)
 | Environment variable | Default | Purpose |
 | --- | --- | --- |
 | `PORT` | `3000` | Port of the server |
-| `NODE_ENV` | | `production`: demo served from its build (`yarn build:static`), secret required |
+| `NODE_ENV` | | `production`: web app served from its build (`yarn build:static`), secret required |
 | `DATABASE_PATH` | `apps/server/data/free-drawing.db` | SQLite database file |
 | `BASE_URL` | `http://localhost:<port>` | Public URL of the server (cookies, auth) |
 | `BETTER_AUTH_SECRET` | development secret | Secret signing sessions, 32 characters at least, required in production |

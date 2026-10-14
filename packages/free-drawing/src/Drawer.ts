@@ -43,6 +43,25 @@ import { toHexColor } from '@/utils/color';
 import { ExportModal } from '@/components/ExportModal/ExportModal';
 import { CommandPalette } from '@/components/CommandPalette/CommandPalette';
 
+// types of options, storage, preferences and files, for apps using the drawer
+export type {
+  CollaborationOptions,
+  ColorLike,
+  DrawerOptions,
+  DrawerStorage,
+  DrawerUser,
+  DrawingShape,
+  Edges,
+  Preferences,
+  ShapeOrder,
+  StrokeStyle,
+  TextStyle,
+  Theme,
+} from '@/@types/drawer';
+export type { DrawingFile } from '@/utils/drawingFile';
+export type { CustomTranslations, Language } from '@/i18n/I18n';
+export type { TranslationKey, Translations } from '@/i18n/en';
+
 export type ExportImageOptions = {
   /** Selected shapes only, when there is a selection (default true) */
   selected?: boolean;

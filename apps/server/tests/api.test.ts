@@ -9,7 +9,7 @@ import type { ServerConfig } from '../src/config';
 const config: ServerConfig = {
   port: 0,
   dev: true,
-  demo: false,
+  web: false,
   databasePath: ':memory:',
   baseURL: 'http://localhost:3000',
   secret: 'secret of tests, thirty two characters at least',

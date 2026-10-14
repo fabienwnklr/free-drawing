@@ -144,7 +144,7 @@ drawer.showCommandPalette();
 
 ## Use in an app
 
-Options and methods to connect the drawer to the server of your app (drawings saved per user, login, preferences).
+Options and methods to connect the drawer to the server of your app (drawings saved per user, login, preferences). Their types are exported (`import type { DrawerStorage, DrawingFile, Preferences } from '@fabwcie/free-drawing'`). The web app of this repository ([apps/web](../../apps/web)) uses them with its server ([apps/server](../../apps/server)).
 
 `storage` option saves the drawing elsewhere than localStorage. Its drawing is loaded on init (`drawer.ready` is resolved then), it replaces the drawing and history starts from it. Then `save` is called on each change (with `autoSave`), one call at a time: changes made during a save are saved once it ends, with the last drawing. Nothing is saved before the drawing is loaded, nor if it can't be (error shown, `ready` rejected), so a stored drawing is never replaced by mistake.
 

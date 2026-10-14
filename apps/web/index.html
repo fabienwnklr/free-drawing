@@ -5,27 +5,9 @@
     <link rel="icon" type="image/svg+xml" href="#" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Free-drawing</title>
-    <style>
-      body {
-        margin: 0;
-      }
-      #app {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 100vh;
-      }
-    </style>
   </head>
   <body>
     <div id="app"></div>
-    <script type="module">
-      import { Drawer } from '@fabwcie/free-drawing';
-
-      window.drawer = new Drawer(document.getElementById('app'), {
-        // live collaboration when served by collaboration server (`yarn serve`, see apps/server/index.mjs)
-        collaboration: !!document.querySelector('meta[name="collaboration-server"]'),
-      });
-    </script>
+    <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

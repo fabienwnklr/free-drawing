@@ -1,0 +1,290 @@
+/* colors of the drawer themes (packages/free-drawing/src/scss/_variables.scss), dark with drawer dark mode */
+:root {
+  --app-primary: #646cff;
+  --app-on-primary: #fff;
+  --app-hover-bg: #e8e9ff;
+  --app-text: #1e1e1e;
+  --app-text-muted: #6b6b6b;
+  --app-surface: #fff;
+  --app-subtle-bg: #f3f3f6;
+  --app-border: #e4e4e9;
+  --app-danger: #bb4040;
+  --app-shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.16);
+
+  color-scheme: light;
+}
+
+body.app-dark {
+  --app-primary: #a8a5ff;
+  --app-on-primary: #1e1e2e;
+  --app-hover-bg: #3a3950;
+  --app-text: #e3e3e8;
+  --app-text-muted: #a4a4ae;
+  --app-surface: #232329;
+  --app-subtle-bg: #2e2d39;
+  --app-border: #3d3d4a;
+  --app-danger: #ff8a8a;
+  --app-shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.5);
+
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background-color: var(--app-surface);
+  color: var(--app-text);
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  font-size: 0.875rem;
+}
+
+/* demo without server: drawer of window size */
+#app.demo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.app-bar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.5rem;
+  height: 3rem;
+  padding: 0 0.75rem;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.app-logo {
+  font-weight: 600;
+}
+
+.app-name {
+  width: 16rem;
+  min-width: 0;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: none;
+  color: inherit;
+  font: inherit;
+}
+
+.app-name:hover {
+  border-color: var(--app-border);
+}
+
+.app-name:focus-visible {
+  border-color: var(--app-primary);
+  outline: none;
+}
+
+.app-spacer {
+  flex: 1;
+}
+
+.text-muted {
+  color: var(--app-text-muted);
+}
+
+.app-save-state.is-error {
+  color: var(--app-danger);
+}
+
+/* drawer fills the rest of the page: no frame */
+.app-main {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.app-main .drawer-container:not(.is-full) .konvajs-content,
+.app-main .drawer-container:not(.is-full) .konvajs-content canvas {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.app-button,
+.app-icon-button,
+.app-drawing-open,
+.app-link {
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.app-button {
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--app-border);
+  white-space: nowrap;
+}
+
+.app-button:hover,
+.app-icon-button:hover,
+.app-drawing-open:hover {
+  background-color: var(--app-hover-bg);
+}
+
+.app-button-primary {
+  border-color: var(--app-primary);
+  background-color: var(--app-primary);
+  color: var(--app-on-primary);
+}
+
+.app-button-primary:hover {
+  background-color: var(--app-primary);
+  opacity: 0.9;
+}
+
+.app-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.app-icon-button {
+  display: flex;
+  padding: 0.375rem;
+  color: var(--app-text-muted);
+}
+
+.app-icon-button svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.app-link {
+  padding: 0.25rem;
+  color: var(--app-primary);
+  text-decoration: underline;
+}
+
+:where(.app-bar, .app-dialog) :focus-visible {
+  outline: 2px solid var(--app-primary);
+  outline-offset: 2px;
+}
+
+.app-dialog {
+  width: min(24rem, calc(100% - 2rem));
+  padding: 1rem;
+  border: 0;
+  border-radius: 8px;
+  background-color: var(--app-surface);
+  color: var(--app-text);
+  box-shadow: var(--app-shadow-lg);
+}
+
+.app-dialog::backdrop {
+  background-color: rgba(0, 0, 0, 0.25);
+}
+
+.app-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.app-dialog h2 {
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+.app-dialog p {
+  margin: 0;
+}
+
+.app-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.app-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.app-form label[hidden] {
+  display: none;
+}
+
+.app-form input {
+  padding: 0.5rem;
+  border: 1px solid var(--app-border);
+  border-radius: 6px;
+  background-color: var(--app-surface);
+  color: inherit;
+  font: inherit;
+}
+
+.app-error {
+  color: var(--app-danger);
+}
+
+.app-error:empty {
+  display: none;
+}
+
+.app-drawings {
+  width: min(30rem, calc(100% - 2rem));
+}
+
+.app-drawings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 60vh;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.app-drawings-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 6px;
+}
+
+.app-drawings-list li[aria-current] {
+  background-color: var(--app-subtle-bg);
+}
+
+.app-drawing-open {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.125rem;
+  min-width: 0;
+  padding: 0.5rem;
+  text-align: start;
+}
+
+.app-drawing-open span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

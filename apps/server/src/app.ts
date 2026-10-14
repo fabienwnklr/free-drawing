@@ -10,7 +10,7 @@ import { createAuth } from './auth';
 import { createApi } from './api';
 import { attachCollaboration } from './collaboration';
 
-// demo app (apps/web): its vite config in development, its build in production
+// web app (apps/web): its vite config in development, its build in production
 const webRoot = fileURLToPath(new URL('../../web/', import.meta.url));
 
 /**
@@ -33,35 +33,39 @@ function cors(origins: string[]): RequestHandler {
 }
 
 /**
- * Demo page with collaboration server meta (live collaboration enabled): vite middleware in development, build in production
+ * Web app (apps/web) with metas of this server: accounts and drawings API, live collaboration.
+ * Vite middleware in development (hot reload), its build in production.
  */
-async function serveDemo(app: Express, httpServer: HttpServer, dev: boolean) {
-  if (!dev) {
-    app.use(express.static(webRoot + 'dist'));
-    return;
-  }
-
-  const { createServer: createViteServer } = await import('vite');
-  // hot reload through this server: no other port (several servers can run)
-  const vite = await createViteServer({ root: webRoot, server: { middlewareMode: true, hmr: { server: httpServer } } });
+async function serveWeb(app: Express, httpServer: HttpServer, dev: boolean) {
+  const vite = dev
+    ? await (
+        await import('vite')
+      ).createServer({
+        root: webRoot,
+        // hot reload through this server: no other port (several servers can run)
+        server: { middlewareMode: true, hmr: { server: httpServer } },
+      })
+    : null;
+  const page = webRoot + (dev ? 'index.html' : 'dist/index.html');
 
   app.get(['/', '/index.html'], async (req, res, next) => {
     try {
-      const html = (await readFile(webRoot + 'index.html', 'utf-8')).replace(
+      const html = (await readFile(page, 'utf-8')).replace(
         '</head>',
-        '  <meta name="collaboration-server" content="same-origin" />\n  </head>'
+        '  <meta name="api-server" content="same-origin" />\n' +
+          '  <meta name="collaboration-server" content="same-origin" />\n  </head>'
       );
 
-      res.type('html').send(await vite.transformIndexHtml(req.originalUrl, html));
+      res.type('html').send(vite ? await vite.transformIndexHtml(req.originalUrl, html) : html);
     } catch (error) {
       next(error);
     }
   });
-  app.use(vite.middlewares);
+  app.use(vite ? vite.middlewares : express.static(webRoot + 'dist', { index: false }));
 }
 
 /**
- * HTTP server: accounts (`/api/auth`), API of logged in users (`/api`), live collaboration (socket.io), demo page.
+ * HTTP server: accounts (`/api/auth`), API of logged in users (`/api`), live collaboration (socket.io), web app.
  * Database tables are created or updated first.
  */
 export async function createServer(config: ServerConfig) {
@@ -81,7 +85,7 @@ export async function createServer(config: ServerConfig) {
 
   const httpServer = createHttpServer(app);
 
-  if (config.demo) await serveDemo(app, httpServer, config.dev);
+  if (config.web) await serveWeb(app, httpServer, config.dev);
 
   const io = new Server(httpServer, { cors: { origin: config.trustedOrigins, credentials: true } });
 

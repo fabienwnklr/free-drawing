@@ -20,7 +20,7 @@
     "test": "yarn workspace @fabwcie/free-drawing test && yarn workspace @free-drawing/server test",
     "test:watch": "yarn workspace @fabwcie/free-drawing test:watch",
     "lint": "yarn workspace @fabwcie/free-drawing lint",
-    "typecheck": "yarn workspace @fabwcie/free-drawing typecheck && yarn workspace @free-drawing/server typecheck",
+    "typecheck": "yarn workspace @fabwcie/free-drawing typecheck && yarn workspace @free-drawing/server typecheck && yarn workspace @free-drawing/web typecheck",
     "format": "yarn workspace @fabwcie/free-drawing format",
     "release": "yarn workspace @fabwcie/free-drawing release",
     "doc:typedoc": "yarn workspace @fabwcie/free-drawing doc:typedoc",
