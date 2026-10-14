@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [6.4.1](https://github.com/fabienwnklr/free-drawing/compare/v6.4.0...v6.4.1) (2026-10-14)
+
+
+### Bug Fixes
+
+* **selection:** snapping to objects while resizing: resized sides and corners aligned on edges and centers of other shapes (guides shown), grid snapping kept when not snapped to a shape
+* **selection:** shapes moved or resized together are not snapping guides of each other
+
 ## [6.4.0](https://github.com/fabienwnklr/free-drawing/compare/v6.3.0...v6.4.0) (2026-10-14)
 
 

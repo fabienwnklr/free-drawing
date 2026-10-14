@@ -81,6 +81,10 @@ export class SelectWidget extends BaseWidget {
   } | null = null;
   // selected shapes of groups, dragged alone while selected
   #nested: DrawingShape[] = [];
+  /**
+   * Snap of resize anchors to grid (set by drawer while grid is shown), applied when anchor is not snapped to objects
+   */
+  gridAnchorBound: ((oldPos: Vector2d, newPos: Vector2d) => Vector2d) | null = null;
   snapping: boolean = false;
   overlay: SelectOverlay;
   // overlay of selected shapes, not of the tool
@@ -128,6 +132,10 @@ export class SelectWidget extends BaseWidget {
 
     this.drawer.selectionLayer.add(this.transformer);
     this.overlay = new SelectOverlay(drawer);
+
+    // resize anchors snapped to objects, else to grid
+    this.transformer.anchorDragBoundFunc((oldPos, newPos) => this._boundAnchor(oldPos, newPos));
+    this.transformer.on('transformend.guides', () => this._clearGuides());
   }
 
   protected initEvents(): void {
@@ -508,10 +516,12 @@ export class SelectWidget extends BaseWidget {
     // namespaced, grid snapping and change saving also listen drag events of draw layer
     this.drawer.drawLayer.on('dragmove.snap', (e) => {
       // clear all previous lines on the screen
-      this.drawer.selectionLayer.find(`.${shapeName.guideLine}`).forEach((l) => l.destroy());
+      this._clearGuides();
 
-      // find possible snapping lines
-      const lineGuideStops = this._getLineGuideStops(e.target);
+      // find possible snapping lines (not of shapes moved with it)
+      const selected = this._getSelected();
+      const moved = selected.includes(e.target as DrawingShape) ? selected : [e.target];
+      const lineGuideStops = this._getLineGuideStops(moved);
       // find snapping points of current object
       const itemBounds = this._getObjectSnappingEdges(e.target);
 
@@ -549,10 +559,47 @@ export class SelectWidget extends BaseWidget {
       e.target.absolutePosition(absPos);
     });
 
-    this.drawer.drawLayer.on('dragend.snap', () => {
-      // clear all previous lines on the screen
-      this.drawer.selectionLayer.find(`.${shapeName.guideLine}`).forEach((l) => l.destroy());
-    });
+    this.drawer.drawLayer.on('dragend.snap', () => this._clearGuides());
+  }
+
+  private _clearGuides() {
+    this.drawer.selectionLayer.find(`.${shapeName.guideLine}`).forEach((l) => l.destroy());
+  }
+
+  /**
+   * Resize anchor position (absolute): side or corner aligned on edges and centers of other shapes (snapping), else
+   * on grid. Not when rotating, nor for a rotated selection
+   */
+  private _boundAnchor(oldPos: Vector2d, newPos: Vector2d): Vector2d {
+    const anchor = this.transformer.getActiveAnchor();
+
+    this._clearGuides();
+    if (!anchor || anchor === 'rotater') return newPos;
+
+    const rotated = Math.abs(this.transformer.rotation() % 90) > 0.5;
+
+    if (this.snapping && !rotated) {
+      const stops = this._getLineGuideStops(this._getSelected());
+      // sides move on one axis only
+      const nearest = (values: number[], value: number) =>
+        values.reduce<number | null>((best, stop) => {
+          const diff = Math.abs(stop - value);
+
+          return diff < 5 && (best === null || diff < Math.abs(best - value)) ? stop : best;
+        }, null);
+      const x = /left|right/.test(anchor) ? nearest(stops.vertical, newPos.x) : null;
+      const y = /top|bottom/.test(anchor) ? nearest(stops.horizontal, newPos.y) : null;
+
+      if (x !== null || y !== null) {
+        this._drawGuides([
+          ...(x !== null ? [{ lineGuide: x, offset: 0, orientation: 'V', snap: 'start' }] : []),
+          ...(y !== null ? [{ lineGuide: y, offset: 0, orientation: 'H', snap: 'start' }] : []),
+        ]);
+        return { x: x ?? newPos.x, y: y ?? newPos.y };
+      }
+    }
+
+    return this.gridAnchorBound ? this.gridAnchorBound(oldPos, newPos) : newPos;
   }
 
   private _removeSnapEvents() {
@@ -560,14 +607,14 @@ export class SelectWidget extends BaseWidget {
     this.drawer.drawLayer.off('.snap');
   }
 
-  private _getLineGuideStops(skipShape: Shape<ShapeConfig> | Stage): { vertical: number[]; horizontal: number[] } {
+  private _getLineGuideStops(skipShapes: Node[]): { vertical: number[]; horizontal: number[] } {
     // we can snap to stage borders and the center of the stage
     const vertical = [0, this.drawer.stage.width() / 2, this.drawer.stage.width()];
     const horizontal = [0, this.drawer.stage.height() / 2, this.drawer.stage.height()];
 
-    // and we snap over edges and center of each object on the canvas
+    // and we snap over edges and center of each object on the canvas, not of moved ones (or their groups)
     this.drawer.getDrawingShapes().forEach((guideItem) => {
-      if (guideItem === skipShape) {
+      if (skipShapes.some((shape) => shape === guideItem || guideItem.isAncestorOf(shape))) {
         return;
       }
       const box = guideItem.getClientRect();

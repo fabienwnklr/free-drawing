@@ -1417,9 +1417,10 @@ export class Drawer extends MicroEvent {
         });
       }
     });
-    selectWidget?.transformer.anchorDragBoundFunc((oldPos, newPos) => {
-      // do not snap rotating point or if grid disabled
-      if (selectWidget.transformer.getActiveAnchor() === 'rotater' || !this.grid) {
+    // applied by selection when anchor is not snapped to objects
+    const gridAnchorBound = (oldPos: Vector2d, newPos: Vector2d) => {
+      // do not snap if grid disabled
+      if (!this.grid) {
         return newPos;
       }
 
@@ -1432,7 +1433,9 @@ export class Drawer extends MicroEvent {
       }
 
       return calc(oldPos, newPos);
-    });
+    };
+
+    if (selectWidget) selectWidget.gridAnchorBound = gridAnchorBound;
 
     function calc(oldPos: Vector2d, newPos: Vector2d) {
       const dist = Math.sqrt(Math.pow(newPos.x - oldPos.x, 2) + Math.pow(newPos.y - oldPos.y, 2));
@@ -1479,9 +1482,7 @@ export class Drawer extends MicroEvent {
   private _removeSnapGridEvents() {
     const selectWidget = this.getWidget<SelectWidget>('selection');
 
-    selectWidget?.transformer.anchorDragBoundFunc(
-      undefined as any as (oldPos: Vector2d, newPos: Vector2d, e: MouseEvent) => Vector2d
-    );
+    if (selectWidget) selectWidget.gridAnchorBound = null;
     selectWidget?.transformer.rotationSnaps(undefined as any as number[]);
 
     this.drawLayer.off('.grid');
