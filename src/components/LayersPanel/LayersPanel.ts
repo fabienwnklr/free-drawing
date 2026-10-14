@@ -1,4 +1,4 @@
-import './layers-panel.scss';
+import '@/components/LayersPanel/layers-panel.scss';
 import type { Drawer } from '@/Drawer';
 import { Group } from 'konva/lib/Group';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';

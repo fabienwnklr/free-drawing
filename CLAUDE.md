@@ -58,7 +58,7 @@ Git hooks (husky): `commit-msg` runs commitlint (conventional commits), `pre-pus
 
 ## Conventions
 
-- TypeScript strict, `@/` alias for `src/`. Prettier: single quotes, 120 columns, 2 spaces. Short English comments.
+- TypeScript strict. Files of `src/` are imported with the `@/` alias, never relative paths (ESLint `no-restricted-imports`), also in tests and SCSS `@use` (`@use '@/scss/variables' as *`). Prettier: single quotes, 120 columns, 2 spaces. Short English comments.
 - Konva is a peer dependency imported by subpath (`konva/lib/...`); the build externalizes `konva`, `perfect-freehand` and `socket.io-client`.
 - Accessibility: create buttons with `createButton` (`type="button"`), name icon buttons with `setLabel` and update toggle buttons with `setPressed` (`active` class + `aria-pressed`, or `aria-checked` for menu items), from [utils/dom](src/utils/dom.ts). Lists of buttons use `arrowNavigation` (toolbar, context menu). `HotKey` listens keydown on `$drawerContainer`: keys handled by a component (menu, dialog) must not propagate to it. New icons need `aria-hidden="true" focusable="false"`.
 - Styles: one SCSS file per component, every rule scoped under `.drawer-container` (nothing applies to the host page). Use tokens of [_variables.scss](src/scss/_variables.scss) (colors, radius, shadows, spaces, font sizes) and mixins of [_mixins.scss](src/scss/_mixins.scss) (`focus-ring`, `surface`, `menu-item`, `swatch`, `picker`, `button-group`) with `@use`, not hard-coded values. Panels receiving pointer use `pointer-events: var(--drawer-pointer-events)` (ignored during pointer actions).

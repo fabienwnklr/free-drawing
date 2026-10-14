@@ -1,5 +1,5 @@
 import type { Drawer } from "@/Drawer";
-import { BaseOverlay } from "../BaseOverlay"
+import { BaseOverlay } from "@/components/tools/Overlay/BaseOverlay"
 
 export class SelectOverlay extends BaseOverlay {
     constructor(drawer: Drawer) {

@@ -9,8 +9,8 @@ import { Line } from 'konva/lib/shapes/Line';
 import { Arrow } from 'konva/lib/shapes/Arrow';
 import { Ellipse } from 'konva/lib/shapes/Ellipse';
 import { Text } from 'konva/lib/shapes/Text';
-import { normalizeColor } from './color';
-import { getShapes } from './hit';
+import { normalizeColor } from '@/utils/color';
+import { getShapes } from '@/utils/hit';
 import type { DrawingShape } from '@/@types/drawer';
 
 export type ImageFormat = 'png' | 'svg' | 'pdf';

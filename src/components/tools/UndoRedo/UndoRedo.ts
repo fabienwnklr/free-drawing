@@ -1,8 +1,8 @@
 import type { Drawer } from '@/Drawer';
-import { History } from './History';
+import { History } from '@/components/tools/UndoRedo/History';
 import UndoIcon from '@/icons/undo.svg?raw';
 import RedoIcon from '@/icons/redo.svg?raw';
-import './undo-redo.scss';
+import '@/components/tools/UndoRedo/undo-redo.scss';
 import { createButton, disableElement, enableElement, setLabel } from '@/utils/dom';
 
 export class UndoRedo extends History {

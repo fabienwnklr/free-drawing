@@ -1,12 +1,12 @@
 import { Drawer } from '@/Drawer';
-import { BaseWidget } from '../BaseWidget';
+import { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import EraserIcon from '@/icons/eraser.svg?raw';
 import type { Node } from 'konva/lib/Node';
 import { Text } from 'konva/lib/shapes/Text';
 import { crosshairCursor } from '@/constants';
 import { getShapes } from '@/utils/hit';
 import type { DrawingShape } from '@/@types/drawer';
-import { Trail } from './Trail';
+import { Trail } from '@/components/toolbar/widgets/Eraser/Trail';
 
 /**
  * Outline color of shapes to erase

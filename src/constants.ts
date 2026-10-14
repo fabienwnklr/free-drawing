@@ -1,5 +1,5 @@
-import { DrawerOptions } from './@types/drawer';
-import type { WidgetName } from './@types/toolbar';
+import { DrawerOptions } from '@/@types/drawer';
+import type { WidgetName } from '@/@types/toolbar';
 
 /**
  * Widgets of toolbar, default order

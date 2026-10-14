@@ -1,4 +1,4 @@
-import './export-modal.scss';
+import '@/components/ExportModal/export-modal.scss';
 import type { Drawer, ExportImageOptions } from '@/Drawer';
 import { Modal } from '@/components/Modal/Modal';
 import type { ImageFormat } from '@/utils/export';

@@ -3,7 +3,7 @@ import { Drawer } from '@/Drawer';
 import { shapeName } from '@/constants';
 import { Line } from 'konva/lib/shapes/Line';
 import type { Vector2d } from 'konva/lib/types';
-import { ShapeWidget, snapAngle } from '../ShapeWidget';
+import { ShapeWidget, snapAngle } from '@/components/toolbar/widgets/ShapeWidget';
 
 export class LineWidget extends ShapeWidget<Line> {
   constructor(drawer: Drawer) {

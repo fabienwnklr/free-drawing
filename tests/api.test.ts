@@ -1,7 +1,7 @@
 import { describe, expect, it, beforeAll } from 'vitest';
-import { Drawer } from '../src/Drawer';
-import type { TextWidget } from '../src/components/toolbar/widgets/Text/Text';
-import type { SelectWidget } from '../src/components/toolbar/widgets/Select/Select';
+import { Drawer } from '@/Drawer';
+import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
+import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 
 beforeAll(() => {
   function noOp() {}

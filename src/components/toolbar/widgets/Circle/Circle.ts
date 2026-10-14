@@ -3,7 +3,7 @@ import { Drawer } from '@/Drawer';
 import { shapeName } from '@/constants';
 import { Ellipse } from 'konva/lib/shapes/Ellipse';
 import type { Vector2d } from 'konva/lib/types';
-import { ShapeWidget, dragBox } from '../ShapeWidget';
+import { ShapeWidget, dragBox } from '@/components/toolbar/widgets/ShapeWidget';
 
 export class CircleWidget extends ShapeWidget<Ellipse> {
   protected hasFill = true;

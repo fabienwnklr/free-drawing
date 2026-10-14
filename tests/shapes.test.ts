@@ -3,9 +3,9 @@ import { Rect } from 'konva/lib/shapes/Rect';
 import { Ellipse } from 'konva/lib/shapes/Ellipse';
 import { Arrow } from 'konva/lib/shapes/Arrow';
 import { Line } from 'konva/lib/shapes/Line';
-import type { BaseWidget } from '../src/components/toolbar/widgets/BaseWidget';
-import type { SelectWidget } from '../src/components/toolbar/widgets/Select/Select';
-import type { AvailableTools } from '../src/@types/toolbar';
+import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
+import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
+import type { AvailableTools } from '@/@types/toolbar';
 import { createDrawer, drag } from './helpers';
 
 beforeAll(() => {

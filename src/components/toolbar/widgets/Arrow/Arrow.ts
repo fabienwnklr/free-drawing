@@ -3,7 +3,7 @@ import { Drawer } from '@/Drawer';
 import { shapeName } from '@/constants';
 import { Arrow } from 'konva/lib/shapes/Arrow';
 import type { Vector2d } from 'konva/lib/types';
-import { ShapeWidget, snapAngle } from '../ShapeWidget';
+import { ShapeWidget, snapAngle } from '@/components/toolbar/widgets/ShapeWidget';
 
 /**
  * Arrow head size, proportional to stroke width

@@ -6,7 +6,7 @@ import type { KonvaEventListener } from 'konva/lib/Node';
 import type { Stage } from 'konva/lib/Stage';
 import type { Shape, ShapeConfig } from 'konva/lib/Shape';
 import type { BaseOverlay } from '@/components/tools/Overlay/BaseOverlay';
-import type { SelectWidget } from './Select/Select';
+import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { createButton, disableElement, enableElement, setLabel, setPressed } from '@/utils/dom';
 
 export abstract class BaseWidget {

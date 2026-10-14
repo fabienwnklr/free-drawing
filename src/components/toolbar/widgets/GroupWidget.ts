@@ -1,7 +1,7 @@
 import { Drawer } from '@/Drawer';
 import { Dropdown } from '@/components/Dropdown/Dropdown';
-import { BaseWidget } from './BaseWidget';
-import { Toolbar } from '../Toolbar';
+import { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
+import { Toolbar } from '@/components/toolbar/Toolbar';
 
 export class GroupWidget extends Dropdown {
   drawer: Drawer;

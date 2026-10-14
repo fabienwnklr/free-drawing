@@ -1,16 +1,16 @@
-import './toolbar.scss';
+import '@/components/toolbar/toolbar.scss';
 import { Drawer } from '@/Drawer';
-import { BaseWidget } from './widgets/BaseWidget';
-import { BrushWidget } from './widgets/Brush/Brush';
-import { EraserWidget } from './widgets/Eraser/Eraser';
-import { SelectWidget } from './widgets/Select/Select';
-import type { AvailableTools, WidgetName } from '../../@types/toolbar';
-import { PanWidget } from './widgets/Pan/Pan';
-import { TextWidget } from './widgets/Text/Text';
-import { LineWidget } from './widgets/Line/Line';
-import { SquareWidget } from './widgets/Square/Square';
-import { CircleWidget } from './widgets/Circle/Circle';
-import { ArrowWidget } from './widgets/Arrow/Arrow';
+import { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
+import { BrushWidget } from '@/components/toolbar/widgets/Brush/Brush';
+import { EraserWidget } from '@/components/toolbar/widgets/Eraser/Eraser';
+import { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
+import type { AvailableTools, WidgetName } from '@/@types/toolbar';
+import { PanWidget } from '@/components/toolbar/widgets/Pan/Pan';
+import { TextWidget } from '@/components/toolbar/widgets/Text/Text';
+import { LineWidget } from '@/components/toolbar/widgets/Line/Line';
+import { SquareWidget } from '@/components/toolbar/widgets/Square/Square';
+import { CircleWidget } from '@/components/toolbar/widgets/Circle/Circle';
+import { ArrowWidget } from '@/components/toolbar/widgets/Arrow/Arrow';
 import { getWidgetNames } from '@/utils/widgets';
 import { arrowNavigation } from '@/utils/dom';
 

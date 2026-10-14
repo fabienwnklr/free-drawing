@@ -1,7 +1,7 @@
 import { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import type { ShapeOrder } from '@/@types/drawer';
-import { Drawer } from '../Drawer';
+import { Drawer } from '@/Drawer';
 
 export class HotKey {
   drawer: Drawer;

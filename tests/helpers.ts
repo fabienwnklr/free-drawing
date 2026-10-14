@@ -1,5 +1,5 @@
-import { Drawer } from '../src/Drawer';
-import type { DrawerOptions } from '../src/@types/drawer';
+import { Drawer } from '@/Drawer';
+import type { DrawerOptions } from '@/@types/drawer';
 
 /**
  * Drawer isolated from other tests: no saved state loaded, nothing saved (unless options say so)

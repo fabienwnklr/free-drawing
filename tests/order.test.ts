@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { Rect } from 'konva/lib/shapes/Rect';
 import type { Shape, ShapeConfig } from 'konva/lib/Shape';
-import type { Drawer } from '../src/Drawer';
-import type { SelectWidget } from '../src/components/toolbar/widgets/Select/Select';
-import type { BaseWidget } from '../src/components/toolbar/widgets/BaseWidget';
-import { applyOrder } from '../src/utils/order';
+import type { Drawer } from '@/Drawer';
+import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
+import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
+import { applyOrder } from '@/utils/order';
 import { createDrawer, keydown } from './helpers';
 
 /** Rects added in this order (bottom to top), named by their id */

@@ -7,7 +7,7 @@ import SendToBackIcon from '@/icons/send-to-back.svg?raw';
 import SendBackwardIcon from '@/icons/send-backward.svg?raw';
 import BringForwardIcon from '@/icons/bring-forward.svg?raw';
 import BringToFrontIcon from '@/icons/bring-to-front.svg?raw';
-import './overlay.scss';
+import '@/components/tools/Overlay/overlay.scss';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Group } from 'konva/lib/Group';
 import { dataAttributes, fillShapes } from '@/constants';

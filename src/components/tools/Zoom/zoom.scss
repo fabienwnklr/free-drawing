@@ -1,5 +1,5 @@
-@use '../../../scss/variables' as *;
-@use '../../../scss/mixins' as *;
+@use '@/scss/variables' as *;
+@use '@/scss/mixins' as *;
 
 .drawer-container .drawer-zoom-container {
   @include button-group;

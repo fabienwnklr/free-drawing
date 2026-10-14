@@ -13,5 +13,25 @@
     "rules": {
       "@typescript-eslint/no-explicit-any": "off"
     },
-    "ignorePatterns": ["**/*.css", "**/*.scss", "**/*.svg", "**/*.ttf"]
+    "ignorePatterns": ["**/*.css", "**/*.scss", "**/*.svg", "**/*.ttf"],
+    "overrides": [
+      {
+        "files": ["src/**/*.ts"],
+        "rules": {
+          "no-restricted-imports": [
+            "error",
+            { "patterns": [{ "group": ["./**", "../**"], "message": "Import with @/ alias (src)." }] }
+          ]
+        }
+      },
+      {
+        "files": ["tests/**/*.ts"],
+        "rules": {
+          "no-restricted-imports": [
+            "error",
+            { "patterns": [{ "group": ["../src/**"], "message": "Import with @/ alias (src)." }] }
+          ]
+        }
+      }
+    ]
   }

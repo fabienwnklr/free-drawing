@@ -1,7 +1,7 @@
 import { describe, expect, it, beforeAll, afterEach, vi } from 'vitest';
 import { Line } from 'konva/lib/shapes/Line';
-import type { TextWidget } from '../src/components/toolbar/widgets/Text/Text';
-import { historyLimit, shapeName } from '../src/constants';
+import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
+import { historyLimit, shapeName } from '@/constants';
 import { createDrawer, fireMouse } from './helpers';
 
 beforeAll(() => {

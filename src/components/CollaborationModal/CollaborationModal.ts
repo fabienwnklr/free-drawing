@@ -1,4 +1,4 @@
-import './collaboration-modal.scss';
+import '@/components/CollaborationModal/collaboration-modal.scss';
 import type { Drawer } from '@/Drawer';
 import { Modal } from '@/components/Modal/Modal';
 import { createButton, uniqueId } from '@/utils/dom';

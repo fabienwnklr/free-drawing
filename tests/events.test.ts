@@ -1,10 +1,10 @@
 import { describe, expect, it, beforeAll, vi } from 'vitest';
-import { Drawer } from '../src/Drawer';
-import { SelectWidget } from '../src/components/toolbar/widgets/Select/Select';
-import type { TextWidget } from '../src/components/toolbar/widgets/Text/Text';
-import type { LineWidget } from '../src/components/toolbar/widgets/Line/Line';
-import type { EraserWidget } from '../src/components/toolbar/widgets/Eraser/Eraser';
-import type { BrushWidget } from '../src/components/toolbar/widgets/Brush/Brush';
+import { Drawer } from '@/Drawer';
+import { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
+import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
+import type { LineWidget } from '@/components/toolbar/widgets/Line/Line';
+import type { EraserWidget } from '@/components/toolbar/widgets/Eraser/Eraser';
+import type { BrushWidget } from '@/components/toolbar/widgets/Brush/Brush';
 import type { Line } from 'konva/lib/shapes/Line';
 import { createDrawer, fireMouse, keydown, setPointer } from './helpers';
 

@@ -3,7 +3,7 @@ import { Drawer } from '@/Drawer';
 import { shapeName } from '@/constants';
 import { Rect } from 'konva/lib/shapes/Rect';
 import type { Vector2d } from 'konva/lib/types';
-import { ShapeWidget, dragBox } from '../ShapeWidget';
+import { ShapeWidget, dragBox } from '@/components/toolbar/widgets/ShapeWidget';
 
 export class SquareWidget extends ShapeWidget<Rect> {
   protected hasFill = true;

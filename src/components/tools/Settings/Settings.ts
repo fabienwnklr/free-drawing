@@ -1,5 +1,5 @@
 import { Dropdown } from '@/components/Dropdown/Dropdown';
-import './settings.scss';
+import '@/components/tools/Settings/settings.scss';
 import { Drawer } from '@/Drawer';
 import SettingIcon from '@/icons/setting.svg?raw';
 import OpenIcon from '@/icons/open.svg?raw';

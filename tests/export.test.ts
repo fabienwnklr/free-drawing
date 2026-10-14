@@ -3,9 +3,9 @@ import { Rect } from 'konva/lib/shapes/Rect';
 import { Ellipse } from 'konva/lib/shapes/Ellipse';
 import { Line } from 'konva/lib/shapes/Line';
 import { Arrow } from 'konva/lib/shapes/Arrow';
-import type { TextWidget } from '../src/components/toolbar/widgets/Text/Text';
-import type { SelectWidget } from '../src/components/toolbar/widgets/Select/Select';
-import { createPdf, getExportBox, renderSvg, toDarkColor } from '../src/utils/export';
+import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
+import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
+import { createPdf, getExportBox, renderSvg, toDarkColor } from '@/utils/export';
 import { createDrawer, keydown } from './helpers';
 
 beforeAll(() => {

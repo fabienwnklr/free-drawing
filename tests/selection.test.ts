@@ -4,10 +4,10 @@ import { Ellipse } from 'konva/lib/shapes/Ellipse';
 import { Line } from 'konva/lib/shapes/Line';
 import type { Context } from 'konva/lib/Context';
 import type { Shape, ShapeConfig } from 'konva/lib/Shape';
-import type { Drawer } from '../src/Drawer';
-import type { SelectWidget } from '../src/components/toolbar/widgets/Select/Select';
-import type { TextWidget } from '../src/components/toolbar/widgets/Text/Text';
-import { shapeName } from '../src/constants';
+import type { Drawer } from '@/Drawer';
+import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
+import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
+import { shapeName } from '@/constants';
 import { createDrawer, fireMouse, setPointer } from './helpers';
 
 type Modifiers = { shiftKey?: boolean; altKey?: boolean };

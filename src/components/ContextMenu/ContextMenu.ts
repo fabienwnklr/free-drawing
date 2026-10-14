@@ -1,7 +1,7 @@
 import type { Drawer } from '@/Drawer';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
-import { TextWidget } from '../toolbar/widgets/Text/Text';
-import './context-menu.scss';
+import { TextWidget } from '@/components/toolbar/widgets/Text/Text';
+import '@/components/ContextMenu/context-menu.scss';
 import { Stage } from 'konva/lib/Stage';
 import { arrowNavigation, createButton, disableElement, enableElement, setPressed } from '@/utils/dom';
 

@@ -1,10 +1,10 @@
 import { describe, expect, it, beforeAll } from 'vitest';
-import { Drawer } from '../src/Drawer';
-import type { SelectWidget } from '../src/components/toolbar/widgets/Select/Select';
-import type { TextWidget } from '../src/components/toolbar/widgets/Text/Text';
-import type { LineWidget } from '../src/components/toolbar/widgets/Line/Line';
-import type { BrushWidget } from '../src/components/toolbar/widgets/Brush/Brush';
-import { defaultOptions } from '../src/constants';
+import { Drawer } from '@/Drawer';
+import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
+import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
+import type { LineWidget } from '@/components/toolbar/widgets/Line/Line';
+import type { BrushWidget } from '@/components/toolbar/widgets/Brush/Brush';
+import { defaultOptions } from '@/constants';
 import { createDrawer, keydown } from './helpers';
 
 beforeAll(() => {

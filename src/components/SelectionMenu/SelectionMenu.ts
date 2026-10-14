@@ -1,4 +1,4 @@
-import './selection-menu.scss';
+import '@/components/SelectionMenu/selection-menu.scss';
 import type { Drawer } from '@/Drawer';
 import type { IRect } from 'konva/lib/types';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';

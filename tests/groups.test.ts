@@ -3,11 +3,11 @@ import { Rect } from 'konva/lib/shapes/Rect';
 import { Ellipse } from 'konva/lib/shapes/Ellipse';
 import { Group } from 'konva/lib/Group';
 import type { Shape, ShapeConfig } from 'konva/lib/Shape';
-import type { Drawer } from '../src/Drawer';
-import type { SelectWidget } from '../src/components/toolbar/widgets/Select/Select';
-import type { EraserWidget } from '../src/components/toolbar/widgets/Eraser/Eraser';
-import { shapeName } from '../src/constants';
-import { parseDrawingFile } from '../src/utils/drawingFile';
+import type { Drawer } from '@/Drawer';
+import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
+import type { EraserWidget } from '@/components/toolbar/widgets/Eraser/Eraser';
+import { shapeName } from '@/constants';
+import { parseDrawingFile } from '@/utils/drawingFile';
 import { createDrawer, fireMouse, keydown, setPointer } from './helpers';
 
 /** Drawer with a rectangle, an ellipse and a rectangle on top */

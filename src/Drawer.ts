@@ -1,16 +1,24 @@
-import './scss/drawer.scss';
+import '@/scss/drawer.scss';
 import { Stage } from 'konva/lib/Stage';
 import { Layer } from 'konva/lib/Layer';
-import { Toolbar } from './components/toolbar/Toolbar';
+import { Toolbar } from '@/components/toolbar/Toolbar';
 import { Rect } from 'konva/lib/shapes/Rect';
-import { AvailableTools } from './@types/toolbar';
-import { ColorLike, DrawerOptions, DrawingShape, OptionsChange, ShapeOrder, StrokeStyle, TextStyle } from './@types/drawer';
-import { createId, deepMerge } from './utils/functions';
-import { defaultOptions, gridSize, shapeLabels, shapeName, zoomLimits } from './constants';
-import { setPressed } from './utils/dom';
-import { getStrokeStyle } from './utils/stroke';
-import { reorderShapes } from './utils/order';
-import { setupHit } from './utils/hit';
+import { AvailableTools } from '@/@types/toolbar';
+import {
+  ColorLike,
+  DrawerOptions,
+  DrawingShape,
+  OptionsChange,
+  ShapeOrder,
+  StrokeStyle,
+  TextStyle,
+} from '@/@types/drawer';
+import { createId, deepMerge } from '@/utils/functions';
+import { defaultOptions, gridSize, shapeLabels, shapeName, zoomLimits } from '@/constants';
+import { setPressed } from '@/utils/dom';
+import { getStrokeStyle } from '@/utils/stroke';
+import { reorderShapes } from '@/utils/order';
+import { setupHit } from '@/utils/hit';
 import {
   type DrawingFile,
   decodeLinkData,
@@ -19,11 +27,11 @@ import {
   parseDrawingFile,
   pickFile,
   saveFile,
-} from './utils/drawingFile';
-import { type ShapeState, getShapeState } from './components/tools/UndoRedo/History';
-import { type ImageFormat, canvasToBlob, createPdf, getExportBox, renderCanvas, renderSvg } from './utils/export';
-import { toHexColor } from './utils/color';
-import { ExportModal } from './components/ExportModal/ExportModal';
+} from '@/utils/drawingFile';
+import { type ShapeState, getShapeState } from '@/components/tools/UndoRedo/History';
+import { type ImageFormat, canvasToBlob, createPdf, getExportBox, renderCanvas, renderSvg } from '@/utils/export';
+import { toHexColor } from '@/utils/color';
+import { ExportModal } from '@/components/ExportModal/ExportModal';
 
 export type ExportImageOptions = {
   /** Selected shapes only, when there is a selection (default true) */
@@ -35,32 +43,32 @@ export type ExportImageOptions = {
   /** Pixel ratio of png and pdf (default 2) */
   scale?: number;
 };
-import { Zoom } from './components/tools/Zoom/Zoom';
-import { Position } from './components/tools/Position/Position';
-import { Help } from './components/tools/Help/Help';
-import { Collaboration, type CollaborationSocket } from './components/Collaboration/Collaboration';
-import { CollaborationModal } from './components/CollaborationModal/CollaborationModal';
+import { Zoom } from '@/components/tools/Zoom/Zoom';
+import { Position } from '@/components/tools/Position/Position';
+import { Help } from '@/components/tools/Help/Help';
+import { Collaboration, type CollaborationSocket } from '@/components/Collaboration/Collaboration';
+import { CollaborationModal } from '@/components/CollaborationModal/CollaborationModal';
 
-import type { SelectWidget } from './components/toolbar/widgets/Select/Select';
-import type { BaseWidget } from './components/toolbar/widgets/BaseWidget';
+import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
+import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 
-import { Settings } from './components/tools/Settings/Settings';
+import { Settings } from '@/components/tools/Settings/Settings';
 import { Node } from 'konva/lib/Node';
-import MicroEvent from './utils/MicroEvent';
-import { ConfirmModal } from './components/Modal/ConfirmModal';
-import { UndoRedo } from './components/tools/UndoRedo/UndoRedo';
-import { ContextMenu } from './components/ContextMenu/ContextMenu';
-import { SelectionMenu } from './components/SelectionMenu/SelectionMenu';
-import { LayersPanel } from './components/LayersPanel/LayersPanel';
-import { TextWidget } from './components/toolbar/widgets/Text/Text';
+import MicroEvent from '@/utils/MicroEvent';
+import { ConfirmModal } from '@/components/Modal/ConfirmModal';
+import { UndoRedo } from '@/components/tools/UndoRedo/UndoRedo';
+import { ContextMenu } from '@/components/ContextMenu/ContextMenu';
+import { SelectionMenu } from '@/components/SelectionMenu/SelectionMenu';
+import { LayersPanel } from '@/components/LayersPanel/LayersPanel';
+import { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import { Line } from 'konva/lib/shapes/Line';
-import { Toast } from './components/Toast/Toast';
+import { Toast } from '@/components/Toast/Toast';
 import { Group } from 'konva/lib/Group';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Vector2d } from 'konva/lib/types';
-import { AvailableTypes } from './@types/toast';
-import { debounce } from './utils/perf';
-import { HotKey } from './utils/HotKey';
+import { AvailableTypes } from '@/@types/toast';
+import { debounce } from '@/utils/perf';
+import { HotKey } from '@/utils/HotKey';
 
 // default id of each drawer of the page
 let drawerCount = 0;

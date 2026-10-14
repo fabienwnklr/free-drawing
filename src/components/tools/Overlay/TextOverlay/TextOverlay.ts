@@ -3,13 +3,13 @@ import type { OptionsChange, TextStyle } from '@/@types/drawer';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Group } from 'konva/lib/Group';
 import { Text } from 'konva/lib/shapes/Text';
-import { BaseOverlay } from '../BaseOverlay';
+import { BaseOverlay } from '@/components/tools/Overlay/BaseOverlay';
 import { dataAttributes } from '@/constants';
 import { setPressed } from '@/utils/dom';
 import AlignLeftIcon from '@/icons/align-left.svg?raw';
 import AlignCenterIcon from '@/icons/align-center.svg?raw';
 import AlignRightIcon from '@/icons/align-right.svg?raw';
-import './text-overlay.scss';
+import '@/components/tools/Overlay/TextOverlay/text-overlay.scss';
 
 const fontFamilies = ['Ubuntu', 'Arial', 'Verdana', 'Georgia', 'Times New Roman', 'Courier New', 'Comic Sans MS'];
 

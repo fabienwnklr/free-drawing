@@ -1,4 +1,4 @@
-import type { AvailableTools, WidgetsOptions } from './toolbar';
+import type { AvailableTools, WidgetsOptions } from '@/@types/toolbar';
 import type { Shape, ShapeConfig } from 'konva/lib/Shape';
 import type { Group } from 'konva/lib/Group';
 

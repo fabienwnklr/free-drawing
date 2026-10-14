@@ -1,4 +1,4 @@
-@use '../../../scss/mixins' as *;
+@use '@/scss/mixins' as *;
 
 .drawer-container .drawer-undoredo-container {
   @include button-group;

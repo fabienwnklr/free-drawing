@@ -1,9 +1,9 @@
 import { describe, expect, it, beforeAll, vi } from 'vitest';
 import type { Line } from 'konva/lib/shapes/Line';
-import type { TextWidget } from '../src/components/toolbar/widgets/Text/Text';
-import type { BaseWidget } from '../src/components/toolbar/widgets/BaseWidget';
-import type { DrawerOptions } from '../src/@types/drawer';
-import { widgetNames } from '../src/constants';
+import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
+import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
+import type { DrawerOptions } from '@/@types/drawer';
+import { widgetNames } from '@/constants';
 import { createDrawer, fireMouse, keydown } from './helpers';
 
 beforeAll(() => {

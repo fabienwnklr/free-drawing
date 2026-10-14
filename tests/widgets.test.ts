@@ -1,13 +1,13 @@
 import { describe, expect, it, beforeAll, vi } from 'vitest';
-import { Drawer } from '../src/Drawer';
-import type { SelectWidget } from '../src/components/toolbar/widgets/Select/Select';
-import type { TextWidget } from '../src/components/toolbar/widgets/Text/Text';
-import type { BrushWidget } from '../src/components/toolbar/widgets/Brush/Brush';
+import { Drawer } from '@/Drawer';
+import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
+import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
+import type { BrushWidget } from '@/components/toolbar/widgets/Brush/Brush';
 import type { Text } from 'konva/lib/shapes/Text';
 import type { Shape, ShapeConfig } from 'konva/lib/Shape';
-import type { BaseWidget } from '../src/components/toolbar/widgets/BaseWidget';
-import type { EraserWidget } from '../src/components/toolbar/widgets/Eraser/Eraser';
-import { crosshairCursor } from '../src/constants';
+import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
+import type { EraserWidget } from '@/components/toolbar/widgets/Eraser/Eraser';
+import { crosshairCursor } from '@/constants';
 import { createDrawer, drag, fireMouse, keydown, setPointer } from './helpers';
 
 beforeAll(() => {

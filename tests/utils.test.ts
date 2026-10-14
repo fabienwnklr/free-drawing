@@ -1,6 +1,6 @@
 import { test, expect, describe } from 'vitest';
-import { deepMerge, isObject, isTruthy, stringToNode } from '../src/utils/functions';
-import MicroEvent from '../src/utils/MicroEvent';
+import { deepMerge, isObject, isTruthy, stringToNode } from '@/utils/functions';
+import MicroEvent from '@/utils/MicroEvent';
 
 describe('utilities', () => {
   test('Convert string to HTML element', () => {

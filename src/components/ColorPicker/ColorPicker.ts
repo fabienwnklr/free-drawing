@@ -1,4 +1,4 @@
-import './color-picker.scss';
+import '@/components/ColorPicker/color-picker.scss';
 import type { ColorLike } from '@/@types/drawer';
 import { createButton, setLabel, setPressed } from '@/utils/dom';
 import { normalizeColor, toHexColor } from '@/utils/color';

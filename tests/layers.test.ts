@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { Rect } from 'konva/lib/shapes/Rect';
 import { Line } from 'konva/lib/shapes/Line';
-import type { Drawer } from '../src/Drawer';
-import type { SelectWidget } from '../src/components/toolbar/widgets/Select/Select';
-import type { TextWidget } from '../src/components/toolbar/widgets/Text/Text';
-import { shapeName } from '../src/constants';
+import type { Drawer } from '@/Drawer';
+import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
+import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
+import { shapeName } from '@/constants';
 import { createDrawer, keydown } from './helpers';
 
 /** Drawer with a rectangle, a freehand line and a text (top), panel open */

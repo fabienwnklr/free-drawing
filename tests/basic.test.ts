@@ -1,9 +1,9 @@
 import { describe, expect, it, beforeAll } from 'vitest';
-import { Drawer } from '../src/Drawer';
-import { Toolbar } from '../src/components/toolbar/Toolbar';
-import { Zoom } from '../src/components/tools/Zoom/Zoom';
-import { Help } from '../src/components/tools/Help/Help';
-import { Settings } from '../src/components/tools/Settings/Settings';
+import { Drawer } from '@/Drawer';
+import { Toolbar } from '@/components/toolbar/Toolbar';
+import { Zoom } from '@/components/tools/Zoom/Zoom';
+import { Help } from '@/components/tools/Help/Help';
+import { Settings } from '@/components/tools/Settings/Settings';
 import { readdirSync, lstatSync } from 'fs';
 import { join } from 'path';
 

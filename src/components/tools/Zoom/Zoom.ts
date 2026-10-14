@@ -1,4 +1,4 @@
-import './zoom.scss';
+import '@/components/tools/Zoom/zoom.scss';
 import { Drawer } from '@/Drawer';
 import MinusIcon from '@/icons/minus.svg?raw';
 import PlusIcon from '@/icons/plus.svg?raw';

@@ -1,4 +1,4 @@
-import './help.scss';
+import '@/components/tools/Help/help.scss';
 import { Drawer } from '@/Drawer';
 import { Modal } from '@/components/Modal/Modal';
 import HelpIcon from '@/icons/help.svg?raw';

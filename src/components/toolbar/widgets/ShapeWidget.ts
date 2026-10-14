@@ -2,7 +2,7 @@ import type { AvailableTools } from '@/@types/toolbar';
 import type { Drawer } from '@/Drawer';
 import type { Shape, ShapeConfig } from 'konva/lib/Shape';
 import type { Vector2d } from 'konva/lib/types';
-import { BaseWidget } from './BaseWidget';
+import { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import { ShapeOverlay } from '@/components/tools/Overlay/ShapeOverlay/ShapeOverlay';
 import { crosshairCursor } from '@/constants';
 import { toFill } from '@/utils/color';

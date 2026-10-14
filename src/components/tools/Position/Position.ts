@@ -1,4 +1,4 @@
-import './position.scss';
+import '@/components/tools/Position/position.scss';
 import type { Drawer } from '@/Drawer';
 import type { Vector2d } from 'konva/lib/types';
 import RecenterIcon from '@/icons/recenter.svg?raw';

@@ -1,5 +1,5 @@
 import type { ModalOptions } from '@/@types/modal';
-import type { ConfirmModal } from './ConfirmModal';
+import type { ConfirmModal } from '@/components/Modal/ConfirmModal';
 
 /**
  * @private

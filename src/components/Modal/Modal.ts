@@ -1,5 +1,5 @@
-import './modal.scss';
-import { defaultOptionsModal } from './constants';
+import '@/components/Modal/modal.scss';
+import { defaultOptionsModal } from '@/components/Modal/constants';
 import { stringToNode } from '@/utils/functions';
 import type { Drawer } from '@/Drawer';
 import type { ModalOptions } from '@/@types/modal';

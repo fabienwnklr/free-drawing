@@ -1,15 +1,15 @@
 import { describe, expect, it, beforeAll, vi } from 'vitest';
 import { Rect } from 'konva/lib/shapes/Rect';
-import { Drawer } from '../src/Drawer';
-import type { TextWidget } from '../src/components/toolbar/widgets/Text/Text';
-import type { SelectWidget } from '../src/components/toolbar/widgets/Select/Select';
+import { Drawer } from '@/Drawer';
+import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
+import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import {
   Collaboration,
   type CollaborationSocket,
   type DrawingChange,
-} from '../src/components/Collaboration/Collaboration';
+} from '@/components/Collaboration/Collaboration';
 import { createDrawer, fireMouse, keydown, setPointer } from './helpers';
-import type { BaseWidget } from '../src/components/toolbar/widgets/BaseWidget';
+import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import type { Group } from 'konva/lib/Group';
 import type { Shape, ShapeConfig } from 'konva/lib/Shape';
 import type { Text } from 'konva/lib/shapes/Text';

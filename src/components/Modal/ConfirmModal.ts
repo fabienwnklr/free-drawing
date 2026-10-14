@@ -1,11 +1,11 @@
 import type { Drawer } from '@/Drawer';
-import { Modal } from './Modal';
+import { Modal } from '@/components/Modal/Modal';
 import { deepMerge } from '@/utils/functions';
-import { confirmModalDefaultOpts } from './constants';
+import { confirmModalDefaultOpts } from '@/components/Modal/constants';
 import type { ConfirmModalOptions } from '@/@types/modal';
 import { uniqueId } from '@/utils/dom';
 
-import './modal-confirm.scss';
+import '@/components/Modal/modal-confirm.scss';
 
 export class ConfirmModal extends Modal {
   drawer: Drawer;

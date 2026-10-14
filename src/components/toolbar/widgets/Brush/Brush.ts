@@ -1,5 +1,5 @@
 import { Drawer } from '@/Drawer';
-import { BaseWidget } from '../BaseWidget';
+import { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import BrushIcon from '@/icons/brush.svg?raw';
 import { Line } from 'konva/lib/shapes/Line';
 import { BrushOverlay } from '@/components/tools/Overlay/BrushOverlay/BrushOverlay';

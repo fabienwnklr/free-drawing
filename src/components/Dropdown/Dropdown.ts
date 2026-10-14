@@ -1,6 +1,6 @@
 import MicroEvent from '@/utils/MicroEvent';
 import { createButton, uniqueId } from '@/utils/dom';
-import './dropdown.scss';
+import '@/components/Dropdown/dropdown.scss';
 
 export class Dropdown extends MicroEvent {
   $dropdownContainer: HTMLDivElement;

@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeAll, vi } from 'vitest';
 import { Rect } from 'konva/lib/shapes/Rect';
-import type { TextWidget } from '../src/components/toolbar/widgets/Text/Text';
+import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import { createDrawer, keydown } from './helpers';
 
 beforeAll(() => {
