@@ -600,4 +600,22 @@ describe('Collaboration', () => {
     connect(c);
     expect(ids(c)).toEqual([second.id(), first.id()]);
   });
+
+  it('Updates received keep local hit region of shapes', () => {
+    const connect = createServer();
+    const a = createDrawer();
+    const b = createDrawer();
+    connect(a);
+    connect(b);
+    const rect = a.addShape(new Rect({ name: 'drawer-rect', width: 10, height: 10, stroke: '#000' }));
+
+    a.stage.fire('change');
+    const copy = byId(b, rect.id())!;
+    expect(copy.hitFunc()).toBeTypeOf('function');
+
+    rect.x(50);
+    a.stage.fire('change');
+    expect(copy.x()).toBe(50);
+    expect(copy.hitFunc()).toBeTypeOf('function');
+  });
 });

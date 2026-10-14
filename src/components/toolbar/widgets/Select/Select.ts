@@ -4,9 +4,6 @@ import SelectIcon from '@/icons/select.svg?raw';
 import { Transformer } from 'konva/lib/shapes/Transformer';
 import { Rect } from 'konva/lib/shapes/Rect';
 import { Line } from 'konva/lib/shapes/Line';
-import { Util } from 'konva/lib/Util';
-import { NodeConfig } from 'konva/lib/Node';
-import { Context } from 'konva/lib/Context';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Stage } from 'konva/lib/Stage';
 import { fillShapes, shapeName, strokeStyleShapes } from '@/constants';
@@ -20,6 +17,11 @@ import { Text } from 'konva/lib/shapes/Text';
 import { Group } from 'konva/lib/Group';
 import { Arrow } from 'konva/lib/shapes/Arrow';
 import { arrowPointerSize } from '../Arrow/Arrow';
+import type { Vector2d } from 'konva/lib/types';
+import { isInsideOutline, rectContains } from '@/utils/hit';
+
+/** Pointer move under which a press is a click (px) */
+const clickTolerance = 3;
 
 export class SelectWidget extends BaseWidget {
   #x1: number = 0;
@@ -62,6 +64,8 @@ export class SelectWidget extends BaseWidget {
   });
   // press on transformer anchor (resize, rotate), its release must not change selection
   #pressOnTransformer: boolean = false;
+  // press on stage: position, shape pressed, selected at once (dragged with selection), in selection box (dragged)
+  #press: { pos: Vector2d; shape: Shape<ShapeConfig> | null; selected: boolean; inSelection: boolean } | null = null;
   snapping: boolean = false;
   overlay: SelectOverlay;
   // overlay of selected shapes, not of the tool
@@ -112,11 +116,41 @@ export class SelectWidget extends BaseWidget {
   protected initEvents(): void {
     this.onStage('mousedown touchstart', (e) => {
       this.#pressOnTransformer = e.target.getParent() === this.transformer;
+      this.#press = null;
 
-      // do nothing if we mousedown on any shape
-      if (e.target !== this.drawer.stage || e.evt.button === 2) {
+      if (e.evt.button === 2 || this.#pressOnTransformer) return;
+
+      const { shiftKey, altKey } = e.evt as MouseEvent;
+      // shape drawn under pointer (konva hit)
+      const shape =
+        e.target !== this.drawer.stage && e.target.getLayer() === this.drawer.drawLayer
+          ? (e.target as Shape<ShapeConfig>)
+          : null;
+
+      // other nodes of selection layer
+      if (!shape && e.target !== this.drawer.stage) return;
+
+      const nodes = this._getSelected();
+
+      this.#press = { pos: this.drawer._getPointerPos(), shape, selected: false, inSelection: false };
+
+      if (shape) {
+        // pressed shape selected at once: dragged alone, or with selection with Shift (Alt selects on click)
+        if (!nodes.includes(shape) && !altKey) {
+          this.select(shiftKey ? [...nodes, shape] : [shape]);
+          this.#press.selected = true;
+        }
         return;
       }
+
+      // press in selection box out of shapes (inside without background, around lines...): selection dragged
+      if (!shiftKey && !altKey && this._inSelectionBox(this.#press.pos)) {
+        this.#press.inSelection = true;
+        nodes[0].startDrag(e);
+        return;
+      }
+
+      // press on empty place: selection rectangle
       e.evt.preventDefault();
       const realPos = this.drawer._getRelativePointerPos();
       this.#x1 = realPos.x;
@@ -133,7 +167,8 @@ export class SelectWidget extends BaseWidget {
       if (!this.inAction) {
         // Don't change cursor on anchor or on transforming
         if (e.target.hasName('_anchor') || this.transformer.isTransforming()) return;
-        if (e.target !== this.drawer.stage) {
+        // shape or selection box (dragged from it)
+        if (e.target !== this.drawer.stage || this._inSelectionBox(this.drawer._getPointerPos())) {
           this.drawer.$stageContainer.style.cursor = 'move';
           // e.target.setAttrs({ strokeWidth: 2, strokeColor: "red"})
         } else {
@@ -166,18 +201,35 @@ export class SelectWidget extends BaseWidget {
         return;
       }
 
-      this.endAction();
-      e.evt.preventDefault();
-      // update visibility in timeout, so we can check it in click event
-      this.selectionRectangle.visible(false);
-      const shapes = this.drawer.getDrawingShapes();
-      // no rectangle drawn (click on a shape or on empty stage): select under pointer
-      const isClick = !this.selectionRectangle.width() && !this.selectionRectangle.height();
-      const { x, y } = this.drawer._getPointerPos();
-      const box = isClick ? { x, y, width: 1, height: 1 } : this.selectionRectangle.getClientRect();
-      const selected = shapes.filter((shape) => shape.listening() && Util.haveIntersection(box, shape.getClientRect()));
+      const press = this.#press;
 
-      this.select(selected);
+      this.#press = null;
+      // released without press on stage
+      if (!press) return;
+
+      const pos = this.drawer._getPointerPos();
+      const moved = Math.hypot(pos.x - press.pos.x, pos.y - press.pos.y) > clickTolerance;
+      const { shiftKey, altKey } = e.evt as MouseEvent;
+
+      if (this.inAction) {
+        this.endAction();
+        e.evt.preventDefault();
+        this.selectionRectangle.visible(false);
+
+        if (moved) {
+          const box = this.selectionRectangle.getClientRect();
+          // shapes entirely in rectangle: a rectangle drawn in a big shape selects small shapes on it, not the big one
+          const inside = this.drawer
+            .getDrawingShapes()
+            .filter((shape) => shape.listening() && rectContains(box, shape.getClientRect()));
+          const nodes = this._getSelected();
+
+          this.select(shiftKey ? [...nodes, ...inside.filter((shape) => !nodes.includes(shape))] : inside);
+        }
+      }
+
+      // click (after a drag, selection is kept), unless pressed shape was selected on press
+      if (!moved && !press.selected) this._selectAt(pos, press.shape, { shiftKey, altKey }, press.inSelection);
       this.$container.focus();
       this.selectionRectangle.setAttrs({
         visible: true,
@@ -199,22 +251,6 @@ export class SelectWidget extends BaseWidget {
       return;
     }
 
-    this._restoreHit();
-
-    // selected lines are hit on their whole box (drag from inside)
-    shapes.forEach((s) => {
-      if (s instanceof Line) {
-        s.hitFunc((context, shape) => {
-          const { x, y, width, height } = shape.getSelfRect();
-          context.beginPath();
-          context.rect(x, y, width, height);
-          context.closePath();
-          context.fillStrokeShape(shape);
-        });
-        s.hitStrokeWidth('auto');
-      }
-    });
-
     this._setupAnchors(shapes);
     this.transformer.nodes(shapes);
     // overlay of active tool (brush, shapes...) replaced by selection one
@@ -223,14 +259,69 @@ export class SelectWidget extends BaseWidget {
   }
 
   /**
-   * reset hit detection for old selected shape
+   * Shapes under a point (absolute position), from top to bottom: drawn there (fill, stroke, text box), then
+   * rectangles and ellipses without background around it, smallest first
+   * @param {Vector2d} pos
+   * @param {Shape<ShapeConfig> | null} hit Shape drawn on top (konva hit of pointer event), none by default
    */
-  private _restoreHit() {
-    const currentlySelected = this.transformer.nodes() as Line<NodeConfig>[];
-    currentlySelected.forEach((s) => {
-      s.hitFunc(undefined as any as (ctx: Context, shape: Line<NodeConfig>) => void);
-      s.hitStrokeWidth(20);
-    });
+  getShapesAt(pos: Vector2d, hit: Shape<ShapeConfig> | null = null): Shape<ShapeConfig>[] {
+    const shapes = this.drawer
+      .getDrawingShapes()
+      .filter((shape) => shape.listening() && shape.isVisible())
+      .reverse();
+    // drawn under hit shape
+    const below = hit
+      ? shapes.slice(shapes.indexOf(hit) + 1).filter((shape) => shape !== hit && shape.intersects(pos))
+      : [];
+    const drawn = hit ? [hit, ...below] : [];
+    const area = (shape: Shape<ShapeConfig>) => shape.getClientRect().width * shape.getClientRect().height;
+    const around = shapes
+      .filter((shape) => !drawn.includes(shape) && fillShapes.some((name) => shape.hasName(name)))
+      .filter((shape) => isInsideOutline(shape, pos))
+      .sort((a, b) => area(a) - area(b));
+
+    return [...drawn, ...around];
+  }
+
+  /**
+   * Point (absolute position) in box of selection, rotated with it
+   */
+  private _inSelectionBox(pos: Vector2d) {
+    const back = this.transformer.findOne<Shape<ShapeConfig>>('.back');
+
+    return this.transformer.nodes().length > 0 && !!back && isInsideOutline(back, pos);
+  }
+
+  /**
+   * Selected nodes (drawing shapes)
+   */
+  private _getSelected() {
+    return this.transformer.nodes() as (Shape<ShapeConfig> | Group)[];
+  }
+
+  /**
+   * Click selection: shape under pointer, Shift adds or removes it, Alt selects the one behind selected shape
+   * @param keep Selection kept without shape under pointer (click in selection box)
+   */
+  private _selectAt(
+    pos: Vector2d,
+    hit: Shape<ShapeConfig> | null,
+    { shiftKey = false, altKey = false } = {},
+    keep = false
+  ) {
+    const shapes = this.getShapesAt(pos, hit);
+    const nodes = this._getSelected();
+    const current = nodes.length === 1 ? shapes.indexOf(nodes[0] as Shape<ShapeConfig>) : -1;
+    // behind selected shape, back to top after the last one
+    const shape = altKey && current !== -1 ? shapes[(current + 1) % shapes.length] : shapes[0];
+
+    if (!shape && keep) return;
+
+    if (!shiftKey) {
+      this.select(shape ? [shape] : []);
+    } else if (shape) {
+      this.select(nodes.includes(shape) ? nodes.filter((node) => node !== shape) : [...nodes, shape]);
+    }
   }
 
   protected onActive(): void {
@@ -279,7 +370,6 @@ export class SelectWidget extends BaseWidget {
    * Unselect shapes and hide selection overlays, overlay of active tool (brush, text...) is shown again
    */
   clearSelection() {
-    this._restoreHit();
     this.transformer.nodes([]);
     this.hideOverlay();
 

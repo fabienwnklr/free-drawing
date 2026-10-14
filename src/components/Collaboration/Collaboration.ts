@@ -326,9 +326,10 @@ export class Collaboration {
       let shape = shapes.get(attrs.id as string);
 
       if (shape) {
-        // same node (kept in selection): attributes removed by other client are removed
+        // same node (kept in selection): attributes removed by other client are removed, not local ones (draggable,
+        // hit function)
         Object.keys(shape.attrs)
-          .filter((key) => !(key in attrs) && key !== 'draggable')
+          .filter((key) => !(key in attrs) && key !== 'draggable' && typeof shape!.getAttr(key) !== 'function')
           .forEach((key) => shape!.setAttr(key, undefined));
         shape.setAttrs(attrs);
       } else {

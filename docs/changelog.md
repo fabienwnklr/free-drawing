@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [5.6.0](https://github.com/fabienwnklr/free-drawing/compare/v5.5.0...v5.6.0) (2026-10-14)
+
+
+### Features
+
+* **selection:** Shift + click adds or removes a shape, Alt + click selects the shape behind the selected one, Shift adds shapes of selection rectangle
+* **selection:** selection dragged from any place of its box (inside of shapes without background, around lines)
+
+### Bug Fixes
+
+* **selection:** click selects only the shape drawn under pointer, not every shape around it: a text (or a small shape) on a shape is selected alone, a pressed shape is selected and dragged alone
+* **selection:** selection rectangle selects shapes entirely in it, a rectangle drawn in a big shape selects the small shapes on it
+* inside of rectangles and ellipses without background does not hide shapes under it (click, eraser): an empty inside selects the smallest shape around pointer, the eraser erases their outline
+* lines saved while selected keep a wide hit region (easier to click)
+
 ## [5.5.0](https://github.com/fabienwnklr/free-drawing/compare/v5.4.0...v5.5.0) (2026-10-14)
 
 

@@ -105,6 +105,13 @@ If `tool` option (or the tool saved in localStorage) is not in `widgets`, the fi
 
 ## Selection
 
+With the selection tool:
+
+- a click selects the shape drawn under pointer (a text on a shape is selected alone). Inside of rectangles and ellipses without background is empty: shapes under it are clicked, else the smallest one around pointer is selected;
+- Shift + click adds or removes a shape, Alt + click selects the shape behind the selected one (again: next one behind, then back to top);
+- a selection rectangle selects shapes entirely in it (Shift adds them): drawn in a big shape, it selects the small shapes on it;
+- a pressed shape is selected and dragged alone, the selection is dragged from any place of its box.
+
 A menu next to selected shapes duplicates them (Ctrl+D), brings them forward, sends them backward or deletes them (`selectionMenu` option). It is under the selection, above it near the bottom of the drawer, and hidden while shapes are moved.
 
 ```js

@@ -10,6 +10,7 @@ import { defaultOptions, gridSize, shapeName, zoomLimits } from './constants';
 import { setPressed } from './utils/dom';
 import { getStrokeStyle } from './utils/stroke';
 import { reorderShapes } from './utils/order';
+import { setupHit } from './utils/hit';
 import {
   type DrawingFile,
   decodeLinkData,
@@ -197,6 +198,7 @@ export class Drawer extends MicroEvent {
       // draggable depends on active tool, set on its activation
       this.drawLayer.getChildren().forEach((shape) => {
         shape.draggable(false);
+        setupHit(shape);
         // saves of previous versions
         if (!shape.id()) shape.id(createId());
       });
@@ -567,6 +569,7 @@ export class Drawer extends MicroEvent {
     shape.draggable(this.activeTool === 'selection');
     // shape identity for collaboration (kept in history and saves)
     if (!shape.id()) shape.id(createId());
+    setupHit(shape);
     this.drawLayer.add(shape);
 
     return shape;
