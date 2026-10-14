@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [4.1.0](https://github.com/fabienwnklr/free-drawing/compare/v4.0.1...v4.1.0) (2026-10-14)
+
+
+### Features
+
+* **files:** open and save as `.freedrawing` files (JSON of background and shapes) from settings menu, Ctrl+O and Ctrl+S, browser save dialog when available, `saveAs`, `open`, `getDrawingFile` and `loadDrawing` methods
+* **files:** copy link to drawing, drawing is compressed in link hash (no server), page opened with it loads the drawing, `getLink` and `copyLink` methods
+
 ## [4.0.1](https://github.com/fabienwnklr/free-drawing/compare/v4.0.0...v4.0.1) (2026-10-14)
 
 

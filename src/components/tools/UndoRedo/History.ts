@@ -7,16 +7,23 @@ import { historyLimit } from '@/constants';
 /**
  * Serialized drawing shape (konva `toObject` format), any shape type can be restored
  */
-type ShapeState = { attrs: Record<string, unknown>; className: string };
+export type ShapeState = { attrs: Record<string, unknown>; className: string };
 
 /**
- * JSON of a drawing shape (history, collaboration), without `draggable` which depends on active tool
+ * State of a drawing shape (history, collaboration, files), without `draggable` which depends on active tool
  */
-export function serializeShape(shape: Shape<ShapeConfig>): string {
+export function getShapeState(shape: Shape<ShapeConfig>): ShapeState {
   const { attrs, className } = shape.toObject();
 
   delete attrs.draggable;
-  return JSON.stringify({ attrs, className } satisfies ShapeState);
+  return { attrs, className };
+}
+
+/**
+ * JSON of a drawing shape state
+ */
+export function serializeShape(shape: Shape<ShapeConfig>): string {
+  return JSON.stringify(getShapeState(shape));
 }
 
 export class History {

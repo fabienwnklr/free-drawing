@@ -76,6 +76,17 @@ export class HotKey {
         this.drawer.undoRedo.undo();
       }
 
+      // instead of browser save page and open file
+      if (mod && e.key === 's') {
+        e.preventDefault();
+        this.drawer.saveAs();
+      }
+
+      if (mod && e.key === 'o') {
+        e.preventDefault();
+        this.drawer.open();
+      }
+
       if (mod && e.key === 'y') {
         this.drawer.undoRedo.redo();
       }

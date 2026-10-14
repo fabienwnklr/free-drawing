@@ -9,6 +9,16 @@ import { createId, deepMerge } from './utils/functions';
 import { defaultOptions, gridSize, shapeName, zoomLimits } from './constants';
 import { setPressed } from './utils/dom';
 import { getStrokeStyle } from './utils/stroke';
+import {
+  type DrawingFile,
+  decodeLinkData,
+  drawingFileExtension,
+  encodeLinkData,
+  parseDrawingFile,
+  pickFile,
+  saveFile,
+} from './utils/drawingFile';
+import { getShapeState } from './components/tools/UndoRedo/History';
 import { Zoom } from './components/tools/Zoom/Zoom';
 import { Position } from './components/tools/Position/Position';
 import { Help } from './components/tools/Help/Help';
@@ -235,6 +245,8 @@ export class Drawer extends MicroEvent {
     this.focus();
     this.undoRedo.manageButtons();
     this._initEvents();
+
+    this._loadFromLink();
 
     if (this.options.collaboration) {
       this._initCollaboration()
@@ -497,6 +509,106 @@ export class Drawer extends MicroEvent {
 
     console.warn(`[free-drawing] invalid saved data "${this.options.localStorageKey}" ignored`);
     return null;
+  }
+
+  /**
+   * Drawing as file content (`.freedrawing` file, link): background color and drawing shapes
+   */
+  getDrawingFile(): DrawingFile {
+    return {
+      type: 'free-drawing',
+      version: 1,
+      background: this.background.fill() as ColorLike,
+      shapes: this.getDrawingShapes().map(getShapeState),
+    };
+  }
+
+  /**
+   * Replace drawing by a drawing file content, undo restores previous drawing
+   * @param {DrawingFile | string} file Content or its JSON
+   * @throws {Error} not a drawing file
+   */
+  loadDrawing(file: DrawingFile | string) {
+    // validated: files and links can come from anyone
+    const { background, shapes } = parseDrawingFile(typeof file === 'string' ? file : JSON.stringify(file));
+
+    this.getWidget<SelectWidget>('selection')?.clearSelection();
+    this.getDrawingShapes().forEach((shape) => shape.destroy());
+    shapes.forEach((shape) => this.addShape(Node.create(shape) as Shape<ShapeConfig>));
+    // fires change: history, saved, sent to collaborators
+    this.setBgColor(background);
+  }
+
+  /**
+   * Save drawing in a `.freedrawing` file, with browser save dialog when available (Chromium) else downloaded
+   * @param {string} name File name without extension
+   */
+  async saveAs(name: string = 'drawing') {
+    try {
+      await saveFile(name + drawingFileExtension, JSON.stringify(this.getDrawingFile()));
+    } catch (error) {
+      // dialog canceled
+      if ((error as Error).name !== 'AbortError') {
+        this.toast(`Drawing can't be saved: ${(error as Error).message}`, 'error');
+      }
+    }
+  }
+
+  /**
+   * Open a `.freedrawing` file chosen by user, it replaces drawing (undo restores it)
+   */
+  async open() {
+    const content = await pickFile(`${drawingFileExtension},.json,application/json`);
+
+    if (content === null) return;
+
+    try {
+      this.loadDrawing(content);
+    } catch (error) {
+      this.toast(`Invalid drawing file: ${(error as Error).message}`, 'error');
+    }
+  }
+
+  /**
+   * Link to current page with drawing in its hash (`#<drawer id>=<data>`), no server needed
+   */
+  async getLink(): Promise<string> {
+    const url = new URL(window.location.href);
+
+    url.hash = `${this.options.id}=${await encodeLinkData(JSON.stringify(this.getDrawingFile()))}`;
+
+    return url.toString();
+  }
+
+  /**
+   * Copy link to drawing (see `getLink`) to clipboard
+   */
+  async copyLink() {
+    try {
+      // secure context (https) only
+      if (!navigator.clipboard) throw new Error('clipboard unavailable');
+
+      await navigator.clipboard.writeText(await this.getLink());
+      this.toast('Link copied', 'info');
+    } catch (error) {
+      this.toast(`Link can't be copied: ${(error as Error).message}`, 'warning');
+    }
+  }
+
+  /**
+   * Drawing of a link (see `getLink`) replaces saved one (undo restores it), removed from page url once loaded
+   */
+  private async _loadFromLink() {
+    const prefix = `#${this.options.id}=`;
+
+    if (!window.location.hash.startsWith(prefix)) return;
+
+    try {
+      this.loadDrawing(await decodeLinkData(window.location.hash.slice(prefix.length)));
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    } catch (error) {
+      this.toast(`Invalid drawing link: ${(error as Error).message}`, 'error');
+    }
   }
 
   /**

@@ -9,6 +9,8 @@ import GridIcon from '@/icons/grid.svg?raw';
 import GithubIcon from '@/icons/github.svg?raw';
 import ZenIcon from '@/icons/zen.svg?raw';
 import StoreIcon from '@/icons/store.svg?raw';
+import SaveIcon from '@/icons/save.svg?raw';
+import LinkIcon from '@/icons/link.svg?raw';
 import { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import type { ColorLike } from '@/@types/drawer';
 import { createButton, setLabel, setPressed, uniqueId } from '@/utils/dom';
@@ -18,6 +20,8 @@ export class Settings extends Dropdown {
   drawer: Drawer;
   $exportButton: HTMLButtonElement;
   $openButton: HTMLButtonElement;
+  $saveAsButton: HTMLButtonElement;
+  $copyLinkButton: HTMLButtonElement;
   $clearCanvasButton: HTMLButtonElement;
   $toggleGridButton: HTMLButtonElement;
   $githubButton: HTMLButtonElement;
@@ -37,7 +41,11 @@ export class Settings extends Dropdown {
     // buttons, separators and colors, not list items
     this.$dropdownList.setAttribute('role', 'none');
 
-    this.$openButton = this._createItem(OpenIcon, 'Open');
+    this.$openButton = this._createItem(OpenIcon, 'Open <span class="text-muted" aria-hidden="true">Ctrl+O</span>');
+    this.$openButton.setAttribute('aria-keyshortcuts', 'Control+O');
+    this.$saveAsButton = this._createItem(SaveIcon, 'Save as... <span class="text-muted" aria-hidden="true">Ctrl+S</span>');
+    this.$saveAsButton.setAttribute('aria-keyshortcuts', 'Control+S');
+    this.$copyLinkButton = this._createItem(LinkIcon, 'Copy link');
     this.$exportButton = this._createItem(ExportIcon, 'Export to...');
 
     // asks confirmation
@@ -97,8 +105,11 @@ export class Settings extends Dropdown {
 
     this.$dropdownList.append(
       ...[
-        // this.$openButton,
+        this.$openButton,
+        this.$saveAsButton,
+        this.$copyLinkButton,
         // this.$exportButton,
+        this.getSeparator(),
         this.$clearCanvasButton,
         this.$toggleGridButton,
         this.$zenModeButton,
@@ -140,6 +151,10 @@ export class Settings extends Dropdown {
   }
 
   private initEvents() {
+    this.$openButton.addEventListener('click', () => this.drawer.open());
+    this.$saveAsButton.addEventListener('click', () => this.drawer.saveAs());
+    this.$copyLinkButton.addEventListener('click', () => this.drawer.copyLink());
+
     this.$clearCanvasButton.addEventListener('click', () => {
       this.drawer.clearCanvas();
     });

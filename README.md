@@ -101,6 +101,20 @@ Brush options (freehand stroke, see [perfect-freehand](https://github.com/stever
 
 If `tool` option (or the tool saved in localStorage) is not in `widgets`, the first widget is activated.
 
+## Files and links
+
+The settings menu opens and saves drawings as `.freedrawing` files (JSON: background color and shapes), and copies a link to the drawing:
+
+```js
+await drawer.saveAs('my-drawing'); // save dialog when the browser has one (Chromium), else download (Ctrl+S)
+await drawer.open(); // file chosen by user replaces drawing, undo restores it (Ctrl+O)
+const file = drawer.getDrawingFile(); // file content, `drawer.loadDrawing(file)` loads it
+const link = await drawer.getLink(); // current page url with compressed drawing: #<drawer id>=<data>
+await drawer.copyLink();
+```
+
+No server is needed for links: the drawing is in the url hash. A drawer whose `id` is in the hash of the page loads its drawing (undo restores the saved one) and removes it from the url.
+
 ## Collaboration
 
 With `collaboration` option, `socket.io-client` is loaded and every drawing change (any tool, eraser, moves, styles, undo / redo...) is sent to a [socket.io](https://socket.io/) server, which relays it to other clients (see [server/index.mjs](./server/index.mjs)).

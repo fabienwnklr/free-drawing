@@ -72,6 +72,18 @@ export class Help extends Modal {
                 <kbd class="drawer-modal-help-kdb">Ctrl+V</kbd>
               </span>
             </li>
+            <li class="drawer-modal-help-shortcut">
+              Open file
+              <span>
+                <kbd class="drawer-modal-help-kdb">Ctrl+O</kbd>
+              </span>
+            </li>
+            <li class="drawer-modal-help-shortcut">
+              Save as file
+              <span>
+                <kbd class="drawer-modal-help-kdb">Ctrl+S</kbd>
+              </span>
+            </li>
           </ul>
         </div>
 
