@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [6.7.0](https://github.com/fabienwnklr/free-drawing/compare/v6.6.0...v6.7.0) (2026-10-14)
+
+
+### Features
+
+* command palette: "Command palette" item of settings menu and Ctrl / Cmd + K, search field and list of tools and commands available now (edition, selection, view, file, language) with their shortcut and state, filtered while typing (case and accents ignored), run with Enter or click, `commandPalette` option and `showCommandPalette` method
+
 ## [6.6.0](https://github.com/fabienwnklr/free-drawing/compare/v6.5.0...v6.6.0) (2026-10-14)
 
 

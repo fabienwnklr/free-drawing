@@ -35,6 +35,8 @@ export type DrawerOptions = {
   positionWidget: boolean;
   /** Show a menu next to selected shapes: duplicate, bring forward, send backward, delete (default true) */
   selectionMenu: boolean;
+  /** Command palette in menu and with Ctrl / Cmd + K: search and run tools and commands (default true) */
+  commandPalette: boolean;
   /** Theme: 'light' (default), 'dark' or 'system' (device one), the one chosen in menu is saved and used instead */
   theme: Theme;
   /** Language of interface: 'auto' (browser one, default), 'en', 'fr', 'es' or 'de', the one chosen in menu is saved */

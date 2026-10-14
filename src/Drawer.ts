@@ -37,6 +37,7 @@ import { type ShapeState, getShapeState } from '@/components/tools/UndoRedo/Hist
 import { type ImageFormat, canvasToBlob, createPdf, getExportBox, renderCanvas, renderSvg } from '@/utils/export';
 import { toHexColor } from '@/utils/color';
 import { ExportModal } from '@/components/ExportModal/ExportModal';
+import { CommandPalette } from '@/components/CommandPalette/CommandPalette';
 
 export type ExportImageOptions = {
   /** Selected shapes only, when there is a selection (default true) */
@@ -134,6 +135,8 @@ export class Drawer extends MicroEvent {
   clearConfirmModal: ConfirmModal | null = null;
   clearStoredConfirmModal: ConfirmModal | null = null;
   exportModal: ExportModal | null = null;
+  /** Created on first use, see `showCommandPalette` */
+  commandPalette: CommandPalette | null = null;
 
   debug: boolean = false;
   #saveFailed = false;
@@ -1152,6 +1155,14 @@ export class Drawer extends MicroEvent {
   showExport() {
     this.exportModal ??= new ExportModal(this);
     this.exportModal.show();
+  }
+
+  /**
+   * Command palette: search a tool or command available now and run it
+   */
+  showCommandPalette() {
+    this.commandPalette ??= new CommandPalette(this);
+    this.commandPalette.show();
   }
 
   /**

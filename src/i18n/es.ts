@@ -46,6 +46,12 @@ export const es: Translations = {
   'menu.background': 'Color de fondo',
   'menu.language': 'Idioma',
 
+  'menu.commands': 'Paleta de comandos',
+  'commands.search': 'Buscar un comando',
+  'commands.empty': 'No se encontró ningún comando',
+  'commands.file': 'Archivo',
+  'commands.language': 'Idioma: {name}',
+
   'color.white': 'Blanco',
   'color.lightGray': 'Gris claro',
   'color.lightBlue': 'Azul claro',

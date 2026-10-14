@@ -46,6 +46,12 @@ export const de: Translations = {
   'menu.background': 'Hintergrundfarbe',
   'menu.language': 'Sprache',
 
+  'menu.commands': 'Befehlspalette',
+  'commands.search': 'Befehl suchen',
+  'commands.empty': 'Kein Befehl gefunden',
+  'commands.file': 'Datei',
+  'commands.language': 'Sprache: {name}',
+
   'color.white': 'Weiß',
   'color.lightGray': 'Hellgrau',
   'color.lightBlue': 'Hellblau',

@@ -1,0 +1,131 @@
+@use '@/scss/variables' as *;
+@use '@/scss/mixins' as *;
+
+.drawer-container .drawer-modal-commands {
+  // near top: list grows down while searching, field does not move
+  top: 12%;
+  width: min(34rem, calc(100% - 2 * #{$edge}));
+  max-width: none;
+  max-height: 70%;
+  padding: $space-2;
+
+  .drawer-modal-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    height: auto;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .drawer-commands-search {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    padding: $space-2 $space-3;
+    border-bottom: 1px solid $border;
+    color: $text-muted;
+
+    // focus shown on field line
+    &:focus-within {
+      border-bottom-color: $primary;
+    }
+
+    svg {
+      flex-shrink: 0;
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  .drawer-commands-input {
+    flex: 1;
+    min-width: 0;
+    padding: $space-1 0;
+    border: 0;
+    outline: 0;
+    background-color: transparent;
+    color: $text;
+    font-size: $font-size-lg;
+
+    &::placeholder {
+      color: $text-muted;
+    }
+  }
+
+  .drawer-commands-list {
+    flex: 1;
+    min-height: 0;
+    padding-top: $space-1;
+    overflow-y: auto;
+  }
+
+  .drawer-commands-group {
+    padding: $space-2 $space-3 $space-1;
+    color: $text-muted;
+    font-size: $font-size-sm;
+    font-weight: 600;
+  }
+
+  .drawer-commands-option {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    padding: $space-2 $space-3;
+    border-radius: $radius;
+    cursor: pointer;
+
+    &[aria-selected='true'] {
+      background-color: $hover-bg;
+    }
+  }
+
+  .drawer-commands-icon {
+    display: flex;
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  .drawer-commands-label {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  // toggle on, current tool or language
+  .drawer-commands-check {
+    display: flex;
+    color: $primary-text;
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  .drawer-commands-shortcut {
+    padding: 0.125rem $space-2;
+    border: 1px solid $border;
+    border-bottom-width: 2px;
+    border-radius: $radius;
+    background-color: $subtle-bg;
+    color: $text-muted;
+    font-family: inherit;
+    font-size: $font-size-sm;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .drawer-commands-empty {
+    padding: $space-4;
+    text-align: center;
+  }
+}

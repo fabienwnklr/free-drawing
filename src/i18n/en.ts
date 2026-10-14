@@ -48,6 +48,13 @@ export const en = {
   'menu.background': 'Background color',
   'menu.language': 'Language',
 
+  // command palette
+  'menu.commands': 'Command palette',
+  'commands.search': 'Search a command',
+  'commands.empty': 'No command found',
+  'commands.file': 'File',
+  'commands.language': 'Language: {name}',
+
   // colors
   'color.white': 'White',
   'color.lightGray': 'Light gray',

@@ -45,6 +45,7 @@ export class Help extends Modal {
    */
   private _render(t: Translate) {
     const editor: Shortcut[] = [
+      ...(this.drawer.options.commandPalette ? [{ label: t('menu.commands'), keys: ['Ctrl+K'] }] : []),
       { label: t('history.undo'), keys: ['Ctrl+Z'] },
       { label: t('history.redo'), keys: ['Ctrl+Y'] },
       { label: t('menu.clearCanvas'), keys: [`Ctrl+${t('key.delete')}`, 'Ctrl+Backspace'], or: true },

@@ -14,6 +14,7 @@ import SaveIcon from '@/icons/save.svg?raw';
 import LinkIcon from '@/icons/link.svg?raw';
 import UsersIcon from '@/icons/users.svg?raw';
 import LanguageIcon from '@/icons/language.svg?raw';
+import CommandIcon from '@/icons/command.svg?raw';
 import { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import type { ColorLike } from '@/@types/drawer';
 import { createButton, disableElement, enableElement, setLabel, setPressed, uniqueId } from '@/utils/dom';
@@ -25,6 +26,7 @@ import type { TranslationKey } from '@/i18n/en';
 export class Settings extends Dropdown {
   drawer: Drawer;
   $exportButton: HTMLButtonElement;
+  $commandsButton: HTMLButtonElement;
   $openButton: HTMLButtonElement;
   $saveAsButton: HTMLButtonElement;
   $copyLinkButton: HTMLButtonElement;
@@ -49,6 +51,9 @@ export class Settings extends Dropdown {
     // buttons, separators and colors, not list items
     this.$dropdownList.setAttribute('role', 'none');
 
+    this.$commandsButton = this._createItem(CommandIcon, 'menu.commands', 'Ctrl+K');
+    this.$commandsButton.setAttribute('aria-haspopup', 'dialog');
+    this.$commandsButton.setAttribute('aria-keyshortcuts', 'Control+K');
     this.$openButton = this._createItem(OpenIcon, 'menu.open', 'Ctrl+O');
     this.$openButton.setAttribute('aria-keyshortcuts', 'Control+O');
     this.$saveAsButton = this._createItem(SaveIcon, 'menu.saveAs', 'Ctrl+S');
@@ -136,6 +141,7 @@ export class Settings extends Dropdown {
 
     this.$dropdownList.append(
       ...[
+        ...(this.drawer.options.commandPalette ? [this.$commandsButton] : []),
         this.$openButton,
         this.$saveAsButton,
         this.$copyLinkButton,
@@ -245,6 +251,7 @@ export class Settings extends Dropdown {
   }
 
   private initEvents() {
+    this.$commandsButton.addEventListener('click', () => this.drawer.showCommandPalette());
     this.$openButton.addEventListener('click', () => this.drawer.open());
     this.$saveAsButton.addEventListener('click', () => this.drawer.saveAs());
     this.$copyLinkButton.addEventListener('click', () => this.drawer.copyLink());
@@ -290,8 +297,15 @@ export class Settings extends Dropdown {
     });
   }
 
+  /**
+   * Interface hidden except toolbar and menu
+   */
+  get zenMode() {
+    return this.$zenModeButton.classList.contains('active');
+  }
+
   toggleZenMode() {
-    const zen = !this.$zenModeButton.classList.contains('active');
+    const zen = !this.zenMode;
 
     setPressed(this.$zenModeButton, zen);
 

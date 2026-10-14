@@ -55,6 +55,7 @@ const drawer = new Drawer($el, {
   zoomWidget: true, // enable/disable zoom ui widget
   positionWidget: true, // enable/disable position ui widget (x / y of view, button back to origin)
   selectionMenu: true, // enable/disable menu next to selected shapes (duplicate, bring forward, send backward, delete)
+  commandPalette: true, // enable/disable command palette (menu item, Ctrl / Cmd + K): search and run tools and commands
   theme: 'light', // 'light' | 'dark' | 'system' (device one), theme chosen in menu is saved and used instead
   language: 'auto', // 'auto' (browser one, English when not available) | 'en' | 'fr' | 'es' | 'de', language chosen in menu is saved and used instead
   translations: {}, // texts replacing default ones, by language, see Languages below
@@ -128,6 +129,14 @@ new Drawer($el, {
     fr: { 'menu.open': 'Ouvrir un dessin' },
   },
 });
+```
+
+## Command palette
+
+"Command palette" of settings menu (Ctrl / Cmd + K) lists the tools and commands available now (edition, selection, view, file, language), with their shortcut and state (grid shown, current tool...). Typing filters them (words of name, case and accents ignored), arrow keys choose one, Enter or click runs it.
+
+```js
+drawer.showCommandPalette();
 ```
 
 ## Widgets

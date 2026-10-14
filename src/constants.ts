@@ -31,6 +31,7 @@ export const defaultOptions: DrawerOptions = {
   zoomWidget: true,
   positionWidget: true,
   selectionMenu: true,
+  commandPalette: true,
   theme: 'light',
   language: 'auto',
   translations: {},
