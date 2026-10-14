@@ -97,6 +97,12 @@ export const fillShapes = [shapeName.rect, shapeName.ellipse];
  * Collaboration events, same as server/socket-events.js
  */
 export const socketEvents = {
+  /** Join a room: `{ room, name }` */
+  JOIN: 'JOIN',
+  /** Name of user changed */
+  NAME: 'NAME',
+  /** Names of users of the room (sent by server) */
+  USERS: 'USERS',
   /** Drawing change (`DrawingChange`): shapes added or updated, ids of removed shapes */
   CHANGE: 'CHANGE',
 };

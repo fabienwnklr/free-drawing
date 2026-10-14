@@ -6,8 +6,8 @@ Guide for working on this repository: `@fabwcie/free-drawing`, an infinite canva
 
 | Command | Purpose |
 | --- | --- |
-| `yarn dev` | Demo (`index.html`) with vite. Add `?collaboration` only with `yarn serve` |
-| `yarn serve` | Express + vite middleware + socket.io server on `http://localhost:3000` (collaboration) |
+| `yarn dev` | Demo (`index.html`) with vite (no collaboration server) |
+| `yarn serve` | Express + vite middleware + socket.io server on `http://localhost:3000`, demo with live collaboration (meta `collaboration-server` injected in page) |
 | `yarn test` / `npx vitest run tests/x.test.ts` | Unit tests (vitest, jsdom, jest-canvas-mock) |
 | `npx tsc --noEmit -p .` | Type check `src` (root tsconfig only includes `src`) |
 | `npx tsc -p tests` | Type check tests (`tests/tsconfig.json`, needed for the `@/` alias in the IDE) |

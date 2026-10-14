@@ -36,7 +36,8 @@ export type ExportImageOptions = {
 import { Zoom } from './components/tools/Zoom/Zoom';
 import { Position } from './components/tools/Position/Position';
 import { Help } from './components/tools/Help/Help';
-import { Collaboration } from './components/Collaboration/Collaboration';
+import { Collaboration, type CollaborationSocket } from './components/Collaboration/Collaboration';
+import { CollaborationModal } from './components/CollaborationModal/CollaborationModal';
 
 import type { SelectWidget } from './components/toolbar/widgets/Select/Select';
 import type { BaseWidget } from './components/toolbar/widgets/BaseWidget';
@@ -54,7 +55,6 @@ import { Group } from 'konva/lib/Group';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Vector2d } from 'konva/lib/types';
 import { AvailableTypes } from './@types/toast';
-import type { Socket } from 'socket.io-client';
 import { debounce } from './utils/perf';
 import { HotKey } from './utils/HotKey';
 
@@ -74,10 +74,11 @@ let drawerCount = 0;
  * });
  */
 export class Drawer extends MicroEvent {
-  /** Collaboration socket, connected only with `collaboration` option */
-  socket: Socket | null = null;
-  /** Drawing changes sent to and received from other clients, with `collaboration` option */
+  /** Collaboration socket, connected during a collaboration session */
+  socket: CollaborationSocket | null = null;
+  /** Collaboration session: drawing changes sent to and received from other users of a room */
   collaboration: Collaboration | null = null;
+  collaborationModal: CollaborationModal | null = null;
   $el: HTMLDivElement;
   $drawerContainer: HTMLDivElement;
   $stageContainer: HTMLDivElement;
@@ -263,25 +264,123 @@ export class Drawer extends MicroEvent {
 
     this._loadFromLink();
 
-    if (this.options.collaboration) {
-      this._initCollaboration()
-        .then(() => this.toast('Collaboration available', 'info'))
-        .catch((error) => {
-          this.toast(`Collaboration unavailable: ${error.message}`, 'error');
-        });
+    // room link (see `getCollaborationLink`)
+    const room = window.location.hash.match(/^#room=([\w-]+)$/)?.[1];
+
+    if (this.options.collaboration && room) {
+      this.startCollaboration(room).catch((error) => {
+        this.toast(`Collaboration unavailable: ${error.message}`, 'error');
+      });
     }
   }
 
   /**
-   * Connect to collaboration server, socket.io client is loaded only when `collaboration` option is enabled
+   * Start a live collaboration session in a room (`collaboration` option gives the server), current session is stopped
+   * @param {string} room Room id, new room by default
+   * @param {string} name Name shown to other users, saved for next sessions
+   * @returns {Promise<string>} Link to join the room
    */
-  private async _initCollaboration() {
+  async startCollaboration(room: string = createId(), name: string = this.getUserName()): Promise<string> {
+    if (!this.options.collaboration) throw new Error('collaboration option is disabled');
+
+    this.stopCollaboration();
+    this.setUserName(name);
+    this.socket = await this._createSocket();
+    this.collaboration = new Collaboration(this, this.socket, { room, name });
+    this.trigger('fd.collaboration.change');
+
+    try {
+      await this._connected(this.socket);
+    } catch (error) {
+      this.stopCollaboration();
+      throw error;
+    }
+
+    const link = this.getCollaborationLink(room);
+
+    // reloading page joins the room again
+    window.history.replaceState(null, '', link);
+    this.trigger('fd.collaboration.change');
+
+    return link;
+  }
+
+  /**
+   * Stop live collaboration session (drawing is kept)
+   */
+  stopCollaboration() {
+    if (!this.collaboration) return;
+
+    this.collaboration.stop();
+    this.collaboration = null;
+    this.socket = null;
+    if (window.location.hash.startsWith('#room=')) {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+    this.trigger('fd.collaboration.change');
+  }
+
+  /**
+   * Link to join a room: current page with `#room=<id>`
+   * @param {string} room Room id, room of current session by default
+   */
+  getCollaborationLink(room: string | undefined = this.collaboration?.room): string {
+    const url = new URL(window.location.href);
+
+    url.hash = room ? `room=${room}` : '';
+
+    return url.toString();
+  }
+
+  /**
+   * Live collaboration dialog: name, start / stop session, link and QR code to join it
+   */
+  showCollaboration() {
+    this.collaborationModal ??= new CollaborationModal(this);
+    this.collaborationModal.show();
+  }
+
+  /**
+   * Name shown to other users in collaboration sessions
+   */
+  getUserName(): string {
+    return this._getStorageItem(this.options.localStorageKey + '-name') ?? '';
+  }
+
+  /**
+   * Change name shown to other users (current session and next ones)
+   */
+  setUserName(name: string) {
+    name = name.trim().slice(0, 40);
+    try {
+      localStorage.setItem(this.options.localStorageKey + '-name', name);
+    } catch {
+      // not saved, kept for current session
+    }
+    if (this.collaboration && this.collaboration.name !== name) this.collaboration.setName(name);
+  }
+
+  /**
+   * Resolved when socket is connected, rejected if server can't be reached (no retry)
+   */
+  private _connected(socket: CollaborationSocket): Promise<void> {
+    return new Promise((resolve, reject) => {
+      socket.once('connect', () => resolve());
+      socket.once('connect_error', (error) => reject(new Error(`server unreachable (${error.message})`)));
+    });
+  }
+
+  /**
+   * Socket connected to collaboration server: true is page origin, string is server url
+   * (socket.io client is loaded only then)
+   */
+  protected async _createSocket(): Promise<CollaborationSocket> {
     const { collaboration } = this.options;
     const { io } = await import('socket.io-client');
+    // new connection for each session (no socket reused after stop)
+    const options = { forceNew: true };
 
-    // true: server on same origin, string: server url
-    this.socket = typeof collaboration === 'string' ? io(collaboration) : io();
-    this.collaboration = new Collaboration(this, this.socket);
+    return typeof collaboration === 'string' ? io(collaboration, options) : io(options);
   }
 
   /**

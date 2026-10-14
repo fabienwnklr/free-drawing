@@ -11,6 +11,7 @@ import ZenIcon from '@/icons/zen.svg?raw';
 import StoreIcon from '@/icons/store.svg?raw';
 import SaveIcon from '@/icons/save.svg?raw';
 import LinkIcon from '@/icons/link.svg?raw';
+import UsersIcon from '@/icons/users.svg?raw';
 import { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import type { ColorLike } from '@/@types/drawer';
 import { createButton, setLabel, setPressed, uniqueId } from '@/utils/dom';
@@ -22,6 +23,7 @@ export class Settings extends Dropdown {
   $openButton: HTMLButtonElement;
   $saveAsButton: HTMLButtonElement;
   $copyLinkButton: HTMLButtonElement;
+  $collaborationButton: HTMLButtonElement;
   $clearCanvasButton: HTMLButtonElement;
   $toggleGridButton: HTMLButtonElement;
   $githubButton: HTMLButtonElement;
@@ -46,6 +48,8 @@ export class Settings extends Dropdown {
     this.$saveAsButton = this._createItem(SaveIcon, 'Save as... <span class="text-muted" aria-hidden="true">Ctrl+S</span>');
     this.$saveAsButton.setAttribute('aria-keyshortcuts', 'Control+S');
     this.$copyLinkButton = this._createItem(LinkIcon, 'Copy link');
+    this.$collaborationButton = this._createItem(UsersIcon, 'Live collaboration... <span class="text-muted"></span>');
+    this.$collaborationButton.setAttribute('aria-haspopup', 'dialog');
     this.$exportButton = this._createItem(
       ExportIcon,
       'Export image... <span class="text-muted" aria-hidden="true">Ctrl+Shift+E</span>'
@@ -114,6 +118,8 @@ export class Settings extends Dropdown {
         this.$saveAsButton,
         this.$copyLinkButton,
         this.$exportButton,
+        // server given by collaboration option
+        ...(this.drawer.options.collaboration ? [this.$collaborationButton] : []),
         this.getSeparator(),
         this.$clearCanvasButton,
         this.$toggleGridButton,
@@ -160,6 +166,15 @@ export class Settings extends Dropdown {
     this.$saveAsButton.addEventListener('click', () => this.drawer.saveAs());
     this.$copyLinkButton.addEventListener('click', () => this.drawer.copyLink());
     this.$exportButton.addEventListener('click', () => this.drawer.showExport());
+    this.$collaborationButton.addEventListener('click', () => this.drawer.showCollaboration());
+    // session state shown in menu
+    this.drawer.on('fd.collaboration.change', () => {
+      const users = this.drawer.collaboration?.users.length;
+
+      this.$collaborationButton.querySelector('.text-muted')!.textContent = this.drawer.collaboration
+        ? `On${users ? ` (${users})` : ''}`
+        : '';
+    });
 
     this.$clearCanvasButton.addEventListener('click', () => {
       this.drawer.clearCanvas();

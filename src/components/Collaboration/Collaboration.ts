@@ -11,31 +11,58 @@ import { socketEvents } from '@/constants';
  */
 export type DrawingChange = { upsert: string[]; remove: string[] };
 
-export type CollaborationSocket = Pick<Socket, 'on' | 'emit'>;
+export type CollaborationSocket = Pick<Socket, 'on' | 'once' | 'emit' | 'disconnect'>;
 
 /**
- * Real time collaboration: changes of drawing (any tool, undo...) are sent shape by shape to other clients,
- * through a socket.io server (see server/index.mjs), so concurrent drawings are merged
+ * Real time collaboration in a room: changes of drawing (any tool, undo...) are sent shape by shape to other users
+ * of the room, through a socket.io server (see server/index.mjs), so concurrent drawings are merged
  */
 export class Collaboration {
   readonly socket: CollaborationSocket;
+  readonly room: string;
+  /** Name shown to other users */
+  name: string;
+  /** Names of users of the room, this one included */
+  users: string[] = [];
   private readonly drawer: Drawer;
   /** Shapes as other clients know them, by id */
   #synced = new Map<string, string>();
   /** Changes received during a pointer action of this client, applied when it ends */
   #pending: DrawingChange[] = [];
 
-  constructor(drawer: Drawer, socket: CollaborationSocket) {
+  constructor(drawer: Drawer, socket: CollaborationSocket, { room, name }: { room: string; name: string }) {
     this.drawer = drawer;
     this.socket = socket;
+    this.room = room;
+    this.name = name;
 
     this.socket.on('connect', () => {
       if (this.drawer.debug) console.log('🌍 Connected to collaboration server');
-      // (re)connected: whole drawing sent, merged with other ones
+      this.socket.emit(socketEvents.JOIN, { room: this.room, name: this.name });
+      // (re)connected: whole drawing sent, merged with other ones of the room
       this.#synced.clear();
       this.send();
     });
     this.socket.on(socketEvents.CHANGE, (change: DrawingChange) => this.receive(change));
+    this.socket.on(socketEvents.USERS, (users: string[]) => {
+      this.users = users;
+      this.drawer.trigger('fd.collaboration.change');
+    });
+  }
+
+  /**
+   * Change name shown to other users
+   */
+  setName(name: string) {
+    this.name = name;
+    this.socket.emit(socketEvents.NAME, name);
+  }
+
+  /**
+   * Leave room
+   */
+  stop() {
+    this.socket.disconnect();
   }
 
   /**

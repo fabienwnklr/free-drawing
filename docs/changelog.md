@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [5.0.0](https://github.com/fabienwnklr/free-drawing/compare/v4.2.0...v5.0.0) (2026-10-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* **collaboration:** `collaboration` option no longer connects every client at init: it adds "Live collaboration" to settings menu, sessions are started there (or with `startCollaboration`) in a room, or by opening a room link
+* **collaboration:** clients join a room (`JOIN` event with room and name) before sending `CHANGE` events, a custom socket.io server must handle rooms (see server/index.mjs)
+
+
+### Features
+
+* **collaboration:** live collaboration dialog: user name, start a session in a new room, room link with copy button and QR code to scan, connected users, stop session, message when server can't be reached
+* **collaboration:** room link (`#room=<id>`) joins the room, reloading page joins it again, `startCollaboration`, `stopCollaboration`, `getCollaborationLink`, `setUserName` and `showCollaboration` methods
+* **collaboration:** server keeps the drawing of each room, users of a room only get its changes
+
 ## [4.2.0](https://github.com/fabienwnklr/free-drawing/compare/v4.1.0...v4.2.0) (2026-10-14)
 
 

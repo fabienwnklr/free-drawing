@@ -32,12 +32,13 @@ export default defineConfig(({ mode }) => {
         },
         rollupOptions: {
           // installed with the package (konva as peer dependency), imported with subpaths (konva/lib/...)
-          external: [/^konva(\/|$)/, 'perfect-freehand', 'socket.io-client'],
+          external: [/^konva(\/|$)/, 'perfect-freehand', 'socket.io-client', 'uqr'],
           output: {
             // umd global names
             globals: (id: string) => {
               if (id.startsWith('konva')) return 'Konva';
               if (id === 'socket.io-client') return 'io';
+              if (id === 'uqr') return 'uqr';
               return 'PerfectFreehand';
             },
           },

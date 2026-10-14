@@ -23,8 +23,8 @@
       import { Drawer } from '/src/Drawer.ts';
 
       window.drawer = new Drawer(document.getElementById('app'), {
-        // http://localhost:3000/?collaboration with `yarn serve` (socket.io server)
-        collaboration: new URLSearchParams(location.search).has('collaboration'),
+        // live collaboration when served by collaboration server (`yarn serve`, see server/index.mjs)
+        collaboration: !!document.querySelector('meta[name="collaboration-server"]'),
       });
     </script>
   </body>

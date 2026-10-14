@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeAll, vi } from 'vitest';
 import { Rect } from 'konva/lib/shapes/Rect';
-import type { Drawer } from '../src/Drawer';
+import { Drawer } from '../src/Drawer';
 import type { TextWidget } from '../src/components/toolbar/widgets/Text/Text';
 import type { SelectWidget } from '../src/components/toolbar/widgets/Select/Select';
 import {
@@ -10,6 +10,8 @@ import {
 } from '../src/components/Collaboration/Collaboration';
 import { createDrawer, fireMouse } from './helpers';
 
+const tick = () => new Promise((resolve) => setTimeout(resolve));
+
 beforeAll(() => {
   function noOp() {}
 
@@ -18,34 +20,76 @@ beforeAll(() => {
   }
 });
 
-type FakeSocket = CollaborationSocket & { receive: (event: string, data?: unknown) => void; emit: ReturnType<typeof vi.fn> };
+type FakeSocket = CollaborationSocket & {
+  receive: (event: string, data?: unknown) => void;
+  emit: ReturnType<typeof vi.fn>;
+  disconnect: ReturnType<typeof vi.fn>;
+  room?: string;
+  name?: string;
+};
 
 /**
- * Relays changes of a socket to the other ones and sends drawing to new ones, as server/index.mjs
+ * Rooms of users, as server/index.mjs: changes relayed to users of the same room,
+ * drawing of the room sent to joining users, names of users sent to the room
  */
 const createServer = () => {
   const sockets: FakeSocket[] = [];
-  const shapes = new Map<string, string>();
+  const rooms = new Map<string, Map<string, string>>();
+  const inRoom = (room?: string) => sockets.filter((s) => s.room === room);
+  const sendUsers = (room?: string) =>
+    inRoom(room).forEach((s) => s.receive('USERS', inRoom(room).map((user) => user.name || 'Anonymous')));
 
-  return (drawer: Drawer) => {
+  /** New socket, connected when `receive('connect')` */
+  const createSocket = () => {
     const handlers: Record<string, ((data?: unknown) => void)[]> = {};
     const socket = {
       on: (event: string, handler: (data?: unknown) => void) => (handlers[event] ??= []).push(handler),
-      emit: vi.fn((event: string, change: DrawingChange) => {
-        change.remove.forEach((id) => shapes.delete(id));
-        change.upsert.forEach((json) => shapes.set(JSON.parse(json).attrs.id, json));
-        sockets.filter((s) => s !== socket).forEach((s) => s.receive(event, change));
-      }),
+      once: (event: string, handler: (data?: unknown) => void) => (handlers[event] ??= []).push(handler),
       receive: (event: string, data?: unknown) => handlers[event]?.forEach((handler) => handler(data)),
+      disconnect: vi.fn(() => {
+        sockets.splice(sockets.indexOf(socket), 1);
+        sendUsers(socket.room);
+      }),
+      emit: vi.fn((event: string, data: unknown) => {
+        if (event === 'JOIN') {
+          const { room, name } = data as { room: string; name: string };
+          const shapes = rooms.get(room) ?? new Map<string, string>();
+
+          Object.assign(socket, { room, name });
+          rooms.set(room, shapes);
+          if (shapes.size) socket.receive('CHANGE', { upsert: [...shapes.values()], remove: [] });
+          sendUsers(room);
+        } else if (event === 'NAME') {
+          socket.name = data as string;
+          sendUsers(socket.room);
+        } else if (event === 'CHANGE') {
+          const change = data as DrawingChange;
+          const shapes = rooms.get(socket.room!)!;
+
+          change.remove.forEach((id) => shapes.delete(id));
+          change.upsert.forEach((json) => shapes.set(JSON.parse(json).attrs.id, json));
+          inRoom(socket.room)
+            .filter((s) => s !== socket)
+            .forEach((s) => s.receive(event, change));
+        }
+      }),
     } as unknown as FakeSocket;
 
     sockets.push(socket);
-    drawer.collaboration = new Collaboration(drawer, socket);
+    return socket;
+  };
+
+  /** Drawer collaborating in a room */
+  const connect = (drawer: Drawer, room = 'room', name = '') => {
+    const socket = createSocket();
+
+    drawer.collaboration = new Collaboration(drawer, socket, { room, name });
     socket.receive('connect');
-    if (shapes.size) socket.receive('CHANGE', { upsert: [...shapes.values()], remove: [] });
 
     return socket;
   };
+
+  return Object.assign(connect, { createSocket });
 };
 
 const addText = (drawer: Drawer, text: string) => {
@@ -96,6 +140,7 @@ describe('Collaboration', () => {
 
     // nothing sent without drawing change, nor back by receiver
     socketA.emit.mockClear();
+    socketB.emit.mockClear();
     a.stage.fire('change');
     expect(socketA.emit).not.toHaveBeenCalled();
     expect(socketB.emit).not.toHaveBeenCalled();
@@ -156,5 +201,98 @@ describe('Collaboration', () => {
 
     expect(byId(a, textB.id())).toBeDefined();
     expect(byId(b, textA.id())).toBeDefined();
+  });
+  it('Changes are shared in a room only, users of the room are known by their name', () => {
+    const connect = createServer();
+    const alice = createDrawer();
+    const bob = createDrawer();
+    const other = createDrawer();
+    connect(alice, 'r1', 'Alice');
+    connect(bob, 'r1', 'Bob');
+    connect(other, 'r2', 'Other');
+
+    const text = addText(alice, 'hello');
+    expect(byId(bob, text.id())).toBeDefined();
+    expect(byId(other, text.id())).toBeUndefined();
+
+    expect(alice.collaboration!.users).toEqual(['Alice', 'Bob']);
+    bob.setUserName('Bobby');
+    expect(alice.collaboration!.users).toEqual(['Alice', 'Bobby']);
+  });
+
+  it('Collaboration dialog starts a session, with link and QR code, and stops it', async () => {
+    const server = createServer();
+    const drawer = createDrawer({ collaboration: true });
+    const socket = server.createSocket();
+    const createSocket = vi.spyOn(drawer as unknown as { _createSocket(): Promise<FakeSocket> }, '_createSocket');
+
+    createSocket.mockImplementation(async () => {
+      setTimeout(() => socket.receive('connect'));
+      return socket;
+    });
+
+    expect(drawer.setting.$collaborationButton.isConnected).toBe(true);
+    drawer.setting.$collaborationButton.click();
+    const modal = drawer.collaborationModal!;
+    expect(modal.isVisible()).toBe(true);
+    expect(modal.$session.hidden).toBe(true);
+
+    modal.$name.value = 'Alice';
+    modal.$name.dispatchEvent(new Event('change'));
+    modal.$startButton.click();
+    await tick();
+    await tick();
+
+    const room = drawer.collaboration!.room;
+    expect(drawer.collaboration!.name).toBe('Alice');
+    expect(window.location.hash).toBe(`#room=${room}`);
+    expect(modal.$link.value).toBe(drawer.getCollaborationLink());
+    expect(modal.$users.textContent).toBe('Connected (1): Alice');
+    expect(modal.$qrCode.querySelector('svg')).not.toBeNull();
+    expect(drawer.setting.$collaborationButton.textContent).toContain('On (1)');
+
+    modal.$stopButton.click();
+    expect(drawer.collaboration).toBeNull();
+    expect(socket.disconnect).toHaveBeenCalled();
+    expect(window.location.hash).toBe('');
+    expect(modal.$session.hidden).toBe(true);
+  });
+
+  it('Room link joins the room, collaboration needs its option', async () => {
+    const server = createServer();
+    const socket = server.createSocket();
+    const createSocket = vi.spyOn(Drawer.prototype as unknown as { _createSocket(): Promise<FakeSocket> }, '_createSocket');
+
+    createSocket.mockImplementation(async () => {
+      setTimeout(() => socket.receive('connect'));
+      return socket;
+    });
+    window.location.hash = '#room=abc123';
+
+    const drawer = createDrawer({ collaboration: true });
+    await tick();
+    expect(drawer.collaboration?.room).toBe('abc123');
+    drawer.stopCollaboration();
+
+    const disabled = createDrawer();
+    expect(disabled.setting.$collaborationButton.isConnected).toBe(false);
+    await expect(disabled.startCollaboration()).rejects.toThrow();
+    createSocket.mockRestore();
+  });
+
+  it('Session is stopped when server is unreachable', async () => {
+    const socket = createServer().createSocket();
+    const drawer = createDrawer({ collaboration: true });
+
+    vi.spyOn(drawer as unknown as { _createSocket(): Promise<FakeSocket> }, '_createSocket').mockImplementation(
+      async () => {
+        setTimeout(() => socket.receive('connect_error', new Error('xhr poll error')));
+        return socket;
+      }
+    );
+
+    await expect(drawer.startCollaboration()).rejects.toThrow('server unreachable (xhr poll error)');
+    expect(drawer.collaboration).toBeNull();
+    expect(socket.disconnect).toHaveBeenCalled();
   });
 });

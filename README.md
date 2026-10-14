@@ -65,7 +65,7 @@ const drawer = new Drawer($el, {
     textDecoration: '', // '' | 'underline' | 'line-through' | 'underline line-through'
     align: 'left', // 'left' | 'center' | 'right'
   },
-  collaboration: false, // real time collaboration: false, true (socket.io server on same origin) or server url
+  collaboration: false, // live collaboration menu: false, true (socket.io server on same origin) or server url
   widgets: ['pan', 'selection', 'brush', 'eraser', 'text', 'line', 'square', 'circle', 'arrow'], // toolbar widgets, see below
 };
 ```
@@ -128,8 +128,15 @@ Svg is vector (shapes, texts), pdf contains a png quality image of the drawing (
 
 ## Collaboration
 
-With `collaboration` option, `socket.io-client` is loaded and every drawing change (any tool, eraser, moves, styles, undo / redo...) is sent to a [socket.io](https://socket.io/) server, which relays it to other clients (see [server/index.mjs](./server/index.mjs)).
+`collaboration` option adds "Live collaboration" to settings menu: a dialog to choose a name, start a session in a new room, share its link (or QR code to scan) and stop the session. Opening a room link (`#room=<id>`) joins the room. Every drawing change (any tool, eraser, moves, styles, undo / redo...) is sent to the other users of the room through a [socket.io](https://socket.io/) server (see [server/index.mjs](./server/index.mjs)), `socket.io-client` and the QR code generator are loaded only then.
 
-Changes are sent shape by shape with a `CHANGE` event: `{ upsert, remove }`, JSON of shapes added or updated (konva `toObject`, with their `id`) and ids of removed shapes, so concurrent drawings are merged. The server keeps the drawing and sends it (as a `CHANGE` event) to clients connecting later.
+```js
+const link = await drawer.startCollaboration(); // new room (or given room id), name of user saved for next sessions
+drawer.setUserName('Alice');
+drawer.stopCollaboration();
+drawer.showCollaboration(); // dialog
+```
 
-In this repository, run `yarn serve` then open `http://localhost:3000/?collaboration` in several windows.
+Socket events: `JOIN` (`{ room, name }`), `NAME`, `USERS` (names of users of the room, sent by server) and `CHANGE`: `{ upsert, remove }`, JSON of shapes added or updated (konva `toObject`, with their `id`) and ids of removed shapes, so concurrent drawings are merged. The server keeps the drawing of each room and sends it to users joining it.
+
+In this repository, run `yarn serve`, open `http://localhost:3000`, start a session from the menu and open its link in other windows.

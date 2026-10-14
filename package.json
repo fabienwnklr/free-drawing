@@ -4,7 +4,7 @@
   "description": "Infinite canvas",
   "contributors": [],
   "private": false,
-  "version": "4.2.0",
+  "version": "5.0.0",
   "type": "module",
   "main": "./dist/drawer.umd.cjs",
   "module": "./dist/drawer.js",
@@ -88,6 +88,7 @@
   },
   "dependencies": {
     "perfect-freehand": "^1.2.0",
-    "socket.io-client": "^4.7.5"
+    "socket.io-client": "^4.7.5",
+    "uqr": "^0.1.3"
   }
 }
