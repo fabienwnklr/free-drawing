@@ -8,6 +8,7 @@ import TrashIcon from '@/icons/trash.svg?raw';
 import GridIcon from '@/icons/grid.svg?raw';
 import GithubIcon from '@/icons/github.svg?raw';
 import ZenIcon from '@/icons/zen.svg?raw';
+import MoonIcon from '@/icons/moon.svg?raw';
 import StoreIcon from '@/icons/store.svg?raw';
 import SaveIcon from '@/icons/save.svg?raw';
 import LinkIcon from '@/icons/link.svg?raw';
@@ -29,6 +30,7 @@ export class Settings extends Dropdown {
   $toggleGridButton: HTMLButtonElement;
   $githubButton: HTMLButtonElement;
   $zenModeButton: HTMLButtonElement;
+  $darkModeButton: HTMLButtonElement;
   $clearStorageButton: HTMLButtonElement;
   $bgColorContainer: HTMLDivElement;
   $bgColorBtnContainer: HTMLDivElement;
@@ -70,6 +72,13 @@ export class Settings extends Dropdown {
     this.$zenModeButton = this._createItem(ZenIcon, 'Zen mode <span class="text-muted" aria-hidden="true">Alt+Z</span>');
     this.$zenModeButton.setAttribute('aria-keyshortcuts', 'Alt+Z');
     setPressed(this.$zenModeButton, false);
+
+    this.$darkModeButton = this._createItem(
+      MoonIcon,
+      'Dark mode <span class="text-muted" aria-hidden="true">Alt+Shift+D</span>'
+    );
+    this.$darkModeButton.setAttribute('aria-keyshortcuts', 'Alt+Shift+D');
+    setPressed(this.$darkModeButton, false);
 
     this.$githubButton = this._createItem(GithubIcon, 'Github');
     setLabel(this.$githubButton, 'Github (opens in a new tab)');
@@ -125,6 +134,7 @@ export class Settings extends Dropdown {
         this.$clearCanvasButton,
         this.$toggleGridButton,
         this.$zenModeButton,
+        this.$darkModeButton,
         this.$githubButton,
         this.getSeparator(),
         this.$clearStorageButton,
@@ -194,6 +204,9 @@ export class Settings extends Dropdown {
     this.$zenModeButton.addEventListener('click', () => {
       this.toggleZenMode();
     });
+
+    this.$darkModeButton.addEventListener('click', () => this.drawer.toggleDarkMode());
+    this.drawer.on(drawerEvents.themeChange, (dark: boolean) => setPressed(this.$darkModeButton, dark));
 
     this.$githubButton.addEventListener('click', () => {
       window.open('https://github.com/fabienwnklr/free-drawing', 'blank');

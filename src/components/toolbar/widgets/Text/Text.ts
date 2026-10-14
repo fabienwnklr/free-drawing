@@ -155,6 +155,8 @@ export class TextWidget extends BaseWidget {
     const textPosition = textNode.absolutePosition();
     const textPadding = textNode.padding() * scale;
     const textarea = document.createElement('textarea');
+    // colors of drawing in dark mode
+    textarea.classList.add('drawer-text-editor');
     this.drawer.$drawerContainer.appendChild(textarea);
 
     textarea.value = textNode.text();

@@ -55,6 +55,7 @@ const drawer = new Drawer($el, {
   zoomWidget: true, // enable/disable zoom ui widget
   positionWidget: true, // enable/disable position ui widget (x / y of view, button back to origin)
   selectionMenu: true, // enable/disable menu next to selected shapes (duplicate, bring forward, send backward, delete)
+  theme: 'light', // 'light' | 'dark' | 'system' (device one), theme chosen in menu is saved and used instead
   layersPanel: true, // enable/disable layers panel (list of shapes) and its button in header
   readOnly: false, // drawing can't be modified by user (only pan, zoom, view options, export), API still modifies it
   scaling: 1.11, // scaling on zoom
@@ -92,8 +93,19 @@ drawer.off('drawer.change', callback);
 | `drawer.selection.change` | selected shapes | Selection changed |
 | `drawer.readonly.change` | read only state | Read only mode changed |
 | `drawer.collaboration.change` | | Collaboration started or stopped, users or rights changed |
+| `drawer.theme.change` | dark state | Light or dark theme shown |
 
 Components trigger `drawer.dropdown.hide` (dropdown menu) and `drawer.toast.hide` (`drawer.toast()` result). Names of previous versions (`change`, `fd.options.change`...) still work, with a warning in console.
+
+## Dark mode
+
+"Dark mode" of settings menu (Alt+Shift+D) switches between light and dark themes, the choice is saved. In dark mode, the drawing is shown with inverted colors (as exported in dark mode), colors of shapes are kept: color swatches show them as drawn.
+
+```js
+drawer.setTheme('dark'); // 'light' | 'dark' | 'system'
+drawer.toggleDarkMode();
+drawer.isDarkMode();
+```
 
 ## Widgets
 

@@ -30,6 +30,7 @@ export const defaultOptions: DrawerOptions = {
   zoomWidget: true,
   positionWidget: true,
   selectionMenu: true,
+  theme: 'light',
   layersPanel: true,
   readOnly: false,
   scaling: 1.11,
@@ -133,6 +134,8 @@ export const drawerEvents = {
   selectionChange: 'drawer.selection.change',
   /** Collaboration started or stopped, users or rights changed */
   collaborationChange: 'drawer.collaboration.change',
+  /** Light or dark theme shown, with dark state */
+  themeChange: 'drawer.theme.change',
   /** Dropdown menu hidden (event of dropdown) */
   dropdownHide: 'drawer.dropdown.hide',
   /** Toast hidden (event of toast) */

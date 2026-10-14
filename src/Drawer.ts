@@ -13,6 +13,7 @@ import {
   ShapeOrder,
   StrokeStyle,
   TextStyle,
+  Theme,
 } from '@/@types/drawer';
 import { createId, deepMerge } from '@/utils/functions';
 import { defaultOptions, drawerEvents, gridSize, shapeLabels, shapeName, zoomLimits } from '@/constants';
@@ -118,6 +119,10 @@ export class Drawer extends MicroEvent {
   selectionMenu: SelectionMenu | undefined;
   /** Panel listing shapes (`layersPanel` option) */
   layersPanel: LayersPanel | undefined;
+  /** Theme chosen ('system': device one), see `setTheme` */
+  theme: Theme = 'light';
+  /** Dark theme of device */
+  #systemDark: MediaQueryList | undefined;
   help: Help;
   setting: Settings;
   clearConfirmModal: ConfirmModal | null = null;
@@ -280,6 +285,7 @@ export class Drawer extends MicroEvent {
     if (this.options.layersPanel) {
       this.layersPanel = new LayersPanel(this);
     }
+    this._initTheme();
 
     if (this.grid) this.showGrid();
 
@@ -1283,6 +1289,55 @@ export class Drawer extends MicroEvent {
     this.options.strokeStyle = strokeStyle;
     this.getWidget<SelectWidget>('selection')?.setStrokeStyle(strokeStyle);
     this._triggerOptionsChange({ strokeStyle });
+  }
+
+  /**
+   * Theme chosen in menu (saved) or by option, device theme followed with 'system'
+   */
+  private _initTheme() {
+    const saved = this._getStorageItem(this.options.localStorageKey + '-theme') as Theme | null;
+
+    this.#systemDark = window.matchMedia?.('(prefers-color-scheme: dark)');
+    this.#systemDark?.addEventListener?.('change', () => {
+      if (this.theme === 'system') this._applyTheme();
+    });
+    this.theme = saved && ['light', 'dark', 'system'].includes(saved) ? saved : this.options.theme;
+    this._applyTheme();
+  }
+
+  private _applyTheme() {
+    const dark = this.isDarkMode();
+
+    this.$drawerContainer.classList.toggle('drawer-dark', dark);
+    this.trigger(drawerEvents.themeChange, dark);
+  }
+
+  /**
+   * Set theme (saved for next visits): in dark mode, drawing is shown with inverted colors, its colors are kept
+   * @param {Theme} theme 'light', 'dark' or 'system' (device one)
+   */
+  setTheme(theme: Theme) {
+    this.theme = theme;
+    try {
+      localStorage.setItem(this.options.localStorageKey + '-theme', theme);
+    } catch {
+      // storage unavailable: theme kept for this visit
+    }
+    this._applyTheme();
+  }
+
+  /**
+   * Dark theme shown (chosen, or of device with 'system' theme)
+   */
+  isDarkMode(): boolean {
+    return this.theme === 'dark' || (this.theme === 'system' && !!this.#systemDark?.matches);
+  }
+
+  /**
+   * Switch between light and dark themes
+   */
+  toggleDarkMode() {
+    this.setTheme(this.isDarkMode() ? 'light' : 'dark');
   }
 
   /**

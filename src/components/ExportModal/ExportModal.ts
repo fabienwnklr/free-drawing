@@ -121,6 +121,8 @@ export class ExportModal extends Modal {
 
     this.$selected.checked = hasSelection;
     this.$selected.parentElement!.hidden = !hasSelection;
+    // as shown
+    this.$dark.checked = this.drawer.isDarkMode();
     super.show();
     this.updatePreview();
   }

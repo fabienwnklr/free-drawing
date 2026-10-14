@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [6.5.0](https://github.com/fabienwnklr/free-drawing/compare/v6.4.1...v6.5.0) (2026-10-14)
+
+
+### Features
+
+* dark mode: "Dark mode" item of settings menu (Alt+Shift+D), choice saved, `theme` option ('light', 'dark' or 'system', device theme followed), `setTheme`, `toggleDarkMode` and `isDarkMode` methods, `drawer.theme.change` event
+* in dark mode, drawing shown with inverted colors (as dark export), colors of shapes kept, color swatches and text being edited shown the same way, export in dark mode by default
+
 ## [6.4.1](https://github.com/fabienwnklr/free-drawing/compare/v6.4.0...v6.4.1) (2026-10-14)
 
 

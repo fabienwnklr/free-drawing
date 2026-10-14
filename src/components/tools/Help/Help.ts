@@ -169,6 +169,12 @@ export class Help extends Modal {
               </span>
             </li>
             <li class="drawer-modal-help-shortcut">
+              Dark mode
+              <span>
+                <kbd class="drawer-modal-help-kdb">Alt+Shift+D</kbd>
+              </span>
+            </li>
+            <li class="drawer-modal-help-shortcut">
               Snap to objects
               <span>
                 <kbd class="drawer-modal-help-kdb">Alt+S</kbd>

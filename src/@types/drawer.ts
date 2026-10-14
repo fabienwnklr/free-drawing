@@ -34,6 +34,8 @@ export type DrawerOptions = {
   positionWidget: boolean;
   /** Show a menu next to selected shapes: duplicate, bring forward, send backward, delete (default true) */
   selectionMenu: boolean;
+  /** Theme: 'light' (default), 'dark' or 'system' (device one), the one chosen in menu is saved and used instead */
+  theme: Theme;
   /** Layers panel listing shapes (select, rename, reorder, lock, hide, delete), button in header (default true) */
   layersPanel: boolean;
   /** Drawing can't be modified by user (only pan, zoom, view options, export), API methods still modify it (default false) */
@@ -44,6 +46,11 @@ export type DrawerOptions = {
 };
 
 export type StrokeStyle = 'solid' | 'dashed' | 'dotted';
+
+/**
+ * Theme of drawer: light, dark, or the one of device
+ */
+export type Theme = 'light' | 'dark' | 'system';
 
 /**
  * Corners of shapes having some (rectangles): sharp, round (radius following shape size) or radius (px)

@@ -2,6 +2,15 @@
 @use '@/scss/mixins' as *;
 
 .drawer-container {
+  // palette colors as drawing shows them
+  .drawer-color-swatch {
+    background-color: var(--swatch-color);
+  }
+
+  &.drawer-dark .drawer-color-swatch {
+    background-color: var(--swatch-dark-color);
+  }
+
   // white with red diagonal: no color
   .drawer-color-transparent {
     background:

@@ -1,25 +1,73 @@
 @use 'sass:color';
 
+// Colors of light and dark themes: custom properties of drawer container (see drawer.scss), tokens below use them
+$light-primary: #646cff;
+$light-surface: #fff;
+$dark-primary: #a8a5ff;
+$dark-surface: #232329;
+
+$themes: (
+  light: (
+    primary: $light-primary,
+    primary-active: color.adjust($light-primary, $lightness: -2%),
+    // primary text on light backgrounds (contrast)
+    primary-text: color.adjust($light-primary, $lightness: -15%),
+    on-primary: #fff,
+    hover-bg: color.mix($light-primary, $light-surface, 15%),
+    text: #1e1e1e,
+    // 5.3:1 contrast on white
+    text-muted: #6b6b6b,
+    surface: $light-surface,
+    subtle-bg: #f3f3f6,
+    border: #e4e4e9,
+    danger: #bb4040,
+    danger-hover: color.adjust(#bb4040, $lightness: -5%),
+    danger-hover-bg: color.mix(#bb4040, $light-surface, 12%),
+    on-danger: #fff,
+    shadow: 0 1px 4px rgba(0, 0, 0, 0.18),
+    shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.16),
+  ),
+  dark: (
+    primary: $dark-primary,
+    primary-active: color.adjust($dark-primary, $lightness: -3%),
+    // primary text on dark backgrounds (contrast)
+    primary-text: color.adjust($dark-primary, $lightness: 6%),
+    on-primary: #1e1e2e,
+    hover-bg: color.mix($dark-primary, $dark-surface, 20%),
+    text: #e3e3e8,
+    // 6.7:1 contrast on surface
+    text-muted: #a4a4ae,
+    surface: $dark-surface,
+    subtle-bg: #2e2d39,
+    border: #3d3d4a,
+    danger: #ff8a8a,
+    danger-hover: color.adjust(#ff8a8a, $lightness: -5%),
+    danger-hover-bg: color.mix(#ff8a8a, $dark-surface, 15%),
+    on-danger: #1e1e1e,
+    shadow: 0 1px 4px rgba(0, 0, 0, 0.5),
+    shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.5),
+  ),
+);
+
 // Colors
-$primary: #646cff;
-$primary-active: color.adjust($primary, $lightness: -2%);
-// primary text on light backgrounds (contrast)
-$primary-text: color.adjust($primary, $lightness: -15%);
-$on-primary: #fff;
-$hover-bg: color.mix($primary, #fff, 15%);
+$primary: var(--drawer-primary);
+$primary-active: var(--drawer-primary-active);
+$primary-text: var(--drawer-primary-text);
+$on-primary: var(--drawer-on-primary);
+$hover-bg: var(--drawer-hover-bg);
 
-$text: #1e1e1e;
-// 5.3:1 contrast on white
-$text-muted: #6b6b6b;
-$surface: #fff;
-$subtle-bg: #f3f3f6;
-$border: #e4e4e9;
+$text: var(--drawer-text);
+$text-muted: var(--drawer-text-muted);
+$surface: var(--drawer-surface);
+$subtle-bg: var(--drawer-subtle-bg);
+$border: var(--drawer-border);
 
-$danger: #bb4040;
-$danger-hover: color.adjust($danger, $lightness: -5%);
-$danger-hover-bg: color.mix($danger, #fff, 12%);
-$on-danger: #fff;
+$danger: var(--drawer-danger);
+$danger-hover: var(--drawer-danger-hover);
+$danger-hover-bg: var(--drawer-danger-hover-bg);
+$on-danger: var(--drawer-on-danger);
 
+// same in both themes (white text)
 $toast-neutral: #343a40;
 $toast-info: #1971c2;
 $toast-warning: #f59f00;
@@ -27,8 +75,8 @@ $toast-warning: #f59f00;
 // Shapes
 $radius: 6px;
 $radius-lg: 8px;
-$shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
-$shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.16);
+$shadow: var(--drawer-shadow);
+$shadow-lg: var(--drawer-shadow-lg);
 
 // Sizes
 $space-1: 0.25rem;
@@ -48,3 +96,6 @@ $btn-size-lg: 2.5rem;
 $swatch-size: 1.5rem;
 
 $transition: 0.15s ease;
+
+// Drawing shown in dark mode: lightness inverted, hue kept (same filter as dark export, see `toDarkColor`)
+$dark-drawing-filter: invert(93%) hue-rotate(180deg);

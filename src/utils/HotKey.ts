@@ -131,6 +131,12 @@ export class HotKey {
       if (e.altKey && e.key === 'l') {
         this.drawer.layersPanel?.toggle();
       }
+
+      // physical key: Alt + Shift + D gives another character on some layouts (macOS)
+      if (e.altKey && e.shiftKey && e.code === 'KeyD') {
+        e.preventDefault();
+        this.drawer.toggleDarkMode();
+      }
     });
 
     this.drawer.$drawerContainer.addEventListener('keyup', (e) => {

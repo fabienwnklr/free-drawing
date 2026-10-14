@@ -2,6 +2,7 @@ import '@/components/ColorPicker/color-picker.scss';
 import type { ColorLike } from '@/@types/drawer';
 import { createButton, setLabel, setPressed } from '@/utils/dom';
 import { normalizeColor, toHexColor } from '@/utils/color';
+import { toDarkColor } from '@/utils/export';
 
 export type ColorPickerOptions = {
   /** Palette, with accessible name of each color */
@@ -38,7 +39,10 @@ export class ColorPicker {
       if (color === 'transparent') {
         $btn.classList.add('drawer-color-transparent');
       } else {
-        $btn.style.backgroundColor = color;
+        // as drawing shows it, also in dark mode (inverted)
+        $btn.classList.add('drawer-color-swatch');
+        $btn.style.setProperty('--swatch-color', color);
+        $btn.style.setProperty('--swatch-dark-color', toDarkColor(color));
       }
       setLabel($btn, label);
       setPressed($btn, false);
