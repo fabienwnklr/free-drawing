@@ -103,12 +103,14 @@ export const es: Translations = {
   'help.export': 'Exportar imagen',
   'help.grid': 'Cuadrícula',
   'help.layers': 'Panel de capas',
+  'help.layersSelect': 'Seleccionar varias capas',
   'help.snap': 'Ajustar a los objetos',
   'help.zoom': 'Zoom',
   'help.toolsConstrain': 'Cuadrado, círculo, línea a 45° (al dibujar)',
   'key.delete': 'Supr',
   'key.arrows': 'Flechas',
   'key.click': 'Clic',
+  'key.space': 'Espacio',
   'key.wheel': 'Rueda',
 
   'toolbar.label': 'Herramientas',
@@ -196,6 +198,8 @@ export const es: Translations = {
   'layers.lock': 'Bloquear {name}',
   'layers.delete': 'Eliminar {name}',
   'layers.name': 'Nombre',
+  'layers.toggle': 'Añadir o quitar',
+  'layers.range': 'Seleccionar un rango',
 
   'shapes.freehand': 'Mano alzada',
   'shapes.line': 'Línea',

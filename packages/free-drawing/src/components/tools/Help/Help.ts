@@ -69,6 +69,15 @@ export class Help extends Modal {
       { label: t('menu.zenMode'), keys: ['Alt+Z'] },
       { label: t('help.grid'), keys: ['Alt+G'] },
       { label: t('help.layers'), keys: ['Alt+L'] },
+      {
+        label: t('help.layersSelect'),
+        keys: [
+          `Ctrl+${t('key.click')}`,
+          `Shift+${t('key.click')}`,
+          `Shift+${t('key.arrows')}`,
+          `Ctrl+${t('key.space')}`,
+        ],
+      },
       { label: t('menu.darkMode'), keys: ['Alt+Shift+D'] },
       { label: t('help.snap'), keys: ['Alt+S'] },
       { label: t('help.zoom'), keys: [`Ctrl+${t('key.wheel')}`] },

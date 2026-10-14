@@ -103,12 +103,14 @@ export const de: Translations = {
   'help.export': 'Bild exportieren',
   'help.grid': 'Raster',
   'help.layers': 'Ebenenbereich',
+  'help.layersSelect': 'Mehrere Ebenen auswählen',
   'help.snap': 'An Objekten ausrichten',
   'help.zoom': 'Zoom',
   'help.toolsConstrain': 'Quadrat, Kreis, 45°-Linie (beim Zeichnen)',
   'key.delete': 'Entf',
   'key.arrows': 'Pfeiltasten',
   'key.click': 'Klick',
+  'key.space': 'Leertaste',
   'key.wheel': 'Mausrad',
 
   'toolbar.label': 'Werkzeuge',
@@ -196,6 +198,8 @@ export const de: Translations = {
   'layers.lock': '{name} sperren',
   'layers.delete': '{name} löschen',
   'layers.name': 'Name',
+  'layers.toggle': 'Hinzufügen oder entfernen',
+  'layers.range': 'Bereich auswählen',
 
   'shapes.freehand': 'Freihand',
   'shapes.line': 'Linie',

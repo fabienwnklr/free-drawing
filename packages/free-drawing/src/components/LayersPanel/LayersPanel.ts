@@ -58,11 +58,17 @@ export class LayersPanel {
   $closeButton: HTMLButtonElement;
   $list: HTMLUListElement;
   $empty: HTMLParagraphElement;
+  /** Shortcuts selecting several rows */
+  $hint: HTMLParagraphElement;
   /** Rename or drag in progress: list updated after it */
   #busy = false;
   #outdated = false;
   /** Ids of expanded groups */
   #expanded = new Set<string>();
+  /** Shapes of rows, by id */
+  #shapes = new Map<string, DrawingShape>();
+  /** Row from which Shift selects a range: last one selected alone or added */
+  #anchor: string | null = null;
 
   constructor(drawer: Drawer) {
     this.drawer = drawer;
@@ -107,14 +113,35 @@ export class LayersPanel {
     this.$list.setAttribute('aria-labelledby', $title.id);
     this.$empty = document.createElement('p');
     this.$empty.classList.add('drawer-layers-empty', 'text-muted');
+    // shortcuts selecting several rows, also description of rows
+    this.$hint = document.createElement('p');
+    this.$hint.id = uniqueId('layers-hint');
+    this.$hint.classList.add('drawer-layers-hint', 'text-muted');
     this.drawer.i18n.translate((t) => {
+      const kbd = (text: string) => Object.assign(document.createElement('kbd'), { textContent: text });
+      // action, then its keys (wrapped at the end when too long)
+      const line = (text: string, ...keys: string[]) => {
+        const $line = document.createElement('span');
+        const $keys = document.createElement('span');
+
+        $line.className = 'drawer-layers-hint-line';
+        $keys.className = 'drawer-layers-hint-keys';
+        $keys.append(...keys.map(kbd));
+        $line.append(text, $keys);
+        return $line;
+      };
+
       setLabel(this.$button, t('layers.title'));
       this.$button.title = `${t('layers.title')} (Alt+L)`;
       $title.textContent = t('layers.title');
       this.$empty.textContent = t('layers.empty');
+      this.$hint.replaceChildren(
+        line(t('layers.toggle'), `Ctrl+${t('key.click')}`, `Ctrl+${t('key.space')}`),
+        line(t('layers.range'), `Shift+${t('key.click')}`, `Shift+${t('key.arrows')}`)
+      );
     });
 
-    this.$panel.append($header, this.$list, this.$empty);
+    this.$panel.append($header, this.$list, this.$empty, this.$hint);
     this.drawer.$drawerContainer.append(this.$panel);
 
     arrowNavigation(this.$list, () => [...this.$list.querySelectorAll<HTMLElement>('.drawer-layers-name')], 'vertical');
@@ -190,12 +217,15 @@ export class LayersPanel {
     const $focused = this.$list.contains(document.activeElement) ? (document.activeElement as HTMLElement) : null;
     const $focusedItem = $focused?.closest('li');
     const focusedIndex = $focusedItem ? [...this.$list.children].indexOf($focusedItem) : -1;
+    this.#shapes.clear();
+
     const $items = this._createItems(this.drawer.getDrawingShapes(), 0);
 
     this.#outdated = false;
     this.$panel.classList.toggle('read-only', this.drawer.readOnly);
     this.$list.replaceChildren(...$items);
     this.$empty.hidden = $items.length > 0;
+    this.$hint.hidden = !$items.length || this.drawer.readOnly;
     this.updateSelection();
 
     if (!$focusedItem) return;
@@ -247,8 +277,11 @@ export class LayersPanel {
    */
   private _onSelectionChange() {
     const count = this.#expanded.size;
+    const selected = this.drawer.getSelectedShapes();
 
-    this.drawer.getSelectedShapes().forEach((shape) => {
+    // range from shape selected alone on canvas too
+    if (selected.length < 2) this.#anchor = selected[0]?.id() ?? null;
+    selected.forEach((shape) => {
       let parent = shape.getParent();
 
       while (parent instanceof Group) {
@@ -300,6 +333,7 @@ export class LayersPanel {
     // hidden or locked with its group
     $item.classList.toggle('is-muted', !shape.isVisible() || !shape.isListening());
     $item.dataset.id = shape.id();
+    this.#shapes.set(shape.id(), shape);
     $item.dataset.parent = parent === this.drawer.drawLayer ? '' : parent?.id();
     $item.style.setProperty('--depth', String(depth));
 
@@ -335,7 +369,10 @@ export class LayersPanel {
     $label.classList.add('drawer-layers-label');
     $label.textContent = label;
     $name.append($label);
-    $name.addEventListener('click', (e) => this._select(shape, e.shiftKey));
+    $name.setAttribute('aria-describedby', this.$hint.id);
+    $name.addEventListener('click', (e) =>
+      this._select(shape, e.shiftKey ? 'range' : e.ctrlKey || e.metaKey ? 'toggle' : 'one')
+    );
     $name.addEventListener('dblclick', () => this._rename(shape, $name));
     $name.addEventListener('keydown', (e) => this._onNameKeydown(e, shape, $name));
 
@@ -393,6 +430,19 @@ export class LayersPanel {
 
     if (e.key === 'F2') {
       this._rename(shape, $name);
+    } else if (e.shiftKey && !e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+      // next row focused, range selected up to it
+      const $names = [...this.$list.querySelectorAll<HTMLElement>('.drawer-layers-name')];
+      const $next = $names[$names.indexOf($name) + (e.key === 'ArrowUp' ? -1 : 1)];
+      const next = $next && this.#shapes.get($next.closest('li')!.dataset.id!);
+
+      if (next) {
+        this.#anchor ??= shape.id();
+        $next.focus();
+        this._select(next, 'range');
+      }
+    } else if ((e.ctrlKey || e.metaKey) && e.key === ' ') {
+      this._select(shape, 'toggle');
     } else if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
       this.moveShape(shape, siblings - 1 - shape.zIndex() + (e.key === 'ArrowUp' ? -1 : 1));
     } else if (e.key === 'ArrowRight' && shape instanceof Group && !expanded) {
@@ -414,18 +464,44 @@ export class LayersPanel {
   }
 
   /**
-   * Select shape of a row (Shift adds or removes it), with selection tool: locked and hidden shapes are not
+   * Select shape of a row with selection tool (locked and hidden shapes are not): `one` alone,
+   * `toggle` added or removed (Ctrl + click, Ctrl + Space), `range` with rows from anchor (Shift + click, Shift + arrows)
    */
-  private _select(shape: DrawingShape, add: boolean) {
+  private _select(shape: DrawingShape, mode: 'one' | 'toggle' | 'range') {
     const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
 
     if (!selectWidget || this.drawer.readOnly || !shape.isListening() || !shape.isVisible()) return;
 
     const selected = this.drawer.getSelectedShapes();
+    const range = mode === 'range' ? this._getRange(shape) : null;
 
     if (this.drawer.activeWidget !== selectWidget) selectWidget.setActive(true);
-    if (!add) selectWidget.select([shape]);
-    else selectWidget.select(selected.includes(shape) ? selected.filter((s) => s !== shape) : [...selected, shape]);
+    if (range) {
+      selectWidget.select(range);
+    } else if (mode === 'toggle') {
+      this.#anchor = shape.id();
+      selectWidget.select(selected.includes(shape) ? selected.filter((s) => s !== shape) : [...selected, shape]);
+    } else {
+      this.#anchor = shape.id();
+      selectWidget.select([shape]);
+    }
+  }
+
+  /**
+   * Selectable shapes of rows from anchor to this one, in same group (null without anchor in it)
+   */
+  private _getRange(shape: DrawingShape): DrawingShape[] | null {
+    const ids = ([...this.$list.children] as HTMLElement[]).map(($item) => $item.dataset.id!);
+    const anchor = this.#anchor ? this.#shapes.get(this.#anchor) : undefined;
+    const from = this.#anchor ? ids.indexOf(this.#anchor) : -1;
+    const to = ids.indexOf(shape.id());
+
+    if (!anchor || from === -1 || to === -1 || anchor.getParent() !== shape.getParent()) return null;
+
+    return ids
+      .slice(Math.min(from, to), Math.max(from, to) + 1)
+      .map((id) => this.#shapes.get(id)!)
+      .filter((row) => row.getParent() === shape.getParent() && row.isVisible() && row.isListening());
   }
 
   /**

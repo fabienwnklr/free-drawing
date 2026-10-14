@@ -103,12 +103,14 @@ export const fr: Translations = {
   'help.export': "Exporter l'image",
   'help.grid': 'Grille',
   'help.layers': 'Panneau des calques',
+  'help.layersSelect': 'Sélectionner plusieurs calques',
   'help.snap': 'Magnétisme aux objets',
   'help.zoom': 'Zoom',
   'help.toolsConstrain': 'Carré, cercle, ligne à 45° (en dessinant)',
   'key.delete': 'Suppr',
   'key.arrows': 'Flèches',
   'key.click': 'Clic',
+  'key.space': 'Espace',
   'key.wheel': 'Molette',
 
   'toolbar.label': 'Outils',
@@ -196,6 +198,8 @@ export const fr: Translations = {
   'layers.lock': 'Verrouiller {name}',
   'layers.delete': 'Supprimer {name}',
   'layers.name': 'Nom',
+  'layers.toggle': 'Ajouter ou retirer',
+  'layers.range': 'Sélectionner une plage',
 
   'shapes.freehand': 'Main levée',
   'shapes.line': 'Ligne',

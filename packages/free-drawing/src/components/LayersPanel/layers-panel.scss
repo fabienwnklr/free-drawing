@@ -69,6 +69,45 @@
     font-size: $font-size-sm;
   }
 
+  .drawer-layers-hint {
+    display: flex;
+    flex-direction: column;
+    gap: $space-1;
+    margin: $space-1 0 0;
+    padding: $space-2 $space-2 0;
+    border-top: 1px solid $border;
+    font-size: $font-size-sm;
+
+    &[hidden] {
+      display: none;
+    }
+
+    kbd {
+      padding: 0 $space-1;
+      border: 1px solid $border;
+      border-bottom-width: 2px;
+      border-radius: $radius;
+      background-color: $subtle-bg;
+      font-family: inherit;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+  }
+
+  .drawer-layers-hint-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-1 $space-2;
+  }
+
+  .drawer-layers-hint-keys {
+    display: flex;
+    gap: $space-1;
+    margin-left: auto;
+  }
+
   .drawer-layers-item {
     display: flex;
     align-items: center;

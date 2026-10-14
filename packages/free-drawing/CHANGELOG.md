@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [6.12.0](https://github.com/fabienwnklr/free-drawing/compare/v6.11.0...v6.12.0) (2026-10-15)
+
+
+### Features
+
+* **layers:** several rows selected: Ctrl / Cmd + click or Ctrl + Space adds or removes a row, Shift + click or Shift + arrows selects the rows from the last one selected (shapes of a same group, hidden and locked ones skipped), shortcuts shown under the list and in help
+
 ## [6.11.0](https://github.com/fabienwnklr/free-drawing/compare/v6.10.0...v6.11.0) (2026-10-15)
 
 

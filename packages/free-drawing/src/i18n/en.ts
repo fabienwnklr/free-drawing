@@ -108,12 +108,14 @@ export const en = {
   'help.export': 'Export image',
   'help.grid': 'Grid',
   'help.layers': 'Layers panel',
+  'help.layersSelect': 'Select several layers',
   'help.snap': 'Snap to objects',
   'help.zoom': 'Zoom',
   'help.toolsConstrain': 'Square, circle, 45° line (while drawing)',
   'key.delete': 'Delete',
   'key.arrows': 'Arrows',
   'key.click': 'Click',
+  'key.space': 'Space',
   'key.wheel': 'Wheel',
 
   // toolbar
@@ -207,6 +209,8 @@ export const en = {
   'layers.lock': 'Lock {name}',
   'layers.delete': 'Delete {name}',
   'layers.name': 'Name',
+  'layers.toggle': 'Add or remove',
+  'layers.range': 'Select a range',
 
   // default names of shapes
   'shapes.freehand': 'Freehand',

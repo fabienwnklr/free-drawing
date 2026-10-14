@@ -60,7 +60,7 @@ describe('Layers panel', () => {
     expect(createDrawer({ layersPanel: false }).layersPanel).toBeUndefined();
   });
 
-  it('Rows select shapes with selection tool, Shift adds, selection on canvas highlights rows', () => {
+  it('Rows select shapes with selection tool, Ctrl adds, selection on canvas highlights rows', () => {
     const { drawer, rect, text } = createLayers();
     const selectWidget = drawer.getWidget<SelectWidget>('selection')!;
 
@@ -70,11 +70,53 @@ describe('Layers panel', () => {
     expect(rows(drawer)).toEqual(['Hello', 'Freehand', 'Rectangle *']);
     expect(part(drawer, 2, 'name').getAttribute('aria-pressed')).toBe('true');
 
-    part(drawer, 0, 'name').dispatchEvent(new MouseEvent('click', { shiftKey: true }));
+    part(drawer, 0, 'name').dispatchEvent(new MouseEvent('click', { ctrlKey: true }));
     expect(drawer.getSelectedShapes()).toEqual([rect, text]);
+    // removed
+    part(drawer, 2, 'name').dispatchEvent(new MouseEvent('click', { metaKey: true }));
+    expect(drawer.getSelectedShapes()).toEqual([text]);
 
     selectWidget.clearSelection();
     expect(rows(drawer)).toEqual(['Hello', 'Freehand', 'Rectangle']);
+  });
+
+  it('Shift selects a range of rows from last one selected, with mouse or keyboard', () => {
+    const { drawer, panel, rect, line, text } = createLayers();
+    const selected = () => new Set(drawer.getSelectedShapes());
+
+    part(drawer, 0, 'name').click();
+    part(drawer, 2, 'name').dispatchEvent(new MouseEvent('click', { shiftKey: true }));
+    expect(selected()).toEqual(new Set([text, line, rect]));
+    expect(rows(drawer)).toEqual(['Hello *', 'Freehand *', 'Rectangle *']);
+
+    // from shape selected on canvas
+    drawer.getWidget<SelectWidget>('selection')!.select([rect]);
+    part(drawer, 1, 'name').dispatchEvent(new MouseEvent('click', { shiftKey: true }));
+    expect(selected()).toEqual(new Set([line, rect]));
+
+    // hidden and locked shapes are not selected
+    drawer.setShapesLocked(true, [line]);
+    part(drawer, 2, 'name').click();
+    part(drawer, 0, 'name').dispatchEvent(new MouseEvent('click', { shiftKey: true }));
+    expect(selected()).toEqual(new Set([rect, text]));
+    drawer.setShapesLocked(false, [line]);
+
+    // keyboard: Shift + arrows extend, Ctrl + Space adds or removes
+    part(drawer, 0, 'name').click();
+    part(drawer, 0, 'name').focus();
+    part(drawer, 0, 'name').dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'ArrowDown', shiftKey: true, bubbles: true })
+    );
+    expect(document.activeElement).toBe(part(drawer, 1, 'name'));
+    expect(selected()).toEqual(new Set([text, line]));
+    part(drawer, 1, 'name').dispatchEvent(new KeyboardEvent('keydown', { key: ' ', ctrlKey: true, bubbles: true }));
+    expect(selected()).toEqual(new Set([text]));
+
+    // shown in panel, describes rows
+    expect(panel.$hint.textContent).toContain('Ctrl+Click');
+    expect(panel.$hint.textContent).toContain('Shift+Click');
+    expect(part(drawer, 0, 'name').getAttribute('aria-describedby')).toBe(panel.$hint.id);
+    expect(panel.$hint.hidden).toBe(false);
   });
 
   it('Shapes are renamed with double click or F2, empty name gives back default one', () => {
