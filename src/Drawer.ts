@@ -74,6 +74,11 @@ let drawerCount = 0;
  * });
  */
 export class Drawer extends MicroEvent {
+  /** Drawing can't be modified by user (see `setReadOnly`) */
+  readOnly: boolean = false;
+  /** Widgets disabled by read only mode, enabled again after it */
+  #readOnlyWidgets: BaseWidget[] = [];
+  #toolBeforeReadOnly: BaseWidget | null = null;
   /** Collaboration socket, connected during a collaboration session */
   socket: CollaborationSocket | null = null;
   /** Collaboration session: drawing changes sent to and received from other users of a room */
@@ -264,14 +269,62 @@ export class Drawer extends MicroEvent {
 
     this._loadFromLink();
 
+    if (this.options.readOnly) this.setReadOnly(true);
+
     // room link (see `getCollaborationLink`)
     const room = window.location.hash.match(/^#room=([\w-]+)$/)?.[1];
 
     if (this.options.collaboration && room) {
-      this.startCollaboration(room).catch((error) => {
-        this.toast(`Collaboration unavailable: ${error.message}`, 'error');
-      });
+      if (this._getOwnerKey(room)) {
+        // owner back in the room
+        this.startCollaboration(room).catch((error) => {
+          this.toast(`Collaboration unavailable: ${error.message}`, 'error');
+        });
+      } else {
+        // invited user gives a name before joining
+        this.showCollaboration(room);
+      }
     }
+  }
+
+  /**
+   * Read only: drawing can't be modified by user (tools except pan, shortcuts and menu items modifying drawing,
+   * text edition), API methods still modify it
+   * @param {boolean} readOnly
+   */
+  setReadOnly(readOnly: boolean) {
+    if (readOnly === this.readOnly) return;
+
+    this.readOnly = readOnly;
+
+    if (readOnly) {
+      const pan = this.getWidget<BaseWidget>('pan');
+
+      this.getWidget<SelectWidget>('selection')?.clearSelection();
+      this.#toolBeforeReadOnly = this.activeWidget ?? null;
+      if (pan) pan.setActive(true);
+      else this.activeWidget?.setActive(false);
+      this.#readOnlyWidgets = [...this.toolbar.widgets.values()].filter((w) => w.id !== 'pan' && !w.isDisabled);
+      this.#readOnlyWidgets.forEach((widget) => widget.setDisabled(true));
+    } else {
+      this.#readOnlyWidgets.forEach((widget) => widget.setDisabled(false));
+      this.#readOnlyWidgets = [];
+      this.#toolBeforeReadOnly?.setActive(true);
+    }
+
+    this.undoRedo.manageButtons();
+    this.trigger('fd.readonly.change', readOnly);
+  }
+
+  /**
+   * Right to draw of this user given or removed by owner of collaboration room
+   */
+  _onCollaborationRight(canEdit: boolean) {
+    this.setReadOnly(!canEdit || this.options.readOnly);
+    this.toast(
+      canEdit ? 'You can draw: the owner of the session allowed you' : 'View only: the owner of the session removed your right to draw',
+      'info'
+    );
   }
 
   /**
@@ -280,13 +333,19 @@ export class Drawer extends MicroEvent {
    * @param {string} name Name shown to other users, saved for next sessions
    * @returns {Promise<string>} Link to join the room
    */
-  async startCollaboration(room: string = createId(), name: string = this.getUserName()): Promise<string> {
+  async startCollaboration(room?: string, name: string = this.getUserName()): Promise<string> {
     if (!this.options.collaboration) throw new Error('collaboration option is disabled');
+
+    // new room: this user is its owner (secret kept for next sessions)
+    const ownerKey = room ? this._getOwnerKey(room) : createId() + createId();
+
+    room ??= createId();
+    if (ownerKey) this._setOwnerKey(room, ownerKey);
 
     this.stopCollaboration();
     this.setUserName(name);
     this.socket = await this._createSocket();
-    this.collaboration = new Collaboration(this, this.socket, { room, name });
+    this.collaboration = new Collaboration(this, this.socket, { room, name, userId: this.getUserId(), ownerKey });
     this.trigger('fd.collaboration.change');
 
     try {
@@ -314,6 +373,8 @@ export class Drawer extends MicroEvent {
     this.collaboration.stop();
     this.collaboration = null;
     this.socket = null;
+    // right to draw back
+    this.setReadOnly(this.options.readOnly);
     if (window.location.hash.startsWith('#room=')) {
       window.history.replaceState(null, '', window.location.pathname + window.location.search);
     }
@@ -335,9 +396,52 @@ export class Drawer extends MicroEvent {
   /**
    * Live collaboration dialog: name, start / stop session, link and QR code to join it
    */
-  showCollaboration() {
+  showCollaboration(joinRoom: string | null = null) {
     this.collaborationModal ??= new CollaborationModal(this);
-    this.collaborationModal.show();
+    this.collaborationModal.show(joinRoom);
+  }
+
+  /**
+   * Id of this user in collaboration sessions (rights given by owners), kept in browser
+   */
+  getUserId(): string {
+    const key = this.options.localStorageKey + '-user';
+    let userId = this._getStorageItem(key);
+
+    if (!userId) {
+      userId = createId();
+      try {
+        localStorage.setItem(key, userId);
+      } catch {
+        // new id each session
+      }
+    }
+
+    return userId;
+  }
+
+  /**
+   * Secret of owner of a room created in this browser
+   */
+  private _getOwnerKey(room: string): string | undefined {
+    try {
+      return JSON.parse(this._getStorageItem(this.options.localStorageKey + '-owner') ?? '{}')[room];
+    } catch {
+      return undefined;
+    }
+  }
+
+  private _setOwnerKey(room: string, ownerKey: string) {
+    const key = this.options.localStorageKey + '-owner';
+
+    try {
+      const rooms = { ...JSON.parse(this._getStorageItem(key) ?? '{}'), [room]: ownerKey };
+
+      // last rooms only
+      localStorage.setItem(key, JSON.stringify(Object.fromEntries(Object.entries(rooms).slice(-20))));
+    } catch {
+      // owner for this session only
+    }
   }
 
   /**

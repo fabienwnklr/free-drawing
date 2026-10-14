@@ -77,13 +77,21 @@ export abstract class BaseWidget {
    * Disable / enable widget, a disabled widget can not be activated
    */
   toggleDisable() {
-    this.disabled = !this.disabled;
+    this.setDisabled(!this.disabled);
+  }
 
-    if (this.disabled) {
+  setDisabled(disabled: boolean) {
+    this.disabled = disabled;
+
+    if (disabled) {
       disableElement(this.$button);
     } else {
       enableElement(this.$button);
     }
+  }
+
+  get isDisabled() {
+    return this.disabled;
   }
 
   /**

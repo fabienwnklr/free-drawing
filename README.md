@@ -53,6 +53,7 @@ const drawer = new Drawer($el, {
   zoom: true, // enable/disable zoom on draw
   zoomWidget: true, // enable/disable zoom ui widget
   positionWidget: true, // enable/disable position ui widget (x / y of view, button back to origin)
+  readOnly: false, // drawing can't be modified by user (only pan, zoom, view options, export), API still modifies it
   scaling: 1.11, // scaling on zoom
   autoSave: true, // for save draw state on localStorage automatically
   localStorageKey: 'free-drawing', // localStorage key used for store data, use a different key for each drawer of a page
@@ -139,6 +140,8 @@ drawer.showCollaboration(); // dialog
 
 Users see the cursor of each other user with their name, and shapes while they are drawn or moved (sent every 50 ms at most, final state sent at the end).
 
-Socket events: `JOIN` (`{ room, name }`), `NAME`, `USERS` (names of users of the room, sent by server), `POINTER` (position in drawing, null out of drawer, relayed with user `id` and `name`), `LEAVE` (id of user leaving, sent by server) and `CHANGE`: `{ upsert, remove, live }`, JSON of shapes added or updated (konva `toObject`, with their `id`) and ids of removed shapes, so concurrent drawings are merged, `live` for previews of shapes being drawn. The server keeps the drawing of each room and sends it to users joining it.
+A user opening a room link enters a name before joining. The user who created the room is its owner (secret kept in browser, so reloading the page joins the room again): in the dialog, the owner gives or removes the right to draw of each user. Users without the right are in read only mode (`drawer.setReadOnly`), their changes are ignored by the server.
+
+Socket events: `JOIN` (`{ room, name, userId, ownerKey }`), `NAME`, `USERS` (users of the room `{ id, name, owner, canEdit }`, sent by server), `RIGHTS` (`{ userId, canEdit }`, from owner), `POINTER` (position in drawing, null out of drawer, relayed with user `id` and `name`), `LEAVE` (id of user leaving, sent by server) and `CHANGE`: `{ upsert, remove, live }`, JSON of shapes added or updated (konva `toObject`, with their `id`) and ids of removed shapes, so concurrent drawings are merged, `live` for previews of shapes being drawn. The server keeps the drawing of each room and sends it to users joining it.
 
 In this repository, run `yarn serve`, open `http://localhost:3000`, start a session from the menu and open its link in other windows.

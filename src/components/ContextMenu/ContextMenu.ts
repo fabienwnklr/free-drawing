@@ -3,7 +3,7 @@ import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { TextWidget } from '../toolbar/widgets/Text/Text';
 import './context-menu.scss';
 import { Stage } from 'konva/lib/Stage';
-import { arrowNavigation, createButton, setPressed } from '@/utils/dom';
+import { arrowNavigation, createButton, disableElement, enableElement, setPressed } from '@/utils/dom';
 
 export class ContextMenu {
   drawer: Drawer;
@@ -91,6 +91,11 @@ export class ContextMenu {
       this.$menu.style.left = Math.max(0, (scope.clientWidth - this.$menu.clientWidth) / 2) + 'px';
       this.show();
     });
+
+    // read only: no paste
+    this.drawer.on('fd.readonly.change', (readOnly: boolean) =>
+      readOnly ? disableElement(this.$pasteBtn) : enableElement(this.$pasteBtn)
+    );
 
     this.$pasteBtn.addEventListener('click', async () => {
       try {

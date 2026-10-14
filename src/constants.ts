@@ -28,6 +28,7 @@ export const defaultOptions: DrawerOptions = {
   zoom: true,
   zoomWidget: true,
   positionWidget: true,
+  readOnly: false,
   scaling: 1.11,
   autoSave: true,
   localStorageKey: 'free-drawing',
@@ -109,6 +110,8 @@ export const socketEvents = {
   POINTER: 'POINTER',
   /** User left the room (id, sent by server) */
   LEAVE: 'LEAVE',
+  /** Right to draw given or removed by owner of the room: `{ userId, canEdit }` */
+  RIGHTS: 'RIGHTS',
 };
 
 export const dataAttributes = {

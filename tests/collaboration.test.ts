@@ -8,7 +8,8 @@ import {
   type CollaborationSocket,
   type DrawingChange,
 } from '../src/components/Collaboration/Collaboration';
-import { createDrawer, fireMouse, setPointer } from './helpers';
+import { createDrawer, fireMouse, keydown, setPointer } from './helpers';
+import type { BaseWidget } from '../src/components/toolbar/widgets/BaseWidget';
 import type { Group } from 'konva/lib/Group';
 import type { Text } from 'konva/lib/shapes/Text';
 
@@ -31,6 +32,7 @@ type FakeSocket = CollaborationSocket & {
   room?: string;
   name?: string;
   id: string;
+  userId?: string;
 };
 
 /**
@@ -39,11 +41,21 @@ type FakeSocket = CollaborationSocket & {
  */
 const createServer = () => {
   const sockets: FakeSocket[] = [];
-  const rooms = new Map<string, Map<string, string>>();
+  type Room = { shapes: Map<string, string>; ownerKey?: string; ownerId?: string; viewers: Set<string> };
+  const rooms = new Map<string, Room>();
   let lastId = 0;
   const inRoom = (room?: string) => sockets.filter((s) => s.room === room);
-  const sendUsers = (room?: string) =>
-    inRoom(room).forEach((s) => s.receive('USERS', inRoom(room).map((user) => user.name || 'Anonymous')));
+  const sendUsers = (room?: string) => {
+    const data = rooms.get(room!)!;
+    const users = inRoom(room).map((user) => ({
+      id: user.userId,
+      name: user.name || 'Anonymous',
+      owner: user.userId === data.ownerId,
+      canEdit: !data.viewers.has(user.userId!),
+    }));
+
+    inRoom(room).forEach((s) => s.receive('USERS', users));
+  };
 
   /** New socket, connected when `receive('connect')` */
   const createSocket = () => {
@@ -59,13 +71,25 @@ const createServer = () => {
       }),
       emit: vi.fn((event: string, data: unknown) => {
         if (event === 'JOIN') {
-          const { room, name } = data as { room: string; name: string };
-          const shapes = rooms.get(room) ?? new Map<string, string>();
+          const { room, name, userId, ownerKey } = data as { room: string; name: string; userId: string; ownerKey?: string };
+          const roomData = rooms.get(room) ?? { shapes: new Map<string, string>(), viewers: new Set<string>() };
 
-          Object.assign(socket, { room, name });
-          rooms.set(room, shapes);
-          if (shapes.size) socket.receive('CHANGE', { upsert: [...shapes.values()], remove: [] });
+          Object.assign(socket, { room, name, userId: userId || socket.id });
+          rooms.set(room, roomData);
+          if (ownerKey) {
+            roomData.ownerKey ??= ownerKey;
+            if (roomData.ownerKey === ownerKey) roomData.ownerId = socket.userId;
+          }
+          if (roomData.shapes.size) socket.receive('CHANGE', { upsert: [...roomData.shapes.values()], remove: [] });
           sendUsers(room);
+        } else if (event === 'RIGHTS') {
+          const { userId, canEdit } = data as { userId: string; canEdit: boolean };
+          const roomData = rooms.get(socket.room!)!;
+
+          if (socket.userId !== roomData.ownerId || userId === roomData.ownerId) return;
+          if (canEdit) roomData.viewers.delete(userId);
+          else roomData.viewers.add(userId);
+          sendUsers(socket.room);
         } else if (event === 'NAME') {
           socket.name = data as string;
           sendUsers(socket.room);
@@ -75,7 +99,10 @@ const createServer = () => {
             .forEach((s) => s.receive(event, { id: socket.id, name: socket.name, position: data }));
         } else if (event === 'CHANGE') {
           const change = data as DrawingChange;
-          const shapes = rooms.get(socket.room!)!;
+          const { shapes, viewers } = rooms.get(socket.room!)!;
+
+          // without right to draw: ignored
+          if (viewers.has(socket.userId!)) return;
 
           change.remove.forEach((id) => shapes.delete(id));
           change.upsert.forEach((json) => shapes.set(JSON.parse(json).attrs.id, json));
@@ -93,10 +120,10 @@ const createServer = () => {
   };
 
   /** Drawer collaborating in a room */
-  const connect = (drawer: Drawer, room = 'room', name = '') => {
+  const connect = (drawer: Drawer, room = 'room', name = '', ids: { userId?: string; ownerKey?: string } = {}) => {
     const socket = createSocket();
 
-    drawer.collaboration = new Collaboration(drawer, socket, { room, name });
+    drawer.collaboration = new Collaboration(drawer, socket, { room, name, ...ids });
     socket.receive('connect');
 
     return socket;
@@ -260,7 +287,9 @@ describe('Collaboration', () => {
     expect(drawer.collaboration!.name).toBe('Alice');
     expect(window.location.hash).toBe(`#room=${room}`);
     expect(modal.$link.value).toBe(drawer.getCollaborationLink());
-    expect(modal.$users.textContent).toBe('Connected (1): Alice');
+    expect(modal.$users.textContent).toBe('Connected (1)');
+    // creator of the room is its owner
+    expect(modal.$members.textContent).toBe('Alice (you)Owner');
     expect(modal.$qrCode.querySelector('svg')).not.toBeNull();
     expect(drawer.setting.$collaborationButton.textContent).toContain('On (1)');
 
@@ -282,10 +311,38 @@ describe('Collaboration', () => {
     });
     window.location.hash = '#room=abc123';
 
+    // invited: name asked before joining
     const drawer = createDrawer({ collaboration: true });
+    const modal = drawer.collaborationModal!;
+    await tick();
+    expect(drawer.collaboration).toBeNull();
+    expect(modal.isVisible()).toBe(true);
+    expect(modal.$joinButton.hidden).toBe(false);
+    expect(modal.$name.required).toBe(true);
+    modal.$name.value = '';
+    modal.$name.dispatchEvent(new Event('input'));
+    expect(modal.$joinButton.disabled).toBe(true);
+
+    modal.$name.value = 'Bob';
+    modal.$name.dispatchEvent(new Event('input'));
+    modal.$joinButton.click();
+    await tick();
     await tick();
     expect(drawer.collaboration?.room).toBe('abc123');
+    expect(drawer.collaboration?.name).toBe('Bob');
     drawer.stopCollaboration();
+
+    // owner (room created in this browser): back in the room without dialog
+    const owner = createDrawer({ collaboration: true });
+    await owner.startCollaboration();
+    const room = owner.collaboration!.room;
+    owner.stopCollaboration();
+    window.location.hash = `#room=${room}`;
+    const reloaded = createDrawer({ collaboration: true, localStorageKey: owner.options.localStorageKey });
+    await tick();
+    expect(reloaded.collaboration?.room).toBe(room);
+    expect(reloaded.collaborationModal).toBeNull();
+    reloaded.stopCollaboration();
 
     const disabled = createDrawer();
     expect(disabled.setting.$collaborationButton.isConnected).toBe(false);
@@ -361,5 +418,69 @@ describe('Collaboration', () => {
 
     alice.stopCollaboration();
     expect(cursors()).toHaveLength(0);
+  });
+  it('Owner of the room gives or removes the right to draw', async () => {
+    const connect = createServer();
+    const alice = createDrawer();
+    const bob = createDrawer();
+    connect(alice, 'room', 'Alice', { userId: 'alice', ownerKey: 'secret' });
+    connect(bob, 'room', 'Bob', { userId: 'bob' });
+
+    expect(alice.collaboration!.isOwner).toBe(true);
+    expect(bob.collaboration!.isOwner).toBe(false);
+    expect(bob.collaboration!.canEdit).toBe(true);
+
+    // owner dialog: right to draw of each user
+    alice.showCollaboration();
+    const $canEdit = alice.collaborationModal!.$members.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+    expect($canEdit.getAttribute('aria-label')).toBe('Bob can draw');
+    expect($canEdit.checked).toBe(true);
+
+    $canEdit.checked = false;
+    $canEdit.dispatchEvent(new Event('change'));
+    expect(bob.collaboration!.canEdit).toBe(false);
+    expect(bob.readOnly).toBe(true);
+    expect(bob.activeTool).toBe('pan');
+
+    // changes of user without right are ignored
+    const text = addText(bob, 'not allowed');
+    expect(byId(alice, text.id())).toBeUndefined();
+
+    // only owner gives rights
+    bob.collaboration!.setRight('bob', true);
+    expect(bob.collaboration!.canEdit).toBe(false);
+
+    alice.collaboration!.setRight('bob', true);
+    expect(bob.readOnly).toBe(false);
+    expect(bob.activeTool).toBe('brush');
+    alice.collaboration!.setRight('alice', false);
+    expect(alice.collaboration!.canEdit).toBe(true);
+  });
+
+  it('Read only mode: drawing not modified by user, only pan, zoom and view options', () => {
+    const drawer = createDrawer({ readOnly: true });
+    const text = drawer.getWidget<TextWidget>('text')!.addTextNode('hello');
+    drawer.stage.fire('change');
+    const widgets = [...drawer.toolbar.widgets.values()] as BaseWidget[];
+
+    expect(drawer.activeTool).toBe('pan');
+    expect(widgets.filter((w) => w.isDisabled).map((w) => w.id)).not.toContain('pan');
+    expect(widgets.filter((w) => !w.isDisabled).map((w) => w.id)).toEqual(['pan']);
+    expect(drawer.undoRedo.$btnUndo.disabled).toBe(true);
+    expect(drawer.setting.$clearCanvasButton.disabled).toBe(true);
+    expect(drawer.setting.$openButton.disabled).toBe(true);
+    expect(drawer.contextMenu.$pasteBtn.disabled).toBe(true);
+
+    // shortcuts modifying drawing do nothing
+    keydown(drawer, { key: 'a', ctrlKey: true });
+    keydown(drawer, { key: 'Delete' });
+    keydown(drawer, { key: 'z', ctrlKey: true });
+    keydown(drawer, { key: 'b' });
+    expect(drawer.getDrawingShapes()).toEqual([text]);
+    expect(drawer.activeTool).toBe('pan');
+
+    drawer.setReadOnly(false);
+    expect(widgets.every((w) => !w.isDisabled)).toBe(true);
+    expect(drawer.undoRedo.$btnUndo.disabled).toBe(false);
   });
 });

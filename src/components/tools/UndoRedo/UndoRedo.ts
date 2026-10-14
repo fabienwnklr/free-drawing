@@ -51,7 +51,7 @@ export class UndoRedo extends History {
   }
 
   manageUndoBtn() {
-    if (!this.canUndo()) {
+    if (!this.canUndo() || this.drawer.readOnly) {
       disableElement(this.$btnUndo);
     } else {
       enableElement(this.$btnUndo);
@@ -59,7 +59,7 @@ export class UndoRedo extends History {
   }
 
   manageRedoBtn() {
-    if (!this.canRedo()) {
+    if (!this.canRedo() || this.drawer.readOnly) {
       disableElement(this.$btnRedo);
     } else {
       enableElement(this.$btnRedo);

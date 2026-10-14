@@ -14,7 +14,7 @@ import LinkIcon from '@/icons/link.svg?raw';
 import UsersIcon from '@/icons/users.svg?raw';
 import { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import type { ColorLike } from '@/@types/drawer';
-import { createButton, setLabel, setPressed, uniqueId } from '@/utils/dom';
+import { createButton, disableElement, enableElement, setLabel, setPressed, uniqueId } from '@/utils/dom';
 import { ColorPicker } from '@/components/ColorPicker/ColorPicker';
 
 export class Settings extends Dropdown {
@@ -167,6 +167,12 @@ export class Settings extends Dropdown {
     this.$copyLinkButton.addEventListener('click', () => this.drawer.copyLink());
     this.$exportButton.addEventListener('click', () => this.drawer.showExport());
     this.$collaborationButton.addEventListener('click', () => this.drawer.showCollaboration());
+    // read only: no item modifying drawing
+    this.drawer.on('fd.readonly.change', (readOnly: boolean) =>
+      [this.$openButton, this.$clearCanvasButton].forEach(($item) =>
+        readOnly ? disableElement($item) : enableElement($item)
+      )
+    );
     // session state shown in menu
     this.drawer.on('fd.collaboration.change', () => {
       const users = this.drawer.collaboration?.users.length;

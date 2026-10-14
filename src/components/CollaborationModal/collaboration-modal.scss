@@ -50,8 +50,8 @@
 
   .drawer-collaboration-qrcode {
     align-self: center;
-    width: 10rem;
-    height: 10rem;
+    width: 8rem;
+    height: 8rem;
 
     svg {
       width: 100%;
@@ -60,7 +60,47 @@
   }
 
   .drawer-collaboration-users {
+    margin-bottom: -$space-2;
     color: $text-muted;
+    font-size: $font-size-sm;
+    font-weight: 500;
+  }
+
+  .drawer-collaboration-members {
+    display: flex;
+    flex-direction: column;
+    max-height: 10rem;
+    overflow: auto;
+    border: 1px solid $border;
+    border-radius: $radius;
+
+    li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: $space-2;
+      padding: $space-2 $space-3;
+
+      & + li {
+        border-top: 1px solid $border;
+      }
+    }
+
+    label {
+      display: flex;
+      align-items: center;
+      gap: $space-1;
+      cursor: pointer;
+    }
+
+    input[type='checkbox'] {
+      margin: 0;
+      appearance: auto;
+      accent-color: $primary;
+      cursor: pointer;
+
+      @include focus-ring;
+    }
   }
 
   .drawer-modal-footer .drawer-button {

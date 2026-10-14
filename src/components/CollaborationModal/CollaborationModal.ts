@@ -4,31 +4,43 @@ import { Modal } from '@/components/Modal/Modal';
 import { createButton, uniqueId } from '@/utils/dom';
 
 /**
- * Live collaboration dialog: name, start or stop session, room link with copy button and QR code, connected users
+ * Live collaboration dialog: start a session, join one from a link (name required), session link with copy button
+ * and QR code, users of the session with rights given by the owner, stop session
  */
 export class CollaborationModal extends Modal {
+  $intro: HTMLParagraphElement;
   $name: HTMLInputElement;
   $session: HTMLDivElement;
   $link: HTMLInputElement;
   $qrCode: HTMLDivElement;
   $users: HTMLParagraphElement;
+  $members: HTMLUListElement;
   $startButton: HTMLButtonElement;
+  $joinButton: HTMLButtonElement;
+  $cancelButton: HTMLButtonElement;
   $stopButton: HTMLButtonElement;
+  /** Room of a link, joined once user gives a name */
+  joinRoom: string | null = null;
 
   constructor(drawer: Drawer) {
     super(drawer, { title: 'Live collaboration' });
     this.$modal.classList.add('drawer-modal-collaboration');
 
-    const $intro = document.createElement('p');
-
-    $intro.textContent = 'Draw with other people in real time: everyone with the link joins this drawing.';
+    this.$intro = document.createElement('p');
 
     this.$name = this._createField('Your name', 'text');
     this.$name.maxLength = 40;
     this.$name.placeholder = 'Anonymous';
-    this.$name.value = drawer.getUserName();
     // name shown to other users
     this.$name.addEventListener('change', () => this.drawer.setUserName(this.$name.value));
+    // name required to join
+    this.$name.addEventListener('input', () => (this.$joinButton.disabled = !this.$name.value.trim()));
+    // Enter starts or joins
+    this.$name.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter') return;
+      if (this.joinRoom) this.$joinButton.click();
+      else if (!this.drawer.collaboration) this.$startButton.click();
+    });
 
     this.$session = document.createElement('div');
     this.$session.classList.add('drawer-collaboration-session');
@@ -50,19 +62,30 @@ export class CollaborationModal extends Modal {
 
     this.$users = document.createElement('p');
     this.$users.classList.add('drawer-collaboration-users');
-    // updated when users join or leave
-    this.$users.setAttribute('aria-live', 'polite');
+    this.$users.id = uniqueId('collaboration-users');
+    this.$members = document.createElement('ul');
+    this.$members.classList.add('drawer-collaboration-members');
+    this.$members.setAttribute('aria-labelledby', this.$users.id);
+    // updated when users join, leave or get rights
+    this.$members.setAttribute('aria-live', 'polite');
 
-    this.$session.append(this.$link.closest('.drawer-collaboration-field')!, this.$qrCode, this.$users);
-    this.$modalBody.prepend($intro, this.$name.closest('.drawer-collaboration-field')!, this.$session);
+    // users and rights before QR code (visible without scrolling)
+    this.$session.append(this.$link.closest('.drawer-collaboration-field')!, this.$users, this.$members, this.$qrCode);
+    this.$modalBody.prepend(this.$intro, this.$name.closest('.drawer-collaboration-field')!, this.$session);
 
     this.$startButton = createButton('drawer-button', 'drawer-button-primary');
     this.$startButton.textContent = 'Start session';
     this.$startButton.addEventListener('click', () => this.start());
+    this.$cancelButton = createButton('drawer-button', 'drawer-button-neutral');
+    this.$cancelButton.textContent = 'Cancel';
+    this.$cancelButton.addEventListener('click', () => this.cancelJoin());
+    this.$joinButton = createButton('drawer-button', 'drawer-button-primary');
+    this.$joinButton.textContent = 'Join session';
+    this.$joinButton.addEventListener('click', () => this.join());
     this.$stopButton = createButton('drawer-button', 'drawer-button-danger');
     this.$stopButton.textContent = 'Stop session';
     this.$stopButton.addEventListener('click', () => this.drawer.stopCollaboration());
-    this.$modalFooter.append(this.$startButton, this.$stopButton);
+    this.$modalFooter.append(this.$cancelButton, this.$startButton, this.$joinButton, this.$stopButton);
 
     this.drawer.on('fd.collaboration.change', () => this.update());
   }
@@ -85,7 +108,12 @@ export class CollaborationModal extends Modal {
     return $input;
   }
 
-  show() {
+  /**
+   * Show dialog
+   * @param joinRoom Room of a link: user gives a name before joining it
+   */
+  show(joinRoom: string | null = null) {
+    this.joinRoom = joinRoom;
     this.$name.value = this.drawer.getUserName();
     this.update();
     super.show();
@@ -97,6 +125,28 @@ export class CollaborationModal extends Modal {
     } catch (error) {
       this.drawer.toast(`Collaboration unavailable: ${(error as Error).message}`, 'error');
     }
+  }
+
+  async join() {
+    const room = this.joinRoom;
+
+    if (!room || !this.$name.value.trim()) return;
+
+    this.joinRoom = null;
+    try {
+      await this.drawer.startCollaboration(room, this.$name.value);
+    } catch (error) {
+      this.drawer.toast(`Collaboration unavailable: ${(error as Error).message}`, 'error');
+    }
+  }
+
+  /**
+   * Room of link not joined, removed from page url
+   */
+  cancelJoin() {
+    this.joinRoom = null;
+    window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    this.hide();
   }
 
   async copyLink() {
@@ -112,21 +162,67 @@ export class CollaborationModal extends Modal {
   }
 
   /**
-   * Show session (link, QR code, users) or start button
+   * Users of session, with rights: owner gives or removes the right to draw
+   */
+  private _updateMembers() {
+    const collaboration = this.drawer.collaboration!;
+    const { members, isOwner, userId } = collaboration;
+
+    this.$users.textContent = members.length ? `Connected (${members.length})` : 'Connecting...';
+    this.$members.replaceChildren(
+      ...members.map((member) => {
+        const $member = document.createElement('li');
+        const $name = document.createElement('span');
+
+        $name.textContent = member.name + (member.id === userId ? ' (you)' : '');
+        $member.append($name);
+
+        if (isOwner && !member.owner) {
+          const $label = document.createElement('label');
+          const $canEdit = document.createElement('input');
+
+          $canEdit.type = 'checkbox';
+          $canEdit.checked = member.canEdit;
+          $canEdit.setAttribute('aria-label', `${member.name} can draw`);
+          $canEdit.addEventListener('change', () => collaboration.setRight(member.id, $canEdit.checked));
+          $label.append($canEdit, 'Can draw');
+          $member.append($label);
+        } else {
+          const $role = document.createElement('span');
+
+          $role.classList.add('text-muted');
+          $role.textContent = member.owner ? 'Owner' : member.canEdit ? 'Can draw' : 'View only';
+          $member.append($role);
+        }
+
+        return $member;
+      })
+    );
+  }
+
+  /**
+   * Show session (link, QR code, users), join form or start button
    */
   async update() {
     const { collaboration } = this.drawer;
+    const joining = !collaboration && !!this.joinRoom;
 
+    this.$intro.textContent = joining
+      ? 'You are invited to draw together: enter your name to join the session.'
+      : 'Draw with other people in real time: everyone with the link joins this drawing.';
+    this.$name.required = joining;
+    this.$joinButton.disabled = !this.$name.value.trim();
     this.$session.hidden = !collaboration;
-    this.$startButton.hidden = !!collaboration;
+    this.$startButton.hidden = !!collaboration || joining;
+    this.$joinButton.hidden = !joining;
+    this.$cancelButton.hidden = !joining;
     this.$stopButton.hidden = !collaboration;
 
     if (!collaboration) return;
 
-    const link = this.drawer.getCollaborationLink();
-    const { users } = collaboration;
+    this._updateMembers();
 
-    this.$users.textContent = users.length ? `Connected (${users.length}): ${users.join(', ')}` : 'Connecting...';
+    const link = this.drawer.getCollaborationLink();
 
     if (this.$link.value === link) return;
 

@@ -19,7 +19,7 @@ export class TextWidget extends BaseWidget {
 
     // listen on layer, so any text is editable (created, loaded, restored from history...)
     this.drawer.drawLayer.on('dblclick.edit dbltap.edit', (e) => {
-      if (e.target instanceof Text && e.target.hasName(shapeName.text)) {
+      if (e.target instanceof Text && e.target.hasName(shapeName.text) && !this.drawer.readOnly) {
         this.editTextNode(e.target);
       }
     });

@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [5.2.0](https://github.com/fabienwnklr/free-drawing/compare/v5.1.0...v5.2.0) (2026-10-14)
+
+
+### Features
+
+* **collaboration:** name asked to users opening a room link before joining, owner of the room (its creator) joins it again without dialog
+* **collaboration:** owner gives or removes the right to draw of each user in the dialog, users without the right are in read only mode and their changes are ignored by server
+* read only mode: drawing can't be modified by user (tools except pan, shortcuts and menu items modifying drawing, text edition), `readOnly` option and `setReadOnly` method
+
 ## [5.1.0](https://github.com/fabienwnklr/free-drawing/compare/v5.0.0...v5.1.0) (2026-10-14)
 
 

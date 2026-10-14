@@ -11,4 +11,6 @@ export const socketEvents = {
   POINTER: 'POINTER',
   // user left the room: id
   LEAVE: 'LEAVE',
+  // right to draw given or removed by owner: { userId, canEdit }
+  RIGHTS: 'RIGHTS',
 };

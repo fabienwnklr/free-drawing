@@ -24,6 +24,21 @@ export type RemotePointer = { id: string; name?: string; position: Vector2d | nu
 
 export type CollaborationSocket = Pick<Socket, 'on' | 'once' | 'emit' | 'disconnect' | 'volatile'>;
 
+/**
+ * User of a room (sent by server): owner (created the room) gives or removes the right to draw
+ */
+export type CollaborationMember = { id: string; name: string; owner: boolean; canEdit: boolean };
+
+export type CollaborationOptions = {
+  room: string;
+  /** Name shown to other users */
+  name: string;
+  /** User id, kept between sessions (rights) */
+  userId?: string;
+  /** Secret of owner of the room, given when the room is created */
+  ownerKey?: string;
+};
+
 /** Minimum interval of pointer and live drawing messages (ms) */
 const liveInterval = 50;
 
@@ -40,6 +55,10 @@ export class Collaboration {
   name: string;
   /** Names of users of the room, this one included */
   users: string[] = [];
+  /** Users of the room with their rights, this one included */
+  members: CollaborationMember[] = [];
+  readonly userId: string;
+  readonly ownerKey?: string;
   private readonly drawer: Drawer;
   /** Shapes as other clients know them, by id */
   #synced = new Map<string, string>();
@@ -54,22 +73,31 @@ export class Collaboration {
   /** Cursors of other users, by user id */
   #cursors = new Map<string, Group>();
 
-  constructor(drawer: Drawer, socket: CollaborationSocket, { room, name }: { room: string; name: string }) {
+  constructor(drawer: Drawer, socket: CollaborationSocket, { room, name, userId = '', ownerKey }: CollaborationOptions) {
     this.drawer = drawer;
     this.socket = socket;
     this.room = room;
     this.name = name;
+    this.userId = userId;
+    this.ownerKey = ownerKey;
 
     this.socket.on('connect', () => {
       if (this.drawer.debug) console.log('🌍 Connected to collaboration server');
-      this.socket.emit(socketEvents.JOIN, { room: this.room, name: this.name });
+      this.socket.emit(socketEvents.JOIN, { room: this.room, name: this.name, userId: this.userId, ownerKey: this.ownerKey });
       // (re)connected: whole drawing sent, merged with other ones of the room
       this.#synced.clear();
       this.send();
     });
     this.socket.on(socketEvents.CHANGE, (change: DrawingChange) => this.receive(change));
-    this.socket.on(socketEvents.USERS, (users: string[]) => {
-      this.users = users;
+    // names only from servers without rights
+    this.socket.on(socketEvents.USERS, (users: (CollaborationMember | string)[]) => {
+      const canEdit = this.canEdit;
+
+      this.members = users.map((user) =>
+        typeof user === 'string' ? { id: '', name: user, owner: false, canEdit: true } : user
+      );
+      this.users = this.members.map((member) => member.name);
+      if (this.canEdit !== canEdit) this.drawer._onCollaborationRight(this.canEdit);
       this.drawer.trigger('fd.collaboration.change');
     });
     this.socket.on(socketEvents.POINTER, (pointer: RemotePointer) => this._showCursor(pointer));
@@ -171,6 +199,27 @@ export class Collaboration {
    */
   updateCursors() {
     this.#cursors.forEach((cursor) => this._scaleCursor(cursor));
+  }
+
+  /**
+   * This user created the room: gives or removes the right to draw
+   */
+  get isOwner(): boolean {
+    return !!this.members.find((member) => member.id === this.userId)?.owner;
+  }
+
+  /**
+   * This user can draw (given by owner of the room)
+   */
+  get canEdit(): boolean {
+    return this.members.find((member) => member.id === this.userId)?.canEdit ?? true;
+  }
+
+  /**
+   * Give or remove the right to draw to a user of the room (owner only, checked by server)
+   */
+  setRight(userId: string, canEdit: boolean) {
+    this.socket.emit(socketEvents.RIGHTS, { userId, canEdit });
   }
 
   /**

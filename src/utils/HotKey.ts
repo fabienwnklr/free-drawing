@@ -26,8 +26,10 @@ export class HotKey {
       const selectedNodes = selectWidget?.transformer.nodes() ?? [];
       // fields keep their keys (arrows of opacity, select all of a text field...)
       const inField = (e.target as HTMLElement).matches('input, select, textarea');
+      // read only: shortcuts modifying drawing do nothing
+      const edit = !this.drawer.readOnly;
 
-      if (e.key === 'Backspace' || e.key === 'Delete') {
+      if (edit && (e.key === 'Backspace' || e.key === 'Delete')) {
         if (mod) {
           // asks confirmation, selection is kept if canceled
           this.drawer.clearCanvas();
@@ -39,13 +41,13 @@ export class HotKey {
       }
 
       if (mod && e.key === 'a' && !inField) {
-        selectWidget?.selectAll();
+        if (edit) selectWidget?.selectAll();
         // shapes, not page text (browser select all)
         e.preventDefault();
       }
 
       // only arrow keys, other keys keep their default behavior (F5, Tab...)
-      if (selectedNodes.length && e.key in arrowMoves && !inField) {
+      if (edit && selectedNodes.length && e.key in arrowMoves && !inField) {
         selectedNodes.forEach((shape) => shape.move(arrowMoves[e.key]));
         arrowMoved = true;
         e.preventDefault();
@@ -72,7 +74,7 @@ export class HotKey {
         this.drawer.setting.toggleZenMode();
       }
 
-      if (mod && e.key === 'z') {
+      if (edit && mod && e.key === 'z') {
         this.drawer.undoRedo.undo();
       }
 
@@ -84,7 +86,7 @@ export class HotKey {
 
       if (mod && e.key === 'o') {
         e.preventDefault();
-        this.drawer.open();
+        if (edit) this.drawer.open();
       }
 
       if (mod && e.shiftKey && e.key.toLowerCase() === 'e') {
@@ -92,7 +94,7 @@ export class HotKey {
         this.drawer.showExport();
       }
 
-      if (mod && e.key === 'y') {
+      if (edit && mod && e.key === 'y') {
         this.drawer.undoRedo.redo();
       }
 
@@ -110,7 +112,7 @@ export class HotKey {
 
     // Ctrl / Cmd + V, clipboard data is available without permission (unlike navigator.clipboard)
     this.drawer.$drawerContainer.addEventListener('paste', (e) => {
-      if (this.drawer._duringAction()) return;
+      if (this.drawer._duringAction() || this.drawer.readOnly) return;
 
       const text = e.clipboardData?.getData('text');
 
