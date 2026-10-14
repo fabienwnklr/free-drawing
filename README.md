@@ -176,6 +176,10 @@ drawer.ungroupShapes([group]); // shapes keep their look (group transform, hidde
 
 Drawing shapes are konva shapes or groups (`DrawingShape` type): `getDrawingShapes()` and `getSelectedShapes()` may return groups, their shapes are their children.
 
+## Linked arrows
+
+An arrow drawn from a shape to another one (end near or inside them) is linked to them: its ends follow them when they move, are resized or rotated. With the arrow tool, shapes under pointer show the middle of their sides: an end released near one is fixed to this side (e.g. bottom of a shape to left side of another one), else it stays on the outline aiming at the other end. Ctrl (Cmd) draws an arrow without links. Arrows moved without their shapes (or with removed shapes) are unlinked, copies of arrows and shapes are linked together. Links are `startBinding` / `endBinding` (ids of shapes) and `startAnchor` / `endAnchor` (`top`, `right`, `bottom`, `left`) attributes of arrows.
+
 ## Stacking order
 
 "Layers" buttons of selection options (or Ctrl+Up / Ctrl+Down, with Shift to front / back) move selected shapes in front of or behind other shapes:

@@ -1,6 +1,7 @@
 import { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import type { ShapeOrder } from '@/@types/drawer';
+import { unbindMoved } from '@/utils/binding';
 import { Drawer } from '@/Drawer';
 
 export class HotKey {
@@ -72,6 +73,7 @@ export class HotKey {
         e.preventDefault();
       } else if (edit && selectedNodes.length && e.key in arrowMoves && !inField) {
         // only arrow keys, other keys keep their default behavior (F5, Tab...)
+        if (!arrowMoved) unbindMoved(selectedNodes);
         selectedNodes.forEach((shape) => shape.move(arrowMoves[e.key]));
         arrowMoved = true;
         e.preventDefault();

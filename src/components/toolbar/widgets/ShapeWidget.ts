@@ -60,6 +60,8 @@ export abstract class ShapeWidget<T extends Shape<ShapeConfig>> extends BaseWidg
   protected hasFill: boolean = false;
   /** Corners sharp or round (`edges` option) */
   protected hasEdges: boolean = false;
+  /** Last pointer event of drawing (modifier keys) */
+  protected pointerEvent: MouseEvent | TouchEvent | null = null;
 
   constructor(drawer: Drawer, id: AvailableTools, title: string, icon: string, shortcut: string) {
     super(drawer, id, title, icon, shortcut);
@@ -112,6 +114,11 @@ export abstract class ShapeWidget<T extends Shape<ShapeConfig>> extends BaseWidg
     };
   }
 
+  /**
+   * Drawing ended (shape drawn or removed)
+   */
+  protected onDrawEnd?(): void;
+
   // Shift pressed or released while drawing
   protected onConstrainChange(constrain: boolean): void {
     if (this.#shape) this.updateShape(this.#shape, this.#start, this.drawer._getRelativePointerPos(), constrain);
@@ -129,6 +136,7 @@ export abstract class ShapeWidget<T extends Shape<ShapeConfig>> extends BaseWidg
       e.evt.preventDefault();
 
       this.startAction();
+      this.pointerEvent = e.evt;
       this.#start = this.drawer._getRelativePointerPos();
       this.#shape = this.drawer.addShape(this.createShape(this.#start));
     });
@@ -138,6 +146,7 @@ export abstract class ShapeWidget<T extends Shape<ShapeConfig>> extends BaseWidg
       // prevent scrolling on touch devices
       e.evt.preventDefault();
 
+      this.pointerEvent = e.evt;
       this.updateShape(this.#shape, this.#start, this.drawer._getRelativePointerPos(), !!e.evt.shiftKey);
       this.shareLive(this.#shape);
     });
@@ -150,15 +159,18 @@ export abstract class ShapeWidget<T extends Shape<ShapeConfig>> extends BaseWidg
       const shape = this.#shape;
       const end = this.drawer._getRelativePointerPos();
       this.#shape = null;
+      this.pointerEvent = e.evt;
       this.endAction();
 
       // simple click, nothing drawn
       if (Math.hypot(end.x - this.#start.x, end.y - this.#start.y) < 2) {
         shape.destroy();
+        this.onDrawEnd?.();
         return;
       }
 
       this.updateShape(shape, this.#start, end, !!e.evt.shiftKey);
+      this.onDrawEnd?.();
       this.clearSelection();
       this.drawer.stage.fire('change');
     });

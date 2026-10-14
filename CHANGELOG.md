@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [6.4.0](https://github.com/fabienwnklr/free-drawing/compare/v6.3.0...v6.4.0) (2026-10-14)
+
+
+### Features
+
+* arrows linked to shapes: an arrow drawn from a shape to another one follows them when they move, are resized or rotated, ends fixed to the side whose middle is chosen (shown with arrow tool, e.g. bottom of a shape to side of another one) or on outline aiming at the other end, Ctrl / Cmd draws without links, arrows moved alone unlinked, copies linked together
+
 ## [6.3.0](https://github.com/fabienwnklr/free-drawing/compare/v6.2.0...v6.3.0) (2026-10-14)
 
 

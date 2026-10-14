@@ -87,6 +87,13 @@ export class Help extends Modal {
               </span>
             </li>
             <li class="drawer-modal-help-shortcut">
+              Arrow not linked to shapes
+              <span>
+                <kbd class="drawer-modal-help-kdb">Ctrl</kbd>
+                while drawing
+              </span>
+            </li>
+            <li class="drawer-modal-help-shortcut">
               Keep proportions, rotate by 15°, move straight
               <span>
                 <kbd class="drawer-modal-help-kdb">Shift</kbd>

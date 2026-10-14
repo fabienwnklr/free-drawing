@@ -20,6 +20,7 @@ import { setPressed } from '@/utils/dom';
 import { getStrokeStyle } from '@/utils/stroke';
 import { reorderShapes } from '@/utils/order';
 import { setupHit } from '@/utils/hit';
+import { bindingAttrs, unbindMoved, updateBindings } from '@/utils/binding';
 import {
   type DrawingFile,
   decodeLinkData,
@@ -670,9 +671,23 @@ export class Drawer extends MicroEvent {
 
     this.drawLayer.on('dragmove.live', (e) => sendLive(e.target));
     this.getWidget<SelectWidget>('selection')?.transformer.on('transform.live', (e) => sendLive(e.target));
+
+    // arrows linked to shapes follow them, unlinked when moved without them
+    const transformer = this.getWidget<SelectWidget>('selection')?.transformer;
+
+    this.drawLayer.on('dragstart.binding', (e) => {
+      const selected = this.getSelectedShapes();
+
+      unbindMoved(selected.includes(e.target as DrawingShape) ? selected : [e.target]);
+    });
+    this.drawLayer.on('dragmove.binding', () => updateBindings(this.drawLayer));
+    transformer?.on('transformstart.binding', () => unbindMoved(transformer.nodes()));
+    transformer?.on('transform.binding', () => updateBindings(this.drawLayer));
     this.stage.on('change', () => {
       // collaborators changes received during a pointer action, then this one
       this.collaboration?.flush();
+      // arrows on their linked shapes before saving
+      updateBindings(this.drawLayer);
       this.collaboration?.send();
 
       if (this.options.autoSave) {
@@ -818,23 +833,33 @@ export class Drawer extends MicroEvent {
   duplicateShapes(shapes: DrawingShape[] = this.getSelectedShapes()): DrawingShape[] {
     // same offset on screen whatever zoom
     const offset = 20 / this.getZoomLevel();
-    const copies = shapes
-      .filter((shape) => shape.getLayer())
-      .sort((a, b) => a.zIndex() - b.zIndex())
-      .map((shape) => {
-        const state = getShapeState(shape);
-        // new ids given by addShape
-        const removeIds = ({ attrs, children }: ShapeState) => {
-          delete attrs.id;
-          children?.forEach(removeIds);
-        };
+    const originals = shapes.filter((shape) => shape.getLayer()).sort((a, b) => a.zIndex() - b.zIndex());
+    const copies = originals.map((shape) => {
+      const state = getShapeState(shape);
+      // new ids given by addShape
+      const removeIds = ({ attrs, children }: ShapeState) => {
+        delete attrs.id;
+        children?.forEach(removeIds);
+      };
 
-        removeIds(state);
-        const copy = this.addShape(Node.create(state) as DrawingShape);
+      removeIds(state);
+      const copy = this.addShape(Node.create(state) as DrawingShape);
 
-        copy.move({ x: offset, y: offset });
-        return copy;
+      copy.move({ x: offset, y: offset });
+      return copy;
+    });
+    // ids of copies, also of shapes of groups
+    const nodes = (shape: DrawingShape) => [shape, ...(shape instanceof Group ? shape.find(() => true) : [])];
+    const ids = new Map(
+      originals.flatMap((shape, i) => nodes(shape).map((node, j) => [node.id(), nodes(copies[i])[j].id()]))
+    );
+
+    // copied arrows linked to copied shapes, unlinked from others
+    copies.flatMap(nodes).forEach((node) => {
+      bindingAttrs.forEach((attr) => {
+        if (node.getAttr(attr)) node.setAttr(attr, ids.get(node.getAttr(attr)));
       });
+    });
 
     if (copies.length) {
       this.getWidget<SelectWidget>('selection')?.select(copies);
