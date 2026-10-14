@@ -2,10 +2,9 @@ import { Drawer } from '@/Drawer';
 import { BaseWidget } from '../BaseWidget';
 import BrushIcon from '@/icons/brush.svg?raw';
 import { Line } from 'konva/lib/shapes/Line';
-import { Node } from 'konva/lib/Node';
 import { BrushOverlay } from '@/components/tools/Overlay/BrushOverlay/BrushOverlay';
 import { getStroke } from 'perfect-freehand';
-import { crosshairCursor, shapeName, socketEvents } from '@/constants';
+import { crosshairCursor, shapeName } from '@/constants';
 import type { BrushWidgetOptions } from '@/@types/toolbar';
 
 /**
@@ -69,7 +68,6 @@ export class BrushWidget extends BaseWidget {
       if (!this.inAction) return;
 
       this._updateLine();
-      // this.drawer.socket.emit(socketEvents.DRAW, this.#lastLine);
     });
 
     this.onStage('mouseup touchend', (e) => {
@@ -84,8 +82,6 @@ export class BrushWidget extends BaseWidget {
 
       this.clearSelection();
       e.evt.preventDefault();
-      // serialized line (konva JSON), only with collaboration enabled
-      this.drawer.socket?.emit(socketEvents.DRAW, this.#lastLine.toJSON());
     });
   }
 
@@ -106,15 +102,5 @@ export class BrushWidget extends BaseWidget {
     // 2 decimals are enough to draw, and saved data / history are about 3 times lighter
     const newPoints = points.flat().map((n) => Math.round(n * 100) / 100);
     this.#lastLine?.points(newPoints);
-  }
-
-  /**
-   * Get the drawing data from the socket and basically
-   * draw on our canvas whatever the other person draws
-   *
-   */
-  _socketDraw(data: string) {
-    // konva JSON of the line, server does not send it back to its author
-    this.drawer.addShape(Node.create(data) as Line);
   }
 }

@@ -5,14 +5,14 @@ import { Toolbar } from './components/toolbar/Toolbar';
 import { Rect } from 'konva/lib/shapes/Rect';
 import { AvailableTools } from './@types/toolbar';
 import { ColorLike, DrawerOptions, OptionsChange, StrokeStyle, TextStyle } from './@types/drawer';
-import { deepMerge } from './utils/functions';
-import { defaultOptions, gridSize, shapeName, socketEvents, zoomLimits } from './constants';
+import { createId, deepMerge } from './utils/functions';
+import { defaultOptions, gridSize, shapeName, zoomLimits } from './constants';
 import { setPressed } from './utils/dom';
 import { getStrokeStyle } from './utils/stroke';
 import { Zoom } from './components/tools/Zoom/Zoom';
 import { Position } from './components/tools/Position/Position';
 import { Help } from './components/tools/Help/Help';
-import { BrushWidget } from './components/toolbar/widgets/Brush/Brush';
+import { Collaboration } from './components/Collaboration/Collaboration';
 
 import type { SelectWidget } from './components/toolbar/widgets/Select/Select';
 import type { BaseWidget } from './components/toolbar/widgets/BaseWidget';
@@ -52,6 +52,8 @@ let drawerCount = 0;
 export class Drawer extends MicroEvent {
   /** Collaboration socket, connected only with `collaboration` option */
   socket: Socket | null = null;
+  /** Drawing changes sent to and received from other clients, with `collaboration` option */
+  collaboration: Collaboration | null = null;
   $el: HTMLDivElement;
   $drawerContainer: HTMLDivElement;
   $stageContainer: HTMLDivElement;
@@ -158,7 +160,11 @@ export class Drawer extends MicroEvent {
       // saved transformer, selection rectangle and guides are recreated by selection widget
       this.selectionLayer.destroyChildren();
       // draggable depends on active tool, set on its activation
-      this.drawLayer.getChildren().forEach((shape) => shape.draggable(false));
+      this.drawLayer.getChildren().forEach((shape) => {
+        shape.draggable(false);
+        // saves of previous versions
+        if (!shape.id()) shape.id(createId());
+      });
       this.background = this.bgLayer.findOne(`.${shapeName.background}`) as Rect;
       activeTool = (this._getStorageItem(this.options.localStorageKey + '-tool') as AvailableTools | null) ?? activeTool;
       saved = true;
@@ -248,12 +254,14 @@ export class Drawer extends MicroEvent {
 
     // true: server on same origin, string: server url
     this.socket = typeof collaboration === 'string' ? io(collaboration) : io();
-    this.socket.on('connect', () => {
-      if (this.debug) console.log('🌍 Connected to collaboration server');
-    });
-    this.socket.on(socketEvents.DRAW, (data: string) => {
-      this.getWidget<BrushWidget>('brush')?._socketDraw(data);
-    });
+    this.collaboration = new Collaboration(this, this.socket);
+  }
+
+  /**
+   * Pointer action of a widget ended: changes of collaborators received meanwhile are applied
+   */
+  _onActionEnd() {
+    if (this.collaboration?.flush()) this.stage.fire('change');
   }
 
   /**
@@ -309,6 +317,8 @@ export class Drawer extends MicroEvent {
    */
   addShape<T extends Shape<ShapeConfig>>(shape: T): T {
     shape.draggable(this.activeTool === 'selection');
+    // shape identity for collaboration (kept in history and saves)
+    if (!shape.id()) shape.id(createId());
     this.drawLayer.add(shape);
 
     return shape;
@@ -371,6 +381,10 @@ export class Drawer extends MicroEvent {
     });
 
     this.stage.on('change', () => {
+      // collaborators changes received during a pointer action, then this one
+      this.collaboration?.flush();
+      this.collaboration?.send();
+
       if (this.options.autoSave) {
         this.save();
       }

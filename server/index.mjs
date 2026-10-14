@@ -25,6 +25,8 @@ async function server() {
 
   const httpServer = createHttpServer(app);
   const io = new Server(httpServer);
+  // shared drawing: shapes JSON by id, sent to clients when they connect
+  const shapes = new Map();
 
   io.on('connection', (socket) => {
     console.log(`A client has connected (id: ${socket.id})`);
@@ -33,9 +35,19 @@ async function server() {
       connectedClients[socket.id] = {};
     }
 
-    socket.on(socketEvents.DRAW, (data) => {
-      // Emit to other connected clients (author already has the line)
-      socket.broadcast.emit(socketEvents.DRAW, data);
+    if (shapes.size) socket.emit(socketEvents.CHANGE, { upsert: [...shapes.values()], remove: [] });
+
+    // { upsert: shapes JSON, remove: ids }
+    socket.on(socketEvents.CHANGE, (change) => {
+      try {
+        change.remove.forEach((id) => shapes.delete(id));
+        change.upsert.forEach((json) => shapes.set(JSON.parse(json).attrs.id, json));
+      } catch (error) {
+        console.warn(`Invalid change (id: ${socket.id}): ${error.message}`);
+        return;
+      }
+      // to other clients, author already has it
+      socket.broadcast.emit(socketEvents.CHANGE, change);
     });
 
     socket.on('disconnect', () => {

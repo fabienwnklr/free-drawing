@@ -39,15 +39,15 @@ export class UndoRedo extends History {
     this.$btnRedo.addEventListener('click', () => this.redo());
   }
 
-  // buttons state updated whatever the trigger (buttons, keyboard, API)
+  // change: saved, drawer change event, sent to collaborators, buttons updated (history state already there)
   undo() {
     super.undo();
-    this.manageButtons();
+    this.drawer.stage.fire('change');
   }
 
   redo() {
     super.redo();
-    this.manageButtons();
+    this.drawer.stage.fire('change');
   }
 
   manageUndoBtn() {

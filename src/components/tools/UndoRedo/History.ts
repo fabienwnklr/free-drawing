@@ -9,6 +9,16 @@ import { historyLimit } from '@/constants';
  */
 type ShapeState = { attrs: Record<string, unknown>; className: string };
 
+/**
+ * JSON of a drawing shape (history, collaboration), without `draggable` which depends on active tool
+ */
+export function serializeShape(shape: Shape<ShapeConfig>): string {
+  const { attrs, className } = shape.toObject();
+
+  delete attrs.draggable;
+  return JSON.stringify({ attrs, className } satisfies ShapeState);
+}
+
 export class History {
   /**
    * Drawing states, JSON of shapes array (string is lighter than objects and compared without serializing again)
@@ -22,12 +32,7 @@ export class History {
   }
 
   saveState(fromSaved = false) {
-    const shapes = this.drawer.getDrawingShapes().map((shape) => {
-      const { attrs, className } = shape.toObject();
-      // depends on active tool, not on drawing
-      delete attrs.draggable;
-      return JSON.stringify({ attrs, className } satisfies ShapeState);
-    });
+    const shapes = this.drawer.getDrawingShapes().map(serializeShape);
 
     if (fromSaved) {
       // add the first, first and second, first, second and third, etc. (only last ones, history is limited)

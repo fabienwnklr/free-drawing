@@ -1,4 +1,4 @@
 export const socketEvents = {
-  DRAW: 'DRAW',
-  DRAW_BEGIN_PATH: 'DRAW_BEGIN_PATH',
+  // drawing change: { upsert: shapes JSON, remove: ids }
+  CHANGE: 'CHANGE',
 };

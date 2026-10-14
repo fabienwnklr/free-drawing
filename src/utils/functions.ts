@@ -42,6 +42,13 @@ export function deepMerge<T extends object>(target: T, source: Partial<T> | T): 
   return output;
 }
 
+/**
+ * Unique id of a drawing shape (collaboration), `crypto.randomUUID` needs a secure context (https)
+ */
+export function createId(): string {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+}
+
 export function stringToNode<T>(string: string): T {
   const placeholder = document.createElement('div');
   placeholder.innerHTML = string;

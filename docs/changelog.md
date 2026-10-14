@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [4.0.0](https://github.com/fabienwnklr/free-drawing/compare/v3.8.0...v4.0.0) (2026-10-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* **collaboration:** drawing changes are sent with `CHANGE` event (`{ upsert, remove }`: JSON of shapes added or updated, ids of removed shapes) instead of `DRAW` (brush strokes only), a custom socket.io server must relay `CHANGE` (see server/index.mjs), `_socketDraw` of widgets is removed
+
+
+### Features
+
+* **collaboration:** every drawing change is shared (all tools, eraser, moves, styles, undo / redo, clear canvas), concurrent drawings are merged shape by shape, changes received while drawing are applied at the end of the stroke, server sends the drawing to clients connecting later
+* drawing shapes have a unique `id`
+
+
+### Bug Fixes
+
+* **history:** undo and redo are saved (`autoSave`) and trigger drawer `change` event
+
 ## [3.8.0](https://github.com/fabienwnklr/free-drawing/compare/v3.7.0...v3.8.0) (2026-10-14)
 
 

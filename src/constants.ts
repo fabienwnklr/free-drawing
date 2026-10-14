@@ -97,8 +97,8 @@ export const fillShapes = [shapeName.rect, shapeName.ellipse];
  * Collaboration events, same as server/socket-events.js
  */
 export const socketEvents = {
-  DRAW: 'DRAW',
-  DRAW_BEGIN_PATH: 'DRAW_BEGIN_PATH',
+  /** Drawing change (`DrawingChange`): shapes added or updated, ids of removed shapes */
+  CHANGE: 'CHANGE',
 };
 
 export const dataAttributes = {

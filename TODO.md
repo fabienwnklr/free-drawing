@@ -14,3 +14,4 @@
 - position object (reculer d'un plan, en arrièere plan, idem pour devant)
 - use alias instead absolute path (replace ../../ or ./ with @/) where isn't already set and used
 - event namespace (fd?) utiliser une signature identique pour tout les events, par ex drawer.options.change, drawer.change, drawer.saved, etc.
+- si je fais ctrl+a ça selectionne le texte du widget x/y, fix ça

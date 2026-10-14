@@ -103,6 +103,8 @@ If `tool` option (or the tool saved in localStorage) is not in `widgets`, the fi
 
 ## Collaboration
 
-With `collaboration` option, `socket.io-client` is loaded and brush strokes are sent to a [socket.io](https://socket.io/) server, which relays `DRAW` events to other clients (see [server/index.mjs](./server/index.mjs)).
+With `collaboration` option, `socket.io-client` is loaded and every drawing change (any tool, eraser, moves, styles, undo / redo...) is sent to a [socket.io](https://socket.io/) server, which relays it to other clients (see [server/index.mjs](./server/index.mjs)).
+
+Changes are sent shape by shape with a `CHANGE` event: `{ upsert, remove }`, JSON of shapes added or updated (konva `toObject`, with their `id`) and ids of removed shapes, so concurrent drawings are merged. The server keeps the drawing and sends it (as a `CHANGE` event) to clients connecting later.
 
 In this repository, run `yarn serve` then open `http://localhost:3000/?collaboration` in several windows.

@@ -140,6 +140,7 @@ export abstract class BaseWidget {
   protected endAction() {
     this.inAction = false;
     this.drawer.UIPointerEvents('all');
+    this.drawer._onActionEnd();
   }
 
   /**
@@ -148,13 +149,6 @@ export abstract class BaseWidget {
   clearSelection() {
     this.drawer.getWidget<SelectWidget>('selection')?.clearSelection();
   }
-
-  /**
-   * Get the drawing data from the socket and basically
-   * draw on our canvas whatever the other person draws
-   *
-   */
-  public _socketDraw?(data: string): void;
 
   private _initEvents() {
     this.$button.addEventListener('click', () => {
