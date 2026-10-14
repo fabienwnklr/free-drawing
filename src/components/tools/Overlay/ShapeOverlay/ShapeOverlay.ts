@@ -6,6 +6,6 @@ import { BaseOverlay } from '@/components/tools/Overlay/BaseOverlay';
  */
 export class ShapeOverlay extends BaseOverlay {
   constructor(drawer: Drawer) {
-    super(drawer, { styleBtns: true, label: 'Shape options' });
+    super(drawer, { styleBtns: true, label: 'overlay.shape' });
   }
 }

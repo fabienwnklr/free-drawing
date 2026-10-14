@@ -1,5 +1,6 @@
 import { DrawerOptions } from '@/@types/drawer';
 import type { WidgetName } from '@/@types/toolbar';
+import type { TranslationKey } from '@/i18n/en';
 
 /**
  * Widgets of toolbar, default order
@@ -31,6 +32,8 @@ export const defaultOptions: DrawerOptions = {
   positionWidget: true,
   selectionMenu: true,
   theme: 'light',
+  language: 'auto',
+  translations: {},
   layersPanel: true,
   readOnly: false,
   scaling: 1.11,
@@ -105,16 +108,16 @@ export const fillShapes = [shapeName.rect, shapeName.ellipse];
 export const edgesShapes = [shapeName.rect];
 
 /**
- * Type names of drawing shapes (layers panel)
+ * Type names of drawing shapes (layers panel), keys of their translation
  */
-export const shapeLabels: Record<string, string> = {
-  [shapeName.line]: 'Freehand',
-  [shapeName.straightLine]: 'Line',
-  [shapeName.rect]: 'Rectangle',
-  [shapeName.ellipse]: 'Ellipse',
-  [shapeName.arrow]: 'Arrow',
-  [shapeName.text]: 'Text',
-  [shapeName.group]: 'Group',
+export const shapeLabels: Record<string, TranslationKey> = {
+  [shapeName.line]: 'shapes.freehand',
+  [shapeName.straightLine]: 'shapes.line',
+  [shapeName.rect]: 'shapes.rect',
+  [shapeName.ellipse]: 'shapes.ellipse',
+  [shapeName.arrow]: 'shapes.arrow',
+  [shapeName.text]: 'shapes.text',
+  [shapeName.group]: 'shapes.group',
 };
 
 /**
@@ -136,6 +139,8 @@ export const drawerEvents = {
   collaborationChange: 'drawer.collaboration.change',
   /** Light or dark theme shown, with dark state */
   themeChange: 'drawer.theme.change',
+  /** Language of interface changed, with language */
+  languageChange: 'drawer.language.change',
   /** Dropdown menu hidden (event of dropdown) */
   dropdownHide: 'drawer.dropdown.hide',
   /** Toast hidden (event of toast) */

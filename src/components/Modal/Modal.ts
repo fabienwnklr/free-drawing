@@ -41,16 +41,31 @@ export class Modal {
 
       this.setHeaderContent(
         `<h2 class="drawer-modal-title" id="${titleId}">${
-          this.options.title ?? 'Modal'
-        }</h2><button type="button" title="Close" aria-label="Close" class="btn-close" data-modal="close">${CloseIcon}</button>`
+          this.options.title ?? ''
+        }</h2><button type="button" class="btn-close" data-modal="close">${CloseIcon}</button>`
       );
       this.$modal.setAttribute('aria-labelledby', titleId);
+      this.drawer.i18n.translate((t) => {
+        const $close = this.$modalHeader.querySelector<HTMLElement>('[data-modal=close]')!;
+
+        $close.title = t('modal.close');
+        $close.setAttribute('aria-label', t('modal.close'));
+      });
     } else {
       this.$modalHeader.remove();
     }
 
     this.setBodyContent(this.options.bodyContent ?? '');
     this.setFooterContent(this.options.footerContent ?? '');
+  }
+
+  /**
+   * Title in header
+   */
+  setTitle(title: string) {
+    const $title = this.$modalHeader.querySelector('.drawer-modal-title');
+
+    if ($title) $title.textContent = title;
   }
 
   private _setupDefaultEvents() {

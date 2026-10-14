@@ -5,6 +5,7 @@ import '@/components/ContextMenu/context-menu.scss';
 import { Stage } from 'konva/lib/Stage';
 import { arrowNavigation, createButton, disableElement, enableElement, setPressed } from '@/utils/dom';
 import { drawerEvents } from '@/constants';
+import type { TranslationKey } from '@/i18n/en';
 
 export class ContextMenu {
   drawer: Drawer;
@@ -31,10 +32,10 @@ export class ContextMenu {
     this.$list = document.createElement('ul');
     this.$list.setAttribute('role', 'none');
 
-    this.$pasteBtn = this._createItem('Paste', 'Ctrl+V');
-    this.$snappingBtn = this._createItem('Snap to object', 'Alt+S', 'menuitemcheckbox');
-    this.$gridBtn = this._createItem('Show grid', 'Alt+G', 'menuitemcheckbox');
-    this.$lockShapeBtn = this._createItem('Lock', '');
+    this.$pasteBtn = this._createItem('context.paste', 'Ctrl+V');
+    this.$snappingBtn = this._createItem('context.snap', 'Alt+S', 'menuitemcheckbox');
+    this.$gridBtn = this._createItem('menu.showGrid', 'Alt+G', 'menuitemcheckbox');
+    this.$lockShapeBtn = this._createItem('context.lock', '');
 
     this.$list.append(...[this.$pasteBtn, this.$snappingBtn, this.$gridBtn]);
 
@@ -45,10 +46,13 @@ export class ContextMenu {
   /**
    * Menu item, focused with arrow keys
    */
-  private _createItem(label: string, shortcut: string, role: 'menuitem' | 'menuitemcheckbox' = 'menuitem') {
+  private _createItem(label: TranslationKey, shortcut: string, role: 'menuitem' | 'menuitemcheckbox' = 'menuitem') {
     const $item = createButton('drawer-button', 'drawer-button-neutral', 'drawer-context-menu-list-item');
 
-    $item.innerHTML = `<span class="drawer-context-menu-item__label">${label}</span><kbd class="drawer-context-menu-item__shortcut" aria-hidden="true">${shortcut}</kbd>`;
+    $item.innerHTML = `<span class="drawer-context-menu-item__label"></span><kbd class="drawer-context-menu-item__shortcut" aria-hidden="true">${shortcut}</kbd>`;
+    this.drawer.i18n.translate(
+      (t) => ($item.querySelector('.drawer-context-menu-item__label')!.textContent = t(label))
+    );
     $item.setAttribute('role', role);
     $item.tabIndex = -1;
     if (shortcut) $item.setAttribute('aria-keyshortcuts', shortcut.replace('Ctrl', 'Control'));
@@ -108,7 +112,7 @@ export class ContextMenu {
         this.drawer.getWidget<TextWidget>('text')?.addTextNode(text);
         this.drawer.stage.fire('change');
       } catch (error) {
-        this.drawer.toast(`Clipboard unavailable: ${(error as Error).message}`, 'warning');
+        this.drawer.toast(this.drawer.t('toast.clipboardUnavailable', { error: (error as Error).message }), 'warning');
       }
     });
 

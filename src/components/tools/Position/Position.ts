@@ -21,7 +21,6 @@ export class Position {
     this.$positionContainer = document.createElement('div');
     this.$positionContainer.classList.add('drawer-position-container', 'tool');
     this.$positionContainer.setAttribute('role', 'group');
-    this.$positionContainer.setAttribute('aria-label', 'Position');
 
     this.$coordinates = document.createElement('span');
     this.$coordinates.classList.add('drawer-position-coordinates');
@@ -30,7 +29,10 @@ export class Position {
 
     this.$btnRecenter = createButton('drawer-button', 'drawer-button-neutral');
     this.$btnRecenter.innerHTML = RecenterIcon;
-    setLabel(this.$btnRecenter, 'Back to origin');
+    this.drawer.i18n.translate((t) => {
+      this.$positionContainer.setAttribute('aria-label', t('position.label'));
+      setLabel(this.$btnRecenter, t('position.recenter'));
+    });
     this.$btnRecenter.addEventListener('click', () => this.recenter());
 
     this.$positionContainer.append(this.$coordinates, this.$btnRecenter);

@@ -14,10 +14,10 @@ export const defaultOptionsModal: ModalOptions = {
   backdrop: true,
 };
 
+/**
+ * Default actions of confirmation dialog (texts: translated ones)
+ */
 export const confirmModalDefaultOpts = {
-  message: 'Would you confirm action ?',
-  cancelLabel: 'Cancel',
-  confirmLabel: 'Confirm',
   onCancel: (modal: ConfirmModal) => {
     modal.hide();
   },

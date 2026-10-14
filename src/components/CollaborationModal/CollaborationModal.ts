@@ -3,6 +3,7 @@ import type { Drawer } from '@/Drawer';
 import { Modal } from '@/components/Modal/Modal';
 import { createButton, uniqueId } from '@/utils/dom';
 import { drawerEvents } from '@/constants';
+import type { TranslationKey } from '@/i18n/en';
 
 /**
  * Live collaboration dialog: start a session, join one from a link (name required), session link with copy button
@@ -26,14 +27,13 @@ export class CollaborationModal extends Modal {
   invitedBy?: string;
 
   constructor(drawer: Drawer) {
-    super(drawer, { title: 'Live collaboration' });
+    super(drawer, { title: drawer.t('collab.title') });
     this.$modal.classList.add('drawer-modal-collaboration');
 
     this.$intro = document.createElement('p');
 
-    this.$name = this._createField('Your name', 'text');
+    this.$name = this._createField('collab.name', 'text');
     this.$name.maxLength = 40;
-    this.$name.placeholder = 'Anonymous';
     // name shown to other users
     this.$name.addEventListener('change', () => this.drawer.setUserName(this.$name.value));
     // name required to join
@@ -48,20 +48,18 @@ export class CollaborationModal extends Modal {
     this.$session = document.createElement('div');
     this.$session.classList.add('drawer-collaboration-session');
 
-    this.$link = this._createField('Link', 'text');
+    this.$link = this._createField('collab.link', 'text');
     this.$link.readOnly = true;
     this.$link.addEventListener('focus', () => this.$link.select());
 
     const $copy = createButton('drawer-button', 'drawer-button-neutral');
 
-    $copy.textContent = 'Copy';
     $copy.addEventListener('click', () => this.copyLink());
     this.$link.after($copy);
 
     this.$qrCode = document.createElement('div');
     this.$qrCode.classList.add('drawer-collaboration-qrcode');
     this.$qrCode.setAttribute('role', 'img');
-    this.$qrCode.setAttribute('aria-label', 'QR code of the link, to scan with a phone');
 
     this.$users = document.createElement('p');
     this.$users.classList.add('drawer-collaboration-users');
@@ -77,26 +75,35 @@ export class CollaborationModal extends Modal {
     this.$modalBody.prepend(this.$intro, this.$name.closest('.drawer-collaboration-field')!, this.$session);
 
     this.$startButton = createButton('drawer-button', 'drawer-button-primary');
-    this.$startButton.textContent = 'Start session';
     this.$startButton.addEventListener('click', () => this.start());
     this.$cancelButton = createButton('drawer-button', 'drawer-button-neutral');
-    this.$cancelButton.textContent = 'Cancel';
     this.$cancelButton.addEventListener('click', () => this.cancelJoin());
     this.$joinButton = createButton('drawer-button', 'drawer-button-primary');
-    this.$joinButton.textContent = 'Join session';
     this.$joinButton.addEventListener('click', () => this.join());
     this.$stopButton = createButton('drawer-button', 'drawer-button-danger');
-    this.$stopButton.textContent = 'Stop session';
     this.$stopButton.addEventListener('click', () => this.drawer.stopCollaboration());
     this.$modalFooter.append(this.$cancelButton, this.$startButton, this.$joinButton, this.$stopButton);
 
+    drawer.i18n.translate((t) => {
+      this.setTitle(t('collab.title'));
+      this.$name.placeholder = t('collab.anonymous');
+      $copy.textContent = t('collab.copy');
+      this.$qrCode.setAttribute('aria-label', t('collab.qrCode'));
+      this.$startButton.textContent = t('collab.start');
+      this.$cancelButton.textContent = t('confirm.cancel');
+      this.$joinButton.textContent = t('collab.join');
+      this.$stopButton.textContent = t('collab.stop');
+    });
+
     this.drawer.on(drawerEvents.collaborationChange, () => this.update());
+    // intro and users in new language
+    this.drawer.on(drawerEvents.languageChange, () => this.update());
   }
 
   /**
    * Labelled input, in a field container
    */
-  private _createField(text: string, type: string) {
+  private _createField(text: TranslationKey, type: string) {
     const $field = document.createElement('div');
     const $label = document.createElement('label');
     const $input = document.createElement('input');
@@ -105,7 +112,7 @@ export class CollaborationModal extends Modal {
     $input.id = uniqueId('collaboration-field');
     $input.type = type;
     $label.htmlFor = $input.id;
-    $label.textContent = text;
+    this.drawer.i18n.translate((t) => ($label.textContent = t(text)));
     $field.append($label, $input);
 
     return $input;
@@ -128,7 +135,7 @@ export class CollaborationModal extends Modal {
     try {
       await this.drawer.startCollaboration(undefined, this.$name.value);
     } catch (error) {
-      this.drawer.toast(`Collaboration unavailable: ${(error as Error).message}`, 'error');
+      this.drawer.toast(this.drawer.t('toast.collaborationUnavailable', { error: (error as Error).message }), 'error');
     }
   }
 
@@ -141,7 +148,7 @@ export class CollaborationModal extends Modal {
     try {
       await this.drawer.startCollaboration(room, this.$name.value, this.invitedBy);
     } catch (error) {
-      this.drawer.toast(`Collaboration unavailable: ${(error as Error).message}`, 'error');
+      this.drawer.toast(this.drawer.t('toast.collaborationUnavailable', { error: (error as Error).message }), 'error');
     }
   }
 
@@ -160,9 +167,9 @@ export class CollaborationModal extends Modal {
       if (!navigator.clipboard) throw new Error('clipboard unavailable');
 
       await navigator.clipboard.writeText(this.$link.value);
-      this.drawer.toast('Link copied', 'info');
+      this.drawer.toast(this.drawer.t('toast.linkCopied'), 'info');
     } catch (error) {
-      this.drawer.toast(`Link can't be copied: ${(error as Error).message}`, 'warning');
+      this.drawer.toast(this.drawer.t('toast.linkNotCopied', { error: (error as Error).message }), 'warning');
     }
   }
 
@@ -172,14 +179,17 @@ export class CollaborationModal extends Modal {
   private _updateMembers() {
     const collaboration = this.drawer.collaboration!;
     const { members, isOwner, userId } = collaboration;
+    const t = this.drawer.t.bind(this.drawer);
 
-    this.$users.textContent = members.length ? `Connected (${members.length})` : 'Connecting...';
+    this.$users.textContent = members.length
+      ? t('collab.connected', { count: members.length })
+      : t('collab.connecting');
     this.$members.replaceChildren(
       ...members.map((member) => {
         const $member = document.createElement('li');
         const $name = document.createElement('span');
 
-        $name.textContent = member.name + (member.id === userId ? ' (you)' : '');
+        $name.textContent = member.id === userId ? t('collab.you', { name: member.name }) : member.name;
         $member.append($name);
 
         // who shared the link (also page url of a user)
@@ -187,7 +197,7 @@ export class CollaborationModal extends Modal {
           const $invitedBy = document.createElement('small');
 
           $invitedBy.classList.add('text-muted');
-          $invitedBy.textContent = `invited by ${member.invitedBy}`;
+          $invitedBy.textContent = t('collab.invitedBy', { name: member.invitedBy });
           $name.append(document.createElement('br'), $invitedBy);
         }
 
@@ -197,15 +207,15 @@ export class CollaborationModal extends Modal {
 
           $canEdit.type = 'checkbox';
           $canEdit.checked = member.canEdit;
-          $canEdit.setAttribute('aria-label', `${member.name} can draw`);
+          $canEdit.setAttribute('aria-label', t('collab.canDrawLabel', { name: member.name }));
           $canEdit.addEventListener('change', () => collaboration.setRight(member.id, $canEdit.checked));
-          $label.append($canEdit, 'Can draw');
+          $label.append($canEdit, t('collab.canDraw'));
           $member.append($label);
         } else {
           const $role = document.createElement('span');
 
           $role.classList.add('text-muted');
-          $role.textContent = member.owner ? 'Owner' : member.canEdit ? 'Can draw' : 'View only';
+          $role.textContent = t(member.owner ? 'collab.owner' : member.canEdit ? 'collab.canDraw' : 'collab.viewOnly');
           $member.append($role);
         }
 
@@ -225,11 +235,13 @@ export class CollaborationModal extends Modal {
     const ownerName = collaboration?.members.find((member) => member.owner)?.name;
 
     if (joining) {
-      this.$intro.textContent = 'You are invited to draw together: enter your name to join the session.';
+      this.$intro.textContent = this.drawer.t('collab.introInvited');
     } else if (collaboration && !owner) {
-      this.$intro.textContent = `You joined the live collaboration session${ownerName ? ` of ${ownerName}` : ''}.`;
+      this.$intro.textContent = ownerName
+        ? this.drawer.t('collab.introJoinedOf', { name: ownerName })
+        : this.drawer.t('collab.introJoined');
     } else {
-      this.$intro.textContent = 'Draw with other people in real time: everyone with the link joins this drawing.';
+      this.$intro.textContent = this.drawer.t('collab.intro');
     }
     this.$name.required = joining;
     this.$joinButton.disabled = !this.$name.value.trim();

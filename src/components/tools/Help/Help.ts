@@ -5,207 +5,35 @@ import HelpIcon from '@/icons/help.svg?raw';
 import ExternalLink from '@/icons/external-link.svg?raw';
 import { ShapeWidget } from '@/components/toolbar/widgets/ShapeWidget';
 import { createButton, setLabel } from '@/utils/dom';
+import type { Translate } from '@/i18n/I18n';
+
+/** Shortcut: action, keys (several: alternatives or second action), text after keys */
+type Shortcut = { label: string; keys: string[]; or?: boolean; after?: string };
 
 export class Help extends Modal {
   $button: HTMLButtonElement;
   $helpContainer: HTMLDivElement;
   constructor(drawer: Drawer) {
-    super(drawer, { title: 'Help' });
-
-    const data = /*html*/ `
-    <div class="drawer-modal-help-links">
-      <a class="drawer-link" href="https://free-drawing-docs.fabienwinkler.fr/" target="_blank">Documentation${ExternalLink}</a>
-      <a class="drawer-link" href="https://github.com/fabienwnklr/free-drawing/issues/new" target="_blank">Found issue ? Please inform us !${ExternalLink}</a>
-    </div>
-    <h3>Keyboard shortcuts</h3>
-    <div class="drawer-modal-help-grid">
-      <div class="drawer-modal-help-grid-container">
-        <h4>Tools</h4>
-        <!-- toolbar widgets and their shortcuts (widgets option) -->
-        <ul class="drawer-modal-help-shortcut-container" data-help-tools></ul>
-        </div>
-
-        <div class="drawer-modal-help-grid-container">
-          <h4>Editor</h4>
-          <ul class="drawer-modal-help-shortcut-container">
-            <li class="drawer-modal-help-shortcut">
-              Undo
-              <span>
-                <kbd class="drawer-modal-help-kdb">Ctrl+Z</kbd>
-              </span>
-            </li>
-            <li class="drawer-modal-help-shortcut">
-              Redo
-              <span>
-                <kbd class="drawer-modal-help-kdb">Ctrl+Y</kbd>
-              </span>
-            </li>
-            <li class="drawer-modal-help-shortcut">
-              Clear canvas
-              <span>
-                <kbd class="drawer-modal-help-kdb">Ctrl+Delete</kbd>
-                or
-                <kbd class="drawer-modal-help-kdb">Ctrl+Backspace</kbd>
-              </span>
-            </li>
-            <li class="drawer-modal-help-shortcut">
-              Select all
-              <span>
-                <kbd class="drawer-modal-help-kdb">Ctrl+A</kbd>
-              </span>
-            </li>
-            <li class="drawer-modal-help-shortcut">
-              Delete selection
-              <span>
-                <kbd class="drawer-modal-help-kdb">Delete</kbd>
-              </span>
-            </li>
-            <li class="drawer-modal-help-shortcut">
-              Duplicate selection
-              <span>
-                <kbd class="drawer-modal-help-kdb">Ctrl+D</kbd>
-              </span>
-            </li>
-            <li class="drawer-modal-help-shortcut">
-              Group / ungroup selection
-              <span>
-                <kbd class="drawer-modal-help-kdb">Ctrl+G</kbd>
-                <kbd class="drawer-modal-help-kdb">Ctrl+Shift+G</kbd>
-              </span>
-            </li>
-            <li class="drawer-modal-help-shortcut">
-              Select shape in a group
-              <span>
-                <kbd class="drawer-modal-help-kdb">Ctrl+Click</kbd>
-              </span>
-            </li>
-            <li class="drawer-modal-help-shortcut">
-              Square, circle, 45° line, straight stroke
-              <span>
-                <kbd class="drawer-modal-help-kdb">Shift</kbd>
-                while drawing
-              </span>
-            </li>
-            <li class="drawer-modal-help-shortcut">
-              Arrow not linked to shapes
-              <span>
-                <kbd class="drawer-modal-help-kdb">Ctrl</kbd>
-                while drawing
-              </span>
-            </li>
-            <li class="drawer-modal-help-shortcut">
-              Keep proportions, rotate by 15°, move straight
-              <span>
-                <kbd class="drawer-modal-help-kdb">Shift</kbd>
-                while resizing, rotating, moving
-              </span>
-            </li>
-            <li class="drawer-modal-help-shortcut">
-              Move selection
-              <span>
-                <kbd class="drawer-modal-help-kdb">Arrows</kbd>
-              </span>
-            </li>
-            <li class="drawer-modal-help-shortcut">
-              Bring forward / send backward
-              <span>
-                <kbd class="drawer-modal-help-kdb">Ctrl+Up</kbd>
-                <kbd class="drawer-modal-help-kdb">Ctrl+Down</kbd>
-              </span>
-            </li>
-            <li class="drawer-modal-help-shortcut">
-              Bring to front / send to back
-              <span>
-                <kbd class="drawer-modal-help-kdb">Ctrl+Shift+Up</kbd>
-                <kbd class="drawer-modal-help-kdb">Ctrl+Shift+Down</kbd>
-              </span>
-            </li>
-            <li class="drawer-modal-help-shortcut">
-              Paste text
-              <span>
-                <kbd class="drawer-modal-help-kdb">Ctrl+V</kbd>
-              </span>
-            </li>
-            <li class="drawer-modal-help-shortcut">
-              Open file
-              <span>
-                <kbd class="drawer-modal-help-kdb">Ctrl+O</kbd>
-              </span>
-            </li>
-            <li class="drawer-modal-help-shortcut">
-              Save as file
-              <span>
-                <kbd class="drawer-modal-help-kdb">Ctrl+S</kbd>
-              </span>
-            </li>
-            <li class="drawer-modal-help-shortcut">
-              Export image
-              <span>
-                <kbd class="drawer-modal-help-kdb">Ctrl+Shift+E</kbd>
-              </span>
-            </li>
-          </ul>
-        </div>
-
-        <div class="drawer-modal-help-grid-container">
-          <h4>View</h4>
-          <ul class="drawer-modal-help-shortcut-container">
-            <li class="drawer-modal-help-shortcut">
-              Zen mode
-              <span>
-                <kbd class="drawer-modal-help-kdb">Alt+Z</kbd>
-              </span>
-            </li>
-            <li class="drawer-modal-help-shortcut">
-              Grid
-              <span>
-                <kbd class="drawer-modal-help-kdb">Alt+G</kbd>
-              </span>
-            </li>
-            <li class="drawer-modal-help-shortcut">
-              Layers panel
-              <span>
-                <kbd class="drawer-modal-help-kdb">Alt+L</kbd>
-              </span>
-            </li>
-            <li class="drawer-modal-help-shortcut">
-              Dark mode
-              <span>
-                <kbd class="drawer-modal-help-kdb">Alt+Shift+D</kbd>
-              </span>
-            </li>
-            <li class="drawer-modal-help-shortcut">
-              Snap to objects
-              <span>
-                <kbd class="drawer-modal-help-kdb">Alt+S</kbd>
-              </span>
-            </li>
-            <li class="drawer-modal-help-shortcut">
-              Zoom
-              <span>
-                <kbd class="drawer-modal-help-kdb">Ctrl+Wheel</kbd>
-              </span>
-            </li>
-          </ul>
-        </div>
-
-      </div>
-    `;
+    super(drawer, { title: drawer.t('help.title') });
 
     this.$modal.classList.add('drawer-modal-help');
-    this.setBodyContent(data);
-    this._fillToolsShortcuts();
 
     this.$helpContainer = document.createElement('div');
     this.$helpContainer.classList.add('drawer-help-container', 'tool');
     this.$button = createButton('drawer-button', 'drawer-button-neutral');
     this.$button.innerHTML = HelpIcon;
-    setLabel(this.$button, 'Help');
     this.$button.setAttribute('aria-haspopup', 'dialog');
 
     this.$helpContainer.append(this.$button);
 
     this.drawer.$footerContainer.append(this.$helpContainer);
+
+    // after widgets: their titles are translated
+    this.drawer.i18n.translate((t) => {
+      this.setTitle(t('help.title'));
+      setLabel(this.$button, t('help.title'));
+      this._render(t);
+    });
 
     this.$button.addEventListener('click', () => {
       this.show();
@@ -213,27 +41,118 @@ export class Help extends Modal {
   }
 
   /**
+   * Links and shortcuts in current language
+   */
+  private _render(t: Translate) {
+    const editor: Shortcut[] = [
+      { label: t('history.undo'), keys: ['Ctrl+Z'] },
+      { label: t('history.redo'), keys: ['Ctrl+Y'] },
+      { label: t('menu.clearCanvas'), keys: [`Ctrl+${t('key.delete')}`, 'Ctrl+Backspace'], or: true },
+      { label: t('help.selectAll'), keys: ['Ctrl+A'] },
+      { label: t('help.deleteSelection'), keys: [t('key.delete')] },
+      { label: t('help.duplicate'), keys: ['Ctrl+D'] },
+      { label: t('help.group'), keys: ['Ctrl+G', 'Ctrl+Shift+G'] },
+      { label: t('help.selectInGroup'), keys: [`Ctrl+${t('key.click')}`] },
+      { label: t('help.constrainDrawing'), keys: ['Shift'], after: t('help.whileDrawing') },
+      { label: t('help.arrowUnlinked'), keys: ['Ctrl'], after: t('help.whileDrawing') },
+      { label: t('help.constrainSelection'), keys: ['Shift'], after: t('help.whileTransforming') },
+      { label: t('help.move'), keys: [t('key.arrows')] },
+      { label: t('help.forwardBackward'), keys: ['Ctrl+Up', 'Ctrl+Down'] },
+      { label: t('help.frontBack'), keys: ['Ctrl+Shift+Up', 'Ctrl+Shift+Down'] },
+      { label: t('help.paste'), keys: ['Ctrl+V'] },
+      { label: t('help.open'), keys: ['Ctrl+O'] },
+      { label: t('help.save'), keys: ['Ctrl+S'] },
+      { label: t('help.export'), keys: ['Ctrl+Shift+E'] },
+    ];
+    const view: Shortcut[] = [
+      { label: t('menu.zenMode'), keys: ['Alt+Z'] },
+      { label: t('help.grid'), keys: ['Alt+G'] },
+      { label: t('help.layers'), keys: ['Alt+L'] },
+      { label: t('menu.darkMode'), keys: ['Alt+Shift+D'] },
+      { label: t('help.snap'), keys: ['Alt+S'] },
+      { label: t('help.zoom'), keys: [`Ctrl+${t('key.wheel')}`] },
+    ];
+
+    this.$modalBody.innerHTML = /*html*/ `
+    <div class="drawer-modal-help-links">
+      <a class="drawer-link" href="https://free-drawing-docs.fabienwinkler.fr/" target="_blank"></a>
+      <a class="drawer-link" href="https://github.com/fabienwnklr/free-drawing/issues/new" target="_blank"></a>
+    </div>
+    <h3></h3>
+    <div class="drawer-modal-help-grid">
+      <div class="drawer-modal-help-grid-container">
+        <h4></h4>
+        <!-- toolbar widgets and their shortcuts (widgets option) -->
+        <ul class="drawer-modal-help-shortcut-container" data-help-tools></ul>
+      </div>
+      <div class="drawer-modal-help-grid-container">
+        <h4></h4>
+        <ul class="drawer-modal-help-shortcut-container" data-help-editor></ul>
+      </div>
+      <div class="drawer-modal-help-grid-container">
+        <h4></h4>
+        <ul class="drawer-modal-help-shortcut-container" data-help-view></ul>
+      </div>
+    </div>
+    `;
+
+    const [$doc, $issue] = this.$modalBody.querySelectorAll('a');
+    const [$tools, $editor, $view] = this.$modalBody.querySelectorAll('h4');
+
+    $doc.append(t('help.documentation'));
+    $issue.append(t('help.issue'));
+    $doc.insertAdjacentHTML('beforeend', ExternalLink);
+    $issue.insertAdjacentHTML('beforeend', ExternalLink);
+    this.$modalBody.querySelector('h3')!.textContent = t('help.shortcuts');
+    $tools.textContent = t('help.tools');
+    $editor.textContent = t('help.editor');
+    $view.textContent = t('help.view');
+
+    const fill = (selector: string, shortcuts: Shortcut[]) =>
+      this.$modalBody
+        .querySelector(selector)!
+        .append(...shortcuts.map((shortcut) => this._createShortcut(t, shortcut)));
+
+    fill('[data-help-tools]', this._getToolsShortcuts(t));
+    fill('[data-help-editor]', editor);
+    fill('[data-help-view]', view);
+  }
+
+  /**
    * Shortcuts of toolbar widgets (only the available ones, with their title and shortcut options)
    */
-  private _fillToolsShortcuts() {
-    const $tools = this.$modalBody.querySelector('[data-help-tools]') as HTMLUListElement;
-    const addShortcut = (label: string, key: string) => {
-      const $item = document.createElement('li');
-      const $key = document.createElement('kbd');
-      $item.classList.add('drawer-modal-help-shortcut');
-      $key.classList.add('drawer-modal-help-kdb');
-      $key.textContent = key;
-      $item.append(label + ' ', $key);
-      $tools.append($item);
-    };
+  private _getToolsShortcuts(t: Translate) {
     const widgets = Array.from(this.drawer.toolbar.widgets.values());
-
-    widgets.forEach((widget) => {
-      if (widget.shortcut) addShortcut(widget.$button.title, widget.shortcut.toUpperCase());
-    });
+    const shortcuts: Shortcut[] = widgets
+      .filter((widget) => widget.shortcut)
+      .map((widget) => ({ label: widget.$button.title, keys: [widget.shortcut!.toUpperCase()] }));
 
     if (widgets.some((widget) => widget instanceof ShapeWidget)) {
-      addShortcut('Square, circle, 45° line (while drawing)', 'Shift');
+      shortcuts.push({ label: t('help.toolsConstrain'), keys: ['Shift'] });
     }
+
+    return shortcuts;
+  }
+
+  /**
+   * Item of shortcut list: action then keys
+   */
+  private _createShortcut(t: Translate, { label, keys, or, after }: Shortcut) {
+    const $item = document.createElement('li');
+    const $keys = document.createElement('span');
+
+    $item.classList.add('drawer-modal-help-shortcut');
+    keys.forEach((key, index) => {
+      const $key = document.createElement('kbd');
+
+      $key.classList.add('drawer-modal-help-kdb');
+      $key.textContent = key;
+      if (index) $keys.append(or ? ` ${t('help.or')} ` : ' ');
+      $keys.append($key);
+    });
+    if (after) $keys.append(` ${after}`);
+    $item.append(label, ' ', $keys);
+
+    return $item;
   }
 }

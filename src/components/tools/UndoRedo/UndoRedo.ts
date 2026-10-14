@@ -15,17 +15,19 @@ export class UndoRedo extends History {
     this.$undoRedoContainer = document.createElement('div');
     this.$undoRedoContainer.classList.add('drawer-undoredo-container', 'tool');
     this.$undoRedoContainer.setAttribute('role', 'group');
-    this.$undoRedoContainer.setAttribute('aria-label', 'History');
 
     this.$btnUndo = createButton('drawer-button', 'drawer-button-neutral');
     this.$btnUndo.innerHTML = UndoIcon;
-    setLabel(this.$btnUndo, 'Undo');
     this.$btnUndo.setAttribute('aria-keyshortcuts', 'Control+Z');
 
     this.$btnRedo = createButton('drawer-button', 'drawer-button-neutral');
     this.$btnRedo.innerHTML = RedoIcon;
-    setLabel(this.$btnRedo, 'Redo');
     this.$btnRedo.setAttribute('aria-keyshortcuts', 'Control+Y');
+    drawer.i18n.translate((t) => {
+      this.$undoRedoContainer.setAttribute('aria-label', t('history.label'));
+      setLabel(this.$btnUndo, t('history.undo'));
+      setLabel(this.$btnRedo, t('history.redo'));
+    });
 
     this.$undoRedoContainer.append(...[this.$btnUndo, this.$btnRedo]);
 

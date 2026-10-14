@@ -26,6 +26,7 @@ DRAWER.on('drawer.change', (drawer) => {
 | `drawer.readonly.change` | read only state | Read only mode changed |
 | `drawer.collaboration.change` | | Collaboration started or stopped, users or rights changed |
 | `drawer.theme.change` | dark state | Light or dark theme shown |
+| `drawer.language.change` | language | Language of interface changed |
 
 Components trigger `drawer.dropdown.hide` (dropdown menu) and `drawer.toast.hide` (`drawer.toast()` result).
 

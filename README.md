@@ -56,6 +56,8 @@ const drawer = new Drawer($el, {
   positionWidget: true, // enable/disable position ui widget (x / y of view, button back to origin)
   selectionMenu: true, // enable/disable menu next to selected shapes (duplicate, bring forward, send backward, delete)
   theme: 'light', // 'light' | 'dark' | 'system' (device one), theme chosen in menu is saved and used instead
+  language: 'auto', // 'auto' (browser one, English when not available) | 'en' | 'fr' | 'es' | 'de', language chosen in menu is saved and used instead
+  translations: {}, // texts replacing default ones, by language, see Languages below
   layersPanel: true, // enable/disable layers panel (list of shapes) and its button in header
   readOnly: false, // drawing can't be modified by user (only pan, zoom, view options, export), API still modifies it
   scaling: 1.11, // scaling on zoom
@@ -94,6 +96,7 @@ drawer.off('drawer.change', callback);
 | `drawer.readonly.change` | read only state | Read only mode changed |
 | `drawer.collaboration.change` | | Collaboration started or stopped, users or rights changed |
 | `drawer.theme.change` | dark state | Light or dark theme shown |
+| `drawer.language.change` | language | Language of interface changed |
 
 Components trigger `drawer.dropdown.hide` (dropdown menu) and `drawer.toast.hide` (`drawer.toast()` result). Names of previous versions (`change`, `fd.options.change`...) still work, with a warning in console.
 
@@ -105,6 +108,26 @@ Components trigger `drawer.dropdown.hide` (dropdown menu) and `drawer.toast.hide
 drawer.setTheme('dark'); // 'light' | 'dark' | 'system'
 drawer.toggleDarkMode();
 drawer.isDarkMode();
+```
+
+## Languages
+
+Interface is available in English, French, Spanish and German: browser language by default, "Language" of settings menu chooses another one (saved). Every text is translated at once, without reloading.
+
+```js
+drawer.setLanguage('fr'); // 'auto' | 'en' | 'fr' | 'es' | 'de'
+drawer.language; // language shown: 'fr'
+drawer.t('menu.open'); // text of interface in current language: 'Ouvrir'
+```
+
+`translations` option replaces texts of interface (keys of [src/i18n/en.ts](src/i18n/en.ts)):
+
+```js
+new Drawer($el, {
+  translations: {
+    fr: { 'menu.open': 'Ouvrir un dessin' },
+  },
+});
 ```
 
 ## Widgets

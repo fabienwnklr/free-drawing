@@ -232,7 +232,7 @@ describe('Accessibility', () => {
     const modal = drawer.clearConfirmModal!;
 
     expect(modal.$modal.getAttribute('role')).toBe('alertdialog');
-    expect(labelledBy(modal.$modal)).toBe('Are you sure to remove all canvas draw ?');
+    expect(labelledBy(modal.$modal)).toBe('Remove the whole drawing?');
     expect(modal.$cancelBtn).toBeInstanceOf(HTMLButtonElement);
     expect(modal.$confirmBtn).toBeInstanceOf(HTMLButtonElement);
     expect(document.activeElement).toBe(modal.$cancelBtn);

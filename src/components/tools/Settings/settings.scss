@@ -9,6 +9,30 @@
     font-size: $font-size-sm;
   }
 
+  // label and select in one item
+  .drawer-language {
+    cursor: default;
+
+    // as icons of buttons
+    svg {
+      flex-shrink: 0;
+      width: 18px;
+      height: 18px;
+    }
+
+    select {
+      margin-left: auto;
+      padding: $space-1 $space-2;
+      border: 1px solid $border;
+      border-radius: $radius;
+      background-color: $surface;
+      color: $text;
+      cursor: pointer;
+
+      @include focus-ring;
+    }
+  }
+
   .color-picker-container {
     @include picker;
 

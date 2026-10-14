@@ -10,6 +10,7 @@ import GroupIcon from '@/icons/group.svg?raw';
 import UngroupIcon from '@/icons/ungroup.svg?raw';
 import { Group } from 'konva/lib/Group';
 import { arrowNavigation, createButton, setLabel } from '@/utils/dom';
+import type { TranslationKey } from '@/i18n/en';
 import { drawerEvents } from '@/constants';
 
 /** Space between selection and menu, between menu and drawer edges (px) */
@@ -35,18 +36,22 @@ export class SelectionMenu {
     this.$menu = document.createElement('div');
     this.$menu.classList.add('drawer-selection-menu', 'tool');
     this.$menu.setAttribute('role', 'toolbar');
-    this.$menu.setAttribute('aria-label', 'Selection actions');
+    drawer.i18n.translate((t) => this.$menu.setAttribute('aria-label', t('selectionMenu.label')));
 
-    this.$duplicateBtn = this._createButton(DuplicateIcon, 'Duplicate', 'Ctrl+D', () => this.drawer.duplicateShapes());
-    this.$backwardBtn = this._createButton(SendBackwardIcon, 'Send backward', 'Ctrl+Down', () =>
+    this.$duplicateBtn = this._createButton(DuplicateIcon, 'action.duplicate', 'Ctrl+D', () =>
+      this.drawer.duplicateShapes()
+    );
+    this.$backwardBtn = this._createButton(SendBackwardIcon, 'action.sendBackward', 'Ctrl+Down', () =>
       this.drawer.reorderShapes('backward')
     );
-    this.$forwardBtn = this._createButton(BringForwardIcon, 'Bring forward', 'Ctrl+Up', () =>
+    this.$forwardBtn = this._createButton(BringForwardIcon, 'action.bringForward', 'Ctrl+Up', () =>
       this.drawer.reorderShapes('forward')
     );
-    this.$groupBtn = this._createButton(GroupIcon, 'Group', 'Ctrl+G', () => this.drawer.groupShapes());
-    this.$ungroupBtn = this._createButton(UngroupIcon, 'Ungroup', 'Ctrl+Shift+G', () => this.drawer.ungroupShapes());
-    this.$deleteBtn = this._createButton(TrashIcon, 'Delete', 'Delete', () => this.drawer.deleteShapes());
+    this.$groupBtn = this._createButton(GroupIcon, 'action.group', 'Ctrl+G', () => this.drawer.groupShapes());
+    this.$ungroupBtn = this._createButton(UngroupIcon, 'action.ungroup', 'Ctrl+Shift+G', () =>
+      this.drawer.ungroupShapes()
+    );
+    this.$deleteBtn = this._createButton(TrashIcon, 'action.delete', 'Delete', () => this.drawer.deleteShapes());
     this.$deleteBtn.classList.add('drawer-selection-menu-delete');
 
     const $separator = document.createElement('span');
@@ -81,12 +86,15 @@ export class SelectionMenu {
   /**
    * Action button, named by its label, shortcut in tooltip
    */
-  private _createButton(icon: string, label: string, shortcut: string, action: () => void) {
+  private _createButton(icon: string, label: TranslationKey, shortcut: string, action: () => void) {
     const $btn = createButton('drawer-button', 'drawer-button-neutral');
 
     $btn.innerHTML = icon;
-    setLabel($btn, label);
-    $btn.title = `${label} (${shortcut})`;
+    this.drawer.i18n.translate((t) => {
+      setLabel($btn, t(label));
+      // name of Delete key in language
+      $btn.title = `${t(label)} (${shortcut === 'Delete' ? t('key.delete') : shortcut})`;
+    });
     $btn.setAttribute('aria-keyshortcuts', shortcut.replace('Ctrl', 'Control').replace(/Up|Down/, 'Arrow$&'));
     $btn.addEventListener('click', action);
 

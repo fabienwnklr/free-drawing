@@ -3,18 +3,16 @@ import { Modal } from '@/components/Modal/Modal';
 import { deepMerge } from '@/utils/functions';
 import { confirmModalDefaultOpts } from '@/components/Modal/constants';
 import type { ConfirmModalOptions } from '@/@types/modal';
-import { uniqueId } from '@/utils/dom';
+import { createButton, uniqueId } from '@/utils/dom';
 
 import '@/components/Modal/modal-confirm.scss';
 
 export class ConfirmModal extends Modal {
   drawer: Drawer;
-  $cancelBtn!: HTMLButtonElement;
-  $confirmBtn!: HTMLButtonElement;
-  message: string;
-  cancelLabel: string;
+  $message: HTMLParagraphElement;
+  $cancelBtn: HTMLButtonElement;
+  $confirmBtn: HTMLButtonElement;
   onCancel: (modal: ConfirmModal) => void;
-  confirmLabel: string;
   onConfirm: (modal: ConfirmModal) => void;
   _options: ConfirmModalOptions;
   #messageId = uniqueId('confirm-message');
@@ -28,35 +26,40 @@ export class ConfirmModal extends Modal {
     this.$modal.setAttribute('aria-labelledby', this.#messageId);
     this._options = deepMerge<ConfirmModalOptions>(confirmModalDefaultOpts, options);
     this.drawer = drawer;
-    this.message = this._options.message;
-    this.cancelLabel = this._options.cancelLabel;
     this.onCancel = this._options.onCancel;
-    this.confirmLabel = this._options.confirmLabel;
     this.onConfirm = this._options.onConfirm;
 
-    this.fill();
-    this._setupElements();
+    this.$message = document.createElement('p');
+    this.$message.className = 'p-2';
+    this.$message.id = this.#messageId;
+    this.$modalBody.append(this.$message);
+    // cancel first: focused on show
+    this.$cancelBtn = createButton('drawer-button', 'drawer-button-neutral');
+    this.$confirmBtn = createButton('drawer-button', 'drawer-button-danger');
+    this.$modalFooter.append(this.$cancelBtn, this.$confirmBtn);
+    // texts given in options, else translated ones
+    drawer.i18n.translate((t) => {
+      this.$message.textContent = this._options.message ?? t('confirm.message');
+      this.$cancelBtn.textContent = this._options.cancelLabel ?? t('confirm.cancel');
+      this.$confirmBtn.textContent = this._options.confirmLabel ?? t('confirm.confirm');
+    });
+
     this._initEvents();
   }
 
-  fill() {
-    this.setBodyContent(`<p class="p-2" id="${this.#messageId}">${this.message}</p>`);
-    // cancel first: focused on show
-    this.setFooterContent(
-      /*html*/ `<button type="button" class="drawer-button drawer-button-neutral">${this.cancelLabel}</button><button type="button" class="drawer-button drawer-button-danger">${this.confirmLabel}</button>`
-    );
-  }
-
-  private _setupElements() {
-    this.$cancelBtn = this.$modalFooter.querySelector(`.drawer-button-neutral`) as HTMLButtonElement;
-    this.$confirmBtn = this.$modalFooter.querySelector(`.drawer-button-danger`) as HTMLButtonElement;
+  /**
+   * Message asking confirmation
+   */
+  setMessage(message: string) {
+    this._options.message = message;
+    this.$message.textContent = message;
   }
 
   private _initEvents() {
-    this.$cancelBtn?.addEventListener('click', () => {
+    this.$cancelBtn.addEventListener('click', () => {
       this.onCancel(this);
     });
-    this.$confirmBtn?.addEventListener('click', () => {
+    this.$confirmBtn.addEventListener('click', () => {
       this.onConfirm(this);
     });
   }

@@ -3,10 +3,12 @@ import type { ColorLike } from '@/@types/drawer';
 import { createButton, setLabel, setPressed } from '@/utils/dom';
 import { normalizeColor, toHexColor } from '@/utils/color';
 import { toDarkColor } from '@/utils/export';
+import type { I18n } from '@/i18n/I18n';
+import type { TranslationKey } from '@/i18n/en';
 
 export type ColorPickerOptions = {
-  /** Palette, with accessible name of each color */
-  colors: { color: ColorLike; label: string }[];
+  /** Palette, with translation of accessible name of each color */
+  colors: { color: ColorLike; label: TranslationKey }[];
   /** Attribute of palette buttons, its value is the color */
   attr: string;
   /** Class of palette buttons */
@@ -15,6 +17,8 @@ export type ColorPickerOptions = {
   transparent?: boolean;
   /** Color chosen with a button or the custom input */
   onChange: (color: ColorLike) => void;
+  /** Texts of drawer */
+  i18n: I18n;
 };
 
 /**
@@ -30,7 +34,7 @@ export class ColorPicker {
 
     const colors = [...options.colors];
 
-    if (options.transparent) colors.push({ color: 'transparent', label: 'Transparent' });
+    if (options.transparent) colors.push({ color: 'transparent', label: 'color.transparent' });
 
     colors.forEach(({ color, label }) => {
       const $btn = createButton(options.buttonClass);
@@ -44,7 +48,7 @@ export class ColorPicker {
         $btn.style.setProperty('--swatch-color', color);
         $btn.style.setProperty('--swatch-dark-color', toDarkColor(color));
       }
-      setLabel($btn, label);
+      options.i18n.translate((t) => setLabel($btn, t(label)));
       setPressed($btn, false);
       $btn.addEventListener('click', () => options.onChange(color));
       this.$buttons.push($btn);
@@ -54,7 +58,7 @@ export class ColorPicker {
     this.$customInput = document.createElement('input');
     this.$customInput.type = 'color';
     this.$customInput.classList.add('drawer-color-input');
-    setLabel(this.$customInput, 'Custom color');
+    options.i18n.translate((t) => setLabel(this.$customInput, t('color.custom')));
     // when picker is closed, not on each move in picker (history)
     this.$customInput.addEventListener('change', () => options.onChange(this.$customInput.value as ColorLike));
     // menu containing it (settings) stays open while picking

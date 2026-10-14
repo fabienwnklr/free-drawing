@@ -8,6 +8,7 @@ import type { Shape, ShapeConfig } from 'konva/lib/Shape';
 import type { BaseOverlay } from '@/components/tools/Overlay/BaseOverlay';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { createButton, disableElement, enableElement, setLabel, setPressed } from '@/utils/dom';
+import { type TranslationKey, en } from '@/i18n/en';
 
 export abstract class BaseWidget {
   protected readonly $container: HTMLElement;
@@ -43,7 +44,10 @@ export abstract class BaseWidget {
       `drawer-internal-widgetId--${id.replace(/\W/g, '-')}`
     );
     this.$button = createButton('drawer-button');
-    setLabel(this.$button, this.options.title ?? title ?? id);
+    // title option, else translated title of tool
+    const key = `tools.${id}` as TranslationKey;
+
+    drawer.i18n.translate((t) => setLabel(this.$button, this.options.title ?? (key in en ? t(key) : title ?? id)));
     setPressed(this.$button, false);
     this.$icon = typeof $icon === 'string' ? stringToNode<SVGElement>($icon) : $icon;
     // compared to lower case key (caps lock), false disables shortcut

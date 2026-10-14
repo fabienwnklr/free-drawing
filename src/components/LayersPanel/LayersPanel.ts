@@ -4,6 +4,7 @@ import { Group } from 'konva/lib/Group';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import type { DrawingShape } from '@/@types/drawer';
 import { drawerEvents, shapeName } from '@/constants';
+import type { TranslationKey } from '@/i18n/en';
 import {
   arrowNavigation,
   createButton,
@@ -71,8 +72,6 @@ export class LayersPanel {
     this.$buttonContainer.classList.add('drawer-layers-button-container', 'tool');
     this.$button = createButton('drawer-button', 'drawer-button-neutral');
     this.$button.innerHTML = LayersIcon;
-    setLabel(this.$button, 'Layers');
-    this.$button.title = 'Layers (Alt+L)';
     this.$button.setAttribute('aria-keyshortcuts', 'Alt+L');
     this.$button.setAttribute('aria-expanded', 'false');
     setPressed(this.$button, false);
@@ -93,15 +92,12 @@ export class LayersPanel {
     $header.classList.add('drawer-layers-header');
     $title.classList.add('drawer-layers-title');
     $title.id = uniqueId('layers-title');
-    $title.textContent = 'Layers';
     this.$panel.setAttribute('aria-labelledby', $title.id);
-    this.$groupButton = this._createHeaderButton(GroupIcon, 'Group selection', 'Ctrl+G', () =>
-      this.drawer.groupShapes()
-    );
-    this.$ungroupButton = this._createHeaderButton(UngroupIcon, 'Ungroup', 'Ctrl+Shift+G', () =>
+    this.$groupButton = this._createHeaderButton(GroupIcon, 'layers.group', 'Ctrl+G', () => this.drawer.groupShapes());
+    this.$ungroupButton = this._createHeaderButton(UngroupIcon, 'action.ungroup', 'Ctrl+Shift+G', () =>
       this.drawer.ungroupShapes()
     );
-    this.$closeButton = this._createHeaderButton(CloseIcon, 'Close layers', '', () => this._close());
+    this.$closeButton = this._createHeaderButton(CloseIcon, 'layers.close', '', () => this._close());
     $actions.classList.add('drawer-layers-header-actions');
     $actions.append(this.$groupButton, this.$ungroupButton, this.$closeButton);
     $header.append($title, $actions);
@@ -111,7 +107,12 @@ export class LayersPanel {
     this.$list.setAttribute('aria-labelledby', $title.id);
     this.$empty = document.createElement('p');
     this.$empty.classList.add('drawer-layers-empty', 'text-muted');
-    this.$empty.textContent = 'No shapes yet';
+    this.drawer.i18n.translate((t) => {
+      setLabel(this.$button, t('layers.title'));
+      this.$button.title = `${t('layers.title')} (Alt+L)`;
+      $title.textContent = t('layers.title');
+      this.$empty.textContent = t('layers.empty');
+    });
 
     this.$panel.append($header, this.$list, this.$empty);
     this.drawer.$drawerContainer.append(this.$panel);
@@ -129,6 +130,8 @@ export class LayersPanel {
     this.drawer.on(drawerEvents.change, () => this.update());
     this.drawer.on(drawerEvents.selectionChange, () => this._onSelectionChange());
     this.drawer.on(drawerEvents.readOnlyChange, () => this.update());
+    // rows in new language
+    this.drawer.on(drawerEvents.languageChange, () => this.update());
   }
 
   isVisible() {
@@ -151,15 +154,15 @@ export class LayersPanel {
     this.$button.focus();
   }
 
-  private _createHeaderButton(icon: string, label: string, shortcut: string, action: () => void) {
+  private _createHeaderButton(icon: string, label: TranslationKey, shortcut: string, action: () => void) {
     const $btn = createButton('drawer-button', 'drawer-button-neutral');
 
     $btn.innerHTML = icon;
-    setLabel($btn, label);
-    if (shortcut) {
-      $btn.title = `${label} (${shortcut})`;
-      $btn.setAttribute('aria-keyshortcuts', shortcut.replace('Ctrl', 'Control'));
-    }
+    this.drawer.i18n.translate((t) => {
+      setLabel($btn, t(label));
+      if (shortcut) $btn.title = `${t(label)} (${shortcut})`;
+    });
+    if (shortcut) $btn.setAttribute('aria-keyshortcuts', shortcut.replace('Ctrl', 'Control'));
     $btn.addEventListener('click', action);
 
     return $btn;
@@ -304,7 +307,7 @@ export class LayersPanel {
     $grip.classList.add('drawer-layers-grip');
     $grip.innerHTML = GripIcon;
     $grip.setAttribute('aria-hidden', 'true');
-    $grip.title = 'Drag to reorder';
+    $grip.title = this.drawer.t('layers.drag');
     $grip.addEventListener('pointerdown', (e) => this._drag(e, shape, $item));
     $item.append($grip);
 
@@ -314,7 +317,7 @@ export class LayersPanel {
 
       $toggle.dataset.part = 'toggle';
       $toggle.innerHTML = ChevronIcon;
-      setLabel($toggle, `Shapes of ${label}`);
+      setLabel($toggle, this.drawer.t('layers.shapesOf', { name: label }));
       $toggle.setAttribute('aria-expanded', String(expanded));
       $toggle.addEventListener('click', () => this.setExpanded(shape, !expanded));
       $item.append($toggle);
@@ -336,13 +339,22 @@ export class LayersPanel {
     $name.addEventListener('dblclick', () => this._rename(shape, $name));
     $name.addEventListener('keydown', (e) => this._onNameKeydown(e, shape, $name));
 
-    const $visibility = this._createAction('visibility', hidden ? EyeOffIcon : EyeIcon, `Hide ${label}`, hidden, () =>
-      this.drawer.setShapesHidden(shape.visible(), [shape])
+    const t = this.drawer.t.bind(this.drawer);
+    const $visibility = this._createAction(
+      'visibility',
+      hidden ? EyeOffIcon : EyeIcon,
+      t('layers.hide', { name: label }),
+      hidden,
+      () => this.drawer.setShapesHidden(shape.visible(), [shape])
     );
-    const $lock = this._createAction('lock', locked ? LockIcon : UnlockIcon, `Lock ${label}`, locked, () =>
-      this.drawer.setShapesLocked(shape.listening(), [shape])
+    const $lock = this._createAction(
+      'lock',
+      locked ? LockIcon : UnlockIcon,
+      t('layers.lock', { name: label }),
+      locked,
+      () => this.drawer.setShapesLocked(shape.listening(), [shape])
     );
-    const $delete = this._createAction('delete', TrashIcon, `Delete ${label}`, null, () =>
+    const $delete = this._createAction('delete', TrashIcon, t('layers.delete', { name: label }), null, () =>
       this.drawer.deleteShapes([shape])
     );
 
@@ -437,7 +449,7 @@ export class LayersPanel {
     $input.classList.add('drawer-layers-input');
     $input.dataset.part = 'name';
     $input.value = this.drawer.getShapeLabel(shape);
-    $input.setAttribute('aria-label', 'Name');
+    $input.setAttribute('aria-label', this.drawer.t('layers.name'));
     $input.addEventListener('keydown', (e) => {
       // typed letters are not shortcuts
       e.stopPropagation();

@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [6.6.0](https://github.com/fabienwnklr/free-drawing/compare/v6.5.0...v6.6.0) (2026-10-14)
+
+
+### Features
+
+* interface in English, French, Spanish and German: "Language" choice in settings menu (saved, every text translated at once), browser language by default (English when not available), `language` option ('auto', 'en', 'fr', 'es' or 'de'), `setLanguage` and `t` methods, `language` property, `drawer.language.change` event
+* `translations` option: texts of interface replaced by language (e.g. `{ fr: { 'menu.open': 'Ouvrir un dessin' } }`)
+* zoom percentage written in language of interface
+
 ## [6.5.0](https://github.com/fabienwnklr/free-drawing/compare/v6.4.1...v6.5.0) (2026-10-14)
 
 

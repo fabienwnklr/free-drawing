@@ -40,7 +40,7 @@ export class Toolbar {
     this.$toolbarRoot = document.createElement('div');
     this.$toolbarRoot.classList.add(`drawer-toolbar-root`, 'tool');
     this.$toolbarRoot.setAttribute('role', 'toolbar');
-    this.$toolbarRoot.setAttribute('aria-label', 'Tools');
+    this.drawer.i18n.translate((t) => this.$toolbarRoot.setAttribute('aria-label', t('toolbar.label')));
 
     this.$toolbarContent.append(this.$toolbarRoot);
     this.drawer.$footerContainer.append(this.$toolbarContent);

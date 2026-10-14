@@ -189,7 +189,7 @@ export class Collaboration {
       this.drawer.selectionLayer.add(cursor);
     }
 
-    cursor.findOne<Text>('Text')?.text(name || 'Anonymous');
+    cursor.findOne<Text>('Text')?.text(name || this.drawer.t('collab.anonymous'));
     cursor.setAttrs({ ...position, visible: true });
     // above selection, guides...
     cursor.moveToTop();

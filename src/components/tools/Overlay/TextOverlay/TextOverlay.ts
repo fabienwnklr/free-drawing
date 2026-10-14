@@ -10,27 +10,28 @@ import AlignLeftIcon from '@/icons/align-left.svg?raw';
 import AlignCenterIcon from '@/icons/align-center.svg?raw';
 import AlignRightIcon from '@/icons/align-right.svg?raw';
 import '@/components/tools/Overlay/TextOverlay/text-overlay.scss';
+import type { TranslationKey } from '@/i18n/en';
 
 const fontFamilies = ['Ubuntu', 'Arial', 'Verdana', 'Georgia', 'Times New Roman', 'Courier New', 'Comic Sans MS'];
 
-const fontSizes = [
-  { label: 'S', title: 'Small', value: 12 },
-  { label: 'M', title: 'Medium', value: 16 },
-  { label: 'L', title: 'Large', value: 24 },
-  { label: 'XL', title: 'Extra large', value: 32 },
+const fontSizes: { label: string; title: TranslationKey; value: number }[] = [
+  { label: 'S', title: 'text.small', value: 12 },
+  { label: 'M', title: 'text.medium', value: 16 },
+  { label: 'L', title: 'text.large', value: 24 },
+  { label: 'XL', title: 'text.extraLarge', value: 32 },
 ];
 
-const fontStyles = [
-  { label: 'B', title: 'Bold', attr: dataAttributes.fontStyle, value: 'bold' },
-  { label: 'I', title: 'Italic', attr: dataAttributes.fontStyle, value: 'italic' },
-  { label: 'U', title: 'Underline', attr: dataAttributes.textDecoration, value: 'underline' },
-  { label: 'S', title: 'Strikethrough', attr: dataAttributes.textDecoration, value: 'line-through' },
+const fontStyles: { label: string; title: TranslationKey; attr: string; value: string }[] = [
+  { label: 'B', title: 'text.bold', attr: dataAttributes.fontStyle, value: 'bold' },
+  { label: 'I', title: 'text.italic', attr: dataAttributes.fontStyle, value: 'italic' },
+  { label: 'U', title: 'text.underline', attr: dataAttributes.textDecoration, value: 'underline' },
+  { label: 'S', title: 'text.strikethrough', attr: dataAttributes.textDecoration, value: 'line-through' },
 ];
 
-const textAligns: { icon: string; title: string; value: TextStyle['align'] }[] = [
-  { icon: AlignLeftIcon, title: 'Align left', value: 'left' },
-  { icon: AlignCenterIcon, title: 'Align center', value: 'center' },
-  { icon: AlignRightIcon, title: 'Align right', value: 'right' },
+const textAligns: { icon: string; title: TranslationKey; value: TextStyle['align'] }[] = [
+  { icon: AlignLeftIcon, title: 'text.alignLeft', value: 'left' },
+  { icon: AlignCenterIcon, title: 'text.alignCenter', value: 'center' },
+  { icon: AlignRightIcon, title: 'text.alignRight', value: 'right' },
 ];
 
 /**
@@ -50,7 +51,7 @@ export class TextOverlay extends BaseOverlay {
   $textAlignBtnContainer!: HTMLDivElement;
 
   constructor(drawer: Drawer) {
-    super(drawer, { widthBtns: false, colorTitle: 'Color', label: 'Text options' });
+    super(drawer, { widthBtns: false, colorTitle: 'overlay.color', label: 'overlay.text' });
     this.$overlayContainer.classList.add('drawer-text-overlay');
 
     this._createFontFamilyField();
@@ -68,7 +69,7 @@ export class TextOverlay extends BaseOverlay {
   }
 
   private _createFontFamilyField() {
-    const { $container, $btnContainer } = this._createSection('Font family');
+    const { $container, $btnContainer } = this._createSection('text.fontFamily');
     this.$fontFamilyContainer = $container;
 
     this.$fontFamilySelect = document.createElement('select');
@@ -96,7 +97,7 @@ export class TextOverlay extends BaseOverlay {
   }
 
   private _createFontSizeFields() {
-    const { $container, $btnContainer } = this._createSection('Font size');
+    const { $container, $btnContainer } = this._createSection('text.fontSize');
     this.$fontSizeContainer = $container;
     this.$fontSizeBtnContainer = $btnContainer;
 
@@ -108,7 +109,7 @@ export class TextOverlay extends BaseOverlay {
   }
 
   private _createFontStyleFields() {
-    const { $container, $btnContainer } = this._createSection('Style');
+    const { $container, $btnContainer } = this._createSection('text.style');
     this.$fontStyleContainer = $container;
     this.$fontStyleBtnContainer = $btnContainer;
 
@@ -141,7 +142,7 @@ export class TextOverlay extends BaseOverlay {
   }
 
   private _createTextAlignFields() {
-    const { $container, $btnContainer } = this._createSection('Align');
+    const { $container, $btnContainer } = this._createSection('text.align');
     this.$textAlignContainer = $container;
     this.$textAlignBtnContainer = $btnContainer;
 

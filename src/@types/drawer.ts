@@ -1,6 +1,7 @@
 import type { AvailableTools, WidgetsOptions } from '@/@types/toolbar';
 import type { Shape, ShapeConfig } from 'konva/lib/Shape';
 import type { Group } from 'konva/lib/Group';
+import type { CustomTranslations, Language } from '@/i18n/I18n';
 
 /**
  * Node of drawing: a shape or a group of drawing nodes
@@ -36,6 +37,10 @@ export type DrawerOptions = {
   selectionMenu: boolean;
   /** Theme: 'light' (default), 'dark' or 'system' (device one), the one chosen in menu is saved and used instead */
   theme: Theme;
+  /** Language of interface: 'auto' (browser one, default), 'en', 'fr', 'es' or 'de', the one chosen in menu is saved */
+  language: Language | 'auto';
+  /** Texts replacing default ones, by language (e.g. `{ fr: { 'menu.open': 'Ouvrir un dessin' } }`) */
+  translations: CustomTranslations;
   /** Layers panel listing shapes (select, rename, reorder, lock, hide, delete), button in header (default true) */
   layersPanel: boolean;
   /** Drawing can't be modified by user (only pan, zoom, view options, export), API methods still modify it (default false) */

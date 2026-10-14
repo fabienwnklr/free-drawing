@@ -3,6 +3,6 @@ import { BaseOverlay } from "@/components/tools/Overlay/BaseOverlay"
 
 export class SelectOverlay extends BaseOverlay {
     constructor(drawer: Drawer) {
-        super(drawer, { label: 'Selection options' });
+        super(drawer, { label: 'overlay.selection' });
     }
 }

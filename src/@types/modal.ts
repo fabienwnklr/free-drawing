@@ -12,9 +12,10 @@ export interface ModalOptions {
 }
 
 export type ConfirmModalOptions = {
-  message: string;
-  cancelLabel: string;
-  confirmLabel: string;
+  /** Translated texts by default */
+  message?: string;
+  cancelLabel?: string;
+  confirmLabel?: string;
   onCancel: (modal: ConfirmModal) => void;
   onConfirm: (modal: ConfirmModal) => void;
 };

@@ -21,6 +21,8 @@ import { setPressed } from '@/utils/dom';
 import { getStrokeStyle } from '@/utils/stroke';
 import { reorderShapes } from '@/utils/order';
 import { setupHit } from '@/utils/hit';
+import { I18n, type Language, type TranslationParams, getLanguage, languages } from '@/i18n/I18n';
+import type { TranslationKey } from '@/i18n/en';
 import { bindingAttrs, unbindMoved, updateBindings } from '@/utils/binding';
 import {
   type DrawingFile,
@@ -121,6 +123,10 @@ export class Drawer extends MicroEvent {
   layersPanel: LayersPanel | undefined;
   /** Theme chosen ('system': device one), see `setTheme` */
   theme: Theme = 'light';
+  /** Texts of interface, see `t` and `setLanguage` */
+  i18n: I18n;
+  /** Language chosen ('auto': browser one), see `setLanguage` */
+  #languageChoice: Language | 'auto' = 'auto';
   /** Dark theme of device */
   #systemDark: MediaQueryList | undefined;
   help: Help;
@@ -170,7 +176,19 @@ export class Drawer extends MicroEvent {
     // in tab order, keys go to drawer shortcuts (not to screen reader commands)
     this.$drawerContainer.tabIndex = 0;
     this.$drawerContainer.setAttribute('role', 'application');
-    this.$drawerContainer.setAttribute('aria-label', 'Drawing board');
+    // language chosen in menu (saved), else of options
+    const savedLanguage = this._getStorageItem(this.options.localStorageKey + '-language');
+
+    this.#languageChoice =
+      savedLanguage === 'auto' || (savedLanguage && savedLanguage in languages)
+        ? (savedLanguage as Language | 'auto')
+        : this.options.language;
+    this.i18n = new I18n(
+      this.#languageChoice === 'auto' ? getLanguage() : this.#languageChoice,
+      this.options.translations
+    );
+    this.$drawerContainer.lang = this.i18n.language;
+    this.i18n.translate((t) => this.$drawerContainer.setAttribute('aria-label', t('drawer.label')));
 
     this.$el.replaceChildren(this.$drawerContainer);
 
@@ -309,7 +327,7 @@ export class Drawer extends MicroEvent {
       if (this._getOwnerKey(room)) {
         // owner back in the room
         this.startCollaboration(room).catch((error) => {
-          this.toast(`Collaboration unavailable: ${error.message}`, 'error');
+          this.toast(this.t('toast.collaborationUnavailable', { error: error.message }), 'error');
         });
       } else {
         // invited user gives a name before joining
@@ -352,10 +370,7 @@ export class Drawer extends MicroEvent {
    */
   _onCollaborationRight(canEdit: boolean) {
     this.setReadOnly(!canEdit || this.options.readOnly);
-    this.toast(
-      canEdit ? 'You can draw: the owner of the session allowed you' : 'View only: the owner of the session removed your right to draw',
-      'info'
-    );
+    this.toast(this.t(canEdit ? 'toast.canDraw' : 'toast.viewOnly'), 'info');
   }
 
   /**
@@ -768,7 +783,7 @@ export class Drawer extends MicroEvent {
       // storage full or unavailable: drawing stays in page, warn only once
       if (!this.#saveFailed) {
         this.#saveFailed = true;
-        this.toast(`Drawing can't be saved: ${(error as Error).message}`, 'warning');
+        this.toast(this.t('toast.saveFailed', { error: (error as Error).message }), 'warning');
       }
     }
   }
@@ -993,7 +1008,7 @@ export class Drawer extends MicroEvent {
     const text = shape.hasName(shapeName.text) ? String(shape.getAttr('text') ?? '').trim().split('\n')[0] : '';
     const type = Object.keys(shapeLabels).find((name) => shape.hasName(name));
 
-    return shape.getAttr('label') || text || (type ? shapeLabels[type] : shape.getClassName());
+    return shape.getAttr('label') || text || (type ? this.t(shapeLabels[type]) : shape.getClassName());
   }
 
   /**
@@ -1165,7 +1180,7 @@ export class Drawer extends MicroEvent {
     } catch (error) {
       // dialog canceled
       if ((error as Error).name !== 'AbortError') {
-        this.toast(`Drawing can't be saved: ${(error as Error).message}`, 'error');
+        this.toast(this.t('toast.saveFailed', { error: (error as Error).message }), 'error');
       }
     }
   }
@@ -1181,7 +1196,7 @@ export class Drawer extends MicroEvent {
     try {
       this.loadDrawing(content);
     } catch (error) {
-      this.toast(`Invalid drawing file: ${(error as Error).message}`, 'error');
+      this.toast(this.t('toast.invalidFile', { error: (error as Error).message }), 'error');
     }
   }
 
@@ -1205,9 +1220,9 @@ export class Drawer extends MicroEvent {
       if (!navigator.clipboard) throw new Error('clipboard unavailable');
 
       await navigator.clipboard.writeText(await this.getLink());
-      this.toast('Link copied', 'info');
+      this.toast(this.t('toast.linkCopied'), 'info');
     } catch (error) {
-      this.toast(`Link can't be copied: ${(error as Error).message}`, 'warning');
+      this.toast(this.t('toast.linkNotCopied', { error: (error as Error).message }), 'warning');
     }
   }
 
@@ -1223,7 +1238,7 @@ export class Drawer extends MicroEvent {
       this.loadDrawing(await decodeLinkData(window.location.hash.slice(prefix.length)));
       window.history.replaceState(null, '', window.location.pathname + window.location.search);
     } catch (error) {
-      this.toast(`Invalid drawing link: ${(error as Error).message}`, 'error');
+      this.toast(this.t('toast.invalidLink', { error: (error as Error).message }), 'error');
     }
   }
 
@@ -1289,6 +1304,45 @@ export class Drawer extends MicroEvent {
     this.options.strokeStyle = strokeStyle;
     this.getWidget<SelectWidget>('selection')?.setStrokeStyle(strokeStyle);
     this._triggerOptionsChange({ strokeStyle });
+  }
+
+  /**
+   * Text of interface in current language
+   * @param {TranslationKey} key
+   * @param {TranslationParams} params Values of `{name}` placeholders
+   */
+  t(key: TranslationKey, params?: TranslationParams): string {
+    return this.i18n.t(key, params);
+  }
+
+  /**
+   * Language of interface shown
+   */
+  get language(): Language {
+    return this.i18n.language;
+  }
+
+  /**
+   * Language chosen: 'auto' (browser one) or a language
+   */
+  get languageChoice(): Language | 'auto' {
+    return this.#languageChoice;
+  }
+
+  /**
+   * Set language of interface (saved for next visits): every text is translated at once
+   * @param {Language | 'auto'} language 'en', 'fr', 'es', 'de' or 'auto' (browser one)
+   */
+  setLanguage(language: Language | 'auto') {
+    this.#languageChoice = language;
+    try {
+      localStorage.setItem(this.options.localStorageKey + '-language', language);
+    } catch {
+      // storage unavailable: language kept for this visit
+    }
+    this.i18n.setLanguage(language === 'auto' ? getLanguage() : language);
+    this.$drawerContainer.lang = this.i18n.language;
+    this.trigger(drawerEvents.languageChange, this.i18n.language);
   }
 
   /**
@@ -1404,11 +1458,9 @@ export class Drawer extends MicroEvent {
    */
   clearCanvas(force: boolean = false) {
     if (!force) {
-      if (!this.clearConfirmModal) {
-        this.clearConfirmModal = new ConfirmModal(this, {
-          message: 'Are you sure to remove all canvas draw ?',
-        });
-      }
+      this.clearConfirmModal ??= new ConfirmModal(this);
+      // current language
+      this.clearConfirmModal.setMessage(this.t('confirm.clearCanvas'));
       this.clearConfirmModal.show();
     } else {
       const shapes = this.getDrawingShapes();
@@ -1427,15 +1479,13 @@ export class Drawer extends MicroEvent {
    */
   clearStoredData(force: boolean = false) {
     if (!force) {
-      if (!this.clearStoredConfirmModal) {
-        this.clearStoredConfirmModal = new ConfirmModal(this, {
-          message: 'Are you sure to remove all stored data ?',
-          onConfirm: (modal) => {
-            localStorage.removeItem(this.options.localStorageKey);
-            modal.hide();
-          },
-        });
-      }
+      this.clearStoredConfirmModal ??= new ConfirmModal(this, {
+        onConfirm: (modal) => {
+          localStorage.removeItem(this.options.localStorageKey);
+          modal.hide();
+        },
+      });
+      this.clearStoredConfirmModal.setMessage(this.t('confirm.clearStorage'));
       this.clearStoredConfirmModal.show();
     } else {
       localStorage.removeItem(this.options.localStorageKey);

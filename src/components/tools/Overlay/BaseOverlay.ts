@@ -16,6 +16,7 @@ import { dataAttributes, drawerEvents, fillShapes } from '@/constants';
 import { ColorPicker } from '@/components/ColorPicker/ColorPicker';
 import { createButton, setLabel, setPressed, uniqueId } from '@/utils/dom';
 import { getEdges, getStrokeStyle } from '@/utils/stroke';
+import type { TranslationKey } from '@/i18n/en';
 
 /**
  * All common tool for all shape (color, opacity for now)
@@ -28,10 +29,10 @@ export type OverlayOptions = {
   widthBtns: boolean;
   /** Show background color buttons, for rectangle and ellipse (default false) */
   fillBtns: boolean;
-  /** Title of color section (default 'Stroke') */
-  colorTitle: string;
-  /** Accessible name of overlay (default 'Tool options') */
-  label: string;
+  /** Title of color section (default stroke) */
+  colorTitle: TranslationKey;
+  /** Accessible name of overlay (default tool options) */
+  label: TranslationKey;
 };
 
 export class BaseOverlay {
@@ -75,7 +76,9 @@ export class BaseOverlay {
     this.$overlayContainer = document.createElement('div');
     this.$overlayContainer.classList.add('drawer-overlay-container', 'tool');
     this.$overlayContainer.setAttribute('role', 'region');
-    this.$overlayContainer.setAttribute('aria-label', options?.label ?? 'Tool options');
+    drawer.i18n.translate((t) =>
+      this.$overlayContainer.setAttribute('aria-label', t(options?.label ?? 'overlay.tool'))
+    );
 
     this.drawer.$drawerContainer.append(this.$overlayContainer);
 
@@ -114,20 +117,21 @@ export class BaseOverlay {
   }
 
   private _createStrokeColorFields() {
-    const { $container, $btnContainer } = this._createSection(this.options?.colorTitle ?? 'Stroke');
+    const { $container, $btnContainer } = this._createSection(this.options?.colorTitle ?? 'overlay.stroke');
     this.$strokeColorContainer = $container;
     this.$strokeColorBtnContainer = $btnContainer;
 
-    const strokeColors: { color: ColorLike; label: string }[] = [
-      { color: '#000', label: 'Black' },
-      { color: '#e03131', label: 'Red' },
-      { color: '#2f9e44', label: 'Green' },
-      { color: '#1971c2', label: 'Blue' },
-      { color: '#f08c00', label: 'Orange' },
+    const strokeColors: { color: ColorLike; label: TranslationKey }[] = [
+      { color: '#000', label: 'color.black' },
+      { color: '#e03131', label: 'color.red' },
+      { color: '#2f9e44', label: 'color.green' },
+      { color: '#1971c2', label: 'color.blue' },
+      { color: '#f08c00', label: 'color.orange' },
     ];
 
     // no transparent color: drawing would be invisible
     this.strokeColorPicker = new ColorPicker(this.$strokeColorBtnContainer, {
+      i18n: this.drawer.i18n,
       colors: strokeColors,
       attr: dataAttributes.strokeColor,
       buttonClass: this.selectors.button,
@@ -136,16 +140,17 @@ export class BaseOverlay {
   }
 
   private _createFillColorFields() {
-    const { $container, $btnContainer } = this._createSection('Background');
+    const { $container, $btnContainer } = this._createSection('overlay.background');
     this.$fillColorContainer = $container;
     this.$fillColorBtnContainer = $btnContainer;
 
     this.fillColorPicker = new ColorPicker(this.$fillColorBtnContainer, {
+      i18n: this.drawer.i18n,
       colors: [
-        { color: '#ffc9c9', label: 'Light red' },
-        { color: '#b2f2bb', label: 'Light green' },
-        { color: '#a5d8ff', label: 'Light blue' },
-        { color: '#ffec99', label: 'Light yellow' },
+        { color: '#ffc9c9', label: 'color.lightRed' },
+        { color: '#b2f2bb', label: 'color.lightGreen' },
+        { color: '#a5d8ff', label: 'color.lightBlue' },
+        { color: '#ffec99', label: 'color.lightYellow' },
       ],
       attr: dataAttributes.fillColor,
       buttonClass: this.selectors.button,
@@ -157,15 +162,15 @@ export class BaseOverlay {
   }
 
   private _createStrokeWidthFields() {
-    const { $container, $btnContainer } = this._createSection('Stroke width');
+    const { $container, $btnContainer } = this._createSection('overlay.strokeWidth');
     this.$strokeWidthContainer = $container;
     this.$strokeWidthBtnContainer = $btnContainer;
 
-    const strokeWidths = [
-      { width: 3, label: 'Thin' },
-      { width: 5, label: 'Medium' },
-      { width: 8, label: 'Thick' },
-      { width: 12, label: 'Extra thick' },
+    const strokeWidths: { width: number; label: TranslationKey }[] = [
+      { width: 3, label: 'width.thin' },
+      { width: 5, label: 'width.medium' },
+      { width: 8, label: 'width.thick' },
+      { width: 12, label: 'width.extraThick' },
     ];
 
     strokeWidths.forEach(({ width, label }) => {
@@ -180,14 +185,14 @@ export class BaseOverlay {
   }
 
   private _createStrokeStyleFields() {
-    const { $container, $btnContainer } = this._createSection('Stroke style');
+    const { $container, $btnContainer } = this._createSection('overlay.strokeStyle');
     this.$strokeStyleContainer = $container;
     this.$strokeStyleBtnContainer = $btnContainer;
 
-    const strokeStyles: { icon: string; style: StrokeStyle; label: string }[] = [
-      { icon: LineIcon, style: 'solid', label: 'Solid' },
-      { icon: LineDashedIcon, style: 'dashed', label: 'Dashed' },
-      { icon: LineDottedIcon, style: 'dotted', label: 'Dotted' },
+    const strokeStyles: { icon: string; style: StrokeStyle; label: TranslationKey }[] = [
+      { icon: LineIcon, style: 'solid', label: 'style.solid' },
+      { icon: LineDashedIcon, style: 'dashed', label: 'style.dashed' },
+      { icon: LineDottedIcon, style: 'dotted', label: 'style.dotted' },
     ];
 
     strokeStyles.forEach(({ icon, style, label }) => {
@@ -201,13 +206,13 @@ export class BaseOverlay {
   }
 
   private _createEdgesFields() {
-    const { $container, $btnContainer } = this._createSection('Edges');
+    const { $container, $btnContainer } = this._createSection('overlay.edges');
     this.$edgesContainer = $container;
     this.$edgesBtnContainer = $btnContainer;
 
-    const edges: { icon: string; value: Exclude<Edges, number>; label: string }[] = [
-      { icon: EdgesSharpIcon, value: 'sharp', label: 'Sharp' },
-      { icon: EdgesRoundIcon, value: 'round', label: 'Round' },
+    const edges: { icon: string; value: Exclude<Edges, number>; label: TranslationKey }[] = [
+      { icon: EdgesSharpIcon, value: 'sharp', label: 'edges.sharp' },
+      { icon: EdgesRoundIcon, value: 'round', label: 'edges.round' },
     ];
 
     edges.forEach(({ icon, value, label }) => {
@@ -222,9 +227,11 @@ export class BaseOverlay {
     this.$edgesRadius.type = 'number';
     this.$edgesRadius.min = '0';
     this.$edgesRadius.step = '1';
-    this.$edgesRadius.placeholder = 'Auto';
     this.$edgesRadius.classList.add('overlay-picker__input');
-    setLabel(this.$edgesRadius, 'Corner radius');
+    this.drawer.i18n.translate((t) => {
+      this.$edgesRadius.placeholder = t('edges.auto');
+      setLabel(this.$edgesRadius, t('edges.radius'));
+    });
     this.$edgesRadius.addEventListener('change', () => {
       const radius = this.$edgesRadius.valueAsNumber;
 
@@ -241,7 +248,7 @@ export class BaseOverlay {
     this.$opacityContainer = document.createElement('div');
     this.$opacityContainer.classList.add('opacity-container');
 
-    const $opacityTitle = this._createTitle('Opacity');
+    const $opacityTitle = this._createTitle('overlay.opacity');
     this.$opacityContainer.append($opacityTitle);
 
     this.$opacityRange = document.createElement('input');
@@ -261,14 +268,14 @@ export class BaseOverlay {
   }
 
   private _createOrderFields() {
-    const { $container, $btnContainer } = this._createSection('Layers');
+    const { $container, $btnContainer } = this._createSection('overlay.layers');
     this.$orderContainer = $container;
 
-    const orders: { icon: string; order: ShapeOrder; label: string; shortcut: string }[] = [
-      { icon: SendToBackIcon, order: 'back', label: 'Send to back', shortcut: 'Ctrl+Shift+Down' },
-      { icon: SendBackwardIcon, order: 'backward', label: 'Send backward', shortcut: 'Ctrl+Down' },
-      { icon: BringForwardIcon, order: 'forward', label: 'Bring forward', shortcut: 'Ctrl+Up' },
-      { icon: BringToFrontIcon, order: 'front', label: 'Bring to front', shortcut: 'Ctrl+Shift+Up' },
+    const orders: { icon: string; order: ShapeOrder; label: TranslationKey; shortcut: string }[] = [
+      { icon: SendToBackIcon, order: 'back', label: 'action.sendToBack', shortcut: 'Ctrl+Shift+Down' },
+      { icon: SendBackwardIcon, order: 'backward', label: 'action.sendBackward', shortcut: 'Ctrl+Down' },
+      { icon: BringForwardIcon, order: 'forward', label: 'action.bringForward', shortcut: 'Ctrl+Up' },
+      { icon: BringToFrontIcon, order: 'front', label: 'action.bringToFront', shortcut: 'Ctrl+Shift+Up' },
     ];
 
     orders.forEach(({ icon, order, label, shortcut }) => {
@@ -277,8 +284,10 @@ export class BaseOverlay {
 
       $btn.innerHTML = icon;
       $btn.setAttribute(dataAttributes.order, order);
-      setLabel($btn, label);
-      $btn.title = `${label} (${shortcut})`;
+      this.drawer.i18n.translate((t) => {
+        setLabel($btn, t(label));
+        $btn.title = `${t(label)} (${shortcut})`;
+      });
       $btn.setAttribute('aria-keyshortcuts', shortcut.replace('Ctrl', 'Control').replace(/Up|Down/, 'Arrow$&'));
       $btn.addEventListener('click', () => this.drawer.reorderShapes(order));
       $btnContainer.append($btn);
@@ -295,12 +304,12 @@ export class BaseOverlay {
   /**
    * Section title, referenced by its fields
    */
-  protected _createTitle(text: string) {
+  protected _createTitle(text: TranslationKey) {
     const $title = document.createElement('h6');
 
     $title.classList.add('title');
     $title.id = uniqueId('overlay-title');
-    $title.textContent = text;
+    this.drawer.i18n.translate((t) => ($title.textContent = t(text)));
 
     return $title;
   }
@@ -308,7 +317,7 @@ export class BaseOverlay {
   /**
    * Group of fields named by its title
    */
-  protected _createSection(title: string) {
+  protected _createSection(title: TranslationKey) {
     const $container = document.createElement('div');
     const $title = this._createTitle(title);
     const $btnContainer = document.createElement('div');
@@ -325,12 +334,12 @@ export class BaseOverlay {
   /**
    * Toggle button of a field, `label` is its accessible name (icon or short content)
    */
-  protected _createButton(content: string, attr: string, value: string, label: string) {
+  protected _createButton(content: string, attr: string, value: string, label: TranslationKey) {
     const $btn = createButton('drawer-button', this.selectors.button);
 
     $btn.innerHTML = content;
     $btn.setAttribute(attr, value);
-    setLabel($btn, label);
+    this.drawer.i18n.translate((t) => setLabel($btn, t(label)));
     setPressed($btn, false);
 
     return $btn;

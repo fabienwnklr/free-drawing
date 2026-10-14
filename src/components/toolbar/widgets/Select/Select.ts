@@ -98,7 +98,7 @@ export class SelectWidget extends BaseWidget {
         this.transformer.stopTransform();
         this.transformer.nodes([]);
         if (this.drawer.debug) {
-          this.drawer.toast('You need to use "selection" tool.', 'info');
+          this.drawer.toast(this.drawer.t('toast.selectionTool'), 'info');
         }
       }
     });

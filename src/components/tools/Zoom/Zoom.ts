@@ -18,19 +18,19 @@ export class Zoom {
     this.$zoomContainer = document.createElement('div');
     this.$zoomContainer.classList.add('drawer-zoom-container', 'tool');
     this.$zoomContainer.setAttribute('role', 'group');
-    this.$zoomContainer.setAttribute('aria-label', 'Zoom');
 
     this.$btnMinus = createButton('drawer-button', 'drawer-button-neutral');
     this.$btnReset = createButton('drawer-button', 'drawer-button-neutral', 'reset-zoom');
     this.$btnPlus = createButton('drawer-button', 'drawer-button-neutral');
 
     this.$btnMinus.innerHTML = MinusIcon;
-    setLabel(this.$btnMinus, 'Zoom out');
-
-    this._updateResetButton();
-
     this.$btnPlus.innerHTML = PlusIcon;
-    setLabel(this.$btnPlus, 'Zoom in');
+    this.drawer.i18n.translate((t) => {
+      this.$zoomContainer.setAttribute('aria-label', t('zoom.label'));
+      setLabel(this.$btnMinus, t('zoom.out'));
+      setLabel(this.$btnPlus, t('zoom.in'));
+      this._updateResetButton();
+    });
 
     this.$zoomContainer.append(...[this.$btnMinus, this.$btnReset, this.$btnPlus]);
 
@@ -73,10 +73,13 @@ export class Zoom {
     const percentage = this._formatPercentage();
 
     this.$btnReset.innerHTML = ZoomReset + percentage;
-    setLabel(this.$btnReset, `Reset zoom (${percentage})`);
+    setLabel(this.$btnReset, this.drawer.t('zoom.reset', { percentage }));
   }
 
   private _formatPercentage() {
-    return Number(this.drawer.getZoomLevel()).toLocaleString(undefined, { style: 'percent', maximumFractionDigits: 0 });
+    return Number(this.drawer.getZoomLevel()).toLocaleString(this.drawer.language, {
+      style: 'percent',
+      maximumFractionDigits: 0,
+    });
   }
 }
