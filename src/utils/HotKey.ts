@@ -24,6 +24,8 @@ export class HotKey {
       const mod = e.ctrlKey || e.metaKey;
       const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
       const selectedNodes = selectWidget?.transformer.nodes() ?? [];
+      // fields keep their keys (arrows of opacity, select all of a text field...)
+      const inField = (e.target as HTMLElement).matches('input, select, textarea');
 
       if (e.key === 'Backspace' || e.key === 'Delete') {
         if (mod) {
@@ -36,13 +38,13 @@ export class HotKey {
         }
       }
 
-      if (mod && e.key === 'a') {
+      if (mod && e.key === 'a' && !inField) {
         selectWidget?.selectAll();
+        // shapes, not page text (browser select all)
+        e.preventDefault();
       }
 
-      // only arrow keys, other keys keep their default behavior (F5, Tab...), not arrows of fields (opacity...)
-      const inField = (e.target as HTMLElement).matches('input, select, textarea');
-
+      // only arrow keys, other keys keep their default behavior (F5, Tab...)
       if (selectedNodes.length && e.key in arrowMoves && !inField) {
         selectedNodes.forEach((shape) => shape.move(arrowMoves[e.key]));
         arrowMoved = true;

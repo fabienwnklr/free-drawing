@@ -43,9 +43,11 @@
     pointer-events: none;
   }
 
-  // panel of interface
+  // panel of interface, its texts (position, zoom...) are not selected with page text
   .tool {
     @include surface;
+
+    user-select: none;
   }
 
   .text-muted {

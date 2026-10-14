@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [4.0.1](https://github.com/fabienwnklr/free-drawing/compare/v4.0.0...v4.0.1) (2026-10-14)
+
+
+### Bug Fixes
+
+* **keyboard:** Ctrl / Cmd + A selects shapes only, not page text (position widget...), interface panels texts are not selectable
+
 ## [4.0.0](https://github.com/fabienwnklr/free-drawing/compare/v3.8.0...v4.0.0) (2026-10-14)
 
 

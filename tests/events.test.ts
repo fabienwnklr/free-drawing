@@ -28,7 +28,8 @@ describe('Test drawer event', () => {
 
     expect(selectWidget?.transformer.nodes().length).eq(0);
 
-    keydown(drawer, { key: 'a', ctrlKey: true });
+    // not page text selection (browser select all)
+    expect(keydown(drawer, { key: 'a', ctrlKey: true })).toBe(false);
 
     expect(selectWidget?.transformer.nodes().length).eq(2);
   });
