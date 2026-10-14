@@ -11,6 +11,7 @@ export const en = {
   'toast.canDraw': 'You can draw: the owner of the session allowed you',
   'toast.viewOnly': 'View only: the owner of the session removed your right to draw',
   'toast.saveFailed': "Drawing can't be saved: {error}",
+  'toast.loadFailed': "Drawing can't be loaded: {error}",
   'toast.invalidFile': 'Invalid drawing file: {error}',
   'toast.linkCopied': 'Link copied',
   'toast.linkNotCopied': "Link can't be copied: {error}",

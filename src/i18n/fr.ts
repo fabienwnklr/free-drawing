@@ -11,6 +11,7 @@ export const fr: Translations = {
   'toast.canDraw': 'Vous pouvez dessiner : le propriétaire de la session vous y a autorisé',
   'toast.viewOnly': 'Lecture seule : le propriétaire de la session vous a retiré le droit de dessiner',
   'toast.saveFailed': "Le dessin n'a pas pu être enregistré : {error}",
+  'toast.loadFailed': "Le dessin n'a pas pu être chargé : {error}",
   'toast.invalidFile': 'Fichier de dessin invalide : {error}',
   'toast.linkCopied': 'Lien copié',
   'toast.linkNotCopied': "Le lien n'a pas pu être copié : {error}",

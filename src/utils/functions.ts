@@ -28,12 +28,9 @@ export function deepMerge<T extends object>(target: T, source: Partial<T> | T): 
   const output = { ...target };
   if (isObject(target) && isObject(source)) {
     Object.keys(source).forEach((key) => {
-      if (isObject(source[key as keyof T])) {
-        if (!(key in target)) {
-          Object.assign(output, { [key]: source[key as keyof T] });
-        } else {
-          output[key as keyof object] = deepMerge(target[key as keyof object], source[key as keyof object]);
-        }
+      // merged into default object, else kept as given (e.g. object replacing false or null, class instance)
+      if (isObject(source[key as keyof T]) && isObject(target[key as keyof T])) {
+        output[key as keyof object] = deepMerge(target[key as keyof object], source[key as keyof object]);
       } else if (isTruthy(source[key as keyof T])) {
         Object.assign(output, { [key]: source[key as keyof T] });
       }

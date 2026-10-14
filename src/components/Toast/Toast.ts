@@ -40,11 +40,9 @@ export class Toast extends MicroEvent {
       icon = ErrorIcon;
     }
 
-    this.$toastContainer.innerHTML = icon + message;
-
-    if (!showIcon) {
-      this.$toastContainer.innerHTML = message;
-    }
+    // message as text: error messages may come from a server
+    this.$toastContainer.innerHTML = showIcon ? icon : '';
+    this.$toastContainer.append(message);
 
     // stacked with other toasts at top of drawer
     let $toasts = drawer.$drawerContainer.querySelector<HTMLDivElement>('.drawer-toasts');

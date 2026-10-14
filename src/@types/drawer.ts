@@ -2,6 +2,7 @@ import type { AvailableTools, WidgetsOptions } from '@/@types/toolbar';
 import type { Shape, ShapeConfig } from 'konva/lib/Shape';
 import type { Group } from 'konva/lib/Group';
 import type { CustomTranslations, Language } from '@/i18n/I18n';
+import type { DrawingFile } from '@/utils/drawingFile';
 
 /**
  * Node of drawing: a shape or a group of drawing nodes
@@ -25,8 +26,8 @@ export type DrawerOptions = {
   edges: Edges;
   opacity: number;
   textStyle: TextStyle;
-  /** Real time collaboration with socket.io server: false (default), true (same origin) or server url */
-  collaboration: boolean | string;
+  /** Real time collaboration with socket.io server: false (default), true (same origin), server url or options */
+  collaboration: boolean | string | CollaborationOptions;
   /** Widgets of toolbar: list (e.g. `['brush', 'eraser']`) or object with widget options (e.g. `{ brush: {} }`) */
   widgets: WidgetsOptions;
   zoom: boolean;
@@ -50,6 +51,52 @@ export type DrawerOptions = {
   scaling: number;
   autoSave: boolean;
   localStorageKey: string;
+  /** User of the app (e.g. logged in): id and name used in collaboration sessions instead of ones kept in browser */
+  user: DrawerUser | null;
+  /** Storage of drawing instead of localStorage (e.g. server of the app), see `DrawerStorage` */
+  storage: DrawerStorage | null;
+};
+
+/**
+ * Collaboration server and data sent on connection
+ */
+export type CollaborationOptions = {
+  /** Server url, page origin by default */
+  url?: string;
+  /** Data read by server on connection (`socket.handshake.auth`, e.g. token of logged in user), or function giving it on each connection */
+  auth?: Record<string, unknown> | ((callback: (data: Record<string, unknown>) => void) => void);
+};
+
+/**
+ * User of the app, see `user` option and `setUser`
+ */
+export type DrawerUser = {
+  id: string;
+  /** Name shown to other users, user can change it for current visit */
+  name?: string;
+};
+
+/**
+ * Drawing saved somewhere else than localStorage (`storage` option)
+ */
+export type DrawerStorage = {
+  /** Saved drawing, null if none: loaded on init (see `ready`) and by `loadFromStorage` */
+  load: () => DrawingFile | string | null | Promise<DrawingFile | string | null>;
+  /** Save drawing (on each change with `autoSave`): one call at a time, last drawing saved once current call ends */
+  save: (file: DrawingFile) => void | Promise<void>;
+};
+
+/**
+ * Interface settings of user, see `getPreferences` / `setPreferences` and `drawer.preferences.change` event
+ */
+export type Preferences = {
+  theme: Theme;
+  /** Language chosen, 'auto' for browser one */
+  language: Language | 'auto';
+  /** Grid shown (grid and snapping to objects exclude each other) */
+  grid: boolean;
+  /** Snapping to objects */
+  snapping: boolean;
 };
 
 export type StrokeStyle = 'solid' | 'dashed' | 'dotted';

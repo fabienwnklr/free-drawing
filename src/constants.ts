@@ -42,6 +42,8 @@ export const defaultOptions: DrawerOptions = {
   localStorageKey: 'free-drawing',
   opacity: 1,
   collaboration: false,
+  user: null,
+  storage: null,
   widgets: widgetNames,
   textStyle: {
     fontFamily: 'Ubuntu',
@@ -142,6 +144,8 @@ export const drawerEvents = {
   themeChange: 'drawer.theme.change',
   /** Language of interface changed, with language */
   languageChange: 'drawer.language.change',
+  /** Interface settings changed (theme, language, grid, snapping), with preferences: once for several ones */
+  preferencesChange: 'drawer.preferences.change',
   /** Dropdown menu hidden (event of dropdown) */
   dropdownHide: 'drawer.dropdown.hide',
   /** Toast hidden (event of toast) */

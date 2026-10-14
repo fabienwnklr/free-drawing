@@ -5,11 +5,15 @@ import { Toolbar } from '@/components/toolbar/Toolbar';
 import { Rect } from 'konva/lib/shapes/Rect';
 import { AvailableTools } from '@/@types/toolbar';
 import {
+  CollaborationOptions,
   ColorLike,
   DrawerOptions,
+  DrawerStorage,
+  DrawerUser,
   DrawingShape,
   Edges,
   OptionsChange,
+  Preferences,
   ShapeOrder,
   StrokeStyle,
   TextStyle,
@@ -140,6 +144,20 @@ export class Drawer extends MicroEvent {
 
   debug: boolean = false;
   #saveFailed = false;
+  /** Drawing of `storage` option loaded (on init, see `ready`, or with `loadFromStorage`), else not saved */
+  #storageLoaded = false;
+  /** Save in storage in progress, another one after it */
+  #saving: Promise<void> | null = null;
+  #saveAgain = false;
+  /** Resolved once drawing of `storage` option is loaded (rejected if it can't be), at once without it */
+  ready: Promise<void>;
+  /** See `user` option and `setUser` */
+  #user: DrawerUser | null = null;
+  /** Name given by user for this visit (collaboration dialog) */
+  #userName: string | undefined;
+  /** Last preferences notified, one check for several changes */
+  #preferences = '';
+  #preferencesCheck = false;
   #initialOptions: DrawerOptions;
   undoRedo: UndoRedo;
   /** Top left interface: settings menu, position */
@@ -173,6 +191,7 @@ export class Drawer extends MicroEvent {
     if (widgets) this.options.widgets = widgets;
     // copy (setters replace values), restored by resetDrawer
     this.#initialOptions = { ...this.options, textStyle: { ...this.options.textStyle } };
+    this.#user = this.options.user;
     // Creating drawer container
     this.$drawerContainer = document.createElement('div');
     this.$drawerContainer.classList.add('drawer-container');
@@ -212,7 +231,8 @@ export class Drawer extends MicroEvent {
       resizeObserver.observe(document.documentElement);
     }
 
-    const stageSaved = this._loadSavedStage();
+    // drawing of storage option loaded once drawer is created
+    const stageSaved = this.options.storage ? null : this._loadSavedStage();
     let saved = false;
     if (stageSaved) {
       this.stage = stageSaved;
@@ -319,9 +339,27 @@ export class Drawer extends MicroEvent {
     this.undoRedo.manageButtons();
     this._initEvents();
 
-    this._loadFromLink();
-
     if (this.options.readOnly) this.setReadOnly(true);
+
+    if (this.options.storage) {
+      this.ready = this.loadFromStorage();
+      // drawing of a link or room replaces stored one
+      this.ready.then(
+        () => this._openFromUrl(),
+        () => this._openFromUrl()
+      );
+    } else {
+      this.ready = Promise.resolve();
+      this._openFromUrl();
+    }
+    this.#preferences = JSON.stringify(this.getPreferences());
+  }
+
+  /**
+   * Drawing of a link, or room of a collaboration link
+   */
+  private _openFromUrl() {
+    this._loadFromLink();
 
     // room link (see `getCollaborationLink`), with id of user who shared it
     const [, room, invitedBy] = window.location.hash.match(/^#room=([\w-]+)(?:&by=([\w-]+))?$/) ?? [];
@@ -461,9 +499,32 @@ export class Drawer extends MicroEvent {
   }
 
   /**
-   * Id of this user in collaboration sessions (rights given by owners), kept in browser
+   * User of the app (`user` option), null for anonymous user
+   */
+  get user(): DrawerUser | null {
+    return this.#user;
+  }
+
+  /**
+   * User logged in or out: their id is used by next collaboration sessions, their name at once
+   * @param {DrawerUser | null} user null for anonymous user (id and name kept in browser)
+   */
+  setUser(user: DrawerUser | null) {
+    this.#user = user;
+    // name of new user, unless given in dialog
+    this.#userName = undefined;
+
+    const name = this.getUserName();
+
+    if (this.collaboration && this.collaboration.name !== name) this.collaboration.setName(name);
+  }
+
+  /**
+   * Id of this user in collaboration sessions (rights given by owners): of `user` option, else kept in browser
    */
   getUserId(): string {
+    if (this.#user) return this.#user.id;
+
     const key = this.options.localStorageKey + '-user';
     let userId = this._getStorageItem(key);
 
@@ -504,10 +565,10 @@ export class Drawer extends MicroEvent {
   }
 
   /**
-   * Name shown to other users in collaboration sessions
+   * Name shown to other users in collaboration sessions: given for this visit, else of `user` option, else kept in browser
    */
   getUserName(): string {
-    return this._getStorageItem(this.options.localStorageKey + '-name') ?? '';
+    return this.#userName ?? this.#user?.name ?? this._getStorageItem(this.options.localStorageKey + '-name') ?? '';
   }
 
   /**
@@ -515,6 +576,7 @@ export class Drawer extends MicroEvent {
    */
   setUserName(name: string) {
     name = name.trim().slice(0, 40);
+    this.#userName = name;
     try {
       localStorage.setItem(this.options.localStorageKey + '-name', name);
     } catch {
@@ -534,16 +596,20 @@ export class Drawer extends MicroEvent {
   }
 
   /**
-   * Socket connected to collaboration server: true is page origin, string is server url
-   * (socket.io client is loaded only then)
+   * Socket connected to collaboration server: true is page origin, string is server url, options give url and
+   * data read by server on connection (socket.io client is loaded only then)
    */
   protected async _createSocket(): Promise<CollaborationSocket> {
     const { collaboration } = this.options;
+    const { url, auth }: CollaborationOptions =
+      typeof collaboration === 'object'
+        ? collaboration
+        : { url: typeof collaboration === 'string' ? collaboration : '' };
     const { io } = await import('socket.io-client');
     // new connection for each session (no socket reused after stop)
-    const options = { forceNew: true };
+    const options = { forceNew: true, ...(auth && { auth }) };
 
-    return typeof collaboration === 'string' ? io(collaboration, options) : io(options);
+    return url ? io(url, options) : io(options);
   }
 
   /**
@@ -776,18 +842,85 @@ export class Drawer extends MicroEvent {
   }
 
   /**
-   * Save current draw state to localstorage
+   * Save drawing in `storage` option (once its drawing is loaded), else in localStorage
+   * @returns {Promise<void>} Resolved once saved (errors are shown in a toast)
    */
-  save() {
+  save(): Promise<void> {
+    const { storage, localStorageKey } = this.options;
+
     try {
-      localStorage.setItem(this.options.localStorageKey, this.stage.toJSON());
-      localStorage.setItem(this.options.localStorageKey + '-tool', this.activeTool);
+      // tool of this browser
+      localStorage.setItem(localStorageKey + '-tool', this.activeTool);
+      if (!storage) localStorage.setItem(localStorageKey, this.stage.toJSON());
     } catch (error) {
-      // storage full or unavailable: drawing stays in page, warn only once
-      if (!this.#saveFailed) {
-        this.#saveFailed = true;
-        this.toast(this.t('toast.saveFailed', { error: (error as Error).message }), 'warning');
+      this._onSaveError(error as Error, 'warning');
+    }
+
+    // stored drawing not replaced before it is loaded (nor if it can't be)
+    return storage && this.#storageLoaded ? this._saveToStorage(storage) : Promise.resolve();
+  }
+
+  /**
+   * One save at a time: changes made during a save are saved once it ends (last drawing only)
+   */
+  private _saveToStorage(storage: DrawerStorage): Promise<void> {
+    if (this.#saving) {
+      this.#saveAgain = true;
+      return this.#saving;
+    }
+
+    this.#saving = (async () => {
+      do {
+        this.#saveAgain = false;
+        try {
+          await storage.save(this.getDrawingFile());
+          this.#saveFailed = false;
+        } catch (error) {
+          this._onSaveError(error as Error, 'error');
+        }
+      } while (this.#saveAgain);
+      this.#saving = null;
+    })();
+
+    return this.#saving;
+  }
+
+  /**
+   * Drawing stays in page, warned once until a save succeeds
+   */
+  private _onSaveError(error: Error, type: 'warning' | 'error') {
+    if (this.#saveFailed) return;
+
+    this.#saveFailed = true;
+    this.toast(this.t('toast.saveFailed', { error: error.message }), type);
+  }
+
+  /**
+   * Load drawing of `storage` option (on init, again after login...): it replaces drawing (kept if nothing is
+   * stored), history starts from it, changes are saved in storage once it is loaded
+   * @returns {Promise<void>} Rejected if drawing can't be loaded (shown in a toast): changes are not saved
+   */
+  async loadFromStorage(): Promise<void> {
+    const { storage } = this.options;
+
+    if (!storage) throw new Error('storage option is not set');
+
+    this.#storageLoaded = false;
+    this.$drawerContainer.setAttribute('aria-busy', 'true');
+    try {
+      const file = await storage.load();
+
+      if (file) {
+        this.loadDrawing(file);
+        this.undoRedo.reset();
+        this.undoRedo.manageButtons();
       }
+      this.#storageLoaded = true;
+    } catch (error) {
+      this.toast(this.t('toast.loadFailed', { error: (error as Error).message }), 'error');
+      throw error;
+    } finally {
+      this.$drawerContainer.removeAttribute('aria-busy');
     }
   }
 
@@ -1354,6 +1487,55 @@ export class Drawer extends MicroEvent {
     this.i18n.setLanguage(language === 'auto' ? getLanguage() : language);
     this.$drawerContainer.lang = this.i18n.language;
     this.trigger(drawerEvents.languageChange, this.i18n.language);
+    this._preferencesChanged();
+  }
+
+  /**
+   * Interface settings of user (e.g. saved by the app for its logged in user)
+   */
+  getPreferences(): Preferences {
+    return {
+      theme: this.theme,
+      language: this.#languageChoice,
+      grid: this.grid,
+      snapping: !!this.getWidget<SelectWidget>('selection')?.snapping,
+    };
+  }
+
+  /**
+   * Apply interface settings (given ones only), one `drawer.preferences.change` event
+   * @param {Partial<Preferences>} preferences Grid wins when grid and snapping are both true
+   */
+  setPreferences({ theme, language, grid, snapping }: Partial<Preferences>) {
+    if (theme !== undefined && theme !== this.theme) this.setTheme(theme);
+    if (language !== undefined && language !== this.#languageChoice) this.setLanguage(language);
+    if (snapping !== undefined) this.getWidget<SelectWidget>('selection')?.toggleSnapping(snapping);
+    if (grid !== undefined && grid !== this.grid) {
+      if (grid) this.showGrid();
+      else this.hideGrid();
+      // saved with drawing in localStorage
+      this.stage.fire('change');
+    }
+  }
+
+  /**
+   * A preference may have changed: event once current code ends (several changes give one event)
+   */
+  _preferencesChanged() {
+    if (this.#preferencesCheck) return;
+
+    this.#preferencesCheck = true;
+    queueMicrotask(() => {
+      this.#preferencesCheck = false;
+
+      const preferences = this.getPreferences();
+      const json = JSON.stringify(preferences);
+
+      if (json === this.#preferences) return;
+
+      this.#preferences = json;
+      this.trigger(drawerEvents.preferencesChange, preferences);
+    });
   }
 
   /**
@@ -1389,6 +1571,7 @@ export class Drawer extends MicroEvent {
       // storage unavailable: theme kept for this visit
     }
     this._applyTheme();
+    this._preferencesChanged();
   }
 
   /**
@@ -1518,6 +1701,7 @@ export class Drawer extends MicroEvent {
     if (selectWidget?.snapping) {
       selectWidget.toggleSnapping(false);
     }
+    this._preferencesChanged();
   }
 
   private _initSnapGridEvents() {
@@ -1655,6 +1839,7 @@ export class Drawer extends MicroEvent {
     setPressed(this.contextMenu.$gridBtn, false);
     this.gridLayer.destroyChildren();
     this._removeSnapGridEvents();
+    this._preferencesChanged();
   }
 
   /**

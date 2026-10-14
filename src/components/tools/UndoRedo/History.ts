@@ -75,6 +75,14 @@ export class History {
     this.appHistoryStep = this.appHistory.length - 1;
   }
 
+  /**
+   * Current drawing is the first state (e.g. loaded from storage): nothing to undo or redo
+   */
+  reset() {
+    this.appHistory = [`[${this.drawer.getDrawingShapes().map(serializeShape).join(',')}]`];
+    this.appHistoryStep = 0;
+  }
+
   canUndo() {
     return !!this.appHistory[this.appHistoryStep - 1];
   }

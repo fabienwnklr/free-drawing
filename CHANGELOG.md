@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [6.8.0](https://github.com/fabienwnklr/free-drawing/compare/v6.7.0...v6.8.0) (2026-10-14)
+
+
+### Features
+
+* `storage` option: drawing loaded from and saved to the storage of an app (e.g. its server) instead of localStorage, `ready` promise and `loadFromStorage` method, one save at a time with the last drawing, nothing saved before stored drawing is loaded (nor if it can't be)
+* `user` option and `setUser` method: id and name of the user of an app in collaboration sessions
+* preferences: `getPreferences` and `setPreferences` methods (theme, language, grid, snapping to objects), `drawer.preferences.change` event (one event for several changes)
+* `collaboration` option can be `{ url, auth }`: data read by server on connection (e.g. token of logged in user), or function giving it
+
+### Bug Fixes
+
+* **dialogs:** keys of page (Escape, Tab) and clicks not taken anymore by a dialog whose drawer was removed from page while it was shown
+* **toast:** message shown as text (HTML of error messages not interpreted)
+* **collaboration:** name given in dialog kept for the visit when localStorage is unavailable
+
 ## [6.7.0](https://github.com/fabienwnklr/free-drawing/compare/v6.6.0...v6.7.0) (2026-10-14)
 
 

@@ -64,6 +64,8 @@ const drawer = new Drawer($el, {
   scaling: 1.11, // scaling on zoom
   autoSave: true, // for save draw state on localStorage automatically
   localStorageKey: 'free-drawing', // localStorage key used for store data, use a different key for each drawer of a page
+  storage: null, // drawing saved somewhere else than localStorage (e.g. server of your app), see "Use in an app" below
+  user: null, // user of your app ({ id, name }), used in collaboration sessions instead of id and name kept in browser
   opacity: 1, // opacity of draw
   textStyle: {
     // style of new text
@@ -73,7 +75,7 @@ const drawer = new Drawer($el, {
     textDecoration: '', // '' | 'underline' | 'line-through' | 'underline line-through'
     align: 'left', // 'left' | 'center' | 'right'
   },
-  collaboration: false, // live collaboration menu: false, true (socket.io server on same origin) or server url
+  collaboration: false, // live collaboration menu: false, true (socket.io server on same origin), server url or { url, auth }
   widgets: ['pan', 'selection', 'brush', 'eraser', 'text', 'line', 'square', 'circle', 'arrow'], // toolbar widgets, see below
 };
 ```
@@ -98,6 +100,7 @@ drawer.off('drawer.change', callback);
 | `drawer.collaboration.change` | | Collaboration started or stopped, users or rights changed |
 | `drawer.theme.change` | dark state | Light or dark theme shown |
 | `drawer.language.change` | language | Language of interface changed |
+| `drawer.preferences.change` | preferences | Theme, language, grid or snapping changed (one event for several changes) |
 
 Components trigger `drawer.dropdown.hide` (dropdown menu) and `drawer.toast.hide` (`drawer.toast()` result). Names of previous versions (`change`, `fd.options.change`...) still work, with a warning in console.
 
@@ -137,6 +140,47 @@ new Drawer($el, {
 
 ```js
 drawer.showCommandPalette();
+```
+
+## Use in an app
+
+Options and methods to connect the drawer to the server of your app (drawings saved per user, login, preferences).
+
+`storage` option saves the drawing elsewhere than localStorage. Its drawing is loaded on init (`drawer.ready` is resolved then), it replaces the drawing and history starts from it. Then `save` is called on each change (with `autoSave`), one call at a time: changes made during a save are saved once it ends, with the last drawing. Nothing is saved before the drawing is loaded, nor if it can't be (error shown, `ready` rejected), so a stored drawing is never replaced by mistake.
+
+```js
+const drawer = new Drawer($el, {
+  storage: {
+    load: async () => (await fetch('/api/drawings/1')).json(), // drawing file or null
+    save: (file) => fetch('/api/drawings/1', { method: 'PUT', body: JSON.stringify(file) }),
+  },
+});
+
+await drawer.ready;
+await drawer.loadFromStorage(); // again, e.g. after login (drawing kept if nothing is stored)
+```
+
+`user` option gives the user of your app: their id is used in collaboration sessions (rights given by owners, links) and their name is shown to other users (the user can change it for the current visit). `setUser` changes it on login or logout.
+
+```js
+drawer.setUser({ id: 'user-1', name: 'Ada' });
+drawer.setUser(null); // anonymous: id and name kept in browser
+```
+
+Preferences are the interface settings of the user (theme, language, grid, snapping to objects), to save them with their account:
+
+```js
+drawer.setPreferences(await api.getPreferences()); // given ones only
+drawer.on('drawer.preferences.change', (preferences) => api.savePreferences(preferences));
+drawer.getPreferences(); // { theme: 'light', language: 'auto', grid: false, snapping: false }
+```
+
+`collaboration` option can also give data read by the server on connection (`socket.handshake.auth`), e.g. a token of the logged in user, or a function giving it on each connection:
+
+```js
+new Drawer($el, {
+  collaboration: { url: 'https://draw.example.com', auth: (callback) => callback({ token: getToken() }) },
+});
 ```
 
 ## Widgets

@@ -83,10 +83,12 @@ export class Modal {
 
   // document listeners, added only while modal is visible
   #onDocumentClick = (event: MouseEvent) => {
+    if (this.#removedFromPage()) return;
     if (!this.$modal.contains(event.target as Node)) this.hide();
   };
 
   #onDocumentKeydown = (event: KeyboardEvent) => {
+    if (this.#removedFromPage()) return;
     if (event.key === 'Escape' && this.options.closeOnEsc) {
       event.stopPropagation();
       this.hide();
@@ -94,6 +96,21 @@ export class Modal {
       this._trapFocus(event);
     }
   };
+
+  /**
+   * Drawer removed from page while modal is shown (e.g. view of app changed): keys and clicks of page not taken anymore
+   */
+  #removedFromPage() {
+    if (this.$modal.isConnected) return false;
+
+    this.#removeDocumentListeners();
+    return true;
+  }
+
+  #removeDocumentListeners() {
+    document.removeEventListener('click', this.#onDocumentClick);
+    document.removeEventListener('keydown', this.#onDocumentKeydown, true);
+  }
 
   /**
    * Tab and Shift+Tab cycle in modal
@@ -183,8 +200,7 @@ export class Modal {
   }
 
   hide() {
-    document.removeEventListener('click', this.#onDocumentClick);
-    document.removeEventListener('keydown', this.#onDocumentKeydown, true);
+    this.#removeDocumentListeners();
 
     if (this.$backdrop) {
       this.$backdrop.classList.remove('show');

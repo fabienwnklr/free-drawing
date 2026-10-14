@@ -11,6 +11,7 @@ export const de: Translations = {
   'toast.canDraw': 'Sie können zeichnen: der Besitzer der Sitzung hat es Ihnen erlaubt',
   'toast.viewOnly': 'Nur ansehen: der Besitzer der Sitzung hat Ihnen das Zeichnen entzogen',
   'toast.saveFailed': 'Die Zeichnung konnte nicht gespeichert werden: {error}',
+  'toast.loadFailed': 'Die Zeichnung konnte nicht geladen werden: {error}',
   'toast.invalidFile': 'Ungültige Zeichnungsdatei: {error}',
   'toast.linkCopied': 'Link kopiert',
   'toast.linkNotCopied': 'Der Link konnte nicht kopiert werden: {error}',

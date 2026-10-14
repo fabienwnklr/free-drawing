@@ -935,6 +935,7 @@ export class SelectWidget extends BaseWidget {
       this._removeSnapEvents();
       setPressed(this.drawer.contextMenu.$snappingBtn, false);
     }
+    this.drawer._preferencesChanged();
     this.drawer.stage.fire('change');
   }
 }

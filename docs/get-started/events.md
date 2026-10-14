@@ -27,6 +27,7 @@ DRAWER.on('drawer.change', (drawer) => {
 | `drawer.collaboration.change` | | Collaboration started or stopped, users or rights changed |
 | `drawer.theme.change` | dark state | Light or dark theme shown |
 | `drawer.language.change` | language | Language of interface changed |
+| `drawer.preferences.change` | preferences | Theme, language, grid or snapping changed (one event for several changes) |
 
 Components trigger `drawer.dropdown.hide` (dropdown menu) and `drawer.toast.hide` (`drawer.toast()` result).
 
