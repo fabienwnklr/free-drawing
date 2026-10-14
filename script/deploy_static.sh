@@ -7,7 +7,7 @@ set -e
 yarn build:static
 
 # navigate into the build output directory
-cd static
+cd apps/web/dist
 
 # if you are deploying to a custom domain
 # echo 'www.example.com' > CNAME

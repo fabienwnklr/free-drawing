@@ -124,9 +124,6 @@ export const shapeLabels: Record<string, TranslationKey> = {
 };
 
 /**
- * Collaboration events, same as server/socket-events.js
- */
-/**
  * Events of drawer (`drawer.on(event, callback)`) and of its components, named `drawer.<subject>.<action>`
  */
 export const drawerEvents = {
@@ -163,23 +160,6 @@ export const deprecatedEvents: Record<string, string> = {
   'fd.collaboration.change': drawerEvents.collaborationChange,
   'fd.dropdown.hide': drawerEvents.dropdownHide,
   'fd.toast.hide': drawerEvents.toastHide,
-};
-
-export const socketEvents = {
-  /** Join a room: `{ room, name }` */
-  JOIN: 'JOIN',
-  /** Name of user changed */
-  NAME: 'NAME',
-  /** Names of users of the room (sent by server) */
-  USERS: 'USERS',
-  /** Drawing change (`DrawingChange`): shapes added or updated, ids of removed shapes */
-  CHANGE: 'CHANGE',
-  /** Pointer of a user: canvas position (null out of drawer), with user id and name from server */
-  POINTER: 'POINTER',
-  /** User left the room (id, sent by server) */
-  LEAVE: 'LEAVE',
-  /** Right to draw given or removed by owner of the room: `{ userId, canEdit }` */
-  RIGHTS: 'RIGHTS',
 };
 
 export const dataAttributes = {

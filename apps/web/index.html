@@ -20,10 +20,10 @@
   <body>
     <div id="app"></div>
     <script type="module">
-      import { Drawer } from '/src/Drawer.ts';
+      import { Drawer } from '@fabwcie/free-drawing';
 
       window.drawer = new Drawer(document.getElementById('app'), {
-        // live collaboration when served by collaboration server (`yarn serve`, see server/index.mjs)
+        // live collaboration when served by collaboration server (`yarn serve`, see apps/server/index.mjs)
         collaboration: !!document.querySelector('meta[name="collaboration-server"]'),
       });
     </script>

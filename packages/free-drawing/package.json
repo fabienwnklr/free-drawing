@@ -1,0 +1,71 @@
+{
+  "name": "@fabwcie/free-drawing",
+  "author": "Winkler Fabien <fabienwinkler@outlook.fr>",
+  "description": "Infinite canvas",
+  "contributors": [],
+  "private": false,
+  "version": "6.8.0",
+  "type": "module",
+  "main": "./dist/drawer.umd.cjs",
+  "module": "./dist/drawer.js",
+  "types": "./dist/index.d.ts",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=5.7.1"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/drawer.js",
+      "require": "./dist/drawer.umd.cjs"
+    },
+    "./style.css": "./dist/style.css"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/fabienwnklr/free-drawing.git",
+    "directory": "packages/free-drawing"
+  },
+  "keywords": [
+    "typescript"
+  ],
+  "files": [
+    "dist/*"
+  ],
+  "scripts": {
+    "build": "tsc && vite build",
+    "build:watch": "tsc && vite build --watch",
+    "test": "vitest run",
+    "test:watch": "vitest dev",
+    "lint": "eslint src tests --ext .ts",
+    "format": "prettier src/**/*.ts --write",
+    "doc:typedoc": "typedoc --options typedoc.json src/**/*.ts",
+    "release": "yarn build && git push --follow-tags origin master && npm publish --access public"
+  },
+  "devDependencies": {
+    "@free-drawing/protocol": "*",
+    "@types/node": "^20.8.7",
+    "@typescript-eslint/eslint-plugin": "^6.7.5",
+    "@typescript-eslint/parser": "^6.7.5",
+    "eslint": "^8.51.0",
+    "jest-canvas-mock": "^2.5.2",
+    "jsdom": "^22.1.0",
+    "konva": "^9.3.1",
+    "sass": "^1.69.1",
+    "typedoc": "^0.25.2",
+    "typedoc-plugin-markdown": "^4.0.0-next.55",
+    "typescript": "^5.0.2",
+    "vite": "^4.4.5",
+    "vite-plugin-dts": "^3.6.0",
+    "vitest": "^0.34.6"
+  },
+  "peerDependencies": {
+    "konva": "^9.3.1"
+  },
+  "dependencies": {
+    "perfect-freehand": "^1.2.0",
+    "socket.io-client": "^4.7.5",
+    "uqr": "^0.1.3"
+  }
+}

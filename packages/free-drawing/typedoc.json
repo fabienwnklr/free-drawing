@@ -2,7 +2,7 @@
   "plugin": ["typedoc-plugin-markdown"],
   "gitRevision": "master",
   "excludePrivate": true,
-  "out": "./docs/api",
+  "out": "../../docs/api",
   "readme": "none",
   "exclude": ["src/vite.env.d.ts"]
 }

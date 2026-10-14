@@ -1,25 +1,30 @@
 import { env } from 'process';
 import { readFile } from 'fs/promises';
 import { createServer as createHttpServer } from 'http';
+import { fileURLToPath } from 'url';
 import express from 'express';
 import { createServer as createViteServer } from 'vite';
 import { Server } from 'socket.io';
-import { socketEvents } from './socket-events.js';
+import { socketEvents } from '@free-drawing/protocol';
+
+// demo app (apps/web): its vite config in development, its build in production
+const webRoot = fileURLToPath(new URL('../web/', import.meta.url));
 
 async function server() {
-  const productionRootPath = 'dist';
+  const productionRootPath = webRoot + 'dist';
   const isProductionMode = env.NODE_ENV === 'production';
   const app = express();
   if (!isProductionMode) {
     console.log('> Development Mode');
     const vite = await createViteServer({
+      root: webRoot,
       server: { middlewareMode: true, open: true },
     });
 
     // demo page: collaboration server is there (live collaboration enabled)
     app.get(['/', '/index.html'], async (req, res, next) => {
       try {
-        const html = (await readFile('index.html', 'utf-8')).replace(
+        const html = (await readFile(webRoot + 'index.html', 'utf-8')).replace(
           '</head>',
           '  <meta name="collaboration-server" content="same-origin" />\n  </head>'
         );

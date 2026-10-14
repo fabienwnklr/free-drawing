@@ -1,0 +1,20 @@
+{
+  "name": "@free-drawing/web",
+  "description": "Demo of free-drawing",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@fabwcie/free-drawing": "*",
+    "konva": "^9.3.1"
+  },
+  "devDependencies": {
+    "sass": "^1.69.1",
+    "vite": "^4.4.5"
+  }
+}

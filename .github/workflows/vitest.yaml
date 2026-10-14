@@ -23,10 +23,11 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
+          cache: 'yarn'
 
+      # yarn workspaces (packages/*, apps/*), yarn.lock
       - name: Install
-        run: npm i
+        run: yarn install --frozen-lockfile
 
       - name: Test
-        run: npm run test
+        run: yarn test

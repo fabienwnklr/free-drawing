@@ -9,7 +9,8 @@ import { Label, Tag } from 'konva/lib/shapes/Label';
 import { Text } from 'konva/lib/shapes/Text';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { serializeShape } from '@/components/tools/UndoRedo/History';
-import { drawerEvents, socketEvents } from '@/constants';
+import { drawerEvents } from '@/constants';
+import { socketEvents } from '@free-drawing/protocol';
 import { applyOrder } from '@/utils/order';
 import type { DrawingShape } from '@/@types/drawer';
 
