@@ -59,7 +59,7 @@ const cursorColors = ['#e03131', '#2f9e44', '#1971c2', '#f08c00', '#9c36b5', '#0
 
 /**
  * Real time collaboration in a room: changes of drawing (any tool, undo...) are sent shape by shape to other users
- * of the room, through a socket.io server (see server/index.mjs), so concurrent drawings are merged
+ * of the room, through a socket.io server (see apps/server), so concurrent drawings are merged
  */
 export class Collaboration {
   readonly socket: CollaborationSocket;
@@ -70,7 +70,8 @@ export class Collaboration {
   users: string[] = [];
   /** Users of the room with their rights, this one included */
   members: CollaborationMember[] = [];
-  readonly userId: string;
+  /** Id of this user: given by drawer, then by server when it joins (e.g. id of logged in account) */
+  userId: string;
   readonly ownerKey?: string;
   readonly invitedBy?: string;
   private readonly drawer: Drawer;
@@ -108,6 +109,10 @@ export class Collaboration {
       // (re)connected: whole drawing sent, merged with other ones of the room
       this.#synced.clear();
       this.send();
+    });
+    // server identifies this user (logged in account), before sending users of the room
+    this.socket.on(socketEvents.JOINED, ({ userId }: { userId?: unknown } = {}) => {
+      if (typeof userId === 'string' && userId) this.userId = userId;
     });
     this.socket.on(socketEvents.CHANGE, (change: DrawingChange) => this.receive(change));
     // names only from servers without rights

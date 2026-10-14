@@ -67,13 +67,13 @@ function toBase64Url(bytes: Uint8Array): string {
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-function fromBase64Url(data: string): Uint8Array {
+function fromBase64Url(data: string): Uint8Array<ArrayBuffer> {
   const binary = atob(data.replace(/-/g, '+').replace(/_/g, '/'));
 
   return Uint8Array.from(binary, (char) => char.charCodeAt(0));
 }
 
-async function transform(bytes: Uint8Array, stream: CompressionStream | DecompressionStream) {
+async function transform(bytes: Uint8Array<ArrayBuffer>, stream: CompressionStream | DecompressionStream) {
   return new Uint8Array(await new Response(new Response(bytes).body!.pipeThrough(stream)).arrayBuffer());
 }
 

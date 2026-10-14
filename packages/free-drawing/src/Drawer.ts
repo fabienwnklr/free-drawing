@@ -482,7 +482,8 @@ export class Drawer extends MicroEvent {
   getCollaborationLink(room: string | undefined = this.collaboration?.room): string {
     const url = new URL(window.location.href);
 
-    url.hash = room ? `room=${room}&by=${this.getUserId()}` : '';
+    // id known by server in a session
+    url.hash = room ? `room=${room}&by=${this.collaboration?.userId || this.getUserId()}` : '';
 
     return url.toString();
   }

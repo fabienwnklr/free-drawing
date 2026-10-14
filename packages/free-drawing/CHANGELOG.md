@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [6.8.1](https://github.com/fabienwnklr/free-drawing/compare/v6.8.0...v6.8.1) (2026-10-14)
+
+
+### Bug Fixes
+
+* **collaboration:** user id given by the server when joining a room (`JOINED` event, e.g. id of logged in account) used to recognize oneself: owner of the room, right to draw, "(you)" in users, links
+
 ## [6.8.0](https://github.com/fabienwnklr/free-drawing/compare/v6.7.0...v6.8.0) (2026-10-14)
 
 

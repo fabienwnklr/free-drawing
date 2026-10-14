@@ -4,7 +4,7 @@
   "description": "Infinite canvas",
   "contributors": [],
   "private": false,
-  "version": "6.8.0",
+  "version": "6.8.1",
   "type": "module",
   "main": "./dist/drawer.umd.cjs",
   "module": "./dist/drawer.js",
@@ -39,6 +39,7 @@
     "test": "vitest run",
     "test:watch": "vitest dev",
     "lint": "eslint src tests --ext .ts",
+    "typecheck": "tsc --noEmit -p . && tsc -p tests",
     "format": "prettier src/**/*.ts --write",
     "doc:typedoc": "typedoc --options typedoc.json src/**/*.ts",
     "release": "yarn build && git push --follow-tags origin master && npm publish --access public"
@@ -55,7 +56,7 @@
     "sass": "^1.69.1",
     "typedoc": "^0.25.2",
     "typedoc-plugin-markdown": "^4.0.0-next.55",
-    "typescript": "^5.0.2",
+    "typescript": "^5.9.3",
     "vite": "^4.4.5",
     "vite-plugin-dts": "^3.6.0",
     "vitest": "^0.34.6"

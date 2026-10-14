@@ -9,6 +9,9 @@ lerna-debug.log*
 
 node_modules
 dist
+
+# databases of server
+apps/server/data
 dist-ssr
 *.local
 

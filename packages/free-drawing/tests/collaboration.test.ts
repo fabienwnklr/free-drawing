@@ -28,6 +28,8 @@ beforeAll(() => {
 
 type FakeSocket = CollaborationSocket & {
   receive: (event: string, data?: unknown) => void;
+  /** Id of logged in account: server gives it instead of id of client */
+  account?: string;
   emit: ReturnType<typeof vi.fn>;
   disconnect: ReturnType<typeof vi.fn>;
   room?: string;
@@ -93,9 +95,10 @@ const createServer = () => {
             names: new Map<string, string>(),
           };
 
-          Object.assign(socket, { room, name, userId: userId || socket.id, invitedBy });
+          Object.assign(socket, { room, name, userId: socket.account ?? (userId || socket.id), invitedBy });
           rooms.set(room, roomData);
           roomData.names.set(socket.userId!, name);
+          socket.receive('JOINED', { userId: socket.userId });
           if (ownerKey) {
             roomData.ownerKey ??= ownerKey;
             if (roomData.ownerKey === ownerKey) roomData.ownerId = socket.userId;
@@ -339,6 +342,30 @@ describe('Collaboration', () => {
     expect(socket.disconnect).toHaveBeenCalled();
     expect(window.location.hash).toBe('');
     expect(modal.$session.hidden).toBe(true);
+  });
+
+  it('User id given by server (logged in account) recognizes this user: owner, links', async () => {
+    const server = createServer();
+    const drawer = createDrawer({ collaboration: true, language: 'en' });
+    const socket = server.createSocket();
+
+    socket.account = 'account-1';
+    vi.spyOn(drawer as unknown as { _createSocket(): Promise<FakeSocket> }, '_createSocket').mockImplementation(
+      async () => {
+        setTimeout(() => socket.receive('connect'));
+        return socket;
+      }
+    );
+    await drawer.startCollaboration(undefined, 'Ada');
+
+    expect(socket.emit).toHaveBeenCalledWith('JOIN', expect.objectContaining({ userId: drawer.getUserId() }));
+    expect(drawer.collaboration!.userId).toBe('account-1');
+    expect(drawer.collaboration!.isOwner).toBe(true);
+    expect(drawer.getCollaborationLink()).toContain('&by=account-1');
+
+    drawer.showCollaboration();
+    expect(drawer.collaborationModal!.$members.textContent).toBe('Ada (you)Owner');
+    drawer.collaborationModal!.hide();
   });
 
   it('Room link joins the room, collaboration needs its option', async () => {

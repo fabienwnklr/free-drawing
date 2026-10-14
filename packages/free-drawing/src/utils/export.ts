@@ -287,22 +287,22 @@ export function canvasToBlob(canvas: HTMLCanvasElement, type = 'image/png', qual
  * @param height Image height in pixels
  * @param scale Pixel ratio of image: page has the drawing size (96 dpi)
  */
-export function createPdf(jpeg: Uint8Array, width: number, height: number, scale: number): Blob {
+export function createPdf(jpeg: Uint8Array<ArrayBuffer>, width: number, height: number, scale: number): Blob {
   // css pixel to pdf point
   const pageWidth = num((width / scale) * 0.75);
   const pageHeight = num((height / scale) * 0.75);
   const content = `q ${pageWidth} 0 0 ${pageHeight} 0 0 cm /Im0 Do Q`;
   const encoder = new TextEncoder();
-  const parts: Uint8Array[] = [];
+  const parts: Uint8Array<ArrayBuffer>[] = [];
   const offsets: number[] = [];
   let length = 0;
-  const add = (part: string | Uint8Array) => {
+  const add = (part: string | Uint8Array<ArrayBuffer>) => {
     const bytes = typeof part === 'string' ? encoder.encode(part) : part;
 
     parts.push(bytes);
     length += bytes.length;
   };
-  const object = (body: string | (string | Uint8Array)[]) => {
+  const object = (body: string | (string | Uint8Array<ArrayBuffer>)[]) => {
     offsets.push(length);
     add(`${offsets.length} 0 obj\n`);
     (Array.isArray(body) ? body : [body]).forEach(add);

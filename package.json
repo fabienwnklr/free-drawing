@@ -17,9 +17,10 @@
     "build:watch": "yarn workspace @fabwcie/free-drawing build:watch",
     "build:static": "yarn workspace @free-drawing/web build",
     "preview": "yarn workspace @free-drawing/web preview",
-    "test": "yarn workspace @fabwcie/free-drawing test",
+    "test": "yarn workspace @fabwcie/free-drawing test && yarn workspace @free-drawing/server test",
     "test:watch": "yarn workspace @fabwcie/free-drawing test:watch",
     "lint": "yarn workspace @fabwcie/free-drawing lint",
+    "typecheck": "yarn workspace @fabwcie/free-drawing typecheck && yarn workspace @free-drawing/server typecheck",
     "format": "yarn workspace @fabwcie/free-drawing format",
     "release": "yarn workspace @fabwcie/free-drawing release",
     "doc:typedoc": "yarn workspace @fabwcie/free-drawing doc:typedoc",
@@ -39,7 +40,7 @@
     "concurrently": "^8.2.2",
     "husky": "^8.0.3",
     "prettier": "^3.0.3",
-    "typescript": "^5.0.2",
+    "typescript": "^5.9.3",
     "vite-svg-loader": "^5.1.0",
     "vitepress": "^1.0.0-rc.42"
   }

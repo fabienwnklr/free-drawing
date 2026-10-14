@@ -4,6 +4,8 @@
 export declare const socketEvents: {
   /** Join a room: `{ room, name, userId, ownerKey, invitedBy }` */
   readonly JOIN: 'JOIN';
+  /** Room joined, sent by server to the joining user: `{ userId }` id it gives the user (e.g. of logged in account) */
+  readonly JOINED: 'JOINED';
   /** Name of user changed */
   readonly NAME: 'NAME';
   /** Users of the room `{ id, name, owner, canEdit, invitedBy }` (sent by server) */
