@@ -104,6 +104,14 @@ drawer.off('drawer.change', callback);
 
 Components trigger `drawer.dropdown.hide` (dropdown menu) and `drawer.toast.hide` (`drawer.toast()` result). Names of previous versions (`change`, `fd.options.change`...) still work, with a warning in console.
 
+## Preferences
+
+"Preferences..." of settings menu (Ctrl / Cmd + ,, also in the command palette) opens a dialog: theme (light, dark or system), language, zen mode, grid, snapping to objects and name in collaboration sessions. Changes are applied at once and saved in the browser (`<localStorageKey>-preferences`), also with the `storage` option. An app can save them with the account of its user (see "Use in an app").
+
+```js
+drawer.showPreferences();
+```
+
 ## Dark mode
 
 "Dark mode" of settings menu (Alt+Shift+D) switches between light and dark themes, the choice is saved. In dark mode, the drawing is shown with inverted colors (as exported in dark mode), colors of shapes are kept: color swatches show them as drawn.
@@ -167,12 +175,12 @@ drawer.setUser({ id: 'user-1', name: 'Ada' });
 drawer.setUser(null); // anonymous: id and name kept in browser
 ```
 
-Preferences are the interface settings of the user (theme, language, grid, snapping to objects), to save them with their account:
+Preferences are the interface settings of the user (theme, language, grid, snapping to objects, zen mode), saved in the browser by the drawer, to save them with their account too:
 
 ```js
 drawer.setPreferences(await api.getPreferences()); // given ones only
 drawer.on('drawer.preferences.change', (preferences) => api.savePreferences(preferences));
-drawer.getPreferences(); // { theme: 'light', language: 'auto', grid: false, snapping: false }
+drawer.getPreferences(); // { theme: 'light', language: 'auto', grid: false, snapping: false, zen: false }
 ```
 
 `collaboration` option can also give data read by the server on connection (`socket.handshake.auth`), e.g. a token of the logged in user, or a function giving it on each connection:

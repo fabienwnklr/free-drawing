@@ -35,7 +35,7 @@ API of logged in users (401 without session):
 | Route | Purpose |
 | --- | --- |
 | `GET /api/me` | User: `{ id, name, email }` |
-| `GET /api/preferences` | Preferences of user (`Preferences` of the library: theme, language, grid, snapping) |
+| `GET /api/preferences` | Preferences of user (`Preferences` of the library: theme, language, grid, snapping, zen) |
 | `PUT /api/preferences` | Replace them (unknown keys and invalid values ignored) |
 | `GET /api/drawings` | Drawings of user: `{ id, name, createdAt, updatedAt }`, last updated first |
 | `POST /api/drawings` | New drawing (`{ name, content }`, content is a drawing file, empty one by default) |

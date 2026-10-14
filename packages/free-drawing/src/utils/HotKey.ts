@@ -115,6 +115,11 @@ export class HotKey {
         if (edit) this.drawer.open();
       }
 
+      if (mod && e.key === ',' && !inField) {
+        e.preventDefault();
+        this.drawer.showPreferences();
+      }
+
       // instead of browser search
       if (mod && e.key.toLowerCase() === 'k' && !inField && this.drawer.options.commandPalette) {
         e.preventDefault();

@@ -28,7 +28,7 @@ describe('Dark mode', () => {
     expect(isDark(drawer)).toBe(true);
     expect($item.getAttribute('aria-pressed')).toBe('true');
     expect(onTheme).toHaveBeenCalledWith(true);
-    expect(localStorage.getItem(drawer.options.localStorageKey + '-theme')).toBe('dark');
+    expect(JSON.parse(localStorage.getItem(drawer.options.localStorageKey + '-preferences')!).theme).toBe('dark');
 
     // saved choice used instead of option
     const reloaded = createDrawer({ localStorageKey: drawer.options.localStorageKey, theme: 'light' });

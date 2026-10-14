@@ -81,10 +81,15 @@ describe('Preferences', () => {
 
     const res = await agent
       .put('/api/preferences')
-      .send({ theme: 'dark', language: 'fr', grid: true, snapping: 'yes', other: 1 });
+      .send({ theme: 'dark', language: 'fr', grid: true, snapping: 'yes', zen: true, other: 1 });
 
-    expect(res.body).toEqual({ theme: 'dark', language: 'fr', grid: true });
-    expect((await agent.get('/api/preferences')).body).toEqual({ theme: 'dark', language: 'fr', grid: true });
+    expect(res.body).toEqual({ theme: 'dark', language: 'fr', grid: true, zen: true });
+    expect((await agent.get('/api/preferences')).body).toEqual({
+      theme: 'dark',
+      language: 'fr',
+      grid: true,
+      zen: true,
+    });
 
     // replaced
     await agent.put('/api/preferences').send({ theme: 'system' });

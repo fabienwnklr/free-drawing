@@ -72,6 +72,7 @@ export class Help extends Modal {
       { label: t('menu.darkMode'), keys: ['Alt+Shift+D'] },
       { label: t('help.snap'), keys: ['Alt+S'] },
       { label: t('help.zoom'), keys: [`Ctrl+${t('key.wheel')}`] },
+      { label: t('preferences.title'), keys: ['Ctrl+,'] },
     ];
 
     this.$modalBody.innerHTML = /*html*/ `

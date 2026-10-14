@@ -36,6 +36,7 @@ import ExportIcon from '@/icons/export.svg?raw';
 import UsersIcon from '@/icons/users.svg?raw';
 import StoreIcon from '@/icons/store.svg?raw';
 import LanguageIcon from '@/icons/language.svg?raw';
+import SlidersIcon from '@/icons/sliders.svg?raw';
 
 /**
  * Command of palette
@@ -409,6 +410,13 @@ export class CommandPalette extends Modal {
             label: t('position.recenter'),
             icon: RecenterIcon,
             run: () => position.recenter(),
+          },
+          {
+            id: 'preferences settings',
+            label: t('preferences.title'),
+            icon: SlidersIcon,
+            shortcut: 'Ctrl+,',
+            run: () => drawer.showPreferences(),
           },
           { id: 'help shortcuts', label: t('help.title'), icon: HelpIcon, run: () => drawer.help.show() },
         ],

@@ -1,9 +1,8 @@
-import type { DrawingFile, Preferences } from '@fabwcie/free-drawing';
+import type { DrawingFile } from '@fabwcie/free-drawing';
 
 const keys = {
   /** Drawing of anonymous user (drawing file) */
   drawing: 'free-drawing-web-drawing',
-  preferences: 'free-drawing-web-preferences',
   /** Last drawing open by logged in user, opened again on next visit */
   lastDrawing: 'free-drawing-web-last-drawing',
   /** Stage saved by the drawer without storage option (demo before this app) */
@@ -48,7 +47,7 @@ function fromStage(json: string): DrawingFile | null {
 }
 
 /**
- * Data kept in browser: drawing and preferences of anonymous user, last drawing of logged in user
+ * Data kept in browser: drawing of anonymous user, last drawing of logged in user
  */
 export const local = {
   /** Drawing of anonymous user, else the one of the demo, else an empty one (drawing of an account never kept) */
@@ -70,14 +69,6 @@ export const local = {
     return emptyDrawing();
   },
   saveDrawing: (file: DrawingFile) => write(keys.drawing, JSON.stringify(file)),
-  loadPreferences(): Partial<Preferences> | null {
-    try {
-      return JSON.parse(read(keys.preferences) ?? 'null');
-    } catch {
-      return null;
-    }
-  },
-  savePreferences: (preferences: Preferences) => write(keys.preferences, JSON.stringify(preferences)),
   lastDrawingId: () => read(keys.lastDrawing),
   setLastDrawingId: (id: string) => write(keys.lastDrawing, id),
 };

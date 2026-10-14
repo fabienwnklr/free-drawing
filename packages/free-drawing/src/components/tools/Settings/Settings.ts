@@ -15,6 +15,7 @@ import LinkIcon from '@/icons/link.svg?raw';
 import UsersIcon from '@/icons/users.svg?raw';
 import LanguageIcon from '@/icons/language.svg?raw';
 import CommandIcon from '@/icons/command.svg?raw';
+import SlidersIcon from '@/icons/sliders.svg?raw';
 import { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import type { ColorLike } from '@/@types/drawer';
 import { createButton, disableElement, enableElement, setLabel, setPressed, uniqueId } from '@/utils/dom';
@@ -27,6 +28,7 @@ export class Settings extends Dropdown {
   drawer: Drawer;
   $exportButton: HTMLButtonElement;
   $commandsButton: HTMLButtonElement;
+  $preferencesButton: HTMLButtonElement;
   $openButton: HTMLButtonElement;
   $saveAsButton: HTMLButtonElement;
   $copyLinkButton: HTMLButtonElement;
@@ -91,6 +93,10 @@ export class Settings extends Dropdown {
 
     this.$languageSelect = $language.querySelector('select')!;
 
+    this.$preferencesButton = this._createItem(SlidersIcon, 'menu.preferences', 'Ctrl+,');
+    this.$preferencesButton.setAttribute('aria-haspopup', 'dialog');
+    this.$preferencesButton.setAttribute('aria-keyshortcuts', 'Control+,');
+
     this.$githubButton = this._createItem(GithubIcon, 'menu.github');
 
     // asks confirmation
@@ -154,6 +160,7 @@ export class Settings extends Dropdown {
         this.$zenModeButton,
         this.$darkModeButton,
         $language,
+        this.$preferencesButton,
         this.$githubButton,
         this.getSeparator(),
         this.$clearStorageButton,
@@ -252,6 +259,7 @@ export class Settings extends Dropdown {
 
   private initEvents() {
     this.$commandsButton.addEventListener('click', () => this.drawer.showCommandPalette());
+    this.$preferencesButton.addEventListener('click', () => this.drawer.showPreferences());
     this.$openButton.addEventListener('click', () => this.drawer.open());
     this.$saveAsButton.addEventListener('click', () => this.drawer.saveAs());
     this.$copyLinkButton.addEventListener('click', () => this.drawer.copyLink());
@@ -321,6 +329,7 @@ export class Settings extends Dropdown {
     $containers.forEach(($container) => {
       if ($container) $container.style.display = zen ? 'none' : '';
     });
+    this.drawer._preferencesChanged();
   }
 
   toggleSnapping() {

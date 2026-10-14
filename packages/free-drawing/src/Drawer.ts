@@ -42,6 +42,7 @@ import { type ImageFormat, canvasToBlob, createPdf, getExportBox, renderCanvas, 
 import { toHexColor } from '@/utils/color';
 import { ExportModal } from '@/components/ExportModal/ExportModal';
 import { CommandPalette } from '@/components/CommandPalette/CommandPalette';
+import { PreferencesModal } from '@/components/PreferencesModal/PreferencesModal';
 
 // types of options, storage, preferences and files, for apps using the drawer
 export type {
@@ -160,6 +161,8 @@ export class Drawer extends MicroEvent {
   exportModal: ExportModal | null = null;
   /** Created on first use, see `showCommandPalette` */
   commandPalette: CommandPalette | null = null;
+  /** Created on first use, see `showPreferences` */
+  preferencesModal: PreferencesModal | null = null;
 
   debug: boolean = false;
   #saveFailed = false;
@@ -217,13 +220,10 @@ export class Drawer extends MicroEvent {
     // in tab order, keys go to drawer shortcuts (not to screen reader commands)
     this.$drawerContainer.tabIndex = 0;
     this.$drawerContainer.setAttribute('role', 'application');
-    // language chosen in menu (saved), else of options
-    const savedLanguage = this._getStorageItem(this.options.localStorageKey + '-language');
+    // preferences saved in browser, else options
+    const preferences = this._readPreferences();
 
-    this.#languageChoice =
-      savedLanguage === 'auto' || (savedLanguage && savedLanguage in languages)
-        ? (savedLanguage as Language | 'auto')
-        : this.options.language;
+    this.#languageChoice = preferences.language ?? this.options.language;
     this.i18n = new I18n(
       this.#languageChoice === 'auto' ? getLanguage() : this.#languageChoice,
       this.options.translations
@@ -345,9 +345,13 @@ export class Drawer extends MicroEvent {
     if (this.options.layersPanel) {
       this.layersPanel = new LayersPanel(this);
     }
-    this._initTheme();
+    this._initTheme(preferences.theme);
 
+    this.grid = preferences.grid ?? this.grid;
     if (this.grid) this.showGrid();
+    // grid and snapping exclude each other
+    else if (preferences.snapping) this.getWidget<SelectWidget>('selection')?.toggleSnapping(true);
+    if (preferences.zen) this.setting.toggleZenMode();
 
     // initial (or saved) tool may not be in widgets option: first widget of toolbar
     const activeWidget = this.getWidget<BaseWidget>(activeTool) ?? this.toolbar.widgets.values().next().value;
@@ -1319,6 +1323,14 @@ export class Drawer extends MicroEvent {
   }
 
   /**
+   * Preferences dialog: theme, language, zen mode, grid, snapping, name in collaboration sessions
+   */
+  showPreferences() {
+    this.preferencesModal ??= new PreferencesModal(this);
+    this.preferencesModal.show();
+  }
+
+  /**
    * Replace drawing by a drawing file content, undo restores previous drawing
    * @param {DrawingFile | string} file Content or its JSON
    * @throws {Error} not a drawing file
@@ -1499,11 +1511,6 @@ export class Drawer extends MicroEvent {
    */
   setLanguage(language: Language | 'auto') {
     this.#languageChoice = language;
-    try {
-      localStorage.setItem(this.options.localStorageKey + '-language', language);
-    } catch {
-      // storage unavailable: language kept for this visit
-    }
     this.i18n.setLanguage(language === 'auto' ? getLanguage() : language);
     this.$drawerContainer.lang = this.i18n.language;
     this.trigger(drawerEvents.languageChange, this.i18n.language);
@@ -1519,6 +1526,7 @@ export class Drawer extends MicroEvent {
       language: this.#languageChoice,
       grid: this.grid,
       snapping: !!this.getWidget<SelectWidget>('selection')?.snapping,
+      zen: this.setting.zenMode,
     };
   }
 
@@ -1526,9 +1534,10 @@ export class Drawer extends MicroEvent {
    * Apply interface settings (given ones only), one `drawer.preferences.change` event
    * @param {Partial<Preferences>} preferences Grid wins when grid and snapping are both true
    */
-  setPreferences({ theme, language, grid, snapping }: Partial<Preferences>) {
+  setPreferences({ theme, language, grid, snapping, zen }: Partial<Preferences>) {
     if (theme !== undefined && theme !== this.theme) this.setTheme(theme);
     if (language !== undefined && language !== this.#languageChoice) this.setLanguage(language);
+    if (zen !== undefined && zen !== this.setting.zenMode) this.setting.toggleZenMode();
     if (snapping !== undefined) this.getWidget<SelectWidget>('selection')?.toggleSnapping(snapping);
     if (grid !== undefined && grid !== this.grid) {
       if (grid) this.showGrid();
@@ -1539,9 +1548,45 @@ export class Drawer extends MicroEvent {
   }
 
   /**
-   * A preference may have changed: event once current code ends (several changes give one event)
+   * Preferences saved in browser, and choices of previous versions (`<key>-theme`, `<key>-language`)
+   */
+  private _readPreferences(): Partial<Preferences> {
+    const key = this.options.localStorageKey;
+    let saved: Record<string, unknown> = {};
+
+    try {
+      saved = JSON.parse(this._getStorageItem(key + '-preferences') ?? '{}') ?? {};
+    } catch {
+      // invalid data ignored
+    }
+
+    const isTheme = (value: unknown): value is Theme => value === 'light' || value === 'dark' || value === 'system';
+    const isLanguage = (value: unknown): value is Language | 'auto' =>
+      typeof value === 'string' && (value === 'auto' || value in languages);
+    // first valid one
+    const theme = [saved.theme, this._getStorageItem(key + '-theme')].find(isTheme);
+    const language = [saved.language, this._getStorageItem(key + '-language')].find(isLanguage);
+    const preferences: Partial<Preferences> = { ...(theme && { theme }), ...(language && { language }) };
+
+    (['grid', 'snapping', 'zen'] as const).forEach((name) => {
+      if (typeof saved[name] === 'boolean') preferences[name] = saved[name];
+    });
+
+    return preferences;
+  }
+
+  /**
+   * A preference may have changed: saved in browser, event once current code ends (several changes give one event)
    */
   _preferencesChanged() {
+    // not while drawer is created
+    if (!this.#preferences) return;
+
+    try {
+      localStorage.setItem(this.options.localStorageKey + '-preferences', JSON.stringify(this.getPreferences()));
+    } catch {
+      // storage unavailable: kept for this visit
+    }
     if (this.#preferencesCheck) return;
 
     this.#preferencesCheck = true;
@@ -1561,14 +1606,12 @@ export class Drawer extends MicroEvent {
   /**
    * Theme chosen in menu (saved) or by option, device theme followed with 'system'
    */
-  private _initTheme() {
-    const saved = this._getStorageItem(this.options.localStorageKey + '-theme') as Theme | null;
-
+  private _initTheme(saved?: Theme) {
     this.#systemDark = window.matchMedia?.('(prefers-color-scheme: dark)');
     this.#systemDark?.addEventListener?.('change', () => {
       if (this.theme === 'system') this._applyTheme();
     });
-    this.theme = saved && ['light', 'dark', 'system'].includes(saved) ? saved : this.options.theme;
+    this.theme = saved ?? this.options.theme;
     this._applyTheme();
   }
 
@@ -1585,11 +1628,6 @@ export class Drawer extends MicroEvent {
    */
   setTheme(theme: Theme) {
     this.theme = theme;
-    try {
-      localStorage.setItem(this.options.localStorageKey + '-theme', theme);
-    } catch {
-      // storage unavailable: theme kept for this visit
-    }
     this._applyTheme();
     this._preferencesChanged();
   }

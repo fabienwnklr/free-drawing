@@ -33,13 +33,14 @@ function isDrawingFile(value: unknown) {
  * Known preferences of the library (`Preferences`) only, invalid values ignored
  */
 function toPreferences(value: Record<string, unknown>) {
-  const { theme, language, grid, snapping } = value;
+  const { theme, language, grid, snapping, zen } = value;
 
   return {
     ...(typeof theme === 'string' && themes.includes(theme) && { theme }),
     ...(typeof language === 'string' && /^[a-z]{2}$|^auto$/.test(language) && { language }),
     ...(typeof grid === 'boolean' && { grid }),
     ...(typeof snapping === 'boolean' && { snapping }),
+    ...(typeof zen === 'boolean' && { zen }),
   };
 }
 

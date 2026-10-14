@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [6.10.0](https://github.com/fabienwnklr/free-drawing/compare/v6.9.0...v6.10.0) (2026-10-15)
+
+
+### Features
+
+* "Preferences..." item of settings menu, Ctrl / Cmd + , and command palette: dialog with theme (light, dark or system), language, zen mode, grid, snapping to objects and name in collaboration sessions, applied at once, `showPreferences` method
+* preferences saved in browser (`<localStorageKey>-preferences`): grid, snapping and zen mode restored on next visit too (also with `storage` option), theme and language chosen with previous versions kept
+* zen mode is a preference (`zen` of `getPreferences`, `setPreferences` and `drawer.preferences.change` event)
+
 ## [6.9.0](https://github.com/fabienwnklr/free-drawing/compare/v6.8.1...v6.9.0) (2026-10-14)
 
 

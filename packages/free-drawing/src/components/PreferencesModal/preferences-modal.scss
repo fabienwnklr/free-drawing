@@ -1,0 +1,91 @@
+@use '@/scss/variables' as *;
+@use '@/scss/mixins' as *;
+
+.drawer-container .drawer-modal-preferences {
+  width: min(90%, 26rem);
+  max-width: 90%;
+
+  .drawer-modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: $space-4;
+  }
+
+  section {
+    display: flex;
+    flex-direction: column;
+    gap: $space-2;
+  }
+
+  h3 {
+    color: $text-muted;
+    font-size: $font-size-sm;
+    font-weight: 600;
+  }
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    cursor: pointer;
+  }
+
+  // theme choices on one line
+  .drawer-preferences-themes {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: $space-2 $space-4;
+    margin: 0;
+    padding: 0;
+    border: 0;
+
+    legend {
+      float: left;
+      margin-right: $space-2;
+      padding: 0;
+    }
+  }
+
+  .drawer-preferences-field {
+    justify-content: space-between;
+    cursor: default;
+
+    // longest choice visible ("Automatique (navigateur)")
+    select,
+    input {
+      width: 15rem;
+      max-width: 60%;
+      padding: $space-1 $space-2;
+      border: 1px solid $border;
+      border-radius: $radius;
+      background-color: $surface;
+      color: $text;
+
+      @include focus-ring;
+    }
+  }
+
+  input[type='checkbox'],
+  input[type='radio'] {
+    margin: 0;
+    appearance: auto;
+    accent-color: $primary;
+    cursor: pointer;
+
+    @include focus-ring;
+  }
+
+  .drawer-preferences-shortcut {
+    margin-left: auto;
+    padding: 0.125rem $space-2;
+    border: 1px solid $border;
+    border-bottom-width: 2px;
+    border-radius: $radius;
+    background-color: $subtle-bg;
+    color: $text-muted;
+    font-family: inherit;
+    font-size: $font-size-sm;
+    font-weight: 600;
+  }
+}

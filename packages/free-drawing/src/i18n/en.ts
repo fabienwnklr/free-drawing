@@ -51,6 +51,14 @@ export const en = {
 
   // command palette
   'menu.commands': 'Command palette',
+  'menu.preferences': 'Preferences...',
+  'preferences.title': 'Preferences',
+  'preferences.appearance': 'Appearance',
+  'preferences.theme': 'Theme',
+  'preferences.light': 'Light',
+  'preferences.dark': 'Dark',
+  'preferences.system': 'System',
+  'preferences.drawing': 'Drawing',
   'commands.search': 'Search a command',
   'commands.empty': 'No command found',
   'commands.file': 'File',

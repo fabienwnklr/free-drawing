@@ -132,14 +132,13 @@ export class App {
     return drawings.find(({ id }) => id === local.lastDrawingId()) ?? drawings[0] ?? (await api.createDrawing({}));
   }
 
+  /**
+   * Logged in user: their preferences (anonymous user: preferences saved in browser by drawer)
+   */
   private async _onStart() {
     if (this.user) {
       this.drawer.setUser({ id: this.user.id, name: this.user.name });
       await this._loadPreferences();
-    } else {
-      const preferences = local.loadPreferences();
-
-      if (preferences) this.drawer.setPreferences(preferences);
     }
     this.render();
   }
@@ -159,9 +158,9 @@ export class App {
   }
 
   private _initEvents() {
+    // also saved in browser by drawer
     this.drawer.on('drawer.preferences.change', (preferences: Preferences) => {
       if (this.user) api.savePreferences(preferences).catch(() => {});
-      else local.savePreferences(preferences);
     });
     this.drawer.on('drawer.language.change', () => this.render());
     this.drawer.on('drawer.theme.change', () => this.render());

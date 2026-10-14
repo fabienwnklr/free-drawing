@@ -87,7 +87,8 @@ export type DrawerStorage = {
 };
 
 /**
- * Interface settings of user, see `getPreferences` / `setPreferences` and `drawer.preferences.change` event
+ * Interface settings of user, saved in browser (`<localStorageKey>-preferences`),
+ * see `getPreferences` / `setPreferences` and `drawer.preferences.change` event
  */
 export type Preferences = {
   theme: Theme;
@@ -97,6 +98,8 @@ export type Preferences = {
   grid: boolean;
   /** Snapping to objects */
   snapping: boolean;
+  /** Zen mode: interface hidden except toolbar and menu */
+  zen: boolean;
 };
 
 export type StrokeStyle = 'solid' | 'dashed' | 'dotted';

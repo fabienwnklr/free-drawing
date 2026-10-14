@@ -153,13 +153,19 @@ describe('Integration in an app', () => {
     const drawer = createDrawer({ language: 'en' });
     const onChange = vi.fn();
 
-    expect(drawer.getPreferences()).toEqual({ theme: 'light', language: 'en', grid: false, snapping: false });
+    expect(drawer.getPreferences()).toEqual({
+      theme: 'light',
+      language: 'en',
+      grid: false,
+      snapping: false,
+      zen: false,
+    });
     drawer.on('drawer.preferences.change', onChange);
 
     drawer.setPreferences({ theme: 'dark', language: 'fr', grid: true });
     await Promise.resolve();
     expect(onChange).toHaveBeenCalledTimes(1);
-    expect(onChange).toHaveBeenCalledWith({ theme: 'dark', language: 'fr', grid: true, snapping: false });
+    expect(onChange).toHaveBeenCalledWith({ theme: 'dark', language: 'fr', grid: true, snapping: false, zen: false });
     expect(drawer.isDarkMode()).toBe(true);
     expect(drawer.language).toBe('fr');
     expect(drawer.grid).toBe(true);
@@ -168,7 +174,13 @@ describe('Integration in an app', () => {
     drawer.setting.toggleSnapping();
     await Promise.resolve();
     expect(onChange).toHaveBeenCalledTimes(2);
-    expect(onChange).toHaveBeenLastCalledWith({ theme: 'dark', language: 'fr', grid: false, snapping: true });
+    expect(onChange).toHaveBeenLastCalledWith({
+      theme: 'dark',
+      language: 'fr',
+      grid: false,
+      snapping: true,
+      zen: false,
+    });
 
     // same values: no event
     drawer.setPreferences({ theme: 'dark', snapping: true });

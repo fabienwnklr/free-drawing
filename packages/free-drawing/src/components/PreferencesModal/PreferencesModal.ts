@@ -1,0 +1,165 @@
+import '@/components/PreferencesModal/preferences-modal.scss';
+import type { Drawer } from '@/Drawer';
+import type { Preferences, Theme } from '@/@types/drawer';
+import { Modal } from '@/components/Modal/Modal';
+import { type Language, languages } from '@/i18n/I18n';
+import type { TranslationKey } from '@/i18n/en';
+import { drawerEvents } from '@/constants';
+import { uniqueId } from '@/utils/dom';
+
+const themes: { value: Theme; label: TranslationKey }[] = [
+  { value: 'light', label: 'preferences.light' },
+  { value: 'dark', label: 'preferences.dark' },
+  { value: 'system', label: 'preferences.system' },
+];
+
+/**
+ * Preferences of user (theme, language, zen mode, grid, snapping, name in collaboration sessions):
+ * applied at once, saved in browser by drawer (and by the app of a logged in user)
+ */
+export class PreferencesModal extends Modal {
+  $themes: HTMLInputElement[];
+  $language: HTMLSelectElement;
+  $zen: HTMLInputElement;
+  $grid: HTMLInputElement;
+  $snapping: HTMLInputElement;
+  /** Name in collaboration sessions, with `collaboration` option */
+  $name: HTMLInputElement | null = null;
+
+  constructor(drawer: Drawer) {
+    super(drawer, { title: drawer.t('preferences.title') });
+    this.$modal.classList.add('drawer-modal-preferences');
+    this.$modalFooter.remove();
+
+    // appearance: theme, language, zen mode
+    const $appearance = this._createSection('preferences.appearance');
+    const $themes = document.createElement('fieldset');
+    const $themesLegend = document.createElement('legend');
+    const themesName = uniqueId('theme');
+
+    $themes.className = 'drawer-preferences-themes';
+    $themes.append($themesLegend);
+    this.$themes = themes.map(({ value, label }) => {
+      const $radio = this._createCheckable($themes, label, 'radio');
+
+      $radio.name = themesName;
+      $radio.value = value;
+      $radio.addEventListener('change', () => drawer.setTheme(value));
+      return $radio;
+    });
+
+    this.$language = document.createElement('select');
+    this.$language.append(
+      new Option('', 'auto'),
+      ...Object.entries(languages).map(([language, { name }]) => new Option(name, language))
+    );
+    this.$language.addEventListener('change', () => drawer.setLanguage(this.$language.value as Language | 'auto'));
+    $appearance.append($themes, this._createField('menu.language', this.$language));
+    this.$zen = this._createCheckable($appearance, 'menu.zenMode', 'checkbox', 'Alt+Z');
+    this.$zen.addEventListener('change', () => drawer.setPreferences({ zen: this.$zen.checked }));
+
+    // drawing: grid, snapping (exclude each other)
+    const $drawing = this._createSection('preferences.drawing');
+
+    this.$grid = this._createCheckable($drawing, 'menu.showGrid', 'checkbox', 'Alt+G');
+    this.$grid.addEventListener('change', () => drawer.setPreferences({ grid: this.$grid.checked }));
+    this.$snapping = this._createCheckable($drawing, 'context.snap', 'checkbox', 'Alt+S');
+    this.$snapping.addEventListener('change', () => drawer.setPreferences({ snapping: this.$snapping.checked }));
+
+    this.$modalBody.append($appearance, $drawing);
+
+    if (drawer.options.collaboration) {
+      const $collaboration = this._createSection('collab.title');
+
+      this.$name = document.createElement('input');
+      this.$name.type = 'text';
+      this.$name.maxLength = 40;
+      // valid token, unknown to dom types
+      this.$name.setAttribute('autocomplete', 'nickname');
+      this.$name.addEventListener('change', () => drawer.setUserName(this.$name!.value));
+      $collaboration.append(this._createField('collab.name', this.$name));
+      this.$modalBody.append($collaboration);
+    }
+
+    drawer.i18n.translate((t) => {
+      this.setTitle(t('preferences.title'));
+      $themesLegend.textContent = t('preferences.theme');
+      this.$language.options[0].text = t('language.auto');
+      if (this.$name) this.$name.placeholder = t('collab.anonymous');
+    });
+    // changed elsewhere (menu, shortcuts, app) while shown
+    drawer.on(drawerEvents.preferencesChange, () => this.update());
+  }
+
+  show() {
+    this.update();
+    super.show();
+  }
+
+  /**
+   * Fields show current preferences
+   */
+  update() {
+    const preferences: Preferences = this.drawer.getPreferences();
+
+    this.$themes.forEach(($radio) => ($radio.checked = $radio.value === preferences.theme));
+    this.$language.value = preferences.language;
+    this.$zen.checked = preferences.zen;
+    this.$grid.checked = preferences.grid;
+    this.$snapping.checked = preferences.snapping;
+    if (this.$name && document.activeElement !== this.$name) this.$name.value = this.drawer.getUserName();
+  }
+
+  /**
+   * Group of fields with its title
+   */
+  private _createSection(title: TranslationKey) {
+    const $section = document.createElement('section');
+    const $title = document.createElement('h3');
+
+    $title.id = uniqueId('preferences-section');
+    $section.setAttribute('aria-labelledby', $title.id);
+    $section.append($title);
+    this.drawer.i18n.translate((t) => ($title.textContent = t(title)));
+
+    return $section;
+  }
+
+  /**
+   * Field with its label (select, text input)
+   */
+  private _createField(label: TranslationKey, $field: HTMLInputElement | HTMLSelectElement) {
+    const $label = document.createElement('label');
+    const $text = document.createElement('span');
+
+    $label.className = 'drawer-preferences-field';
+    $label.append($text, $field);
+    this.drawer.i18n.translate((t) => ($text.textContent = t(label)));
+
+    return $label;
+  }
+
+  /**
+   * Checkbox or radio with its label, and shortcut doing the same
+   */
+  private _createCheckable($container: HTMLElement, label: TranslationKey, type: 'checkbox' | 'radio', shortcut = '') {
+    const $label = document.createElement('label');
+    const $input = document.createElement('input');
+    const $text = document.createElement('span');
+
+    $input.type = type;
+    $label.append($input, $text);
+    if (shortcut) {
+      const $shortcut = document.createElement('kbd');
+
+      $shortcut.className = 'drawer-preferences-shortcut';
+      $shortcut.textContent = shortcut;
+      $input.setAttribute('aria-keyshortcuts', shortcut);
+      $label.append($shortcut);
+    }
+    $container.append($label);
+    this.drawer.i18n.translate((t) => ($text.textContent = t(label)));
+
+    return $input;
+  }
+}
