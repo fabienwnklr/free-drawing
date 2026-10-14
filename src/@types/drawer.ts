@@ -33,6 +33,11 @@ export type DrawerOptions = {
 export type StrokeStyle = 'solid' | 'dashed' | 'dotted';
 
 /**
+ * Move of shapes in stacking order: one step (above / below next shape they overlap) or above / below all shapes
+ */
+export type ShapeOrder = 'forward' | 'backward' | 'front' | 'back';
+
+/**
  * Text node style, keys match konva Text attributes
  */
 export type TextStyle = {

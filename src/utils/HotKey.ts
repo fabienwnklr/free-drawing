@@ -1,5 +1,6 @@
 import { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { TextWidget } from '@/components/toolbar/widgets/Text/Text';
+import type { ShapeOrder } from '@/@types/drawer';
 import { Drawer } from '../Drawer';
 
 export class HotKey {
@@ -13,6 +14,13 @@ export class HotKey {
       ArrowUp: { x: 0, y: -DELTA },
       ArrowRight: { x: DELTA, y: 0 },
       ArrowDown: { x: 0, y: DELTA },
+    };
+    // stacking order of selection with Ctrl / Cmd
+    const orderKeys: Record<string, ShapeOrder> = {
+      ArrowUp: 'forward',
+      ArrowDown: 'backward',
+      'Shift+ArrowUp': 'front',
+      'Shift+ArrowDown': 'back',
     };
     // selection moved with arrow keys, saved on key release (not on each repeated keydown)
     let arrowMoved = false;
@@ -46,8 +54,13 @@ export class HotKey {
         e.preventDefault();
       }
 
-      // only arrow keys, other keys keep their default behavior (F5, Tab...)
-      if (edit && selectedNodes.length && e.key in arrowMoves && !inField) {
+      const order = mod ? orderKeys[`${e.shiftKey ? 'Shift+' : ''}${e.key}`] : undefined;
+
+      if (edit && selectedNodes.length && order && !inField) {
+        this.drawer.reorderShapes(order);
+        e.preventDefault();
+      } else if (edit && selectedNodes.length && e.key in arrowMoves && !inField) {
+        // only arrow keys, other keys keep their default behavior (F5, Tab...)
         selectedNodes.forEach((shape) => shape.move(arrowMoves[e.key]));
         arrowMoved = true;
         e.preventDefault();

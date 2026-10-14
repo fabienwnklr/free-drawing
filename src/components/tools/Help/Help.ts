@@ -67,6 +67,20 @@ export class Help extends Modal {
               </span>
             </li>
             <li class="drawer-modal-help-shortcut">
+              Bring forward / send backward
+              <span>
+                <kbd class="drawer-modal-help-kdb">Ctrl+Up</kbd>
+                <kbd class="drawer-modal-help-kdb">Ctrl+Down</kbd>
+              </span>
+            </li>
+            <li class="drawer-modal-help-shortcut">
+              Bring to front / send to back
+              <span>
+                <kbd class="drawer-modal-help-kdb">Ctrl+Shift+Up</kbd>
+                <kbd class="drawer-modal-help-kdb">Ctrl+Shift+Down</kbd>
+              </span>
+            </li>
+            <li class="drawer-modal-help-shortcut">
               Paste text
               <span>
                 <kbd class="drawer-modal-help-kdb">Ctrl+V</kbd>

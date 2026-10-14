@@ -99,7 +99,13 @@ const createServer = () => {
             roomData.ownerKey ??= ownerKey;
             if (roomData.ownerKey === ownerKey) roomData.ownerId = socket.userId;
           }
-          if (roomData.shapes.size) socket.receive('CHANGE', { upsert: [...roomData.shapes.values()], remove: [] });
+          if (roomData.shapes.size) {
+            socket.receive('CHANGE', {
+              upsert: [...roomData.shapes.values()],
+              remove: [],
+              order: [...roomData.shapes.keys()],
+            });
+          }
           sendUsers(room);
         } else if (event === 'RIGHTS') {
           const { userId, canEdit } = data as { userId: string; canEdit: boolean };
@@ -119,13 +125,20 @@ const createServer = () => {
             .forEach((s) => s.receive(event, { id: socket.id, name: socket.name, position: data }));
         } else if (event === 'CHANGE') {
           const change = data as DrawingChange;
-          const { shapes, viewers } = rooms.get(socket.room!)!;
+          const roomData = rooms.get(socket.room!)!;
+          const { shapes, viewers } = roomData;
 
           // without right to draw: ignored
           if (viewers.has(socket.userId!)) return;
 
           change.remove.forEach((id) => shapes.delete(id));
           change.upsert.forEach((json) => shapes.set(JSON.parse(json).attrs.id, json));
+          if (change.order) {
+            const ordered = new Map(change.order.filter((id) => shapes.has(id)).map((id) => [id, shapes.get(id)!]));
+
+            shapes.forEach((json, id) => ordered.set(id, json));
+            roomData.shapes = ordered;
+          }
           inRoom(socket.room)
             .filter((s) => s !== socket)
             .forEach((s) => s.receive(event, change));
@@ -555,5 +568,36 @@ describe('Collaboration', () => {
     expect([modal.$stopButton, modal.$startButton, modal.$joinButton, modal.$cancelButton].every(($btn) => $btn.hidden)).toBe(
       true
     );
+  });
+
+  it('Stacking order is sent, kept by server for users joining later', () => {
+    const connect = createServer();
+    const a = createDrawer();
+    const b = createDrawer();
+    const socketA = connect(a);
+    const socketB = connect(b);
+    const first = addText(a, 'first');
+    const second = addText(a, 'second');
+    const ids = (drawer: Drawer) => drawer.getDrawingShapes().map((shape) => shape.id());
+
+    // new shapes are on top for everyone: no order sent
+    expect(socketA.emit).not.toHaveBeenCalledWith('CHANGE', expect.objectContaining({ order: expect.anything() }));
+    expect(ids(b)).toEqual([first.id(), second.id()]);
+
+    socketB.emit.mockClear();
+    a.reorderShapes('front', [first]);
+    expect(ids(b)).toEqual([second.id(), first.id()]);
+    // not sent back
+    expect(socketB.emit).not.toHaveBeenCalled();
+
+    a.undoRedo.undo();
+    expect(ids(b)).toEqual([first.id(), second.id()]);
+
+    b.reorderShapes('back', [byId(b, second.id())!]);
+    expect(ids(a)).toEqual([second.id(), first.id()]);
+
+    const c = createDrawer();
+    connect(c);
+    expect(ids(c)).toEqual([second.id(), first.id()]);
   });
 });

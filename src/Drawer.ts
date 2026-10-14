@@ -4,11 +4,12 @@ import { Layer } from 'konva/lib/Layer';
 import { Toolbar } from './components/toolbar/Toolbar';
 import { Rect } from 'konva/lib/shapes/Rect';
 import { AvailableTools } from './@types/toolbar';
-import { ColorLike, DrawerOptions, OptionsChange, StrokeStyle, TextStyle } from './@types/drawer';
+import { ColorLike, DrawerOptions, OptionsChange, ShapeOrder, StrokeStyle, TextStyle } from './@types/drawer';
 import { createId, deepMerge } from './utils/functions';
 import { defaultOptions, gridSize, shapeName, zoomLimits } from './constants';
 import { setPressed } from './utils/dom';
 import { getStrokeStyle } from './utils/stroke';
+import { reorderShapes } from './utils/order';
 import {
   type DrawingFile,
   decodeLinkData,
@@ -768,6 +769,21 @@ export class Drawer extends MicroEvent {
     const nodes = this.getWidget<SelectWidget>('selection')?.transformer.nodes() ?? [];
 
     return nodes.filter((node): node is Shape<ShapeConfig> => node instanceof Shape);
+  }
+
+  /**
+   * Move shapes in stacking order: `forward` / `backward` above / below the next shape they overlap,
+   * `front` / `back` above / below all shapes (relative order of moved shapes is kept)
+   * @param {ShapeOrder} order
+   * @param {Shape<ShapeConfig>[]} shapes Selected shapes by default
+   * @returns {boolean} true if a shape moved (change saved)
+   */
+  reorderShapes(order: ShapeOrder, shapes: Shape<ShapeConfig>[] = this.getSelectedShapes()): boolean {
+    const moved = reorderShapes(shapes, order);
+
+    if (moved) this.stage.fire('change');
+
+    return moved;
   }
 
   /**

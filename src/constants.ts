@@ -123,4 +123,5 @@ export const dataAttributes = {
   fontStyle: 'data-font-style',
   textDecoration: 'data-text-decoration',
   textAlign: 'data-text-align',
+  order: 'data-order',
 };

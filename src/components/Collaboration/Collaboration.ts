@@ -10,12 +10,14 @@ import { Text } from 'konva/lib/shapes/Text';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { serializeShape } from '@/components/tools/UndoRedo/History';
 import { socketEvents } from '@/constants';
+import { applyOrder } from '@/utils/order';
 
 /**
  * Drawing change sent to other clients: shapes added or updated (konva JSON), ids of removed shapes,
+ * `order`: ids of all shapes from bottom to top when stacking order changed,
  * `live`: preview of shapes being drawn or moved (final change follows)
  */
-export type DrawingChange = { upsert: string[]; remove: string[]; live?: boolean };
+export type DrawingChange = { upsert: string[]; remove: string[]; order?: string[]; live?: boolean };
 
 /**
  * Pointer of another user, position in drawing (null out of drawer)
@@ -70,7 +72,7 @@ export class Collaboration {
   readonly ownerKey?: string;
   readonly invitedBy?: string;
   private readonly drawer: Drawer;
-  /** Shapes as other clients know them, by id */
+  /** Shapes as other clients know them, by id, in stacking order */
   #synced = new Map<string, string>();
   /** Changes received during a pointer action of this client, applied when it ends */
   #pending: DrawingChange[] = [];
@@ -266,11 +268,16 @@ export class Collaboration {
     const current = new Map(this.drawer.getDrawingShapes().map((shape) => [shape.id(), serializeShape(shape)]));
     const upsert = [...current].filter(([id, json]) => this.#synced.get(id) !== json).map(([, json]) => json);
     const remove = [...this.#synced.keys()].filter((id) => !current.has(id));
+    // stacking order of known shapes changed (reorder, undo...), new shapes are added on top by others
+    const reordered =
+      [...current.keys()].filter((id) => this.#synced.has(id)).join() !==
+      [...this.#synced.keys()].filter((id) => current.has(id)).join();
+    const change: DrawingChange = { upsert, remove, ...(reordered && { order: [...current.keys()] }) };
 
     this.#synced = current;
     // final state sent, previews useless
     this.#live.clear();
-    if (upsert.length || remove.length) this.socket.emit(socketEvents.CHANGE, { upsert, remove } satisfies DrawingChange);
+    if (upsert.length || remove.length || reordered) this.socket.emit(socketEvents.CHANGE, change);
   }
 
   /**
@@ -306,7 +313,7 @@ export class Collaboration {
     return pending.length > 0;
   }
 
-  private _apply({ upsert, remove }: DrawingChange) {
+  private _apply({ upsert, remove, order }: DrawingChange) {
     const shapes = new Map(this.drawer.getDrawingShapes().map((shape) => [shape.id(), shape]));
 
     remove.forEach((id) => {
@@ -330,6 +337,17 @@ export class Collaboration {
       // as serialized here, not to send it back
       this.#synced.set(shape.id(), serializeShape(shape));
     });
+
+    if (order) {
+      applyOrder(this.drawer.getDrawingShapes(), order);
+      // known in this order, not to send it back
+      this.#synced = new Map(
+        this.drawer
+          .getDrawingShapes()
+          .filter((shape) => this.#synced.has(shape.id()))
+          .map((shape) => [shape.id(), this.#synced.get(shape.id())!])
+      );
+    }
 
     // removed shapes are not selected anymore
     const transformer = this.drawer.getWidget<SelectWidget>('selection')?.transformer;

@@ -102,6 +102,17 @@ Brush options (freehand stroke, see [perfect-freehand](https://github.com/stever
 
 If `tool` option (or the tool saved in localStorage) is not in `widgets`, the first widget is activated.
 
+## Stacking order
+
+"Layers" buttons of selection options (or Ctrl+Up / Ctrl+Down, with Shift to front / back) move selected shapes in front of or behind other shapes:
+
+```js
+drawer.reorderShapes('forward'); // 'forward' | 'backward' | 'front' | 'back', selected shapes by default
+drawer.reorderShapes('back', [shape]);
+```
+
+`forward` / `backward` move shapes above / below the next shape they overlap, `front` / `back` above / below all shapes. Moved shapes keep their relative order.
+
 ## Files and links
 
 The settings menu opens and saves drawings as `.freedrawing` files (JSON: background color and shapes), and copies a link to the drawing:
@@ -144,6 +155,6 @@ A user opening a room link enters a name before joining. The user who created th
 
 Links contain the id of the user sharing them (`by`), the page URL of each user too: the owner sees who invited each user, even with a link copied from the address bar.
 
-Socket events: `JOIN` (`{ room, name, userId, ownerKey, invitedBy }`), `NAME`, `USERS` (users of the room `{ id, name, owner, canEdit, invitedBy }`, `invitedBy` is the name of the user who shared the link, sent by server), `RIGHTS` (`{ userId, canEdit }`, from owner), `POINTER` (position in drawing, null out of drawer, relayed with user `id` and `name`), `LEAVE` (id of user leaving, sent by server) and `CHANGE`: `{ upsert, remove, live }`, JSON of shapes added or updated (konva `toObject`, with their `id`) and ids of removed shapes, so concurrent drawings are merged, `live` for previews of shapes being drawn. The server keeps the drawing of each room and sends it to users joining it.
+Socket events: `JOIN` (`{ room, name, userId, ownerKey, invitedBy }`), `NAME`, `USERS` (users of the room `{ id, name, owner, canEdit, invitedBy }`, `invitedBy` is the name of the user who shared the link, sent by server), `RIGHTS` (`{ userId, canEdit }`, from owner), `POINTER` (position in drawing, null out of drawer, relayed with user `id` and `name`), `LEAVE` (id of user leaving, sent by server) and `CHANGE`: `{ upsert, remove, order, live }`, JSON of shapes added or updated (konva `toObject`, with their `id`) and ids of removed shapes, so concurrent drawings are merged, `order` ids of shapes from bottom to top when stacking order changed, `live` for previews of shapes being drawn. The server keeps the drawing of each room and sends it to users joining it.
 
 In this repository, run `yarn serve`, open `http://localhost:3000`, start a session from the menu and open its link in other windows.

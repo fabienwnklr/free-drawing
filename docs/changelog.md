@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [5.4.0](https://github.com/fabienwnklr/free-drawing/compare/v5.3.0...v5.4.0) (2026-10-14)
+
+
+### Features
+
+* stacking order of selected shapes: bring forward / send backward (past the next overlapping shape), bring to front / send to back, with "Layers" buttons of selection options, Ctrl+Up / Ctrl+Down (with Shift to front / back) and `reorderShapes` method
+* **collaboration:** stacking order shared with other users and kept for users joining later
+
 ## [5.3.0](https://github.com/fabienwnklr/free-drawing/compare/v5.2.0...v5.3.0) (2026-10-14)
 
 

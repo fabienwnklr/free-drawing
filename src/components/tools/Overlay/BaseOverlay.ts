@@ -1,8 +1,12 @@
 import type { Drawer } from '@/Drawer';
-import type { ColorLike, OptionsChange, StrokeStyle } from '@/@types/drawer';
+import type { ColorLike, OptionsChange, ShapeOrder, StrokeStyle } from '@/@types/drawer';
 import LineIcon from '@/icons/line.svg?raw';
 import LineDottedIcon from '@/icons/line-dotted.svg?raw';
 import LineDashedIcon from '@/icons/line-dashed.svg?raw';
+import SendToBackIcon from '@/icons/send-to-back.svg?raw';
+import SendBackwardIcon from '@/icons/send-backward.svg?raw';
+import BringForwardIcon from '@/icons/bring-forward.svg?raw';
+import BringToFrontIcon from '@/icons/bring-to-front.svg?raw';
 import './overlay.scss';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Group } from 'konva/lib/Group';
@@ -49,6 +53,8 @@ export class BaseOverlay {
   $opacityContainer!: HTMLDivElement;
   $opacityRange!: HTMLInputElement;
 
+  $orderContainer!: HTMLDivElement;
+
   selectors = {
     container: 'overlay-picker-container',
     buttonContainer: 'overlay-picker-btn-container',
@@ -84,6 +90,8 @@ export class BaseOverlay {
     this._createStrokeStyleFields();
     // opacity
     this._createOpacityField();
+    // stacking order of selected shapes
+    this._createOrderFields();
 
     // Then append to dom
     this.appendContent([
@@ -92,6 +100,7 @@ export class BaseOverlay {
       this.$strokeWidthContainer,
       this.$strokeStyleContainer,
       this.$opacityContainer,
+      this.$orderContainer,
     ]);
   }
 
@@ -205,6 +214,31 @@ export class BaseOverlay {
     this.$opacityContainer.append(this.$opacityRange);
   }
 
+  private _createOrderFields() {
+    const { $container, $btnContainer } = this._createSection('Layers');
+    this.$orderContainer = $container;
+
+    const orders: { icon: string; order: ShapeOrder; label: string; shortcut: string }[] = [
+      { icon: SendToBackIcon, order: 'back', label: 'Send to back', shortcut: 'Ctrl+Shift+Down' },
+      { icon: SendBackwardIcon, order: 'backward', label: 'Send backward', shortcut: 'Ctrl+Down' },
+      { icon: BringForwardIcon, order: 'forward', label: 'Bring forward', shortcut: 'Ctrl+Up' },
+      { icon: BringToFrontIcon, order: 'front', label: 'Bring to front', shortcut: 'Ctrl+Shift+Up' },
+    ];
+
+    orders.forEach(({ icon, order, label, shortcut }) => {
+      // action, not a toggle
+      const $btn = createButton('drawer-button', this.selectors.button);
+
+      $btn.innerHTML = icon;
+      $btn.setAttribute(dataAttributes.order, order);
+      setLabel($btn, label);
+      $btn.title = `${label} (${shortcut})`;
+      $btn.setAttribute('aria-keyshortcuts', shortcut.replace('Ctrl', 'Control').replace(/Up|Down/, 'Arrow$&'));
+      $btn.addEventListener('click', () => this.drawer.reorderShapes(order));
+      $btnContainer.append($btn);
+    });
+  }
+
   /**
    * Opacity announced as percentage (range is from 0 to 10)
    */
@@ -262,6 +296,8 @@ export class BaseOverlay {
 
   show(shape?: (Shape<ShapeConfig> | Group)[]) {
     this.$overlayContainer.classList.add('show');
+    // stacking order only for selected shapes, not for tool options
+    this.$orderContainer.style.display = shape?.length ? '' : 'none';
 
     const { strokeColor, fillColor, strokeWidth, strokeStyle, opacity } = this.drawer.options;
     let data: OptionsChange = { strokeColor, fillColor, strokeWidth, strokeStyle, opacity };

@@ -101,7 +101,9 @@ async function server() {
         }
       }
 
-      if (shapes.size) socket.emit(socketEvents.CHANGE, { upsert: [...shapes.values()], remove: [] });
+      if (shapes.size) {
+        socket.emit(socketEvents.CHANGE, { upsert: [...shapes.values()], remove: [], order: [...shapes.keys()] });
+      }
       sendUsers(room);
     });
 
@@ -125,17 +127,25 @@ async function server() {
       sendUsers(room);
     });
 
-    // { upsert: shapes JSON, remove: ids }
+    // { upsert: shapes JSON, remove: ids, order: ids from bottom to top when stacking order changed }
     socket.on(socketEvents.CHANGE, (change) => {
       const { room } = socket.data;
 
       // users without right to draw: ignored
       if (!room || rooms.get(room).viewers.has(socket.data.userId)) return;
       try {
-        const { shapes } = rooms.get(room);
+        const data = rooms.get(room);
+        const { shapes } = data;
 
         change.remove.forEach((id) => shapes.delete(id));
         change.upsert.forEach((json) => shapes.set(JSON.parse(json).attrs.id, json));
+        // drawing kept in stacking order (sent so to joining users), unknown shapes after
+        if (Array.isArray(change.order)) {
+          const ordered = new Map(change.order.filter((id) => shapes.has(id)).map((id) => [id, shapes.get(id)]));
+
+          shapes.forEach((json, id) => ordered.set(id, json));
+          data.shapes = ordered;
+        }
       } catch (error) {
         console.warn(`Invalid change (id: ${socket.id}): ${error.message}`);
         return;
