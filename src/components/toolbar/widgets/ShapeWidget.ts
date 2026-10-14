@@ -58,6 +58,8 @@ export abstract class ShapeWidget<T extends Shape<ShapeConfig>> extends BaseWidg
   #start: Vector2d = { x: 0, y: 0 };
   /** Shapes of tool have a background color (rectangle, ellipse) */
   protected hasFill: boolean = false;
+  /** Corners sharp or round (`edges` option) */
+  protected hasEdges: boolean = false;
 
   constructor(drawer: Drawer, id: AvailableTools, title: string, icon: string, shortcut: string) {
     super(drawer, id, title, icon, shortcut);
@@ -118,6 +120,7 @@ export abstract class ShapeWidget<T extends Shape<ShapeConfig>> extends BaseWidg
   // overlay shared by shape tools: background color only for shapes having one
   protected onActive(): void {
     this.overlay.toggleFillBtns(this.hasFill);
+    this.overlay.toggleEdgesBtns(this.hasEdges);
   }
 
   protected initEvents(): void {

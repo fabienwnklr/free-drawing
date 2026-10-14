@@ -1,8 +1,10 @@
 import type { Drawer } from '@/Drawer';
-import type { ColorLike, OptionsChange, ShapeOrder, StrokeStyle } from '@/@types/drawer';
+import type { ColorLike, Edges, OptionsChange, ShapeOrder, StrokeStyle } from '@/@types/drawer';
 import LineIcon from '@/icons/line.svg?raw';
 import LineDottedIcon from '@/icons/line-dotted.svg?raw';
 import LineDashedIcon from '@/icons/line-dashed.svg?raw';
+import EdgesSharpIcon from '@/icons/edges-sharp.svg?raw';
+import EdgesRoundIcon from '@/icons/edges-round.svg?raw';
 import SendToBackIcon from '@/icons/send-to-back.svg?raw';
 import SendBackwardIcon from '@/icons/send-backward.svg?raw';
 import BringForwardIcon from '@/icons/bring-forward.svg?raw';
@@ -13,7 +15,7 @@ import { Group } from 'konva/lib/Group';
 import { dataAttributes, drawerEvents, fillShapes } from '@/constants';
 import { ColorPicker } from '@/components/ColorPicker/ColorPicker';
 import { createButton, setLabel, setPressed, uniqueId } from '@/utils/dom';
-import { getStrokeStyle } from '@/utils/stroke';
+import { getEdges, getStrokeStyle } from '@/utils/stroke';
 
 /**
  * All common tool for all shape (color, opacity for now)
@@ -49,6 +51,10 @@ export class BaseOverlay {
 
   $strokeStyleContainer!: HTMLDivElement;
   $strokeStyleBtnContainer!: HTMLDivElement;
+
+  $edgesContainer!: HTMLDivElement;
+  $edgesBtnContainer!: HTMLDivElement;
+  $edgesRadius!: HTMLInputElement;
 
   $opacityContainer!: HTMLDivElement;
   $opacityRange!: HTMLInputElement;
@@ -88,6 +94,8 @@ export class BaseOverlay {
     this._createStrokeWidthFields();
     // stroke style
     this._createStrokeStyleFields();
+    // corners
+    this._createEdgesFields();
     // opacity
     this._createOpacityField();
     // stacking order of selected shapes
@@ -99,6 +107,7 @@ export class BaseOverlay {
       this.$fillColorContainer,
       this.$strokeWidthContainer,
       this.$strokeStyleContainer,
+      this.$edgesContainer,
       this.$opacityContainer,
       this.$orderContainer,
     ]);
@@ -189,6 +198,43 @@ export class BaseOverlay {
     });
 
     this.toggleStyleBtns(!!this.options?.styleBtns);
+  }
+
+  private _createEdgesFields() {
+    const { $container, $btnContainer } = this._createSection('Edges');
+    this.$edgesContainer = $container;
+    this.$edgesBtnContainer = $btnContainer;
+
+    const edges: { icon: string; value: Exclude<Edges, number>; label: string }[] = [
+      { icon: EdgesSharpIcon, value: 'sharp', label: 'Sharp' },
+      { icon: EdgesRoundIcon, value: 'round', label: 'Round' },
+    ];
+
+    edges.forEach(({ icon, value, label }) => {
+      const $btn = this._createButton(icon, dataAttributes.edges, value, label);
+
+      $btn.addEventListener('click', () => this.drawer.setEdges(value));
+      this.$edgesBtnContainer.append($btn);
+    });
+
+    // radius chosen, empty for radius following size
+    this.$edgesRadius = document.createElement('input');
+    this.$edgesRadius.type = 'number';
+    this.$edgesRadius.min = '0';
+    this.$edgesRadius.step = '1';
+    this.$edgesRadius.placeholder = 'Auto';
+    this.$edgesRadius.classList.add('overlay-picker__input');
+    setLabel(this.$edgesRadius, 'Corner radius');
+    this.$edgesRadius.addEventListener('change', () => {
+      const radius = this.$edgesRadius.valueAsNumber;
+
+      this.drawer.setEdges(Number.isFinite(radius) ? radius : 'round');
+    });
+    // typed digits and Backspace are not drawer shortcuts (tools, delete selection...)
+    this.$edgesRadius.addEventListener('keydown', (e) => e.stopPropagation());
+    this.$edgesBtnContainer.append(this.$edgesRadius);
+
+    this.toggleEdgesBtns(false);
   }
 
   private _createOpacityField() {
@@ -299,8 +345,8 @@ export class BaseOverlay {
     // stacking order only for selected shapes, not for tool options
     this.$orderContainer.style.display = shape?.length ? '' : 'none';
 
-    const { strokeColor, fillColor, strokeWidth, strokeStyle, opacity } = this.drawer.options;
-    let data: OptionsChange = { strokeColor, fillColor, strokeWidth, strokeStyle, opacity };
+    const { strokeColor, fillColor, strokeWidth, strokeStyle, edges, opacity } = this.drawer.options;
+    let data: OptionsChange = { strokeColor, fillColor, strokeWidth, strokeStyle, edges, opacity };
 
     if (shape && shape[0] instanceof Shape) {
       const hasFill = fillShapes.some((name) => shape[0].hasName(name));
@@ -312,6 +358,7 @@ export class BaseOverlay {
         fillColor: hasFill ? ((shape[0].fill() || 'transparent') as ColorLike) : fillColor,
         strokeWidth: shape[0].strokeWidth(),
         strokeStyle: getStrokeStyle(shape[0].dash()),
+        edges: getEdges(shape[0].getAttr('cornerRadius')),
         opacity: shape[0].opacity(),
       };
     }
@@ -355,6 +402,18 @@ export class BaseOverlay {
       );
     }
 
+    if (change.edges !== undefined) {
+      const { edges } = change;
+      const round = edges === 'round' || (typeof edges === 'number' && edges > 0);
+
+      this._setActiveBtn(
+        this.$edgesBtnContainer,
+        this.$edgesBtnContainer.querySelector(`[${dataAttributes.edges}="${round ? 'round' : 'sharp'}"]`)
+      );
+      // radius given (or of selected rectangle), empty when following size
+      this.$edgesRadius.value = typeof edges === 'number' ? String(edges) : edges === 'sharp' ? '0' : '';
+    }
+
     if (change.opacity !== undefined) {
       this.$opacityRange.value = (change.opacity * 10).toString();
       this._updateOpacityText();
@@ -375,6 +434,14 @@ export class BaseOverlay {
    */
   toggleFillBtns(visible: boolean) {
     this.$fillColorContainer.style.display = visible ? '' : 'none';
+  }
+
+  /**
+   * Show / hide corners buttons, only relevant for rectangles
+   * @param {boolean} visible
+   */
+  toggleEdgesBtns(visible: boolean) {
+    this.$edgesContainer.style.display = visible ? '' : 'none';
   }
 
   hide() {

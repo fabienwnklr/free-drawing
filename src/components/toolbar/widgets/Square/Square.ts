@@ -4,9 +4,11 @@ import { shapeName } from '@/constants';
 import { Rect } from 'konva/lib/shapes/Rect';
 import type { Vector2d } from 'konva/lib/types';
 import { ShapeWidget, dragBox } from '@/components/toolbar/widgets/ShapeWidget';
+import { getCornerRadius } from '@/utils/stroke';
 
 export class SquareWidget extends ShapeWidget<Rect> {
   protected hasFill = true;
+  protected hasEdges = true;
 
   constructor(drawer: Drawer) {
     super(drawer, 'square', 'Rectangle', SquareIcon, 'r');
@@ -18,6 +20,8 @@ export class SquareWidget extends ShapeWidget<Rect> {
 
   protected updateShape(rect: Rect, start: Vector2d, end: Vector2d, constrain: boolean) {
     // square with shift
-    rect.setAttrs(dragBox(start, end, constrain));
+    const box = dragBox(start, end, constrain);
+    // round corners follow size
+    rect.setAttrs({ ...box, cornerRadius: getCornerRadius(box.width, box.height, this.drawer.options.edges) });
   }
 }

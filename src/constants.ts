@@ -23,6 +23,7 @@ export const defaultOptions: DrawerOptions = {
   height: window.innerHeight,
   strokeWidth: 5,
   strokeStyle: 'solid',
+  edges: 'sharp',
   strokeColor: '#000',
   fillColor: 'transparent',
   zoom: true,
@@ -98,6 +99,11 @@ export const strokeStyleShapes = [shapeName.straightLine, shapeName.rect, shapeN
 export const fillShapes = [shapeName.rect, shapeName.ellipse];
 
 /**
+ * Shapes with corners, sharp or round (see `edges` option)
+ */
+export const edgesShapes = [shapeName.rect];
+
+/**
  * Type names of drawing shapes (layers panel)
  */
 export const shapeLabels: Record<string, string> = {
@@ -168,6 +174,7 @@ export const dataAttributes = {
   strokeColor: 'data-stroke-color',
   fillColor: 'data-fill-color',
   strokeStyle: 'data-stroke-style',
+  edges: 'data-edges',
   fontSize: 'data-font-size',
   fontStyle: 'data-font-style',
   textDecoration: 'data-text-decoration',

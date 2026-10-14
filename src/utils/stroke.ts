@@ -1,4 +1,4 @@
-import type { StrokeStyle } from '@/@types/drawer';
+import type { Edges, StrokeStyle } from '@/@types/drawer';
 
 /**
  * Dash of a stroke style, proportional to stroke width.
@@ -19,4 +19,23 @@ export function getStrokeStyle(dash: number[] | undefined): StrokeStyle {
   if (!dash?.length) return 'solid';
 
   return dash[0] === 0 ? 'dotted' : 'dashed';
+}
+
+/**
+ * Radius of corners of a rectangle: none (sharp), a quarter of its smallest side, 32 at most (round), or given one
+ */
+export function getCornerRadius(width: number, height: number, edges: Edges = 'round'): number {
+  if (typeof edges === 'number') return Math.max(0, edges);
+  if (edges === 'sharp') return 0;
+
+  return Math.round(Math.min(32, Math.min(Math.abs(width), Math.abs(height)) / 4) * 100) / 100;
+}
+
+/**
+ * Edges of a shape from its corner radius (konva: number or radius of each corner): sharp or radius
+ */
+export function getEdges(cornerRadius: number | number[] | undefined): Edges {
+  const radius = Array.isArray(cornerRadius) ? Math.max(...cornerRadius) : cornerRadius;
+
+  return radius ? Math.round(radius * 100) / 100 : 'sharp';
 }

@@ -6,11 +6,11 @@ import { Rect } from 'konva/lib/shapes/Rect';
 import { Line } from 'konva/lib/shapes/Line';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Stage } from 'konva/lib/Stage';
-import { drawerEvents, fillShapes, shapeName, strokeStyleShapes } from '@/constants';
+import { drawerEvents, edgesShapes, fillShapes, shapeName, strokeStyleShapes } from '@/constants';
 import { toFill } from '@/utils/color';
-import { getDash, getStrokeStyle } from '@/utils/stroke';
+import { getCornerRadius, getDash, getStrokeStyle } from '@/utils/stroke';
 import { setPressed } from '@/utils/dom';
-import type { ColorLike, StrokeStyle, TextStyle } from '@/@types/drawer';
+import type { ColorLike, Edges, StrokeStyle, TextStyle } from '@/@types/drawer';
 import { SelectOverlay } from '@/components/tools/Overlay/SelectOverlay/SelectOverlay';
 import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import { Text } from 'konva/lib/shapes/Text';
@@ -402,6 +402,7 @@ export class SelectWidget extends BaseWidget {
       // dash only for outline shapes (not brush lines)
       this.overlay.toggleStyleBtns(shapes.every((s) => strokeStyleShapes.some((name) => s.hasName(name))));
       this.overlay.toggleFillBtns(shapes.every((s) => fillShapes.some((name) => s.hasName(name))));
+      this.overlay.toggleEdgesBtns(shapes.every((s) => edgesShapes.some((name) => s.hasName(name))));
       this.overlay.show(shapes);
     }
   }
@@ -827,6 +828,18 @@ export class SelectWidget extends BaseWidget {
       // setAttrs: dash(undefined) would be the getter, round caps as drawn shapes (previous versions: butt)
       if (strokeStyleShapes.some((name) => s.hasName(name))) {
         s.setAttrs({ dash: getDash(style, s.strokeWidth()), lineCap: 'round' });
+      }
+    });
+  }
+
+  /**
+   * Set corners of selected rectangles: sharp, round (radius from their size) or radius
+   * @param {Edges} edges
+   */
+  setEdges(edges: Edges) {
+    this._updateSelected((s) => {
+      if (edgesShapes.some((name) => s.hasName(name))) {
+        s.setAttr('cornerRadius', getCornerRadius(s.width(), s.height(), edges));
       }
     });
   }

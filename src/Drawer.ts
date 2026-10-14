@@ -8,6 +8,7 @@ import {
   ColorLike,
   DrawerOptions,
   DrawingShape,
+  Edges,
   OptionsChange,
   ShapeOrder,
   StrokeStyle,
@@ -1260,6 +1261,18 @@ export class Drawer extends MicroEvent {
   }
 
   /**
+   * Set corners of rectangles (new and selected ones)
+   * @param {Edges} edges 'sharp', 'round' (radius following rectangle size) or radius (px, 0 is sharp)
+   */
+  setEdges(value: Edges) {
+    const edges = typeof value !== 'number' ? value : value > 0 ? Math.round(value * 100) / 100 : 'sharp';
+
+    this.options.edges = edges;
+    this.getWidget<SelectWidget>('selection')?.setEdges(edges);
+    this._triggerOptionsChange({ edges });
+  }
+
+  /**
    * Set opacity of shape 0 to 1
    * @param opacity
    */
@@ -1514,7 +1527,7 @@ export class Drawer extends MicroEvent {
    * and drawing options given on init (color, width, opacity, text style...)
    */
   resetDrawer() {
-    const { strokeColor, fillColor, strokeWidth, strokeStyle, opacity, textStyle } = this.#initialOptions;
+    const { strokeColor, fillColor, strokeWidth, strokeStyle, edges, opacity, textStyle } = this.#initialOptions;
 
     this.clearCanvas(true);
     this.setBgColor('#fff');
@@ -1522,6 +1535,7 @@ export class Drawer extends MicroEvent {
     this.setFillColor(fillColor);
     this.setStrokeWidth(strokeWidth);
     this.setStrokeStyle(strokeStyle);
+    this.setEdges(edges);
     this.setOpacity(opacity);
     this.setTextStyle({ ...textStyle });
   }

@@ -20,6 +20,8 @@ export type DrawerOptions = {
   strokeColor: ColorLike;
   /** Background color of new rectangles and ellipses, `'transparent'` for none (default) */
   fillColor: ColorLike;
+  /** Corners of rectangles: 'sharp' (default), 'round' (radius following rectangle size) or radius (px) */
+  edges: Edges;
   opacity: number;
   textStyle: TextStyle;
   /** Real time collaboration with socket.io server: false (default), true (same origin) or server url */
@@ -44,6 +46,11 @@ export type DrawerOptions = {
 export type StrokeStyle = 'solid' | 'dashed' | 'dotted';
 
 /**
+ * Corners of shapes having some (rectangles): sharp, round (radius following shape size) or radius (px)
+ */
+export type Edges = 'sharp' | 'round' | number;
+
+/**
  * Move of shapes in stacking order: one step (above / below next shape they overlap) or above / below all shapes
  */
 export type ShapeOrder = 'forward' | 'backward' | 'front' | 'back';
@@ -63,7 +70,7 @@ export type TextStyle = {
  * Options changed by Drawer setters, sent with `drawer.options.change` event (only changed keys)
  */
 export type OptionsChange = Partial<
-  Pick<DrawerOptions, 'strokeColor' | 'fillColor' | 'strokeWidth' | 'strokeStyle' | 'opacity'>
+  Pick<DrawerOptions, 'strokeColor' | 'fillColor' | 'strokeWidth' | 'strokeStyle' | 'edges' | 'opacity'>
 > & {
   textStyle?: Partial<TextStyle>;
 };

@@ -51,6 +51,21 @@
     }
   }
 
+  // number field next to buttons (corner radius)
+  .overlay-picker__input {
+    width: 4.5rem;
+    height: $btn-size-default;
+    padding: 0 $space-2;
+    border: 1px solid $border;
+    border-radius: $radius;
+    background-color: $surface;
+    color: $text;
+    font: inherit;
+    pointer-events: var(--drawer-pointer-events);
+
+    @include focus-ring;
+  }
+
   input[type='range'] {
     width: 100%;
     margin: 0;

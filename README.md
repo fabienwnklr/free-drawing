@@ -50,6 +50,7 @@ const drawer = new Drawer($el, {
   strokeStyle: 'solid', // 'solid' | 'dashed' | 'dotted', stroke of lines, arrows, rectangles and ellipses
   strokeColor: '#000', // color for drawing stroke
   fillColor: 'transparent', // background color of rectangles and ellipses, 'transparent' for none
+  edges: 'sharp', // corners of rectangles: 'sharp', 'round' (radius following their size) or radius (px), drawer.setEdges(12) for new and selected ones
   zoom: true, // enable/disable zoom on draw
   zoomWidget: true, // enable/disable zoom ui widget
   positionWidget: true, // enable/disable position ui widget (x / y of view, button back to origin)

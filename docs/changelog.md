@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [6.3.0](https://github.com/fabienwnklr/free-drawing/compare/v6.2.0...v6.3.0) (2026-10-14)
+
+
+### Features
+
+* round corners of rectangles: "Edges" buttons (sharp / round) and radius field of rectangle tool and selection options, also for rectangles of groups, `edges` option and `setEdges` method: radius following rectangle size (a quarter of its smallest side, 32 at most, empty field) or chosen one
+
 ## [6.2.0](https://github.com/fabienwnklr/free-drawing/compare/v6.1.0...v6.2.0) (2026-10-14)
 
 
