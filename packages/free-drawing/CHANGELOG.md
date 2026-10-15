@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.9.1](https://github.com/fabienwnklr/free-drawing/compare/v7.9.0...v7.9.1) (2026-10-16)
+
+
+### Bug Fixes
+
+* **shortcuts:** Ctrl / Cmd + A no longer selects the text of the page: a click on the drawing focuses the drawer when focus was elsewhere in the page (e.g. bar of an app), and a slider or checkbox of the drawer gives the shortcut to the drawer (text fields keep it)
+
 ## [7.9.0](https://github.com/fabienwnklr/free-drawing/compare/v7.8.0...v7.9.0) (2026-10-16)
 
 

@@ -34,6 +34,43 @@ describe('Test drawer event', () => {
     expect(selectWidget?.transformer.nodes().length).eq(2);
   });
 
+  it('Ctrl + A in a field of drawer: its text for text fields, else shapes (not page text)', () => {
+    const drawer = createDrawer();
+    const selectWidget = drawer.getWidget<SelectWidget>('selection')!;
+    const $text = document.createElement('input');
+    const $range = document.createElement('input');
+    const ctrlA = ($target: HTMLElement) =>
+      $target.dispatchEvent(new KeyboardEvent('keydown', { key: 'a', ctrlKey: true, bubbles: true, cancelable: true }));
+
+    drawer.getWidget<TextWidget>('text')!.addTextNode('hello');
+    $range.type = 'range';
+    drawer.$drawerContainer.append($text, $range);
+
+    expect(ctrlA($text)).toBe(true);
+    expect(selectWidget.transformer.nodes()).toHaveLength(0);
+    expect(ctrlA($range)).toBe(false);
+    expect(selectWidget.transformer.nodes()).toHaveLength(1);
+    $text.remove();
+    $range.remove();
+  });
+
+  it('Pointer down on canvas focuses drawer when focus is out of it (page, app bar)', () => {
+    const drawer = createDrawer();
+    const $outside = document.createElement('button');
+    const $tool = drawer.toolbar.getButton(drawer.getWidget<BrushWidget>('brush')!);
+
+    document.body.append($outside);
+    $outside.focus();
+    drawer.$stageContainer.dispatchEvent(new Event('pointerdown'));
+    expect(document.activeElement).toBe(drawer.$drawerContainer);
+
+    // already in drawer: kept
+    $tool.focus();
+    drawer.$stageContainer.dispatchEvent(new Event('pointerdown'));
+    expect(document.activeElement).toBe($tool);
+    $outside.remove();
+  });
+
   it('Alt + Z toggles zen mode only', () => {
     const drawer = createDrawer();
 

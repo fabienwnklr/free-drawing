@@ -840,6 +840,11 @@ export class Drawer extends MicroEvent {
     $container.addEventListener('focus', () => $container.classList.toggle(className, navigationKey));
     $container.addEventListener('blur', () => $container.classList.remove(className));
     $container.addEventListener('pointerdown', () => $container.classList.remove(className));
+    // konva prevents default of mouse down on canvas (no focus change): focus taken from the page (app bar...),
+    // so shortcuts (Ctrl + A...) go to drawer
+    this.$stageContainer.addEventListener('pointerdown', () => {
+      if (!$container.contains(document.activeElement)) this.focus({ preventScroll: true });
+    });
   }
 
   private _initHotKey() {
@@ -2164,9 +2169,10 @@ export class Drawer extends MicroEvent {
 
   /**
    * Focus drawer div container (usefull for keyevent for example)
+   * @param {FocusOptions} options
    */
-  focus() {
-    this.$drawerContainer.focus();
+  focus(options?: FocusOptions) {
+    this.$drawerContainer.focus(options);
   }
 
   /**

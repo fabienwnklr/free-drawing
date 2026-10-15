@@ -4,6 +4,9 @@ import type { ShapeOrder } from '@/@types/drawer';
 import { unbindMoved } from '@/utils/binding';
 import { Drawer } from '@/Drawer';
 
+/** Types of inputs with editable text */
+const textInputTypes = ['text', 'search', 'number', 'email', 'url', 'tel', 'password'];
+
 export class HotKey {
   drawer: Drawer;
   constructor(drawer: Drawer) {
@@ -38,6 +41,10 @@ export class HotKey {
       const editable = locked ? [] : selectedNodes;
       // fields keep their keys (arrows of opacity, select all of a text field...)
       const inField = (e.target as HTMLElement).matches('input, select, textarea');
+      // Ctrl + A selects text of these fields, else text of page (range, checkbox...)
+      const inTextField =
+        e.target instanceof HTMLTextAreaElement ||
+        (e.target instanceof HTMLInputElement && textInputTypes.includes(e.target.type));
       // read only: shortcuts modifying drawing do nothing
       const edit = !this.drawer.readOnly;
 
@@ -50,7 +57,7 @@ export class HotKey {
         }
       }
 
-      if (mod && e.key === 'a' && !inField) {
+      if (mod && e.key === 'a' && !inTextField) {
         if (edit) selectWidget?.selectAll();
         // shapes, not page text (browser select all)
         e.preventDefault();
