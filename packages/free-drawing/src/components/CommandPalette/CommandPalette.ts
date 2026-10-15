@@ -31,6 +31,7 @@ import RecenterIcon from '@/icons/recenter.svg?raw';
 import HelpIcon from '@/icons/help.svg?raw';
 import OpenIcon from '@/icons/open.svg?raw';
 import SaveIcon from '@/icons/save.svg?raw';
+import PinIcon from '@/icons/pin.svg?raw';
 import LinkIcon from '@/icons/link.svg?raw';
 import ExportIcon from '@/icons/export.svg?raw';
 import UsersIcon from '@/icons/users.svg?raw';
@@ -277,16 +278,26 @@ export class CommandPalette extends Modal {
     const groups: [TranslationKey, (Omit<Command, 'group'> | false | null | undefined)[]][] = [
       [
         'help.tools',
-        [...drawer.toolbar.widgets.values()]
-          .filter((widget) => !widget.isDisabled)
-          .map((widget) => ({
-            id: `tool ${widget.id}`,
-            label: widget.$button.title,
-            icon: widget.$button.querySelector('svg')?.outerHTML,
-            shortcut: widget.shortcut?.toUpperCase(),
-            checked: drawer.activeTool === widget.id,
-            run: () => widget.setActive(true),
-          })),
+        [
+          ...[...drawer.toolbar.widgets.values()]
+            .filter((widget) => !widget.isDisabled)
+            .map((widget) => ({
+              id: `tool ${widget.id}`,
+              label: widget.$button.title,
+              icon: widget.$button.querySelector('svg')?.outerHTML,
+              shortcut: widget.shortcut?.toUpperCase(),
+              checked: drawer.activeTool === widget.id,
+              run: () => widget.setActive(true),
+            })),
+          !!drawer.toolbar.$keepToolButton && {
+            id: 'keep tool lock pin',
+            label: t('toolbar.keepTool'),
+            icon: PinIcon,
+            shortcut: 'Q',
+            checked: drawer.options.keepTool,
+            run: () => drawer.setKeepTool(!drawer.options.keepTool),
+          },
+        ],
       ],
       [
         'help.editor',

@@ -20,8 +20,10 @@ import { LaserWidget } from '@/components/toolbar/widgets/Laser/Laser';
 import { FrameWidget } from '@/components/toolbar/widgets/Frame/Frame';
 import { GroupWidget } from '@/components/toolbar/widgets/GroupWidget';
 import { getWidgetGroups, getWidgetNames } from '@/utils/widgets';
-import { arrowNavigation } from '@/utils/dom';
+import { arrowNavigation, createButton, setLabel, setPressed } from '@/utils/dom';
+import { stringToNode } from '@/utils/functions';
 import { drawerEvents } from '@/constants';
+import PinIcon from '@/icons/pin.svg?raw';
 
 const widgetClasses: Record<WidgetName, new (drawer: Drawer) => BaseWidget> = {
   pan: PanWidget,
@@ -49,6 +51,8 @@ export class Toolbar {
   widgets: Map<AvailableTools, BaseWidget> = new Map();
   groups: GroupWidget[] = [];
   $toolbarContent: HTMLDivElement;
+  /** Keep tool after drawing (`keepTool` preference), first button, with selection widget only */
+  $keepToolButton: HTMLButtonElement | null = null;
 
   constructor(drawer: Drawer) {
     this.drawer = drawer;
@@ -63,6 +67,8 @@ export class Toolbar {
     this.$toolbarContent.append(this.$toolbarRoot);
     this.drawer.layout.add('footer', this.$toolbarContent);
     this.init();
+    // tool replaced by selection after drawing: useless without it
+    if (this.widgets.has('selection')) this._addKeepTool();
 
     // buttons of toolbar: widgets and groups (widgets of a group: arrow keys once it is open)
     arrowNavigation(
@@ -144,6 +150,36 @@ export class Toolbar {
     this._getButtons().forEach(($btn) => ($btn.tabIndex = $btn === $button ? 0 : -1));
     // widgets of groups reached with arrow keys
     this.groups.forEach((group) => group.widgets.forEach((widget) => (widget.$button.tabIndex = -1)));
+  }
+
+  /**
+   * Toggle button keeping drawing tool after drawing (Q), separated from widgets
+   */
+  private _addKeepTool() {
+    const $container = document.createElement('div');
+    const $button = createButton('drawer-button', 'drawer-button-neutral');
+    const $shortcut = document.createElement('div');
+    const $separator = document.createElement('div');
+
+    $container.classList.add('drawer-tool-container', 'drawer-tool-button-container', 'drawer-tool-keep');
+    $button.setAttribute('aria-keyshortcuts', 'Q');
+    $shortcut.classList.add('tool-key-shortcut');
+    // announced with aria-keyshortcuts
+    $shortcut.setAttribute('aria-hidden', 'true');
+    $shortcut.textContent = 'q';
+    $button.append(stringToNode<SVGElement>(PinIcon), $shortcut);
+    $button.addEventListener('click', () => this.drawer.setKeepTool(!this.drawer.options.keepTool));
+    $separator.classList.add('drawer-toolbar-separator');
+    $separator.setAttribute('role', 'separator');
+    $separator.setAttribute('aria-orientation', 'vertical');
+    $container.append($button);
+    this.$toolbarRoot.prepend($container, $separator);
+    this.$keepToolButton = $button;
+
+    this.drawer.i18n.translate((t) => setLabel($button, t('toolbar.keepTool')));
+    setPressed($button, this.drawer.options.keepTool);
+    this.drawer.on(drawerEvents.preferencesChange, () => setPressed($button, this.drawer.options.keepTool));
+    this._initTabStop();
   }
 
   /**

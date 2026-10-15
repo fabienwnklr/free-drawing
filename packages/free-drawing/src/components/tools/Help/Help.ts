@@ -145,6 +145,8 @@ export class Help extends Modal {
       .filter((widget) => widget.shortcut)
       .map((widget) => ({ label: widget.$button.title, keys: [widget.shortcut!.toUpperCase()] }));
 
+    if (this.drawer.toolbar.$keepToolButton) shortcuts.push({ label: t('toolbar.keepTool'), keys: ['Q'] });
+
     if (widgets.some((widget) => widget instanceof ShapeWidget)) {
       shortcuts.push({ label: t('help.toolsConstrain'), keys: ['Shift'] });
     }

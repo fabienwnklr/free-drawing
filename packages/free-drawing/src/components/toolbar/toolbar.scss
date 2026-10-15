@@ -17,6 +17,14 @@
       position: relative;
     }
 
+    // between keep tool button and widgets
+    .drawer-toolbar-separator {
+      align-self: stretch;
+      width: 1px;
+      margin: $space-1 0;
+      background-color: $border;
+    }
+
     .tool-key-shortcut {
       position: absolute;
       right: 3px;

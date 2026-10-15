@@ -102,6 +102,7 @@ export abstract class FreehandWidget extends BaseWidget {
       this.drawer.stage.fire('change');
 
       this.clearSelection();
+      this.afterDraw([this.#lastLine]);
       e.evt.preventDefault();
     });
   }

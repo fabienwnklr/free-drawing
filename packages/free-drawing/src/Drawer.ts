@@ -231,6 +231,7 @@ export class Drawer extends MicroEvent {
 
     this.#languageChoice = preferences.language ?? this.options.language;
     this.options.autoSave = preferences.autoSave ?? this.options.autoSave;
+    this.options.keepTool = preferences.keepTool ?? this.options.keepTool;
     this.i18n = new I18n(
       this.#languageChoice === 'auto' ? getLanguage() : this.#languageChoice,
       this.options.translations
@@ -918,6 +919,17 @@ export class Drawer extends MicroEvent {
 
     this.options.autoSave = autoSave;
     if (autoSave && this.#unsaved) this.save();
+    this._preferencesChanged();
+  }
+
+  /**
+   * Keep drawing tool after drawing a shape, else selection tool is activated with the drawn shape (preference)
+   * @param {boolean} keepTool
+   */
+  setKeepTool(keepTool: boolean) {
+    if (keepTool === this.options.keepTool) return;
+
+    this.options.keepTool = keepTool;
     this._preferencesChanged();
   }
 
@@ -1735,6 +1747,7 @@ export class Drawer extends MicroEvent {
       snapping: !!this.getWidget<SelectWidget>('selection')?.snapping,
       zen: this.setting.zenMode,
       autoSave: this.options.autoSave,
+      keepTool: this.options.keepTool,
     };
   }
 
@@ -1742,8 +1755,9 @@ export class Drawer extends MicroEvent {
    * Apply interface settings (given ones only), one `drawer.preferences.change` event
    * @param {Partial<Preferences>} preferences Grid wins when grid and snapping are both true
    */
-  setPreferences({ theme, language, grid, snapping, zen, autoSave }: Partial<Preferences>) {
+  setPreferences({ theme, language, grid, snapping, zen, autoSave, keepTool }: Partial<Preferences>) {
     if (autoSave !== undefined) this.setAutoSave(autoSave);
+    if (keepTool !== undefined) this.setKeepTool(keepTool);
     if (theme !== undefined && theme !== this.theme) this.setTheme(theme);
     if (language !== undefined && language !== this.#languageChoice) this.setLanguage(language);
     if (zen !== undefined && zen !== this.setting.zenMode) this.setting.toggleZenMode();
@@ -1777,7 +1791,7 @@ export class Drawer extends MicroEvent {
     const language = [saved.language, this._getStorageItem(key + '-language')].find(isLanguage);
     const preferences: Partial<Preferences> = { ...(theme && { theme }), ...(language && { language }) };
 
-    (['grid', 'snapping', 'zen', 'autoSave'] as const).forEach((name) => {
+    (['grid', 'snapping', 'zen', 'autoSave', 'keepTool'] as const).forEach((name) => {
       if (typeof saved[name] === 'boolean') preferences[name] = saved[name];
     });
 

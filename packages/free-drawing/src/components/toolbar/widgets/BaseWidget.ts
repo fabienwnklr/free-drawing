@@ -182,6 +182,19 @@ export abstract class BaseWidget {
     this.drawer.getWidget<SelectWidget>('selection')?.clearSelection();
   }
 
+  /**
+   * Shapes drawn with this tool: selection tool activated with them, unless tool is kept (`keepTool` preference)
+   * @param {DrawingShape[]} shapes
+   */
+  protected afterDraw(shapes: DrawingShape[]) {
+    const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
+
+    if (this.drawer.options.keepTool || !selectWidget || selectWidget.isDisabled) return;
+
+    selectWidget.setActive(true);
+    selectWidget.select(shapes);
+  }
+
   private _initEvents() {
     this.$button.addEventListener('click', () => {
       this.setActive(true);

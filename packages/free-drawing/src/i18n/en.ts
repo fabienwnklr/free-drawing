@@ -129,6 +129,7 @@ export const en = {
   // toolbar
   'toolbar.label': 'Tools',
   'toolbar.moreTools': 'More tools',
+  'toolbar.keepTool': 'Keep tool active',
   'tools.pan': 'Pan',
   'tools.selection': 'Select',
   'tools.brush': 'Brush',

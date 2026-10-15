@@ -25,6 +25,8 @@ export class PreferencesModal extends Modal {
   $grid: HTMLInputElement;
   $snapping: HTMLInputElement;
   $autoSave: HTMLInputElement;
+  /** Keep tool after drawing, with selection widget only */
+  $keepTool: HTMLInputElement | null = null;
   /** Name in collaboration sessions, with `collaboration` option */
   $name: HTMLInputElement | null = null;
   $cancelButton: HTMLButtonElement;
@@ -73,6 +75,7 @@ export class PreferencesModal extends Modal {
     });
     // else saved from menu
     this.$autoSave = this._createSwitch($drawing, 'preferences.autoSave');
+    if (drawer.toolbar.$keepToolButton) this.$keepTool = this._createSwitch($drawing, 'toolbar.keepTool', 'Q');
 
     this.$modalBody.append($appearance, $drawing);
 
@@ -134,6 +137,7 @@ export class PreferencesModal extends Modal {
       grid: this.$grid.checked,
       snapping: this.$snapping.checked,
       autoSave: this.$autoSave.checked,
+      ...(this.$keepTool && { keepTool: this.$keepTool.checked }),
     });
     if (this.$name) this.drawer.setUserName(this.$name.value);
     this.hide();
@@ -151,6 +155,7 @@ export class PreferencesModal extends Modal {
     this.$grid.checked = preferences.grid;
     this.$snapping.checked = preferences.snapping;
     this.$autoSave.checked = preferences.autoSave;
+    if (this.$keepTool) this.$keepTool.checked = preferences.keepTool;
     if (this.$name) this.$name.value = this.drawer.getUserName();
   }
 

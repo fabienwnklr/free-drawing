@@ -52,6 +52,8 @@ export type DrawerOptions = {
   readOnly: boolean;
   scaling: number;
   autoSave: boolean;
+  /** Drawing tool kept after drawing a shape, else selection tool activated with the drawn shape (user preference) */
+  keepTool: boolean;
   localStorageKey: string;
   /** User of the app (e.g. logged in): id and name used in collaboration sessions instead of ones kept in browser */
   user: DrawerUser | null;
@@ -104,6 +106,8 @@ export type Preferences = {
   zen: boolean;
   /** Drawing saved on each change, else with `saveNow` (menu, command palette) */
   autoSave: boolean;
+  /** Drawing tool kept after drawing a shape, else selection tool activated with the drawn shape */
+  keepTool: boolean;
 };
 
 export type StrokeStyle = 'solid' | 'dashed' | 'dotted';

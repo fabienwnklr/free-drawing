@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.8.0](https://github.com/fabienwnklr/free-drawing/compare/v7.7.0...v7.8.0) (2026-10-16)
+
+
+### Features
+
+* **toolbar:** "Keep tool active" (pin button at the start of the toolbar, Q, preferences dialog, command palette, `setKeepTool`, `keepTool` option and preference): turned off, the selection tool is activated with the shape just drawn (shapes, frames, brush, highlighter)
+
 ## [7.7.0](https://github.com/fabienwnklr/free-drawing/compare/v7.6.0...v7.7.0) (2026-10-15)
 
 

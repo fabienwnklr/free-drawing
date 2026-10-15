@@ -23,6 +23,7 @@ describe('Preferences', () => {
       snapping: true,
       zen: true,
       autoSave: false,
+      keepTool: true,
     });
 
     const reloaded = createDrawer({ localStorageKey: drawer.options.localStorageKey, language: 'en' });
@@ -114,6 +115,7 @@ describe('Preferences', () => {
       snapping: true,
       zen: true,
       autoSave: false,
+      keepTool: true,
     });
 
     // cancelled, closed with Escape: nothing applied, fields show preferences again

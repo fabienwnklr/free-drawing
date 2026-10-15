@@ -160,6 +160,7 @@ describe('Integration in an app', () => {
       snapping: false,
       zen: false,
       autoSave: false,
+      keepTool: true,
     });
     drawer.on('drawer.preferences.change', onChange);
 
@@ -173,6 +174,7 @@ describe('Integration in an app', () => {
       snapping: false,
       zen: false,
       autoSave: false,
+      keepTool: true,
     });
     expect(drawer.isDarkMode()).toBe(true);
     expect(drawer.language).toBe('fr');
@@ -189,6 +191,7 @@ describe('Integration in an app', () => {
       snapping: true,
       zen: false,
       autoSave: false,
+      keepTool: true,
     });
 
     // same values: no event

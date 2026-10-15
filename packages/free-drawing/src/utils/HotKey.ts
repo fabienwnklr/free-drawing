@@ -113,6 +113,11 @@ export class HotKey {
           this.drawer.toolbar.getButton(widget).focus();
           return;
         }
+
+        // keep tool after drawing (button of toolbar)
+        if (e.key.toLowerCase() === 'q' && this.drawer.toolbar.$keepToolButton && !inField) {
+          this.drawer.setKeepTool(!this.drawer.options.keepTool);
+        }
       }
 
       if (e.altKey && e.key === 's') {

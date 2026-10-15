@@ -26,7 +26,6 @@ export class App {
   /** Auto save on / off (preference of drawer) */
   readonly $autoSaveButton: HTMLButtonElement;
   readonly $drawingsButton: HTMLButtonElement;
-  readonly $user: HTMLElement;
   readonly $accountButton: HTMLButtonElement;
   readonly accountDialog: AccountDialog;
   readonly drawingsDialog: DrawingsDialog;

@@ -123,6 +123,7 @@ export const es: Translations = {
 
   'toolbar.label': 'Herramientas',
   'toolbar.moreTools': 'Más herramientas',
+  'toolbar.keepTool': 'Mantener la herramienta activa',
   'tools.pan': 'Mano',
   'tools.selection': 'Seleccionar',
   'tools.brush': 'Pincel',

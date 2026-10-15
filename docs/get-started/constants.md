@@ -18,6 +18,7 @@ export const defaultOptions = {
   positionWidget: true,
   scaling: 1.11,
   autoSave: true,
+  keepTool: true,
   localStorageKey: 'free-drawing',
   opacity: 1,
 };

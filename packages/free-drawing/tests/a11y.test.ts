@@ -68,11 +68,14 @@ describe('Accessibility', () => {
   it('Toolbar exposes active tool and shortcuts, arrows move focus (roving tabindex)', () => {
     const drawer = createDrawer();
     const root = drawer.toolbar.$toolbarRoot;
-    // buttons of toolbar: widgets and group of more tools
-    const buttons = [...root.children].map(($item) => $item.querySelector<HTMLButtonElement>(':scope > button')!);
+    // buttons of toolbar: keep tool, widgets and group of more tools (not separator)
+    const buttons = [...root.children].flatMap(
+      ($item) => $item.querySelector<HTMLButtonElement>(':scope > button') ?? []
+    );
     const brush = drawer.getWidget<BaseWidget>('brush')!.$button;
     const eraser = drawer.getWidget<BaseWidget>('eraser')!.$button;
 
+    expect(buttons[0]).toBe(drawer.toolbar.$keepToolButton);
     expect(root.getAttribute('role')).toBe('toolbar');
     expect(label(root)).toBe('Tools');
     expect(label(brush)).toBe('Brush');
@@ -256,7 +259,7 @@ describe('Accessibility', () => {
       ...exportModal.$modal.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'),
     ];
 
-    expect(switches).toHaveLength(7);
+    expect(switches).toHaveLength(8);
     switches.forEach(($switch) => {
       expect($switch.getAttribute('role')).toBe('switch');
       expect($switch.closest('label')!.textContent!.trim()).not.toBe('');

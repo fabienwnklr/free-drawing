@@ -123,6 +123,7 @@ export const fr: Translations = {
 
   'toolbar.label': 'Outils',
   'toolbar.moreTools': "Plus d'outils",
+  'toolbar.keepTool': "Garder l'outil actif",
   'tools.pan': 'Main',
   'tools.selection': 'Sélection',
   'tools.brush': 'Pinceau',

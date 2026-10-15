@@ -175,6 +175,7 @@ export abstract class ShapeWidget<T extends DrawingShape> extends BaseWidget {
       this.onDrawEnd?.(shape);
       this.clearSelection();
       this.drawer.stage.fire('change');
+      this.afterDraw([shape]);
     });
   }
 }

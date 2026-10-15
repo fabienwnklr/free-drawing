@@ -63,6 +63,7 @@ const drawer = new Drawer($el, {
   readOnly: false, // drawing can't be modified by user (only pan, zoom, view options, export), API still modifies it
   scaling: 1.11, // scaling on zoom
   autoSave: true, // drawing saved on each change (localStorage or storage), user preference (see Preferences)
+  keepTool: true, // drawing tool kept after drawing a shape, else selection tool activated with it, user preference (see Preferences)
   localStorageKey: 'free-drawing', // localStorage key used for store data, use a different key for each drawer of a page
   storage: null, // drawing saved somewhere else than localStorage (e.g. server of your app), see "Use in an app" below
   user: null, // user of your app ({ id, name }), used in collaboration sessions instead of id and name kept in browser
@@ -110,7 +111,7 @@ Components trigger `drawer.dropdown.hide` (dropdown menu) and `drawer.toast.hide
 
 ## Preferences
 
-"Preferences..." of settings menu (Ctrl / Cmd + ,, also in the command palette) opens a dialog: theme (light, dark or system), language, zen mode, grid, snapping to objects, auto save and name in collaboration sessions. Changes are applied together with "Save" ("Cancel", Escape or close keep current preferences) and saved in the browser (`<localStorageKey>-preferences`), also with the `storage` option. An app can save them with the account of its user (see "Use in an app").
+"Preferences..." of settings menu (Ctrl / Cmd + ,, also in the command palette) opens a dialog: theme (light, dark or system), language, zen mode, grid, snapping to objects, auto save, keep tool active and name in collaboration sessions. Changes are applied together with "Save" ("Cancel", Escape or close keep current preferences) and saved in the browser (`<localStorageKey>-preferences`), also with the `storage` option. An app can save them with the account of its user (see "Use in an app").
 
 ```js
 drawer.showPreferences();
@@ -122,6 +123,12 @@ Without auto save (preference or `autoSave` option), changes are saved with "Sav
 drawer.setAutoSave(false);
 drawer.hasUnsavedChanges(); // true after a change, until saved
 await drawer.saveNow(); // save, "Drawing saved" message
+```
+
+"Keep tool active" (pin button at the start of the toolbar, Q, also in the command palette) keeps the drawing tool after drawing a shape. Turned off, the selection tool is activated with the drawn shape (shapes, frames, brush, highlighter) to move or change it at once. The button is shown with the selection tool only.
+
+```js
+drawer.setKeepTool(false);
 ```
 
 ## Dark mode
@@ -187,12 +194,12 @@ drawer.setUser({ id: 'user-1', name: 'Ada' });
 drawer.setUser(null); // anonymous: id and name kept in browser
 ```
 
-Preferences are the interface settings of the user (theme, language, grid, snapping to objects, zen mode), saved in the browser by the drawer, to save them with their account too:
+Preferences are the interface settings of the user (theme, language, grid, snapping to objects, zen mode, auto save, keep tool active), saved in the browser by the drawer, to save them with their account too:
 
 ```js
 drawer.setPreferences(await api.getPreferences()); // given ones only
 drawer.on('drawer.preferences.change', (preferences) => api.savePreferences(preferences));
-drawer.getPreferences(); // { theme: 'light', language: 'auto', grid: false, snapping: false, zen: false, autoSave: true }
+drawer.getPreferences(); // { theme: 'light', language: 'auto', grid: false, snapping: false, zen: false, autoSave: true, keepTool: true }
 ```
 
 `collaboration` option can also give data read by the server on connection (`socket.handshake.auth`), e.g. a token of the logged in user, or a function giving it on each connection:

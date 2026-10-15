@@ -13,10 +13,10 @@ const widgets: WidgetName[] = ['pan', 'selection', 'brush', 'eraser', 'text', 'l
 
 const widget = (drawer: Drawer, id: string) => drawer.toolbar.widgets.get(id as BaseWidget['id'])!;
 
-/** Names of buttons of toolbar (widgets and groups), in order */
+/** Names of buttons of toolbar (keep tool, widgets and groups), in order */
 const buttons = (drawer: Drawer) =>
-  [...drawer.toolbar.$toolbarRoot.children].map(($item) =>
-    $item.querySelector(':scope > button')!.getAttribute('aria-label')
+  [...drawer.toolbar.$toolbarRoot.children].flatMap(
+    ($item) => $item.querySelector(':scope > button')?.getAttribute('aria-label') ?? []
   );
 
 const key = ($el: HTMLElement, init: KeyboardEventInit) =>
@@ -34,7 +34,11 @@ describe('Groups of widgets', () => {
     const [group] = drawer.toolbar.groups;
     const label = (id: string) => widget(drawer, id).$button.getAttribute('aria-label');
 
-    expect(buttons(drawer)).toEqual([...['pan', 'selection', 'brush', 'eraser', 'text'].map(label), 'Shapes']);
+    expect(buttons(drawer)).toEqual([
+      'Keep tool active',
+      ...['pan', 'selection', 'brush', 'eraser', 'text'].map(label),
+      'Shapes',
+    ]);
     expect(group.widgets.map(({ id }) => id)).toEqual(['line', 'square', 'circle', 'arrow']);
     expect(group.$menu.contains(widget(drawer, 'square').$button)).toBe(true);
     expect(drawer.toolbar.widgets.size).toBe(9);
@@ -106,7 +110,7 @@ describe('Groups of widgets', () => {
     key(text.$button, { key: 'ArrowRight' });
     expect(document.activeElement).toBe(group.$button);
     key(group.$button, { key: 'ArrowRight' });
-    expect(document.activeElement).toBe(widget(drawer, 'pan').$button);
+    expect(document.activeElement).toBe(drawer.toolbar.$keepToolButton);
   });
 
   it('Icon: generic by default, name of an icon or of a widget, svg code without scripts', () => {
