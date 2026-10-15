@@ -5,5 +5,5 @@
 - [x] add save button to preference, and updtade eveything visually (including name)
 - [x] add button to keep same tool or after every use switch on selection tool automatically
 - [x] for text object add feature to crop width to his content
-- [ ] check why release tag doesn't appear on github
+- [x] check why release tag doesn't appear on github
 - [ ] when i use ctrl+a shortcut, everything in appbar is select, when drawer is focused limit to himself
