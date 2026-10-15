@@ -97,6 +97,7 @@ export const es: Translations = {
   'help.move': 'Mover la selección',
   'help.forwardBackward': 'Traer adelante / enviar atrás',
   'help.frontBack': 'Traer al frente / enviar al fondo',
+  'help.lock': 'Bloquear o desbloquear la selección',
   'help.paste': 'Pegar texto',
   'help.open': 'Abrir archivo',
   'help.save': 'Guardar en un archivo',
@@ -137,6 +138,7 @@ export const es: Translations = {
   'context.paste': 'Pegar',
   'context.snap': 'Ajustar a los objetos',
   'context.lock': 'Bloquear',
+  'context.unlock': 'Desbloquear',
 
   'selectionMenu.label': 'Acciones de la selección',
   'action.duplicate': 'Duplicar',

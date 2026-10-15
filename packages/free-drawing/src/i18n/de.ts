@@ -97,6 +97,7 @@ export const de: Translations = {
   'help.move': 'Auswahl verschieben',
   'help.forwardBackward': 'Eine Ebene nach vorne / nach hinten',
   'help.frontBack': 'In den Vordergrund / in den Hintergrund',
+  'help.lock': 'Auswahl sperren oder entsperren',
   'help.paste': 'Text einfügen',
   'help.open': 'Datei öffnen',
   'help.save': 'In Datei speichern',
@@ -137,6 +138,7 @@ export const de: Translations = {
   'context.paste': 'Einfügen',
   'context.snap': 'An Objekten ausrichten',
   'context.lock': 'Sperren',
+  'context.unlock': 'Entsperren',
 
   'selectionMenu.label': 'Aktionen der Auswahl',
   'action.duplicate': 'Duplizieren',

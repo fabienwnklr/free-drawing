@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [6.14.0](https://github.com/fabienwnklr/free-drawing/compare/v6.13.1...v6.14.0) (2026-10-15)
+
+
+### Features
+
+* **lock:** locked shapes can be selected to unlock them: a click (after unlocked shapes under pointer), a right click or their row in layers panel selects them alone, with a dashed box and without anchors; they are not moved, transformed, styled nor deleted from canvas. Unlock button in selection menu, unlock item in context menu and command palette, Ctrl + Shift + L locks or unlocks the selection
+
 ## [6.13.1](https://github.com/fabienwnklr/free-drawing/compare/v6.13.0...v6.13.1) (2026-10-15)
 
 

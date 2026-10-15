@@ -1254,7 +1254,7 @@ export class Drawer extends MicroEvent {
   }
 
   /**
-   * Lock shapes (selected ones by default): not selected, moved nor erased on canvas
+   * Lock shapes (selected ones by default): not moved, transformed nor erased on canvas, only selected to be unlocked
    * @param {boolean} locked
    * @param {Shape<ShapeConfig>[]} shapes
    * @returns {boolean} true if a shape changed (change saved)
@@ -1286,7 +1286,7 @@ export class Drawer extends MicroEvent {
     if (!shapes.length) return false;
 
     shapes.forEach(apply);
-    // locked and hidden shapes are unselected
+    // hidden shapes are unselected, locked ones stay selected only without others
     if (shapes.some((shape) => selected.includes(shape))) this.getWidget<SelectWidget>('selection')?.select(selected);
     this.stage.fire('change');
 

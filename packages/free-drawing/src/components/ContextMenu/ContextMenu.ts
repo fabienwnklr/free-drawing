@@ -13,8 +13,8 @@ type Item = { $item: HTMLButtonElement; visible: () => boolean; run: () => void 
 
 /**
  * Menu of right click (or context menu key, Shift + F10): actions on selection when a shape is under pointer
- * or selected (order, flip, duplicate, lock, delete, copy as image), else actions on drawing (paste, select all,
- * copy as image, snapping, grid), with their shortcuts
+ * or selected (order, flip, duplicate, lock, delete, copy as image; unlock for locked shapes), else actions on
+ * drawing (paste, select all, copy as image, snapping, grid), with their shortcuts
  */
 export class ContextMenu {
   drawer: Drawer;
@@ -39,7 +39,9 @@ export class ContextMenu {
   private _init() {
     const { drawer } = this;
     const edit = () => !drawer.readOnly;
-    const selection = () => edit() && drawer.getSelectedShapes().length > 0;
+    // locked shapes are selected to be unlocked, not modified
+    const locked = () => edit() && !!this.selectWidget?.isLocked();
+    const selection = () => edit() && drawer.getSelectedShapes().length > 0 && !locked();
     const canvas = () => drawer.getSelectedShapes().length === 0;
     const hasShapes = () => drawer.getDrawingShapes().length > 0;
     const order = (label: TranslationKey, value: ShapeOrder, shortcut: string): Item => ({
@@ -88,6 +90,11 @@ export class ContextMenu {
           $item: this._createItem('context.lock', 'Ctrl+Shift+L'),
           visible: selection,
           run: () => drawer.setShapesLocked(true),
+        },
+        {
+          $item: this._createItem('context.unlock', 'Ctrl+Shift+L'),
+          visible: locked,
+          run: () => drawer.setShapesLocked(false),
         },
         {
           $item: this._createItem('action.delete', drawer.t('key.delete'), 'menuitem', 'Delete'),
@@ -153,7 +160,7 @@ export class ContextMenu {
     });
     // Delete key name in language
     drawer.i18n.translate((t) => {
-      const $delete = this.#sections[1].items[2].$item.querySelector('kbd')!;
+      const $delete = this.#sections[1].items[3].$item.querySelector('kbd')!;
 
       $delete.textContent = t('key.delete');
     });

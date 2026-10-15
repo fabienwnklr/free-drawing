@@ -94,7 +94,7 @@ describe('Layers panel', () => {
     part(drawer, 1, 'name').dispatchEvent(new MouseEvent('click', { shiftKey: true }));
     expect(selected()).toEqual(new Set([line, rect]));
 
-    // hidden and locked shapes are not selected
+    // locked shapes are not selected with others
     drawer.setShapesLocked(true, [line]);
     part(drawer, 2, 'name').click();
     part(drawer, 0, 'name').dispatchEvent(new MouseEvent('click', { shiftKey: true }));
@@ -158,7 +158,7 @@ describe('Layers panel', () => {
     expect(drawer.getShapeLabel(restored)).toBe('Rectangle');
   });
 
-  it('Hidden and locked shapes are not selectable, states saved and undone', () => {
+  it('Hidden shapes are not selectable, locked ones alone (to be unlocked), states saved and undone', () => {
     const { drawer, rect, text } = createLayers();
     const selectWidget = drawer.getWidget<SelectWidget>('selection')!;
 
@@ -172,12 +172,19 @@ describe('Layers panel', () => {
     part(drawer, 0, 'lock').click();
     expect(text.listening()).toBe(false);
     expect(part(drawer, 0, 'lock').getAttribute('aria-label')).toBe('Lock Hello');
-    expect(drawer.getSelectedShapes()).toEqual([]);
-    expect(rows(drawer)).toEqual(['Hello locked', 'Freehand', 'Rectangle hidden']);
+    // still selected, to be unlocked
+    expect(drawer.getSelectedShapes()).toEqual([text]);
+    expect(selectWidget.isLocked()).toBe(true);
+    expect(rows(drawer)).toEqual(['Hello * locked', 'Freehand', 'Rectangle hidden']);
 
-    // not selectable from panel nor select all
+    // hidden one not selectable from panel, locked one alone, not with select all
+    part(drawer, 2, 'name').click();
+    expect(drawer.getSelectedShapes()).toEqual([text]);
+    part(drawer, 1, 'name').click();
+    part(drawer, 0, 'name').dispatchEvent(new MouseEvent('click', { ctrlKey: true }));
+    expect(drawer.getSelectedShapes().map((shape) => shape.getAttr('name'))).toEqual([shapeName.line]);
     part(drawer, 0, 'name').click();
-    expect(drawer.getSelectedShapes()).toEqual([]);
+    expect(drawer.getSelectedShapes()).toEqual([text]);
     selectWidget.selectAll();
     expect(drawer.getSelectedShapes().map((shape) => shape.getAttr('name'))).toEqual([shapeName.line]);
 

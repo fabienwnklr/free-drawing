@@ -8,6 +8,7 @@ import BringForwardIcon from '@/icons/bring-forward.svg?raw';
 import TrashIcon from '@/icons/trash.svg?raw';
 import GroupIcon from '@/icons/group.svg?raw';
 import UngroupIcon from '@/icons/ungroup.svg?raw';
+import UnlockIcon from '@/icons/unlock.svg?raw';
 import { Group } from 'konva/lib/Group';
 import { arrowNavigation, createButton, setLabel } from '@/utils/dom';
 import type { TranslationKey } from '@/i18n/en';
@@ -17,8 +18,8 @@ import { drawerEvents } from '@/constants';
 const gap = 12;
 
 /**
- * Menu next to selected shapes: duplicate, bring forward, send backward, delete.
- * Under selection (rotation anchor is above), above it when there is no room, hidden while shapes are moved
+ * Menu next to selected shapes: duplicate, bring forward, send backward, delete, or unlock for locked shapes.
+ * Out of transformer (below, above, right or left of it), hidden while shapes are moved
  */
 export class SelectionMenu {
   drawer: Drawer;
@@ -29,6 +30,8 @@ export class SelectionMenu {
   $backwardBtn: HTMLButtonElement;
   $forwardBtn: HTMLButtonElement;
   $deleteBtn: HTMLButtonElement;
+  $unlockBtn: HTMLButtonElement;
+  $separator: HTMLSpanElement;
 
   constructor(drawer: Drawer) {
     this.drawer = drawer;
@@ -53,22 +56,26 @@ export class SelectionMenu {
     );
     this.$deleteBtn = this._createButton(TrashIcon, 'action.delete', 'Delete', () => this.drawer.deleteShapes());
     this.$deleteBtn.classList.add('drawer-selection-menu-delete');
+    // only action on locked shapes
+    this.$unlockBtn = this._createButton(UnlockIcon, 'context.unlock', 'Ctrl+Shift+L', () =>
+      this.drawer.setShapesLocked(false)
+    );
 
-    const $separator = document.createElement('span');
-
-    $separator.classList.add('drawer-selection-menu-separator');
-    $separator.setAttribute('aria-hidden', 'true');
+    this.$separator = document.createElement('span');
+    this.$separator.classList.add('drawer-selection-menu-separator');
+    this.$separator.setAttribute('aria-hidden', 'true');
 
     this.$menu.append(
+      this.$unlockBtn,
       this.$duplicateBtn,
       this.$groupBtn,
       this.$ungroupBtn,
       this.$backwardBtn,
       this.$forwardBtn,
-      $separator,
+      this.$separator,
       this.$deleteBtn
     );
-    arrowNavigation(this.$menu, () => [...this.$menu.querySelectorAll('button')], 'horizontal');
+    arrowNavigation(this.$menu, () => [...this.$menu.querySelectorAll<HTMLElement>('button:not([hidden])')], 'horizontal');
     this.drawer.$drawerContainer.append(this.$menu);
 
     // selection layer is drawn when selection changes or moves (drag, transform, pan, zoom, changes of other users...)
@@ -148,10 +155,16 @@ export class SelectionMenu {
     this.$menu.classList.add('show');
 
     const shapes = this.drawer.getSelectedShapes();
+    const locked = !!this.drawer.getWidget<SelectWidget>('selection')?.isLocked();
 
+    // locked shapes are only unlocked
+    this.$unlockBtn.hidden = !locked;
+    [this.$duplicateBtn, this.$backwardBtn, this.$forwardBtn, this.$separator, this.$deleteBtn].forEach(
+      ($element) => ($element.hidden = locked)
+    );
     // group 2 shapes at least, ungroup groups
-    this.$groupBtn.hidden = !this.drawer.canGroupShapes(shapes);
-    this.$ungroupBtn.hidden = !shapes.some((shape) => shape instanceof Group);
+    this.$groupBtn.hidden = locked || !this.drawer.canGroupShapes(shapes);
+    this.$ungroupBtn.hidden = locked || !shapes.some((shape) => shape instanceof Group);
 
     const { left, top } = this._getPlace();
     // view in drawer

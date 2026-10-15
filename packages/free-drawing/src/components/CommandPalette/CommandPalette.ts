@@ -38,6 +38,7 @@ import StoreIcon from '@/icons/store.svg?raw';
 import LanguageIcon from '@/icons/language.svg?raw';
 import SlidersIcon from '@/icons/sliders.svg?raw';
 import LockIcon from '@/icons/lock.svg?raw';
+import UnlockIcon from '@/icons/unlock.svg?raw';
 import FlipHorizontalIcon from '@/icons/flip-horizontal.svg?raw';
 import FlipVerticalIcon from '@/icons/flip-vertical.svg?raw';
 
@@ -258,7 +259,9 @@ export class CommandPalette extends Modal {
     const t = drawer.t.bind(drawer);
     const edit = !drawer.readOnly;
     const selectWidget = drawer.getWidget<SelectWidget>('selection');
-    const selected = selectWidget ? drawer.getSelectedShapes() : [];
+    // locked shapes are selected to be unlocked, not modified
+    const locked = edit && !!selectWidget?.isLocked();
+    const selected = selectWidget && !locked ? drawer.getSelectedShapes() : [];
     const editSelection = edit && selected.length > 0;
     const hasShapes = drawer.getDrawingShapes().length > 0;
     const { zoom, position, layersPanel } = drawer;
@@ -363,6 +366,13 @@ export class CommandPalette extends Modal {
             icon: LockIcon,
             shortcut: 'Ctrl+Shift+L',
             run: () => drawer.setShapesLocked(true),
+          },
+          locked && {
+            id: 'unlock',
+            label: t('context.unlock'),
+            icon: UnlockIcon,
+            shortcut: 'Ctrl+Shift+L',
+            run: () => drawer.setShapesLocked(false),
           },
           editSelection && {
             id: 'delete remove',

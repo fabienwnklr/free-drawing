@@ -256,7 +256,7 @@ A right click on a shape selects it (with the selection tool) and shows actions 
 | Action | Shortcut |
 | --- | --- |
 | Duplicate | Ctrl / Cmd + D |
-| Lock (unlocked from layers panel) | Ctrl / Cmd + Shift + L |
+| Lock or unlock selection | Ctrl / Cmd + Shift + L |
 | Delete | Delete |
 | Bring to front, forward, send backward, to back | Ctrl / Cmd + (Shift +) Up / Down |
 | Flip horizontal, vertical (texts are still readable) | Shift + H, Shift + V |
@@ -272,7 +272,7 @@ await drawer.copyImage('svg'); // svg image and svg code (text), 'png' by defaul
 
 ## Layers
 
-The layers button of header (Alt+L) shows the list of shapes, top one first. A row selects its shape, Ctrl / Cmd + click (or Ctrl + Space) adds or removes it, Shift + click (or Shift + arrows) selects the rows from the last one selected (shortcuts shown under the list), a double click (or F2) renames it, its handle (or Alt + Up / Down) moves it in stacking order, its buttons hide, lock or delete it. Hidden shapes are not drawn nor exported, locked shapes can't be selected, moved nor erased on canvas. Names, hidden and locked states are saved with shapes.
+The layers button of header (Alt+L) shows the list of shapes, top one first. A row selects its shape, Ctrl / Cmd + click (or Ctrl + Space) adds or removes it, Shift + click (or Shift + arrows) selects the rows from the last one selected (shortcuts shown under the list), a double click (or F2) renames it, its handle (or Alt + Up / Down) moves it in stacking order, its buttons hide, lock or delete it. Hidden shapes are not drawn nor exported, locked shapes can't be moved, transformed nor erased on canvas: a click (or their row) selects them alone, with a dashed box, to unlock them (button of selection menu, context menu, Ctrl+Shift+L). Names, hidden and locked states are saved with shapes.
 
 ```js
 drawer.layersPanel?.toggle(); // show / hide panel

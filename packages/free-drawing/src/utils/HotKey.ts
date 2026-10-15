@@ -33,6 +33,9 @@ export class HotKey {
       const mod = e.ctrlKey || e.metaKey;
       const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
       const selectedNodes = selectWidget?.transformer.nodes() ?? [];
+      // locked shapes are selected to be unlocked, not modified
+      const locked = !!selectWidget?.isLocked();
+      const editable = locked ? [] : selectedNodes;
       // fields keep their keys (arrows of opacity, select all of a text field...)
       const inField = (e.target as HTMLElement).matches('input, select, textarea');
       // read only: shortcuts modifying drawing do nothing
@@ -42,7 +45,7 @@ export class HotKey {
         if (mod) {
           // asks confirmation, selection is kept if canceled
           this.drawer.clearCanvas();
-        } else {
+        } else if (editable.length) {
           this.drawer.deleteShapes();
         }
       }
@@ -54,13 +57,13 @@ export class HotKey {
       }
 
       // instead of browser bookmark
-      if (edit && mod && e.key === 'd' && selectedNodes.length && !inField) {
+      if (edit && mod && e.key === 'd' && editable.length && !inField) {
         e.preventDefault();
         this.drawer.duplicateShapes();
       }
 
       // instead of browser find next
-      if (edit && mod && e.key.toLowerCase() === 'g' && selectedNodes.length && !inField) {
+      if (edit && mod && e.key.toLowerCase() === 'g' && editable.length && !inField) {
         e.preventDefault();
         if (e.shiftKey) this.drawer.ungroupShapes();
         else this.drawer.groupShapes();
@@ -68,27 +71,27 @@ export class HotKey {
 
       const order = mod ? orderKeys[`${e.shiftKey ? 'Shift+' : ''}${e.key}`] : undefined;
 
-      if (edit && selectedNodes.length && order && !inField) {
+      if (edit && editable.length && order && !inField) {
         this.drawer.reorderShapes(order);
         e.preventDefault();
-      } else if (edit && selectedNodes.length && e.key in arrowMoves && !inField) {
+      } else if (edit && editable.length && e.key in arrowMoves && !inField) {
         // only arrow keys, other keys keep their default behavior (F5, Tab...)
-        if (!arrowMoved) unbindMoved(selectedNodes);
-        selectedNodes.forEach((shape) => shape.move(arrowMoves[e.key]));
+        if (!arrowMoved) unbindMoved(editable);
+        editable.forEach((shape) => shape.move(arrowMoves[e.key]));
         arrowMoved = true;
         e.preventDefault();
       }
 
       // flip selection (Shift + letter is not a tool shortcut)
-      if (edit && !mod && !e.altKey && e.shiftKey && selectedNodes.length && !inField) {
+      if (edit && !mod && !e.altKey && e.shiftKey && editable.length && !inField) {
         if (e.code === 'KeyH') this.drawer.flipShapes('horizontal');
         if (e.code === 'KeyV') this.drawer.flipShapes('vertical');
       }
 
-      // lock selection: unlocked from layers panel
+      // lock selection, unlock locked one (still selected)
       if (edit && mod && e.shiftKey && e.code === 'KeyL' && selectedNodes.length && !inField) {
         e.preventDefault();
-        this.drawer.setShapesLocked(true);
+        this.drawer.setShapesLocked(!locked);
       }
 
       // copy selection (whole drawing without selection) as image, physical keys (Alt changes characters)

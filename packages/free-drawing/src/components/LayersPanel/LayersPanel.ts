@@ -464,13 +464,13 @@ export class LayersPanel {
   }
 
   /**
-   * Select shape of a row with selection tool (locked and hidden shapes are not): `one` alone,
+   * Select shape of a row with selection tool (hidden shapes are not, locked ones only without others): `one` alone,
    * `toggle` added or removed (Ctrl + click, Ctrl + Space), `range` with rows from anchor (Shift + click, Shift + arrows)
    */
   private _select(shape: DrawingShape, mode: 'one' | 'toggle' | 'range') {
     const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
 
-    if (!selectWidget || this.drawer.readOnly || !shape.isListening() || !shape.isVisible()) return;
+    if (!selectWidget || this.drawer.readOnly || !shape.isVisible()) return;
 
     const selected = this.drawer.getSelectedShapes();
     const range = mode === 'range' ? this._getRange(shape) : null;
@@ -501,7 +501,7 @@ export class LayersPanel {
     return ids
       .slice(Math.min(from, to), Math.max(from, to) + 1)
       .map((id) => this.#shapes.get(id)!)
-      .filter((row) => row.getParent() === shape.getParent() && row.isVisible() && row.isListening());
+      .filter((row) => row.getParent() === shape.getParent() && row.isVisible());
   }
 
   /**

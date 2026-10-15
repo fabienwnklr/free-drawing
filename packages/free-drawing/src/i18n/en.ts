@@ -102,6 +102,7 @@ export const en = {
   'help.move': 'Move selection',
   'help.forwardBackward': 'Bring forward / send backward',
   'help.frontBack': 'Bring to front / send to back',
+  'help.lock': 'Lock or unlock selection',
   'help.paste': 'Paste text',
   'help.open': 'Open file',
   'help.save': 'Save as file',
@@ -145,6 +146,7 @@ export const en = {
   'context.paste': 'Paste',
   'context.snap': 'Snap to object',
   'context.lock': 'Lock',
+  'context.unlock': 'Unlock',
 
   // actions on selection
   'selectionMenu.label': 'Selection actions',

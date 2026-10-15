@@ -18,7 +18,15 @@ import { Group } from 'konva/lib/Group';
 import { Arrow } from 'konva/lib/shapes/Arrow';
 import { arrowPointerSize } from '@/components/toolbar/widgets/Arrow/Arrow';
 import type { Vector2d } from 'konva/lib/types';
-import { getShapes, isDrawnAt, isInsideNode, isInsideOutline, rectContains } from '@/utils/hit';
+import {
+  getLockedNode,
+  getShapes,
+  isDrawnAt,
+  isDrawnAtLocked,
+  isInsideNode,
+  isInsideOutline,
+  rectContains,
+} from '@/utils/hit';
 import type { DrawingShape } from '@/@types/drawer';
 import type { Node } from 'konva/lib/Node';
 
@@ -269,49 +277,70 @@ export class SelectWidget extends BaseWidget {
   }
 
   /**
-   * Select shapes (none clears selection): transformer, anchors, selection options instead of options of active tool
+   * Select shapes (none clears selection): transformer, anchors, selection options instead of options of active tool.
+   * Hidden shapes are not selectable, locked ones only without other shapes: selected as a whole (locked group)
+   * to be unlocked, not modified (no anchors, options nor move)
    * @param {(Shape<ShapeConfig> | Group)[]} shapes
    */
   select(shapes: (Shape<ShapeConfig> | Group)[]) {
-    // locked and hidden shapes (or groups) are not selectable
-    const selectable = shapes.filter((shape) => shape.isListening() && shape.isVisible());
+    const visible = shapes.filter((shape) => shape.isVisible());
+    const unlocked = visible.filter((shape) => shape.isListening());
+    const selectable = unlocked.length ? unlocked : [...new Set(visible.map(getLockedNode))];
+    const locked = !unlocked.length;
 
     if (!selectable.length) {
       this.clearSelection();
       return;
     }
 
-    this._setupAnchors(selectable);
+    this._setupAnchors(selectable, locked);
     this.transformer.nodes(selectable);
-    this._setNested(selectable.filter((shape) => shape.getParent() !== this.drawer.drawLayer));
+    this._setNested(locked ? [] : selectable.filter((shape) => shape.getParent() !== this.drawer.drawLayer));
     // overlay of active tool (brush, shapes...) replaced by selection one
     if (this.drawer.activeWidget !== this) this.drawer.activeWidget?.overlay?.hide();
-    this.showOverlay(selectable);
+    if (locked) this.hideOverlay();
+    else this.showOverlay(selectable);
     this.drawer.trigger(drawerEvents.selectionChange, selectable);
   }
 
   /**
+   * Selected shapes are locked: selected to be unlocked, not modified
+   */
+  isLocked(): boolean {
+    const nodes = this.transformer.nodes();
+
+    return nodes.length > 0 && nodes.every((node) => !node.isListening());
+  }
+
+  /**
    * Shapes (or groups) under a point (absolute position), from top to bottom: drawn there (fill, stroke, text box),
-   * then rectangles and ellipses without background around it, smallest first
+   * then rectangles and ellipses without background around it, smallest first, then locked shapes (or their locked
+   * groups) in the same order
    * @param {Vector2d} pos
    * @param {DrawingShape | null} hit Shape drawn on top (konva hit of pointer event, or its group), none by default
    * @param {boolean} deep Shapes of groups instead of groups
    */
   getShapesAt(pos: Vector2d, hit: DrawingShape | null = null, deep: boolean = false): DrawingShape[] {
-    const shapes = (deep ? this.drawer.getDrawingShapes().flatMap(getShapes) : this.drawer.getDrawingShapes())
-      .filter((shape) => shape.isListening() && shape.isVisible())
+    const all = (deep ? this.drawer.getDrawingShapes().flatMap(getShapes) : this.drawer.getDrawingShapes())
+      .filter((shape) => shape.isVisible())
       .reverse();
+    const shapes = all.filter((shape) => shape.isListening());
+    const locked = all.filter((shape) => !shape.isListening());
     // drawn under hit shape
     const below = hit
       ? shapes.slice(shapes.indexOf(hit) + 1).filter((shape) => shape !== hit && isDrawnAt(shape, pos))
       : [];
     const drawn = hit ? [hit, ...below] : [];
+    const lockedDrawn = locked.filter((shape) => isDrawnAtLocked(shape, pos));
     const area = (shape: DrawingShape) => shape.getClientRect().width * shape.getClientRect().height;
-    const around = shapes
-      .filter((shape) => !drawn.includes(shape) && isInsideNode(shape, pos))
-      .sort((a, b) => area(a) - area(b));
+    const around = (list: DrawingShape[], exclude: DrawingShape[]) =>
+      list.filter((shape) => !exclude.includes(shape) && isInsideNode(shape, pos)).sort((a, b) => area(a) - area(b));
 
-    return [...drawn, ...around];
+    return [
+      ...drawn,
+      ...around(shapes, drawn),
+      ...new Set([...lockedDrawn, ...around(locked, lockedDrawn)].map(getLockedNode)),
+    ];
   }
 
   /**
@@ -335,12 +364,12 @@ export class SelectWidget extends BaseWidget {
   }
 
   /**
-   * Point (absolute position) in box of selection, rotated with it
+   * Point (absolute position) in box of selection, rotated with it (dragged from it), not for locked shapes
    */
   private _inSelectionBox(pos: Vector2d) {
     const back = this.transformer.findOne<Shape<ShapeConfig>>('.back');
 
-    return this.transformer.nodes().length > 0 && !!back && isInsideOutline(back, pos);
+    return this.transformer.nodes().length > 0 && !this.isLocked() && !!back && isInsideOutline(back, pos);
   }
 
   /**
@@ -474,17 +503,23 @@ export class SelectWidget extends BaseWidget {
 
   /**
    * Anchors of selected shapes: text has no top / bottom anchors (it would be stretched), its side anchors
-   * resize text box and its corners scale it
+   * resize text box and its corners scale it; locked shapes have none (dashed box around their outline)
    * @param {(Shape<ShapeConfig> | Group)[]} shapes
+   * @param {boolean} locked
    */
-  private _setupAnchors(shapes: (Shape<ShapeConfig> | Group)[]) {
+  private _setupAnchors(shapes: (Shape<ShapeConfig> | Group)[], locked: boolean) {
     const onlyText = shapes.length > 0 && shapes.every((s) => s.hasName(shapeName.text));
 
     this.transformer.enabledAnchors(
-      onlyText
+      locked
+        ? []
+        : onlyText
         ? ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'middle-left', 'middle-right']
         : this.defaultAnchors
     );
+    this.transformer.rotateEnabled(!locked);
+    this.transformer.borderDash(locked ? [4, 4] : []);
+    this.transformer.padding(locked ? 4 : 0);
     // texts scaled by corners keep their proportions
     this.transformer.keepRatio(onlyText);
   }
@@ -802,8 +837,8 @@ export class SelectWidget extends BaseWidget {
    * @param update
    */
   private _updateSelected(update: (shape: Shape<ShapeConfig>) => void) {
-    // shapes of groups too
-    const shapes = this.transformer.nodes().flatMap(getShapes);
+    // shapes of groups too, locked shapes are not modified
+    const shapes = this.isLocked() ? [] : this.transformer.nodes().flatMap(getShapes);
 
     if (!shapes.length) return;
 

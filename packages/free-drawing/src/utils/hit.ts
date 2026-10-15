@@ -5,6 +5,7 @@ import { Group } from 'konva/lib/Group';
 import { Line } from 'konva/lib/shapes/Line';
 import type { IRect, Vector2d } from 'konva/lib/types';
 import { fillShapes, shapeName } from '@/constants';
+import type { DrawingShape } from '@/@types/drawer';
 
 /** Minimum hit width of strokes (px), easier to click than thin strokes */
 const hitStrokeWidth = 20;
@@ -49,6 +50,35 @@ export function getShapes(node: Node): Shape<ShapeConfig>[] {
  */
 export function isDrawnAt(node: Node, point: Vector2d): boolean {
   return getShapes(node).some((shape) => shape.isVisible() && shape.intersects(point));
+}
+
+/**
+ * A visible shape of a node is drawn at a point, also when it is locked (konva draws hits of listening nodes only)
+ */
+export function isDrawnAtLocked(node: Node, point: Vector2d): boolean {
+  const locked = [...node.getAncestors(), node, ...(node instanceof Group ? node.find(() => true) : [])].filter(
+    (n) => !n.listening()
+  );
+
+  locked.forEach((n) => n.listening(true));
+  try {
+    return isDrawnAt(node, point);
+  } finally {
+    locked.forEach((n) => n.listening(false));
+  }
+}
+
+/**
+ * Locked node of a locked shape: its top locked group, else itself (selected and unlocked as a whole)
+ */
+export function getLockedNode(shape: DrawingShape): DrawingShape {
+  let locked = shape;
+
+  for (let parent = shape.getParent(); parent instanceof Group; parent = parent.getParent()) {
+    if (!parent.listening()) locked = parent;
+  }
+
+  return locked;
 }
 
 /**
