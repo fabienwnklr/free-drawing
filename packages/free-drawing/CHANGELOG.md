@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [6.13.1](https://github.com/fabienwnklr/free-drawing/compare/v6.13.0...v6.13.1) (2026-10-15)
+
+
+### Bug Fixes
+
+* **selection menu:** no longer covers the rotation and resize anchors, also on rotated or flipped shapes: placed below the selection, else above, right or left of it
+
 ## [6.13.0](https://github.com/fabienwnklr/free-drawing/compare/v6.12.0...v6.13.0) (2026-10-15)
 
 

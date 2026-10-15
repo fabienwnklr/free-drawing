@@ -53,6 +53,41 @@ describe('Selection menu', () => {
     expect(menu.isVisible()).toBe(false);
   });
 
+  it('Menu does not cover transformer: rotation anchor wherever rotation puts it, resize anchors', () => {
+    const drawer = createDrawer();
+    const menu = drawer.selectionMenu!;
+    const transformer = drawer.getWidget<SelectWidget>('selection')!.transformer;
+    // jsdom has no layout
+    Object.defineProperties(menu.$menu, { offsetWidth: { value: 150 }, offsetHeight: { value: 40 } });
+    const place = () => {
+      const left = parseFloat(menu.$menu.style.left);
+      const top = parseFloat(menu.$menu.style.top);
+
+      return { x: left, y: top, width: 150, height: 40 };
+    };
+    const overlaps = (a: { x: number; y: number; width: number; height: number }, b: typeof a) =>
+      a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
+
+    // rotated: rotation anchor below shape, menu under it
+    const rotated = addRect(drawer, 300, 300);
+
+    rotated.rotation(180);
+    select(drawer, [rotated]);
+
+    const rotater = transformer.findOne('.rotater')!.getClientRect();
+
+    expect(rotater.y).toBeGreaterThan(rotated.getClientRect().y + rotated.getClientRect().height);
+    expect(overlaps(place(), rotater)).toBe(false);
+    expect(overlaps(place(), transformer.getClientRect())).toBe(false);
+    expect(place().y).toBeGreaterThan(rotater.y + rotater.height);
+
+    // near bottom: above rotation anchor, with margin
+    const low = addRect(drawer, 300, drawer.stage.height() - drawer.$footerContainer.offsetHeight - 60);
+
+    select(drawer, [low]);
+    expect(place().y + 40 + 12).toBeLessThanOrEqual(transformer.findOne('.rotater')!.getClientRect().y);
+  });
+
   it('Duplicate copies selected shapes a little further, copies are selected', () => {
     const drawer = createDrawer();
     const first = addRect(drawer);

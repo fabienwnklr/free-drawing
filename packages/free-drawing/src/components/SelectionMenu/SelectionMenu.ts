@@ -153,22 +153,47 @@ export class SelectionMenu {
     this.$groupBtn.hidden = !this.drawer.canGroupShapes(shapes);
     this.$ungroupBtn.hidden = !shapes.some((shape) => shape instanceof Group);
 
-    const { offsetWidth: width, offsetHeight: height } = this.$menu;
-    // above toolbar of footer
-    const bottom = stage.height() - this.drawer.$footerContainer.offsetHeight - gap;
-    const transformer = this.transformer!;
-    const rotateAnchor = transformer.rotateEnabled() ? transformer.rotateAnchorOffset() : 0;
-    let top = box.y + box.height + gap;
-
-    if (top + height > bottom) top = box.y - rotateAnchor - gap - height;
-
-    const left = Math.min(Math.max(gap, box.x + box.width / 2 - width / 2), stage.width() - width - gap);
+    const { left, top } = this._getPlace();
     // view in drawer
     const view = this.drawer.$stageContainer.getBoundingClientRect();
     const container = this.drawer.$drawerContainer.getBoundingClientRect();
 
     this.$menu.style.left = `${left + view.left - container.left}px`;
-    this.$menu.style.top = `${Math.min(Math.max(gap, top), bottom - height) + view.top - container.top}px`;
+    this.$menu.style.top = `${top + view.top - container.top}px`;
+  }
+
+  /**
+   * Place of menu in view, out of transformer (selection box, resize and rotation anchors, wherever rotation puts them):
+   * below, else above, else right, else left, else at bottom of view (selection bigger than view)
+   */
+  private _getPlace() {
+    const { stage } = this.drawer;
+    const { offsetWidth: width, offsetHeight: height } = this.$menu;
+    // hidden anchors are not counted
+    const around = this.transformer!.getClientRect();
+    // above toolbar of footer
+    const area = {
+      left: gap,
+      top: gap,
+      right: stage.width() - gap,
+      bottom: stage.height() - this.drawer.$footerContainer.offsetHeight - gap,
+    };
+    const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(value, max));
+    const centerLeft = clamp(around.x + around.width / 2 - width / 2, area.left, area.right - width);
+    const centerTop = clamp(around.y + around.height / 2 - height / 2, area.top, area.bottom - height);
+    const places = [
+      { left: centerLeft, top: around.y + around.height + gap },
+      { left: centerLeft, top: around.y - gap - height },
+      { left: around.x + around.width + gap, top: centerTop },
+      { left: around.x - gap - width, top: centerTop },
+    ];
+
+    return (
+      places.find(
+        ({ left, top }) =>
+          left >= area.left && top >= area.top && left + width <= area.right && top + height <= area.bottom
+      ) ?? { left: centerLeft, top: area.bottom - height }
+    );
   }
 
   /**
