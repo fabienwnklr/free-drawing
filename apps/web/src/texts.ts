@@ -1,4 +1,5 @@
 import type { Drawer, Language } from '@fabwcie/free-drawing';
+import { ApiError } from './api';
 
 const en = {
   signIn: 'Sign in',
@@ -27,6 +28,20 @@ const en = {
   errorEmailTaken: 'An account already uses this email',
   errorPassword: 'Password of 8 characters at least',
   errorEmail: 'Invalid email',
+  account: 'My account',
+  profile: 'Profile',
+  save: 'Save',
+  profileSaved: 'Profile saved',
+  changePassword: 'Change password',
+  currentPassword: 'Current password',
+  newPassword: 'New password',
+  passwordChanged: 'Password changed, other sessions signed out',
+  deleteAccount: 'Delete account',
+  deleteAccountWarning: "Your drawings and preferences are deleted with your account. It can't be undone.",
+  deleteMyAccount: 'Delete my account',
+  deleteAccountConfirm: "Delete your account and all your drawings? It can't be undone.",
+  accountDeleted: 'Account deleted',
+  errorCurrentPassword: 'Wrong password',
   error: 'Something went wrong: {error}',
 };
 
@@ -59,6 +74,20 @@ const fr: Record<Key, string> = {
   errorEmailTaken: 'Un compte utilise déjà cet email',
   errorPassword: 'Mot de passe de 8 caractères au moins',
   errorEmail: 'Email invalide',
+  account: 'Mon compte',
+  profile: 'Profil',
+  save: 'Enregistrer',
+  profileSaved: 'Profil enregistré',
+  changePassword: 'Changer le mot de passe',
+  currentPassword: 'Mot de passe actuel',
+  newPassword: 'Nouveau mot de passe',
+  passwordChanged: 'Mot de passe modifié, autres sessions déconnectées',
+  deleteAccount: 'Supprimer le compte',
+  deleteAccountWarning: 'Vos dessins et vos préférences sont supprimés avec votre compte. Cette action est définitive.',
+  deleteMyAccount: 'Supprimer mon compte',
+  deleteAccountConfirm: 'Supprimer votre compte et tous vos dessins ? Cette action est définitive.',
+  accountDeleted: 'Compte supprimé',
+  errorCurrentPassword: 'Mot de passe incorrect',
   error: 'Une erreur est survenue : {error}',
 };
 
@@ -89,6 +118,20 @@ const es: Record<Key, string> = {
   errorEmailTaken: 'Ya existe una cuenta con este correo',
   errorPassword: 'Contraseña de 8 caracteres como mínimo',
   errorEmail: 'Correo no válido',
+  account: 'Mi cuenta',
+  profile: 'Perfil',
+  save: 'Guardar',
+  profileSaved: 'Perfil guardado',
+  changePassword: 'Cambiar contraseña',
+  currentPassword: 'Contraseña actual',
+  newPassword: 'Nueva contraseña',
+  passwordChanged: 'Contraseña cambiada, otras sesiones cerradas',
+  deleteAccount: 'Eliminar la cuenta',
+  deleteAccountWarning: 'Tus dibujos y preferencias se eliminan con tu cuenta. No se puede deshacer.',
+  deleteMyAccount: 'Eliminar mi cuenta',
+  deleteAccountConfirm: '¿Eliminar tu cuenta y todos tus dibujos? No se puede deshacer.',
+  accountDeleted: 'Cuenta eliminada',
+  errorCurrentPassword: 'Contraseña incorrecta',
   error: 'Se produjo un error: {error}',
 };
 
@@ -119,6 +162,21 @@ const de: Record<Key, string> = {
   errorEmailTaken: 'Ein Konto verwendet diese E-Mail bereits',
   errorPassword: 'Passwort mit mindestens 8 Zeichen',
   errorEmail: 'Ungültige E-Mail',
+  account: 'Mein Konto',
+  profile: 'Profil',
+  save: 'Speichern',
+  profileSaved: 'Profil gespeichert',
+  changePassword: 'Passwort ändern',
+  currentPassword: 'Aktuelles Passwort',
+  newPassword: 'Neues Passwort',
+  passwordChanged: 'Passwort geändert, andere Sitzungen abgemeldet',
+  deleteAccount: 'Konto löschen',
+  deleteAccountWarning:
+    'Ihre Zeichnungen und Einstellungen werden mit Ihrem Konto gelöscht. Das kann nicht rückgängig gemacht werden.',
+  deleteMyAccount: 'Mein Konto löschen',
+  deleteAccountConfirm: 'Ihr Konto und alle Ihre Zeichnungen löschen? Das kann nicht rückgängig gemacht werden.',
+  accountDeleted: 'Konto gelöscht',
+  errorCurrentPassword: 'Falsches Passwort',
   error: 'Ein Fehler ist aufgetreten: {error}',
 };
 
@@ -132,6 +190,18 @@ export class Texts {
 
   t = (key: Key, params: Record<string, string> = {}): string =>
     (texts[this.drawer.language] ?? en)[key].replace(/\{(\w+)\}/g, (match, name) => params[name] ?? match);
+
+  /** Error of the server, known errors of Better Auth explained */
+  error = (error: Error): string => {
+    const code = error instanceof ApiError ? error.code ?? '' : '';
+
+    if (code.includes('INVALID_EMAIL_OR_PASSWORD')) return this.t('errorCredentials');
+    if (code.includes('USER_ALREADY_EXISTS')) return this.t('errorEmailTaken');
+    if (code.includes('PASSWORD_TOO_SHORT')) return this.t('errorPassword');
+    if (code === 'INVALID_PASSWORD') return this.t('errorCurrentPassword');
+    if (code.includes('INVALID_EMAIL')) return this.t('errorEmail');
+    return this.t('error', { error: error.message });
+  };
 
   /** Date and time of an ISO date */
   date = (iso: string): string =>

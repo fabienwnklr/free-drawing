@@ -73,6 +73,72 @@ describe('Accounts', () => {
   });
 });
 
+describe('Account', () => {
+  it('Name, email and password changed', async () => {
+    const { agent, email } = await signUp('Ada');
+    const post = (path: string, body: object) =>
+      agent.post(`/api/auth${path}`).set('Origin', config.baseURL).send(body);
+
+    expect((await post('/update-user', { name: 'Ada L.' })).status).toBe(200);
+    expect((await agent.get('/api/me')).body.name).toBe('Ada L.');
+
+    const newEmail = `new${++count}@example.com`;
+
+    expect((await post('/change-email', { newEmail })).status).toBe(200);
+    expect((await agent.get('/api/me')).body.email).toBe(newEmail);
+    // email of another account: not changed (not told, like Better Auth)
+    const other = await signUp();
+
+    expect((await post('/change-email', { newEmail: other.email })).status).toBe(200);
+    expect((await agent.get('/api/me')).body.email).toBe(newEmail);
+
+    // wrong current password, then other sessions signed out
+    const second = request.agent(server.app);
+
+    await second.post('/api/auth/sign-in/email').set('Origin', config.baseURL).send({ email: newEmail, password });
+    expect((await second.get('/api/me')).status).toBe(200);
+    expect(
+      (await post('/change-password', { currentPassword: 'wrong password', newPassword: 'other password' })).body.code
+    ).toBe('INVALID_PASSWORD');
+
+    const changed = await post('/change-password', {
+      currentPassword: password,
+      newPassword: 'new password 42',
+      revokeOtherSessions: true,
+    });
+
+    expect(changed.status).toBe(200);
+    expect((await agent.get('/api/me')).status).toBe(200);
+    expect((await second.get('/api/me')).status).toBe(401);
+    expect(email).not.toBe(newEmail);
+  });
+
+  it('Account deleted with its password, with drawings and preferences', async () => {
+    const { agent, email } = await signUp();
+    const post = (path: string, body: object) =>
+      agent.post(`/api/auth${path}`).set('Origin', config.baseURL).send(body);
+    const { id } = (await agent.post('/api/drawings').send({ content: drawing })).body;
+    const userId = (await agent.get('/api/me')).body.id;
+
+    await agent.put('/api/preferences').send({ theme: 'dark' });
+    expect((await post('/delete-user', { password: 'wrong password' })).body.code).toBe('INVALID_PASSWORD');
+    expect((await agent.get(`/api/drawings/${id}`)).status).toBe(200);
+
+    expect((await post('/delete-user', { password })).status).toBe(200);
+    expect((await agent.get('/api/me')).status).toBe(401);
+    expect(await server.db.selectFrom('drawing').where('userId', '=', userId).selectAll().execute()).toEqual([]);
+    expect(await server.db.selectFrom('preferences').where('userId', '=', userId).selectAll().execute()).toEqual([]);
+
+    // email free again
+    const res = await request(server.app)
+      .post('/api/auth/sign-in/email')
+      .set('Origin', config.baseURL)
+      .send({ email, password });
+
+    expect(res.status).toBe(401);
+  });
+});
+
 describe('Preferences', () => {
   it('Known preferences saved, others ignored', async () => {
     const { agent } = await signUp();

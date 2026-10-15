@@ -14,12 +14,19 @@ function getOptions(config: ServerConfig, db: Kysely<Database>) {
     secret: config.secret,
     trustedOrigins: config.trustedOrigins,
     emailAndPassword: { enabled: true, minPasswordLength: 8 },
+    user: {
+      // no email sent (no verification): the new email is used at once, unless an account uses it
+      changeEmail: { enabled: true, updateEmailWithoutVerification: true },
+      // with password, drawings and preferences removed with the user (foreign keys)
+      deleteUser: { enabled: true },
+    },
   } satisfies BetterAuthOptions;
 }
 
 /**
- * Accounts and sessions (cookie) with Better Auth: sign up and sign in with email and password,
- * routes under `/api/auth` (`/sign-up/email`, `/sign-in/email`, `/sign-out`, `/get-session`...).
+ * Accounts and sessions (cookie) with Better Auth: sign up and sign in with email and password, account changes,
+ * routes under `/api/auth` (`/sign-up/email`, `/sign-in/email`, `/sign-out`, `/get-session`, `/update-user`,
+ * `/change-email`, `/change-password`, `/delete-user`...).
  * Its tables are created or updated first (it checks them when created).
  */
 export async function createAuth(config: ServerConfig, db: Kysely<Database>) {

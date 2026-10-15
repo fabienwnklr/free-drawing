@@ -4,6 +4,7 @@ import { local } from './local';
 import { Texts } from './texts';
 import { AccountDialog } from './AccountDialog';
 import { DrawingsDialog } from './DrawingsDialog';
+import { ProfileDialog } from './ProfileDialog';
 
 type SaveState = '' | 'saving' | 'saved' | 'error';
 
@@ -27,6 +28,7 @@ export class App {
   readonly $accountButton: HTMLButtonElement;
   readonly accountDialog: AccountDialog;
   readonly drawingsDialog: DrawingsDialog;
+  readonly profileDialog: ProfileDialog;
   #saveState: SaveState = '';
   /** Session read and drawing chosen: drawing is loaded after it */
   readonly #started: Promise<void>;
@@ -63,6 +65,7 @@ export class App {
     this.texts = new Texts(this.drawer);
     this.accountDialog = new AccountDialog(this);
     this.drawingsDialog = new DrawingsDialog(this);
+    this.profileDialog = new ProfileDialog(this);
 
     this._initEvents();
     // user and preferences once drawing is loaded (or could not be)
@@ -176,7 +179,9 @@ export class App {
       }
     });
     this.$drawingsButton.addEventListener('click', () => this.drawingsDialog.show());
-    this.$accountButton.addEventListener('click', () => (this.user ? this.logout() : this.accountDialog.show()));
+    this.$accountButton.addEventListener('click', () =>
+      this.user ? this.profileDialog.show() : this.accountDialog.show()
+    );
   }
 
   /**
@@ -211,11 +216,34 @@ export class App {
   }
 
   /**
-   * Drawing of browser shown again: drawing of account is not kept in browser
+   * Name or email of logged in user changed: shown, name of collaboration sessions
    */
+  setUser(user: User) {
+    this.user = user;
+    this.drawer.setUser({ id: user.id, name: user.name });
+    this.render();
+  }
+
   async logout() {
     await this.drawer.save();
     await api.signOut().catch(() => {});
+    await this._leaveAccount();
+  }
+
+  /**
+   * Account deleted with its drawings and preferences (wrong password: error, still logged in)
+   */
+  async deleteAccount(password: string) {
+    // pending save ended before (not done once drawing is deleted)
+    await this.drawer.save();
+    await api.deleteUser(password);
+    await this._leaveAccount();
+  }
+
+  /**
+   * Drawing of browser shown again: drawing of account is not kept in browser
+   */
+  private async _leaveAccount() {
     this.user = null;
     this.drawing = null;
     this.drawer.setUser(null);
@@ -274,8 +302,9 @@ export class App {
     this.$drawingsButton.hidden = !this.user;
     this.$drawingsButton.textContent = t('myDrawings');
     this.$user.textContent = this.user?.name ?? '';
-    this.$accountButton.textContent = t(this.user ? 'signOut' : 'signIn');
+    this.$accountButton.textContent = t(this.user ? 'account' : 'signIn');
     this.accountDialog?.render();
+    this.profileDialog?.render();
     this.drawingsDialog?.render();
   }
 }

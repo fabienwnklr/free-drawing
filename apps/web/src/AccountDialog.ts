@@ -1,4 +1,4 @@
-import { ApiError, api } from './api';
+import { api } from './api';
 import type { App } from './App';
 
 let lastId = 0;
@@ -108,24 +108,10 @@ export class AccountDialog {
       this.$dialog.close();
       await this.app.login(user);
     } catch (error) {
-      this.$error.textContent = this._errorText(error as Error);
+      this.$error.textContent = this.app.texts.error(error as Error);
       if (!this.$dialog.open) this.app.drawer.toast(t('error', { error: (error as Error).message }), 'error');
     } finally {
       this.$submit.disabled = false;
     }
-  }
-
-  /**
-   * Known errors of Better Auth in language of the app
-   */
-  private _errorText(error: Error) {
-    const { t } = this.app.texts;
-    const code = error instanceof ApiError ? error.code ?? '' : '';
-
-    if (code.includes('INVALID_EMAIL_OR_PASSWORD')) return t('errorCredentials');
-    if (code.includes('USER_ALREADY_EXISTS')) return t('errorEmailTaken');
-    if (code.includes('PASSWORD_TOO_SHORT')) return t('errorPassword');
-    if (code.includes('INVALID_EMAIL')) return t('errorEmail');
-    return t('error', { error: error.message });
   }
 }

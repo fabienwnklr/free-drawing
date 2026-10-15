@@ -241,8 +241,35 @@ body {
   color: var(--app-danger);
 }
 
-.app-error:empty {
+.app-error:empty,
+.app-success:empty {
   display: none;
+}
+
+.app-success {
+  color: var(--app-text-muted);
+}
+
+.app-button-danger {
+  border-color: var(--app-danger);
+  color: var(--app-danger);
+}
+
+/* account: sections separated */
+.app-profile h3 {
+  margin: 0;
+  font-size: 0.9375rem;
+}
+
+.app-profile :is(form, .app-profile-section) + :is(form, .app-profile-section) {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--app-border);
+}
+
+.app-profile-section {
+  display: flex;
+  flex-direction: column;
 }
 
 .app-drawings {

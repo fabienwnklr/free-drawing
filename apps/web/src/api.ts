@@ -46,6 +46,14 @@ export const api = {
   signUp: (name: string, email: string, password: string) =>
     request('/api/auth/sign-up/email', 'POST', { name, email, password }),
   signOut: () => request('/api/auth/sign-out', 'POST', {}),
+  updateUser: (name: string) => request('/api/auth/update-user', 'POST', { name }),
+  /** Not changed (no error) when an account uses this email */
+  changeEmail: (newEmail: string) => request('/api/auth/change-email', 'POST', { newEmail }),
+  /** Other sessions signed out */
+  changePassword: (currentPassword: string, newPassword: string) =>
+    request('/api/auth/change-password', 'POST', { currentPassword, newPassword, revokeOtherSessions: true }),
+  /** Account removed with its drawings and preferences, session ended */
+  deleteUser: (password: string) => request('/api/auth/delete-user', 'POST', { password }),
   getPreferences: () => request<Partial<Preferences>>('/api/preferences'),
   savePreferences: (preferences: Preferences) => request('/api/preferences', 'PUT', preferences),
   listDrawings: () => request<DrawingSummary[]>('/api/drawings'),
