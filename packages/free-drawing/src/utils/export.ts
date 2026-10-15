@@ -221,6 +221,10 @@ function shapeToSvg(shape: Node, dark?: boolean, matrix = shape.getTransform().g
     const lineHeight = shape.lineHeight() * fontSize;
     const style = shape.fontStyle();
     const decoration = shape.textDecoration();
+    // baseline as konva draws it: font box centered in line height
+    const { fontBoundingBoxAscent: ascent, fontBoundingBoxDescent: descent } = shape.measureSize('M');
+    const baseline = padding + lineHeight / 2 + (ascent - descent) / 2;
+    const decorationOffset = Math.round(fontSize / 4);
     const lines = shape.textArr.map((line, i) => {
       const x =
         padding +
@@ -229,15 +233,15 @@ function shapeToSvg(shape: Node, dark?: boolean, matrix = shape.getTransform().g
           : shape.align() === 'center'
           ? (shape.width() - line.width - padding * 2) / 2
           : 0);
-      const y = padding + lineHeight / 2 + i * lineHeight;
+      const y = baseline + i * lineHeight;
       // decorations drawn as konva draws them
       const decorationLine = (dy: number) =>
         `<path${attrs({ d: `M${num(x)} ${num(y + dy)}h${num(Math.round(line.width))}`, stroke: fill, 'stroke-width': fontSize / 15 })}/>`;
 
       return (
         `<text${attrs({ x, y })} xml:space="preserve">${escapeXml(line.text)}</text>` +
-        (decoration.includes('underline') ? decorationLine(Math.round(fontSize / 2)) : '') +
-        (decoration.includes('line-through') ? decorationLine(0) : '')
+        (decoration.includes('underline') ? decorationLine(shape.underlineOffset() ?? decorationOffset) : '') +
+        (decoration.includes('line-through') ? decorationLine(-decorationOffset) : '')
       );
     });
     const font = attrs({
@@ -246,7 +250,6 @@ function shapeToSvg(shape: Node, dark?: boolean, matrix = shape.getTransform().g
       'font-style': style.includes('italic') ? 'italic' : undefined,
       'font-weight': style.includes('bold') ? 'bold' : undefined,
       fill,
-      'dominant-baseline': 'middle',
     });
 
     return `<g${group}${font}>${lines.join('')}</g>`;

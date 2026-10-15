@@ -124,27 +124,6 @@ export class TextWidget extends BaseWidget {
     this._initEventsTextarea(textNode, textarea);
   }
 
-  /**
-   * Vertical offset between canvas text and textarea text (unscaled): konva centers the middle of the em box
-   * in each line, css centers the font box (ascent + descent). Negative when canvas text is higher.
-   * @param {Text} textNode
-   */
-  private _baselineOffset(textNode: Text) {
-    const ctx = document.createElement('canvas').getContext('2d');
-
-    if (!ctx) return 0;
-
-    ctx.font = textNode._getContextFont();
-    ctx.textBaseline = 'alphabetic';
-    const { fontBoundingBoxAscent: ascent, fontBoundingBoxDescent: descent } = ctx.measureText('M');
-    ctx.textBaseline = 'middle';
-    const middleAboveBaseline = ascent - ctx.measureText('M').fontBoundingBoxAscent;
-    const offset = middleAboveBaseline - (ascent - descent) / 2;
-
-    // font box metrics not supported (old browsers)
-    return Number.isFinite(offset) ? offset : 0;
-  }
-
   private _createTextarea(textNode: Text) {
     // zoom and scale of text and its groups
     const scale = textNode.getAbsoluteScale().x;
@@ -161,13 +140,8 @@ export class TextWidget extends BaseWidget {
 
     textarea.value = textNode.text();
     textarea.style.position = 'absolute';
-    textarea.style.top =
-      this.drawer.stage.container().offsetTop +
-      textPosition.y +
-      textPadding -
-      spacing +
-      this._baselineOffset(textNode) * scale +
-      'px';
+    // konva places lines like css (font box centered in line height)
+    textarea.style.top = this.drawer.stage.container().offsetTop + textPosition.y + textPadding - spacing + 'px';
     textarea.style.left = this.drawer.stage.container().offsetLeft + textPosition.x + textPadding - spacing + 'px';
     // content width is text width (border-box), so lines wrap the same way
     textarea.style.width = (textNode.width() - textNode.padding() * 2) * scale + spacing * 2 + 'px';
@@ -190,7 +164,8 @@ export class TextWidget extends BaseWidget {
     // rotation around text position, not textarea corner
     textarea.style.transformOrigin = `${spacing}px ${spacing}px`;
     textarea.style.textAlign = textNode.align();
-    textarea.style.color = textNode.fill();
+    // texts are filled with a color, not a gradient
+    textarea.style.color = textNode.fill() as string;
 
     return textarea;
   }

@@ -24,7 +24,7 @@ See [Contribute guide](https://github.com/fabienwnklr/free-drawing/blob/master/C
 yarn add @fabwcie/free-drawing konva
 ```
 
-`konva` is a peer dependency, install it with the package.
+`konva` (version 10) is a peer dependency, install it with the package.
 
 ## Use it
 

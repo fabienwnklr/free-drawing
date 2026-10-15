@@ -4,7 +4,7 @@
   "description": "Infinite canvas",
   "contributors": [],
   "private": false,
-  "version": "6.14.0",
+  "version": "7.0.0",
   "type": "module",
   "main": "./dist/drawer.umd.cjs",
   "module": "./dist/drawer.js",
@@ -52,7 +52,7 @@
     "eslint": "^8.51.0",
     "jest-canvas-mock": "^2.5.2",
     "jsdom": "^22.1.0",
-    "konva": "^9.3.1",
+    "konva": "^10.9.0",
     "sass": "^1.69.1",
     "typedoc": "^0.25.2",
     "typedoc-plugin-markdown": "^4.0.0-next.55",
@@ -62,7 +62,7 @@
     "vitest": "^0.34.6"
   },
   "peerDependencies": {
-    "konva": "^9.3.1"
+    "konva": "^10.9.0"
   },
   "dependencies": {
     "perfect-freehand": "^1.2.0",

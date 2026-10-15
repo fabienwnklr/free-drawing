@@ -11,8 +11,7 @@ vi.mock('socket.io-client', () => ({ io }));
 /** Pending promises and timers done */
 const flush = () => new Promise((resolve) => setTimeout(resolve));
 
-const texts = (drawer: ReturnType<typeof createDrawer>) =>
-  drawer.getDrawingShapes().map((shape) => shape.getAttr('text'));
+const texts = (drawer: ReturnType<typeof createDrawer>) => drawer.getDrawingShapes().map((shape) => shape.attrs.text);
 
 const addText = (drawer: ReturnType<typeof createDrawer>, text: string) => {
   drawer.getWidget<TextWidget>('text')!.addTextNode(text);

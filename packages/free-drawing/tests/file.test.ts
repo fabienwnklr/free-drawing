@@ -33,7 +33,7 @@ describe('Drawing files and links', () => {
     drawer.stage.fire('change');
 
     drawer.loadDrawing(JSON.stringify(file));
-    expect(drawer.getDrawingShapes().map((s) => s.getAttr('text'))).toEqual(['hello']);
+    expect(drawer.getDrawingShapes().map((s) => s.attrs.text)).toEqual(['hello']);
     expect(drawer.background.fill()).toBe('#f8f9fa');
 
     drawer.undoRedo.undo();
@@ -83,7 +83,7 @@ describe('Drawing files and links', () => {
     const drawer = createDrawer({ id: 'drawer-link' });
     await wait();
 
-    expect(drawer.getDrawingShapes().map((s) => s.getAttr('text'))).toEqual(['from link']);
+    expect(drawer.getDrawingShapes().map((s) => s.attrs.text)).toEqual(['from link']);
     // link drawing loaded once, not on next page load
     expect(window.location.hash).toBe('');
   });

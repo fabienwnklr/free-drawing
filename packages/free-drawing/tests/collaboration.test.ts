@@ -468,11 +468,11 @@ describe('Collaboration', () => {
     fireMouse(b, 'mousedown', 300, 300);
     fireMouse(a, 'mousemove', 120, 90);
     await wait();
-    expect(byId(b, line.id())!.getAttr('points')).toEqual(line.getAttr('points'));
+    expect(byId(b, line.id())!.getAttr('points')).toEqual(line.attrs.points);
     fireMouse(b, 'mouseup', 300, 300);
 
     fireMouse(a, 'mouseup', 120, 90);
-    expect(byId(b, line.id())!.getAttr('points')).toEqual(line.getAttr('points'));
+    expect(byId(b, line.id())!.getAttr('points')).toEqual(line.attrs.points);
     expect(b.undoRedo.canUndo()).toBe(true);
   });
 

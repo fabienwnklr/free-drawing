@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.0.0](https://github.com/fabienwnklr/free-drawing/compare/v6.14.0...v7.0.0) (2026-10-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** konva 10 is required (peer dependency `^10.9.0`): ES modules only, `require('konva').default` in CommonJS, see [konva changelog](https://github.com/konvajs/konva/blob/master/CHANGELOG.md). Konva 10 types `getAttr` / `setAttr` per class: on a `DrawingShape` (shape or group), read attributes from a `Node` (`const node: Node = shape`) or `shape.attrs`
+* texts are placed in their lines like HTML texts (konva 10): texts of existing drawings move down a little (about 6% of their font size)
+
+### Features
+
+* konva 10.9: rotation follows the pointer around the center of selection, faster transformer with many selected shapes, finer hit detection of thin lines, hit detection in Brave
+* text editor, svg export of texts (underline, line-through) and rotation by 15° with Shift follow konva 10
+
 ## [6.14.0](https://github.com/fabienwnklr/free-drawing/compare/v6.13.1...v6.14.0) (2026-10-15)
 
 

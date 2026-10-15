@@ -1095,7 +1095,7 @@ export class Drawer extends MicroEvent {
       return copy;
     });
     // ids of copies, also of shapes of groups
-    const nodes = (shape: DrawingShape) => [shape, ...(shape instanceof Group ? shape.find(() => true) : [])];
+    const nodes = (shape: DrawingShape): Node[] => [shape, ...(shape instanceof Group ? shape.find(() => true) : [])];
     const ids = new Map(
       originals.flatMap((shape, i) => nodes(shape).map((node, j) => [node.id(), nodes(copies[i])[j].id()]))
     );
@@ -1230,10 +1230,13 @@ export class Drawer extends MicroEvent {
    * @param {Shape<ShapeConfig>} shape
    */
   getShapeLabel(shape: DrawingShape): string {
-    const text = shape.hasName(shapeName.text) ? String(shape.getAttr('text') ?? '').trim().split('\n')[0] : '';
+    // attributes read from node (konva types those of each class, not of a shape or group)
+    const node: Node = shape;
+    const text = shape.hasName(shapeName.text) ? String(node.getAttr('text') ?? '').trim() : '';
     const type = Object.keys(shapeLabels).find((name) => shape.hasName(name));
 
-    return shape.getAttr('label') || text || (type ? this.t(shapeLabels[type]) : shape.getClassName());
+    // first line of a text
+    return node.getAttr('label') || text.split('\n')[0] || (type ? this.t(shapeLabels[type]) : shape.getClassName());
   }
 
   /**
@@ -1244,10 +1247,11 @@ export class Drawer extends MicroEvent {
    */
   setShapeLabel(shape: DrawingShape, label: string): boolean {
     const value = label.trim() || undefined;
+    const node: Node = shape;
 
-    if (shape.getAttr('label') === value) return false;
+    if (node.getAttr('label') === value) return false;
 
-    shape.setAttr('label', value);
+    node.setAttr('label', value);
     this.stage.fire('change');
 
     return true;

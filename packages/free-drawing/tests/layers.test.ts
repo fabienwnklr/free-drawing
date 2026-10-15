@@ -182,11 +182,11 @@ describe('Layers panel', () => {
     expect(drawer.getSelectedShapes()).toEqual([text]);
     part(drawer, 1, 'name').click();
     part(drawer, 0, 'name').dispatchEvent(new MouseEvent('click', { ctrlKey: true }));
-    expect(drawer.getSelectedShapes().map((shape) => shape.getAttr('name'))).toEqual([shapeName.line]);
+    expect(drawer.getSelectedShapes().map((shape) => shape.name())).toEqual([shapeName.line]);
     part(drawer, 0, 'name').click();
     expect(drawer.getSelectedShapes()).toEqual([text]);
     selectWidget.selectAll();
-    expect(drawer.getSelectedShapes().map((shape) => shape.getAttr('name'))).toEqual([shapeName.line]);
+    expect(drawer.getSelectedShapes().map((shape) => shape.name())).toEqual([shapeName.line]);
 
     drawer.undoRedo.undo();
     expect(rows(drawer)).toEqual(['Hello', 'Freehand', 'Rectangle hidden']);

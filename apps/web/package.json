@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@fabwcie/free-drawing": "*",
-    "konva": "^9.3.1"
+    "konva": "^10.9.0"
   },
   "devDependencies": {
     "sass": "^1.69.1",

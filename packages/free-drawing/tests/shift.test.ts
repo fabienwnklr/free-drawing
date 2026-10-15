@@ -57,25 +57,15 @@ describe('Shift', () => {
     expect(selectWidget.transformer.keepRatio()).toBe(true);
   });
 
-  it('Rotation by 15 degrees with Shift, snaps of grid kept otherwise', () => {
+  it('Rotation by 15 degrees with Shift (konva), snaps of grid kept', () => {
     const drawer = createDrawer();
     const { transformer } = drawer.getWidget<SelectWidget>('selection')!;
 
+    // 'none' would turn Shift rotation off
+    expect(transformer.shiftBehavior()).toBe('default');
     transformer.rotationSnaps([0, 90, 180, 270]);
     transformer.fire('transformstart', { evt: new MouseEvent('mousedown', { shiftKey: true }) });
-    expect(transformer.rotationSnaps()).toEqual(Array.from({ length: 24 }, (_, i) => i * 15));
-    expect(transformer.rotationSnapTolerance()).toBe(7.5);
-
-    // Shift released while rotating
-    window.dispatchEvent(new MouseEvent('mousemove'));
-    expect(transformer.rotationSnaps()).toEqual([0, 90, 180, 270]);
-    window.dispatchEvent(new MouseEvent('mousemove', { shiftKey: true }));
-    expect(transformer.rotationSnaps()).toHaveLength(24);
-
     transformer.fire('transformend');
-    expect(transformer.rotationSnaps()).toEqual([0, 90, 180, 270]);
-    expect(transformer.rotationSnapTolerance()).toBe(5);
-    window.dispatchEvent(new MouseEvent('mousemove', { shiftKey: true }));
     expect(transformer.rotationSnaps()).toEqual([0, 90, 180, 270]);
   });
 

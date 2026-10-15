@@ -33,9 +33,6 @@ import type { Node } from 'konva/lib/Node';
 /** Pointer move under which a press is a click (px) */
 const clickTolerance = 3;
 
-/** Rotation angles with Shift (degrees) */
-const rotationSteps = Array.from({ length: 24 }, (_, i) => i * 15);
-
 export class SelectWidget extends BaseWidget {
   #x1: number = 0;
   #y1: number = 0;
@@ -462,28 +459,9 @@ export class SelectWidget extends BaseWidget {
   }
 
   /**
-   * Shift while rotating: by 15 degrees, while moving: horizontally or vertically (resize: see `keepRatio`)
+   * Shift while moving: horizontally or vertically (resize: see `keepRatio`, rotation by 15 degrees: konva transformer)
    */
   private _initShiftEvents() {
-    // rotation snaps without Shift (grid)
-    let snaps: number[] = [];
-    // read before transformer handles pointer move (capture phase)
-    const onMove = (e: MouseEvent) => {
-      this.transformer.rotationSnaps(e.shiftKey ? rotationSteps : snaps);
-      this.transformer.rotationSnapTolerance(e.shiftKey ? 7.5 : 5);
-    };
-
-    this.transformer.on('transformstart', (e) => {
-      snaps = this.transformer.rotationSnaps();
-      onMove(e.evt);
-      window.addEventListener('mousemove', onMove, true);
-    });
-    this.transformer.on('transformend', () => {
-      window.removeEventListener('mousemove', onMove, true);
-      this.transformer.rotationSnaps(snaps);
-      this.transformer.rotationSnapTolerance(5);
-    });
-
     this.drawer.drawLayer.on('dragstart.axis', (e) => {
       const start = e.target.absolutePosition();
 
