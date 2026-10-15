@@ -149,6 +149,8 @@ export const fr: Translations = {
   'action.bringForward': 'Avancer',
   'action.bringToFront': 'Mettre au premier plan',
   'action.delete': 'Supprimer',
+  'action.rotateRight': 'Pivoter de 90° à droite',
+  'action.rotateLeft': 'Pivoter de 90° à gauche',
   'action.flipHorizontal': 'Retourner horizontalement',
   'action.flipVertical': 'Retourner verticalement',
   'action.copyPng': 'Copier en PNG',

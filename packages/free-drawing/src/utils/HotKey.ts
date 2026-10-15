@@ -82,10 +82,12 @@ export class HotKey {
         e.preventDefault();
       }
 
-      // flip selection (Shift + letter is not a tool shortcut)
+      // flip or rotate selection by a quarter turn (Shift + letter is not a tool shortcut)
       if (edit && !mod && !e.altKey && e.shiftKey && editable.length && !inField) {
         if (e.code === 'KeyH') this.drawer.flipShapes('horizontal');
         if (e.code === 'KeyV') this.drawer.flipShapes('vertical');
+        if (e.code === 'KeyR') this.drawer.rotateShapes(90);
+        if (e.code === 'KeyL') this.drawer.rotateShapes(-90);
       }
 
       // lock selection, unlock locked one (still selected)

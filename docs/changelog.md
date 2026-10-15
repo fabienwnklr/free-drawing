@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.2.0](https://github.com/fabienwnklr/free-drawing/compare/v7.1.0...v7.2.0) (2026-10-15)
+
+
+### Features
+
+* rotate selection by 90° to the right or left around its center: Shift + R / Shift + L, buttons of selection menu, context menu, command palette, `rotateShapes` method (linked arrows follow)
+
 ## [7.1.0](https://github.com/fabienwnklr/free-drawing/compare/v7.0.0...v7.1.0) (2026-10-15)
 
 

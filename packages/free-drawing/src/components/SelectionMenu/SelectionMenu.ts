@@ -10,6 +10,8 @@ import GroupIcon from '@/icons/group.svg?raw';
 import UngroupIcon from '@/icons/ungroup.svg?raw';
 import UnlockIcon from '@/icons/unlock.svg?raw';
 import LockIcon from '@/icons/lock.svg?raw';
+import RotateLeftIcon from '@/icons/rotate-left.svg?raw';
+import RotateRightIcon from '@/icons/rotate-right.svg?raw';
 import { Group } from 'konva/lib/Group';
 import { arrowNavigation, createButton, setLabel } from '@/utils/dom';
 import type { TranslationKey } from '@/i18n/en';
@@ -19,7 +21,8 @@ import { drawerEvents } from '@/constants';
 const gap = 12;
 
 /**
- * Menu next to selected shapes: duplicate, bring forward, send backward, lock, delete, or unlock for locked shapes.
+ * Menu next to selected shapes: duplicate, rotate, bring forward, send backward, lock, delete, or unlock for locked
+ * shapes.
  * Out of transformer (below, above, right or left of it), hidden while shapes are moved
  */
 export class SelectionMenu {
@@ -28,6 +31,8 @@ export class SelectionMenu {
   $duplicateBtn: HTMLButtonElement;
   $groupBtn: HTMLButtonElement;
   $ungroupBtn: HTMLButtonElement;
+  $rotateLeftBtn: HTMLButtonElement;
+  $rotateRightBtn: HTMLButtonElement;
   $backwardBtn: HTMLButtonElement;
   $forwardBtn: HTMLButtonElement;
   $deleteBtn: HTMLButtonElement;
@@ -45,6 +50,12 @@ export class SelectionMenu {
 
     this.$duplicateBtn = this._createButton(DuplicateIcon, 'action.duplicate', 'Ctrl+D', () =>
       this.drawer.duplicateShapes()
+    );
+    this.$rotateLeftBtn = this._createButton(RotateLeftIcon, 'action.rotateLeft', 'Shift+L', () =>
+      this.drawer.rotateShapes(-90)
+    );
+    this.$rotateRightBtn = this._createButton(RotateRightIcon, 'action.rotateRight', 'Shift+R', () =>
+      this.drawer.rotateShapes(90)
     );
     this.$backwardBtn = this._createButton(SendBackwardIcon, 'action.sendBackward', 'Ctrl+Down', () =>
       this.drawer.reorderShapes('backward')
@@ -76,6 +87,8 @@ export class SelectionMenu {
       this.$duplicateBtn,
       this.$groupBtn,
       this.$ungroupBtn,
+      this.$rotateLeftBtn,
+      this.$rotateRightBtn,
       this.$backwardBtn,
       this.$forwardBtn,
       this.$lockBtn,
@@ -170,9 +183,16 @@ export class SelectionMenu {
 
     // locked shapes are only unlocked
     this.$unlockBtn.hidden = !locked;
-    [this.$duplicateBtn, this.$backwardBtn, this.$forwardBtn, this.$lockBtn, this.$separator, this.$deleteBtn].forEach(
-      ($element) => ($element.hidden = locked)
-    );
+    [
+      this.$duplicateBtn,
+      this.$rotateLeftBtn,
+      this.$rotateRightBtn,
+      this.$backwardBtn,
+      this.$forwardBtn,
+      this.$lockBtn,
+      this.$separator,
+      this.$deleteBtn,
+    ].forEach(($element) => ($element.hidden = locked));
     // group 2 shapes at least, ungroup groups
     this.$groupBtn.hidden = locked || !this.drawer.canGroupShapes(shapes);
     this.$ungroupBtn.hidden = locked || !shapes.some((shape) => shape instanceof Group);

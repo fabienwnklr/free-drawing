@@ -54,7 +54,7 @@ const drawer = new Drawer($el, {
   zoom: true, // enable/disable zoom on draw
   zoomWidget: true, // enable/disable zoom ui widget
   positionWidget: true, // enable/disable position ui widget (x / y of view, button back to origin)
-  selectionMenu: true, // enable/disable menu next to selected shapes (duplicate, bring forward, send backward, lock, delete)
+  selectionMenu: true, // enable/disable menu next to selected shapes (duplicate, rotate, bring forward, send backward, lock, delete)
   commandPalette: true, // enable/disable command palette (menu item, Ctrl / Cmd + K): search and run tools and commands
   theme: 'light', // 'light' | 'dark' | 'system' (device one), theme chosen in menu is saved and used instead
   language: 'auto', // 'auto' (browser one, English when not available) | 'en' | 'fr' | 'es' | 'de', language chosen in menu is saved and used instead
@@ -242,7 +242,7 @@ Shift constrains drawing and selected shapes, also pressed or released without m
 | Rotate | By 15° |
 | Move | Horizontally or vertically |
 
-A menu next to selected shapes duplicates them (Ctrl+D), brings them forward, sends them backward, locks them (Ctrl+Shift+L) or deletes them (`selectionMenu` option). It is under the selection, above it near the bottom of the drawer, and hidden while shapes are moved.
+A menu next to selected shapes duplicates them (Ctrl+D), rotates them by 90° left or right (Shift+L, Shift+R), brings them forward, sends them backward, locks them (Ctrl+Shift+L) or deletes them (`selectionMenu` option). It is under the selection, above it near the bottom of the drawer, and hidden while shapes are moved.
 
 ```js
 const copies = drawer.duplicateShapes(); // selected shapes by default, copies are selected
@@ -259,6 +259,7 @@ A right click on a shape selects it (with the selection tool) and shows actions 
 | Lock or unlock selection | Ctrl / Cmd + Shift + L |
 | Delete | Delete |
 | Bring to front, forward, send backward, to back | Ctrl / Cmd + (Shift +) Up / Down |
+| Rotate 90° right, left (around center of selection) | Shift + R, Shift + L |
 | Flip horizontal, vertical (texts are still readable) | Shift + H, Shift + V |
 | Copy as PNG, as SVG (selection, else whole drawing) | Shift + Alt + C, Shift + Alt + S |
 | Select all | Ctrl / Cmd + A |
@@ -266,6 +267,7 @@ A right click on a shape selects it (with the selection tool) and shows actions 
 Elsewhere, it shows actions on the drawing: paste, copy as PNG or SVG, select all, snapping to objects, grid. The context menu key (or Shift + F10) opens it with the keyboard.
 
 ```js
+drawer.rotateShapes(90); // selected shapes by default, degrees clockwise (-90: left)
 drawer.flipShapes('horizontal'); // selected shapes by default
 await drawer.copyImage('svg'); // svg image and svg code (text), 'png' by default
 ```

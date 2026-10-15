@@ -60,6 +60,8 @@ export class Help extends Modal {
       { label: t('help.move'), keys: [t('key.arrows')] },
       { label: t('help.forwardBackward'), keys: ['Ctrl+Up', 'Ctrl+Down'] },
       { label: t('help.frontBack'), keys: ['Ctrl+Shift+Up', 'Ctrl+Shift+Down'] },
+      { label: t('action.rotateRight'), keys: ['Shift+R'] },
+      { label: t('action.rotateLeft'), keys: ['Shift+L'] },
       { label: t('action.flipHorizontal'), keys: ['Shift+H'] },
       { label: t('action.flipVertical'), keys: ['Shift+V'] },
       { label: t('help.lock'), keys: ['Ctrl+Shift+L'] },

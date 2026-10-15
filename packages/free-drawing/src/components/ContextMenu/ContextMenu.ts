@@ -13,7 +13,7 @@ type Item = { $item: HTMLButtonElement; visible: () => boolean; run: () => void 
 
 /**
  * Menu of right click (or context menu key, Shift + F10): actions on selection when a shape is under pointer
- * or selected (order, flip, duplicate, lock, delete, copy as image; unlock for locked shapes), else actions on
+ * or selected (order, rotate, flip, duplicate, lock, delete, copy as image; unlock for locked shapes), else actions on
  * drawing (paste, select all, copy as image, snapping, grid), with their shortcuts
  */
 export class ContextMenu {
@@ -109,6 +109,16 @@ export class ContextMenu {
         order('action.sendToBack', 'back', 'Ctrl+Shift+↓'),
       ],
       [
+        {
+          $item: this._createItem('action.rotateRight', 'Shift+R'),
+          visible: selection,
+          run: () => drawer.rotateShapes(90),
+        },
+        {
+          $item: this._createItem('action.rotateLeft', 'Shift+L'),
+          visible: selection,
+          run: () => drawer.rotateShapes(-90),
+        },
         {
           $item: this._createItem('action.flipHorizontal', 'Shift+H'),
           visible: selection,

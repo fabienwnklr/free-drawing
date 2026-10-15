@@ -40,6 +40,8 @@ import SlidersIcon from '@/icons/sliders.svg?raw';
 import LockIcon from '@/icons/lock.svg?raw';
 import UnlockIcon from '@/icons/unlock.svg?raw';
 import FlipHorizontalIcon from '@/icons/flip-horizontal.svg?raw';
+import RotateRightIcon from '@/icons/rotate-right.svg?raw';
+import RotateLeftIcon from '@/icons/rotate-left.svg?raw';
 import FlipVerticalIcon from '@/icons/flip-vertical.svg?raw';
 
 /**
@@ -346,6 +348,20 @@ export class CommandPalette extends Modal {
                 run: () => drawer.reorderShapes(order),
               }
           ),
+          editSelection && {
+            id: 'rotate turn right clockwise 90',
+            label: t('action.rotateRight'),
+            icon: RotateRightIcon,
+            shortcut: 'Shift+R',
+            run: () => drawer.rotateShapes(90),
+          },
+          editSelection && {
+            id: 'rotate turn left counterclockwise 90',
+            label: t('action.rotateLeft'),
+            icon: RotateLeftIcon,
+            shortcut: 'Shift+L',
+            run: () => drawer.rotateShapes(-90),
+          },
           editSelection && {
             id: 'flip mirror horizontal',
             label: t('action.flipHorizontal'),

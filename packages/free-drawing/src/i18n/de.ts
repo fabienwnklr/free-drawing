@@ -149,6 +149,8 @@ export const de: Translations = {
   'action.bringForward': 'Eine Ebene nach vorne',
   'action.bringToFront': 'In den Vordergrund',
   'action.delete': 'Löschen',
+  'action.rotateRight': 'Um 90° nach rechts drehen',
+  'action.rotateLeft': 'Um 90° nach links drehen',
   'action.flipHorizontal': 'Horizontal spiegeln',
   'action.flipVertical': 'Vertikal spiegeln',
   'action.copyPng': 'Als PNG kopieren',

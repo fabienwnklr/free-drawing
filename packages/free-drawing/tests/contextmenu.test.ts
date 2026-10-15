@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Rect } from 'konva/lib/shapes/Rect';
 import { Text } from 'konva/lib/shapes/Text';
+import { Group } from 'konva/lib/Group';
+import { Transform } from 'konva/lib/Util';
 import type { Drawer } from '@/Drawer';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { shapeName } from '@/constants';
@@ -60,6 +62,8 @@ describe('Context menu', () => {
       'Bring forward Ctrl+↑',
       'Send backward Ctrl+↓',
       'Send to back Ctrl+Shift+↓',
+      'Rotate 90° right Shift+R',
+      'Rotate 90° left Shift+L',
       'Flip horizontal Shift+H',
       'Flip vertical Shift+V',
       'Copy as PNG Shift+Alt+C',
@@ -154,7 +158,57 @@ describe('Context menu', () => {
     expect(drawer.undoRedo.canUndo()).toBe(true);
   });
 
-  it('Shortcuts: Shift + H / V flip, Ctrl + Shift + L locks, Shift + Alt + C / S copy as image', async () => {
+  it('Rotate by a quarter turn around center of selection, also in a flipped group', () => {
+    const drawer = createDrawer();
+    const rect = createRect(drawer, 0, 0);
+    const other = createRect(drawer, 200, 100);
+    // absolute transform expected after a turn around center of box (absolute position)
+    const turned = (shapes: Rect[], degrees: number) => {
+      const boxes = shapes.map((shape) => shape.getClientRect());
+      const left = Math.min(...boxes.map((box) => box.x));
+      const top = Math.min(...boxes.map((box) => box.y));
+      const x = (left + Math.max(...boxes.map((box) => box.x + box.width))) / 2;
+      const y = (top + Math.max(...boxes.map((box) => box.y + box.height))) / 2;
+      const turn = new Transform()
+        .translate(x, y)
+        .rotate((degrees * Math.PI) / 180)
+        .translate(-x, -y);
+
+      return shapes.map((shape) => turn.copy().multiply(shape.getAbsoluteTransform()).getMatrix());
+    };
+    const expectMatrices = (shapes: Rect[], matrices: number[][]) =>
+      shapes.forEach((shape, i) =>
+        shape
+          .getAbsoluteTransform()
+          .getMatrix()
+          .forEach((n, j) => expect(n).toBeCloseTo(matrices[i][j]))
+      );
+
+    // box 0..100 x 0..50: center 50, 25
+    drawer.rotateShapes(90, [rect]);
+    expect([rect.x(), rect.y(), rect.rotation()]).toEqual([75, -25, 90]);
+    drawer.rotateShapes(-90, [rect]);
+    expect([rect.x(), rect.y(), rect.rotation()]).toEqual([0, 0, 0]);
+    // 4 quarter turns: back
+    [1, 2, 3, 4].forEach(() => drawer.rotateShapes(90, [rect]));
+    expect([rect.x(), rect.y(), rect.rotation()]).toEqual([0, 0, 0]);
+
+    // several shapes around center of their box
+    const expected = turned([rect, other], 90);
+    drawer.rotateShapes(90, [rect, other]);
+    expectMatrices([rect, other], expected);
+
+    // shape of a flipped group turns clockwise on screen too
+    const group = drawer.groupShapes([rect, other])!;
+    group.scaleX(-1);
+    const flipped = turned([rect], -90);
+    drawer.rotateShapes(-90, [rect]);
+    expectMatrices([rect], flipped);
+    expect(group).toBeInstanceOf(Group);
+    expect(drawer.undoRedo.canUndo()).toBe(true);
+  });
+
+  it('Shortcuts: Shift + H / V flip, Shift + R / L rotate, Ctrl + Shift + L locks, Shift + Alt + C / S copy', async () => {
     const drawer = createDrawer();
     const rect = createRect(drawer, 100, 100);
     const write = vi.fn(async () => {});
@@ -177,6 +231,12 @@ describe('Context menu', () => {
     expect(rect.scaleX()).toBe(-1);
     keydown(drawer, { key: 'V', code: 'KeyV', shiftKey: true });
     expect(rect.scaleY()).toBe(-1);
+    // quarter turns, not tool shortcuts (rectangle, line)
+    keydown(drawer, { key: 'R', code: 'KeyR', shiftKey: true });
+    expect(rect.rotation()).toBe(90);
+    keydown(drawer, { key: 'L', code: 'KeyL', shiftKey: true });
+    expect(rect.rotation()).toBe(0);
+    expect(drawer.activeTool).not.toBe('square');
 
     expect(keydown(drawer, { key: 'Ś', code: 'KeyS', shiftKey: true, altKey: true })).toBe(false);
     await vi.waitFor(() => expect(write).toHaveBeenCalled());

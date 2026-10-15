@@ -1016,13 +1016,7 @@ export class Drawer extends MicroEvent {
     if (!shapes.length) return;
 
     const horizontal = direction === 'horizontal';
-    const boxes = shapes.map((shape) => shape.getClientRect());
-    const left = Math.min(...boxes.map((box) => box.x));
-    const top = Math.min(...boxes.map((box) => box.y));
-    const center = {
-      x: (left + Math.max(...boxes.map((box) => box.x + box.width))) / 2,
-      y: (top + Math.max(...boxes.map((box) => box.y + box.height))) / 2,
-    };
+    const center = this._getCenter(shapes);
     // mirrored around an axis, in coordinates of its parent
     const mirror = (node: Node, axis: Vector2d) => {
       node.rotation(-node.rotation());
@@ -1042,6 +1036,55 @@ export class Drawer extends MicroEvent {
       });
     });
     this.stage.fire('change');
+  }
+
+  /**
+   * Rotate shapes (selected ones by default) around the center of their box
+   * @param {number} angle Degrees, clockwise when positive (90: quarter turn right, -90: left)
+   * @param {DrawingShape[]} shapes
+   */
+  rotateShapes(angle: number, shapes: DrawingShape[] = this.getSelectedShapes()) {
+    if (!shapes.length || !angle) return;
+
+    const center = this._getCenter(shapes);
+    // no float noise in saved positions (box of rotated shapes)
+    const round = (n: number) => Math.round(n * 1e6) / 1e6 || 0;
+
+    // arrows rotated without their shapes are unlinked
+    unbindMoved(shapes);
+    shapes.forEach((shape) => {
+      const transform = shape.getParent()!.getAbsoluteTransform();
+      const [a, b, c, d] = transform.getMatrix();
+      // in coordinates of its parent, which turns the other way when flipped
+      const degrees = a * d - b * c < 0 ? -angle : angle;
+      const radians = (degrees * Math.PI) / 180;
+      // exact quarter turns
+      const [cos, sin] = [Math.cos(radians), Math.sin(radians)].map((n) => Math.round(n * 1e12) / 1e12);
+      const pivot = transform.copy().invert().point(center);
+      const dx = shape.x() - pivot.x;
+      const dy = shape.y() - pivot.y;
+
+      shape.setAttrs({
+        x: round(pivot.x + dx * cos - dy * sin),
+        y: round(pivot.y + dx * sin + dy * cos),
+        rotation: (shape.rotation() + degrees) % 360,
+      });
+    });
+    this.stage.fire('change');
+  }
+
+  /**
+   * Center of the box of shapes (absolute position)
+   */
+  private _getCenter(shapes: DrawingShape[]): Vector2d {
+    const boxes = shapes.map((shape) => shape.getClientRect());
+    const left = Math.min(...boxes.map((box) => box.x));
+    const top = Math.min(...boxes.map((box) => box.y));
+
+    return {
+      x: (left + Math.max(...boxes.map((box) => box.x + box.width))) / 2,
+      y: (top + Math.max(...boxes.map((box) => box.y + box.height))) / 2,
+    };
   }
 
   /**

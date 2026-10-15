@@ -30,6 +30,8 @@ describe('Selection menu', () => {
       'Duplicate',
       'Group',
       'Ungroup',
+      'Rotate 90° left',
+      'Rotate 90° right',
       'Send backward',
       'Bring forward',
       'Lock',

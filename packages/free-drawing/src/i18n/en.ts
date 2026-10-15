@@ -158,6 +158,8 @@ export const en = {
   'action.bringForward': 'Bring forward',
   'action.bringToFront': 'Bring to front',
   'action.delete': 'Delete',
+  'action.rotateRight': 'Rotate 90° right',
+  'action.rotateLeft': 'Rotate 90° left',
   'action.flipHorizontal': 'Flip horizontal',
   'action.flipVertical': 'Flip vertical',
   'action.copyPng': 'Copy as PNG',

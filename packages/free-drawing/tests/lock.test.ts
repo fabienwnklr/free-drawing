@@ -55,12 +55,13 @@ describe('Locked shapes', () => {
     keydown(drawer, { key: 'Delete' });
     keydown(drawer, { key: 'ArrowRight' });
     keydown(drawer, { key: 'H', code: 'KeyH', shiftKey: true });
+    keydown(drawer, { key: 'R', code: 'KeyR', shiftKey: true });
     keydown(drawer, { key: 'd', ctrlKey: true });
     keydown(drawer, { key: 'ArrowUp', ctrlKey: true });
     drawer.setStrokeColor('#f00');
     expect(drawer.getDrawingShapes()).toHaveLength(2);
     expect(drawer.getDrawingShapes()[0]).toBe(locked);
-    expect([locked.x(), locked.scaleX(), locked.stroke()]).toEqual([0, 1, '#000']);
+    expect([locked.x(), locked.scaleX(), locked.rotation(), locked.stroke()]).toEqual([0, 1, 0, '#000']);
 
     // Ctrl + Shift + L unlocks it, still selected with anchors
     keydown(drawer, { key: 'L', code: 'KeyL', ctrlKey: true, shiftKey: true });
@@ -134,7 +135,7 @@ describe('Locked shapes', () => {
     expect(drawer.getSelectedShapes()).toEqual([group]);
   });
 
-  it('Lock and unlock from selection menu, unlock from context menu and command palette', () => {
+  it('Rotate, lock and unlock from selection menu, unlock from context menu and command palette', () => {
     const { drawer, selectWidget, locked } = createLocked();
     const menu = drawer.selectionMenu!;
     const contextItems = () =>
@@ -154,6 +155,13 @@ describe('Locked shapes', () => {
     menu.update();
     expect(menu.$unlockBtn.hidden).toBe(true);
     expect(menu.$deleteBtn.hidden).toBe(false);
+
+    // quarter turns around center
+    expect(menu.$rotateRightBtn.title).toBe('Rotate 90° right (Shift+R)');
+    menu.$rotateRightBtn.click();
+    expect(locked.rotation()).toBe(90);
+    menu.$rotateLeftBtn.click();
+    expect([locked.x(), locked.y(), locked.rotation()]).toEqual([0, 0, 0]);
 
     // lock button: locked, still selected to be unlocked
     expect(menu.$lockBtn.hidden).toBe(false);

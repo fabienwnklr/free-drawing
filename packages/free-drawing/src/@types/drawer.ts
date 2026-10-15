@@ -34,7 +34,7 @@ export type DrawerOptions = {
   zoomWidget: boolean;
   /** Show view position (x / y) with a button back to origin, not to get lost when moving (default true) */
   positionWidget: boolean;
-  /** Show a menu next to selected shapes: duplicate, bring forward, send backward, lock, delete (default true) */
+  /** Show a menu next to selected shapes: duplicate, rotate, bring forward, send backward, lock, delete (default true) */
   selectionMenu: boolean;
   /** Command palette in menu and with Ctrl / Cmd + K: search and run tools and commands (default true) */
   commandPalette: boolean;
