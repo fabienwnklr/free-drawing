@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.1.0](https://github.com/fabienwnklr/free-drawing/compare/v7.0.0...v7.1.0) (2026-10-15)
+
+
+### Features
+
+* **selection menu:** lock button (Ctrl+Shift+L), locked shapes stay selected with the unlock button
+
 ## [7.0.0](https://github.com/fabienwnklr/free-drawing/compare/v6.14.0...v7.0.0) (2026-10-15)
 
 

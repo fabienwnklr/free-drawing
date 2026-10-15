@@ -32,6 +32,7 @@ describe('Selection menu', () => {
       'Ungroup',
       'Send backward',
       'Bring forward',
+      'Lock',
       'Delete',
     ]);
     expect(menu.$duplicateBtn.title).toBe('Duplicate (Ctrl+D)');

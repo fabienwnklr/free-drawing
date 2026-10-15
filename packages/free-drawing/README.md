@@ -54,7 +54,7 @@ const drawer = new Drawer($el, {
   zoom: true, // enable/disable zoom on draw
   zoomWidget: true, // enable/disable zoom ui widget
   positionWidget: true, // enable/disable position ui widget (x / y of view, button back to origin)
-  selectionMenu: true, // enable/disable menu next to selected shapes (duplicate, bring forward, send backward, delete)
+  selectionMenu: true, // enable/disable menu next to selected shapes (duplicate, bring forward, send backward, lock, delete)
   commandPalette: true, // enable/disable command palette (menu item, Ctrl / Cmd + K): search and run tools and commands
   theme: 'light', // 'light' | 'dark' | 'system' (device one), theme chosen in menu is saved and used instead
   language: 'auto', // 'auto' (browser one, English when not available) | 'en' | 'fr' | 'es' | 'de', language chosen in menu is saved and used instead
@@ -242,7 +242,7 @@ Shift constrains drawing and selected shapes, also pressed or released without m
 | Rotate | By 15° |
 | Move | Horizontally or vertically |
 
-A menu next to selected shapes duplicates them (Ctrl+D), brings them forward, sends them backward or deletes them (`selectionMenu` option). It is under the selection, above it near the bottom of the drawer, and hidden while shapes are moved.
+A menu next to selected shapes duplicates them (Ctrl+D), brings them forward, sends them backward, locks them (Ctrl+Shift+L) or deletes them (`selectionMenu` option). It is under the selection, above it near the bottom of the drawer, and hidden while shapes are moved.
 
 ```js
 const copies = drawer.duplicateShapes(); // selected shapes by default, copies are selected

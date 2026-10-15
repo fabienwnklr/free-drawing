@@ -134,7 +134,7 @@ describe('Locked shapes', () => {
     expect(drawer.getSelectedShapes()).toEqual([group]);
   });
 
-  it('Unlock from selection menu, context menu and command palette', () => {
+  it('Lock and unlock from selection menu, unlock from context menu and command palette', () => {
     const { drawer, selectWidget, locked } = createLocked();
     const menu = drawer.selectionMenu!;
     const contextItems = () =>
@@ -154,6 +154,17 @@ describe('Locked shapes', () => {
     menu.update();
     expect(menu.$unlockBtn.hidden).toBe(true);
     expect(menu.$deleteBtn.hidden).toBe(false);
+
+    // lock button: locked, still selected to be unlocked
+    expect(menu.$lockBtn.hidden).toBe(false);
+    expect(menu.$lockBtn.title).toBe('Lock (Ctrl+Shift+L)');
+    expect(menu.$lockBtn.getAttribute('aria-keyshortcuts')).toBe('Control+Shift+L');
+    menu.$lockBtn.click();
+    expect(locked.listening()).toBe(false);
+    expect(drawer.getSelectedShapes()).toEqual([locked]);
+    menu.update();
+    expect(shown()).toEqual([menu.$unlockBtn]);
+    menu.$unlockBtn.click();
 
     // context menu: right click selects it, unlock and copy
     drawer.setShapesLocked(true, [locked]);
