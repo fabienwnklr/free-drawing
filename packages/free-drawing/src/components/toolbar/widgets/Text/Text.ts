@@ -1,4 +1,5 @@
 import { Drawer } from '@/Drawer';
+import { getFrameOfTitle } from '@/utils/frame';
 import { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import TextIcon from '@/icons/text.svg?raw';
 import { Text } from 'konva/lib/shapes/Text';
@@ -19,7 +20,10 @@ export class TextWidget extends BaseWidget {
 
     // listen on layer, so any text is editable (created, loaded, restored from history...)
     this.drawer.drawLayer.on('dblclick.edit dbltap.edit', (e) => {
-      if (e.target instanceof Text && e.target.hasName(shapeName.text) && !this.drawer.readOnly) {
+      // texts and titles of frames
+      const editable = e.target.hasName(shapeName.text) || !!getFrameOfTitle(e.target);
+
+      if (e.target instanceof Text && editable && !this.drawer.readOnly) {
         this.editTextNode(e.target);
       }
     });
@@ -76,6 +80,7 @@ export class TextWidget extends BaseWidget {
     }
 
     this.drawer.addShape(textNode);
+    this.drawer.placeInFrames([textNode]);
 
     const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
     selectWidget?.setActive(true);
@@ -183,8 +188,13 @@ export class TextWidget extends BaseWidget {
       // hidden during edition
       selectWidget?.transformer.show();
 
+      // title of frame: its name, never empty
+      const frame = getFrameOfTitle(textNode);
+
+      if (frame) this.drawer.setShapeLabel(frame, textNode.text(), false);
+
       // Do not keep empty text (new text cancelled with Escape or validated empty)
-      if (textNode.text() === '') {
+      if (!frame && textNode.text() === '') {
         textNode.destroy();
         selectWidget?.transformer.nodes([]);
         selectWidget?.hideOverlay();

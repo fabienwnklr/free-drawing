@@ -4,6 +4,7 @@ import type { Shape, ShapeConfig } from 'konva/lib/Shape';
 import type { Drawer } from '@/Drawer';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
+import type { BaseOverlay } from '@/components/tools/Overlay/BaseOverlay';
 import { applyOrder } from '@/utils/order';
 import { createDrawer, keydown } from './helpers';
 
@@ -97,7 +98,7 @@ describe('Stacking order', () => {
   it('Layers buttons of selection options reorder selection, not shown in tool options', () => {
     const drawer = createDrawer({ tool: 'brush' });
     const selectWidget = drawer.getWidget<SelectWidget>('selection')!;
-    const brushOverlay = drawer.getWidget<BaseWidget>('brush')!.overlay!;
+    const brushOverlay = drawer.getWidget<BaseWidget>('brush')!.overlay as BaseOverlay;
     const [a] = addRects(drawer, { a: [0, 0, 50, 50], b: [10, 10, 50, 50], c: [20, 20, 50, 50] });
 
     expect(brushOverlay.$orderContainer.style.display).toBe('none');

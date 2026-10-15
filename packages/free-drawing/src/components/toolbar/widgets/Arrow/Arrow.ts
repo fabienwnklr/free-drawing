@@ -9,6 +9,7 @@ import type { Vector2d } from 'konva/lib/types';
 import { ShapeWidget, snapAngle } from '@/components/toolbar/widgets/ShapeWidget';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { type BoundEnd, anchors, findBindingTarget, getAnchorAt, getAnchorPoints, getBoundEnds } from '@/utils/binding';
+import { withFrameShapes } from '@/utils/frame';
 
 /**
  * Arrow head size, proportional to stroke width
@@ -103,7 +104,9 @@ export class ArrowWidget extends ShapeWidget<Arrow> {
    * Arrow end at a point: linked to the shape there, at the side whose middle is near
    */
   private _findEnd(point: Vector2d, exclude?: Arrow): BoundEnd | null {
-    const shape = this._unlinked() ? null : findBindingTarget(this.drawer.getDrawingShapes(), point, exclude);
+    // shapes of frames too (smallest one: not their frame)
+    const shapes = withFrameShapes(this.drawer.getDrawingShapes());
+    const shape = this._unlinked() ? null : findBindingTarget(shapes, point, exclude);
     const tolerance = anchorTolerance / this.drawer.getZoomLevel();
 
     return shape && { shape, anchor: getAnchorAt(shape, this.drawer.drawLayer, point, tolerance) };

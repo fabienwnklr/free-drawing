@@ -27,6 +27,14 @@ import {
   isInsideOutline,
   rectContains,
 } from '@/utils/hit';
+import {
+  getDrawingShape,
+  getFrameShapes,
+  isFrame,
+  isShapesContainer,
+  setFrameSize,
+  withFrameShapes,
+} from '@/utils/frame';
 import type { DrawingShape } from '@/@types/drawer';
 import type { Node } from 'konva/lib/Node';
 
@@ -111,8 +119,38 @@ export class SelectWidget extends BaseWidget {
     this._initShiftEvents();
 
     // in constructor, not in initEvents, else a listener is added on each activation
-    this.transformer.on('transformend dragend', () => {
+    this.transformer.on('transformend dragend', (e) => {
+      const nodes = this._getSelected();
+
+      // resized frames take shapes entirely in them, other shapes in frame containing them
+      if (e.type === 'transformend') nodes.filter(isFrame).forEach((frame) => this.drawer.fitFrame(frame));
+      this.drawer.placeInFrames(nodes);
       this.drawer.stage.fire('change');
+    });
+
+    // frames resized, not scaled (title, border), their shapes stay in place
+    let framePositions = new Map<Node, Vector2d>();
+
+    this.transformer.on('transformstart', () => {
+      framePositions = new Map(
+        this._getSelected()
+          .filter(isFrame)
+          .map((frame) => [frame, frame.position()])
+      );
+    });
+    this.transformer.on('transform', (e) => {
+      const frame = e.target;
+      const previous = framePositions.get(frame);
+
+      if (!isFrame(frame) || !previous) return;
+
+      const dx = frame.x() - previous.x;
+      const dy = frame.y() - previous.y;
+
+      setFrameSize(frame, Math.abs(frame.width() * frame.scaleX()), Math.abs(frame.height() * frame.scaleY()));
+      frame.scale({ x: 1, y: 1 });
+      getFrameShapes(frame).forEach((shape) => shape.move({ x: -dx, y: -dy }));
+      framePositions.set(frame, frame.position());
     });
 
     // side anchors resize text box (line breaks) instead of stretching text: horizontal stretch becomes width
@@ -130,6 +168,11 @@ export class SelectWidget extends BaseWidget {
     this.transformer.boundBoxFunc((_oldBox, newBox) => {
       if (this.transformer.nodes().every((node) => node instanceof Text)) {
         newBox.width = Math.max(30, newBox.width);
+      }
+      // frames not flipped
+      if (this.transformer.nodes().some(isFrame)) {
+        newBox.width = Math.max(20, newBox.width);
+        newBox.height = Math.max(20, newBox.height);
       }
 
       return newBox;
@@ -155,7 +198,8 @@ export class SelectWidget extends BaseWidget {
       const deep = ctrlKey || metaKey;
       // shape drawn under pointer (konva hit), or its group
       const hit = e.target !== this.drawer.stage && e.target.getLayer() === this.drawer.drawLayer ? e.target : null;
-      const shape = hit && (deep ? (hit as DrawingShape) : this._getDrawingShape(hit));
+      // parts of frames (border, title) give the frame
+      const shape = hit && (deep && !isFrame(hit.getParent()) ? (hit as DrawingShape) : this._getDrawingShape(hit));
 
       // other nodes of selection layer
       if (!shape && e.target !== this.drawer.stage) return;
@@ -249,9 +293,10 @@ export class SelectWidget extends BaseWidget {
         if (moved) {
           const box = this.selectionRectangle.getClientRect();
           // shapes entirely in rectangle: a rectangle drawn in a big shape selects small shapes on it, not the big one
-          const inside = this.drawer
-            .getDrawingShapes()
-            .filter((shape) => shape.listening() && rectContains(box, shape.getClientRect()));
+          // (shapes of frames too, with their frame when it is in rectangle)
+          const inside = withFrameShapes(this.drawer.getDrawingShapes()).filter(
+            (shape) => shape.isListening() && rectContains(box, shape.getClientRect())
+          );
           const nodes = this._getSelected();
 
           this.select(shiftKey ? [...nodes, ...inside.filter((shape) => !nodes.includes(shape))] : inside);
@@ -280,7 +325,10 @@ export class SelectWidget extends BaseWidget {
    * @param {(Shape<ShapeConfig> | Group)[]} shapes
    */
   select(shapes: (Shape<ShapeConfig> | Group)[]) {
-    const visible = shapes.filter((shape) => shape.isVisible());
+    // shapes of a selected frame are selected with it
+    const visible = shapes.filter(
+      (shape) => shape.isVisible() && !shapes.some((other) => isFrame(other) && other.isAncestorOf(shape))
+    );
     const unlocked = visible.filter((shape) => shape.isListening());
     const selectable = unlocked.length ? unlocked : [...new Set(visible.map(getLockedNode))];
     const locked = !unlocked.length;
@@ -292,11 +340,18 @@ export class SelectWidget extends BaseWidget {
 
     this._setupAnchors(selectable, locked);
     this.transformer.nodes(selectable);
-    this._setNested(locked ? [] : selectable.filter((shape) => shape.getParent() !== this.drawer.drawLayer));
+    // shapes of groups (not of frames: draggable)
+    this._setNested(
+      locked ? [] : selectable.filter((shape) => !isShapesContainer(shape.getParent(), this.drawer.drawLayer))
+    );
     // overlay of active tool (brush, shapes...) replaced by selection one
     if (this.drawer.activeWidget !== this) this.drawer.activeWidget?.overlay?.hide();
-    if (locked) this.hideOverlay();
-    else this.showOverlay(selectable);
+
+    // frames have no style
+    const styled = selectable.filter((shape) => !isFrame(shape));
+
+    if (locked || !styled.length) this.hideOverlay();
+    else this.showOverlay(styled);
     this.drawer.trigger(drawerEvents.selectionChange, selectable);
   }
 
@@ -318,7 +373,11 @@ export class SelectWidget extends BaseWidget {
    * @param {boolean} deep Shapes of groups instead of groups
    */
   getShapesAt(pos: Vector2d, hit: DrawingShape | null = null, deep: boolean = false): DrawingShape[] {
-    const all = (deep ? this.drawer.getDrawingShapes().flatMap(getShapes) : this.drawer.getDrawingShapes())
+    // shapes of frames above their frame
+    const drawing = withFrameShapes(this.drawer.getDrawingShapes());
+    const all = (
+      deep ? drawing.flatMap((shape): DrawingShape[] => (isFrame(shape) ? [shape] : getShapes(shape))) : drawing
+    )
       .filter((shape) => shape.isVisible())
       .reverse();
     const shapes = all.filter((shape) => shape.isListening());
@@ -341,14 +400,10 @@ export class SelectWidget extends BaseWidget {
   }
 
   /**
-   * Drawing shape (or group) of a node of draw layer: the node itself or its top group
+   * Drawing shape (or group) of a node of draw layer: the node itself or its top group, in drawing or in a frame
    */
   private _getDrawingShape(node: Node): DrawingShape {
-    let shape = node;
-
-    while (shape.getParent() && shape.getParent() !== this.drawer.drawLayer) shape = shape.getParent()!;
-
-    return shape as DrawingShape;
+    return getDrawingShape(node, this.drawer.drawLayer);
   }
 
   /**
@@ -411,9 +466,8 @@ export class SelectWidget extends BaseWidget {
     });
 
     this.drawer.selectionLayer.add(this.selectionRectangle);
-    const shapes = this.drawer.getDrawingShapes();
-
-    shapes.forEach((d) => {
+    // shapes of frames too
+    withFrameShapes(this.drawer.getDrawingShapes()).forEach((d) => {
       d.draggable(true);
     });
   }
@@ -495,7 +549,8 @@ export class SelectWidget extends BaseWidget {
         ? ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'middle-left', 'middle-right']
         : this.defaultAnchors
     );
-    this.transformer.rotateEnabled(!locked);
+    // frames are not rotated
+    this.transformer.rotateEnabled(!locked && !shapes.some(isFrame));
     this.transformer.borderDash(locked ? [4, 4] : []);
     this.transformer.padding(locked ? 4 : 0);
     // texts scaled by corners keep their proportions
@@ -521,7 +576,7 @@ export class SelectWidget extends BaseWidget {
   protected onDesactive(): void {
     this.selectionRectangle.destroy();
     this.clearSelection();
-    this.drawer.getDrawingShapes().forEach((d) => d.draggable(false));
+    withFrameShapes(this.drawer.getDrawingShapes()).forEach((d) => d.draggable(false));
   }
 
   private _initSnapEvents() {
@@ -815,8 +870,13 @@ export class SelectWidget extends BaseWidget {
    * @param update
    */
   private _updateSelected(update: (shape: Shape<ShapeConfig>) => void) {
-    // shapes of groups too, locked shapes are not modified
-    const shapes = this.isLocked() ? [] : this.transformer.nodes().flatMap(getShapes);
+    // shapes of groups too, locked shapes and frames are not modified
+    const shapes = this.isLocked()
+      ? []
+      : this.transformer
+          .nodes()
+          .filter((node) => !isFrame(node))
+          .flatMap(getShapes);
 
     if (!shapes.length) return;
 
@@ -848,10 +908,10 @@ export class SelectWidget extends BaseWidget {
    */
   setColor(color: ColorLike) {
     this._updateSelected((s) => {
-      // line need to be filled
+      // line need to be filled, highlights have no stroke (darker, multiplied)
       if (s instanceof Line) {
         s.fill(color);
-        s.stroke(color);
+        if (!s.hasName(shapeName.highlighter)) s.stroke(color);
       } else if (s instanceof Text) {
         s.fill(color);
       } else {
@@ -866,6 +926,9 @@ export class SelectWidget extends BaseWidget {
    */
   setStrokeWidth(width: number) {
     this._updateSelected((s) => {
+      // width of highlights is their outline
+      if (s.hasName(shapeName.highlighter)) return;
+
       s.strokeWidth(width);
 
       // dashes and dots follow stroke width

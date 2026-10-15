@@ -5,6 +5,7 @@ import type { Node } from 'konva/lib/Node';
 import { Text } from 'konva/lib/shapes/Text';
 import { crosshairCursor } from '@/constants';
 import { getShapes } from '@/utils/hit';
+import { getDrawingShape } from '@/utils/frame';
 import type { DrawingShape } from '@/@types/drawer';
 import { Trail } from '@/components/toolbar/widgets/Eraser/Trail';
 
@@ -89,12 +90,10 @@ export class EraserWidget extends BaseWidget {
   }
 
   /**
-   * Drawing shape of a node (shape of a group: whole group is erased)
+   * Drawing shape of a node (shape of a group: whole group is erased, shape of a frame: alone)
    */
   private _getDrawingShape(node: Node | null): DrawingShape | undefined {
-    return node
-      ? this.drawer.getDrawingShapes().find((shape) => shape === node || shape.isAncestorOf(node))
-      : undefined;
+    return node && node.getLayer() === this.drawer.drawLayer ? getDrawingShape(node, this.drawer.drawLayer) : undefined;
   }
 
   private _addTrailPoint() {

@@ -24,7 +24,7 @@ import { defaultOptions, drawerEvents, gridSize, shapeLabels, shapeName, zoomLim
 import { setPressed } from '@/utils/dom';
 import { getStrokeStyle } from '@/utils/stroke';
 import { reorderShapes } from '@/utils/order';
-import { setupHit } from '@/utils/hit';
+import { rectContains, setupHit } from '@/utils/hit';
 import { I18n, type Language, type TranslationParams, getLanguage, languages } from '@/i18n/I18n';
 import type { TranslationKey } from '@/i18n/en';
 import { bindingAttrs, unbindMoved, updateBindings } from '@/utils/binding';
@@ -44,6 +44,16 @@ import { ExportModal } from '@/components/ExportModal/ExportModal';
 import { CommandPalette } from '@/components/CommandPalette/CommandPalette';
 import { PreferencesModal } from '@/components/PreferencesModal/PreferencesModal';
 import { DrawerLayout } from '@/DrawerLayout';
+import {
+  type Frame,
+  findFrameAt,
+  getFrameContent,
+  getFrameShapes,
+  isFrame,
+  isShapesContainer,
+  moveShapeTo,
+  setFrameLabel,
+} from '@/utils/frame';
 
 // types of options, storage, preferences and files, for apps using the drawer
 export type {
@@ -388,7 +398,10 @@ export class Drawer extends MicroEvent {
       this.#toolBeforeReadOnly = this.activeWidget ?? null;
       if (pan) pan.setActive(true);
       else this.activeWidget?.setActive(false);
-      this.#readOnlyWidgets = [...this.toolbar.widgets.values()].filter((w) => w.id !== 'pan' && !w.isDisabled);
+      // pan and laser do not change drawing
+      this.#readOnlyWidgets = [...this.toolbar.widgets.values()].filter(
+        (w) => w.id !== 'pan' && w.id !== 'laser' && !w.isDisabled
+      );
       this.#readOnlyWidgets.forEach((widget) => widget.setDisabled(true));
     } else {
       this.#readOnlyWidgets.forEach((widget) => widget.setDisabled(false));
@@ -679,7 +692,17 @@ export class Drawer extends MicroEvent {
    */
   private _setupShape(shape: DrawingShape) {
     if (!shape.id()) shape.id(createId());
-    if (shape instanceof Group) {
+    if (isFrame(shape)) {
+      // parts not moved alone, shapes of frame moved as other shapes
+      shape.getChildren().forEach((part) => {
+        if (!part.id()) part.id(createId());
+        part.draggable(false);
+      });
+      getFrameShapes(shape).forEach((child) => {
+        this._setupShape(child);
+        child.draggable(this.activeTool === 'selection');
+      });
+    } else if (shape instanceof Group) {
       shape.find(() => true).forEach((node) => {
         if (!node.id()) node.id(createId());
         node.draggable(false);
@@ -741,7 +764,11 @@ export class Drawer extends MicroEvent {
     });
 
     // shape moved, listened on layer so any shape is concerned (created, loaded, restored from history...)
-    this.drawLayer.on('dragend.change', () => {
+    this.drawLayer.on('dragend.change', (e) => {
+      const selected = this.getSelectedShapes();
+
+      // moved shapes in frame containing them
+      this.placeInFrames(selected.includes(e.target as DrawingShape) ? selected : [e.target as DrawingShape]);
       this.stage.fire('change');
     });
 
@@ -983,6 +1010,8 @@ export class Drawer extends MicroEvent {
    * @param {DrawingShape[]} shapes
    */
   flipShapes(direction: 'horizontal' | 'vertical', shapes: DrawingShape[] = this.getSelectedShapes()) {
+    // frames are not flipped
+    shapes = shapes.filter((shape) => !isFrame(shape));
     if (!shapes.length) return;
 
     const horizontal = direction === 'horizontal';
@@ -1014,6 +1043,8 @@ export class Drawer extends MicroEvent {
    * @param {DrawingShape[]} shapes
    */
   rotateShapes(angle: number, shapes: DrawingShape[] = this.getSelectedShapes()) {
+    // frames are not rotated
+    shapes = shapes.filter((shape) => !isFrame(shape));
     if (!shapes.length || !angle) return;
 
     const center = this._getCenter(shapes);
@@ -1104,6 +1135,12 @@ export class Drawer extends MicroEvent {
       removeIds(state);
       const copy = this.addShape(Node.create(state) as DrawingShape);
 
+      // copy of a shape of a group or frame: in drawing, at its place
+      if (shape.getParent() !== this.drawLayer) {
+        const transform = this.drawLayer.getAbsoluteTransform().copy().invert().multiply(shape.getAbsoluteTransform());
+
+        copy.setAttrs(transform.decompose());
+      }
       copy.move({ x: offset, y: offset });
       return copy;
     });
@@ -1121,6 +1158,8 @@ export class Drawer extends MicroEvent {
     });
 
     if (copies.length) {
+      // copies of shapes of a frame in it
+      this.placeInFrames(copies);
       this.getWidget<SelectWidget>('selection')?.select(copies);
       this.stage.fire('change');
     }
@@ -1144,8 +1183,8 @@ export class Drawer extends MicroEvent {
       let parent = shape.getParent();
 
       shape.destroy();
-      // empty groups removed
-      while (parent instanceof Group && !parent.hasChildren()) {
+      // empty groups removed (not content of a frame)
+      while (parent instanceof Group && !isShapesContainer(parent, this.drawLayer) && !parent.hasChildren()) {
         const group = parent;
 
         parent = group.getParent();
@@ -1197,7 +1236,8 @@ export class Drawer extends MicroEvent {
   canGroupShapes(shapes: DrawingShape[] = this.getSelectedShapes()): boolean {
     const parent = shapes[0]?.getParent();
 
-    return !!parent && shapes.length > 1 && shapes.every((shape) => shape.getParent() === parent);
+    // frames are not grouped
+    return !!parent && shapes.length > 1 && shapes.every((shape) => shape.getParent() === parent && !isFrame(shape));
   }
 
   /**
@@ -1207,7 +1247,9 @@ export class Drawer extends MicroEvent {
    * @returns {DrawingShape[]} shapes of groups (change saved)
    */
   ungroupShapes(shapes: DrawingShape[] = this.getSelectedShapes()): DrawingShape[] {
-    const groups = shapes.filter((shape): shape is Group => shape instanceof Group && !!shape.getParent());
+    const groups = shapes.filter(
+      (shape): shape is Group => shape instanceof Group && !isFrame(shape) && !!shape.getParent()
+    );
     const ungrouped = groups.flatMap((group) => {
       const parent = group.getParent()!;
       const index = group.zIndex();
@@ -1253,21 +1295,56 @@ export class Drawer extends MicroEvent {
   }
 
   /**
-   * Give a name to a shape (saved with it), an empty name gives back its default name
+   * Give a name to a shape (saved with it), an empty name gives back its default name (frames: their title)
    * @param {Shape<ShapeConfig>} shape
    * @param {string} label
-   * @returns {boolean} true if name changed (change saved)
+   * @param {boolean} save Change saved (default true)
+   * @returns {boolean} true if name changed
    */
-  setShapeLabel(shape: DrawingShape, label: string): boolean {
-    const value = label.trim() || undefined;
+  setShapeLabel(shape: DrawingShape, label: string, save: boolean = true): boolean {
+    // frames always have a name, their title
+    const value = label.trim() || (isFrame(shape) ? this.t('shapes.frame') : undefined);
     const node: Node = shape;
 
-    if (node.getAttr('label') === value) return false;
+    if (node.getAttr('label') === value && (!isFrame(shape) || label === value)) return false;
 
-    node.setAttr('label', value);
-    this.stage.fire('change');
+    if (isFrame(shape)) setFrameLabel(shape, value!);
+    else node.setAttr('label', value);
+    if (save) this.stage.fire('change');
 
     return true;
+  }
+
+  /**
+   * Shapes (drawn, moved, transformed) put in the frame containing their center, or back in drawing out of frames.
+   * Frames and shapes of groups are not concerned.
+   * @param {DrawingShape[]} shapes
+   */
+  placeInFrames(shapes: DrawingShape[]) {
+    const frames = this.getDrawingShapes().filter(isFrame);
+
+    shapes.forEach((shape) => {
+      if (isFrame(shape) || !shape.getLayer() || !isShapesContainer(shape.getParent(), this.drawLayer)) return;
+
+      const frame = findFrameAt(shape, frames);
+
+      moveShapeTo(shape, frame ? getFrameContent(frame) : this.drawLayer);
+    });
+  }
+
+  /**
+   * Frame drawn or resized: takes shapes of drawing entirely in it, gives back to drawing its shapes out of it
+   * @param {Frame} frame
+   */
+  fitFrame(frame: Frame) {
+    const box = frame.getClientRect();
+
+    getFrameShapes(frame)
+      .filter((shape) => findFrameAt(shape, [frame]) !== frame)
+      .forEach((shape) => moveShapeTo(shape, this.drawLayer));
+    this.getDrawingShapes()
+      .filter((shape) => !isFrame(shape) && rectContains(box, shape.getClientRect()))
+      .forEach((shape) => moveShapeTo(shape, getFrameContent(frame)));
   }
 
   /**

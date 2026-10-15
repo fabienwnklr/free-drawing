@@ -31,6 +31,13 @@ import SquareIcon from '@/icons/square.svg?raw';
 import CircleIcon from '@/icons/circle.svg?raw';
 import ArrowIcon from '@/icons/arrow.svg?raw';
 import TextIcon from '@/icons/text.svg?raw';
+import TriangleIcon from '@/icons/triangle.svg?raw';
+import DiamondIcon from '@/icons/diamond.svg?raw';
+import HeartIcon from '@/icons/heart.svg?raw';
+import CloudIcon from '@/icons/cloud.svg?raw';
+import FrameIcon from '@/icons/frame.svg?raw';
+import { getFrameShapes, isFrame } from '@/utils/frame';
+import HighlighterIcon from '@/icons/highlighter.svg?raw';
 
 /** Icons of shape types, as their tools */
 const typeIcons: Record<string, string> = {
@@ -39,6 +46,12 @@ const typeIcons: Record<string, string> = {
   [shapeName.rect]: SquareIcon,
   [shapeName.ellipse]: CircleIcon,
   [shapeName.arrow]: ArrowIcon,
+  [shapeName.triangle]: TriangleIcon,
+  [shapeName.diamond]: DiamondIcon,
+  [shapeName.heart]: HeartIcon,
+  [shapeName.cloud]: CloudIcon,
+  [shapeName.frame]: FrameIcon,
+  [shapeName.highlighter]: HighlighterIcon,
   [shapeName.text]: TextIcon,
   [shapeName.group]: GroupIcon,
 };
@@ -260,7 +273,9 @@ export class LayersPanel {
     });
 
     (edit && this.drawer.canGroupShapes(shapes) ? enableElement : disableElement)(this.$groupButton);
-    (edit && shapes.some((shape) => shape instanceof Group) ? enableElement : disableElement)(this.$ungroupButton);
+    (edit && shapes.some((shape) => shape instanceof Group && !isFrame(shape)) ? enableElement : disableElement)(
+      this.$ungroupButton
+    );
 
     const $selected = $items.find(($item) => $item.classList.contains('is-selected'));
 
@@ -316,7 +331,10 @@ export class LayersPanel {
 
       if (!(shape instanceof Group) || !this.#expanded.has(shape.id())) return [$item];
 
-      return [$item, ...this._createItems(shape.getChildren() as DrawingShape[], depth + 1)];
+      // shapes of frames, not their title and border
+      const children = isFrame(shape) ? getFrameShapes(shape) : (shape.getChildren() as DrawingShape[]);
+
+      return [$item, ...this._createItems(children, depth + 1)];
     });
   }
 
@@ -454,8 +472,12 @@ export class LayersPanel {
     } else if (e.key === 'ArrowLeft' && expanded) {
       this.setExpanded(shape as Group, false);
     } else if (e.key === 'ArrowLeft' && parent instanceof Group) {
-      // row of its group
-      this._getItem(parent)?.querySelector<HTMLElement>('[data-part="name"]')?.focus();
+      // row of its group or frame (shapes of a frame are in its content)
+      const row = isFrame(parent.getParent()) ? parent.getParent()! : parent;
+
+      this._getItem(row as Group)
+        ?.querySelector<HTMLElement>('[data-part="name"]')
+        ?.focus();
     } else if ((e.key === 'Delete' || e.key === 'Backspace') && !this.drawer.readOnly) {
       this.drawer.deleteShapes([shape]);
     } else {

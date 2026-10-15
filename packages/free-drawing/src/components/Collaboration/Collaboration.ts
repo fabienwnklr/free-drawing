@@ -1,6 +1,8 @@
 import type { Drawer } from '@/Drawer';
 import type { Socket } from 'socket.io-client';
 import { Node } from 'konva/lib/Node';
+import type { Trail } from '@/components/toolbar/widgets/Eraser/Trail';
+import { createLaserTrail } from '@/components/toolbar/widgets/Laser/Laser';
 import type { ShapeConfig } from 'konva/lib/Shape';
 import type { Vector2d } from 'konva/lib/types';
 import { Group } from 'konva/lib/Group';
@@ -24,7 +26,8 @@ export type DrawingChange = { upsert: string[]; remove: string[]; order?: string
 /**
  * Pointer of another user, position in drawing (null out of drawer)
  */
-export type RemotePointer = { id: string; name?: string; position: Vector2d | null };
+/** Pointer of another user: position in drawing (null out of drawer), laser used */
+export type RemotePointer = { id: string; name?: string; position: (Vector2d & { laser?: boolean }) | null };
 
 export type CollaborationSocket = Pick<Socket, 'on' | 'once' | 'emit' | 'disconnect' | 'volatile'>;
 
@@ -81,7 +84,11 @@ export class Collaboration {
   #pending: DrawingChange[] = [];
   /** Shapes being drawn or moved, sent at next live message */
   #live = new Set<DrawingShape>();
-  #pointer: Vector2d | null = null;
+  #pointer: (Vector2d & { laser?: boolean }) | null = null;
+  /** Laser used by this user, see `setLaser` */
+  #laser = false;
+  /** Laser trails of other users, by user id */
+  #lasers = new Map<string, Trail>();
   /** Messages waiting for live interval */
   #timers: Record<string, ReturnType<typeof setTimeout> | undefined> = {};
   #lastSent: Record<string, number> = {};
@@ -130,6 +137,8 @@ export class Collaboration {
     this.socket.on(socketEvents.LEAVE, (id: string) => {
       this.#cursors.get(id)?.destroy();
       this.#cursors.delete(id);
+      this.#lasers.get(id)?.destroy();
+      this.#lasers.delete(id);
     });
 
     // pointer shown to other users
@@ -153,9 +162,25 @@ export class Collaboration {
   }
 
   private _sendPointer(position: Vector2d | null) {
-    this.#pointer = position && { x: Math.round(position.x), y: Math.round(position.y) };
+    this.#pointer = position && {
+      x: Math.round(position.x),
+      y: Math.round(position.y),
+      ...(this.#laser && { laser: true }),
+    };
     // dropped rather than delayed when connection is slow
     this._schedule('pointer', () => this.socket.volatile.emit(socketEvents.POINTER, this.#pointer));
+  }
+
+  /**
+   * Laser used (pressed) by this user: its trail is shown to other users with pointer
+   * @param {boolean} on
+   */
+  setLaser(on: boolean) {
+    if (this.#laser === on) return;
+
+    this.#laser = on;
+    // end told at once, pointer may not move
+    this._sendPointer(this.drawer.stage.getRelativePointerPosition());
   }
 
   /**
@@ -183,10 +208,24 @@ export class Collaboration {
    */
   private _showCursor({ id, name, position }: RemotePointer) {
     let cursor = this.#cursors.get(id);
+    let laser = this.#lasers.get(id);
 
     if (!position) {
       cursor?.hide();
+      laser?.stop();
       return;
+    }
+
+    // laser of this user: trail of their color following their pointer
+    if (position.laser) {
+      if (!laser) {
+        laser = createLaserTrail(this.drawer.selectionLayer, this._color(id));
+        this.#lasers.set(id, laser);
+      }
+      laser.start();
+      laser.add(position.x, position.y);
+    } else {
+      laser?.stop();
     }
 
     if (!cursor) {
@@ -196,13 +235,20 @@ export class Collaboration {
     }
 
     cursor.findOne<Text>('Text')?.text(name || this.drawer.t('collab.anonymous'));
-    cursor.setAttrs({ ...position, visible: true });
+    cursor.setAttrs({ x: position.x, y: position.y, visible: true });
     // above selection, guides...
     cursor.moveToTop();
   }
 
+  /**
+   * Color of a user: their cursor and laser
+   */
+  private _color(id: string) {
+    return cursorColors[[...id].reduce((sum, char) => sum + char.charCodeAt(0), 0) % cursorColors.length];
+  }
+
   private _createCursor(id: string) {
-    const color = cursorColors[[...id].reduce((sum, char) => sum + char.charCodeAt(0), 0) % cursorColors.length];
+    const color = this._color(id);
     const cursor = new Group({ name: 'collaborator-cursor', listening: false });
     const label = new Label({ x: 12, y: 18 });
 
@@ -271,6 +317,8 @@ export class Collaboration {
     Object.values(this.#timers).forEach((timer) => clearTimeout(timer));
     this.#cursors.forEach((cursor) => cursor.destroy());
     this.#cursors.clear();
+    this.#lasers.forEach((laser) => laser.destroy());
+    this.#lasers.clear();
   }
 
   /**

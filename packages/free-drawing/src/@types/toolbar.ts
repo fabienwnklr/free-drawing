@@ -15,6 +15,12 @@ export enum Tools {
   star = 'star',
   triangle = 'triangle',
   polygon = 'polygon',
+  diamond = 'diamond',
+  heart = 'heart',
+  cloud = 'cloud',
+  highlighter = 'highlighter',
+  laser = 'laser',
+  frame = 'frame',
 }
 
 export type AvailableTools = keyof typeof Tools;
@@ -22,7 +28,23 @@ export type AvailableTools = keyof typeof Tools;
 /**
  * Widgets of toolbar
  */
-export type WidgetName = 'pan' | 'selection' | 'brush' | 'eraser' | 'text' | 'line' | 'square' | 'circle' | 'arrow';
+export type WidgetName =
+  | 'pan'
+  | 'selection'
+  | 'brush'
+  | 'eraser'
+  | 'text'
+  | 'line'
+  | 'square'
+  | 'circle'
+  | 'arrow'
+  | 'triangle'
+  | 'diamond'
+  | 'heart'
+  | 'cloud'
+  | 'highlighter'
+  | 'laser'
+  | 'frame';
 
 /**
  * Options of every widget

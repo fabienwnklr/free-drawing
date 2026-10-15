@@ -1,6 +1,6 @@
 import type { AvailableTools } from '@/@types/toolbar';
 import type { Drawer } from '@/Drawer';
-import type { Shape, ShapeConfig } from 'konva/lib/Shape';
+import type { DrawingShape } from '@/@types/drawer';
 import type { Vector2d } from 'konva/lib/types';
 import { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import { ShapeOverlay } from '@/components/tools/Overlay/ShapeOverlay/ShapeOverlay';
@@ -51,7 +51,7 @@ export function dragBox(start: Vector2d, end: Vector2d, square: boolean) {
 /**
  * Tool drawing a shape by drag (line, rectangle, ellipse, arrow), shift key constrains the shape
  */
-export abstract class ShapeWidget<T extends Shape<ShapeConfig>> extends BaseWidget {
+export abstract class ShapeWidget<T extends DrawingShape> extends BaseWidget {
   overlay: ShapeOverlay;
   protected cursor = crosshairCursor;
   #shape: T | null = null;
@@ -63,7 +63,7 @@ export abstract class ShapeWidget<T extends Shape<ShapeConfig>> extends BaseWidg
   /** Last pointer event of drawing (modifier keys) */
   protected pointerEvent: MouseEvent | TouchEvent | null = null;
 
-  constructor(drawer: Drawer, id: AvailableTools, title: string, icon: string, shortcut: string) {
+  constructor(drawer: Drawer, id: AvailableTools, title: string, icon: string, shortcut?: string) {
     super(drawer, id, title, icon, shortcut);
 
     let overlay = overlays.get(drawer);
@@ -115,9 +115,9 @@ export abstract class ShapeWidget<T extends Shape<ShapeConfig>> extends BaseWidg
   }
 
   /**
-   * Drawing ended (shape drawn or removed)
+   * Drawing ended: shape drawn, or null (removed: simple click)
    */
-  protected onDrawEnd?(): void;
+  protected onDrawEnd?(shape: T | null): void;
 
   // Shift pressed or released while drawing
   protected onConstrainChange(constrain: boolean): void {
@@ -165,12 +165,14 @@ export abstract class ShapeWidget<T extends Shape<ShapeConfig>> extends BaseWidg
       // simple click, nothing drawn
       if (Math.hypot(end.x - this.#start.x, end.y - this.#start.y) < 2) {
         shape.destroy();
-        this.onDrawEnd?.();
+        this.onDrawEnd?.(null);
         return;
       }
 
       this.updateShape(shape, this.#start, end, !!e.evt.shiftKey);
-      this.onDrawEnd?.();
+      // in frame containing it
+      this.drawer.placeInFrames([shape]);
+      this.onDrawEnd?.(shape);
       this.clearSelection();
       this.drawer.stage.fire('change');
     });

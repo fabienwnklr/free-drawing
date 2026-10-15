@@ -15,6 +15,13 @@ export const widgetNames: WidgetName[] = [
   'square',
   'circle',
   'arrow',
+  'triangle',
+  'diamond',
+  'heart',
+  'cloud',
+  'highlighter',
+  'laser',
+  'frame',
 ];
 
 export const defaultOptions: DrawerOptions = {
@@ -45,7 +52,8 @@ export const defaultOptions: DrawerOptions = {
   user: null,
   storage: null,
   widgets: widgetNames,
-  widgetGroups: [],
+  // more tools in one button
+  widgetGroups: [{ widgets: ['triangle', 'diamond', 'heart', 'cloud', 'highlighter', 'laser', 'frame'], icon: 'more' }],
   textStyle: {
     fontFamily: 'Ubuntu',
     fontSize: 16,
@@ -88,6 +96,12 @@ export const shapeName = {
   rect: 'drawer-rect',
   ellipse: 'drawer-ellipse',
   arrow: 'drawer-arrow',
+  triangle: 'drawer-triangle',
+  diamond: 'drawer-diamond',
+  heart: 'drawer-heart',
+  cloud: 'drawer-cloud',
+  highlighter: 'drawer-highlighter',
+  frame: 'drawer-frame',
   text: 'drawer-text',
   group: 'drawer-group',
   selection: 'drawer-selection',
@@ -99,12 +113,23 @@ export const shapeName = {
 /**
  * Shapes drawn with an outline, which can be dashed (brush line is a filled outline)
  */
-export const strokeStyleShapes = [shapeName.straightLine, shapeName.rect, shapeName.ellipse, shapeName.arrow];
+/**
+ * Closed shapes drawn by path (see `PathShapeWidget`)
+ */
+export const pathShapes = [shapeName.triangle, shapeName.diamond, shapeName.heart, shapeName.cloud];
+
+export const strokeStyleShapes = [
+  shapeName.straightLine,
+  shapeName.rect,
+  shapeName.ellipse,
+  shapeName.arrow,
+  ...pathShapes,
+];
 
 /**
  * Shapes with a background color (fill), other shapes fill is their color (brush line, text) or none
  */
-export const fillShapes = [shapeName.rect, shapeName.ellipse];
+export const fillShapes = [shapeName.rect, shapeName.ellipse, ...pathShapes];
 
 /**
  * Shapes with corners, sharp or round (see `edges` option)
@@ -120,6 +145,12 @@ export const shapeLabels: Record<string, TranslationKey> = {
   [shapeName.rect]: 'shapes.rect',
   [shapeName.ellipse]: 'shapes.ellipse',
   [shapeName.arrow]: 'shapes.arrow',
+  [shapeName.triangle]: 'shapes.triangle',
+  [shapeName.diamond]: 'shapes.diamond',
+  [shapeName.heart]: 'shapes.heart',
+  [shapeName.cloud]: 'shapes.cloud',
+  [shapeName.highlighter]: 'shapes.highlighter',
+  [shapeName.frame]: 'shapes.frame',
   [shapeName.text]: 'shapes.text',
   [shapeName.group]: 'shapes.group',
 };

@@ -9,6 +9,8 @@ export type TrailOptions = {
   size: number;
   /** Life time of a point, in ms */
   duration: number;
+  /** Color of a glow around trail (laser), none by default */
+  glow?: string;
 };
 
 const defaultTrailOptions: TrailOptions = {
@@ -42,7 +44,13 @@ export class Trail {
 
     if (!this.#line) {
       // not listening: not found by hit detection
-      this.#line = new Line({ name: 'trail', fill: this.options.color, closed: true, listening: false });
+      this.#line = new Line({
+        name: 'trail',
+        fill: this.options.color,
+        closed: true,
+        listening: false,
+        ...(this.options.glow && { shadowColor: this.options.glow, shadowBlur: 8, shadowOpacity: 0.8 }),
+      });
       this.layer.add(this.#line);
     }
     if (!this.#frame) this.#frame = requestAnimationFrame(this.#update);

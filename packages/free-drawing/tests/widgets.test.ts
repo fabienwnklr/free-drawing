@@ -6,6 +6,7 @@ import type { BrushWidget } from '@/components/toolbar/widgets/Brush/Brush';
 import type { Text } from 'konva/lib/shapes/Text';
 import type { Shape, ShapeConfig } from 'konva/lib/Shape';
 import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
+import type { BaseOverlay } from '@/components/tools/Overlay/BaseOverlay';
 import type { EraserWidget } from '@/components/toolbar/widgets/Eraser/Eraser';
 import { crosshairCursor } from '@/constants';
 import { createDrawer, drag, fireMouse, keydown, setPointer } from './helpers';
@@ -295,9 +296,12 @@ describe('Widgets', () => {
     const drawer = createDrawer();
     const square = drawer.getWidget<BaseWidget>('square')!;
     const selectWidget = drawer.getWidget<SelectWidget>('selection')!;
-    const fillShown = (widget: BaseWidget) => widget.overlay!.$fillColorContainer.style.display !== 'none';
+    const fillShown = (widget: BaseWidget) =>
+      (widget.overlay as BaseOverlay).$fillColorContainer.style.display !== 'none';
     const fillPressed = (widget: BaseWidget) =>
-      widget.overlay!.$fillColorBtnContainer.querySelector('[aria-pressed="true"]')?.getAttribute('data-fill-color');
+      (widget.overlay as BaseOverlay).$fillColorBtnContainer
+        .querySelector('[aria-pressed="true"]')
+        ?.getAttribute('data-fill-color');
 
     // shared overlay of shape tools: background only for rectangle and ellipse
     square.setActive(true);

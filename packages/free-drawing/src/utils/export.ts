@@ -9,8 +9,10 @@ import { Line } from 'konva/lib/shapes/Line';
 import { Arrow } from 'konva/lib/shapes/Arrow';
 import { Ellipse } from 'konva/lib/shapes/Ellipse';
 import { Text } from 'konva/lib/shapes/Text';
+import { Path } from 'konva/lib/shapes/Path';
 import { normalizeColor } from '@/utils/color';
 import { getShapes } from '@/utils/hit';
+import { frameParts } from '@/utils/frame';
 import type { DrawingShape } from '@/@types/drawer';
 
 export type ImageFormat = 'png' | 'svg' | 'pdf';
@@ -98,6 +100,8 @@ export function renderCanvas(shapes: DrawingShape[], box: Box, options: ImageOpt
   shapes.forEach((shape) => {
     const clone = shape.clone({ draggable: false }) as DrawingShape;
 
+    // title of frames not exported
+    if (clone instanceof Group) clone.find(`.${frameParts.title}`).forEach((title) => title.hide());
     // shape of a group exported alone
     if (shape.getParent() !== shape.getLayer()) {
       clone.setAttrs({ ...layerTransform(shape).decompose(), offsetX: 0, offsetY: 0 });
@@ -164,12 +168,21 @@ function shapeToSvg(shape: Node, dark?: boolean, matrix = shape.getTransform().g
   const group = attrs({
     transform: `matrix(${[a, b, c, d, e, f].map(num).join(' ')})`,
     opacity: shape.opacity() !== 1 ? shape.opacity() : undefined,
+    // highlights
+    style: shape.globalCompositeOperation() === 'multiply' ? 'mix-blend-mode:multiply' : undefined,
   });
 
   if (shape instanceof Group) {
-    const children = shape.getChildren().filter((child) => child.visible());
+    // title of frames not exported
+    const children = shape.getChildren().filter((child) => child.visible() && !child.hasName(frameParts.title));
+    // shapes of frames cut at their edges
+    const clip = shape.clipWidth() && shape.clipHeight() ? `drawer-clip-${shape._id}` : '';
+    const clipRect = attrs({ width: shape.clipWidth(), height: shape.clipHeight() });
+    const clipPath = clip ? `<clipPath${attrs({ id: clip })}><rect${clipRect}/></clipPath>` : '';
 
-    return `<g${group}>${children.map((child) => shapeToSvg(child, dark)).join('')}</g>`;
+    return `<g${group}${clip ? attrs({ 'clip-path': `url(#${clip})` }) : ''}>${clipPath}${children
+      .map((child) => shapeToSvg(child, dark))
+      .join('')}</g>`;
   }
 
   if (!(shape instanceof Shape)) return '';
@@ -193,6 +206,10 @@ function shapeToSvg(shape: Node, dark?: boolean, matrix = shape.getTransform().g
 
   if (shape instanceof Ellipse) {
     return `<g${group}><ellipse${attrs({ rx: shape.radiusX(), ry: shape.radiusY(), fill })}${strokeAttrs()}/></g>`;
+  }
+
+  if (shape instanceof Path) {
+    return `<g${group}><path${attrs({ d: shape.data(), fill })}${strokeAttrs()}/></g>`;
   }
 
   if (shape instanceof Arrow) {

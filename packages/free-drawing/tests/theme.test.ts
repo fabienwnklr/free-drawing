@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, afterEach } from 'vitest';
 import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
+import type { BaseOverlay } from '@/components/tools/Overlay/BaseOverlay';
 import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import { createDrawer, keydown } from './helpers';
 
@@ -63,7 +64,7 @@ describe('Dark mode', () => {
 
   it('Colors of drawing shown as in dark mode: swatches, text editor, export', () => {
     const drawer = createDrawer({ theme: 'dark' });
-    const overlay = drawer.getWidget<BaseWidget>('brush')!.overlay!;
+    const overlay = drawer.getWidget<BaseWidget>('brush')!.overlay as BaseOverlay;
     const $black = overlay.$strokeColorBtnContainer.querySelector<HTMLElement>('[data-stroke-color="#000"]')!;
 
     expect($black.style.getPropertyValue('--swatch-color')).toBe('#000');

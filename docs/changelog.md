@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.5.0](https://github.com/fabienwnklr/free-drawing/compare/v7.4.0...v7.5.0) (2026-10-15)
+
+
+### Features
+
+* **toolbar:** "More tools" group in default toolbar: triangle, diamond (D), heart, cloud, highlighter (M), laser pointer (K), frame (F)
+* triangle, diamond, heart and cloud drawn in dragged box, with background color and stroke style
+* highlighter: wide strokes of its own fluorescent colors and widths, texts under them stay readable
+* laser pointer: fading trail, never saved, shown to users of a collaboration session, usable in read only
+* frames: named areas whose shapes are moved with them and cut at their edges; shapes drawn or moved in a frame belong to it, resizing a frame does not scale its shapes, exports cut its shapes
+
+### Bug Fixes
+
+* duplicated shape of a group selected alone at its place
+
 ## [7.4.0](https://github.com/fabienwnklr/free-drawing/compare/v7.3.0...v7.4.0) (2026-10-15)
 
 

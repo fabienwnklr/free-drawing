@@ -68,7 +68,8 @@ describe('Accessibility', () => {
   it('Toolbar exposes active tool and shortcuts, arrows move focus (roving tabindex)', () => {
     const drawer = createDrawer();
     const root = drawer.toolbar.$toolbarRoot;
-    const buttons = Array.from(drawer.toolbar.widgets.values()).map((w) => w.$button);
+    // buttons of toolbar: widgets and group of more tools
+    const buttons = [...root.children].map(($item) => $item.querySelector<HTMLButtonElement>(':scope > button')!);
     const brush = drawer.getWidget<BaseWidget>('brush')!.$button;
     const eraser = drawer.getWidget<BaseWidget>('eraser')!.$button;
 

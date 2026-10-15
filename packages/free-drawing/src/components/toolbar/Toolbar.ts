@@ -11,6 +11,13 @@ import { LineWidget } from '@/components/toolbar/widgets/Line/Line';
 import { SquareWidget } from '@/components/toolbar/widgets/Square/Square';
 import { CircleWidget } from '@/components/toolbar/widgets/Circle/Circle';
 import { ArrowWidget } from '@/components/toolbar/widgets/Arrow/Arrow';
+import { TriangleWidget } from '@/components/toolbar/widgets/Triangle/Triangle';
+import { DiamondWidget } from '@/components/toolbar/widgets/Diamond/Diamond';
+import { HeartWidget } from '@/components/toolbar/widgets/Heart/Heart';
+import { CloudWidget } from '@/components/toolbar/widgets/Cloud/Cloud';
+import { HighlighterWidget } from '@/components/toolbar/widgets/Highlighter/Highlighter';
+import { LaserWidget } from '@/components/toolbar/widgets/Laser/Laser';
+import { FrameWidget } from '@/components/toolbar/widgets/Frame/Frame';
 import { GroupWidget } from '@/components/toolbar/widgets/GroupWidget';
 import { getWidgetGroups, getWidgetNames } from '@/utils/widgets';
 import { arrowNavigation } from '@/utils/dom';
@@ -26,6 +33,13 @@ const widgetClasses: Record<WidgetName, new (drawer: Drawer) => BaseWidget> = {
   square: SquareWidget,
   circle: CircleWidget,
   arrow: ArrowWidget,
+  triangle: TriangleWidget,
+  diamond: DiamondWidget,
+  heart: HeartWidget,
+  cloud: CloudWidget,
+  highlighter: HighlighterWidget,
+  laser: LaserWidget,
+  frame: FrameWidget,
 };
 
 export class Toolbar {

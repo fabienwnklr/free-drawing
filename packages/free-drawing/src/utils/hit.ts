@@ -3,6 +3,7 @@ import type { Context } from 'konva/lib/Context';
 import { Shape, type ShapeConfig } from 'konva/lib/Shape';
 import { Group } from 'konva/lib/Group';
 import { Line } from 'konva/lib/shapes/Line';
+import { Path } from 'konva/lib/shapes/Path';
 import type { IRect, Vector2d } from 'konva/lib/types';
 import { fillShapes, shapeName } from '@/constants';
 import type { DrawingShape } from '@/@types/drawer';
@@ -102,11 +103,26 @@ export function rectContains(outer: IRect, inner: IRect): boolean {
   );
 }
 
+let pathContext: CanvasRenderingContext2D | null | undefined;
+
 /**
- * Point (absolute position) is inside outline of a rectangle or an ellipse, filled or not, whatever its transform
+ * Point (shape coordinates) inside the path of a path shape (triangle, diamond, heart, cloud)
+ */
+function isInsidePath(shape: Path, x: number, y: number) {
+  pathContext ??= document.createElement('canvas').getContext('2d');
+
+  return !!pathContext?.isPointInPath(new Path2D(shape.data()), x, y);
+}
+
+/**
+ * Point (absolute position) is inside outline of a rectangle, an ellipse or a path shape, filled or not, whatever
+ * its transform
  */
 export function isInsideOutline(shape: Shape<ShapeConfig>, point: Vector2d): boolean {
   const { x, y } = shape.getAbsoluteTransform().copy().invert().point(point);
+
+  if (shape instanceof Path) return isInsidePath(shape, x, y);
+
   const rect = shape.getSelfRect();
   // negative size when drawn up or left
   const [left, right] = [rect.x, rect.x + rect.width].sort((a, b) => a - b);

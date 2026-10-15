@@ -4,6 +4,7 @@ import { Ellipse } from 'konva/lib/shapes/Ellipse';
 import { Arrow } from 'konva/lib/shapes/Arrow';
 import { Line } from 'konva/lib/shapes/Line';
 import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
+import type { BaseOverlay } from '@/components/tools/Overlay/BaseOverlay';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import type { AvailableTools } from '@/@types/toolbar';
 import { createDrawer, drag } from './helpers';
@@ -109,7 +110,7 @@ describe('Shape tools', () => {
 
   it('Shape tools share an overlay with stroke style', () => {
     const drawer = drawerWithTool('square');
-    const overlay = drawer.getWidget<BaseWidget>('square')!.overlay!;
+    const overlay = drawer.getWidget<BaseWidget>('square')!.overlay as BaseOverlay;
 
     expect(drawer.getWidget<BaseWidget>('arrow')!.overlay).toBe(overlay);
     expect(overlay.$overlayContainer.classList.contains('show')).toBe(true);
@@ -145,7 +146,7 @@ describe('Shape tools', () => {
 
   it('Stroke styles: dashes and dots follow stroke width', () => {
     const drawer = drawerWithTool('line');
-    const overlay = drawer.getWidget<BaseWidget>('line')!.overlay!;
+    const overlay = drawer.getWidget<BaseWidget>('line')!.overlay as BaseOverlay;
     const pressedStyle = () =>
       overlay.$strokeStyleBtnContainer.querySelector('[aria-pressed="true"]')?.getAttribute('data-stroke-style');
     const styles = Array.from(overlay.$strokeStyleBtnContainer.querySelectorAll('[data-stroke-style]'));

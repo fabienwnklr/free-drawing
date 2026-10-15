@@ -76,8 +76,10 @@ const drawer = new Drawer($el, {
     align: 'left', // 'left' | 'center' | 'right'
   },
   collaboration: false, // live collaboration menu: false, true (socket.io server on same origin), server url or { url, auth }
-  widgets: ['pan', 'selection', 'brush', 'eraser', 'text', 'line', 'square', 'circle', 'arrow'], // toolbar widgets, see below
-  widgetGroups: [], // groups of toolbar widgets, see below
+  // toolbar widgets, see below
+  widgets: ['pan', 'selection', 'brush', 'eraser', 'text', 'line', 'square', 'circle', 'arrow', 'triangle', 'diamond', 'heart', 'cloud', 'highlighter', 'laser', 'frame'],
+  // groups of toolbar widgets, see below
+  widgetGroups: [{ widgets: ['triangle', 'diamond', 'heart', 'cloud', 'highlighter', 'laser', 'frame'], icon: 'more' }],
 };
 ```
 
@@ -250,6 +252,15 @@ Options of a group:
 - `widgets`: widgets of the group, in this order (widgets of `widgets` option only, a widget is in one group)
 - `icon`: `'shapes'` (default), `'more'`, `'grid'`, `'plus'`, the name of a widget (e.g. `'square'`) or svg code (scripts and event attributes are removed)
 - `title`: button tooltip ("More tools" translated by default)
+
+The default toolbar groups the tools below in "More tools" (`widgetGroups` replaces this group).
+
+### More tools
+
+- Triangle, diamond (D), heart and cloud: drawn in the dragged box (Shift: in a square), background color and stroke style as rectangles.
+- Highlighter (M): wide strokes of its own fluorescent colors (yellow by default, green, blue, pink, orange or custom) and widths, multiplied with the drawing under them so texts stay readable.
+- Laser pointer (K): trail following pointer while pressed, fading after a second, never saved. Users of a collaboration session see it with the color of the user's cursor. Usable in read only.
+- Frame (F): area with a name above it ("Frame 1"...: double click or layers panel renames it). Shapes entirely in a new frame belong to it, so do shapes drawn, moved or duplicated in it (their center), shapes moved out of it are back in the drawing. Its shapes are moved with it and cut at its edges, selected alone (click), or with it (its name or border). Resizing it does not scale its shapes, frames are not rotated, flipped, grouped nor styled. Exports cut its shapes, without its name.
 
 ## Selection
 

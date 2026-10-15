@@ -4,10 +4,12 @@ import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import { GroupWidget } from '@/components/toolbar/widgets/GroupWidget';
 import { LineWidget } from '@/components/toolbar/widgets/Line/Line';
 import { ArrowWidget } from '@/components/toolbar/widgets/Arrow/Arrow';
-import type { WidgetGroupOptions } from '@/@types/toolbar';
+import type { WidgetGroupOptions, WidgetName } from '@/@types/toolbar';
 import { createDrawer, keydown } from './helpers';
 
 const shapes: WidgetGroupOptions = { widgets: ['line', 'square', 'circle', 'arrow'], title: 'Shapes' };
+// toolbar of these tests, whatever the default one
+const widgets: WidgetName[] = ['pan', 'selection', 'brush', 'eraser', 'text', 'line', 'square', 'circle', 'arrow'];
 
 const widget = (drawer: Drawer, id: string) => drawer.toolbar.widgets.get(id as BaseWidget['id'])!;
 
@@ -28,7 +30,7 @@ describe('Groups of widgets', () => {
   });
 
   it('Option groups widgets in one button, at the place of the first one, still widgets of toolbar', () => {
-    const drawer = createDrawer({ language: 'en', widgetGroups: [shapes] });
+    const drawer = createDrawer({ language: 'en', widgets, widgetGroups: [shapes] });
     const [group] = drawer.toolbar.groups;
     const label = (id: string) => widget(drawer, id).$button.getAttribute('aria-label');
 
@@ -52,7 +54,7 @@ describe('Groups of widgets', () => {
   });
 
   it('Group shows its widgets, a chosen one is active and highlights the group', () => {
-    const drawer = createDrawer({ widgetGroups: [shapes] });
+    const drawer = createDrawer({ widgets, widgetGroups: [shapes] });
     const [group] = drawer.toolbar.groups;
     const [line, square, circle, arrow] = group.widgets;
 
@@ -91,7 +93,7 @@ describe('Groups of widgets', () => {
   });
 
   it('Tab stop and arrow keys on buttons of toolbar, widgets of groups reached from their group', () => {
-    const drawer = createDrawer({ widgetGroups: [shapes] });
+    const drawer = createDrawer({ widgets, widgetGroups: [shapes] });
     const [group] = drawer.toolbar.groups;
     const text = widget(drawer, 'text');
 
@@ -138,7 +140,7 @@ describe('Groups of widgets', () => {
   });
 
   it('Read only: group disabled with its widgets', () => {
-    const drawer = createDrawer({ widgetGroups: [shapes] });
+    const drawer = createDrawer({ widgets, widgetGroups: [shapes] });
     const [group] = drawer.toolbar.groups;
 
     drawer.setReadOnly(true);

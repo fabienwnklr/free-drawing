@@ -4,8 +4,12 @@ import { stringToNode } from '@/utils/functions';
 import { getWidgetOptions } from '@/utils/widgets';
 import type { KonvaEventListener } from 'konva/lib/Node';
 import type { Stage } from 'konva/lib/Stage';
-import type { Shape, ShapeConfig } from 'konva/lib/Shape';
-import type { BaseOverlay } from '@/components/tools/Overlay/BaseOverlay';
+import type { DrawingShape } from '@/@types/drawer';
+
+/**
+ * Options of a tool, shown while it is active (`BaseOverlay` and others)
+ */
+export type ToolOverlay = { $overlayContainer: HTMLElement; show(shapes?: DrawingShape[]): void; hide(): void };
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { createButton, disableElement, enableElement, setLabel, setPressed } from '@/utils/dom';
 import { type TranslationKey, en } from '@/i18n/en';
@@ -18,7 +22,7 @@ export abstract class BaseWidget {
   id: AvailableTools;
   shortcut: string | undefined;
   /** Options of the tool (color, width...), shown while widget is active (see `showOverlayOnActive`) */
-  declare overlay?: BaseOverlay;
+  declare overlay?: ToolOverlay;
   /** Widget options given with drawer `widgets` option */
   readonly options: WidgetOptions;
   /** Pointer action in progress (drawing, erasing, selecting...), see `startAction` / `endAction` */
@@ -167,7 +171,7 @@ export abstract class BaseWidget {
   /**
    * Shapes being drawn shown to collaborators while drawing (final state is sent on change)
    */
-  protected shareLive(...shapes: Shape<ShapeConfig>[]) {
+  protected shareLive(...shapes: DrawingShape[]) {
     this.drawer.collaboration?.sendLive(shapes);
   }
 

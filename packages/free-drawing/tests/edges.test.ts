@@ -3,6 +3,7 @@ import { Rect } from 'konva/lib/shapes/Rect';
 import { Ellipse } from 'konva/lib/shapes/Ellipse';
 import type { Group } from 'konva/lib/Group';
 import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
+import type { BaseOverlay } from '@/components/tools/Overlay/BaseOverlay';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { shapeName } from '@/constants';
 import { getCornerRadius, getEdges } from '@/utils/stroke';
@@ -26,7 +27,7 @@ describe('Edges', () => {
 
   it('Rectangles are drawn with round corners when edges are round, buttons only for rectangles', () => {
     const drawer = createDrawer({ tool: 'square', edges: 'round' });
-    const overlay = drawer.getWidget<BaseWidget>('square')!.overlay!;
+    const overlay = drawer.getWidget<BaseWidget>('square')!.overlay as BaseOverlay;
     const pressed = () => overlay.$edgesBtnContainer.querySelector('.active')?.getAttribute('data-edges');
 
     expect(overlay.$edgesContainer.style.display).toBe('');
@@ -81,7 +82,7 @@ describe('Edges', () => {
   it('Corner radius is chosen in radius field, empty for radius following size', () => {
     const drawer = createDrawer({ tool: 'square' });
     const selectWidget = drawer.getWidget<SelectWidget>('selection')!;
-    const overlay = drawer.getWidget<BaseWidget>('square')!.overlay!;
+    const overlay = drawer.getWidget<BaseWidget>('square')!.overlay as BaseOverlay;
     const rect = drawer.addShape(new Rect({ name: shapeName.rect, width: 200, height: 100 }));
     const $radius = overlay.$edgesRadius;
     const setRadius = (value: string) => {

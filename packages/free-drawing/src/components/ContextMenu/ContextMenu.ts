@@ -6,6 +6,7 @@ import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import '@/components/ContextMenu/context-menu.scss';
 import { arrowNavigation, createButton, setPressed } from '@/utils/dom';
+import { getDrawingShape } from '@/utils/frame';
 import type { TranslationKey } from '@/i18n/en';
 
 /** Item of menu: shown in a context, action run once menu is hidden */
@@ -274,14 +275,10 @@ export class ContextMenu {
   }
 
   /**
-   * Drawing shape of a node of draw layer: the node itself or its top group
+   * Drawing shape of a node of draw layer: the node itself or its top group, in drawing or in a frame
    */
   private _getDrawingShape(node: Node): DrawingShape {
-    let shape = node;
-
-    while (shape.getParent() && shape.getParent() !== this.drawer.drawLayer) shape = shape.getParent()!;
-
-    return shape as DrawingShape;
+    return getDrawingShape(node, this.drawer.drawLayer);
   }
 
   /**

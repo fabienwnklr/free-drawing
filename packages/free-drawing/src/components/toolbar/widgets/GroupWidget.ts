@@ -16,6 +16,13 @@ import LineIcon from '@/icons/line2.svg?raw';
 import SquareIcon from '@/icons/square.svg?raw';
 import CircleIcon from '@/icons/circle.svg?raw';
 import ArrowIcon from '@/icons/arrow.svg?raw';
+import TriangleIcon from '@/icons/triangle.svg?raw';
+import DiamondIcon from '@/icons/diamond.svg?raw';
+import HeartIcon from '@/icons/heart.svg?raw';
+import CloudIcon from '@/icons/cloud.svg?raw';
+import HighlighterIcon from '@/icons/highlighter.svg?raw';
+import LaserIcon from '@/icons/laser.svg?raw';
+import FrameIcon from '@/icons/frame.svg?raw';
 
 /** Space between group button and its widgets, between widgets and drawer edges (px) */
 const gap = 8;
@@ -37,6 +44,13 @@ export const groupIcons: Record<string, string> = {
   square: SquareIcon,
   circle: CircleIcon,
   arrow: ArrowIcon,
+  triangle: TriangleIcon,
+  diamond: DiamondIcon,
+  heart: HeartIcon,
+  cloud: CloudIcon,
+  highlighter: HighlighterIcon,
+  laser: LaserIcon,
+  frame: FrameIcon,
 };
 
 export type GroupWidgetOptions = {

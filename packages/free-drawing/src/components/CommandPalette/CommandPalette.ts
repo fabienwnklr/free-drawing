@@ -38,6 +38,7 @@ import StoreIcon from '@/icons/store.svg?raw';
 import LanguageIcon from '@/icons/language.svg?raw';
 import SlidersIcon from '@/icons/sliders.svg?raw';
 import LockIcon from '@/icons/lock.svg?raw';
+import { isFrame } from '@/utils/frame';
 import UnlockIcon from '@/icons/unlock.svg?raw';
 import FlipHorizontalIcon from '@/icons/flip-horizontal.svg?raw';
 import RotateRightIcon from '@/icons/rotate-right.svg?raw';
@@ -331,7 +332,7 @@ export class CommandPalette extends Modal {
               run: () => drawer.groupShapes(),
             },
           edit &&
-            selected.some((shape) => shape instanceof Group) && {
+            selected.some((shape) => shape instanceof Group && !isFrame(shape)) && {
               id: 'ungroup',
               label: t('action.ungroup'),
               icon: UngroupIcon,

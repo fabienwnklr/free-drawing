@@ -17,7 +17,7 @@ export type DrawingFile = {
 };
 
 // files and links can come from anyone: only drawing shapes and groups of them are created
-const shapeClasses = ['Line', 'Arrow', 'Rect', 'Ellipse', 'Text'];
+const shapeClasses = ['Line', 'Arrow', 'Rect', 'Ellipse', 'Text', 'Path'];
 
 /**
  * Drawing shape or group of a file, null for other nodes
@@ -25,12 +25,13 @@ const shapeClasses = ['Line', 'Arrow', 'Rect', 'Ellipse', 'Text'];
 function parseShape(shape: ShapeState): ShapeState | null {
   if (typeof shape?.attrs !== 'object' || shape.attrs === null) return null;
 
-  if (shape.className === 'Group') {
+  // groups, frames
+  if (shape.className === 'Group' || shape.className === 'Frame') {
     const children = Array.isArray(shape.children) ? shape.children.map(parseShape) : [];
 
     return {
       attrs: shape.attrs,
-      className: 'Group',
+      className: shape.className,
       children: children.filter((child): child is ShapeState => !!child),
     };
   }

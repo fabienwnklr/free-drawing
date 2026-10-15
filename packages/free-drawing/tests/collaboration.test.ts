@@ -13,6 +13,7 @@ import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import type { Group } from 'konva/lib/Group';
 import type { Shape, ShapeConfig } from 'konva/lib/Shape';
 import type { Text } from 'konva/lib/shapes/Text';
+import type { Line } from 'konva/lib/shapes/Line';
 
 const tick = () => new Promise((resolve) => setTimeout(resolve));
 // after live messages interval
@@ -502,6 +503,41 @@ describe('Collaboration', () => {
     alice.stopCollaboration();
     expect(cursors()).toHaveLength(0);
   });
+  it('Laser of another user: trail of their color following their pointer', async () => {
+    const connect = createServer();
+    const alice = createDrawer();
+    const bob = createDrawer();
+    const socket = connect(alice, 'room', 'Alice');
+    connect(bob, 'room', 'Bob');
+    const trails = () => bob.selectionLayer.find<Line>('.trail');
+    const pointers = () => socket.emit.mock.calls.filter(([event]) => event === 'POINTER').map(([, data]) => data);
+    const cursor = () => bob.selectionLayer.findOne<Group>('.collaborator-cursor')!;
+
+    alice.getWidget<BaseWidget>('laser')!.setActive(true);
+    setPointer(alice, 100, 50);
+    fireMouse(alice, 'mousedown', 100, 50);
+    await wait();
+    expect(pointers().at(-1)).toEqual({ x: 100, y: 50, laser: true });
+    expect(trails()).toHaveLength(1);
+    // color of cursor of this user
+    expect(trails()[0].fill()).toBe(cursor().findOne<Line>('Line')!.fill());
+    expect(cursor().getAttr('laser')).toBeUndefined();
+
+    setPointer(alice, 120, 60);
+    alice.stage.fire('pointermove');
+    await wait();
+    expect(cursor().position()).toEqual({ x: 120, y: 60 });
+
+    // released: told at once, trail fades
+    fireMouse(alice, 'mouseup', 120, 60);
+    await wait();
+    expect(pointers().at(-1)).toEqual({ x: 120, y: 60 });
+    expect(bob.getDrawingShapes()).toEqual([]);
+
+    alice.stopCollaboration();
+    expect(trails()).toHaveLength(0);
+  });
+
   it('Owner of the room gives or removes the right to draw', async () => {
     const connect = createServer();
     const alice = createDrawer();
@@ -548,7 +584,8 @@ describe('Collaboration', () => {
 
     expect(drawer.activeTool).toBe('pan');
     expect(widgets.filter((w) => w.isDisabled).map((w) => w.id)).not.toContain('pan');
-    expect(widgets.filter((w) => !w.isDisabled).map((w) => w.id)).toEqual(['pan']);
+    // laser points without drawing
+    expect(widgets.filter((w) => !w.isDisabled).map((w) => w.id)).toEqual(['pan', 'laser']);
     expect(drawer.undoRedo.$btnUndo.disabled).toBe(true);
     expect(drawer.setting.$clearCanvasButton.disabled).toBe(true);
     expect(drawer.setting.$openButton.disabled).toBe(true);

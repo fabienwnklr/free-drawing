@@ -16,6 +16,7 @@ import { Group } from 'konva/lib/Group';
 import { arrowNavigation, createButton, setLabel } from '@/utils/dom';
 import type { TranslationKey } from '@/i18n/en';
 import { drawerEvents } from '@/constants';
+import { getFrameTitle, isFrame } from '@/utils/frame';
 
 /** Space between selection and menu, between menu and drawer edges (px) */
 const gap = 12;
@@ -195,7 +196,9 @@ export class SelectionMenu {
     ].forEach(($element) => ($element.hidden = locked));
     // group 2 shapes at least, ungroup groups
     this.$groupBtn.hidden = locked || !this.drawer.canGroupShapes(shapes);
-    this.$ungroupBtn.hidden = locked || !shapes.some((shape) => shape instanceof Group);
+    this.$ungroupBtn.hidden = locked || !shapes.some((shape) => shape instanceof Group && !isFrame(shape));
+    // frames are not rotated
+    this.$rotateLeftBtn.hidden = this.$rotateRightBtn.hidden = locked || shapes.every(isFrame);
 
     const { left, top } = this._getPlace();
     // view in drawer
@@ -213,8 +216,22 @@ export class SelectionMenu {
   private _getPlace() {
     const { stage } = this.drawer;
     const { offsetWidth: width, offsetHeight: height } = this.$menu;
-    // hidden anchors are not counted
-    const around = this.transformer!.getClientRect();
+    // hidden anchors are not counted, titles of frames above their box
+    const boxes = [
+      this.transformer!.getClientRect(),
+      ...this.drawer
+        .getSelectedShapes()
+        .filter(isFrame)
+        .map((frame) => getFrameTitle(frame).getClientRect()),
+    ];
+    const x = Math.min(...boxes.map((box) => box.x));
+    const y = Math.min(...boxes.map((box) => box.y));
+    const around = {
+      x,
+      y,
+      width: Math.max(...boxes.map((box) => box.x + box.width)) - x,
+      height: Math.max(...boxes.map((box) => box.y + box.height)) - y,
+    };
     // above toolbar of footer
     const area = {
       left: gap,
