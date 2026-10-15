@@ -77,6 +77,7 @@ const drawer = new Drawer($el, {
   },
   collaboration: false, // live collaboration menu: false, true (socket.io server on same origin), server url or { url, auth }
   widgets: ['pan', 'selection', 'brush', 'eraser', 'text', 'line', 'square', 'circle', 'arrow'], // toolbar widgets, see below
+  widgetGroups: [], // groups of toolbar widgets, see below
 };
 ```
 
@@ -221,6 +222,25 @@ Brush options (freehand stroke, see [perfect-freehand](https://github.com/stever
 - `streamline`: how much stroke is stabilized, from 0 to 1 (`0.5` by default)
 
 If `tool` option (or the tool saved in localStorage) is not in `widgets`, the first widget is activated.
+
+### Groups of widgets
+
+`widgetGroups` option puts widgets of the toolbar in groups: one button, at the place of the first widget of the group, shows its widgets above it (arrow keys move between them, Escape closes them). It is highlighted while one of its widgets is active, shortcuts of its widgets still work.
+
+```js
+new Drawer($el, {
+  widgetGroups: [
+    { widgets: ['line', 'square', 'circle', 'arrow'], title: 'Shapes' },
+    { widgets: ['brush', 'eraser'], icon: 'more' },
+  ],
+});
+```
+
+Options of a group:
+
+- `widgets`: widgets of the group, in this order (widgets of `widgets` option only, a widget is in one group)
+- `icon`: `'shapes'` (default), `'more'`, `'grid'`, `'plus'`, the name of a widget (e.g. `'square'`) or svg code (scripts and event attributes are removed)
+- `title`: button tooltip ("More tools" translated by default)
 
 ## Selection
 

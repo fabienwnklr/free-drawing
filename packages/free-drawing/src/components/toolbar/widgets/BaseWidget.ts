@@ -92,6 +92,8 @@ export abstract class BaseWidget {
     } else {
       enableElement(this.$button);
     }
+    // group disabled with its widgets
+    this.drawer.toolbar?.update();
   }
 
   get isDisabled() {

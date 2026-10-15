@@ -1,4 +1,4 @@
-import type { AvailableTools, WidgetName, WidgetOptions, WidgetsOptions } from '@/@types/toolbar';
+import type { AvailableTools, WidgetGroupOptions, WidgetName, WidgetOptions, WidgetsOptions } from '@/@types/toolbar';
 import { widgetNames } from '@/constants';
 
 /**
@@ -13,6 +13,26 @@ export function getWidgetNames(widgets: WidgetsOptions): WidgetName[] {
     if (!known) console.warn(`[free-drawing] unknown widget "${name}" ignored`);
     return known;
   });
+}
+
+/**
+ * Groups of widgets option with widgets of toolbar only (a widget in one group), groups without widgets ignored
+ * @param {WidgetGroupOptions[]} groups
+ * @param {WidgetName[]} names Widgets of toolbar
+ */
+export function getWidgetGroups(groups: WidgetGroupOptions[], names: WidgetName[]): WidgetGroupOptions[] {
+  const grouped = new Set<WidgetName>();
+
+  return groups
+    .map((group) => ({
+      ...group,
+      widgets: (group.widgets ?? []).filter((name) => {
+        if (!names.includes(name) || grouped.has(name)) return false;
+        grouped.add(name);
+        return true;
+      }),
+    }))
+    .filter((group) => group.widgets.length > 0);
 }
 
 /**

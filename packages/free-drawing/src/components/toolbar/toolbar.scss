@@ -26,5 +26,35 @@
       // follows button color, also on active tool
       opacity: 0.65;
     }
+
+    // group of widgets: its widgets above its button
+    .drawer-tool-group {
+      position: relative;
+    }
+
+    // widgets shown when pressed
+    .drawer-tool-group-indicator {
+      position: absolute;
+      top: 3px;
+      right: 3px;
+      width: 8px;
+      height: 8px;
+      opacity: 0.65;
+      transform: rotate(-90deg);
+    }
+
+    // placed above group button (see GroupWidget._place): fixed, footer scrolls on narrow screens
+    .drawer-tool-group-menu {
+      position: fixed;
+      // under context menu and dialogs
+      z-index: 2;
+      display: flex;
+      gap: $space-1;
+      padding: $space-1;
+
+      &[hidden] {
+        display: none;
+      }
+    }
   }
 }

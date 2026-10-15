@@ -60,6 +60,7 @@ export type {
   Theme,
 } from '@/@types/drawer';
 export type { DrawingFile } from '@/utils/drawingFile';
+export type { WidgetGroupOptions, WidgetName, WidgetsOptions } from '@/@types/toolbar';
 export type { CustomTranslations, Language } from '@/i18n/I18n';
 export type { TranslationKey, Translations } from '@/i18n/en';
 

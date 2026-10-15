@@ -47,6 +47,18 @@ export type BrushWidgetOptions = WidgetOptions & {
 };
 
 /**
+ * Group of toolbar widgets (`widgetGroups` option): one button showing its widgets, at the place of the first one
+ */
+export type WidgetGroupOptions = {
+  /** Widgets of the group, in this order: widgets of `widgets` option only, each one in one group */
+  widgets: WidgetName[];
+  /** Icon: 'shapes' (default), 'more', 'grid', 'plus', name of a widget (e.g. 'square') or svg code */
+  icon?: string;
+  /** Button tooltip, "More tools" translated by default */
+  title?: string;
+};
+
+/**
  * Widgets option: list of widgets or object of widgets options, toolbar keeps the given order
  */
 export type WidgetsOptions = WidgetName[] | (Partial<Record<WidgetName, WidgetOptions>> & { brush?: BrushWidgetOptions });

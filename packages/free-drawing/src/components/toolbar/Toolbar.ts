@@ -4,15 +4,17 @@ import { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import { BrushWidget } from '@/components/toolbar/widgets/Brush/Brush';
 import { EraserWidget } from '@/components/toolbar/widgets/Eraser/Eraser';
 import { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
-import type { AvailableTools, WidgetName } from '@/@types/toolbar';
+import type { AvailableTools, WidgetGroupOptions, WidgetName } from '@/@types/toolbar';
 import { PanWidget } from '@/components/toolbar/widgets/Pan/Pan';
 import { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import { LineWidget } from '@/components/toolbar/widgets/Line/Line';
 import { SquareWidget } from '@/components/toolbar/widgets/Square/Square';
 import { CircleWidget } from '@/components/toolbar/widgets/Circle/Circle';
 import { ArrowWidget } from '@/components/toolbar/widgets/Arrow/Arrow';
-import { getWidgetNames } from '@/utils/widgets';
+import { GroupWidget } from '@/components/toolbar/widgets/GroupWidget';
+import { getWidgetGroups, getWidgetNames } from '@/utils/widgets';
 import { arrowNavigation } from '@/utils/dom';
+import { drawerEvents } from '@/constants';
 
 const widgetClasses: Record<WidgetName, new (drawer: Drawer) => BaseWidget> = {
   pan: PanWidget,
@@ -29,7 +31,9 @@ const widgetClasses: Record<WidgetName, new (drawer: Drawer) => BaseWidget> = {
 export class Toolbar {
   drawer: Drawer;
   $toolbarRoot: HTMLElement;
+  /** Widgets of toolbar, also those of groups */
   widgets: Map<AvailableTools, BaseWidget> = new Map();
+  groups: GroupWidget[] = [];
   $toolbarContent: HTMLDivElement;
 
   constructor(drawer: Drawer) {
@@ -46,37 +50,104 @@ export class Toolbar {
     this.drawer.$footerContainer.append(this.$toolbarContent);
     this.init();
 
+    // buttons of toolbar: widgets and groups (widgets of a group: arrow keys once it is open)
     arrowNavigation(
       this.$toolbarRoot,
-      () => Array.from(this.widgets.values()).map((widget) => widget.$button),
+      () => this._getButtons(),
       'horizontal',
       ($button) => this.setTabStop($button)
     );
+    // widgets disabled in read only
+    this.drawer.on(drawerEvents.readOnlyChange, () => this.update());
   }
 
   init() {
-    // widgets option (list or object), in given order
-    getWidgetNames(this.drawer.options.widgets).forEach((name) => this.addWidget(new widgetClasses[name](this.drawer)));
+    // widgets option (list or object), in given order, a group at the place of its first widget
+    const names = getWidgetNames(this.drawer.options.widgets);
+    const groups = getWidgetGroups(this.drawer.options.widgetGroups ?? [], names);
+    const added = new Set<WidgetGroupOptions>();
+
+    names.forEach((name) => {
+      const group = groups.find(({ widgets }) => widgets.includes(name));
+
+      if (!group) {
+        this.addWidget(new widgetClasses[name](this.drawer));
+      } else if (!added.has(group)) {
+        added.add(group);
+        this.addGroup(
+          new GroupWidget(this.drawer, {
+            ...group,
+            widgets: group.widgets.map((n) => new widgetClasses[n](this.drawer)),
+          })
+        );
+      }
+    });
   }
 
   addWidget(widget: BaseWidget) {
     this.widgets.set(widget.id, widget);
     widget.addTo(this.$toolbarRoot);
-    // first tool is the tab stop until a tool is active
-    widget.$button.tabIndex = this.widgets.size === 1 ? 0 : -1;
+    this._initTabStop();
+  }
+
+  /**
+   * Add a group of widgets (created by the app or the library), its widgets become widgets of toolbar
+   * @param {GroupWidget} group
+   */
+  addGroup(group: GroupWidget) {
+    group.widgets.forEach((widget) => this.widgets.set(widget.id, widget));
+    this.groups.push(group);
+    group.addTo(this.$toolbarRoot);
+    this._initTabStop();
   }
 
   setActiveWidget(widget: BaseWidget) {
     this.drawer.activeWidget = widget;
     this.drawer.activeTool = widget.id;
-    this.setTabStop(widget.$button);
+    this.setTabStop(this.getButton(widget));
+    this.update();
   }
 
   /**
-   * Only given tool button is reached with Tab (roving tabindex), arrow keys move between tools
+   * Button of a widget in toolbar: its own, or the button of its group
+   * @param {BaseWidget} widget
+   */
+  getButton(widget: BaseWidget): HTMLButtonElement {
+    return this.groups.find((group) => group.widgets.includes(widget))?.$button ?? widget.$button;
+  }
+
+  /**
+   * State of groups buttons: highlighted while one of their widgets is active, disabled with them
+   */
+  update() {
+    this.groups.forEach((group) => group.update());
+  }
+
+  /**
+   * Only given button of toolbar is reached with Tab (roving tabindex), arrow keys move between them
    */
   setTabStop($button: HTMLElement) {
-    this.widgets.forEach((widget) => (widget.$button.tabIndex = widget.$button === $button ? 0 : -1));
+    this._getButtons().forEach(($btn) => ($btn.tabIndex = $btn === $button ? 0 : -1));
+    // widgets of groups reached with arrow keys
+    this.groups.forEach((group) => group.widgets.forEach((widget) => (widget.$button.tabIndex = -1)));
+  }
+
+  /**
+   * Buttons of toolbar in order: widgets and groups, not widgets of groups
+   */
+  private _getButtons() {
+    return [...this.$toolbarRoot.children]
+      .map(($item) => $item.querySelector<HTMLButtonElement>(':scope > button'))
+      .filter(($button): $button is HTMLButtonElement => !!$button);
+  }
+
+  /**
+   * First button is the tab stop until a tool is active
+   */
+  private _initTabStop() {
+    const { activeWidget } = this.drawer;
+
+    this.setTabStop(activeWidget ? this.getButton(activeWidget) : this._getButtons()[0]);
   }
 
   getWidget<T>(name: AvailableTools): T | undefined {

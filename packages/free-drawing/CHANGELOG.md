@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.3.0](https://github.com/fabienwnklr/free-drawing/compare/v7.2.0...v7.3.0) (2026-10-15)
+
+
+### Features
+
+* **toolbar:** groups of widgets (`widgetGroups` option): one button showing its widgets above it, highlighted while one of them is active, icon by name (`shapes`, `more`, `grid`, `plus`, a widget) or svg code, title; groups created by code with `GroupWidget` and `toolbar.addGroup`
+
 ## [7.2.0](https://github.com/fabienwnklr/free-drawing/compare/v7.1.0...v7.2.0) (2026-10-15)
 
 

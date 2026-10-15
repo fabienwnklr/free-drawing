@@ -1,0 +1,6 @@
+<svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3l4.5 7.5h-9z"></path>
+    <path d="M3 13h8v8H3z"></path>
+    <circle cx="17" cy="17" r="4"></circle>
+</svg>

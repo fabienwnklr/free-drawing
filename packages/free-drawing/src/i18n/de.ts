@@ -115,6 +115,7 @@ export const de: Translations = {
   'key.wheel': 'Mausrad',
 
   'toolbar.label': 'Werkzeuge',
+  'toolbar.moreTools': 'Weitere Werkzeuge',
   'tools.pan': 'Hand',
   'tools.selection': 'Auswählen',
   'tools.brush': 'Pinsel',

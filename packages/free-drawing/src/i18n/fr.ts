@@ -115,6 +115,7 @@ export const fr: Translations = {
   'key.wheel': 'Molette',
 
   'toolbar.label': 'Outils',
+  'toolbar.moreTools': "Plus d'outils",
   'tools.pan': 'Main',
   'tools.selection': 'Sélection',
   'tools.brush': 'Pinceau',

@@ -1,4 +1,4 @@
-import type { AvailableTools, WidgetsOptions } from '@/@types/toolbar';
+import type { AvailableTools, WidgetGroupOptions, WidgetsOptions } from '@/@types/toolbar';
 import type { Shape, ShapeConfig } from 'konva/lib/Shape';
 import type { Group } from 'konva/lib/Group';
 import type { CustomTranslations, Language } from '@/i18n/I18n';
@@ -30,6 +30,8 @@ export type DrawerOptions = {
   collaboration: boolean | string | CollaborationOptions;
   /** Widgets of toolbar: list (e.g. `['brush', 'eraser']`) or object with widget options (e.g. `{ brush: {} }`) */
   widgets: WidgetsOptions;
+  /** Groups of toolbar widgets, e.g. `[{ widgets: ['line', 'square', 'circle', 'arrow'], title: 'Shapes' }]` */
+  widgetGroups: WidgetGroupOptions[];
   zoom: boolean;
   zoomWidget: boolean;
   /** Show view position (x / y) with a button back to origin, not to get lost when moving (default true) */

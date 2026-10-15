@@ -110,7 +110,7 @@ export class HotKey {
 
         if (widget) {
           widget.setActive(true);
-          widget.$button.focus();
+          this.drawer.toolbar.getButton(widget).focus();
           return;
         }
       }

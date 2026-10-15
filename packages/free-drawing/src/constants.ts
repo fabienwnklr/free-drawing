@@ -45,6 +45,7 @@ export const defaultOptions: DrawerOptions = {
   user: null,
   storage: null,
   widgets: widgetNames,
+  widgetGroups: [],
   textStyle: {
     fontFamily: 'Ubuntu',
     fontSize: 16,
