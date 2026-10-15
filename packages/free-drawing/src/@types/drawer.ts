@@ -102,6 +102,8 @@ export type Preferences = {
   snapping: boolean;
   /** Zen mode: interface hidden except toolbar and menu */
   zen: boolean;
+  /** Drawing saved on each change, else with `saveNow` (menu, command palette) */
+  autoSave: boolean;
 };
 
 export type StrokeStyle = 'solid' | 'dashed' | 'dotted';

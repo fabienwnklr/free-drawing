@@ -193,6 +193,8 @@ export class Drawer extends MicroEvent {
   #userName: string | undefined;
   /** Last preferences notified, one check for several changes */
   #preferences = '';
+  /** Changes not saved yet, see `hasUnsavedChanges` */
+  #unsaved = false;
   #preferencesCheck = false;
   #initialOptions: DrawerOptions;
   undoRedo: UndoRedo;
@@ -228,6 +230,7 @@ export class Drawer extends MicroEvent {
     const preferences = this._readPreferences();
 
     this.#languageChoice = preferences.language ?? this.options.language;
+    this.options.autoSave = preferences.autoSave ?? this.options.autoSave;
     this.i18n = new I18n(
       this.#languageChoice === 'auto' ? getLanguage() : this.#languageChoice,
       this.options.translations
@@ -357,6 +360,12 @@ export class Drawer extends MicroEvent {
       this._openFromUrl();
     }
     this.#preferences = JSON.stringify(this.getPreferences());
+    // drawing as loaded (grid of preferences...)
+    this.#unsaved = false;
+    // changes not saved (without auto save): page not left without warning
+    window.addEventListener('beforeunload', (e) => {
+      if (this.#unsaved && !this.options.autoSave && this.$drawerContainer.isConnected) e.preventDefault();
+    });
   }
 
   /**
@@ -804,6 +813,8 @@ export class Drawer extends MicroEvent {
 
       if (this.options.autoSave) {
         this.save();
+      } else {
+        this._setUnsaved(true);
       }
 
       this.undoRedo.saveState();
@@ -870,6 +881,7 @@ export class Drawer extends MicroEvent {
   save(): Promise<void> {
     const { storage, localStorageKey } = this.options;
 
+    this._setUnsaved(false);
     try {
       // tool of this browser
       localStorage.setItem(localStorageKey + '-tool', this.activeTool);
@@ -880,6 +892,40 @@ export class Drawer extends MicroEvent {
 
     // stored drawing not replaced before it is loaded (nor if it can't be)
     return storage && this.#storageLoaded ? this._saveToStorage(storage) : Promise.resolve();
+  }
+
+  /**
+   * Save drawing (`save`) and tell it, from menu and command palette
+   */
+  async saveNow() {
+    await this.save();
+    if (!this.#saveFailed) this.toast(this.t('toast.saved'), 'info');
+  }
+
+  /**
+   * Drawing has changes not saved yet: without auto save, until `save` (or `saveNow`)
+   */
+  hasUnsavedChanges(): boolean {
+    return this.#unsaved;
+  }
+
+  /**
+   * Save drawing on each change, or only with `save` / `saveNow` (preference): pending changes saved when enabled
+   * @param {boolean} autoSave
+   */
+  setAutoSave(autoSave: boolean) {
+    if (autoSave === this.options.autoSave) return;
+
+    this.options.autoSave = autoSave;
+    if (autoSave && this.#unsaved) this.save();
+    this._preferencesChanged();
+  }
+
+  private _setUnsaved(unsaved: boolean) {
+    if (unsaved === this.#unsaved) return;
+
+    this.#unsaved = unsaved;
+    this.trigger(drawerEvents.unsavedChange, unsaved);
   }
 
   /**
@@ -938,6 +984,8 @@ export class Drawer extends MicroEvent {
         this.undoRedo.manageButtons();
       }
       this.#storageLoaded = true;
+      // drawing as stored
+      this._setUnsaved(false);
     } catch (error) {
       this.toast(this.t('toast.loadFailed', { error: (error as Error).message }), 'error');
       throw error;
@@ -1686,6 +1734,7 @@ export class Drawer extends MicroEvent {
       grid: this.grid,
       snapping: !!this.getWidget<SelectWidget>('selection')?.snapping,
       zen: this.setting.zenMode,
+      autoSave: this.options.autoSave,
     };
   }
 
@@ -1693,7 +1742,8 @@ export class Drawer extends MicroEvent {
    * Apply interface settings (given ones only), one `drawer.preferences.change` event
    * @param {Partial<Preferences>} preferences Grid wins when grid and snapping are both true
    */
-  setPreferences({ theme, language, grid, snapping, zen }: Partial<Preferences>) {
+  setPreferences({ theme, language, grid, snapping, zen, autoSave }: Partial<Preferences>) {
+    if (autoSave !== undefined) this.setAutoSave(autoSave);
     if (theme !== undefined && theme !== this.theme) this.setTheme(theme);
     if (language !== undefined && language !== this.#languageChoice) this.setLanguage(language);
     if (zen !== undefined && zen !== this.setting.zenMode) this.setting.toggleZenMode();
@@ -1727,7 +1777,7 @@ export class Drawer extends MicroEvent {
     const language = [saved.language, this._getStorageItem(key + '-language')].find(isLanguage);
     const preferences: Partial<Preferences> = { ...(theme && { theme }), ...(language && { language }) };
 
-    (['grid', 'snapping', 'zen'] as const).forEach((name) => {
+    (['grid', 'snapping', 'zen', 'autoSave'] as const).forEach((name) => {
       if (typeof saved[name] === 'boolean') preferences[name] = saved[name];
     });
 

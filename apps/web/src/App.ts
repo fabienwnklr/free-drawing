@@ -6,7 +6,7 @@ import { AccountDialog } from './AccountDialog';
 import { DrawingsDialog } from './DrawingsDialog';
 import { ProfileDialog } from './ProfileDialog';
 
-type SaveState = '' | 'saving' | 'saved' | 'error';
+type SaveState = '' | 'saving' | 'saved' | 'error' | 'unsaved';
 
 /**
  * App served by the server of free-drawing: account, drawings saved on server, preferences of account.
@@ -23,6 +23,8 @@ export class App {
   readonly $main: HTMLElement;
   readonly $name: HTMLInputElement;
   readonly $saveState: HTMLElement;
+  /** Auto save on / off (preference of drawer) */
+  readonly $autoSaveButton: HTMLButtonElement;
   readonly $drawingsButton: HTMLButtonElement;
   readonly $user: HTMLElement;
   readonly $accountButton: HTMLButtonElement;
@@ -40,6 +42,9 @@ export class App {
         <span class="app-logo">free-drawing</span>
         <input class="app-name" maxlength="100" hidden />
         <span class="app-save-state text-muted" aria-live="polite"></span>
+        <button type="button" class="app-toggle" role="switch" data-autosave>
+          <span class="app-toggle-track" aria-hidden="true"></span><span data-label></span>
+        </button>
         <span class="app-spacer"></span>
         <button type="button" class="app-button" data-drawings hidden></button>
         <span class="app-user text-muted"></span>
@@ -51,6 +56,7 @@ export class App {
     this.$main = $root.querySelector('.app-main')!;
     this.$name = $root.querySelector('.app-name')!;
     this.$saveState = $root.querySelector('.app-save-state')!;
+    this.$autoSaveButton = $root.querySelector('[data-autosave]')!;
     this.$drawingsButton = $root.querySelector('[data-drawings]')!;
     this.$user = $root.querySelector('.app-user')!;
     this.$accountButton = $root.querySelector('[data-account]')!;
@@ -164,6 +170,17 @@ export class App {
     // also saved in browser by drawer
     this.drawer.on('drawer.preferences.change', (preferences: Preferences) => {
       if (this.user) api.savePreferences(preferences).catch(() => {});
+      this.render();
+    });
+    // pending changes saved when turned on
+    this.$autoSaveButton.addEventListener('click', () => {
+      this.drawer.setAutoSave(!this.drawer.options.autoSave);
+      this.render();
+    });
+    // without auto save: changes not saved yet
+    this.drawer.on('drawer.unsaved.change', (unsaved: boolean) => {
+      if (unsaved && !this.drawer.options.autoSave) this._setSaveState('unsaved');
+      else if (!unsaved && this.#saveState === 'unsaved') this._setSaveState('');
     });
     this.drawer.on('drawer.language.change', () => this.render());
     this.drawer.on('drawer.theme.change', () => this.render());
@@ -289,7 +306,7 @@ export class App {
    */
   render() {
     const { t } = this.texts;
-    const saveTexts = { '': '', saving: t('saving'), saved: t('saved'), error: t('notSaved') };
+    const saveTexts = { '': '', saving: t('saving'), saved: t('saved'), error: t('notSaved'), unsaved: t('unsaved') };
 
     document.documentElement.lang = this.drawer.language;
     document.body.classList.toggle('app-dark', this.drawer.isDarkMode());
@@ -299,6 +316,9 @@ export class App {
     if (document.activeElement !== this.$name) this.$name.value = this.drawing?.name ?? '';
     this.$saveState.textContent = saveTexts[this.#saveState];
     this.$saveState.classList.toggle('is-error', this.#saveState === 'error');
+    this.$autoSaveButton.setAttribute('aria-checked', String(this.drawer.options.autoSave));
+    this.$autoSaveButton.querySelector('[data-label]')!.textContent = t('autoSave');
+    this.$autoSaveButton.title = t('autoSaveHint');
     this.$drawingsButton.hidden = !this.user;
     this.$drawingsButton.textContent = t('myDrawings');
     this.$user.textContent = this.user?.name ?? '';

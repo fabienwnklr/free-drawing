@@ -152,19 +152,28 @@ describe('Integration in an app', () => {
     const drawer = createDrawer({ language: 'en' });
     const onChange = vi.fn();
 
+    // tests drawers do not save on each change
     expect(drawer.getPreferences()).toEqual({
       theme: 'light',
       language: 'en',
       grid: false,
       snapping: false,
       zen: false,
+      autoSave: false,
     });
     drawer.on('drawer.preferences.change', onChange);
 
     drawer.setPreferences({ theme: 'dark', language: 'fr', grid: true });
     await Promise.resolve();
     expect(onChange).toHaveBeenCalledTimes(1);
-    expect(onChange).toHaveBeenCalledWith({ theme: 'dark', language: 'fr', grid: true, snapping: false, zen: false });
+    expect(onChange).toHaveBeenCalledWith({
+      theme: 'dark',
+      language: 'fr',
+      grid: true,
+      snapping: false,
+      zen: false,
+      autoSave: false,
+    });
     expect(drawer.isDarkMode()).toBe(true);
     expect(drawer.language).toBe('fr');
     expect(drawer.grid).toBe(true);
@@ -179,6 +188,7 @@ describe('Integration in an app', () => {
       grid: false,
       snapping: true,
       zen: false,
+      autoSave: false,
     });
 
     // same values: no event

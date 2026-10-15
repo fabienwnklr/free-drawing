@@ -175,6 +175,8 @@ export const drawerEvents = {
   languageChange: 'drawer.language.change',
   /** Interface settings changed (theme, language, grid, snapping), with preferences: once for several ones */
   preferencesChange: 'drawer.preferences.change',
+  /** Drawing has changes not saved yet (without auto save) or is saved, with unsaved state */
+  unsavedChange: 'drawer.unsaved.change',
   /** Dropdown menu hidden (event of dropdown) */
   dropdownHide: 'drawer.dropdown.hide',
   /** Toast hidden (event of toast) */

@@ -16,7 +16,14 @@ describe('Preferences', () => {
     const drawer = createDrawer({ language: 'en' });
 
     drawer.setPreferences({ theme: 'dark', language: 'fr', snapping: true, zen: true });
-    expect(saved(drawer)).toEqual({ theme: 'dark', language: 'fr', grid: false, snapping: true, zen: true });
+    expect(saved(drawer)).toEqual({
+      theme: 'dark',
+      language: 'fr',
+      grid: false,
+      snapping: true,
+      zen: true,
+      autoSave: false,
+    });
 
     const reloaded = createDrawer({ localStorageKey: drawer.options.localStorageKey, language: 'en' });
 
@@ -95,7 +102,14 @@ describe('Preferences', () => {
     modal.$name!.value = 'Ada';
     modal.$name!.dispatchEvent(new Event('change'));
     expect(drawer.getUserName()).toBe('Ada');
-    expect(saved(drawer)).toEqual({ theme: 'dark', language: 'fr', grid: false, snapping: true, zen: true });
+    expect(saved(drawer)).toEqual({
+      theme: 'dark',
+      language: 'fr',
+      grid: false,
+      snapping: true,
+      zen: true,
+      autoSave: false,
+    });
 
     modal.hide();
     expect(keydown(drawer, { key: ',', ctrlKey: true })).toBe(false);

@@ -147,14 +147,15 @@ describe('Preferences', () => {
 
     const res = await agent
       .put('/api/preferences')
-      .send({ theme: 'dark', language: 'fr', grid: true, snapping: 'yes', zen: true, other: 1 });
+      .send({ theme: 'dark', language: 'fr', grid: true, snapping: 'yes', zen: true, autoSave: false, other: 1 });
 
-    expect(res.body).toEqual({ theme: 'dark', language: 'fr', grid: true, zen: true });
+    expect(res.body).toEqual({ theme: 'dark', language: 'fr', grid: true, zen: true, autoSave: false });
     expect((await agent.get('/api/preferences')).body).toEqual({
       theme: 'dark',
       language: 'fr',
       grid: true,
       zen: true,
+      autoSave: false,
     });
 
     // replaced

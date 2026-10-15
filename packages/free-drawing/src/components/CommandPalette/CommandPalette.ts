@@ -398,6 +398,19 @@ export class CommandPalette extends Modal {
             shortcut: t('key.delete'),
             run: () => drawer.deleteShapes(),
           },
+          {
+            id: 'auto save autosave',
+            label: t('preferences.autoSave'),
+            icon: SaveIcon,
+            checked: drawer.options.autoSave,
+            run: () => drawer.setAutoSave(!drawer.options.autoSave),
+          },
+          !drawer.options.autoSave && {
+            id: 'save now store',
+            label: t('menu.save'),
+            icon: SaveIcon,
+            run: () => drawer.saveNow(),
+          },
           edit && {
             id: 'clear canvas',
             label: t('menu.clearCanvas'),

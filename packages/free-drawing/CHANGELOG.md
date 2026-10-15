@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.6.0](https://github.com/fabienwnklr/free-drawing/compare/v7.5.0...v7.6.0) (2026-10-15)
+
+
+### Features
+
+* **preferences:** auto save can be turned off (preferences dialog, command palette, `setAutoSave`, `autoSave` preference): changes are then saved with "Save now" (settings menu, command palette, `saveNow`), the menu shows "Not saved" until then and leaving the page asks a confirmation; `hasUnsavedChanges` method and `drawer.unsaved.change` event
+
 ## [7.5.0](https://github.com/fabienwnklr/free-drawing/compare/v7.4.0...v7.5.0) (2026-10-15)
 
 

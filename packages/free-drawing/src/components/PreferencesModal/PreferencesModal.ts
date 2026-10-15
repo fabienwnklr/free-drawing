@@ -23,6 +23,7 @@ export class PreferencesModal extends Modal {
   $zen: HTMLInputElement;
   $grid: HTMLInputElement;
   $snapping: HTMLInputElement;
+  $autoSave: HTMLInputElement;
   /** Name in collaboration sessions, with `collaboration` option */
   $name: HTMLInputElement | null = null;
 
@@ -65,6 +66,9 @@ export class PreferencesModal extends Modal {
     this.$grid.addEventListener('change', () => drawer.setPreferences({ grid: this.$grid.checked }));
     this.$snapping = this._createSwitch($drawing, 'context.snap', 'Alt+S');
     this.$snapping.addEventListener('change', () => drawer.setPreferences({ snapping: this.$snapping.checked }));
+    // else saved from menu
+    this.$autoSave = this._createSwitch($drawing, 'preferences.autoSave');
+    this.$autoSave.addEventListener('change', () => drawer.setPreferences({ autoSave: this.$autoSave.checked }));
 
     this.$modalBody.append($appearance, $drawing);
 
@@ -107,6 +111,7 @@ export class PreferencesModal extends Modal {
     this.$zen.checked = preferences.zen;
     this.$grid.checked = preferences.grid;
     this.$snapping.checked = preferences.snapping;
+    this.$autoSave.checked = preferences.autoSave;
     if (this.$name && document.activeElement !== this.$name) this.$name.value = this.drawer.getUserName();
   }
 
@@ -156,9 +161,9 @@ export class PreferencesModal extends Modal {
   }
 
   /**
-   * Switch at the end of its row: label, shortcut doing the same
+   * Switch at the end of its row: label, shortcut doing the same (if any)
    */
-  private _createSwitch($container: HTMLElement, label: TranslationKey, shortcut: string) {
+  private _createSwitch($container: HTMLElement, label: TranslationKey, shortcut?: string) {
     const $label = document.createElement('label');
     const $text = document.createElement('span');
     const $shortcut = document.createElement('kbd');
@@ -166,8 +171,9 @@ export class PreferencesModal extends Modal {
 
     $label.className = 'drawer-preferences-switch';
     $shortcut.className = 'drawer-preferences-shortcut';
-    $shortcut.textContent = shortcut;
-    $switch.setAttribute('aria-keyshortcuts', shortcut);
+    $shortcut.textContent = shortcut ?? '';
+    $shortcut.hidden = !shortcut;
+    if (shortcut) $switch.setAttribute('aria-keyshortcuts', shortcut);
     $label.append($text, $shortcut, $switch);
     $container.append($label);
     this.drawer.i18n.translate((t) => ($text.textContent = t(label)));

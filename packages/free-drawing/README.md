@@ -62,7 +62,7 @@ const drawer = new Drawer($el, {
   layersPanel: true, // enable/disable layers panel (list of shapes) and its button in header
   readOnly: false, // drawing can't be modified by user (only pan, zoom, view options, export), API still modifies it
   scaling: 1.11, // scaling on zoom
-  autoSave: true, // for save draw state on localStorage automatically
+  autoSave: true, // drawing saved on each change (localStorage or storage), user preference (see Preferences)
   localStorageKey: 'free-drawing', // localStorage key used for store data, use a different key for each drawer of a page
   storage: null, // drawing saved somewhere else than localStorage (e.g. server of your app), see "Use in an app" below
   user: null, // user of your app ({ id, name }), used in collaboration sessions instead of id and name kept in browser
@@ -104,15 +104,24 @@ drawer.off('drawer.change', callback);
 | `drawer.theme.change` | dark state | Light or dark theme shown |
 | `drawer.language.change` | language | Language of interface changed |
 | `drawer.preferences.change` | preferences | Theme, language, grid or snapping changed (one event for several changes) |
+| `drawer.unsaved.change` | unsaved | Drawing has changes not saved yet (auto save off), or is saved again |
 
 Components trigger `drawer.dropdown.hide` (dropdown menu) and `drawer.toast.hide` (`drawer.toast()` result). Names of previous versions (`change`, `fd.options.change`...) still work, with a warning in console.
 
 ## Preferences
 
-"Preferences..." of settings menu (Ctrl / Cmd + ,, also in the command palette) opens a dialog: theme (light, dark or system), language, zen mode, grid, snapping to objects and name in collaboration sessions. Changes are applied at once and saved in the browser (`<localStorageKey>-preferences`), also with the `storage` option. An app can save them with the account of its user (see "Use in an app").
+"Preferences..." of settings menu (Ctrl / Cmd + ,, also in the command palette) opens a dialog: theme (light, dark or system), language, zen mode, grid, snapping to objects, auto save and name in collaboration sessions. Changes are applied at once and saved in the browser (`<localStorageKey>-preferences`), also with the `storage` option. An app can save them with the account of its user (see "Use in an app").
 
 ```js
 drawer.showPreferences();
+```
+
+Without auto save (preference or `autoSave` option), changes are saved with "Save now" (settings menu, command palette), the menu shows "Not saved" until then, and leaving the page asks a confirmation. Turning auto save on again saves pending changes.
+
+```js
+drawer.setAutoSave(false);
+drawer.hasUnsavedChanges(); // true after a change, until saved
+await drawer.saveNow(); // save, "Drawing saved" message
 ```
 
 ## Dark mode
@@ -183,7 +192,7 @@ Preferences are the interface settings of the user (theme, language, grid, snapp
 ```js
 drawer.setPreferences(await api.getPreferences()); // given ones only
 drawer.on('drawer.preferences.change', (preferences) => api.savePreferences(preferences));
-drawer.getPreferences(); // { theme: 'light', language: 'auto', grid: false, snapping: false, zen: false }
+drawer.getPreferences(); // { theme: 'light', language: 'auto', grid: false, snapping: false, zen: false, autoSave: true }
 ```
 
 `collaboration` option can also give data read by the server on connection (`socket.handshake.auth`), e.g. a token of the logged in user, or a function giving it on each connection:

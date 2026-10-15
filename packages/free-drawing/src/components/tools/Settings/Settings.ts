@@ -31,6 +31,8 @@ export class Settings extends Dropdown {
   $preferencesButton: HTMLButtonElement;
   $openButton: HTMLButtonElement;
   $saveAsButton: HTMLButtonElement;
+  /** Save now, shown without auto save */
+  $saveButton: HTMLButtonElement;
   $copyLinkButton: HTMLButtonElement;
   $collaborationButton: HTMLButtonElement;
   $clearCanvasButton: HTMLButtonElement;
@@ -58,6 +60,12 @@ export class Settings extends Dropdown {
     this.$commandsButton.setAttribute('aria-keyshortcuts', 'Control+K');
     this.$openButton = this._createItem(OpenIcon, 'menu.open', 'Ctrl+O');
     this.$openButton.setAttribute('aria-keyshortcuts', 'Control+O');
+    this.$saveButton = this._createItem(SaveIcon, 'menu.save');
+    // changes not saved yet
+    const $saveState = document.createElement('span');
+
+    $saveState.className = 'text-muted';
+    this.$saveButton.append($saveState);
     this.$saveAsButton = this._createItem(SaveIcon, 'menu.saveAs', 'Ctrl+S');
     this.$saveAsButton.setAttribute('aria-keyshortcuts', 'Control+S');
     this.$copyLinkButton = this._createItem(LinkIcon, 'menu.copyLink');
@@ -144,11 +152,21 @@ export class Settings extends Dropdown {
       $bgColorTitle.textContent = t('menu.background');
       this._updateCollaborationState();
     });
+    const updateSave = () => {
+      this.$saveButton.hidden = this.drawer.options.autoSave;
+      $saveState.textContent = this.drawer.hasUnsavedChanges() ? this.drawer.t('menu.unsaved') : '';
+    };
+
+    updateSave();
+    this.drawer.on(drawerEvents.unsavedChange, updateSave);
+    this.drawer.on(drawerEvents.preferencesChange, updateSave);
+    this.drawer.on(drawerEvents.languageChange, updateSave);
 
     this.$dropdownList.append(
       ...[
         ...(this.drawer.options.commandPalette ? [this.$commandsButton] : []),
         this.$openButton,
+        this.$saveButton,
         this.$saveAsButton,
         this.$copyLinkButton,
         this.$exportButton,
@@ -262,6 +280,7 @@ export class Settings extends Dropdown {
     this.$preferencesButton.addEventListener('click', () => this.drawer.showPreferences());
     this.$openButton.addEventListener('click', () => this.drawer.open());
     this.$saveAsButton.addEventListener('click', () => this.drawer.saveAs());
+    this.$saveButton.addEventListener('click', () => this.drawer.saveNow());
     this.$copyLinkButton.addEventListener('click', () => this.drawer.copyLink());
     this.$exportButton.addEventListener('click', () => this.drawer.showExport());
     this.$collaborationButton.addEventListener('click', () => this.drawer.showCollaboration());

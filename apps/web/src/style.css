@@ -102,6 +102,54 @@ body {
   color: var(--app-danger);
 }
 
+/* on / off switch: track with knob, then label */
+.app-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--app-text-muted);
+  font: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.app-toggle:hover {
+  background-color: var(--app-hover-bg);
+}
+
+.app-toggle-track {
+  position: relative;
+  width: 1.75rem;
+  height: 1rem;
+  border-radius: 999px;
+  background-color: var(--app-border);
+  transition: background-color 0.15s;
+}
+
+.app-toggle-track::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: calc(1rem - 4px);
+  height: calc(1rem - 4px);
+  border-radius: 50%;
+  background-color: var(--app-surface);
+  transition: transform 0.15s;
+}
+
+.app-toggle[aria-checked='true'] .app-toggle-track {
+  background-color: var(--app-primary);
+}
+
+.app-toggle[aria-checked='true'] .app-toggle-track::after {
+  transform: translateX(0.75rem);
+}
+
 /* drawer fills the rest of the page: no frame */
 .app-main {
   flex: 1;
