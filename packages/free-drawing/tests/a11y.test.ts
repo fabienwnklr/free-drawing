@@ -265,7 +265,7 @@ describe('Accessibility', () => {
 
     // still toggled as checkboxes
     preferences.$grid.click();
-    expect(drawer.grid).toBe(true);
+    expect(preferences.$grid.checked).toBe(true);
     exportModal.$background.click();
     expect(exportModal.exportOptions.background).toBe(false);
     preferences.hide();

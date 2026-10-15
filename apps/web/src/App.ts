@@ -47,7 +47,6 @@ export class App {
         </button>
         <span class="app-spacer"></span>
         <button type="button" class="app-button" data-drawings hidden></button>
-        <span class="app-user text-muted"></span>
         <button type="button" class="app-button" data-account></button>
       </header>
       <main class="app-main"></main>
@@ -58,7 +57,6 @@ export class App {
     this.$saveState = $root.querySelector('.app-save-state')!;
     this.$autoSaveButton = $root.querySelector('[data-autosave]')!;
     this.$drawingsButton = $root.querySelector('[data-drawings]')!;
-    this.$user = $root.querySelector('.app-user')!;
     this.$accountButton = $root.querySelector('[data-account]')!;
 
     this.#started = this._restoreSession();
@@ -321,7 +319,6 @@ export class App {
     this.$autoSaveButton.title = t('autoSaveHint');
     this.$drawingsButton.hidden = !this.user;
     this.$drawingsButton.textContent = t('myDrawings');
-    this.$user.textContent = this.user?.name ?? '';
     this.$accountButton.textContent = t(this.user ? 'account' : 'signIn');
     this.accountDialog?.render();
     this.profileDialog?.render();

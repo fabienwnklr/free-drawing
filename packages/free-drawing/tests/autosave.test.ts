@@ -73,8 +73,8 @@ describe('Auto save', () => {
     expect(modal.$autoSave.checked).toBe(true);
     expect(modal.$autoSave.closest('label')!.textContent).toContain('Auto save');
     modal.$autoSave.click();
+    modal.$saveButton.click();
     expect(drawer.options.autoSave).toBe(false);
-    modal.hide();
 
     // next visit
     expect(createDrawer({ autoSave: true, localStorageKey: drawer.options.localStorageKey }).options.autoSave).toBe(

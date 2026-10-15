@@ -54,6 +54,7 @@ export const es: Translations = {
   'menu.preferences': 'Preferencias...',
   'preferences.title': 'Preferencias',
   'preferences.autoSave': 'Guardado automático',
+  'preferences.save': 'Guardar',
   'preferences.appearance': 'Apariencia',
   'preferences.theme': 'Tema',
   'preferences.light': 'Claro',

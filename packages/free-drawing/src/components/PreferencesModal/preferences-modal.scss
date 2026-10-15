@@ -71,6 +71,16 @@
     flex: 1;
   }
 
+  // cancel, save
+  .drawer-modal-footer .drawer-button {
+    width: auto;
+    padding: $space-2 $space-3;
+  }
+
+  .drawer-modal-footer .drawer-button-neutral {
+    border: 1px solid $border;
+  }
+
   input[type='radio'] {
     margin: 0;
     appearance: auto;

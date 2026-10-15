@@ -57,6 +57,7 @@ export const en = {
   'menu.preferences': 'Preferences...',
   'preferences.title': 'Preferences',
   'preferences.autoSave': 'Auto save',
+  'preferences.save': 'Save',
   'preferences.appearance': 'Appearance',
   'preferences.theme': 'Theme',
   'preferences.light': 'Light',

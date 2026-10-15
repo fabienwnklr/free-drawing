@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.7.0](https://github.com/fabienwnklr/free-drawing/compare/v7.6.0...v7.7.0) (2026-10-15)
+
+
+### Features
+
+* **preferences:** dialog applies its changes together with "Save" (theme, language, zen mode, grid, snapping, auto save and name, Enter in name field), "Cancel", Escape or close keep current preferences
+
 ## [7.6.0](https://github.com/fabienwnklr/free-drawing/compare/v7.5.0...v7.6.0) (2026-10-15)
 
 

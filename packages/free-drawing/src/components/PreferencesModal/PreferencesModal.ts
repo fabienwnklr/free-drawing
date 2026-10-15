@@ -5,7 +5,7 @@ import { Modal } from '@/components/Modal/Modal';
 import { type Language, languages } from '@/i18n/I18n';
 import type { TranslationKey } from '@/i18n/en';
 import { drawerEvents } from '@/constants';
-import { createSwitch, uniqueId } from '@/utils/dom';
+import { createButton, createSwitch, uniqueId } from '@/utils/dom';
 
 const themes: { value: Theme; label: TranslationKey }[] = [
   { value: 'light', label: 'preferences.light' },
@@ -14,8 +14,9 @@ const themes: { value: Theme; label: TranslationKey }[] = [
 ];
 
 /**
- * Preferences of user (theme, language, zen mode, grid, snapping, name in collaboration sessions):
- * applied at once, saved in browser by drawer (and by the app of a logged in user)
+ * Preferences of user (theme, language, zen mode, grid, snapping, auto save, name in collaboration sessions):
+ * applied together with Save (Cancel, Escape or close keep current ones), saved in browser by drawer
+ * (and by the app of a logged in user)
  */
 export class PreferencesModal extends Modal {
   $themes: HTMLInputElement[];
@@ -26,11 +27,14 @@ export class PreferencesModal extends Modal {
   $autoSave: HTMLInputElement;
   /** Name in collaboration sessions, with `collaboration` option */
   $name: HTMLInputElement | null = null;
+  $cancelButton: HTMLButtonElement;
+  $saveButton: HTMLButtonElement;
+  /** Fields changed since shown: not replaced by preferences changed elsewhere */
+  #changed = false;
 
   constructor(drawer: Drawer) {
     super(drawer, { title: drawer.t('preferences.title') });
     this.$modal.classList.add('drawer-modal-preferences');
-    this.$modalFooter.remove();
 
     // appearance: theme, language, zen mode
     const $appearance = this._createSection('preferences.appearance');
@@ -45,7 +49,6 @@ export class PreferencesModal extends Modal {
 
       $radio.name = themesName;
       $radio.value = value;
-      $radio.addEventListener('change', () => drawer.setTheme(value));
       return $radio;
     });
 
@@ -54,21 +57,22 @@ export class PreferencesModal extends Modal {
       new Option('', 'auto'),
       ...Object.entries(languages).map(([language, { name }]) => new Option(name, language))
     );
-    this.$language.addEventListener('change', () => drawer.setLanguage(this.$language.value as Language | 'auto'));
     $appearance.append($themes, this._createField('menu.language', this.$language));
     this.$zen = this._createSwitch($appearance, 'menu.zenMode', 'Alt+Z');
-    this.$zen.addEventListener('change', () => drawer.setPreferences({ zen: this.$zen.checked }));
 
     // drawing: grid, snapping (exclude each other)
     const $drawing = this._createSection('preferences.drawing');
 
     this.$grid = this._createSwitch($drawing, 'menu.showGrid', 'Alt+G');
-    this.$grid.addEventListener('change', () => drawer.setPreferences({ grid: this.$grid.checked }));
     this.$snapping = this._createSwitch($drawing, 'context.snap', 'Alt+S');
-    this.$snapping.addEventListener('change', () => drawer.setPreferences({ snapping: this.$snapping.checked }));
+    this.$grid.addEventListener('change', () => {
+      if (this.$grid.checked) this.$snapping.checked = false;
+    });
+    this.$snapping.addEventListener('change', () => {
+      if (this.$snapping.checked) this.$grid.checked = false;
+    });
     // else saved from menu
     this.$autoSave = this._createSwitch($drawing, 'preferences.autoSave');
-    this.$autoSave.addEventListener('change', () => drawer.setPreferences({ autoSave: this.$autoSave.checked }));
 
     this.$modalBody.append($appearance, $drawing);
 
@@ -80,24 +84,59 @@ export class PreferencesModal extends Modal {
       this.$name.maxLength = 40;
       // valid token, unknown to dom types
       this.$name.setAttribute('autocomplete', 'nickname');
-      this.$name.addEventListener('change', () => drawer.setUserName(this.$name!.value));
+      // Enter saves, as a form
+      this.$name.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') this.save();
+      });
       $collaboration.append(this._createField('collab.name', this.$name));
       this.$modalBody.append($collaboration);
     }
+    this.$modalBody.addEventListener('input', () => (this.#changed = true));
+    this.$modalBody.addEventListener('change', () => (this.#changed = true));
+
+    // cancel first, save on the right
+    this.$cancelButton = createButton('drawer-button', 'drawer-button-neutral');
+    this.$saveButton = createButton('drawer-button', 'drawer-button-primary');
+    this.$cancelButton.addEventListener('click', () => this.hide());
+    this.$saveButton.addEventListener('click', () => this.save());
+    this.$modalFooter.append(this.$cancelButton, this.$saveButton);
 
     drawer.i18n.translate((t) => {
       this.setTitle(t('preferences.title'));
       $themesLegend.textContent = t('preferences.theme');
       this.$language.options[0].text = t('language.auto');
       if (this.$name) this.$name.placeholder = t('collab.anonymous');
+      this.$cancelButton.textContent = t('confirm.cancel');
+      this.$saveButton.textContent = t('preferences.save');
     });
-    // changed elsewhere (menu, shortcuts, app) while shown
-    drawer.on(drawerEvents.preferencesChange, () => this.update());
+    // changed elsewhere (app...) while shown, fields not changed yet
+    drawer.on(drawerEvents.preferencesChange, () => {
+      if (!this.#changed) this.update();
+    });
   }
 
   show() {
+    this.#changed = false;
     this.update();
     super.show();
+  }
+
+  /**
+   * Fields applied together (one preferences change), dialog closed
+   */
+  save() {
+    const theme = this.$themes.find(($radio) => $radio.checked)?.value as Theme | undefined;
+
+    this.drawer.setPreferences({
+      ...(theme && { theme }),
+      language: this.$language.value as Language | 'auto',
+      zen: this.$zen.checked,
+      grid: this.$grid.checked,
+      snapping: this.$snapping.checked,
+      autoSave: this.$autoSave.checked,
+    });
+    if (this.$name) this.drawer.setUserName(this.$name.value);
+    this.hide();
   }
 
   /**
@@ -112,7 +151,7 @@ export class PreferencesModal extends Modal {
     this.$grid.checked = preferences.grid;
     this.$snapping.checked = preferences.snapping;
     this.$autoSave.checked = preferences.autoSave;
-    if (this.$name && document.activeElement !== this.$name) this.$name.value = this.drawer.getUserName();
+    if (this.$name) this.$name.value = this.drawer.getUserName();
   }
 
   /**

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Drawer } from '@/Drawer';
 import { createDrawer, keydown } from './helpers';
 
@@ -65,10 +65,12 @@ describe('Preferences', () => {
     });
   });
 
-  it('Dialog from menu, shortcut and command palette, fields applied at once', async () => {
+  it('Dialog from menu, shortcut and command palette, fields applied together with Save', async () => {
     const drawer = createDrawer({ language: 'en', collaboration: true });
     const $item = drawer.setting.$preferencesButton;
+    const onChange = vi.fn();
 
+    drawer.on('drawer.preferences.change', onChange);
     expect($item.getAttribute('aria-haspopup')).toBe('dialog');
     expect($item.getAttribute('aria-keyshortcuts')).toBe('Control+,');
     $item.click();
@@ -79,29 +81,32 @@ describe('Preferences', () => {
     expect(modal.isVisible()).toBe(true);
     expect(modal.$modal.querySelector('.drawer-modal-title')!.textContent).toBe('Preferences');
     expect(modal.$themes.find(($radio) => $radio.checked)!.value).toBe('light');
+    expect([modal.$cancelButton.textContent, modal.$saveButton.textContent]).toEqual(['Cancel', 'Save']);
 
+    // fields changed: nothing applied yet
     modal.$themes[1].click();
-    expect(drawer.theme).toBe('dark');
-
     modal.$language.value = 'fr';
     modal.$language.dispatchEvent(new Event('change'));
-    expect(drawer.language).toBe('fr');
-    expect(modal.$modal.querySelector('.drawer-modal-title')!.textContent).toBe('Préférences');
-
     modal.$grid.click();
-    expect(drawer.grid).toBe(true);
-    // snapping hides grid: field updated
+    // grid and snapping exclude each other
     modal.$snapping.click();
-    await Promise.resolve();
-    expect(drawer.getPreferences()).toMatchObject({ grid: false, snapping: true });
     expect(modal.$grid.checked).toBe(false);
-
     modal.$zen.click();
-    expect(drawer.getPreferences().zen).toBe(true);
-
     modal.$name!.value = 'Ada';
-    modal.$name!.dispatchEvent(new Event('change'));
-    expect(drawer.getUserName()).toBe('Ada');
+    modal.$name!.dispatchEvent(new Event('input'));
+    expect([drawer.theme, drawer.language, drawer.grid, drawer.getUserName()]).toEqual(['light', 'en', false, '']);
+    // not replaced by a change elsewhere
+    drawer.setPreferences({ zen: false });
+    await Promise.resolve();
+    expect(modal.$zen.checked).toBe(true);
+
+    // saved: all applied, one event
+    onChange.mockClear();
+    modal.$saveButton.click();
+    await Promise.resolve();
+    expect(modal.isVisible()).toBe(false);
+    expect([drawer.theme, drawer.language, drawer.getUserName()]).toEqual(['dark', 'fr', 'Ada']);
+    expect(onChange).toHaveBeenCalledTimes(1);
     expect(saved(drawer)).toEqual({
       theme: 'dark',
       language: 'fr',
@@ -111,7 +116,26 @@ describe('Preferences', () => {
       autoSave: false,
     });
 
-    modal.hide();
+    // cancelled, closed with Escape: nothing applied, fields show preferences again
+    drawer.showPreferences();
+    expect(modal.$modal.querySelector('.drawer-modal-title')!.textContent).toBe('Préférences');
+    modal.$themes[0].click();
+    modal.$cancelButton.click();
+    expect(drawer.theme).toBe('dark');
+    drawer.showPreferences();
+    expect(modal.$themes.find(($radio) => $radio.checked)!.value).toBe('dark');
+    modal.$zen.click();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(modal.isVisible()).toBe(false);
+    expect(drawer.getPreferences().zen).toBe(true);
+
+    // Enter in name field saves
+    drawer.showPreferences();
+    modal.$name!.value = 'Grace';
+    modal.$name!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+    expect(drawer.getUserName()).toBe('Grace');
+    expect(modal.isVisible()).toBe(false);
+
     expect(keydown(drawer, { key: ',', ctrlKey: true })).toBe(false);
     expect(modal.isVisible()).toBe(true);
     modal.hide();
