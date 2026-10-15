@@ -12,18 +12,20 @@ import UnlockIcon from '@/icons/unlock.svg?raw';
 import LockIcon from '@/icons/lock.svg?raw';
 import RotateLeftIcon from '@/icons/rotate-left.svg?raw';
 import RotateRightIcon from '@/icons/rotate-right.svg?raw';
+import FitWidthIcon from '@/icons/fit-width.svg?raw';
 import { Group } from 'konva/lib/Group';
 import { arrowNavigation, createButton, setLabel } from '@/utils/dom';
 import type { TranslationKey } from '@/i18n/en';
 import { drawerEvents } from '@/constants';
 import { getFrameTitle, isFrame } from '@/utils/frame';
+import { getTexts } from '@/utils/text';
 
 /** Space between selection and menu, between menu and drawer edges (px) */
 const gap = 12;
 
 /**
- * Menu next to selected shapes: duplicate, rotate, bring forward, send backward, lock, delete, or unlock for locked
- * shapes.
+ * Menu next to selected shapes: duplicate, rotate, fit width of texts, bring forward, send backward, lock, delete, or
+ * unlock for locked shapes.
  * Out of transformer (below, above, right or left of it), hidden while shapes are moved
  */
 export class SelectionMenu {
@@ -34,6 +36,7 @@ export class SelectionMenu {
   $ungroupBtn: HTMLButtonElement;
   $rotateLeftBtn: HTMLButtonElement;
   $rotateRightBtn: HTMLButtonElement;
+  $fitWidthBtn: HTMLButtonElement;
   $backwardBtn: HTMLButtonElement;
   $forwardBtn: HTMLButtonElement;
   $deleteBtn: HTMLButtonElement;
@@ -57,6 +60,9 @@ export class SelectionMenu {
     );
     this.$rotateRightBtn = this._createButton(RotateRightIcon, 'action.rotateRight', 'Shift+R', () =>
       this.drawer.rotateShapes(90)
+    );
+    this.$fitWidthBtn = this._createButton(FitWidthIcon, 'action.fitTextWidth', 'Shift+W', () =>
+      this.drawer.fitTextWidth()
     );
     this.$backwardBtn = this._createButton(SendBackwardIcon, 'action.sendBackward', 'Ctrl+Down', () =>
       this.drawer.reorderShapes('backward')
@@ -90,6 +96,7 @@ export class SelectionMenu {
       this.$ungroupBtn,
       this.$rotateLeftBtn,
       this.$rotateRightBtn,
+      this.$fitWidthBtn,
       this.$backwardBtn,
       this.$forwardBtn,
       this.$lockBtn,
@@ -199,6 +206,7 @@ export class SelectionMenu {
     this.$ungroupBtn.hidden = locked || !shapes.some((shape) => shape instanceof Group && !isFrame(shape));
     // frames are not rotated
     this.$rotateLeftBtn.hidden = this.$rotateRightBtn.hidden = locked || shapes.every(isFrame);
+    this.$fitWidthBtn.hidden = locked || !getTexts(shapes).length;
 
     const { left, top } = this._getPlace();
     // view in drawer

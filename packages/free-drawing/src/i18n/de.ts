@@ -169,6 +169,7 @@ export const de: Translations = {
   'action.rotateLeft': 'Um 90° nach links drehen',
   'action.flipHorizontal': 'Horizontal spiegeln',
   'action.flipVertical': 'Vertikal spiegeln',
+  'action.fitTextWidth': 'Breite an Text anpassen',
   'action.copyPng': 'Als PNG kopieren',
   'action.copySvg': 'Als SVG kopieren',
 

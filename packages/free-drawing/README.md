@@ -298,11 +298,12 @@ Shift constrains drawing and selected shapes, also pressed or released without m
 | Rotate | By 15° |
 | Move | Horizontally or vertically |
 
-A menu next to selected shapes duplicates them (Ctrl+D), rotates them by 90° left or right (Shift+L, Shift+R), brings them forward, sends them backward, locks them (Ctrl+Shift+L) or deletes them (`selectionMenu` option). It is under the selection, above it near the bottom of the drawer, and hidden while shapes are moved.
+A menu next to selected shapes duplicates them (Ctrl+D), rotates them by 90° left or right (Shift+L, Shift+R), fits the width of texts to their content (Shift+W: box of the longest line, lines no longer wrapped, text kept in place whatever its alignment), brings them forward, sends them backward, locks them (Ctrl+Shift+L) or deletes them (`selectionMenu` option). It is under the selection, above it near the bottom of the drawer, and hidden while shapes are moved.
 
 ```js
 const copies = drawer.duplicateShapes(); // selected shapes by default, copies are selected
 drawer.deleteShapes([shape]);
+drawer.fitTextWidth(); // texts of selection (also of groups), true if one changed
 ```
 
 ## Context menu
@@ -317,6 +318,7 @@ A right click on a shape selects it (with the selection tool) and shows actions 
 | Bring to front, forward, send backward, to back | Ctrl / Cmd + (Shift +) Up / Down |
 | Rotate 90° right, left (around center of selection) | Shift + R, Shift + L |
 | Flip horizontal, vertical (texts are still readable) | Shift + H, Shift + V |
+| Fit width to text (texts of selection) | Shift + W |
 | Copy as PNG, as SVG (selection, else whole drawing) | Shift + Alt + C, Shift + Alt + S |
 | Select all | Ctrl / Cmd + A |
 

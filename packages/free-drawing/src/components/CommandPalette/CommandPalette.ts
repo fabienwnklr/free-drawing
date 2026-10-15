@@ -40,11 +40,13 @@ import LanguageIcon from '@/icons/language.svg?raw';
 import SlidersIcon from '@/icons/sliders.svg?raw';
 import LockIcon from '@/icons/lock.svg?raw';
 import { isFrame } from '@/utils/frame';
+import { getTexts } from '@/utils/text';
 import UnlockIcon from '@/icons/unlock.svg?raw';
 import FlipHorizontalIcon from '@/icons/flip-horizontal.svg?raw';
 import RotateRightIcon from '@/icons/rotate-right.svg?raw';
 import RotateLeftIcon from '@/icons/rotate-left.svg?raw';
 import FlipVerticalIcon from '@/icons/flip-vertical.svg?raw';
+import FitWidthIcon from '@/icons/fit-width.svg?raw';
 
 /**
  * Command of palette
@@ -388,6 +390,14 @@ export class CommandPalette extends Modal {
             shortcut: 'Shift+V',
             run: () => drawer.flipShapes('vertical'),
           },
+          editSelection &&
+            getTexts(selected).length > 0 && {
+              id: 'fit text width content shrink',
+              label: t('action.fitTextWidth'),
+              icon: FitWidthIcon,
+              shortcut: 'Shift+W',
+              run: () => drawer.fitTextWidth(),
+            },
           editSelection && {
             id: 'lock',
             label: t('context.lock'),

@@ -169,6 +169,7 @@ export const es: Translations = {
   'action.rotateLeft': 'Girar 90° a la izquierda',
   'action.flipHorizontal': 'Voltear horizontalmente',
   'action.flipVertical': 'Voltear verticalmente',
+  'action.fitTextWidth': 'Ajustar el ancho al texto',
   'action.copyPng': 'Copiar como PNG',
   'action.copySvg': 'Copiar como SVG',
 

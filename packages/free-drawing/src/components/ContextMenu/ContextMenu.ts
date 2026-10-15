@@ -7,6 +7,7 @@ import { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import '@/components/ContextMenu/context-menu.scss';
 import { arrowNavigation, createButton, setPressed } from '@/utils/dom';
 import { getDrawingShape } from '@/utils/frame';
+import { getTexts } from '@/utils/text';
 import type { TranslationKey } from '@/i18n/en';
 
 /** Item of menu: shown in a context, action run once menu is hidden */
@@ -14,7 +15,8 @@ type Item = { $item: HTMLButtonElement; visible: () => boolean; run: () => void 
 
 /**
  * Menu of right click (or context menu key, Shift + F10): actions on selection when a shape is under pointer
- * or selected (order, rotate, flip, duplicate, lock, delete, copy as image; unlock for locked shapes), else actions on
+ * or selected (order, rotate, flip, fit width of texts, duplicate, lock, delete, copy as image; unlock for locked
+ * shapes), else actions on
  * drawing (paste, select all, copy as image, snapping, grid), with their shortcuts
  */
 export class ContextMenu {
@@ -129,6 +131,11 @@ export class ContextMenu {
           $item: this._createItem('action.flipVertical', 'Shift+V'),
           visible: selection,
           run: () => drawer.flipShapes('vertical'),
+        },
+        {
+          $item: this._createItem('action.fitTextWidth', 'Shift+W'),
+          visible: () => selection() && getTexts(drawer.getSelectedShapes()).length > 0,
+          run: () => drawer.fitTextWidth(),
         },
       ],
       [

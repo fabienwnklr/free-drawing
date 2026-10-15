@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.9.0](https://github.com/fabienwnklr/free-drawing/compare/v7.8.0...v7.9.0) (2026-10-16)
+
+
+### Features
+
+* **text:** "Fit width to text" (selection menu, context menu, command palette, Shift+W, `fitTextWidth`): width of selected texts (also texts of groups) fitted to their longest line, lines no longer wrapped, text kept in place whatever its alignment
+
 ## [7.8.0](https://github.com/fabienwnklr/free-drawing/compare/v7.7.0...v7.8.0) (2026-10-16)
 
 

@@ -32,6 +32,7 @@ describe('Selection menu', () => {
       'Ungroup',
       'Rotate 90° left',
       'Rotate 90° right',
+      'Fit width to text',
       'Send backward',
       'Bring forward',
       'Lock',

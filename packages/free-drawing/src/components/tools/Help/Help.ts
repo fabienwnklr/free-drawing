@@ -64,6 +64,7 @@ export class Help extends Modal {
       { label: t('action.rotateLeft'), keys: ['Shift+L'] },
       { label: t('action.flipHorizontal'), keys: ['Shift+H'] },
       { label: t('action.flipVertical'), keys: ['Shift+V'] },
+      { label: t('action.fitTextWidth'), keys: ['Shift+W'] },
       { label: t('help.lock'), keys: ['Ctrl+Shift+L'] },
       { label: t('help.paste'), keys: ['Ctrl+V'] },
       { label: t('help.open'), keys: ['Ctrl+O'] },

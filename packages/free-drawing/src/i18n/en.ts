@@ -178,6 +178,7 @@ export const en = {
   'action.rotateLeft': 'Rotate 90° left',
   'action.flipHorizontal': 'Flip horizontal',
   'action.flipVertical': 'Flip vertical',
+  'action.fitTextWidth': 'Fit width to text',
   'action.copyPng': 'Copy as PNG',
   'action.copySvg': 'Copy as SVG',
 

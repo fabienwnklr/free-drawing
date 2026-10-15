@@ -28,6 +28,7 @@ import { rectContains, setupHit } from '@/utils/hit';
 import { I18n, type Language, type TranslationParams, getLanguage, languages } from '@/i18n/I18n';
 import type { TranslationKey } from '@/i18n/en';
 import { bindingAttrs, unbindMoved, updateBindings } from '@/utils/binding';
+import { fitTextWidth, getTexts } from '@/utils/text';
 import {
   type DrawingFile,
   decodeLinkData,
@@ -1132,6 +1133,20 @@ export class Drawer extends MicroEvent {
       });
     });
     this.stage.fire('change');
+  }
+
+  /**
+   * Fit width of texts (selected ones by default, also texts of groups) to their content: box of their longest line,
+   * lines no longer wrapped, text stays in place
+   * @param {DrawingShape[]} shapes
+   * @returns {boolean} true if a text changed (change saved)
+   */
+  fitTextWidth(shapes: DrawingShape[] = this.getSelectedShapes()): boolean {
+    const changed = getTexts(shapes).filter(fitTextWidth);
+
+    if (changed.length) this.stage.fire('change');
+
+    return changed.length > 0;
   }
 
   /**
