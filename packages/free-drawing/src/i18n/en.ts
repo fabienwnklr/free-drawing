@@ -156,6 +156,10 @@ export const en = {
   'action.bringForward': 'Bring forward',
   'action.bringToFront': 'Bring to front',
   'action.delete': 'Delete',
+  'action.flipHorizontal': 'Flip horizontal',
+  'action.flipVertical': 'Flip vertical',
+  'action.copyPng': 'Copy as PNG',
+  'action.copySvg': 'Copy as SVG',
 
   // options of tools and selection
   'overlay.tool': 'Tool options',

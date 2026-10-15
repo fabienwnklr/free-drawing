@@ -552,7 +552,10 @@ describe('Collaboration', () => {
     expect(drawer.undoRedo.$btnUndo.disabled).toBe(true);
     expect(drawer.setting.$clearCanvasButton.disabled).toBe(true);
     expect(drawer.setting.$openButton.disabled).toBe(true);
-    expect(drawer.contextMenu.$pasteBtn.disabled).toBe(true);
+    // no paste in menu
+    drawer.contextMenu.show();
+    expect(drawer.contextMenu.$pasteBtn.hidden).toBe(true);
+    drawer.contextMenu.hide();
 
     // shortcuts modifying drawing do nothing
     keydown(drawer, { key: 'a', ctrlKey: true });

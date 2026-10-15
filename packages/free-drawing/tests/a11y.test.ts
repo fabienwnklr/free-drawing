@@ -283,7 +283,7 @@ describe('Accessibility', () => {
     const menu = drawer.contextMenu;
 
     menu.show();
-    const items = Array.from(menu.$menu.querySelectorAll<HTMLElement>('[role^="menuitem"]'));
+    const items = Array.from(menu.$menu.querySelectorAll<HTMLElement>('[role^="menuitem"]:not([hidden])'));
 
     expect(menu.$menu.getAttribute('role')).toBe('menu');
     expect(items.length).toBe(3);

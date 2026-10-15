@@ -1,22 +1,30 @@
 import type { Drawer } from '@/Drawer';
-import { Shape, ShapeConfig } from 'konva/lib/Shape';
+import type { Node } from 'konva/lib/Node';
+import type { KonvaEventObject } from 'konva/lib/Node';
+import type { DrawingShape, ShapeOrder } from '@/@types/drawer';
+import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import '@/components/ContextMenu/context-menu.scss';
-import { Stage } from 'konva/lib/Stage';
-import { arrowNavigation, createButton, disableElement, enableElement, setPressed } from '@/utils/dom';
-import { drawerEvents } from '@/constants';
+import { arrowNavigation, createButton, setPressed } from '@/utils/dom';
 import type { TranslationKey } from '@/i18n/en';
 
+/** Item of menu: shown in a context, action run once menu is hidden */
+type Item = { $item: HTMLButtonElement; visible: () => boolean; run: () => void };
+
+/**
+ * Menu of right click (or context menu key, Shift + F10): actions on selection when a shape is under pointer
+ * or selected (order, flip, duplicate, lock, delete, copy as image), else actions on drawing (paste, select all,
+ * copy as image, snapping, grid), with their shortcuts
+ */
 export class ContextMenu {
   drawer: Drawer;
-  currentShape: Shape<ShapeConfig> | null = null;
   $menu!: HTMLDivElement;
-  $list!: HTMLUListElement;
+  $list!: HTMLDivElement;
   $pasteBtn!: HTMLButtonElement;
   $snappingBtn!: HTMLButtonElement;
   $gridBtn!: HTMLButtonElement;
-  $lockShapeBtn!: HTMLButtonElement;
-  focusedShape: Stage | Shape<ShapeConfig> | null = null;
+  /** Groups of items, separated when several are shown */
+  #sections: { $section: HTMLElement; items: Item[] }[] = [];
 
   constructor(drawer: Drawer) {
     this.drawer = drawer;
@@ -24,59 +32,174 @@ export class ContextMenu {
     this._initEvents();
   }
 
+  private get selectWidget() {
+    return this.drawer.getWidget<SelectWidget>('selection');
+  }
+
   private _init() {
+    const { drawer } = this;
+    const edit = () => !drawer.readOnly;
+    const selection = () => edit() && drawer.getSelectedShapes().length > 0;
+    const canvas = () => drawer.getSelectedShapes().length === 0;
+    const hasShapes = () => drawer.getDrawingShapes().length > 0;
+    const order = (label: TranslationKey, value: ShapeOrder, shortcut: string): Item => ({
+      $item: this._createItem(label, shortcut),
+      visible: selection,
+      run: () => drawer.reorderShapes(value),
+    });
+    const paste: Item = {
+      $item: this._createItem('context.paste', 'Ctrl+V'),
+      visible: () => edit() && canvas() && !!drawer.getWidget('text'),
+      run: () => this._paste(),
+    };
+    const snapping: Item = {
+      $item: this._createItem('context.snap', 'Alt+S', 'menuitemcheckbox'),
+      visible: () => canvas() && !!this.selectWidget,
+      run: () => drawer.setting.toggleSnapping(),
+    };
+    const grid: Item = {
+      $item: this._createItem('menu.showGrid', 'Alt+G', 'menuitemcheckbox'),
+      visible: canvas,
+      run: () => drawer.setting.toggleGrid(),
+    };
+
+    this.$pasteBtn = paste.$item;
+    this.$snappingBtn = snapping.$item;
+    this.$gridBtn = grid.$item;
+    setPressed(this.$snappingBtn, false);
+    setPressed(this.$gridBtn, false);
+
     this.$menu = document.createElement('div');
     this.$menu.classList.add('drawer-context-menu');
     this.$menu.setAttribute('role', 'menu');
-
-    this.$list = document.createElement('ul');
-    this.$list.setAttribute('role', 'none');
-
-    this.$pasteBtn = this._createItem('context.paste', 'Ctrl+V');
-    this.$snappingBtn = this._createItem('context.snap', 'Alt+S', 'menuitemcheckbox');
-    this.$gridBtn = this._createItem('menu.showGrid', 'Alt+G', 'menuitemcheckbox');
-    this.$lockShapeBtn = this._createItem('context.lock', '');
-
-    this.$list.append(...[this.$pasteBtn, this.$snappingBtn, this.$gridBtn]);
-
+    this.$list = document.createElement('div');
+    this.$list.className = 'drawer-context-menu-list';
     this.$menu.append(this.$list);
+
+    const sections: Item[][] = [
+      [paste],
+      [
+        {
+          $item: this._createItem('action.duplicate', 'Ctrl+D'),
+          visible: selection,
+          run: () => drawer.duplicateShapes(),
+        },
+        {
+          $item: this._createItem('context.lock', 'Ctrl+Shift+L'),
+          visible: selection,
+          run: () => drawer.setShapesLocked(true),
+        },
+        {
+          $item: this._createItem('action.delete', drawer.t('key.delete'), 'menuitem', 'Delete'),
+          visible: selection,
+          run: () => drawer.deleteShapes(),
+        },
+      ],
+      [
+        order('action.bringToFront', 'front', 'Ctrl+Shift+↑'),
+        order('action.bringForward', 'forward', 'Ctrl+↑'),
+        order('action.sendBackward', 'backward', 'Ctrl+↓'),
+        order('action.sendToBack', 'back', 'Ctrl+Shift+↓'),
+      ],
+      [
+        {
+          $item: this._createItem('action.flipHorizontal', 'Shift+H'),
+          visible: selection,
+          run: () => drawer.flipShapes('horizontal'),
+        },
+        {
+          $item: this._createItem('action.flipVertical', 'Shift+V'),
+          visible: selection,
+          run: () => drawer.flipShapes('vertical'),
+        },
+      ],
+      [
+        {
+          $item: this._createItem('action.copyPng', 'Shift+Alt+C'),
+          visible: hasShapes,
+          run: () => drawer.copyImage('png'),
+        },
+        {
+          $item: this._createItem('action.copySvg', 'Shift+Alt+S'),
+          visible: hasShapes,
+          run: () => drawer.copyImage('svg'),
+        },
+      ],
+      [
+        {
+          $item: this._createItem('help.selectAll', 'Ctrl+A'),
+          visible: () => edit() && hasShapes() && !!this.selectWidget,
+          run: () => this._selectAll(),
+        },
+      ],
+      [snapping, grid],
+    ];
+
+    this.#sections = sections.map((items) => {
+      const $section = document.createElement('div');
+
+      $section.className = 'drawer-context-menu-section';
+      $section.setAttribute('role', 'group');
+      $section.append(...items.map(({ $item }) => $item));
+      this.$list.append($section);
+      items.forEach(({ $item, run }) =>
+        $item.addEventListener('click', () => {
+          this.hide();
+          run();
+        })
+      );
+
+      return { $section, items };
+    });
+    // Delete key name in language
+    drawer.i18n.translate((t) => {
+      const $delete = this.#sections[1].items[2].$item.querySelector('kbd')!;
+
+      $delete.textContent = t('key.delete');
+    });
+
     this.drawer.$drawerContainer.append(this.$menu);
   }
 
   /**
-   * Menu item, focused with arrow keys
+   * Menu item, focused with arrow keys, shortcut shown at its end
+   * @param keyshortcuts `aria-keyshortcuts` when shown shortcut is not one
    */
-  private _createItem(label: TranslationKey, shortcut: string, role: 'menuitem' | 'menuitemcheckbox' = 'menuitem') {
+  private _createItem(
+    label: TranslationKey,
+    shortcut: string,
+    role: 'menuitem' | 'menuitemcheckbox' = 'menuitem',
+    keyshortcuts = shortcut.replace('Ctrl', 'Control').replace('↑', 'ArrowUp').replace('↓', 'ArrowDown')
+  ) {
     const $item = createButton('drawer-button', 'drawer-button-neutral', 'drawer-context-menu-list-item');
+    const $label = document.createElement('span');
+    const $shortcut = document.createElement('kbd');
 
-    $item.innerHTML = `<span class="drawer-context-menu-item__label"></span><kbd class="drawer-context-menu-item__shortcut" aria-hidden="true">${shortcut}</kbd>`;
-    this.drawer.i18n.translate(
-      (t) => ($item.querySelector('.drawer-context-menu-item__label')!.textContent = t(label))
-    );
+    $label.className = 'drawer-context-menu-item__label';
+    $shortcut.className = 'drawer-context-menu-item__shortcut';
+    $shortcut.setAttribute('aria-hidden', 'true');
+    $shortcut.textContent = shortcut;
+    $item.append($label, $shortcut);
+    this.drawer.i18n.translate((t) => ($label.textContent = t(label)));
     $item.setAttribute('role', role);
+    $item.setAttribute('aria-keyshortcuts', keyshortcuts);
     $item.tabIndex = -1;
-    if (shortcut) $item.setAttribute('aria-keyshortcuts', shortcut.replace('Ctrl', 'Control'));
-    if (role === 'menuitemcheckbox') setPressed($item, false);
 
     return $item;
   }
 
+  /**
+   * Shown items, in menu order
+   */
   private _getItems() {
-    return Array.from(this.$list.querySelectorAll<HTMLElement>('[role^="menuitem"]'));
+    return Array.from(this.$list.querySelectorAll<HTMLElement>('[role^="menuitem"]:not([hidden])'));
   }
 
   private _initEvents() {
-    window.addEventListener('click', () => {
-      this.hide();
-    });
-
-    // Disable native context menu on my own context menu.. contextmenuception
-    this.$menu.addEventListener('contextmenu', (e) => {
-      e.preventDefault();
-    });
-
+    window.addEventListener('click', () => this.hide());
+    // no native menu on this one
+    this.$menu.addEventListener('contextmenu', (e) => e.preventDefault());
     arrowNavigation(this.$menu, () => this._getItems(), 'vertical');
-
     this.$menu.addEventListener('keydown', (e) => {
       if (e.key !== 'Escape' && e.key !== 'Tab') return;
 
@@ -85,98 +208,114 @@ export class ContextMenu {
       this.hide();
     });
 
-    // keyboard (context menu key, Shift+F10) on focused drawer, menu in drawer center
+    // keyboard (context menu key, Shift+F10) on focused drawer: menu of selection or drawing, in drawer center
     this.drawer.$drawerContainer.addEventListener('contextmenu', (e) => {
       if (e.target !== this.drawer.$drawerContainer) return;
 
       e.preventDefault();
-      const scope = this.drawer.$drawerContainer;
-
-      this.$menu.style.top = Math.max(0, (scope.clientHeight - this.$menu.clientHeight) / 2) + 'px';
-      this.$menu.style.left = Math.max(0, (scope.clientWidth - this.$menu.clientWidth) / 2) + 'px';
       this.show();
-    });
 
-    // read only: no paste
-    this.drawer.on(drawerEvents.readOnlyChange, (readOnly: boolean) =>
-      readOnly ? disableElement(this.$pasteBtn) : enableElement(this.$pasteBtn)
-    );
+      const { clientWidth, clientHeight } = this.drawer.$drawerContainer;
 
-    this.$pasteBtn.addEventListener('click', async () => {
-      try {
-        // needs clipboard permission (asked by browser), Ctrl / Cmd + V does not
-        const text = await navigator.clipboard.readText();
-
-        if (!text) return;
-
-        this.drawer.getWidget<TextWidget>('text')?.addTextNode(text);
-        this.drawer.stage.fire('change');
-      } catch (error) {
-        this.drawer.toast(this.drawer.t('toast.clipboardUnavailable', { error: (error as Error).message }), 'warning');
-      }
-    });
-
-    this.$snappingBtn.addEventListener('click', () => {
-      this.drawer.setting.toggleSnapping();
-    });
-
-    this.$gridBtn.addEventListener('click', () => {
-      this.drawer.setting.toggleGrid();
-    });
-
-    this.$lockShapeBtn.addEventListener('click', () => {
-      this.focusedShape?.listening(false);
+      this._moveTo((clientWidth - this.$menu.offsetWidth) / 2, (clientHeight - this.$menu.offsetHeight) / 2);
     });
 
     this.drawer.stage.on('contextmenu', (e) => {
-      // prevent default behavior
       e.evt.preventDefault();
-      const scope = this.drawer.$drawerContainer;
-      const { left: scopeOffsetX, top: scopeOffsetY } = scope.getBoundingClientRect();
-
-      const scopeX = this.drawer._getPointerPos().x - scopeOffsetX;
-      const scopeY = this.drawer._getPointerPos().y - scopeOffsetY;
-
-      // ? check if the element will go out of bounds
-      const outOfBoundsOnX = scopeX + this.$menu.clientWidth > scope.clientWidth;
-
-      const outOfBoundsOnY = scopeY + this.$menu.clientHeight > scope.clientHeight;
-
-      let normalizedX = this.drawer._getPointerPos().x;
-      let normalizedY = this.drawer._getPointerPos().y;
-
-      // ? normalzie on X
-      if (outOfBoundsOnX) {
-        normalizedX = scopeOffsetX + scope.clientWidth - this.$menu.clientWidth - 4;
-      }
-
-      // ? normalize on Y
-      if (outOfBoundsOnY) {
-        normalizedY = scopeOffsetY + scope.clientHeight - this.$menu.clientHeight - 4;
-      }
-
-      this.$menu.style.top = normalizedY + 'px';
-      this.$menu.style.left = normalizedX + 'px';
-
-      // if (e.target !== this.drawer.stage) {
-      //   this.focusedShape = e.target;
-      //   if (e.target.listening()) {
-      //     this.$list.append(this.$lockShapeBtn);
-      //   } else {
-      //     this.$lockShapeBtn.remove();
-      //   }
-      // }else {
-      //   this.$lockShapeBtn.remove();
-      // }
-      // show menu
+      this._selectAt(e);
       this.show();
+
+      const container = this.drawer.$drawerContainer.getBoundingClientRect();
+
+      this._moveTo(e.evt.clientX - container.left, e.evt.clientY - container.top);
     });
   }
 
   /**
-   * Show the context menu, first item focused (keyboard navigation)
+   * Shape under pointer selected (its group, with selection tool) unless it is selected,
+   * selection kept in its box, removed elsewhere
+   */
+  private _selectAt(e: KonvaEventObject<PointerEvent>) {
+    const { drawer, selectWidget } = this;
+
+    if (!selectWidget || drawer.readOnly) return;
+
+    const pos = drawer._getPointerPos();
+    const hit = e.target.getLayer() === drawer.drawLayer ? this._getDrawingShape(e.target) : null;
+    const [shape] = selectWidget.getShapesAt(pos, hit);
+    const selected = drawer.getSelectedShapes();
+
+    if (shape && selected.includes(shape)) return;
+    if (!shape) {
+      const box = selectWidget.transformer.getClientRect();
+      const inBox = pos.x >= box.x && pos.x <= box.x + box.width && pos.y >= box.y && pos.y <= box.y + box.height;
+
+      if (!selected.length || inBox) return;
+    }
+    if (shape && drawer.activeWidget !== selectWidget) selectWidget.setActive(true);
+    selectWidget.select(shape ? [shape] : []);
+  }
+
+  /**
+   * Drawing shape of a node of draw layer: the node itself or its top group
+   */
+  private _getDrawingShape(node: Node): DrawingShape {
+    let shape = node;
+
+    while (shape.getParent() && shape.getParent() !== this.drawer.drawLayer) shape = shape.getParent()!;
+
+    return shape as DrawingShape;
+  }
+
+  /**
+   * Menu at a position of drawer, kept in it
+   */
+  private _moveTo(left: number, top: number) {
+    const { clientWidth, clientHeight } = this.drawer.$drawerContainer;
+    const margin = 4;
+
+    this.$menu.style.left = Math.max(margin, Math.min(left, clientWidth - this.$menu.offsetWidth - margin)) + 'px';
+    this.$menu.style.top = Math.max(margin, Math.min(top, clientHeight - this.$menu.offsetHeight - margin)) + 'px';
+  }
+
+  private async _paste() {
+    try {
+      // needs clipboard permission (asked by browser), Ctrl / Cmd + V does not
+      const text = await navigator.clipboard.readText();
+
+      if (!text) return;
+
+      this.drawer.getWidget<TextWidget>('text')?.addTextNode(text);
+      this.drawer.stage.fire('change');
+    } catch (error) {
+      this.drawer.toast(this.drawer.t('toast.clipboardUnavailable', { error: (error as Error).message }), 'warning');
+    }
+  }
+
+  private _selectAll() {
+    const { selectWidget } = this;
+
+    if (!selectWidget) return;
+    if (this.drawer.activeWidget !== selectWidget) selectWidget.setActive(true);
+    selectWidget.selectAll();
+  }
+
+  /**
+   * Show items of selection or drawing, first one focused (keyboard navigation)
    */
   show() {
+    let first = true;
+
+    this.#sections.forEach(({ $section, items }) => {
+      items.forEach(({ $item, visible }) => ($item.hidden = !visible()));
+
+      const shown = items.some(({ $item }) => !$item.hidden);
+
+      $section.hidden = !shown;
+      // separator before every shown section but the first one
+      $section.classList.toggle('is-separated', shown && !first);
+      if (shown) first = false;
+    });
     this.$menu.classList.add('show');
     this._getItems()[0]?.focus();
   }
@@ -189,5 +328,9 @@ export class ContextMenu {
 
     this.$menu.classList.remove('show');
     if (hadFocus) this.drawer.focus();
+  }
+
+  isVisible() {
+    return this.$menu.classList.contains('show');
   }
 }

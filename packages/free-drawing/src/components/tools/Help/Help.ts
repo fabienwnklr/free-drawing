@@ -60,10 +60,15 @@ export class Help extends Modal {
       { label: t('help.move'), keys: [t('key.arrows')] },
       { label: t('help.forwardBackward'), keys: ['Ctrl+Up', 'Ctrl+Down'] },
       { label: t('help.frontBack'), keys: ['Ctrl+Shift+Up', 'Ctrl+Shift+Down'] },
+      { label: t('action.flipHorizontal'), keys: ['Shift+H'] },
+      { label: t('action.flipVertical'), keys: ['Shift+V'] },
+      { label: t('context.lock'), keys: ['Ctrl+Shift+L'] },
       { label: t('help.paste'), keys: ['Ctrl+V'] },
       { label: t('help.open'), keys: ['Ctrl+O'] },
       { label: t('help.save'), keys: ['Ctrl+S'] },
       { label: t('help.export'), keys: ['Ctrl+Shift+E'] },
+      { label: t('action.copyPng'), keys: ['Shift+Alt+C'] },
+      { label: t('action.copySvg'), keys: ['Shift+Alt+S'] },
     ];
     const view: Shortcut[] = [
       { label: t('menu.zenMode'), keys: ['Alt+Z'] },

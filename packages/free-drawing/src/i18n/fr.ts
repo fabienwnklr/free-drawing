@@ -147,6 +147,10 @@ export const fr: Translations = {
   'action.bringForward': 'Avancer',
   'action.bringToFront': 'Mettre au premier plan',
   'action.delete': 'Supprimer',
+  'action.flipHorizontal': 'Retourner horizontalement',
+  'action.flipVertical': 'Retourner verticalement',
+  'action.copyPng': 'Copier en PNG',
+  'action.copySvg': 'Copier en SVG',
 
   'overlay.tool': "Options de l'outil",
   'overlay.selection': 'Options de la sélection',

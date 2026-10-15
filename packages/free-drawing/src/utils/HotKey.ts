@@ -79,8 +79,26 @@ export class HotKey {
         e.preventDefault();
       }
 
+      // flip selection (Shift + letter is not a tool shortcut)
+      if (edit && !mod && !e.altKey && e.shiftKey && selectedNodes.length && !inField) {
+        if (e.code === 'KeyH') this.drawer.flipShapes('horizontal');
+        if (e.code === 'KeyV') this.drawer.flipShapes('vertical');
+      }
+
+      // lock selection: unlocked from layers panel
+      if (edit && mod && e.shiftKey && e.code === 'KeyL' && selectedNodes.length && !inField) {
+        e.preventDefault();
+        this.drawer.setShapesLocked(true);
+      }
+
+      // copy selection (whole drawing without selection) as image, physical keys (Alt changes characters)
+      if (e.altKey && e.shiftKey && !mod && (e.code === 'KeyC' || e.code === 'KeyS') && !inField) {
+        e.preventDefault();
+        this.drawer.copyImage(e.code === 'KeyC' ? 'png' : 'svg');
+      }
+
       // Toolbar shortcut, the letter displayed on widget button (whatever caps lock)
-      if (!mod && !e.altKey) {
+      if (!mod && !e.altKey && !e.shiftKey) {
         const widget = Array.from(this.drawer.toolbar.widgets.values()).find(
           (w) => w.shortcut === e.key.toLowerCase()
         );

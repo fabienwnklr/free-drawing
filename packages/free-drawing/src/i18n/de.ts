@@ -147,6 +147,10 @@ export const de: Translations = {
   'action.bringForward': 'Eine Ebene nach vorne',
   'action.bringToFront': 'In den Vordergrund',
   'action.delete': 'Löschen',
+  'action.flipHorizontal': 'Horizontal spiegeln',
+  'action.flipVertical': 'Vertikal spiegeln',
+  'action.copyPng': 'Als PNG kopieren',
+  'action.copySvg': 'Als SVG kopieren',
 
   'overlay.tool': 'Werkzeugoptionen',
   'overlay.selection': 'Optionen der Auswahl',

@@ -16,10 +16,27 @@
     visibility: visible;
   }
 
-  ul {
+  .drawer-context-menu-list,
+  .drawer-context-menu-section {
     display: flex;
     flex-direction: column;
     gap: 2px;
+  }
+
+  .drawer-context-menu-section {
+    &[hidden] {
+      display: none;
+    }
+
+    &.is-separated {
+      margin-top: $space-1;
+      padding-top: $space-1;
+      border-top: 1px solid $border;
+    }
+  }
+
+  .drawer-context-menu-list-item[hidden] {
+    display: none;
   }
 
   .drawer-context-menu-list-item {
@@ -27,6 +44,8 @@
 
     position: relative;
     justify-content: space-between;
+    // compact: many items
+    padding-block: 0.375rem;
     // room for check mark
     padding-left: 1.75rem;
 

@@ -94,6 +94,7 @@ import { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import { Line } from 'konva/lib/shapes/Line';
 import { Toast } from '@/components/Toast/Toast';
 import { Group } from 'konva/lib/Group';
+import { Text } from 'konva/lib/shapes/Text';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Vector2d } from 'konva/lib/types';
 import { AvailableTypes } from '@/@types/toast';
@@ -1004,6 +1005,70 @@ export class Drawer extends MicroEvent {
     const nodes = this.getWidget<SelectWidget>('selection')?.transformer.nodes() ?? [];
 
     return nodes.filter((node): node is DrawingShape => node instanceof Shape || node instanceof Group);
+  }
+
+  /**
+   * Flip shapes (selected ones by default) around the center of their box, texts are still read from left to right
+   * @param {'horizontal' | 'vertical'} direction
+   * @param {DrawingShape[]} shapes
+   */
+  flipShapes(direction: 'horizontal' | 'vertical', shapes: DrawingShape[] = this.getSelectedShapes()) {
+    if (!shapes.length) return;
+
+    const horizontal = direction === 'horizontal';
+    const boxes = shapes.map((shape) => shape.getClientRect());
+    const left = Math.min(...boxes.map((box) => box.x));
+    const top = Math.min(...boxes.map((box) => box.y));
+    const center = {
+      x: (left + Math.max(...boxes.map((box) => box.x + box.width))) / 2,
+      y: (top + Math.max(...boxes.map((box) => box.y + box.height))) / 2,
+    };
+    // mirrored around an axis, in coordinates of its parent
+    const mirror = (node: Node, axis: Vector2d) => {
+      node.rotation(-node.rotation());
+      if (horizontal) node.setAttrs({ x: 2 * axis.x - node.x(), scaleX: -node.scaleX() });
+      else node.setAttrs({ y: 2 * axis.y - node.y(), scaleY: -node.scaleY() });
+    };
+
+    // arrows flipped without their shapes are unlinked
+    unbindMoved(shapes);
+    shapes.forEach((shape) => {
+      mirror(shape, shape.getParent()!.getAbsoluteTransform().copy().invert().point(center));
+      // texts mirrored again around their center: moved, still readable
+      (shape instanceof Text ? [shape] : shape instanceof Group ? shape.find<Text>('Text') : []).forEach((text) => {
+        const box = text.getClientRect({ relativeTo: text.getParent()! });
+
+        mirror(text, { x: box.x + box.width / 2, y: box.y + box.height / 2 });
+      });
+    });
+    this.stage.fire('change');
+  }
+
+  /**
+   * Copy image of selected shapes (whole drawing without selection) to clipboard: png image, or svg image and text
+   * (pasted as svg code in editors), message shown
+   * @param {'png' | 'svg'} format
+   * @param {ExportImageOptions} options
+   */
+  async copyImage(format: 'png' | 'svg' = 'png', options: ExportImageOptions = {}) {
+    try {
+      // secure context (https) only
+      if (!navigator.clipboard?.write || typeof ClipboardItem === 'undefined') throw new Error('clipboard unavailable');
+
+      // image promise: Safari needs clipboard write during the user action
+      const image = this.exportImage(format, options);
+      const items: Record<string, Promise<Blob>> = format === 'png'
+        ? { 'image/png': image }
+        : {
+            'text/plain': image.then((blob) => new Blob([blob], { type: 'text/plain' })),
+            ...(ClipboardItem.supports?.('image/svg+xml') && { 'image/svg+xml': image }),
+          };
+
+      await navigator.clipboard.write([new ClipboardItem(items)]);
+      this.toast(this.t('toast.imageCopied'), 'info');
+    } catch (error) {
+      this.toast(this.t('toast.imageNotCopied', { error: (error as Error).message }), 'warning');
+    }
   }
 
   /**

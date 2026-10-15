@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [6.13.0](https://github.com/fabienwnklr/free-drawing/compare/v6.12.0...v6.13.0) (2026-10-15)
+
+
+### Features
+
+* **context menu:** right click on a shape selects it and shows actions on selection with their shortcuts: duplicate, lock, delete, bring to front / forward, send backward / to back, flip horizontal / vertical, copy as PNG / SVG, select all; elsewhere actions on drawing: paste, copy as PNG / SVG, select all, snapping, grid
+* flip shapes around the center of the selection, texts still readable: Shift + H / Shift + V, `flipShapes` method, also in command palette
+* copy selection (or whole drawing) as PNG image or SVG (image and code): Shift + Alt + C / Shift + Alt + S, `copyImage` method, also in command palette
+* lock selection with Ctrl / Cmd + Shift + L
+* Shift + a letter does not activate a tool anymore (Shift + H flips)
+
+### Bug Fixes
+
+* **context menu:** shown at pointer and kept inside the drawer, also when the drawer is not at the top of the page
+
 ## [6.12.0](https://github.com/fabienwnklr/free-drawing/compare/v6.11.0...v6.12.0) (2026-10-15)
 
 

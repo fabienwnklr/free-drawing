@@ -37,6 +37,9 @@ import UsersIcon from '@/icons/users.svg?raw';
 import StoreIcon from '@/icons/store.svg?raw';
 import LanguageIcon from '@/icons/language.svg?raw';
 import SlidersIcon from '@/icons/sliders.svg?raw';
+import LockIcon from '@/icons/lock.svg?raw';
+import FlipHorizontalIcon from '@/icons/flip-horizontal.svg?raw';
+import FlipVerticalIcon from '@/icons/flip-vertical.svg?raw';
 
 /**
  * Command of palette
@@ -257,6 +260,7 @@ export class CommandPalette extends Modal {
     const selectWidget = drawer.getWidget<SelectWidget>('selection');
     const selected = selectWidget ? drawer.getSelectedShapes() : [];
     const editSelection = edit && selected.length > 0;
+    const hasShapes = drawer.getDrawingShapes().length > 0;
     const { zoom, position, layersPanel } = drawer;
     const orders: { order: ShapeOrder; label: TranslationKey; icon: string; shortcut: string }[] = [
       { order: 'front', label: 'action.bringToFront', icon: BringToFrontIcon, shortcut: 'Ctrl+Shift+Up' },
@@ -339,6 +343,27 @@ export class CommandPalette extends Modal {
                 run: () => drawer.reorderShapes(order),
               }
           ),
+          editSelection && {
+            id: 'flip mirror horizontal',
+            label: t('action.flipHorizontal'),
+            icon: FlipHorizontalIcon,
+            shortcut: 'Shift+H',
+            run: () => drawer.flipShapes('horizontal'),
+          },
+          editSelection && {
+            id: 'flip mirror vertical',
+            label: t('action.flipVertical'),
+            icon: FlipVerticalIcon,
+            shortcut: 'Shift+V',
+            run: () => drawer.flipShapes('vertical'),
+          },
+          editSelection && {
+            id: 'lock',
+            label: t('context.lock'),
+            icon: LockIcon,
+            shortcut: 'Ctrl+Shift+L',
+            run: () => drawer.setShapesLocked(true),
+          },
           editSelection && {
             id: 'delete remove',
             label: t('action.delete'),
@@ -439,6 +464,20 @@ export class CommandPalette extends Modal {
             icon: ExportIcon,
             shortcut: 'Ctrl+Shift+E',
             run: () => drawer.showExport(),
+          },
+          hasShapes && {
+            id: 'copy image clipboard png',
+            label: t('action.copyPng'),
+            icon: ExportIcon,
+            shortcut: 'Shift+Alt+C',
+            run: () => drawer.copyImage('png'),
+          },
+          hasShapes && {
+            id: 'copy image clipboard svg',
+            label: t('action.copySvg'),
+            icon: ExportIcon,
+            shortcut: 'Shift+Alt+S',
+            run: () => drawer.copyImage('svg'),
           },
           !!drawer.options.collaboration && {
             id: 'live collaboration share',

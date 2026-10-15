@@ -189,15 +189,6 @@ export class ExportModal extends Modal {
    * Copy png image to clipboard
    */
   async copy() {
-    try {
-      // secure context (https) only
-      if (!navigator.clipboard?.write || typeof ClipboardItem === 'undefined') throw new Error('clipboard unavailable');
-
-      // image promise: Safari needs clipboard write during the click
-      await navigator.clipboard.write([new ClipboardItem({ 'image/png': this.drawer.exportImage('png', this.exportOptions) })]);
-      this.drawer.toast(this.drawer.t('toast.imageCopied'), 'info');
-    } catch (error) {
-      this.drawer.toast(this.drawer.t('toast.imageNotCopied', { error: (error as Error).message }), 'warning');
-    }
+    await this.drawer.copyImage('png', this.exportOptions);
   }
 }
