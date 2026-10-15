@@ -26,7 +26,7 @@ export class Help extends Modal {
 
     this.$helpContainer.append(this.$button);
 
-    this.drawer.$footerContainer.append(this.$helpContainer);
+    this.drawer.layout.add('footer', this.$helpContainer, { hideInZen: true });
 
     // after widgets: their titles are translated
     this.drawer.i18n.translate((t) => {

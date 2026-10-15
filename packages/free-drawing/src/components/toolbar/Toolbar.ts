@@ -47,7 +47,7 @@ export class Toolbar {
     this.drawer.i18n.translate((t) => this.$toolbarRoot.setAttribute('aria-label', t('toolbar.label')));
 
     this.$toolbarContent.append(this.$toolbarRoot);
-    this.drawer.$footerContainer.append(this.$toolbarContent);
+    this.drawer.layout.add('footer', this.$toolbarContent);
     this.init();
 
     // buttons of toolbar: widgets and groups (widgets of a group: arrow keys once it is open)

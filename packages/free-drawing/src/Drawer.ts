@@ -43,6 +43,7 @@ import { toHexColor } from '@/utils/color';
 import { ExportModal } from '@/components/ExportModal/ExportModal';
 import { CommandPalette } from '@/components/CommandPalette/CommandPalette';
 import { PreferencesModal } from '@/components/PreferencesModal/PreferencesModal';
+import { DrawerLayout } from '@/DrawerLayout';
 
 // types of options, storage, preferences and files, for apps using the drawer
 export type {
@@ -60,6 +61,7 @@ export type {
   Theme,
 } from '@/@types/drawer';
 export type { DrawingFile } from '@/utils/drawingFile';
+export type { LayoutItemOptions, LayoutRegion } from '@/DrawerLayout';
 export type { WidgetGroupOptions, WidgetName, WidgetsOptions } from '@/@types/toolbar';
 export type { CustomTranslations, Language } from '@/i18n/I18n';
 export type { TranslationKey, Translations } from '@/i18n/en';
@@ -99,7 +101,6 @@ import { Text } from 'konva/lib/shapes/Text';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Vector2d } from 'konva/lib/types';
 import { AvailableTypes } from '@/@types/toast';
-import { debounce } from '@/utils/perf';
 import { HotKey } from '@/utils/HotKey';
 
 // default id of each drawer of the page
@@ -129,7 +130,8 @@ export class Drawer extends MicroEvent {
   collaboration: Collaboration | null = null;
   collaborationModal: CollaborationModal | null = null;
   $el: HTMLDivElement;
-  $drawerContainer: HTMLDivElement;
+  /** Container of the drawer and regions of its interface, see `layout.add` */
+  layout: DrawerLayout;
   $stageContainer: HTMLDivElement;
   stage: Stage;
   // Layers
@@ -184,10 +186,6 @@ export class Drawer extends MicroEvent {
   #preferencesCheck = false;
   #initialOptions: DrawerOptions;
   undoRedo: UndoRedo;
-  /** Top left interface: settings menu, position */
-  $headerContainer: HTMLDivElement;
-  $footerContainer: HTMLElement;
-  $footerLeftElement: HTMLDivElement;
   contextMenu: ContextMenu;
   grid: boolean = false;
   bgLayer: Layer;
@@ -216,12 +214,6 @@ export class Drawer extends MicroEvent {
     // copy (setters replace values), restored by resetDrawer
     this.#initialOptions = { ...this.options, textStyle: { ...this.options.textStyle } };
     this.#user = this.options.user;
-    // Creating drawer container
-    this.$drawerContainer = document.createElement('div');
-    this.$drawerContainer.classList.add('drawer-container');
-    // in tab order, keys go to drawer shortcuts (not to screen reader commands)
-    this.$drawerContainer.tabIndex = 0;
-    this.$drawerContainer.setAttribute('role', 'application');
     // preferences saved in browser, else options
     const preferences = this._readPreferences();
 
@@ -230,27 +222,12 @@ export class Drawer extends MicroEvent {
       this.#languageChoice === 'auto' ? getLanguage() : this.#languageChoice,
       this.options.translations
     );
-    this.$drawerContainer.lang = this.i18n.language;
-    this.i18n.translate((t) => this.$drawerContainer.setAttribute('aria-label', t('drawer.label')));
-
-    this.$el.replaceChildren(this.$drawerContainer);
+    // container in drawer element, regions of interface
+    this.layout = new DrawerLayout(this);
 
     const width = this.options.width;
     const height = this.options.height;
     let activeTool = this.options.tool ?? 'brush';
-
-    if (width === document.documentElement.clientWidth && height === document.documentElement.clientHeight) {
-      this.$drawerContainer.classList.add('is-full');
-
-      const resizeObserver = new ResizeObserver(
-        debounce(() => {
-          this.setSize(document.documentElement.clientWidth, document.documentElement.clientHeight);
-        }, 250)
-      );
-
-      //to attach to the whole document
-      resizeObserver.observe(document.documentElement);
-    }
 
     // drawing of storage option loaded once drawer is created
     const stageSaved = this.options.storage ? null : this._loadSavedStage();
@@ -313,16 +290,7 @@ export class Drawer extends MicroEvent {
     }
 
     this.$stageContainer = this.stage.content;
-    this.$headerContainer = document.createElement('div');
-    this.$headerContainer.classList.add('drawer-header-container');
-    this.$drawerContainer.append(this.$headerContainer);
-
-    this.$footerContainer = document.createElement('footer');
-    this.$footerContainer.classList.add('drawer-footer-container');
-
-    this.$footerLeftElement = document.createElement('div');
-    this.$footerLeftElement.classList.add('drawer-footer-left');
-    this.$footerContainer.append(this.$footerLeftElement);
+    this.layout.setStage(this.stage);
 
     this.contextMenu = new ContextMenu(this);
     this.setting = new Settings(this);
@@ -359,7 +327,8 @@ export class Drawer extends MicroEvent {
     const activeWidget = this.getWidget<BaseWidget>(activeTool) ?? this.toolbar.widgets.values().next().value;
     activeWidget?.setActive(true);
 
-    this.$drawerContainer.appendChild(this.$footerContainer);
+    // dialogs, toasts... after footer
+    this.layout.ready();
     this.focus();
     this.undoRedo.manageButtons();
     this._initEvents();
@@ -1807,14 +1776,38 @@ export class Drawer extends MicroEvent {
   }
 
   /**
-   * @private
-   *
-   * update pointer-event state
-   * @param state
+   * @deprecated use `layout.setPointerEvents`
    */
   UIPointerEvents(state: 'all' | 'none') {
-    // on drawer container, other drawers of the page are not concerned
-    this.$drawerContainer.style.setProperty('--drawer-pointer-events', state);
+    this.layout.setPointerEvents(state);
+  }
+
+  /**
+   * Container of the drawer: canvas and interface (`layout.$container`)
+   */
+  get $drawerContainer(): HTMLDivElement {
+    return this.layout.$container;
+  }
+
+  /**
+   * @deprecated use `layout.add('header', $element)`
+   */
+  get $headerContainer(): HTMLDivElement {
+    return this.layout.$header;
+  }
+
+  /**
+   * @deprecated use `layout.add('footer', $element)`
+   */
+  get $footerContainer(): HTMLElement {
+    return this.layout.$footer;
+  }
+
+  /**
+   * @deprecated use `layout.add('footerStart', $element)`
+   */
+  get $footerLeftElement(): HTMLDivElement {
+    return this.layout.$footerStart;
   }
 
   /**

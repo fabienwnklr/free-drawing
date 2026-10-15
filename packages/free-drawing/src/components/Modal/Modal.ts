@@ -151,9 +151,9 @@ export class Modal {
       `);
       this.$backdrop.append(this.$modal);
 
-      this.drawer.$drawerContainer.append(this.$backdrop);
+      this.drawer.layout.add('floating', this.$backdrop);
     } else {
-      this.drawer.$drawerContainer.append(this.$modal);
+      this.drawer.layout.add('floating', this.$modal);
     }
   }
 

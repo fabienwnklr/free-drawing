@@ -83,7 +83,11 @@ export class LayersPanel {
     setPressed(this.$button, false);
     this.$button.addEventListener('click', () => this.toggle());
     this.$buttonContainer.append(this.$button);
-    this.drawer.setting.$dropdownContainer.after(this.$buttonContainer);
+    // next to settings menu
+    this.drawer.layout.add('header', this.$buttonContainer, {
+      hideInZen: true,
+      after: this.drawer.setting.$dropdownContainer,
+    });
 
     this.$panel = document.createElement('div');
     this.$panel.id = uniqueId('layers');
@@ -142,7 +146,7 @@ export class LayersPanel {
     });
 
     this.$panel.append($header, this.$list, this.$empty, this.$hint);
-    this.drawer.$drawerContainer.append(this.$panel);
+    this.drawer.layout.add('floating', this.$panel, { hideInZen: true });
 
     arrowNavigation(this.$list, () => [...this.$list.querySelectorAll<HTMLElement>('.drawer-layers-name')], 'vertical');
     // Tab goes to actions of current row only

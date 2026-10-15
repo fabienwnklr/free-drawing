@@ -136,7 +136,7 @@ export class TextWidget extends BaseWidget {
     const textarea = document.createElement('textarea');
     // colors of drawing in dark mode
     textarea.classList.add('drawer-text-editor');
-    this.drawer.$drawerContainer.appendChild(textarea);
+    this.drawer.layout.add('floating', textarea);
 
     textarea.value = textNode.text();
     textarea.style.position = 'absolute';

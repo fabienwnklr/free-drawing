@@ -168,7 +168,7 @@ export class Settings extends Dropdown {
         this.$bgColorContainer
       ]
     );
-    this.drawer.$headerContainer.append(this.$dropdownContainer);
+    this.drawer.layout.add('header', this.$dropdownContainer);
 
     this.initEvents();
   }
@@ -309,26 +309,15 @@ export class Settings extends Dropdown {
    * Interface hidden except toolbar and menu
    */
   get zenMode() {
-    return this.$zenModeButton.classList.contains('active');
+    return this.drawer.layout.zen;
   }
 
   toggleZenMode() {
     const zen = !this.zenMode;
 
     setPressed(this.$zenModeButton, zen);
-
-    const $containers = [
-      this.drawer.zoom?.$zoomContainer,
-      this.drawer.position?.$positionContainer,
-      this.drawer.help.$helpContainer,
-      this.drawer.undoRedo.$undoRedoContainer,
-      this.drawer.layersPanel?.$buttonContainer,
-      this.drawer.layersPanel?.$panel,
-    ];
-
-    $containers.forEach(($container) => {
-      if ($container) $container.style.display = zen ? 'none' : '';
-    });
+    // interface added with hideInZen
+    this.drawer.layout.setZen(zen);
     this.drawer._preferencesChanged();
   }
 

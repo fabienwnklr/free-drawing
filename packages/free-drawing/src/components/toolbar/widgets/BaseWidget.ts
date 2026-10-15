@@ -152,7 +152,7 @@ export abstract class BaseWidget {
    */
   protected startAction() {
     this.inAction = true;
-    this.drawer.UIPointerEvents('none');
+    this.drawer.layout.setPointerEvents('none');
   }
 
   /**
@@ -160,7 +160,7 @@ export abstract class BaseWidget {
    */
   protected endAction() {
     this.inAction = false;
-    this.drawer.UIPointerEvents('all');
+    this.drawer.layout.setPointerEvents('all');
     this.drawer._onActionEnd();
   }
 

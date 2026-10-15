@@ -248,7 +248,8 @@ describe('User interface', () => {
 
     // hidden in zen mode
     drawer.setting.toggleZenMode();
-    expect(position.$positionContainer.style.display).toBe('none');
+    expect(position.$positionContainer.classList.contains('drawer-zen-hidden')).toBe(true);
+    expect(drawer.$drawerContainer.classList.contains('is-zen')).toBe(true);
   });
 
   it('Position widget can be disabled', () => {

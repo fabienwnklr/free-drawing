@@ -31,7 +31,7 @@ export class UndoRedo extends History {
 
     this.$undoRedoContainer.append(...[this.$btnUndo, this.$btnRedo]);
 
-    this.drawer.$footerLeftElement.append(this.$undoRedoContainer);
+    this.drawer.layout.add('footerStart', this.$undoRedoContainer, { hideInZen: true });
 
     this._initEvents();
   }

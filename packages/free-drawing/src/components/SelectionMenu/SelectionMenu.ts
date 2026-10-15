@@ -100,7 +100,7 @@ export class SelectionMenu {
       () => [...this.$menu.querySelectorAll<HTMLElement>('button:not([hidden])')],
       'horizontal'
     );
-    this.drawer.$drawerContainer.append(this.$menu);
+    this.drawer.layout.add('floating', this.$menu);
 
     // selection layer is drawn when selection changes or moves (drag, transform, pan, zoom, changes of other users...)
     this.drawer.selectionLayer.on('draw.selectionmenu', () => this.update());
@@ -220,7 +220,7 @@ export class SelectionMenu {
       left: gap,
       top: gap,
       right: stage.width() - gap,
-      bottom: stage.height() - this.drawer.$footerContainer.offsetHeight - gap,
+      bottom: stage.height() - this.drawer.layout.$footer.offsetHeight - gap,
     };
     const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(value, max));
     const centerLeft = clamp(around.x + around.width / 2 - width / 2, area.left, area.right - width);

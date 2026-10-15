@@ -64,6 +64,11 @@
     pointer-events: none;
   }
 
+  // zen mode: interface hidden but toolbar, menu and selection options (see DrawerLayout)
+  &.is-zen .drawer-zen-hidden {
+    display: none !important;
+  }
+
   // panel of interface, its texts (position, zoom...) are not selected with page text
   .tool {
     @include surface;

@@ -23,7 +23,8 @@ describe('Preferences', () => {
     expect(reloaded.getPreferences()).toEqual(saved(drawer));
     expect(reloaded.isDarkMode()).toBe(true);
     expect(reloaded.language).toBe('fr');
-    expect(reloaded.zoom!.$zoomContainer.style.display).toBe('none');
+    expect(reloaded.layout.zen).toBe(true);
+    expect(reloaded.$drawerContainer.classList.contains('is-zen')).toBe(true);
     expect(reloaded.setting.$zenModeButton.getAttribute('aria-pressed')).toBe('true');
 
     // grid also without drawing saved in browser

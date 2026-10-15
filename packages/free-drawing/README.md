@@ -192,6 +192,15 @@ new Drawer($el, {
 });
 ```
 
+`layout` adds elements of your app to the interface of the drawer (types `LayoutRegion`, `LayoutItemOptions`): `header` (top left, after settings menu, layers button and position), `footerStart` (bottom left, after zoom and undo / redo), `footer` (bottom, after toolbar and help), `floating` (over the drawing, placed by your styles). Elements can be hidden in zen mode, or placed after another element. `drawer.$drawerContainer` is the container of the drawer (`layout.$container`).
+
+```js
+const $button = document.createElement('button');
+
+drawer.layout.add('header', $button, { hideInZen: true });
+drawer.layout.add('header', $other, { after: drawer.setting.$dropdownContainer }); // right after settings menu
+```
+
 ## Widgets
 
 `widgets` option chooses the toolbar widgets, in the given order. Without it, every widget is available.

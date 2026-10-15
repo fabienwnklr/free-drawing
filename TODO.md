@@ -1,18 +1,6 @@
-<!-- - Send stage data on change instead drawend -->
-- add export button (png, svg, pdf, json, etc) with preview modal, en tenant compte si on a un objet selectionné (bouton pour pouvoir exporter tout sans quitter), mode sombre, avec ou sans le fond, copier l'image dans presse papier
-- - position object (reculer d'un plan, en arrièere plan, idem pour devant)
-- dans le context menu d'un objet, ajouter reculer/envoyer vers l'avant etc, tourner horizontalement/verticalement, dupliquer, verrouiller, supprimer avec des shortcut pour chacun
-- add beta prerelease script in package.json
-- GroupWidgets, pouvoir créer un groupe de widget avec un icone générique de base mais personnalisable (liste d'icones dispo ou un code svg), l'idée est simple pouvoir rassembler à la demande via option simplement tout dans un groupe ou bien niveau dev créer un group de widget existant ou non; par ex en option je veux un groupe avec ligne/rect/cercle/fleche -> je peux configurer via option, en dev je veux créer un groupe pour des widget que je veux créer, j'utilise GroupWidget en créant également les widgets indépendemment et je l'ai utilise dans le group
-- manage layout from DrawerLayout class
-<!-- - améliore l'accessibilité (navigation, aria attribute, etc.) -->
-<!-- - si on efface un element qui a déjà 0.5 d'opacité, comment on peux faire? ajouter un effet propre ? -->
-<!-- - ajoute un effet de 'trainée' pendant l'effacement de l'outil eraser -->
-<!-- - ajoute un widget activable ou désactivable pour savoir la position x/y, pour pas se perdre si on se deplace dans trop pour ce rencentrer -->
-<!-- - améliore le style global (homogénéité, normes, etc.) -->
-<!-- - quand je change un style d'un texte la largeur attribué est modifié à la largeur du contenu
-- la couleur et la couleur de contour du texte diffère -->
-<!-- - dans tout les choix de couleur ajoute un input pour choisir une couleur personnalisé, dont une couleur blank (transparent) -->
-- use alias instead absolute path (replace ../../ or ./ with @/) where isn't already set and used
-- event namespace (fd?) utiliser une signature identique pour tout les events, par ex drawer.options.change, drawer.change, drawer.saved, etc.
-<!-- - si je fais ctrl+a ça selectionne le texte du widget x/y, fix ça -->
+# TODO
+
+- [ ] add group of widgets with some usefull tools like triangle, losange, square, laser, frame, surligner, etc
+- [ ] can enable/disable auto save
+- [ ] add save button to preference, and updtade eveything visually (including name)
+- [ ] add button to keep same tool or after every use switch on selection tool automatically

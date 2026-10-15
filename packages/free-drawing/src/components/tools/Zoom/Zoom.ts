@@ -34,7 +34,7 @@ export class Zoom {
 
     this.$zoomContainer.append(...[this.$btnMinus, this.$btnReset, this.$btnPlus]);
 
-    this.drawer.$footerLeftElement.append(this.$zoomContainer);
+    this.drawer.layout.add('footerStart', this.$zoomContainer, { hideInZen: true });
 
     this.$btnMinus.addEventListener('click', () => {
       this.zoomMinus();

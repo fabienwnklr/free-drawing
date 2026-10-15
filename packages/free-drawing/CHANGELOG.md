@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.4.0](https://github.com/fabienwnklr/free-drawing/compare/v7.3.0...v7.4.0) (2026-10-15)
+
+
+### Features
+
+* **layout:** `drawer.layout` (`DrawerLayout`) manages the container and the regions of the interface: `layout.add(region, $element, { hideInZen, after })` adds elements of an app to `header`, `footerStart`, `footer` or `floating`, `LayoutRegion` and `LayoutItemOptions` types exported
+
+### Deprecations
+
+* `$headerContainer`, `$footerContainer`, `$footerLeftElement` (use `layout.add` or `layout.$header`, `layout.$footer`, `layout.$footerStart`) and `UIPointerEvents` (use `layout.setPointerEvents`), still working
+
 ## [7.3.0](https://github.com/fabienwnklr/free-drawing/compare/v7.2.0...v7.3.0) (2026-10-15)
 
 

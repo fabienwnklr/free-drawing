@@ -50,7 +50,7 @@ export class Toast extends MicroEvent {
     if (!$toasts) {
       $toasts = document.createElement('div');
       $toasts.classList.add('drawer-toasts');
-      drawer.$drawerContainer.append($toasts);
+      drawer.layout.add('floating', $toasts);
     }
     $toasts.append(this.$toastContainer);
   }

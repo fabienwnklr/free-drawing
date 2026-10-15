@@ -80,7 +80,7 @@ export class BaseOverlay {
       this.$overlayContainer.setAttribute('aria-label', t(options?.label ?? 'overlay.tool'))
     );
 
-    this.drawer.$drawerContainer.append(this.$overlayContainer);
+    this.drawer.layout.add('floating', this.$overlayContainer);
 
     this._init();
 

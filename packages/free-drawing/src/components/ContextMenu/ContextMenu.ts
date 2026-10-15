@@ -175,7 +175,7 @@ export class ContextMenu {
       $delete.textContent = t('key.delete');
     });
 
-    this.drawer.$drawerContainer.append(this.$menu);
+    this.drawer.layout.add('floating', this.$menu);
   }
 
   /**

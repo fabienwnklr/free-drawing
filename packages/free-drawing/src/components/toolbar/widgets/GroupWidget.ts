@@ -228,7 +228,7 @@ export class GroupWidget {
       true
     );
     // no longer above group button
-    this.drawer.$footerContainer.addEventListener('scroll', () => this.hide());
+    this.drawer.layout.$footer.addEventListener('scroll', () => this.hide());
     window.addEventListener('resize', () => this.hide());
   }
 }

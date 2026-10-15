@@ -36,7 +36,7 @@ export class Position {
     this.$btnRecenter.addEventListener('click', () => this.recenter());
 
     this.$positionContainer.append(this.$coordinates, this.$btnRecenter);
-    this.drawer.$headerContainer.append(this.$positionContainer);
+    this.drawer.layout.add('header', this.$positionContainer, { hideInZen: true });
 
     this.update();
   }
