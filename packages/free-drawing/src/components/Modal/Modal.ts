@@ -9,13 +9,25 @@ import { uniqueId } from '@/utils/dom';
 const focusableSelector =
   'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
+/**
+ * Dialog of the drawer (header with title and close button, body, footer), base of every dialog of the library.
+ * Added to the `floating` region of the layout, hidden until {@link Modal.show}: while shown, focus stays in it,
+ * Escape and a click outside close it (see options) and keys typed in it do not run drawer shortcuts.
+ */
 export class Modal {
+  /** Dialog element (`role="dialog"`, `aria-modal`), holds header, body and footer */
   $modal!: HTMLDivElement;
+  /** Header of the dialog: title and close button, removed when `showHeader` option is false */
   $modalHeader!: HTMLDivElement;
+  /** Body of the dialog: content of the dialog */
   $modalBody!: HTMLDivElement;
+  /** Footer of the dialog: buttons of the dialog */
   $modalFooter!: HTMLDivElement;
+  /** Options of the dialog, merged with default ones */
   options: ModalOptions;
+  /** Drawer the dialog belongs to */
   drawer: Drawer;
+  /** Backdrop around the dialog (only with `backdrop` option), shown and hidden with it */
   $backdrop!: HTMLDivElement;
   /** Element focused before showing modal, focused again on hide */
   #opener: HTMLElement | null = null;
@@ -31,6 +43,9 @@ export class Modal {
     }
   }
 
+  /**
+   * Creates the dialog, its header (translated close button) unless `showHeader` is false, body and footer contents
+   */
   private _init() {
     this._createModal();
     this.$modal.setAttribute('role', 'dialog');
@@ -68,6 +83,9 @@ export class Modal {
     if ($title) $title.textContent = title;
   }
 
+  /**
+   * Close button hides the dialog, keys typed in it do not reach the drawer
+   */
   private _setupDefaultEvents() {
     const $closeBtn = this.$modalHeader.querySelector('[data-modal=close]');
 
@@ -129,10 +147,16 @@ export class Modal {
     }
   }
 
+  /**
+   * Enabled elements of the dialog taking keyboard focus, in document order
+   */
   private _getFocusables() {
     return Array.from(this.$modal.querySelectorAll<HTMLElement>(focusableSelector));
   }
 
+  /**
+   * Creates dialog elements and adds them to the `floating` region of the layout (in a backdrop if enabled)
+   */
   private _createModal() {
     this.$modal = stringToNode<HTMLDivElement>(/*html*/ `
     <div class="drawer-modal"></div>`);
@@ -157,24 +181,40 @@ export class Modal {
     }
   }
 
+  /**
+   * Replaces the header with an HTML string (an empty string keeps the current header)
+   */
   setHeaderContent(content: string) {
     if (content) {
       this.$modalHeader.innerHTML = content;
     }
   }
 
+  /**
+   * Replaces the body with an HTML string
+   */
   setBodyContent(content: string) {
     this.$modalBody.innerHTML = content;
   }
 
+  /**
+   * Adds text at the end of the body (as text, not parsed as HTML)
+   */
   appendBodyContent(content: string) {
     this.$modalBody.append(content);
   }
 
+  /**
+   * Replaces the footer with an HTML string
+   */
   setFooterContent(content: string) {
     this.$modalFooter.innerHTML = content;
   }
 
+  /**
+   * Shows the dialog and focuses its first focusable element. The element focused before is focused again on hide.
+   * While shown, Escape (`closeOnEsc`) and a click outside (`closeOnClickOutside`) hide it, Tab cycles in it.
+   */
   show() {
     if (!this.isVisible()) {
       const $active = document.activeElement;
@@ -199,6 +239,9 @@ export class Modal {
     });
   }
 
+  /**
+   * Hides the dialog and gives focus back to the element which opened it, else to the drawer
+   */
   hide() {
     this.#removeDocumentListeners();
 
@@ -215,10 +258,16 @@ export class Modal {
     if (!$opener || document.activeElement !== $opener) this.drawer.focus();
   }
 
+  /**
+   * Whether the dialog is shown
+   */
   isVisible(): boolean {
     return this.$modal.classList.contains('show');
   }
 
+  /**
+   * Hides the dialog and removes it from the page
+   */
   destroy() {
     this.hide();
     (this.$backdrop ?? this.$modal).remove();

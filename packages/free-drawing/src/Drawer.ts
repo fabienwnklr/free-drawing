@@ -77,6 +77,9 @@ export type { WidgetGroupOptions, WidgetName, WidgetsOptions } from '@/@types/to
 export type { CustomTranslations, Language } from '@/i18n/I18n';
 export type { TranslationKey, Translations } from '@/i18n/en';
 
+/**
+ * Options of an image export (`exportImage`, `exportCanvas`, export dialog)
+ */
 export type ExportImageOptions = {
   /** Selected shapes only, when there is a selection (default true) */
   selected?: boolean;
@@ -118,10 +121,8 @@ import { HotKey } from '@/utils/HotKey';
 let drawerCount = 0;
 
 /**
- * Drawer constructor. A drawer is used to draw multiple shapes
- * @constructor
- * @memberof Drawer
- * @augments Drawer.MicroEvent
+ * Infinite canvas drawing board created in an element: Konva stage of the drawing, toolbar and interface, public API.
+ * Events of the drawer are listened with `on` (see `drawerEvents`).
  *
  * @example
  * const drawer = new Drawer(document.getElementById('draw'), {
@@ -134,28 +135,43 @@ export class Drawer extends MicroEvent {
   readOnly: boolean = false;
   /** Widgets disabled by read only mode, enabled again after it */
   #readOnlyWidgets: BaseWidget[] = [];
+  /** Active tool when read only mode started, active again after it */
   #toolBeforeReadOnly: BaseWidget | null = null;
   /** Collaboration socket, connected during a collaboration session */
   socket: CollaborationSocket | null = null;
   /** Collaboration session: drawing changes sent to and received from other users of a room */
   collaboration: Collaboration | null = null;
+  /** Created on first use, see `showCollaboration` */
   collaborationModal: CollaborationModal | null = null;
+  /** Element given to the constructor, holding the container of the drawer */
   $el: HTMLDivElement;
   /** Container of the drawer and regions of its interface, see `layout.add` */
   layout: DrawerLayout;
+  /** Konva content of the stage (its canvases): cursor of active tool is set on it */
   $stageContainer: HTMLDivElement;
+  /** Konva stage: background, grid, drawing and selection layers */
   stage: Stage;
   // Layers
+  /** Grid shown with `showGrid` (not listening) */
   gridLayer: Layer;
+  /** Drawing shapes, add them with `addShape` (named ' draw': select it with `.draw`) */
   drawLayer: Layer;
+  /** Transient nodes: transformer, selection rectangle, snapping guides, cursors of collaborators */
   selectionLayer: Layer;
+  /** Toolbar of the footer: widgets (tools) and their groups */
   toolbar: Toolbar;
+  /** Id of active tool, see `activeWidget` */
   activeTool: AvailableTools = 'brush';
+  /** Widget of active tool, set by `toolbar.setActiveWidget` (activate one with `widget.setActive(true)`) */
   activeWidget!: BaseWidget;
+  /** Options given to the constructor merged with defaults, updated by setters (color, width...) and preferences */
   options: DrawerOptions;
 
+  /** Background rectangle of the drawing, its color set with `setBgColor` */
   background: Rect;
+  /** Zoom out, level (reset) and zoom in buttons (`zoomWidget` option) */
   zoom: Zoom | undefined;
+  /** Position of view with a button back to origin (`positionWidget` option) */
   position: Position | undefined;
   /** Menu next to selected shapes (`selectionMenu` option) */
   selectionMenu: SelectionMenu | undefined;
@@ -169,22 +185,30 @@ export class Drawer extends MicroEvent {
   #languageChoice: Language | 'auto' = 'auto';
   /** Dark theme of device */
   #systemDark: MediaQueryList | undefined;
+  /** Help dialog (shortcuts, documentation links) and its footer button */
   help: Help;
+  /** Settings menu of header: file actions, collaboration, view toggles, language, background color */
   setting: Settings;
+  /** Confirmation of `clearCanvas`, created on first use */
   clearConfirmModal: ConfirmModal | null = null;
+  /** Confirmation of `clearStoredData`, created on first use */
   clearStoredConfirmModal: ConfirmModal | null = null;
+  /** Created on first use, see `showExport` */
   exportModal: ExportModal | null = null;
   /** Created on first use, see `showCommandPalette` */
   commandPalette: CommandPalette | null = null;
   /** Created on first use, see `showPreferences` */
   preferencesModal: PreferencesModal | null = null;
 
+  /** Development messages: collaboration connection logged, toast when shapes are moved without selection tool */
   debug: boolean = false;
+  /** Last save failed: its error was shown once, "saved" toast not shown */
   #saveFailed = false;
   /** Drawing of `storage` option loaded (on init, see `ready`, or with `loadFromStorage`), else not saved */
   #storageLoaded = false;
   /** Save in storage in progress, another one after it */
   #saving: Promise<void> | null = null;
+  /** Drawing changed during a save in storage: saved again once it ends */
   #saveAgain = false;
   /** Resolved once drawing of `storage` option is loaded (rejected if it can't be), at once without it */
   ready: Promise<void>;
@@ -196,14 +220,26 @@ export class Drawer extends MicroEvent {
   #preferences = '';
   /** Changes not saved yet, see `hasUnsavedChanges` */
   #unsaved = false;
+  /** Preferences check planned in a microtask (see `_preferencesChanged`) */
   #preferencesCheck = false;
+  /** Options given on init, restored by `resetDrawer` */
   #initialOptions: DrawerOptions;
+  /** History of drawing (undo / redo) and its footer buttons */
   undoRedo: UndoRedo;
+  /** Menu of right click on drawing */
   contextMenu: ContextMenu;
+  /** Grid shown (see `showGrid`, `hideGrid`), shapes snapped to it */
   grid: boolean = false;
+  /** Layer of background rectangle, first one (not listening), moved with the view */
   bgLayer: Layer;
+  /** Keyboard shortcuts of the drawer (keydown on its container) */
   hotKey!: HotKey;
 
+  /**
+   * Create a drawer in an element: its content is replaced by the drawer
+   * @param $el Element of the drawer
+   * @param options Options merged with `defaultOptions` (`widgets` replaces default list)
+   */
   constructor($el: HTMLDivElement, options: Partial<DrawerOptions> = {}) {
     super();
     this.$el = $el;
@@ -570,6 +606,9 @@ export class Drawer extends MicroEvent {
     }
   }
 
+  /**
+   * Keep secret of owner of a room in browser (20 last rooms), owner again when coming back to it
+   */
   private _setOwnerKey(room: string, ownerKey: string) {
     const key = this.options.localStorageKey + '-owner';
 
@@ -767,6 +806,10 @@ export class Drawer extends MicroEvent {
     this.collaboration?.updateCursors();
   }
 
+  /**
+   * Listen to shortcuts, zoom wheel, view moves, shape drags and transforms (frames, linked arrows, collaboration)
+   * and drawing changes (`change` of stage: save, history, `drawer.change` event)
+   */
   private _initEvents() {
     this._initHotKey();
     this._initZoomWheel();
@@ -854,6 +897,9 @@ export class Drawer extends MicroEvent {
     });
   }
 
+  /**
+   * Keyboard shortcuts on drawer container
+   */
   private _initHotKey() {
     this.hotKey = new HotKey(this);
   }
@@ -866,11 +912,17 @@ export class Drawer extends MicroEvent {
     return this.toolbar.getWidget<T>(name);
   }
 
+  /**
+   * Pointer action of active tool or text edition in progress: shortcuts and interface ignore keys and pointer
+   */
   _duringAction() {
     // pointer action of active tool (drawing, erasing, selecting...) or text edition
     return !!this.activeWidget?.inAction || !!this.getWidget<TextWidget>('text')?.isEditing;
   }
 
+  /**
+   * Ctrl + wheel zooms around pointer (`zoom` option), by `scaling` option
+   */
   private _initZoomWheel() {
     if (this.options.zoom) {
       this.stage.on('wheel', (e) => {
@@ -946,6 +998,9 @@ export class Drawer extends MicroEvent {
     this._preferencesChanged();
   }
 
+  /**
+   * Drawing has changes not saved or is saved: `drawer.unsaved.change` event when it changes
+   */
   private _setUnsaved(unsaved: boolean) {
     if (unsaved === this.#unsaved) return;
 
@@ -1460,6 +1515,12 @@ export class Drawer extends MicroEvent {
     );
   }
 
+  /**
+   * Lock or hide shapes of the drawing (not removed ones), selection updated, change saved
+   * @param changed Shapes whose state changes
+   * @param apply Changes the state of a shape
+   * @returns true if a shape changed
+   */
   private _setShapesState(changed: DrawingShape[], apply: (shape: DrawingShape) => void) {
     const shapes = changed.filter((shape) => shape.getLayer());
     const selected = this.getSelectedShapes();
@@ -1544,12 +1605,22 @@ export class Drawer extends MicroEvent {
     const color = background ? (this.background.fill() as string) : undefined;
     // pdf image (jpeg) has no transparency
     const imageOptions = {
+      /** Background color, none for a transparent image */
       background: format === 'pdf' && !(color && toHexColor(color)) ? '#fff' : color,
+      /** Dark mode colors */
       dark,
+      /** Pixel ratio of png and pdf */
       scale,
     };
 
-    return { shapes, box, imageOptions };
+    return {
+      /** Shapes exported */
+      shapes,
+      /** Area of the image, around shapes */
+      box,
+      /** Rendering options */
+      imageOptions,
+    };
   }
 
   /**
@@ -1865,6 +1936,9 @@ export class Drawer extends MicroEvent {
     this._applyTheme();
   }
 
+  /**
+   * Show theme chosen (`drawer-dark` class on container), `drawer.theme.change` event
+   */
   private _applyTheme() {
     const dark = this.isDarkMode();
 
@@ -1898,7 +1972,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Set corners of rectangles (new and selected ones)
-   * @param {Edges} edges 'sharp', 'round' (radius following rectangle size) or radius (px, 0 is sharp)
+   * @param {Edges} value 'sharp', 'round' (radius following rectangle size) or radius (px, 0 is sharp)
    */
   setEdges(value: Edges) {
     const edges = typeof value !== 'number' ? value : value > 0 ? Math.round(value * 100) / 100 : 'sharp';
@@ -2036,6 +2110,9 @@ export class Drawer extends MicroEvent {
     this._preferencesChanged();
   }
 
+  /**
+   * Snap to grid while grid is shown: dragged shapes (but lines), resize anchors of selection, rotation by 90°
+   */
   private _initSnapGridEvents() {
     const selectWidget = this.getWidget<SelectWidget>('selection');
 
@@ -2111,6 +2188,9 @@ export class Drawer extends MicroEvent {
     selectWidget?.transformer.rotationSnaps([0, 90, 180, 270]);
   }
 
+  /**
+   * Stop snapping to grid (grid hidden)
+   */
   private _removeSnapGridEvents() {
     const selectWidget = this.getWidget<SelectWidget>('selection');
 
@@ -2120,6 +2200,9 @@ export class Drawer extends MicroEvent {
     this.drawLayer.off('.grid');
   }
 
+  /**
+   * Length of screen (px) in stage coordinates, at current zoom level
+   */
   private _unScale(val: number) {
     return val / this.getZoomLevel();
   }
@@ -2200,6 +2283,9 @@ export class Drawer extends MicroEvent {
     this.setTextStyle({ ...textStyle });
   }
 
+  /**
+   * Resize the stage (px), e.g. when the window of a drawer of window size is resized
+   */
   setSize(width: number, height: number) {
     this.stage.size({ width, height });
   }

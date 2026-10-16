@@ -6,9 +6,17 @@ import { toDarkColor } from '@/utils/export';
 import type { I18n } from '@/i18n/I18n';
 import type { TranslationKey } from '@/i18n/en';
 
+/**
+ * Options of a {@link ColorPicker}
+ */
 export type ColorPickerOptions = {
   /** Palette, with translation of accessible name of each color */
-  colors: { color: ColorLike; label: TranslationKey }[];
+  colors: {
+    /** Color of the palette button */
+    color: ColorLike;
+    /** Translation key of the accessible name of the color */
+    label: TranslationKey;
+  }[];
   /** Attribute of palette buttons, its value is the color */
   attr: string;
   /** Class of palette buttons */
@@ -25,8 +33,11 @@ export type ColorPickerOptions = {
  * Palette buttons, optional transparent button and custom color input, added to given container
  */
 export class ColorPicker {
+  /** Palette buttons (transparent button last), pressed for the current color */
   readonly $buttons: HTMLButtonElement[] = [];
+  /** Native color input for a color out of the palette, highlighted when the current color is not in it */
   readonly $customInput: HTMLInputElement;
+  /** Options given on creation */
   private readonly options: ColorPickerOptions;
 
   constructor($container: HTMLElement, options: ColorPickerOptions) {

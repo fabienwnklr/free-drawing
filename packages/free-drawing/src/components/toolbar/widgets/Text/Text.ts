@@ -8,8 +8,13 @@ import { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { shapeName } from '@/constants';
 import { TextOverlay } from '@/components/tools/Overlay/TextOverlay/TextOverlay';
 
+/**
+ * Text tool: a click adds a text and edits it in a textarea placed over it. A double click on any text (or title of
+ * a frame) edits it, whatever the active tool.
+ */
 export class TextWidget extends BaseWidget {
   #lastText!: Text;
+  /** A text is edited in the textarea */
   isEditing: boolean = false;
   overlay: TextOverlay;
   protected cursor = 'text';
@@ -54,14 +59,11 @@ export class TextWidget extends BaseWidget {
   }
 
   /**
-   * Add text node to layer
-   * @param text Text content
-   * @returns
-   */
-  /**
-   * New text at a position of drawing (pointer by default, center of view when it is out of canvas)
-   * @param {string} text
+   * New text at a position of drawing (pointer by default, center of view when it is out of canvas), in the frame
+   * containing it, then selection tool active
+   * @param {string} text Content, its width fits its longest line when given
    * @param {Vector2d} position
+   * @returns {Text} The added text node
    */
   addTextNode(text: string = '', { x, y }: Vector2d = this.drawer._getRelativePointerPos()) {
     const { textStyle } = this.drawer.options;
@@ -100,6 +102,11 @@ export class TextWidget extends BaseWidget {
     });
   }
 
+  /**
+   * Edit a text in a textarea at its place (same font, size, rotation), text and transformer hidden meanwhile.
+   * Enter or a click elsewhere validates, Shift + Enter adds a line, Escape cancels; an empty text is removed.
+   * @param {Text} textNode Text of drawing, or title of a frame
+   */
   editTextNode(textNode: Text) {
     textNode.hide();
     const selectWidget = this.drawer.toolbar.getWidget<SelectWidget>('selection');
@@ -134,6 +141,11 @@ export class TextWidget extends BaseWidget {
     this._initEventsTextarea(textNode, textarea);
   }
 
+  /**
+   * Textarea over a text, in `floating` region: same position, size, font and color whatever zoom and scale, with
+   * room around it for glyphs higher than line height
+   * @returns the textarea, added to the layout
+   */
   private _createTextarea(textNode: Text) {
     // zoom and scale of text and its groups
     const scale = textNode.getAbsoluteScale().x;
@@ -180,6 +192,11 @@ export class TextWidget extends BaseWidget {
     return textarea;
   }
 
+  /**
+   * Textarea grows with its content; Enter or a click out of it sets the text, Escape keeps the previous one.
+   * Then textarea removed, text shown again (removed if empty, except frame titles which rename their frame) and
+   * change fired.
+   */
   private _initEventsTextarea(textNode: Text, textarea: HTMLTextAreaElement) {
     const removeTextarea = () => {
       // keep focus on clicked element (e.g. font select of text overlay)

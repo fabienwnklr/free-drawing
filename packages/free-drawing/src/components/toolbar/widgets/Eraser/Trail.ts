@@ -2,6 +2,9 @@ import type { Layer } from 'konva/lib/Layer';
 import { Line } from 'konva/lib/shapes/Line';
 import { getStroke } from 'perfect-freehand';
 
+/**
+ * Options of a `Trail` (eraser, laser), defaults: translucent black, 8 px, 200 ms, no glow
+ */
 export type TrailOptions = {
   /** Fill color */
   color: string;
@@ -23,6 +26,7 @@ const defaultTrailOptions: TrailOptions = {
  * Trail following pointer: thinner towards its tail, points disappear after `duration`
  */
 export class Trail {
+  /** Options given to constructor, completed with defaults */
   readonly options: TrailOptions;
   #line: Line | null = null;
   #points: { x: number; y: number; time: number }[] = [];
@@ -30,6 +34,7 @@ export class Trail {
   #frame = 0;
 
   constructor(
+    /** Layer of the trail line (selection layer: not saved), its scale keeps trail size the same whatever zoom */
     private readonly layer: Layer,
     options: Partial<TrailOptions> = {}
   ) {

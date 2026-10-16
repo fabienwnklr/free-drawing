@@ -1,3 +1,6 @@
+/**
+ * Disable an element: `aria-disabled` and `disabled` class, `disabled` property of buttons
+ */
 export function disableElement($el: HTMLElement) {
   $el.setAttribute('aria-disabled', 'true');
   $el.classList.add('disabled');
@@ -7,6 +10,9 @@ export function disableElement($el: HTMLElement) {
   }
 }
 
+/**
+ * Enable an element disabled by `disableElement`
+ */
 export function enableElement($el: HTMLElement) {
   $el.removeAttribute('aria-disabled');
   $el.classList.remove('disabled');

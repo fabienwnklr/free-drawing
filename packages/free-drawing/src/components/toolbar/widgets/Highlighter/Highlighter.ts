@@ -35,10 +35,13 @@ export class HighlighterWidget extends FreehandWidget {
 
   protected lineStyle() {
     return {
-      // filled outline only: a stroke would be darker (multiplied)
+      /** Outline of the stroke filled with highlighter color (no stroke: it would be darker, multiplied) */
       fill: this.color,
+      /** No stroke around the outline */
       strokeWidth: 0,
+      /** Multiplied with the drawing under it: texts and lines stay readable */
       globalCompositeOperation: 'multiply' as const,
+      /** Shape name of highlighter strokes */
       name: shapeName.highlighter,
     };
   }
@@ -48,7 +51,13 @@ export class HighlighterWidget extends FreehandWidget {
   }
 
   protected freehandSettings() {
-    // same width all along, as a marker
-    return { thinning: 0, smoothing: 0.5, streamline: 0.5 };
+    return {
+      /** Same width all along, as a marker */
+      thinning: 0,
+      /** Softness of stroke edges */
+      smoothing: 0.5,
+      /** Stabilization of stroke */
+      streamline: 0.5,
+    };
   }
 }

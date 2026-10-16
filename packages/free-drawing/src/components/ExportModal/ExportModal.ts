@@ -13,12 +13,19 @@ import type { TranslationKey } from '@/i18n/en';
 export class ExportModal extends Modal {
   /** Rendered image, replaced on each update */
   $preview: HTMLCanvasElement;
+  /** Container of the preview and of the empty message */
   $previewContainer: HTMLDivElement;
+  /** Message shown instead of the preview when there is nothing to export */
   $empty: HTMLParagraphElement;
+  /** Switch exporting selected shapes only, hidden without selection */
   $selected: HTMLInputElement;
+  /** Switch exporting the background color (else transparent, pdf always has one) */
   $background: HTMLInputElement;
+  /** Switch exporting colors of dark mode, checked on show when the drawer is dark */
   $dark: HTMLInputElement;
+  /** Radio buttons of the scale of the image (1×, 2×, 3×), 2× by default */
   $scales: HTMLInputElement[];
+  /** Buttons of the footer: save as PNG, SVG, PDF, drawing file, then copy, disabled when nothing to export */
   $buttons: HTMLButtonElement[];
 
   constructor(drawer: Drawer) {
@@ -102,6 +109,10 @@ export class ExportModal extends Modal {
     });
   }
 
+  /**
+   * Adds a switch with its translated label to the options
+   * @returns the switch input
+   */
   private _createSwitch($container: HTMLElement, text: TranslationKey, checked = false) {
     const $label = document.createElement('label');
     const $switch = createSwitch(checked);

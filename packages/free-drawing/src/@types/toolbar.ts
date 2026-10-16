@@ -1,28 +1,56 @@
+/**
+ * Names of tools: widgets of toolbar (see `WidgetName`) and names kept for other tools
+ */
 export enum Tools {
+  /** Move the view by dragging */
   pan = 'pan',
+  /** Select, move, resize and rotate shapes */
   selection = 'selection',
+  /** Freehand stroke */
   brush = 'brush',
+  /** Erase shapes touched by pointer (erased on pointer up) */
   eraser = 'eraser',
+  /** Undo (not a widget: undo / redo buttons of footer) */
   undo = 'undo',
+  /** Redo (not a widget: undo / redo buttons of footer) */
   redo = 'redo',
+  /** Text, edited in place */
   text = 'text',
+  /** Rectangle (not a widget: `square` draws rectangles) */
   rect = 'rect',
+  /** Ellipse, circle with Shift */
   circle = 'circle',
+  /** Ellipse (not a widget: `circle` draws ellipses) */
   ellipse = 'ellipse',
+  /** Rectangle, square with Shift */
   square = 'square',
+  /** Arrow, its ends can be linked to shapes */
   arrow = 'arrow',
+  /** Straight line */
   line = 'line',
+  /** Star (no widget) */
   star = 'star',
+  /** Triangle */
   triangle = 'triangle',
+  /** Polygon (no widget) */
   polygon = 'polygon',
+  /** Diamond */
   diamond = 'diamond',
+  /** Heart */
   heart = 'heart',
+  /** Cloud */
   cloud = 'cloud',
+  /** Wide freehand stroke multiplied with the drawing under it */
   highlighter = 'highlighter',
+  /** Laser pointer: trail following pointer, not saved in drawing */
   laser = 'laser',
+  /** Frame holding shapes, with a title */
   frame = 'frame',
 }
 
+/**
+ * Name of a tool (`tool` option, `getWidget`), name of a `Tools` member
+ */
 export type AvailableTools = keyof typeof Tools;
 
 /**
@@ -83,4 +111,9 @@ export type WidgetGroupOptions = {
 /**
  * Widgets option: list of widgets or object of widgets options, toolbar keeps the given order
  */
-export type WidgetsOptions = WidgetName[] | (Partial<Record<WidgetName, WidgetOptions>> & { brush?: BrushWidgetOptions });
+export type WidgetsOptions =
+  | WidgetName[]
+  | (Partial<Record<WidgetName, WidgetOptions>> & {
+      /** Brush options, with freehand stroke settings */
+      brush?: BrushWidgetOptions;
+    });

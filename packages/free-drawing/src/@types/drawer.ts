@@ -9,22 +9,33 @@ import type { DrawingFile } from '@/utils/drawingFile';
  */
 export type DrawingShape = Shape<ShapeConfig> | Group;
 
+/**
+ * Options of `new Drawer($el, options)`, all optional (merged with defaults), see `defaultOptions`
+ */
 export type DrawerOptions = {
+  /** Id of drawer, unique for each drawer of a page: prefix of links to drawings (`#<id>=...`) */
   id: string;
+  /** Tool activated on init (default 'brush'), the last one used is restored with a drawing saved in localStorage */
   tool: AvailableTools;
+  /** Width of drawer (px, default window width) */
   width: number;
+  /** Height of drawer (px, default window height) */
   height: number;
+  /** Stroke width of new shapes (px, default 5) */
   strokeWidth: number;
   /** Stroke style of lines, arrows, rectangles and ellipses (default 'solid'), dashes and dots follow stroke width */
   strokeStyle: StrokeStyle;
   /** @deprecated use `strokeStyle` (a dash array gives 'dashed') */
   strokeDash?: number[];
+  /** Stroke color of new shapes (default '#000') */
   strokeColor: ColorLike;
   /** Background color of new rectangles and ellipses, `'transparent'` for none (default) */
   fillColor: ColorLike;
   /** Corners of rectangles: 'sharp' (default), 'round' (radius following rectangle size) or radius (px) */
   edges: Edges;
+  /** Opacity of new shapes, from 0 to 1 (default 1) */
   opacity: number;
+  /** Style of new texts (font, size, style, decoration, alignment) */
   textStyle: TextStyle;
   /** Real time collaboration with socket.io server: false (default), true (same origin), server url or options */
   collaboration: boolean | string | CollaborationOptions;
@@ -32,7 +43,9 @@ export type DrawerOptions = {
   widgets: WidgetsOptions;
   /** Groups of toolbar widgets, e.g. `[{ widgets: ['line', 'square', 'circle', 'arrow'], title: 'Shapes' }]` */
   widgetGroups: WidgetGroupOptions[];
+  /** Zoom with Ctrl + mouse wheel (or trackpad pinch) around pointer (default true) */
   zoom: boolean;
+  /** Zoom buttons and level in footer (default true) */
   zoomWidget: boolean;
   /** Show view position (x / y) with a button back to origin, not to get lost when moving (default true) */
   positionWidget: boolean;
@@ -50,10 +63,13 @@ export type DrawerOptions = {
   layersPanel: boolean;
   /** Drawing can't be modified by user (only pan, zoom, view options, export), API methods still modify it (default false) */
   readOnly: boolean;
+  /** Zoom factor of one wheel step (default 1.11) */
   scaling: number;
+  /** Drawing saved on each change, else with "Save now" (default true, user preference) */
   autoSave: boolean;
   /** Drawing tool kept after drawing a shape, else selection tool activated with the drawn shape (user preference) */
   keepTool: boolean;
+  /** Key of the drawing in localStorage and prefix of other saved data (tool, preferences...), unique for each drawer */
   localStorageKey: string;
   /** User of the app (e.g. logged in): id and name used in collaboration sessions instead of ones kept in browser */
   user: DrawerUser | null;
@@ -75,6 +91,7 @@ export type CollaborationOptions = {
  * User of the app, see `user` option and `setUser`
  */
 export type DrawerUser = {
+  /** Id of user in the app, identifies the user in collaboration sessions (owner, rights, links) */
   id: string;
   /** Name shown to other users, user can change it for current visit */
   name?: string;
@@ -95,6 +112,7 @@ export type DrawerStorage = {
  * see `getPreferences` / `setPreferences` and `drawer.preferences.change` event
  */
 export type Preferences = {
+  /** Theme chosen: light, dark or the one of device */
   theme: Theme;
   /** Language chosen, 'auto' for browser one */
   language: Language | 'auto';
@@ -110,6 +128,9 @@ export type Preferences = {
   keepTool: boolean;
 };
 
+/**
+ * Stroke style of shapes: dash and dots computed from stroke width (`getDash`), read back from shape dash
+ */
 export type StrokeStyle = 'solid' | 'dashed' | 'dotted';
 
 /**
@@ -131,10 +152,15 @@ export type ShapeOrder = 'forward' | 'backward' | 'front' | 'back';
  * Text node style, keys match konva Text attributes
  */
 export type TextStyle = {
+  /** Font family (default 'Ubuntu', font of the library) */
   fontFamily: string;
+  /** Font size (px, default 16) */
   fontSize: number;
+  /** Weight and slant of text */
   fontStyle: 'normal' | 'bold' | 'italic' | 'italic bold';
+  /** Lines under and through text, '' for none */
   textDecoration: '' | 'underline' | 'line-through' | 'underline line-through';
+  /** Horizontal alignment of lines in text width */
   align: 'left' | 'center' | 'right';
 };
 
@@ -144,13 +170,26 @@ export type TextStyle = {
 export type OptionsChange = Partial<
   Pick<DrawerOptions, 'strokeColor' | 'fillColor' | 'strokeWidth' | 'strokeStyle' | 'edges' | 'opacity'>
 > & {
+  /** Changed keys of text style */
   textStyle?: Partial<TextStyle>;
 };
 
-type RGB = `rgb(${number}, ${number}, ${number})`;
-type RGBA = `rgba(${number}, ${number}, ${number}, ${number})`;
-type HEX = `#${string}`;
-type CssColorNames =
+/**
+ * CSS rgb color, e.g. `rgb(255, 0, 0)`
+ */
+export type RGB = `rgb(${number}, ${number}, ${number})`;
+/**
+ * CSS rgba color (alpha from 0 to 1), e.g. `rgba(255, 0, 0, 0.5)`
+ */
+export type RGBA = `rgba(${number}, ${number}, ${number}, ${number})`;
+/**
+ * CSS hexadecimal color, e.g. `#f00` or `#ff0000`
+ */
+export type HEX = `#${string}`;
+/**
+ * CSS named colors
+ */
+export type CssColorNames =
   | 'AliceBlue'
   | 'AntiqueWhite'
   | 'Aqua'
@@ -300,4 +339,7 @@ type CssColorNames =
   | 'Yellow'
   | 'YellowGreen';
 
+/**
+ * Color of shapes and background: any CSS color (rgb, rgba, hexadecimal, name) or transparent (no fill)
+ */
 export type ColorLike = RGB | RGBA | HEX | CssColorNames | 'transparent';

@@ -5,6 +5,9 @@ import { Ellipse } from 'konva/lib/shapes/Ellipse';
 import type { Vector2d } from 'konva/lib/types';
 import { ShapeWidget, dragBox } from '@/components/toolbar/widgets/ShapeWidget';
 
+/**
+ * Ellipse tool: ellipse inside the dragged box, circle with Shift, with background color
+ */
 export class CircleWidget extends ShapeWidget<Ellipse> {
   protected hasFill = true;
 

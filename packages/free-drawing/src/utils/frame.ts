@@ -10,8 +10,11 @@ import { shapeName } from '@/constants';
 
 /** Parts of a frame (not drawing shapes) */
 export const frameParts = {
+  /** Name of the border rectangle (hit on border only) */
   box: 'drawer-frame-box',
+  /** Name of the title text, above the box */
   title: 'drawer-frame-title',
+  /** Name of the group of shapes of the frame, cut at the box edges */
   content: 'drawer-frame-content',
 };
 
@@ -28,6 +31,10 @@ export class Frame extends Group {
   /** Not a group of shapes (types) */
   readonly frame = true;
 
+  /**
+   * Box of the frame, title and shapes out of it not counted (transformer, selection, snapping, export),
+   * drawn rect for konva drawing (cache)
+   */
   getClientRect(config: GetClientRectConfig = {}): IRect {
     // as drawn (cache...)
     if (config._forDrawing) return super.getClientRect(config);
@@ -42,6 +49,9 @@ Frame.prototype.className = 'Frame';
 // created again from its JSON (history, files, collaboration)
 _registerNode(Frame);
 
+/**
+ * Node is a frame: to exclude frames from checks of groups of shapes (`instanceof Group`)
+ */
 export function isFrame(node: Node | null | undefined): node is Frame {
   return node instanceof Frame;
 }
@@ -71,10 +81,16 @@ export function createFrame({ x, y, width, height, label }: IRect & { label: str
   return frame;
 }
 
+/**
+ * Group of the shapes of a frame (cut at its box)
+ */
 export function getFrameContent(frame: Frame): Group {
   return frame.findOne<Group>(`.${frameParts.content}`)!;
 }
 
+/**
+ * Title text of a frame, above its box
+ */
 export function getFrameTitle(frame: Frame): Text {
   return frame.findOne<Text>(`.${frameParts.title}`)!;
 }

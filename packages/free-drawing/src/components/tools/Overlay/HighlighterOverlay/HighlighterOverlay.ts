@@ -7,7 +7,12 @@ import { ColorPicker } from '@/components/ColorPicker/ColorPicker';
 import { createButton, setLabel, setPressed, uniqueId } from '@/utils/dom';
 
 /** Fluorescent colors of highlighter, yellow first (default) */
-export const highlighterColors: { color: ColorLike; label: TranslationKey }[] = [
+export const highlighterColors: {
+  /** Color of strokes */
+  color: ColorLike;
+  /** Accessible name of its button */
+  label: TranslationKey;
+}[] = [
   { color: '#ffe066', label: 'color.yellow' },
   { color: '#8ce99a', label: 'color.green' },
   { color: '#74c0fc', label: 'color.blue' },
@@ -16,14 +21,24 @@ export const highlighterColors: { color: ColorLike; label: TranslationKey }[] = 
 ];
 
 /** Widths of highlighter strokes, medium by default */
-export const highlighterSizes: { size: number; label: TranslationKey }[] = [
+export const highlighterSizes: {
+  /** Width of strokes */
+  size: number;
+  /** Accessible name of its button */
+  label: TranslationKey;
+}[] = [
   { size: 12, label: 'width.thin' },
   { size: 20, label: 'width.medium' },
   { size: 32, label: 'width.thick' },
 ];
 
+/**
+ * Current choices of highlighter widget, updated by the overlay
+ */
 export type HighlighterOverlayOptions = {
+  /** Color of strokes, one of `highlighterColors` or custom */
   color: ColorLike;
+  /** Width of strokes, one of `highlighterSizes` */
   size: number;
   /** Color or size chosen */
   onChange: (change: { color?: ColorLike; size?: number }) => void;
@@ -33,12 +48,17 @@ export type HighlighterOverlayOptions = {
  * Options of highlighter: its own colors and widths, not those of other tools
  */
 export class HighlighterOverlay {
+  /** Panel element (region) in floating region, shown with `show` */
   readonly $overlayContainer: HTMLDivElement;
+  /** Color choice among `highlighterColors` or custom */
   readonly colorPicker: ColorPicker;
+  /** Width buttons, one per `highlighterSizes` (width in `data-size`) */
   readonly $sizeButtons: HTMLButtonElement[];
 
   constructor(
+    /** Drawer of the highlighter widget */
     private readonly drawer: Drawer,
+    /** Choices of the widget, changed in place by `setChange` */
     private readonly options: HighlighterOverlayOptions
   ) {
     this.$overlayContainer = document.createElement('div');
@@ -80,14 +100,23 @@ export class HighlighterOverlay {
     this.options.onChange(change);
   }
 
+  /**
+   * Show panel (highlighter active)
+   */
   show() {
     this.$overlayContainer.classList.add('show');
   }
 
+  /**
+   * Hide panel (other tool, selection shown)
+   */
   hide() {
     this.$overlayContainer.classList.remove('show');
   }
 
+  /**
+   * Fields show the current color and width
+   */
   private _update() {
     this.colorPicker.setColor(this.options.color);
     this.$sizeButtons.forEach(($btn) => setPressed($btn, Number($btn.dataset.size) === this.options.size));
@@ -97,8 +126,10 @@ export class HighlighterOverlay {
    * Group of fields named by its title (as other overlays)
    */
   private _createSection(title: TranslationKey) {
+    /** Section element: group named by its title */
     const $container = document.createElement('div');
     const $title = document.createElement('h6');
+    /** Element of the section buttons, after its title */
     const $buttons = document.createElement('div');
 
     $title.classList.add('title');

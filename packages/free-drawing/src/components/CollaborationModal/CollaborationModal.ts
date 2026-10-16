@@ -10,16 +10,27 @@ import type { TranslationKey } from '@/i18n/en';
  * and QR code, users of the session with rights given by the owner, stop session
  */
 export class CollaborationModal extends Modal {
+  /** Introduction, depends on state: no session, invited by a link, joined session of another user */
   $intro: HTMLParagraphElement;
+  /** Name shown to other users (saved on change), required to join; Enter starts or joins */
   $name: HTMLInputElement;
+  /** Session part, shown to the owner only: link, users with their rights, QR code */
   $session: HTMLDivElement;
+  /** Read only link of the session (selected on focus), followed by its copy button */
   $link: HTMLInputElement;
+  /** QR code of the session link (svg rendered by `uqr`, loaded when needed) */
   $qrCode: HTMLDivElement;
+  /** Number of connected users, title of the list of users */
   $users: HTMLParagraphElement;
+  /** Users of the session (live region): name, who invited them, right to draw (switch for the owner) */
   $members: HTMLUListElement;
+  /** Starts a session, shown without session nor link to join */
   $startButton: HTMLButtonElement;
+  /** Joins the room of the link, shown with a link, enabled once a name is given */
   $joinButton: HTMLButtonElement;
+  /** Cancels joining the room of the link, shown with a link */
   $cancelButton: HTMLButtonElement;
+  /** Stops the session, shown to the owner */
   $stopButton: HTMLButtonElement;
   /** Room of a link, joined once user gives a name */
   joinRoom: string | null = null;
@@ -131,6 +142,9 @@ export class CollaborationModal extends Modal {
     super.show();
   }
 
+  /**
+   * Starts a session in a new room with the given name, error shown in a toast (server unavailable...)
+   */
   async start() {
     try {
       await this.drawer.startCollaboration(undefined, this.$name.value);
@@ -139,6 +153,9 @@ export class CollaborationModal extends Modal {
     }
   }
 
+  /**
+   * Joins the room of the link with the given name (nothing without name), error shown in a toast
+   */
   async join() {
     const room = this.joinRoom;
 
@@ -161,6 +178,9 @@ export class CollaborationModal extends Modal {
     this.hide();
   }
 
+  /**
+   * Copies the session link to clipboard (secure context only), result shown in a toast
+   */
   async copyLink() {
     try {
       // secure context (https) only

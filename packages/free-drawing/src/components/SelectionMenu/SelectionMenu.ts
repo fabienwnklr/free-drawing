@@ -29,19 +29,33 @@ const gap = 12;
  * Out of transformer (below, above, right or left of it), hidden while shapes are moved
  */
 export class SelectionMenu {
+  /** Drawer whose selection the menu acts on */
   drawer: Drawer;
+  /** Menu element (`role="toolbar"`, arrow keys move between buttons), placed next to the selection */
   $menu: HTMLDivElement;
+  /** Duplicates selected shapes (Ctrl+D) */
   $duplicateBtn: HTMLButtonElement;
+  /** Groups selected shapes (Ctrl+G), shown when they can be grouped (2 shapes at least) */
   $groupBtn: HTMLButtonElement;
+  /** Ungroups selected groups (Ctrl+Shift+G), shown when a group is selected */
   $ungroupBtn: HTMLButtonElement;
+  /** Rotates selected shapes by 90° counterclockwise (Shift+L), hidden when only frames are selected */
   $rotateLeftBtn: HTMLButtonElement;
+  /** Rotates selected shapes by 90° clockwise (Shift+R), hidden when only frames are selected */
   $rotateRightBtn: HTMLButtonElement;
+  /** Fits width of selected texts to their content (Shift+W), shown when the selection has texts */
   $fitWidthBtn: HTMLButtonElement;
+  /** Sends selected shapes backward (Ctrl+Down) */
   $backwardBtn: HTMLButtonElement;
+  /** Brings selected shapes forward (Ctrl+Up) */
   $forwardBtn: HTMLButtonElement;
+  /** Deletes selected shapes (Delete), last after the separator */
   $deleteBtn: HTMLButtonElement;
+  /** Locks selected shapes (Ctrl+Shift+L), they stay selected */
   $lockBtn: HTMLButtonElement;
+  /** Unlocks selected shapes (Ctrl+Shift+L), only button shown for a locked selection */
   $unlockBtn: HTMLButtonElement;
+  /** Separator before the delete button */
   $separator: HTMLSpanElement;
 
   constructor(drawer: Drawer) {
@@ -118,6 +132,9 @@ export class SelectionMenu {
     this.drawer.on(drawerEvents.readOnlyChange, () => this.update());
   }
 
+  /**
+   * Transformer of the selection widget, undefined without this widget
+   */
   private get transformer() {
     return this.drawer.getWidget<SelectWidget>('selection')?.transformer;
   }
@@ -251,7 +268,12 @@ export class SelectionMenu {
     const centerLeft = clamp(around.x + around.width / 2 - width / 2, area.left, area.right - width);
     const centerTop = clamp(around.y + around.height / 2 - height / 2, area.top, area.bottom - height);
     const places = [
-      { left: centerLeft, top: around.y + around.height + gap },
+      {
+        /** Left of the menu in view (px) */
+        left: centerLeft,
+        /** Top of the menu in view (px) */
+        top: around.y + around.height + gap,
+      },
       { left: centerLeft, top: around.y - gap - height },
       { left: around.x + around.width + gap, top: centerTop },
       { left: around.x - gap - width, top: centerTop },
@@ -275,6 +297,9 @@ export class SelectionMenu {
     if (hadFocus) this.drawer.focus();
   }
 
+  /**
+   * Whether the menu is shown
+   */
   isVisible() {
     return this.$menu.classList.contains('show');
   }

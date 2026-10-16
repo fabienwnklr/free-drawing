@@ -19,9 +19,8 @@ import { getEdges, getStrokeStyle } from '@/utils/stroke';
 import type { TranslationKey } from '@/i18n/en';
 
 /**
- * All common tool for all shape (color, opacity for now)
+ * Sections shown by an overlay and their titles, given by each subclass
  */
-
 export type OverlayOptions = {
   /** Show stroke style buttons (default false) */
   styleBtns: boolean;
@@ -35,39 +34,66 @@ export type OverlayOptions = {
   label: TranslationKey;
 };
 
+/**
+ * Options panel of a tool or of the selection, common to all shapes: stroke and background colors, stroke width and
+ * style, corners, opacity and stacking order. Buttons only call drawer setters, fields follow `drawer.options.change`
+ */
 export class BaseOverlay {
+  /** Panel element (region named by `label` option) in floating region, shown with `show` */
   $overlayContainer: HTMLDivElement;
+  /** Drawer whose options and selection the fields change */
   drawer: Drawer;
 
+  /** Stroke color section (text color for texts), titled by `colorTitle` option */
   $strokeColorContainer!: HTMLDivElement;
+  /** Element of stroke color buttons */
   $strokeColorBtnContainer!: HTMLDivElement;
+  /** Stroke color choice calling `drawer.setStrokeColor`, without transparent: drawing would be invisible */
   strokeColorPicker!: ColorPicker;
 
+  /** Background color section, shown with `fillBtns` option or `toggleFillBtns` (rectangle and ellipse) */
   $fillColorContainer!: HTMLDivElement;
+  /** Element of background color buttons */
   $fillColorBtnContainer!: HTMLDivElement;
+  /** Background color choice calling `drawer.setFillColor`, transparent for no fill */
   fillColorPicker!: ColorPicker;
 
+  /** Stroke width section, hidden with `widthBtns` option false */
   $strokeWidthContainer!: HTMLDivElement;
+  /** Element of stroke width buttons (line icons of each width) */
   $strokeWidthBtnContainer!: HTMLDivElement;
 
+  /** Stroke style section (solid, dashed, dotted), shown with `styleBtns` option or `toggleStyleBtns` */
   $strokeStyleContainer!: HTMLDivElement;
+  /** Element of stroke style buttons */
   $strokeStyleBtnContainer!: HTMLDivElement;
 
+  /** Corners section, shown with `toggleEdgesBtns` (rectangles) */
   $edgesContainer!: HTMLDivElement;
+  /** Element of sharp and round buttons and of radius field */
   $edgesBtnContainer!: HTMLDivElement;
+  /** Corner radius field, empty for a radius following size (round) */
   $edgesRadius!: HTMLInputElement;
 
+  /** Opacity section: title and range */
   $opacityContainer!: HTMLDivElement;
+  /** Opacity range from 0 to 10 (tenths), applied on change */
   $opacityRange!: HTMLInputElement;
 
+  /** Stacking order section (back, backward, forward, front), shown only for selected shapes */
   $orderContainer!: HTMLDivElement;
 
+  /** CSS classes of sections and of their buttons, shared with subclasses */
   selectors = {
+    /** Class of a section (title and fields) */
     container: 'overlay-picker-container',
+    /** Class of the fields element of a section */
     buttonContainer: 'overlay-picker-btn-container',
+    /** Class of section buttons, those set pressed by `_setActiveBtn` */
     button: 'overlay-picker__button',
   };
 
+  /** Sections and titles given by the subclass, defaults when missing */
   options?: Partial<OverlayOptions>;
 
   constructor(drawer: Drawer, options?: Partial<OverlayOptions>) {
@@ -88,6 +114,9 @@ export class BaseOverlay {
     this.drawer.on(drawerEvents.optionsChange, (change: OptionsChange) => this.updateFields(change));
   }
 
+  /**
+   * Create every section, then append them in panel order
+   */
   private _init() {
     // stroke color
     this._createStrokeColorFields();
@@ -116,6 +145,9 @@ export class BaseOverlay {
     ]);
   }
 
+  /**
+   * Stroke color section: palette (black, red, green, blue, orange) and custom color
+   */
   private _createStrokeColorFields() {
     const { $container, $btnContainer } = this._createSection(this.options?.colorTitle ?? 'overlay.stroke');
     this.$strokeColorContainer = $container;
@@ -139,6 +171,9 @@ export class BaseOverlay {
     });
   }
 
+  /**
+   * Background color section: light colors and transparent, hidden unless `fillBtns` option
+   */
   private _createFillColorFields() {
     const { $container, $btnContainer } = this._createSection('overlay.background');
     this.$fillColorContainer = $container;
@@ -161,6 +196,9 @@ export class BaseOverlay {
     this.toggleFillBtns(!!this.options?.fillBtns);
   }
 
+  /**
+   * Stroke width section: a line icon of each width, hidden with `widthBtns` option false
+   */
   private _createStrokeWidthFields() {
     const { $container, $btnContainer } = this._createSection('overlay.strokeWidth');
     this.$strokeWidthContainer = $container;
@@ -184,6 +222,9 @@ export class BaseOverlay {
     if (this.options?.widthBtns === false) this.$strokeWidthContainer.style.display = 'none';
   }
 
+  /**
+   * Stroke style section (solid, dashed, dotted), hidden unless `styleBtns` option
+   */
   private _createStrokeStyleFields() {
     const { $container, $btnContainer } = this._createSection('overlay.strokeStyle');
     this.$strokeStyleContainer = $container;
@@ -205,6 +246,9 @@ export class BaseOverlay {
     this.toggleStyleBtns(!!this.options?.styleBtns);
   }
 
+  /**
+   * Corners section: sharp and round buttons, radius field, hidden until `toggleEdgesBtns`
+   */
   private _createEdgesFields() {
     const { $container, $btnContainer } = this._createSection('overlay.edges');
     this.$edgesContainer = $container;
@@ -244,6 +288,9 @@ export class BaseOverlay {
     this.toggleEdgesBtns(false);
   }
 
+  /**
+   * Opacity section: range named by its title, announced as percentage
+   */
   private _createOpacityField() {
     this.$opacityContainer = document.createElement('div');
     this.$opacityContainer.classList.add('opacity-container');
@@ -267,6 +314,9 @@ export class BaseOverlay {
     this.$opacityContainer.append(this.$opacityRange);
   }
 
+  /**
+   * Stacking order section: buttons calling `drawer.reorderShapes`, with their shortcut
+   */
   private _createOrderFields() {
     const { $container, $btnContainer } = this._createSection('overlay.layers');
     this.$orderContainer = $container;
@@ -318,8 +368,10 @@ export class BaseOverlay {
    * Group of fields named by its title
    */
   protected _createSection(title: TranslationKey) {
+    /** Section element: group named by its title */
     const $container = document.createElement('div');
     const $title = this._createTitle(title);
+    /** Element of the section fields, after its title */
     const $btnContainer = document.createElement('div');
 
     $container.classList.add(this.selectors.container);
@@ -345,10 +397,17 @@ export class BaseOverlay {
     return $btn;
   }
 
+  /**
+   * Append sections at the end of the panel
+   */
   appendContent(elements: HTMLElement[]) {
     this.$overlayContainer.append(...elements);
   }
 
+  /**
+   * Show panel with fields of first given shape, else of drawer options (tool options)
+   * @param shape selected shapes, stacking order section shown only for them
+   */
   show(shape?: (Shape<ShapeConfig> | Group)[]) {
     this.$overlayContainer.classList.add('show');
     // stacking order only for selected shapes, not for tool options
@@ -453,6 +512,9 @@ export class BaseOverlay {
     this.$edgesContainer.style.display = visible ? '' : 'none';
   }
 
+  /**
+   * Hide panel (tool deactivated, selection cleared...)
+   */
   hide() {
     this.$overlayContainer.classList.remove('show');
   }

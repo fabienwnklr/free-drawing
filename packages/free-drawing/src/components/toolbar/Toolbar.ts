@@ -44,12 +44,20 @@ const widgetClasses: Record<WidgetName, new (drawer: Drawer) => BaseWidget> = {
   frame: FrameWidget,
 };
 
+/**
+ * Toolbar of the footer: buttons of widgets (tools) and groups of widgets, created from `widgets` and `widgetGroups`
+ * options. Buttons are reached with Tab once (roving tabindex), arrow keys move between them.
+ */
 export class Toolbar {
+  /** Drawer of this toolbar */
   drawer: Drawer;
+  /** Element with role `toolbar` holding buttons of widgets and groups */
   $toolbarRoot: HTMLElement;
   /** Widgets of toolbar, also those of groups */
   widgets: Map<AvailableTools, BaseWidget> = new Map();
+  /** Groups of widgets, in toolbar order */
   groups: GroupWidget[] = [];
+  /** Container of the toolbar, added to the `footer` region of the layout */
   $toolbarContent: HTMLDivElement;
   /** Keep tool after drawing (`keepTool` preference), first button, with selection widget only */
   $keepToolButton: HTMLButtonElement | null = null;
@@ -81,6 +89,10 @@ export class Toolbar {
     this.drawer.on(drawerEvents.readOnlyChange, () => this.update());
   }
 
+  /**
+   * Create widgets of `widgets` option, in its order, and groups of `widgetGroups` option at the place of their first
+   * widget. Called by the constructor.
+   */
   init() {
     // widgets option (list or object), in given order, a group at the place of its first widget
     const names = getWidgetNames(this.drawer.options.widgets);
@@ -104,6 +116,10 @@ export class Toolbar {
     });
   }
 
+  /**
+   * Add a widget at the end of toolbar, out of groups
+   * @param {BaseWidget} widget
+   */
   addWidget(widget: BaseWidget) {
     this.widgets.set(widget.id, widget);
     widget.addTo(this.$toolbarRoot);
@@ -121,6 +137,11 @@ export class Toolbar {
     this._initTabStop();
   }
 
+  /**
+   * Make a widget the active tool of drawer (`activeWidget`, `activeTool`), its button (or group) the tab stop.
+   * Called by `BaseWidget.setActive`, which activates a widget: call that one instead.
+   * @param {BaseWidget} widget
+   */
   setActiveWidget(widget: BaseWidget) {
     this.drawer.activeWidget = widget;
     this.drawer.activeTool = widget.id;
@@ -200,6 +221,11 @@ export class Toolbar {
     this.setTabStop(activeWidget ? this.getButton(activeWidget) : this._getButtons()[0]);
   }
 
+  /**
+   * Widget of toolbar (also of a group) by its id
+   * @param name Id of the widget
+   * @returns The widget cast to `T`, undefined if toolbar has no such widget
+   */
   getWidget<T>(name: AvailableTools): T | undefined {
     return this.widgets.get(name) as T;
   }

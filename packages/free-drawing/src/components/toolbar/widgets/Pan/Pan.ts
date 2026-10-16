@@ -3,7 +3,11 @@ import { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import PanIcon from '@/icons/pan.svg?raw';
 import { grabCursor, grabbingCursor } from '@/constants';
 
+/**
+ * Pan tool: drag moves the view (stage draggable while active), grabbing cursor meanwhile
+ */
 export class PanWidget extends BaseWidget {
+  /** View moved since pointer down: a change is fired on pointer up (view saved) */
   hasMoved: boolean = false;
   protected cursor = grabCursor;
 

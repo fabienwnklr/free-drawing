@@ -7,7 +7,13 @@ import { Drawer } from '@/Drawer';
 /** Types of inputs with editable text */
 const textInputTypes = ['text', 'search', 'number', 'email', 'url', 'tel', 'password'];
 
+/**
+ * Keyboard shortcuts of drawer, listened on its container: tools, selection (move, delete, duplicate, group, order,
+ * flip, rotate), history, files, panels. Nothing runs during a pointer action, shortcuts modifying the drawing do
+ * nothing in read only.
+ */
 export class HotKey {
+  /** Drawer whose shortcuts are handled */
   drawer: Drawer;
   constructor(drawer: Drawer) {
     this.drawer = drawer;

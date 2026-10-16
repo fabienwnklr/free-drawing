@@ -41,11 +41,17 @@ import type { Node } from 'konva/lib/Node';
 /** Pointer move under which a press is a click (px) */
 const clickTolerance = 3;
 
+/**
+ * Selection tool: selects shapes (click, Shift toggles, Alt selects the one behind, rectangle selects shapes entirely
+ * in it), moves and transforms them with its Konva `Transformer` (also used by other components), shows the overlay
+ * of selected shapes and applies its options to them. Optional snapping of moves and resizes to other shapes.
+ */
 export class SelectWidget extends BaseWidget {
   #x1: number = 0;
   #y1: number = 0;
   #x2: number = 0;
   #y2: number = 0;
+  /** Resize anchors of the transformer: corners and middles of sides (texts: no top / bottom middle) */
   defaultAnchors: string[] = [
     'top-left',
     'top-center',
@@ -56,9 +62,14 @@ export class SelectWidget extends BaseWidget {
     'bottom-center',
     'bottom-right',
   ];
+  /** Color of transformer box and anchors, and of snapping guides */
   color: ColorLike = 'rgba(152, 158, 255, 1)';
+  /** Rectangle drawn by a drag from an empty place: selects shapes entirely in it (selection layer) */
   selectionRectangle: Rect = new Rect();
-  // In constructor for be usable out of widget
+  /**
+   * Konva transformer of selected shapes (box, resize and rotation anchors), in selection layer. Its nodes are the
+   * selection. Created with the widget, so other components can use it whatever the active tool.
+   */
   transformer: Transformer = new Transformer({
     borderStroke: this.color,
     anchorStroke: this.color,
@@ -98,6 +109,7 @@ export class SelectWidget extends BaseWidget {
    * Snap of resize anchors to grid (set by drawer while grid is shown), applied when anchor is not snapped to objects
    */
   gridAnchorBound: ((oldPos: Vector2d, newPos: Vector2d) => Vector2d) | null = null;
+  /** Moves and resizes snap to edges and centers of other shapes, with guides (`snapping` preference) */
   snapping: boolean = false;
   overlay: SelectOverlay;
   // overlay of selected shapes, not of the tool
@@ -474,7 +486,7 @@ export class SelectWidget extends BaseWidget {
 
   /**
    * Show overlay for selected shapes, text overlay if selection contains only text
-   * @param {(Shape<ShapeConfig> | Group)[]} shapes
+   * @param {(Shape<ShapeConfig> | Group)[]} nodes Selected shapes (shapes of groups are used)
    */
   showOverlay(nodes: (Shape<ShapeConfig> | Group)[]) {
     const textOverlay = this.drawer.getWidget<TextWidget>('text')?.overlay;
@@ -495,6 +507,9 @@ export class SelectWidget extends BaseWidget {
     }
   }
 
+  /**
+   * Hide overlays of selection (selection overlay and text overlay), selection is kept
+   */
   hideOverlay() {
     this.overlay.hide();
     this.drawer.getWidget<TextWidget>('text')?.overlay.hide();
@@ -564,6 +579,9 @@ export class SelectWidget extends BaseWidget {
     return this.inAction;
   }
 
+  /**
+   * Select every shape of the drawing (nothing if drawing is empty), focus back on drawer
+   */
   selectAll() {
     const allNodes = this.drawer.getDrawingShapes();
 
@@ -579,6 +597,10 @@ export class SelectWidget extends BaseWidget {
     withFrameShapes(this.drawer.getDrawingShapes()).forEach((d) => d.draggable(false));
   }
 
+  /**
+   * Turn snapping on: a dragged shape is moved to the nearest guide (edges and centers of other shapes and of stage)
+   * closer than 5 px on each axis, guides shown until drag end
+   */
   private _initSnapEvents() {
     this.snapping = true;
     // namespaced, grid snapping and change saving also listen drag events of draw layer
@@ -630,6 +652,9 @@ export class SelectWidget extends BaseWidget {
     this.drawer.drawLayer.on('dragend.snap', () => this._clearGuides());
   }
 
+  /**
+   * Remove snapping guides of selection layer
+   */
   private _clearGuides() {
     this.drawer.selectionLayer.find(`.${shapeName.guideLine}`).forEach((l) => l.destroy());
   }
@@ -670,12 +695,24 @@ export class SelectWidget extends BaseWidget {
     return this.gridAnchorBound ? this.gridAnchorBound(oldPos, newPos) : newPos;
   }
 
+  /**
+   * Turn snapping off: drag listeners of snapping (`.snap`) removed
+   */
   private _removeSnapEvents() {
     this.snapping = false;
     this.drawer.drawLayer.off('.snap');
   }
 
-  private _getLineGuideStops(skipShapes: Node[]): { vertical: number[]; horizontal: number[] } {
+  /**
+   * Positions a shape can snap to (absolute): borders and center of stage, edges and centers of drawing shapes
+   * @param skipShapes Moved shapes, not guides themselves (nor their groups)
+   */
+  private _getLineGuideStops(skipShapes: Node[]): {
+    /** X of vertical guides */
+    vertical: number[];
+    /** Y of horizontal guides */
+    horizontal: number[];
+  } {
     // we can snap to stage borders and the center of the stage
     const vertical = [0, this.drawer.stage.width() / 2, this.drawer.stage.width()];
     const horizontal = [0, this.drawer.stage.height() / 2, this.drawer.stage.height()];
@@ -696,18 +733,22 @@ export class SelectWidget extends BaseWidget {
     };
   }
 
-  // what points of the object will trigger to snapping?
-  // it can be just center of the object
-  // but we will enable all edges and center
+  /**
+   * Points of a dragged node which snap to guides: its edges and center on each axis (absolute)
+   */
   private _getObjectSnappingEdges(node: Shape<ShapeConfig> | Stage) {
     const box = node.getClientRect();
     const absPos = node.absolutePosition();
 
     return {
+      /** Left, center and right of node box */
       vertical: [
         {
+          /** X of the point */
           guide: Math.round(box.x),
+          /** From the point to node position: node position once the point snapped is guide + offset */
           offset: Math.round(absPos.x - box.x),
+          /** Point of the box: 'start', 'center' or 'end' */
           snap: 'start',
         },
         {
@@ -721,10 +762,14 @@ export class SelectWidget extends BaseWidget {
           snap: 'end',
         },
       ],
+      /** Top, center and bottom of node box */
       horizontal: [
         {
+          /** Y of the point */
           guide: Math.round(box.y),
+          /** From the point to node position: node position once the point snapped is guide + offset */
           offset: Math.round(absPos.y - box.y),
+          /** Point of the box: 'start', 'center' or 'end' */
           snap: 'start',
         },
         {
@@ -741,7 +786,12 @@ export class SelectWidget extends BaseWidget {
     };
   }
 
-  // find all snapping possibilities
+  /**
+   * Guides a dragged node snaps to: on each axis, the stop nearest to one of its points, closer than 5 px
+   * @param lineGuideStops Positions to snap to, see `_getLineGuideStops`
+   * @param itemBounds Points of the node, see `_getObjectSnappingEdges`
+   * @returns Vertical guide then horizontal one, if any
+   */
   private _getGuides(
     lineGuideStops: {
       vertical: number[];
@@ -809,9 +859,13 @@ export class SelectWidget extends BaseWidget {
     const minH = resultH.sort((a, b) => a.diff - b.diff)[0];
     if (minV) {
       guides.push({
+        /** Position of the guide: x of a vertical one, y of a horizontal one (absolute) */
         lineGuide: minV.lineGuide,
+        /** From the snapped point to node position */
         offset: minV.offset,
+        /** 'V' (vertical guide, snaps x) or 'H' (horizontal guide, snaps y) */
         orientation: 'V',
+        /** Point of the node snapped: 'start', 'center' or 'end' */
         snap: minV.snap,
       });
     }
@@ -826,6 +880,10 @@ export class SelectWidget extends BaseWidget {
     return guides;
   }
 
+  /**
+   * Draw guides as dashed lines across the view, in selection layer
+   * @param guides Guides of `_getGuides`
+   */
   private _drawGuides(
     guides: {
       lineGuide: number;
@@ -1002,6 +1060,11 @@ export class SelectWidget extends BaseWidget {
     this.transformer.forceUpdate();
   }
 
+  /**
+   * Turn snapping to objects on (grid hidden: one snapping at a time) or off, update context menu button, save
+   * preferences and fire change. Use `drawer.setting.toggleSnapping()` to toggle it.
+   * @param active Turn snapping on (default) or off
+   */
   toggleSnapping(active: boolean = true) {
     if (active && !this.snapping) {
       if (this.drawer.grid) this.drawer.hideGrid();

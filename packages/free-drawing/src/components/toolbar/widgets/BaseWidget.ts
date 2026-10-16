@@ -9,17 +9,36 @@ import type { DrawingShape } from '@/@types/drawer';
 /**
  * Options of a tool, shown while it is active (`BaseOverlay` and others)
  */
-export type ToolOverlay = { $overlayContainer: HTMLElement; show(shapes?: DrawingShape[]): void; hide(): void };
+export type ToolOverlay = {
+  /** Element of the overlay, in the `floating` region of the layout */
+  $overlayContainer: HTMLElement;
+  /** Show overlay: fields show options of given shapes (selection), else options of drawer */
+  show(shapes?: DrawingShape[]): void;
+  /** Hide overlay */
+  hide(): void;
+};
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { createButton, disableElement, enableElement, setLabel, setPressed } from '@/utils/dom';
 import { type TranslationKey, en } from '@/i18n/en';
 
+/**
+ * Base of every toolbar widget (tool): button with icon and shortcut, widget options (`title`, `shortcut` from
+ * `widgets` option) and lifecycle. `setActive(true)` deactivates the previous widget, then calls `initEvents`,
+ * `updateCursor`, shows `overlay` and calls `onActive`; deactivation calls `removeEvents`, hides `overlay` and
+ * calls `onDesactive`. Pointer actions are wrapped in `startAction` / `endAction`.
+ */
 export abstract class BaseWidget {
+  /** Container of the button in toolbar (or menu of its group), with a class from widget id */
   protected readonly $container: HTMLElement;
+  /** Icon of the button */
   private $icon: SVGElement;
+  /** Widget can not be activated, see `setDisabled` */
   private disabled: boolean = false;
+  /** Button activating the widget, pressed while it is active, named by the title of the tool */
   $button: HTMLButtonElement;
+  /** Id of the tool, key of the widget in toolbar (`drawer.getWidget(id)`) and namespace of its stage events */
   id: AvailableTools;
+  /** Key activating the tool, lower case (`shortcut` widget option, else default of the widget), none if undefined */
   shortcut: string | undefined;
   /** Options of the tool (color, width...), shown while widget is active (see `showOverlayOnActive`) */
   declare overlay?: ToolOverlay;
@@ -33,6 +52,7 @@ export abstract class BaseWidget {
   protected cursor: string = 'default';
 
   constructor(
+    /** Drawer of this widget */
     protected drawer: Drawer,
     id: AvailableTools,
     title: string,
@@ -88,6 +108,11 @@ export abstract class BaseWidget {
     this.setDisabled(!this.disabled);
   }
 
+  /**
+   * Disable or enable widget: a disabled widget can not be activated and its button is disabled (also its group
+   * when all its widgets are). Drawing tools are disabled in read only.
+   * @param disabled Disable widget
+   */
   setDisabled(disabled: boolean) {
     this.disabled = disabled;
 
@@ -100,6 +125,7 @@ export abstract class BaseWidget {
     this.drawer.toolbar?.update();
   }
 
+  /** Widget can not be activated (see `setDisabled`) */
   get isDisabled() {
     return this.disabled;
   }
@@ -147,6 +173,9 @@ export abstract class BaseWidget {
    */
   protected onConstrainChange?(constrain: boolean): void;
 
+  /**
+   * Set stage cursor to the `cursor` of widget: on activation, and to restore it after a temporary one (pan grabbing)
+   */
   public updateCursor(): void {
     this.drawer.$stageContainer.style.cursor = this.cursor;
   }
@@ -195,6 +224,10 @@ export abstract class BaseWidget {
     selectWidget.select(shapes);
   }
 
+  /**
+   * Button click activates widget. Shift pressed or released during a pointer action of the active widget calls
+   * `onConstrainChange`. Listened while widget exists, unlike `initEvents`.
+   */
   private _initEvents() {
     this.$button.addEventListener('click', () => {
       this.setActive(true);
@@ -210,6 +243,12 @@ export abstract class BaseWidget {
     this.drawer.$drawerContainer.addEventListener('keyup', onShift);
   }
 
+  /**
+   * Activate widget (nothing if disabled): previous widget deactivated, button pressed, then `initEvents`,
+   * `updateCursor`, `overlay` shown (if `showOverlayOnActive`), `onActive` and drawer focused.
+   * Deactivate it: pointer action ended, `removeEvents`, `overlay` hidden, `onDesactive`, button released.
+   * @param active Activate (true) or deactivate (false) widget
+   */
   setActive(active: boolean) {
     if (active) {
       if (this.disabled) return;

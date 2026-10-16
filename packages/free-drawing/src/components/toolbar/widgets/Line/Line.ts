@@ -5,6 +5,9 @@ import { Line } from 'konva/lib/shapes/Line';
 import type { Vector2d } from 'konva/lib/types';
 import { ShapeWidget, snapAngle } from '@/components/toolbar/widgets/ShapeWidget';
 
+/**
+ * Straight line tool: line from drag start to end, Shift snaps its angle to 45 degrees
+ */
 export class LineWidget extends ShapeWidget<Line> {
   constructor(drawer: Drawer) {
     super(drawer, 'line', 'Line', LineIcon, 'l');
@@ -13,10 +16,13 @@ export class LineWidget extends ShapeWidget<Line> {
   protected createShape(start: Vector2d) {
     return new Line({
       ...this.shapeStyle,
+      /** Start and end, both at drag start until pointer moves */
       points: [start.x, start.y, start.x, start.y],
-      // round cap for smoother lines
+      /** Round cap for smoother lines */
       lineCap: 'round',
+      /** Round joins */
       lineJoin: 'round',
+      /** Shape name of straight lines */
       name: shapeName.straightLine,
     });
   }

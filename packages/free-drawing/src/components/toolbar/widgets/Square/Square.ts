@@ -6,6 +6,10 @@ import type { Vector2d } from 'konva/lib/types';
 import { ShapeWidget, dragBox } from '@/components/toolbar/widgets/ShapeWidget';
 import { getCornerRadius } from '@/utils/stroke';
 
+/**
+ * Rectangle tool: rectangle of the dragged box, square with Shift, with background color and edges (sharp, round
+ * or radius)
+ */
 export class SquareWidget extends ShapeWidget<Rect> {
   protected hasFill = true;
   protected hasEdges = true;

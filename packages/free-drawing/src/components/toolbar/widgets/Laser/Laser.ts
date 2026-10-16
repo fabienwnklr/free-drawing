@@ -64,6 +64,9 @@ export class LaserWidget extends BaseWidget {
     this._stop();
   }
 
+  /**
+   * Stop laser (pointer up or tool changed): trail fades out, pointer action ended, collaborators notified
+   */
   private _stop() {
     this.#trail?.stop();
     this.#trail = null;

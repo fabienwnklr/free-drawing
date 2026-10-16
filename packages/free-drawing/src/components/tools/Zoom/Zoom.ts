@@ -5,11 +5,19 @@ import PlusIcon from '@/icons/plus.svg?raw';
 import ZoomReset from '@/icons/zoom-reset.svg?raw';
 import { createButton, setLabel } from '@/utils/dom';
 
+/**
+ * Zoom buttons of footer (`zoomWidget` option, hidden in zen mode): zoom out, zoom level resetting to 100%, zoom in
+ */
 export class Zoom {
+  /** Drawer whose stage is zoomed */
   drawer: Drawer;
+  /** Footer group of zoom buttons */
   $zoomContainer: HTMLDivElement;
+  /** Zoom out button */
   $btnMinus: HTMLButtonElement;
+  /** Button showing zoom level, resets zoom and view position */
   $btnReset: HTMLButtonElement;
+  /** Zoom in button */
   $btnPlus: HTMLButtonElement;
 
   constructor(drawer: Drawer) {
@@ -47,20 +55,32 @@ export class Zoom {
     });
   }
 
+  /**
+   * Zoom out by `scaling` option factor
+   */
   zoomMinus() {
     this.drawer.setZoomLevel(this.drawer.getZoomLevel() / this.drawer.options.scaling);
   }
 
+  /**
+   * Back to 100% and to initial view position
+   */
   resetZoom() {
     this.drawer.stage.scale({ x: 1, y: 1 });
     this.drawer.stage.position({ x: 0, y: 0 });
     this.update();
   }
 
+  /**
+   * Zoom in by `scaling` option factor
+   */
   zoomPlus() {
     this.drawer.setZoomLevel(this.drawer.getZoomLevel() * this.drawer.options.scaling);
   }
 
+  /**
+   * Show zoom level and update view (background, position), called after each zoom
+   */
   update() {
     this._updateResetButton();
     this.drawer._update();
@@ -76,6 +96,9 @@ export class Zoom {
     setLabel(this.$btnReset, this.drawer.t('zoom.reset', { percentage }));
   }
 
+  /**
+   * Zoom level as a whole percentage in drawer language (e.g. 110%)
+   */
   private _formatPercentage() {
     return Number(this.drawer.getZoomLevel()).toLocaleString(this.drawer.language, {
       style: 'percent',

@@ -1,12 +1,16 @@
 {
   "$schema": "https://typedoc-plugin-markdown.org/schema.json",
-  "entryPoints": ["src/Drawer.ts"],
+  "entryPoints": ["src"],
+  "entryPointStrategy": "expand",
+  "exclude": ["src/vite.env.d.ts"],
   "plugin": ["typedoc-plugin-markdown", "typedoc-vitepress-theme"],
   "out": "../../docs/api",
   "docsRoot": "../../docs",
   "readme": "none",
   "gitRevision": "master",
-  "excludePrivate": true,
-  "excludeProtected": true,
-  "excludeExternals": true
+  "excludePrivate": false,
+  "excludeProtected": false,
+  "excludeInternal": false,
+  "excludeExternals": true,
+  "sidebar": { "pretty": true }
 }

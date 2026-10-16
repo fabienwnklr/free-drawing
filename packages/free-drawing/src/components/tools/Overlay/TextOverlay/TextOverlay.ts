@@ -38,16 +38,24 @@ const textAligns: { icon: string; title: TranslationKey; value: TextStyle['align
  * Text tool (font family, size, style, align) with common tool (color, opacity)
  */
 export class TextOverlay extends BaseOverlay {
+  /** Font family section */
   $fontFamilyContainer!: HTMLDivElement;
+  /** Font family list, each option previewed in its font */
   $fontFamilySelect!: HTMLSelectElement;
 
+  /** Font size section */
   $fontSizeContainer!: HTMLDivElement;
+  /** Element of font size buttons (S, M, L, XL) */
   $fontSizeBtnContainer!: HTMLDivElement;
 
+  /** Font style section */
   $fontStyleContainer!: HTMLDivElement;
+  /** Element of bold, italic, underline and strikethrough toggle buttons */
   $fontStyleBtnContainer!: HTMLDivElement;
 
+  /** Text alignment section */
   $textAlignContainer!: HTMLDivElement;
+  /** Element of left, center and right alignment buttons */
   $textAlignBtnContainer!: HTMLDivElement;
 
   constructor(drawer: Drawer) {
@@ -68,6 +76,9 @@ export class TextOverlay extends BaseOverlay {
     );
   }
 
+  /**
+   * Font family section: list of fonts, focus back to drawer once chosen
+   */
   private _createFontFamilyField() {
     const { $container, $btnContainer } = this._createSection('text.fontFamily');
     this.$fontFamilyContainer = $container;
@@ -96,6 +107,9 @@ export class TextOverlay extends BaseOverlay {
     $btnContainer.append(this.$fontFamilySelect);
   }
 
+  /**
+   * Font size section: a button per size of `fontSizes`
+   */
   private _createFontSizeFields() {
     const { $container, $btnContainer } = this._createSection('text.fontSize');
     this.$fontSizeContainer = $container;
@@ -108,6 +122,9 @@ export class TextOverlay extends BaseOverlay {
     });
   }
 
+  /**
+   * Font style section: toggle buttons combined into `fontStyle` and `textDecoration`
+   */
   private _createFontStyleFields() {
     const { $container, $btnContainer } = this._createSection('text.style');
     this.$fontStyleContainer = $container;
@@ -141,6 +158,9 @@ export class TextOverlay extends BaseOverlay {
     return { textDecoration: textDecoration as TextStyle['textDecoration'] };
   }
 
+  /**
+   * Text alignment section: left, center and right buttons
+   */
   private _createTextAlignFields() {
     const { $container, $btnContainer } = this._createSection('text.align');
     this.$textAlignContainer = $container;
@@ -153,6 +173,10 @@ export class TextOverlay extends BaseOverlay {
     });
   }
 
+  /**
+   * Show panel, text fields with style of first selected text, else of `textStyle` option
+   * @param shape selected shapes, stacking order section shown only for them
+   */
   show(shape?: (Shape<ShapeConfig> | Group)[]) {
     super.show(shape);
 
@@ -161,6 +185,9 @@ export class TextOverlay extends BaseOverlay {
     this.updateTextFields(text ? this._getTextStyle(text) : this.drawer.options.textStyle);
   }
 
+  /**
+   * Text style of a text node, shown by text fields
+   */
   private _getTextStyle(text: Text): TextStyle {
     return {
       fontFamily: text.fontFamily(),

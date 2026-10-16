@@ -62,19 +62,29 @@ const typeIcons: Record<string, string> = {
  * group and ungroup selection
  */
 export class LayersPanel {
+  /** Drawer whose shapes are listed */
   drawer: Drawer;
+  /** Container of the header button, added after the settings menu (hidden in zen mode) */
   $buttonContainer: HTMLDivElement;
+  /** Header button showing / hiding the panel (Alt+L) */
   $button: HTMLButtonElement;
+  /** Panel element (`region` named by its title): header, list of rows, empty message, hint */
   $panel: HTMLDivElement;
+  /** Header button grouping selected shapes (Ctrl+G), enabled when they can be grouped */
   $groupButton: HTMLButtonElement;
+  /** Header button ungrouping selected groups (Ctrl+Shift+G), enabled when a group is selected */
   $ungroupButton: HTMLButtonElement;
+  /** Header button closing the panel, focus back on the panel button */
   $closeButton: HTMLButtonElement;
+  /** List of rows of shapes, top one first (arrow keys move between names) */
   $list: HTMLUListElement;
+  /** Message shown when the drawing has no shapes */
   $empty: HTMLParagraphElement;
   /** Shortcuts selecting several rows */
   $hint: HTMLParagraphElement;
   /** Rename or drag in progress: list updated after it */
   #busy = false;
+  /** Drawing changed while busy: list updated at the end */
   #outdated = false;
   /** Ids of expanded groups */
   #expanded = new Set<string>();
@@ -178,6 +188,9 @@ export class LayersPanel {
     this.drawer.on(drawerEvents.languageChange, () => this.update());
   }
 
+  /**
+   * Whether the panel is shown
+   */
   isVisible() {
     return this.$panel.classList.contains('show');
   }
@@ -193,11 +206,17 @@ export class LayersPanel {
     if (show) this.update();
   }
 
+  /**
+   * Hides the panel, focus back on its header button (close button, Escape)
+   */
   private _close() {
     this.toggle(false);
     this.$button.focus();
   }
 
+  /**
+   * Icon button of the panel header, named by its translated label, shortcut in tooltip (if any)
+   */
   private _createHeaderButton(icon: string, label: TranslationKey, shortcut: string, action: () => void) {
     const $btn = createButton('drawer-button', 'drawer-button-neutral');
 
@@ -338,6 +357,10 @@ export class LayersPanel {
     });
   }
 
+  /**
+   * Row of a shape, indented by `depth`: drag handle, expand button (groups), name with type icon (selects,
+   * renames), hide, lock and delete buttons
+   */
   private _createItem(shape: DrawingShape, depth: number) {
     const label = this.drawer.getShapeLabel(shape);
     const hidden = !shape.visible();
@@ -445,6 +468,10 @@ export class LayersPanel {
     return ([...this.$list.children] as HTMLElement[]).find(($item) => $item.dataset.id === shape.id());
   }
 
+  /**
+   * Keys of a row name: F2 renames, Shift + arrows select a range, Ctrl + Space adds or removes, Alt + arrows
+   * reorder, Right / Left expand / collapse a group (Left then goes to its group), Delete or Backspace deletes
+   */
   private _onNameKeydown(e: KeyboardEvent, shape: DrawingShape, $name: HTMLButtonElement) {
     const siblings = shape.getParent()?.children.length ?? 0;
     const parent = shape.getParent();

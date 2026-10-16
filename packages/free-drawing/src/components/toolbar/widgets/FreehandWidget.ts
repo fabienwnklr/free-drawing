@@ -8,7 +8,14 @@ import { crosshairCursor } from '@/constants';
 /**
  * Settings of perfect-freehand: effect of speed on width, softness of edges, stabilization
  */
-export type FreehandSettings = { thinning: number; smoothing: number; streamline: number };
+export type FreehandSettings = {
+  /** Effect of drawing speed on stroke width, from -1 to 1 (0 for constant width) */
+  thinning: number;
+  /** Softness of stroke edges, from 0 to 1 */
+  smoothing: number;
+  /** How much stroke is stabilized (follows pointer less closely), from 0 to 1 */
+  streamline: number;
+};
 
 /**
  * Points of a straight stroke, regularly spaced (same width all along)

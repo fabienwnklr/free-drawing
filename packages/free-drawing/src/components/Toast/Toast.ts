@@ -7,8 +7,14 @@ import WarningIcon from '@/icons/warning.svg?raw';
 import ErrorIcon from '@/icons/error.svg?raw';
 import { drawerEvents } from '@/constants';
 
+/**
+ * Short message shown at the top of the drawer (stacked with other toasts), with an icon of its type.
+ * Announced by screen readers (`alert` for problems, else `status`), created for one message by `drawer.toast`.
+ */
 export class Toast extends MicroEvent {
+  /** Element of the toast: icon and message */
   $toastContainer: HTMLDivElement;
+  /** Time in ms before hiding the toast once shown (0: stays until hidden) */
   timeout: number = 5000;
 
   constructor(
@@ -55,6 +61,9 @@ export class Toast extends MicroEvent {
     $toasts.append(this.$toastContainer);
   }
 
+  /**
+   * Shows the toast, hidden after `timeout` (then `drawer.toast.hide` is triggered)
+   */
   show() {
     this.$toastContainer.classList.add('show');
 
@@ -67,12 +76,18 @@ export class Toast extends MicroEvent {
     }
   }
 
+  /**
+   * Hides the toast with an animation, then removes it from the page
+   */
   hide() {
     // removed from page at the end of hide animation, a new toast is created for each message
     this.$toastContainer.addEventListener('animationend', () => this.destroy(), { once: true });
     this.$toastContainer.classList.add('hide');
   }
 
+  /**
+   * Removes the toast from the page at once
+   */
   destroy() {
     this.$toastContainer.remove();
   }

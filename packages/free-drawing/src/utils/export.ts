@@ -15,8 +15,14 @@ import { getShapes } from '@/utils/hit';
 import { frameParts } from '@/utils/frame';
 import type { DrawingShape } from '@/@types/drawer';
 
+/**
+ * Format of exported images
+ */
 export type ImageFormat = 'png' | 'svg' | 'pdf';
 
+/**
+ * Options of exported images, same rendering in every format
+ */
 export type ImageOptions = {
   /** Background color, transparent when undefined */
   background?: string;
@@ -26,7 +32,19 @@ export type ImageOptions = {
   scale?: number;
 };
 
-export type Box = { x: number; y: number; width: number; height: number };
+/**
+ * Exported area, in coordinates of the draw layer
+ */
+export type Box = {
+  /** Left of area */
+  x: number;
+  /** Top of area */
+  y: number;
+  /** Width of area, width of image at scale 1 */
+  width: number;
+  /** Height of area, height of image at scale 1 */
+  height: number;
+};
 
 // space around shapes
 const padding = 16;
@@ -79,15 +97,17 @@ function colorOf(color: unknown, dark?: boolean): string | undefined {
 }
 
 /**
- * Shapes rendered on a canvas (png, pdf, clipboard), same rendering as drawer
- */
-/**
  * Transform of a node in its layer: shapes of groups exported alone are placed as drawn
  */
 function layerTransform(node: Node) {
   return node.getAbsoluteTransform(node.getLayer() ?? undefined);
 }
 
+/**
+ * Shapes rendered on a canvas (png, pdf, clipboard), same rendering as drawer: clones of shapes in a stage out of
+ * page, titles of frames hidden
+ * @param box Exported area (see `getExportBox`)
+ */
 export function renderCanvas(shapes: DrawingShape[], box: Box, options: ImageOptions = {}): HTMLCanvasElement {
   const { background, dark, scale = 2 } = options;
   // not in page

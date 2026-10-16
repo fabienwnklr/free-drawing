@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.9.3](https://github.com/fabienwnklr/free-drawing/compare/v7.9.2...v7.9.3) (2026-10-16)
+
+
+### Bug Fixes
+
+* **help:** "Documentation" link opens the documentation site (its address no longer existed)
+
 ## [7.9.2](https://github.com/fabienwnklr/free-drawing/compare/v7.9.1...v7.9.2) (2026-10-16)
 
 

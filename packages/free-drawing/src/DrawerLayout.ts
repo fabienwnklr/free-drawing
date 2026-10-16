@@ -11,6 +11,9 @@ import { debounce } from '@/utils/perf';
  */
 export type LayoutRegion = 'header' | 'footerStart' | 'footer' | 'floating';
 
+/**
+ * Options of an element added to a region of the interface (`layout.add`)
+ */
 export type LayoutItemOptions = {
   /** Hidden in zen mode */
   hideInZen?: boolean;
@@ -40,6 +43,10 @@ export class DrawerLayout {
   /** Drawer created: floating elements after the footer */
   #ready: boolean = false;
 
+  /**
+   * Container put in the element of the drawer (its content replaced) with header and footer regions
+   * @param drawer Drawer of this layout (element, size, texts), resized with the window when it has its size
+   */
   constructor(private readonly drawer: Drawer) {
     this.$container = document.createElement('div');
     this.$container.classList.add('drawer-container');

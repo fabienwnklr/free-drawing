@@ -20,12 +20,18 @@ export const anchorAttrs = ['startAnchor', 'endAnchor'] as const;
  */
 export type Anchor = 'top' | 'right' | 'bottom' | 'left';
 
+/** Sides of a shape an arrow end can be fixed to, clockwise from top */
 export const anchors: Anchor[] = ['top', 'right', 'bottom', 'left'];
 
 /**
  * Arrow end linked to a shape: at a side, or on its outline aiming at the other end
  */
-export type BoundEnd = { shape: Node; anchor?: Anchor };
+export type BoundEnd = {
+  /** Shape the end is linked to */
+  shape: Node;
+  /** Side whose middle the end is fixed to, else end on outline */
+  anchor?: Anchor;
+};
 
 /** Space between arrow end and shape outline */
 const gap = 6;
@@ -192,7 +198,14 @@ export function getBoundEnds(layer: Container, start: BoundEnd | Vector2d, end: 
   const startPoint = pointOf(start, end);
   const endPoint = pointOf(end, start);
 
-  return startPoint && endPoint ? { start: startPoint, end: endPoint } : null;
+  return startPoint && endPoint
+    ? {
+        /** Start of arrow */
+        start: startPoint,
+        /** End of arrow */
+        end: endPoint,
+      }
+    : null;
 }
 
 const round = (n: number) => Math.round(n * 100) / 100;

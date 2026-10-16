@@ -19,17 +19,25 @@ const themes: { value: Theme; label: TranslationKey }[] = [
  * (and by the app of a logged in user)
  */
 export class PreferencesModal extends Modal {
+  /** Radio buttons of the theme: light, dark, system */
   $themes: HTMLInputElement[];
+  /** Language select: automatic (browser language), then available languages */
   $language: HTMLSelectElement;
+  /** Switch of zen mode (most of the interface hidden) */
   $zen: HTMLInputElement;
+  /** Switch of the grid, unchecks snapping when checked */
   $grid: HTMLInputElement;
+  /** Switch of snapping to shapes, unchecks the grid when checked */
   $snapping: HTMLInputElement;
+  /** Switch of auto save (else changes saved from the menu) */
   $autoSave: HTMLInputElement;
   /** Keep tool after drawing, with selection widget only */
   $keepTool: HTMLInputElement | null = null;
   /** Name in collaboration sessions, with `collaboration` option */
   $name: HTMLInputElement | null = null;
+  /** Cancel button: hides the dialog, fields not applied */
   $cancelButton: HTMLButtonElement;
+  /** Save button: applies fields and hides the dialog */
   $saveButton: HTMLButtonElement;
   /** Fields changed since shown: not replaced by preferences changed elsewhere */
   #changed = false;
@@ -118,6 +126,9 @@ export class PreferencesModal extends Modal {
     });
   }
 
+  /**
+   * Shows the dialog with fields filled from current preferences
+   */
   show() {
     this.#changed = false;
     this.update();

@@ -14,6 +14,10 @@ import { Trail } from '@/components/toolbar/widgets/Eraser/Trail';
  */
 const erasingColor = '#e03131';
 
+/**
+ * Eraser: a click erases the shape under pointer, a drag erases every shape it crosses on pointer up (shown as red
+ * outlines meanwhile), with a trail behind pointer. Shapes of groups erase their whole group.
+ */
 export class EraserWidget extends BaseWidget {
   /** Shapes erased on pointer up, with their outline shown meanwhile */
   #toRemoved = new Map<DrawingShape, DrawingShape>();
@@ -96,6 +100,9 @@ export class EraserWidget extends BaseWidget {
     return node && node.getLayer() === this.drawer.drawLayer ? getDrawingShape(node, this.drawer.drawLayer) : undefined;
   }
 
+  /**
+   * Add pointer position (drawing coordinates) to the trail
+   */
   private _addTrailPoint() {
     const { x, y } = this.drawer._getRelativePointerPos();
 

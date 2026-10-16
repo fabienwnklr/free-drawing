@@ -7,13 +7,24 @@ import { createButton, uniqueId } from '@/utils/dom';
 
 import '@/components/Modal/modal-confirm.scss';
 
+/**
+ * Confirmation dialog (`alertdialog` without header): a message, Cancel (focused first) and Confirm buttons.
+ * By default Cancel hides it and Confirm clears the drawing (see {@link confirmModalDefaultOpts}).
+ */
 export class ConfirmModal extends Modal {
+  /** Drawer the dialog belongs to */
   drawer: Drawer;
+  /** Message asking confirmation, names the dialog */
   $message: HTMLParagraphElement;
+  /** Cancel button, runs {@link ConfirmModal.onCancel} */
   $cancelBtn: HTMLButtonElement;
+  /** Confirm button (danger style), runs {@link ConfirmModal.onConfirm} */
   $confirmBtn: HTMLButtonElement;
+  /** Action of the Cancel button, from options (default: hides the dialog) */
   onCancel: (modal: ConfirmModal) => void;
+  /** Action of the Confirm button, from options (default: clears the drawing and hides the dialog) */
   onConfirm: (modal: ConfirmModal) => void;
+  /** Options of the confirmation (message, button labels, actions), merged with default ones */
   _options: ConfirmModalOptions;
   #messageId = uniqueId('confirm-message');
 
@@ -55,6 +66,9 @@ export class ConfirmModal extends Modal {
     this.$message.textContent = message;
   }
 
+  /**
+   * Buttons run their action with the dialog (actions read at click: they can be replaced after creation)
+   */
   private _initEvents() {
     this.$cancelBtn.addEventListener('click', () => {
       this.onCancel(this);

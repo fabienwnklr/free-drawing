@@ -21,29 +21,58 @@ import type { DrawingShape } from '@/@types/drawer';
  * `order`: ids of all shapes from bottom to top when stacking order changed,
  * `live`: preview of shapes being drawn or moved (final change follows)
  */
-export type DrawingChange = { upsert: string[]; remove: string[]; order?: string[]; live?: boolean };
+export type DrawingChange = {
+  /** Shapes added or updated: konva JSON of top nodes (groups with their shapes) */
+  upsert: string[];
+  /** Ids of removed shapes */
+  remove: string[];
+  /** Ids of all shapes from bottom to top, only when stacking order changed */
+  order?: string[];
+  /** Preview of shapes being drawn or moved: applied without history, the final change follows */
+  live?: boolean;
+};
+
+/** Pointer of another user: position in drawing (null out of drawer), laser used */
+export type RemotePointer = {
+  /** Id of the user, identifies their cursor and laser trail */
+  id: string;
+  /** Name shown in their cursor (anonymous when empty) */
+  name?: string;
+  /** Position in drawing, null when the pointer left the drawer (cursor hidden) */
+  position:
+    | (Vector2d & {
+        /** Laser pressed: trail of their color follows the pointer */
+        laser?: boolean;
+      })
+    | null;
+};
 
 /**
- * Pointer of another user, position in drawing (null out of drawer)
+ * Part of a socket.io client socket used by collaboration (connected by the drawer, replaced by fakes in tests)
  */
-/** Pointer of another user: position in drawing (null out of drawer), laser used */
-export type RemotePointer = { id: string; name?: string; position: (Vector2d & { laser?: boolean }) | null };
-
 export type CollaborationSocket = Pick<Socket, 'on' | 'once' | 'emit' | 'disconnect' | 'volatile'>;
 
 /**
  * User of a room (sent by server): owner (created the room) gives or removes the right to draw
  */
 export type CollaborationMember = {
+  /** Id of the user (account id of a logged in user) */
   id: string;
+  /** Name shown to other users */
   name: string;
+  /** Created the room: gives or removes the right to draw */
   owner: boolean;
+  /** Can draw (right given by the owner), else views only */
   canEdit: boolean;
   /** Name of user who shared the link used to join */
   invitedBy?: string;
 };
 
+/**
+ * Session of a {@link Collaboration}: room to join and identity of this user
+ */
 export type CollaborationOptions = {
+  /** Id of the room (`#room=` of links) */
   room: string;
   /** Name shown to other users */
   name: string;
@@ -65,7 +94,9 @@ const cursorColors = ['#e03131', '#2f9e44', '#1971c2', '#f08c00', '#9c36b5', '#0
  * of the room, through a socket.io server (see apps/server), so concurrent drawings are merged
  */
 export class Collaboration {
+  /** Socket connected to the collaboration server, disconnected by `stop` */
   readonly socket: CollaborationSocket;
+  /** Id of the room */
   readonly room: string;
   /** Name shown to other users */
   name: string;
@@ -75,8 +106,11 @@ export class Collaboration {
   members: CollaborationMember[] = [];
   /** Id of this user: given by drawer, then by server when it joins (e.g. id of logged in account) */
   userId: string;
+  /** Secret of the owner of the room, sent on join: the server makes this user its owner */
   readonly ownerKey?: string;
+  /** Id of the user who shared the link used to join, sent on join (the server gives their name to the owner) */
   readonly invitedBy?: string;
+  /** Drawer whose drawing is shared */
   private readonly drawer: Drawer;
   /** Shapes as other clients know them, by id, in stacking order */
   #synced = new Map<string, string>();
@@ -84,6 +118,7 @@ export class Collaboration {
   #pending: DrawingChange[] = [];
   /** Shapes being drawn or moved, sent at next live message */
   #live = new Set<DrawingShape>();
+  /** Last pointer position of this user in drawing (null out of drawer), sent at next pointer message */
   #pointer: (Vector2d & { laser?: boolean }) | null = null;
   /** Laser used by this user, see `setLaser` */
   #laser = false;
@@ -91,6 +126,7 @@ export class Collaboration {
   #lasers = new Map<string, Trail>();
   /** Messages waiting for live interval */
   #timers: Record<string, ReturnType<typeof setTimeout> | undefined> = {};
+  /** Time of last message of each kind (pointer, live), in ms */
   #lastSent: Record<string, number> = {};
   /** Cursors of other users, by user id */
   #cursors = new Map<string, Group>();
@@ -161,6 +197,9 @@ export class Collaboration {
     }, wait);
   }
 
+  /**
+   * Pointer position in drawing (null: out of drawer) and laser state sent to other users, at live interval at most
+   */
   private _sendPointer(position: Vector2d | null) {
     this.#pointer = position && {
       x: Math.round(position.x),
@@ -247,6 +286,9 @@ export class Collaboration {
     return cursorColors[[...id].reduce((sum, char) => sum + char.charCodeAt(0), 0) % cursorColors.length];
   }
 
+  /**
+   * Cursor of another user in their color: arrow pointing to their position and label of their name
+   */
   private _createCursor(id: string) {
     const color = this._color(id);
     const cursor = new Group({ name: 'collaborator-cursor', listening: false });
@@ -264,7 +306,9 @@ export class Collaboration {
     return cursor;
   }
 
-  // same size on screen whatever zoom
+  /**
+   * Cursor scaled by inverse of zoom: same size on screen whatever zoom
+   */
   private _scaleCursor(cursor: Group) {
     const scale = 1 / this.drawer.getZoomLevel();
 
@@ -377,6 +421,10 @@ export class Collaboration {
     return pending.length > 0;
   }
 
+  /**
+   * Apply a change of another client: shapes removed, updated (groups replaced, selection kept) or added, stacking
+   * order applied. Shapes are recorded as synced, so the change is not sent back
+   */
   private _apply({ upsert, remove, order }: DrawingChange) {
     const shapes = new Map(this.drawer.getDrawingShapes().map((shape) => [shape.id(), shape]));
 

@@ -3,6 +3,9 @@ import { Drawer } from '@/Drawer';
 import { shapeName } from '@/constants';
 import { PathShapeWidget } from '@/components/toolbar/widgets/PathShapeWidget';
 
+/**
+ * Heart tool: heart in the dragged box
+ */
 export class HeartWidget extends PathShapeWidget {
   protected shapeName = shapeName.heart;
   // from bottom tip: left lobe, dip, right lobe

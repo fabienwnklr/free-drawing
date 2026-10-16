@@ -7,7 +7,14 @@ import { historyLimit } from '@/constants';
 /**
  * Serialized drawing shape (konva `toObject` format), any shape type can be restored, groups with their shapes
  */
-export type ShapeState = { attrs: Record<string, unknown>; className: string; children?: ShapeState[] };
+export type ShapeState = {
+  /** Konva attributes of the node (position, colors, name, id, label...) */
+  attrs: Record<string, unknown>;
+  /** Konva class name used by `Node.create` (Rect, Line, Group, Frame...) */
+  className: string;
+  /** States of the shapes of a group */
+  children?: ShapeState[];
+};
 
 /**
  * State of a drawing shape or group (history, collaboration, files), without `draggable` which depends on active tool
@@ -29,18 +36,27 @@ export function serializeShape(shape: DrawingShape): string {
   return JSON.stringify(getShapeState(shape));
 }
 
+/**
+ * Undo / redo history of the drawing: states of drawing shapes, at most `historyLimit`
+ */
 export class History {
   /**
    * Drawing states, JSON of shapes array (string is lighter than objects and compared without serializing again)
    */
   appHistory: string[] = ['[]'];
+  /** Index of current state in `appHistory`: states before it are undone, states after it redone */
   appHistoryStep: number = 0;
+  /** Drawer whose shapes are saved and restored */
   drawer: Drawer;
 
   constructor(drawer: Drawer) {
     this.drawer = drawer;
   }
 
+  /**
+   * Add current drawing as a new state (on each drawer change), skipped when identical to current state
+   * @param fromSaved drawing loaded from a save: one state per shape added, so that each one can be undone
+   */
   saveState(fromSaved = false) {
     const shapes = this.drawer.getDrawingShapes().map(serializeShape);
 
@@ -83,10 +99,16 @@ export class History {
     this.appHistoryStep = 0;
   }
 
+  /**
+   * A state is before the current one
+   */
   canUndo() {
     return !!this.appHistory[this.appHistoryStep - 1];
   }
 
+  /**
+   * Restore previous state, nothing when there is none
+   */
   undo() {
     if (!this.canUndo()) return;
 
@@ -94,10 +116,16 @@ export class History {
     this._restoreState(this.appHistory[this.appHistoryStep]);
   }
 
+  /**
+   * A state undone is after the current one
+   */
   canRedo() {
     return !!this.appHistory[this.appHistoryStep + 1];
   }
 
+  /**
+   * Restore next state, nothing when there is none
+   */
   redo() {
     if (!this.canRedo()) return;
 

@@ -53,6 +53,9 @@ export const groupIcons: Record<string, string> = {
   frame: FrameIcon,
 };
 
+/**
+ * Options of a `GroupWidget` created by code (the `widgetGroups` drawer option gives names of widgets instead)
+ */
 export type GroupWidgetOptions = {
   /** Widgets of the group, in this order (created by the app or the library, not added to toolbar yet) */
   widgets: BaseWidget[];
@@ -108,10 +111,15 @@ export function getGroupIcon(icon: string = 'shapes'): SVGElement {
  * added with it by `toolbar.addGroup`.
  */
 export class GroupWidget {
+  /** Drawer of this group */
   readonly drawer: Drawer;
+  /** Widgets of the group, in menu order */
   readonly widgets: BaseWidget[];
+  /** Container of group button and menu in toolbar */
   readonly $container: HTMLDivElement;
+  /** Button showing / hiding the menu (disclosure), highlighted while a widget of group is active */
   readonly $button: HTMLButtonElement;
+  /** Menu of widget buttons (role `group`), above group button in fixed position, hidden until shown */
   readonly $menu: HTMLDivElement;
 
   constructor(drawer: Drawer, { widgets, icon, title }: GroupWidgetOptions) {
@@ -155,6 +163,9 @@ export class GroupWidget {
     this.update();
   }
 
+  /**
+   * Menu of widgets is shown
+   */
   isShown() {
     return !this.$menu.hidden;
   }
@@ -172,6 +183,9 @@ export class GroupWidget {
     focused?.$button.focus();
   }
 
+  /**
+   * Hide widgets (widget chosen, Escape, focus or pointer elsewhere, footer scrolled, window resized)
+   */
   hide() {
     this.$menu.hidden = true;
     this.$button.setAttribute('aria-expanded', 'false');
@@ -211,6 +225,10 @@ export class GroupWidget {
     this.$menu.style.top = `${button.top - gap - origin.height - origin.top}px`;
   }
 
+  /**
+   * Button toggles widgets, arrow keys move between them, Escape closes them (focus back on button), closed when
+   * a widget is chosen, focus or pointer goes elsewhere, footer scrolls or window is resized
+   */
   private _initEvents() {
     this.$button.addEventListener('click', () => (this.isShown() ? this.hide() : this.show()));
     // widget chosen (activated by its button)

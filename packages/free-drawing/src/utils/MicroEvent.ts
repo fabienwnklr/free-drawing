@@ -1,6 +1,9 @@
 import { deprecatedEvents } from '@/constants';
 
-type TCallback = (...args: any) => any;
+/**
+ * Event listener, called with the arguments given to `trigger` (`this`: the emitter)
+ */
+export type TCallback = (...args: any) => any;
 
 const warned = new Set<string>();
 
@@ -29,13 +32,23 @@ function forEvents(events: string, callback: (event: string) => any) {
   });
 }
 
+/**
+ * Event emitter base class (`Drawer`, `Dropdown`, `Toast`, `Settings`): `on` / `off` / `trigger` listeners by event
+ * name, names of previous versions mapped to current ones with a warning
+ */
 export default class MicroEvent {
+  /** Listeners by event name, in order of registration */
   public _events: { [key: string]: TCallback[] } = {};
 
   constructor() {
     this._events = {};
   }
 
+  /**
+   * Listen to events
+   * @param events event name, or several separated by spaces
+   * @param fct listener, called on each trigger
+   */
   on(events: string, fct: TCallback) {
     forEvents(events, (event) => {
       const event_array = this._events[event] || [];
@@ -44,6 +57,11 @@ export default class MicroEvent {
     });
   }
 
+  /**
+   * Remove a listener of events: without listener all listeners of these events, without arguments all listeners
+   * @param events event name, or several separated by spaces
+   * @param fct listener given to `on`
+   */
   off(events: string, fct: TCallback) {
     const n = arguments.length;
     if (n === 0) {
@@ -67,6 +85,11 @@ export default class MicroEvent {
     });
   }
 
+  /**
+   * Call listeners of events, in order of registration
+   * @param events event name, or several separated by spaces
+   * @param args arguments given to listeners
+   */
   trigger(events: string, ...args: any) {
     forEvents(events, (event) => {
       const event_array = this._events[event];

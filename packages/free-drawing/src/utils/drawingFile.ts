@@ -10,9 +10,13 @@ export const drawingFileExtension = '.freedrawing';
  * Content of a drawing file or link: background color and drawing shapes (konva `toObject` format)
  */
 export type DrawingFile = {
+  /** Identifies drawing files */
   type: 'free-drawing';
+  /** Version of the file format */
   version: 1;
+  /** Background color of the drawing */
   background: ColorLike;
+  /** Drawing shapes (top nodes, with children of groups and frames), bottom first */
   shapes: ShapeState[];
 };
 

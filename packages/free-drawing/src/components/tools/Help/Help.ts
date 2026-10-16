@@ -8,10 +8,25 @@ import { createButton, setLabel } from '@/utils/dom';
 import type { Translate } from '@/i18n/I18n';
 
 /** Shortcut: action, keys (several: alternatives or second action), text after keys */
-type Shortcut = { label: string; keys: string[]; or?: boolean; after?: string };
+export type Shortcut = {
+  /** Translated action */
+  label: string;
+  /** Keys shown, each in a `kbd` element (alternatives with `or`, else a second action such as ungroup) */
+  keys: string[];
+  /** Keys are alternatives, separated by translated "or" */
+  or?: boolean;
+  /** Translated text after keys, e.g. while drawing */
+  after?: string;
+};
 
+/**
+ * Help dialog, opened by its footer button: links to documentation and issues, shortcuts of tools, editor and view
+ * in current language (tools from toolbar widgets and their shortcut options)
+ */
 export class Help extends Modal {
+  /** Footer button opening the dialog */
   $button: HTMLButtonElement;
+  /** Footer element of the button, hidden in zen mode */
   $helpContainer: HTMLDivElement;
   constructor(drawer: Drawer) {
     super(drawer, { title: drawer.t('help.title') });
@@ -94,8 +109,8 @@ export class Help extends Modal {
 
     this.$modalBody.innerHTML = /*html*/ `
     <div class="drawer-modal-help-links">
-      <a class="drawer-link" href="https://free-drawing-docs.fabienwinkler.fr/" target="_blank"></a>
-      <a class="drawer-link" href="https://github.com/fabienwnklr/free-drawing/issues/new" target="_blank"></a>
+      <a class="drawer-link" href="https://free-drawing-docs.netlify.app/" target="_blank" rel="noopener"></a>
+      <a class="drawer-link" href="https://github.com/fabienwnklr/free-drawing/issues/new" target="_blank" rel="noopener"></a>
     </div>
     <h3></h3>
     <div class="drawer-modal-help-grid">

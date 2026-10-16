@@ -41,9 +41,13 @@ export function dragBox(start: Vector2d, end: Vector2d, square: boolean) {
   }
 
   return {
+    /** Left of the box */
     x: Math.min(start.x, start.x + width),
+    /** Top of the box */
     y: Math.min(start.y, start.y + height),
+    /** Width of the box, never negative */
     width: Math.abs(width),
+    /** Height of the box, never negative */
     height: Math.abs(height),
   };
 }
@@ -102,14 +106,19 @@ export abstract class ShapeWidget<T extends DrawingShape> extends BaseWidget {
     const { strokeColor, fillColor, strokeWidth, strokeStyle, opacity } = this.drawer.options;
 
     return {
+      /** Stroke color (`strokeColor` option) */
       stroke: strokeColor,
+      /** Background color (`fillColor` option) of shapes having one (`hasFill`), none if transparent */
       fill: this.hasFill ? toFill(fillColor) : undefined,
+      /** Stroke width (`strokeWidth` option) */
       strokeWidth,
+      /** Dash of `strokeStyle` option for this stroke width, undefined for solid */
       dash: getDash(strokeStyle, strokeWidth),
-      // dashes and dots ends
+      /** Round ends of lines, dashes and dots */
       lineCap: 'round' as const,
+      /** Opacity (`opacity` option) */
       opacity,
-      // easier to select / erase than the stroke only
+      /** Width of the hit region, 20 at least: easier to select / erase than the stroke only */
       hitStrokeWidth: Math.max(20, strokeWidth),
     };
   }

@@ -7,17 +7,43 @@ import { de } from '@/i18n/de';
  * Languages of interface, with their name in their language (language choice)
  */
 export const languages = {
-  en: { name: 'English', translations: en },
-  fr: { name: 'Français', translations: fr },
-  es: { name: 'Español', translations: es },
-  de: { name: 'Deutsch', translations: de },
+  /** English, reference language: its texts replace missing ones of other languages */
+  en: {
+    /** Name of language in itself */
+    name: 'English',
+    /** Texts of interface */
+    translations: en,
+  },
+  /** French */
+  fr: {
+    /** Name of language in itself */
+    name: 'Français',
+    /** Texts of interface */
+    translations: fr,
+  },
+  /** Spanish */
+  es: {
+    /** Name of language in itself */
+    name: 'Español',
+    /** Texts of interface */
+    translations: es,
+  },
+  /** German */
+  de: {
+    /** Name of language in itself */
+    name: 'Deutsch',
+    /** Texts of interface */
+    translations: de,
+  },
 };
 
+/** Code of a language of interface (`en`, `fr`, `es`, `de`) */
 export type Language = keyof typeof languages;
 
 /** Values of `{name}` placeholders of a text */
 export type TranslationParams = Record<string, string | number>;
 
+/** Function giving the text of a key in current language, placeholders replaced by params (`drawer.t`) */
 export type Translate = (key: TranslationKey, params?: TranslationParams) => string;
 
 /** Texts of languages replacing default ones (e.g. `{ fr: { 'menu.open': 'Ouvrir un dessin' } }`) */
@@ -37,10 +63,17 @@ export function getLanguage(locale: string | undefined = globalThis.navigator?.l
  * Texts of interface in a language, updated when it changes
  */
 export class I18n {
+  /** Current language, see `setLanguage` */
   language: Language;
+  /** Texts replacing default ones (`translations` option) */
   #custom: CustomTranslations;
+  /** Functions given to `translate`, run again when language changes */
   #updates: ((t: Translate) => void)[] = [];
 
+  /**
+   * @param language Language of texts
+   * @param custom Texts replacing default ones, per language
+   */
   constructor(language: Language, custom: CustomTranslations = {}) {
     this.language = language;
     this.#custom = custom;

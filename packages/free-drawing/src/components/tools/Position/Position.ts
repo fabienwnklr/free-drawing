@@ -8,9 +8,13 @@ import { createButton, setLabel } from '@/utils/dom';
  * Position of view (x / y), with a button back to origin: not to get lost when moving
  */
 export class Position {
+  /** Drawer whose view position is shown */
   drawer: Drawer;
+  /** Header group of coordinates and recenter button, hidden in zen mode */
   $positionContainer: HTMLDivElement;
+  /** Names and values of x and y axes */
   $coordinates: HTMLSpanElement;
+  /** Button moving view back to origin */
   $btnRecenter: HTMLButtonElement;
   #$x: HTMLSpanElement;
   #$y: HTMLSpanElement;

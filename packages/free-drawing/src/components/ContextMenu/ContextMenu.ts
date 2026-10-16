@@ -21,11 +21,17 @@ type Item = { $item: HTMLButtonElement; visible: () => boolean; run: () => void 
  * drawing (paste, select all, copy as image, snapping, grid), with their shortcuts
  */
 export class ContextMenu {
+  /** Drawer the menu acts on */
   drawer: Drawer;
+  /** Menu element (`role="menu"`), placed at the pointer or in the drawer center */
   $menu!: HTMLDivElement;
+  /** Sections of items of the menu */
   $list!: HTMLDivElement;
+  /** Item pasting text of the clipboard at the place of the right click (needs clipboard permission) */
   $pasteBtn!: HTMLButtonElement;
+  /** Checkbox item of snapping (Alt+S), checked by the selection widget when snapping changes */
   $snappingBtn!: HTMLButtonElement;
+  /** Checkbox item of the grid (Alt+G), checked by the drawer when the grid is shown or hidden */
   $gridBtn!: HTMLButtonElement;
   /** Groups of items, separated when several are shown */
   #sections: { $section: HTMLElement; items: Item[] }[] = [];
@@ -38,10 +44,16 @@ export class ContextMenu {
     this._initEvents();
   }
 
+  /**
+   * Selection widget, undefined when it is not in the toolbar
+   */
   private get selectWidget() {
     return this.drawer.getWidget<SelectWidget>('selection');
   }
 
+  /**
+   * Creates the menu and its sections of items (action, condition to be shown), each item hides the menu then runs
+   */
   private _init() {
     const { drawer } = this;
     const edit = () => !drawer.readOnly;
@@ -223,6 +235,9 @@ export class ContextMenu {
     return Array.from(this.$list.querySelectorAll<HTMLElement>('[role^="menuitem"]:not([hidden])'));
   }
 
+  /**
+   * Right click on stage or context menu key on drawer shows the menu, a click anywhere, Escape or Tab hide it
+   */
   private _initEvents() {
     window.addEventListener('click', () => this.hide());
     // no native menu on this one
@@ -304,6 +319,10 @@ export class ContextMenu {
     this.$menu.style.top = Math.max(margin, Math.min(top, clientHeight - this.$menu.offsetHeight - margin)) + 'px';
   }
 
+  /**
+   * Adds text of the clipboard as a text node at the place of the right click (menu opened with keyboard: pointer
+   * position, center of view when out of canvas), warns when the clipboard cannot be read
+   */
   private async _paste() {
     try {
       // needs clipboard permission (asked by browser), Ctrl / Cmd + V does not
@@ -318,6 +337,9 @@ export class ContextMenu {
     }
   }
 
+  /**
+   * Selects all shapes with the selection tool (activated if needed)
+   */
   private _selectAll() {
     const { selectWidget } = this;
 
@@ -356,6 +378,9 @@ export class ContextMenu {
     if (hadFocus) this.drawer.focus();
   }
 
+  /**
+   * Whether the menu is shown
+   */
   isVisible() {
     return this.$menu.classList.contains('show');
   }

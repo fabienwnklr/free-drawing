@@ -1,12 +1,16 @@
+/**
+ * Function returned by `throttle`: same parameters and result as the throttled function
+ * @typeParam T throttled function
+ */
 export declare type ThrottledFunction<T extends (...args: any) => any> = (...args: Parameters<T>) => ReturnType<T>;
 
 /**
- * permet de déclencher l'appel à une fonction après un certain délai (un peu comme la fonction setTimeout())
- * mais permet en plus de réinitialiser le timer si on demande une nouvelle exécution dans un intervalle de temps plus court que le délai
+ * Function calling `callback` once calls stop for `delay` ms: each call within the delay restarts the timer
  *
- * @param {Function} callback Fonction à appeler
- * @param {Number} delay Timeout avant éxécution de la méthode
- * @returns {Function}
+ * @typeParam T debounced function
+ * @param {Function} callback function to call, with the arguments of the last call
+ * @param {Number} delay time without call before calling `callback` (ms)
+ * @returns {Function} debounced function
  *
  * @example
  * // Define the function that updates the layout
@@ -35,13 +39,13 @@ export function debounce<T extends (...args: any[]) => any>(
 }
 
 /**
- * La fonction throttle permet d'éviter des appels consécutifs en introduisant un délai.
- * Elle servira surtout lorsque l'on écoutera des évènements pouvant se produire un très
- * grand nombre de fois dans un intervalle de temps très court (scroll, resize, mouseMove...).
+ * Function calling `func` at most once every `limit` ms, for events fired very often (scroll, resize, mouse move...):
+ * calls in between are ignored and return the last result
  *
- * @param {Function} fn Fonction à appeler
- * @param {Number} wait Délai avant de relancer la fonction
- * @returns {Function}
+ * @typeParam T throttled function
+ * @param {Function} func function to call
+ * @param {Number} limit time before `func` can be called again (ms)
+ * @returns {Function} throttled function
  *
  * @example
  * // Define the function that updates the layout
@@ -73,9 +77,10 @@ export function throttle<T extends (...args: any) => any>(func: T, limit: number
 }
 
 /**
- * Measure time executing function
- * @param func
- * @param label
+ * Measure time executing function, logged in console
+ * @typeParam T measured function
+ * @param func function called without arguments
+ * @param label label of the time in console
  */
 export function measureTime<T extends (...args: any[]) => any>(func: T, label: string) {
   if (typeof func !== 'function') {

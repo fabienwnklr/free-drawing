@@ -3,11 +3,20 @@ import { createButton, uniqueId } from '@/utils/dom';
 import '@/components/Dropdown/dropdown.scss';
 import { drawerEvents } from '@/constants';
 
+/**
+ * Disclosure menu: a button showing / hiding a menu below it, base of the settings menu.
+ * Escape and a click out of the button hide the menu (`drawer.dropdown.hide` event).
+ */
 export class Dropdown extends MicroEvent {
+  /** Element holding the button and the menu, to add to the page */
   $dropdownContainer: HTMLDivElement;
+  /** Button showing / hiding the menu (`aria-expanded`) */
   $button: HTMLButtonElement;
+  /** Menu shown below the button, holds the content */
   $menu: HTMLDivElement;
+  /** List of the menu, its default content */
   $dropdownList: HTMLUListElement;
+  /** List item element with the item class, created for subclasses (not added to the list) */
   $dropdownItem: HTMLLIElement;
 
   constructor() {
@@ -34,6 +43,9 @@ export class Dropdown extends MicroEvent {
     this._initEvents();
   }
 
+  /**
+   * Sets the content of the menu: an HTML string replaces it, a node is added at its end
+   */
   setContent(content: string | Node) {
     if (typeof content === 'string') {
       this.$menu.innerHTML = content;
@@ -42,25 +54,40 @@ export class Dropdown extends MicroEvent {
     }
   }
 
+  /**
+   * Shows the menu
+   */
   show() {
     this._setShown(true);
   }
 
+  /**
+   * Hides the menu and triggers `drawer.dropdown.hide`
+   */
   hide() {
     this._setShown(false);
 
     this.trigger(drawerEvents.dropdownHide);
   }
 
+  /**
+   * Whether the menu is shown
+   */
   isShown() {
     return this.$menu.classList.contains('show');
   }
 
+  /**
+   * Shows or hides the menu and updates `aria-expanded` of the button, without event
+   */
   private _setShown(shown: boolean) {
     this.$menu.classList.toggle('show', shown);
     this.$button.setAttribute('aria-expanded', String(shown));
   }
 
+  /**
+   * Button toggles the menu, Escape hides it (focus back on button), a click out of the button hides it
+   */
   private _initEvents() {
     this.$button.addEventListener('click', () => {
       // no hide event, focus stays on button

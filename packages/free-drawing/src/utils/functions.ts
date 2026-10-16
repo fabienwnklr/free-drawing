@@ -1,17 +1,16 @@
 /**
- * @description Method to check if an item is an object. Date and Function are considered
- * an object, so if you need to exclude those, please update the method accordingly.
+ * Check if an item is an object: arrays and functions are not, dates and class instances are
  * @param item - The item that needs to be checked
- * @return {Boolean} Whether or not @item is an object
+ * @returns Whether or not `item` is an object
  */
 export function isObject(item: any): boolean {
   return item === Object(item) && !Array.isArray(item) && typeof item !== 'function';
 }
 
 /**
- * @description Method to check if an item is truthy
+ * Check if an item is set: not undefined, null or empty string (false and 0 are)
  * @param {any} t - The item that needs to be checked
- * @return {Boolean} Whether or not @item is truthy
+ * @returns Whether or not `t` is set
  */
 export function isTruthy(t: any): boolean {
   return typeof t !== 'undefined' && t !== '' && t !== null;
@@ -46,6 +45,11 @@ export function createId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
 }
 
+/**
+ * Element created from HTML code (its first element)
+ * @typeParam T type of the element
+ * @param string HTML code of one element
+ */
 export function stringToNode<T>(string: string): T {
   const placeholder = document.createElement('div');
   placeholder.innerHTML = string;

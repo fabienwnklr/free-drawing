@@ -58,10 +58,13 @@ export type Command = {
   label: string;
   /** Title of its group */
   group: TranslationKey;
+  /** SVG markup of its icon, shown before the label */
   icon?: string;
+  /** Keys doing the same, shown at the end of the option */
   shortcut?: string;
   /** State of a toggle (grid, zen mode...) or current choice (tool, language) */
   checked?: boolean;
+  /** Action, run once the palette is closed */
   run: () => void;
 };
 
@@ -76,13 +79,17 @@ const normalize = (text: string) => text.normalize('NFD').replace(accents, '').t
  * arrow keys choose one, Enter or click runs it
  */
 export class CommandPalette extends Modal {
+  /** Search field (`combobox`): keeps focus, arrow keys choose an option, Enter runs it */
   $input: HTMLInputElement;
+  /** List of options (`listbox`) of commands matching search, in their groups */
   $list: HTMLDivElement;
+  /** Message shown when no command matches search */
   $empty: HTMLParagraphElement;
   /** Commands available when palette was opened */
   commands: Command[] = [];
   /** Commands matching search, in list order */
   #shown: Command[] = [];
+  /** Index of the active option in shown commands */
   #active = 0;
 
   constructor(drawer: Drawer) {
@@ -192,6 +199,9 @@ export class CommandPalette extends Modal {
     this._setActive(0);
   }
 
+  /**
+   * Option of a command: icon, label, check mark when checked, shortcut. Hover makes it active, click runs it
+   */
   private _createOption(command: Command) {
     const $option = document.createElement('div');
     const $label = document.createElement('span');
@@ -228,6 +238,10 @@ export class CommandPalette extends Modal {
     return $option;
   }
 
+  /**
+   * Active option (`aria-selected`, `aria-activedescendant` of the field), scrolled into view
+   * @param index Index in shown commands, none active when out of them
+   */
   private _setActive(index: number) {
     const $options = [...this.$list.querySelectorAll<HTMLElement>('[role="option"]')];
     const $active = $options[index];
@@ -242,6 +256,9 @@ export class CommandPalette extends Modal {
     }
   }
 
+  /**
+   * Keys of the search field: Down / Up move the active option (looping), Enter runs it
+   */
   private _onKeydown(e: KeyboardEvent) {
     const count = this.#shown.length;
 

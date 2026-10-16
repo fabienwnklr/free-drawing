@@ -24,26 +24,48 @@ import { drawerEvents } from '@/constants';
 import { type Language, languages } from '@/i18n/I18n';
 import type { TranslationKey } from '@/i18n/en';
 
+/**
+ * Settings menu of header (dropdown): file actions, collaboration, view toggles, language, preferences and
+ * background color. Also toggles grid, snapping and zen mode for shortcuts, context menu and command palette
+ */
 export class Settings extends Dropdown {
+  /** Drawer the menu acts on */
   drawer: Drawer;
+  /** Item opening export dialog (Ctrl+Shift+E) */
   $exportButton: HTMLButtonElement;
+  /** Item opening command palette (Ctrl+K), only with `commandPalette` option */
   $commandsButton: HTMLButtonElement;
+  /** Item opening preferences dialog (Ctrl+,) */
   $preferencesButton: HTMLButtonElement;
+  /** Item opening a `.freedrawing` file (Ctrl+O), disabled in read only */
   $openButton: HTMLButtonElement;
+  /** Item saving drawing in a `.freedrawing` file (Ctrl+S) */
   $saveAsButton: HTMLButtonElement;
   /** Save now, shown without auto save */
   $saveButton: HTMLButtonElement;
+  /** Item copying a link holding the drawing */
   $copyLinkButton: HTMLButtonElement;
+  /** Item opening collaboration dialog, with session state, only with `collaboration` option */
   $collaborationButton: HTMLButtonElement;
+  /** Item clearing drawing after confirmation, disabled in read only */
   $clearCanvasButton: HTMLButtonElement;
+  /** Toggle item of grid (Alt+G) */
   $toggleGridButton: HTMLButtonElement;
+  /** Item opening repository of the library in a new tab */
   $githubButton: HTMLButtonElement;
+  /** Toggle item of zen mode (Alt+Z) */
   $zenModeButton: HTMLButtonElement;
+  /** Toggle item of dark mode (Alt+Shift+D), follows `drawer.theme.change` */
   $darkModeButton: HTMLButtonElement;
+  /** Language choice: auto (browser language) or a language, follows `drawer.language.change` */
   $languageSelect: HTMLSelectElement;
+  /** Item removing drawing saved in localStorage, after confirmation */
   $clearStorageButton: HTMLButtonElement;
+  /** Background color section (group named by its title) */
   $bgColorContainer: HTMLDivElement;
+  /** Element of background color buttons */
   $bgColorBtnContainer: HTMLDivElement;
+  /** Background color choice calling `drawer.setBgColor`, transparent included */
   bgColorPicker: ColorPicker;
 
   constructor(drawer: Drawer) {
@@ -269,12 +291,18 @@ export class Settings extends Dropdown {
       : '';
   }
 
+  /**
+   * Separator between groups of menu items
+   */
   getSeparator() {
     const $separator = document.createElement('hr');
 
     return $separator;
   }
 
+  /**
+   * Actions of menu items, and items following drawer state (read only, session, language, theme)
+   */
   private initEvents() {
     this.$commandsButton.addEventListener('click', () => this.drawer.showCommandPalette());
     this.$preferencesButton.addEventListener('click', () => this.drawer.showPreferences());
@@ -331,6 +359,9 @@ export class Settings extends Dropdown {
     return this.drawer.layout.zen;
   }
 
+  /**
+   * Switch zen mode (menu item, Alt+Z, preferences), saved in preferences
+   */
   toggleZenMode() {
     const zen = !this.zenMode;
 
@@ -340,6 +371,9 @@ export class Settings extends Dropdown {
     this.drawer._preferencesChanged();
   }
 
+  /**
+   * Switch snapping of selection widget (Alt+S, context menu, command palette), nothing without it
+   */
   toggleSnapping() {
     const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
     const active = !selectWidget?.snapping;
@@ -348,6 +382,9 @@ export class Settings extends Dropdown {
     this.drawer.focus();
   }
 
+  /**
+   * Show grid (object snapping turned off) or hide it: menu item, Alt+G, context menu, command palette
+   */
   toggleGrid() {
     if (this.drawer.grid) {
       this.drawer.hideGrid();

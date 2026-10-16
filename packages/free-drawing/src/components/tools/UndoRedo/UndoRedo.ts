@@ -5,9 +5,15 @@ import RedoIcon from '@/icons/redo.svg?raw';
 import '@/components/tools/UndoRedo/undo-redo.scss';
 import { createButton, disableElement, enableElement, setLabel } from '@/utils/dom';
 
+/**
+ * History with its undo and redo buttons (footer, hidden in zen mode), restored states fire drawer change
+ */
 export class UndoRedo extends History {
+  /** Footer group of undo and redo buttons */
   $undoRedoContainer: HTMLDivElement;
+  /** Undo button (Ctrl+Z), disabled without previous state or in read only */
   $btnUndo: HTMLButtonElement;
+  /** Redo button (Ctrl+Y), disabled without next state or in read only */
   $btnRedo: HTMLButtonElement;
 
   constructor(drawer: Drawer) {
@@ -36,22 +42,34 @@ export class UndoRedo extends History {
     this._initEvents();
   }
 
+  /**
+   * Buttons undo and redo
+   */
   private _initEvents() {
     this.$btnUndo.addEventListener('click', () => this.undo());
     this.$btnRedo.addEventListener('click', () => this.redo());
   }
 
-  // change: saved, drawer change event, sent to collaborators, buttons updated (history state already there)
+  /**
+   * Restore previous state, then fire change: saved, drawer change event, sent to collaborators, buttons updated
+   * (history state already there)
+   */
   undo() {
     super.undo();
     this.drawer.stage.fire('change');
   }
 
+  /**
+   * Restore next state, then fire change (as `undo`)
+   */
   redo() {
     super.redo();
     this.drawer.stage.fire('change');
   }
 
+  /**
+   * Enable undo button only with a previous state, out of read only
+   */
   manageUndoBtn() {
     if (!this.canUndo() || this.drawer.readOnly) {
       disableElement(this.$btnUndo);
@@ -60,6 +78,9 @@ export class UndoRedo extends History {
     }
   }
 
+  /**
+   * Enable redo button only with a next state, out of read only
+   */
   manageRedoBtn() {
     if (!this.canRedo() || this.drawer.readOnly) {
       disableElement(this.$btnRedo);
@@ -68,6 +89,9 @@ export class UndoRedo extends History {
     }
   }
 
+  /**
+   * Update both buttons: drawer created or changed, history reset, read only changed
+   */
   manageButtons() {
     this.manageUndoBtn()
     this.manageRedoBtn()
