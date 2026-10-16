@@ -284,7 +284,7 @@ With the selection tool:
 
 - a click selects the shape drawn under pointer (a text on a shape is selected alone). Inside of rectangles and ellipses without background is empty: shapes under it are clicked, else the smallest one around pointer is selected;
 - Shift + click adds or removes a shape, Alt + click selects the shape behind the selected one (again: next one behind, then back to top);
-- a selection rectangle selects shapes entirely in it (Shift adds them): drawn in a big shape, it selects the small shapes on it;
+- a selection rectangle selects the shapes it touches (Shift adds them): lines and strokes where they are drawn, rotated shapes as drawn. Drawn inside a big shape or a frame, it selects the shapes it touches there, not the big shape;
 - a pressed shape is selected and dragged alone, the selection is dragged from any place of its box.
 
 Shift constrains drawing and selected shapes, also pressed or released without moving pointer:

@@ -8,6 +8,7 @@ import type { Drawer } from '@/Drawer';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import { shapeName } from '@/constants';
+import { createFrame } from '@/utils/frame';
 import { createDrawer, fireMouse, setPointer } from './helpers';
 
 type Modifiers = { shiftKey?: boolean; altKey?: boolean };
@@ -177,24 +178,64 @@ describe('Selection', () => {
     expect(selected()).toEqual([text]);
   });
 
-  it('Selection rectangle selects shapes entirely in it, Shift adds them to selection', () => {
+  it('Selection rectangle selects shapes it touches, not a big shape it is drawn in, Shift adds them', () => {
     const { drawer, selected } = createSelection();
     const big = addRect(drawer, 0, 0, 300);
     const small = addRect(drawer, 100, 100, 50);
     const other = addRect(drawer, 400, 100, 50);
 
-    // drawn in big rectangle
-    drag(drawer, [80, 80], [200, 200]);
+    // drawn in big rectangle, over a part of small one
+    drag(drawer, [80, 80], [120, 200]);
     expect(selected()).toEqual([small]);
 
-    drag(drawer, [-20, -20], [350, 350]);
+    // over a side of big one
+    drag(drawer, [-20, 80], [120, 200]);
     expect(selected()).toEqual([big, small]);
 
-    // partly over other: not selected
+    // partly over other
     drag(drawer, [380, 80], [420, 200], { shiftKey: true });
-    expect(selected()).toEqual([big, small]);
-    drag(drawer, [380, 80], [470, 200], { shiftKey: true });
     expect(selected()).toEqual([big, small, other]);
+  });
+
+  it('Selection rectangle touches lines along their points, rotated shapes as drawn, groups by their shapes', () => {
+    const { drawer, selected } = createSelection();
+    const line = drawer.addShape(new Line({ points: [0, 0, 200, 200], stroke: '#000', strokeWidth: 2 }));
+    // diamond: rotated square
+    const rotated = addRect(drawer, 300, 0, 100);
+
+    rotated.rotation(45);
+
+    // in the box of the line, far from it
+    drag(drawer, [150, 0], [200, 50]);
+    expect(selected()).toEqual([]);
+    drag(drawer, [80, 60], [120, 140]);
+    expect(selected()).toEqual([line]);
+
+    // in the box of the rotated square, out of it, then over one of its sides
+    drag(drawer, [350, 0], [370, 20]);
+    expect(selected()).toEqual([]);
+    drag(drawer, [320, 0], [360, 40]);
+    expect(selected()).toEqual([rotated]);
+
+    // group: touched by one of its shapes
+    const group = drawer.groupShapes([addRect(drawer, 500, 0, 50), addRect(drawer, 600, 0, 50)])!;
+
+    drag(drawer, [640, 40], [700, 100]);
+    expect(selected()).toEqual([group]);
+  });
+
+  it('Selection rectangle in a frame selects its shapes, over its box the frame', () => {
+    const { drawer, selected } = createSelection();
+    const frame = drawer.addShape(createFrame({ x: 0, y: 300, width: 200, height: 200, label: 'Frame' }));
+    const inner = addRect(drawer, 50, 350, 40);
+
+    drawer.placeInFrames([inner]);
+    expect(inner.getParent()?.getParent()).toBe(frame);
+
+    drag(drawer, [40, 340], [70, 370]);
+    expect(selected()).toEqual([inner]);
+    drag(drawer, [-20, 340], [70, 370]);
+    expect(selected()).toEqual([frame]);
   });
 
   it('Alt + click selects the shape behind selected one, then back to top', () => {

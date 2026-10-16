@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.10.0](https://github.com/fabienwnklr/free-drawing/compare/v7.9.4...v7.10.0) (2026-10-16)
+
+
+### Features
+
+* **selection:** the selection rectangle selects the shapes it touches, not only the ones entirely in it: lines and strokes where they are drawn, rotated shapes as drawn, groups by their shapes; drawn inside a big shape or a frame, it selects the shapes it touches there, not the big shape
+
 ## [7.9.4](https://github.com/fabienwnklr/free-drawing/compare/v7.9.3...v7.9.4) (2026-10-16)
 
 

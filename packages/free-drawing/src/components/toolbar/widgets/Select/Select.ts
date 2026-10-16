@@ -25,7 +25,8 @@ import {
   isDrawnAtLocked,
   isInsideNode,
   isInsideOutline,
-  rectContains,
+  isTouchedBy,
+  rectTouches,
 } from '@/utils/hit';
 import {
   getDrawingShape,
@@ -304,14 +305,16 @@ export class SelectWidget extends BaseWidget {
 
         if (moved) {
           const box = this.selectionRectangle.getClientRect();
-          // shapes entirely in rectangle: a rectangle drawn in a big shape selects small shapes on it, not the big one
-          // (shapes of frames too, with their frame when it is in rectangle)
-          const inside = withFrameShapes(this.drawer.getDrawingShapes()).filter(
-            (shape) => shape.isListening() && rectContains(box, shape.getClientRect())
+          // shapes touched by rectangle: drawn inside a big shape or a frame, it selects shapes it touches there, not
+          // the big shape (shapes of frames too, with their frame when it touches its box)
+          const touched = withFrameShapes(this.drawer.getDrawingShapes()).filter(
+            (shape) =>
+              shape.isListening() &&
+              (isFrame(shape) ? rectTouches(box, shape.getClientRect()) : isTouchedBy(box, shape))
           );
           const nodes = this._getSelected();
 
-          this.select(shiftKey ? [...nodes, ...inside.filter((shape) => !nodes.includes(shape))] : inside);
+          this.select(shiftKey ? [...nodes, ...touched.filter((shape) => !nodes.includes(shape))] : touched);
         }
       }
 

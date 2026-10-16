@@ -103,6 +103,108 @@ export function rectContains(outer: IRect, inner: IRect): boolean {
   );
 }
 
+/**
+ * Point in box (edges included)
+ */
+function boxHasPoint(box: IRect, { x, y }: Vector2d): boolean {
+  return x >= box.x && x <= box.x + box.width && y >= box.y && y <= box.y + box.height;
+}
+
+/**
+ * Segment crosses box or is in it (Liang-Barsky clipping)
+ */
+function segmentTouches(box: IRect, a: Vector2d, b: Vector2d): boolean {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  let start = 0;
+  let end = 1;
+  // part of segment on the inner side of each edge of box
+  const clip = (p: number, q: number) => {
+    if (p === 0) return q >= 0;
+
+    const t = q / p;
+
+    if (p < 0) {
+      if (t > end) return false;
+      start = Math.max(start, t);
+    } else {
+      if (t < start) return false;
+      end = Math.min(end, t);
+    }
+    return true;
+  };
+
+  return (
+    clip(-dx, a.x - box.x) &&
+    clip(dx, box.x + box.width - a.x) &&
+    clip(-dy, a.y - box.y) &&
+    clip(dy, box.y + box.height - a.y)
+  );
+}
+
+/**
+ * Polygon (absolute points in order, closed or not) touched by box: one of its points is in box or one of its sides
+ * crosses it. A box entirely inside a closed polygon does not touch it
+ */
+function polygonTouches(box: IRect, points: Vector2d[], closed: boolean): boolean {
+  const sides = points.slice(1).map((point, i) => [points[i], point]);
+
+  if (closed && points.length > 2) sides.push([points[points.length - 1], points[0]]);
+
+  return points.some((point) => boxHasPoint(box, point)) || sides.some(([a, b]) => segmentTouches(box, a, b));
+}
+
+/**
+ * Box (absolute coordinates, e.g. a frame) touched by another box: crossed by it or in it, not when entirely around it
+ */
+export function rectTouches(box: IRect, rect: IRect): boolean {
+  const { x, y, width, height } = rect;
+
+  return polygonTouches(
+    box,
+    [
+      { x, y },
+      { x: x + width, y },
+      { x: x + width, y: y + height },
+      { x, y: y + height },
+    ],
+    true
+  );
+}
+
+/**
+ * Drawing shape touched by a box (absolute coordinates, e.g. selection rectangle): lines and strokes along their
+ * points, other shapes along their box (rotated, scaled with them), shapes of groups too. A box entirely inside a shape
+ * does not touch it (box drawn in a big shape)
+ */
+export function isTouchedBy(box: IRect, node: DrawingShape): boolean {
+  return getShapes(node).some((shape) => {
+    if (!shape.isVisible()) return false;
+
+    const transform = shape.getAbsoluteTransform();
+
+    if (shape instanceof Line) {
+      const points = shape.points();
+      const absolute = points.filter((_, i) => i % 2 === 0).map((x, i) => transform.point({ x, y: points[i * 2 + 1] }));
+
+      return polygonTouches(box, absolute, shape.closed());
+    }
+
+    const { x, y, width, height } = shape.getSelfRect();
+
+    return polygonTouches(
+      box,
+      [
+        { x, y },
+        { x: x + width, y },
+        { x: x + width, y: y + height },
+        { x, y: y + height },
+      ].map((point) => transform.point(point)),
+      true
+    );
+  });
+}
+
 let pathContext: CanvasRenderingContext2D | null | undefined;
 
 /**
