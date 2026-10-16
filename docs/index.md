@@ -6,6 +6,9 @@ pageClass: vp-doc
 hero:
   name: "free-drawing"
   text: "Free Drawing Docs"
+  image:
+    src: /logo.svg
+    alt: free-drawing logo
   tagline: Inspired from <a href="https://github.com/fabienwnklr/drawer/">Drawer</a> also inspired from Excalidraw and TlDraw, is totally rewritting and rethinking for better use to more complexe context. Oppositely to Excalidraw or TLDraw, is build for native js environnement.
   actions:
     - theme: brand

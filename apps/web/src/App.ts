@@ -5,6 +5,7 @@ import { Texts } from './texts';
 import { AccountDialog } from './AccountDialog';
 import { DrawingsDialog } from './DrawingsDialog';
 import { ProfileDialog } from './ProfileDialog';
+import logoUrl from '../logo.svg';
 
 type SaveState = '' | 'saving' | 'saved' | 'error' | 'unsaved';
 
@@ -41,7 +42,7 @@ export class App {
     $root.classList.add('app');
     $root.innerHTML = /*html*/ `
       <header class="app-bar">
-        <span class="app-logo">free-drawing</span>
+        <span class="app-logo"><img src="${logoUrl}" alt="" width="22" height="22" />free-drawing</span>
         <input class="app-name" maxlength="100" hidden />
         <span class="app-save-state text-muted" aria-live="polite"></span>
         <button type="button" class="app-toggle" role="switch" data-autosave>

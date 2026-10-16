@@ -1,4 +1,4 @@
-# free-drawing
+# <img src="https://raw.githubusercontent.com/fabienwnklr/free-drawing/master/docs/public/logo.svg" width="36" alt="" /> free-drawing
 
 ![image](https://github.com/fabienwnklr/free-drawing/assets/49644785/2a87f2dc-ee59-4cec-87a6-872f06e231fa)
 

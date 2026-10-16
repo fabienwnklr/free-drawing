@@ -10,7 +10,10 @@ const apiSidebar = existsSync(apiSidebarFile) ? JSON.parse(readFileSync(apiSideb
 export default defineConfig({
   title: 'free-drawing',
   description: 'Infinite canvas drawing library',
-  head: [['link', { rel: 'icon', href: '/favicon.ico' }]],
+  head: [
+    ['link', { rel: 'icon', href: '/favicon.ico', sizes: '16x16 32x32 48x48' }],
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' }],
+  ],
   cleanUrls: true,
   themeConfig: {
     logo: '/logo.svg',

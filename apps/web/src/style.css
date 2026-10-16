@@ -58,7 +58,11 @@ body {
   border-bottom: 1px solid var(--app-border);
 }
 
+/* logo and name of the app */
 .app-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-weight: 600;
 }
 
