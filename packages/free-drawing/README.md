@@ -60,6 +60,7 @@ const drawer = new Drawer($el, {
   language: 'auto', // 'auto' (browser one, English when not available) | 'en' | 'fr' | 'es' | 'de', language chosen in menu is saved and used instead
   translations: {}, // texts replacing default ones, by language, see Languages below
   layersPanel: true, // enable/disable layers panel (list of shapes) and its button in header
+  saveButton: true, // button in header saving the drawing while auto save is off (dot: changes not saved yet)
   readOnly: false, // drawing can't be modified by user (only pan, zoom, view options, export), API still modifies it
   scaling: 1.11, // scaling on zoom
   autoSave: true, // drawing saved on each change (localStorage or storage), user preference (see Preferences)
@@ -117,7 +118,7 @@ Components trigger `drawer.dropdown.hide` (dropdown menu) and `drawer.toast.hide
 drawer.showPreferences();
 ```
 
-Without auto save (preference or `autoSave` option), changes are saved with "Save now" (settings menu, command palette), the menu shows "Not saved" until then, and leaving the page asks a confirmation. Turning auto save on again saves pending changes.
+Without auto save (preference or `autoSave` option), changes are saved with the save button of the header (`saveButton` option, a dot shows changes not saved yet) or "Save now" (settings menu, command palette), the menu shows "Not saved" until then, and leaving the page asks a confirmation. Turning auto save on again saves pending changes.
 
 ```js
 drawer.setAutoSave(false);

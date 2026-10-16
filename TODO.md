@@ -10,7 +10,7 @@
 - [x] after draw and if 'keepActiveTool' active, last draw automatically selected, don't, just change tool to select
 - [x] selection tool dosn't work if i don't select every objet
 - [x] create logo for drawer
-- [ ] if i disable auto save, how save? add button
+- [x] if i disable auto save, how save? add button
 - [ ] use jsdoc with @param etc.
 - [ ] if i select multiple object, for example text, square, hand draw, i want every available tool on panel
 - [ ] scan files and fix error/warning

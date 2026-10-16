@@ -28,6 +28,8 @@ export class App {
   readonly $saveState: HTMLElement;
   /** Auto save on / off (preference of drawer) */
   readonly $autoSaveButton: HTMLButtonElement;
+  /** Saves the drawing while auto save is off */
+  readonly $saveButton: HTMLButtonElement;
   readonly $drawingsButton: HTMLButtonElement;
   readonly $accountButton: HTMLButtonElement;
   readonly accountDialog: AccountDialog;
@@ -48,6 +50,7 @@ export class App {
         <button type="button" class="app-toggle" role="switch" data-autosave>
           <span class="app-toggle-track" aria-hidden="true"></span><span data-label></span>
         </button>
+        <button type="button" class="app-button" data-save hidden></button>
         <span class="app-spacer"></span>
         <button type="button" class="app-button" data-drawings></button>
         <button type="button" class="app-button" data-account hidden></button>
@@ -59,6 +62,7 @@ export class App {
     this.$name = $root.querySelector('.app-name')!;
     this.$saveState = $root.querySelector('.app-save-state')!;
     this.$autoSaveButton = $root.querySelector('[data-autosave]')!;
+    this.$saveButton = $root.querySelector('[data-save]')!;
     this.$drawingsButton = $root.querySelector('[data-drawings]')!;
     this.$accountButton = $root.querySelector('[data-account]')!;
 
@@ -68,6 +72,8 @@ export class App {
       height: this.$main.clientHeight,
       collaboration,
       storage: this._createStorage(),
+      // save button of app bar instead
+      saveButton: false,
     });
     this.texts = new Texts(this.drawer);
     this.accountDialog = new AccountDialog(this);
@@ -200,6 +206,7 @@ export class App {
       this.drawer.setAutoSave(!this.drawer.options.autoSave);
       this.render();
     });
+    this.$saveButton.addEventListener('click', () => this.drawer.saveNow());
     // without auto save: changes not saved yet
     this.drawer.on('drawer.unsaved.change', (unsaved: boolean) => {
       if (unsaved && !this.drawer.options.autoSave) this._setSaveState('unsaved');
@@ -344,6 +351,8 @@ export class App {
     this.$autoSaveButton.setAttribute('aria-checked', String(this.drawer.options.autoSave));
     this.$autoSaveButton.querySelector('[data-label]')!.textContent = t('autoSave');
     this.$autoSaveButton.title = t('autoSaveHint');
+    this.$saveButton.hidden = this.drawer.options.autoSave;
+    this.$saveButton.textContent = t('save');
     this.$drawingsButton.textContent = t('myDrawings');
     // static site: no accounts
     this.$accountButton.hidden = !this.server;

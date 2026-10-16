@@ -31,6 +31,7 @@ import RecenterIcon from '@/icons/recenter.svg?raw';
 import HelpIcon from '@/icons/help.svg?raw';
 import OpenIcon from '@/icons/open.svg?raw';
 import SaveIcon from '@/icons/save.svg?raw';
+import SaveNowIcon from '@/icons/save-now.svg?raw';
 import PinIcon from '@/icons/pin.svg?raw';
 import LinkIcon from '@/icons/link.svg?raw';
 import ExportIcon from '@/icons/export.svg?raw';
@@ -439,14 +440,14 @@ export class CommandPalette extends Modal {
           {
             id: 'auto save autosave',
             label: t('preferences.autoSave'),
-            icon: SaveIcon,
+            icon: SaveNowIcon,
             checked: drawer.options.autoSave,
             run: () => drawer.setAutoSave(!drawer.options.autoSave),
           },
           !drawer.options.autoSave && {
             id: 'save now store',
             label: t('menu.save'),
-            icon: SaveIcon,
+            icon: SaveNowIcon,
             run: () => drawer.saveNow(),
           },
           edit && {

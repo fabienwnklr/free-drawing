@@ -46,6 +46,7 @@ export const defaultOptions: DrawerOptions = {
   language: 'auto',
   translations: {},
   layersPanel: true,
+  saveButton: true,
   readOnly: false,
   scaling: 1.11,
   autoSave: true,

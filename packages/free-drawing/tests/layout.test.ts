@@ -24,6 +24,7 @@ describe('Layout', () => {
       'drawer-dropdown-container',
       'drawer-layers-button-container',
       'drawer-position-container',
+      'drawer-save-button-container',
     ]);
     expect(classes(layout.$footerStart)).toEqual(['drawer-zoom-container', 'drawer-undoredo-container']);
     expect(classes(layout.$footer)).toEqual([

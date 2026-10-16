@@ -57,6 +57,11 @@
 // Item of settings menu and context menu
 @mixin menu-item {
   display: flex;
+
+  &[hidden] {
+    display: none;
+  }
+
   align-items: center;
   justify-content: flex-start;
   gap: $space-2;

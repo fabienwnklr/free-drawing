@@ -107,6 +107,7 @@ import { UndoRedo } from '@/components/tools/UndoRedo/UndoRedo';
 import { ContextMenu } from '@/components/ContextMenu/ContextMenu';
 import { SelectionMenu } from '@/components/SelectionMenu/SelectionMenu';
 import { LayersPanel } from '@/components/LayersPanel/LayersPanel';
+import { SaveButton } from '@/components/tools/SaveButton/SaveButton';
 import { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import { Line } from 'konva/lib/shapes/Line';
 import { Toast } from '@/components/Toast/Toast';
@@ -177,6 +178,8 @@ export class Drawer extends MicroEvent {
   selectionMenu: SelectionMenu | undefined;
   /** Panel listing shapes (`layersPanel` option) */
   layersPanel: LayersPanel | undefined;
+  /** Button of header saving the drawing while auto save is off (`saveButton` option) */
+  saveButton: SaveButton | undefined;
   /** Theme chosen ('system': device one), see `setTheme` */
   theme: Theme = 'light';
   /** Texts of interface, see `t` and `setLanguage` */
@@ -365,6 +368,9 @@ export class Drawer extends MicroEvent {
     }
     if (this.options.layersPanel) {
       this.layersPanel = new LayersPanel(this);
+    }
+    if (this.options.saveButton) {
+      this.saveButton = new SaveButton(this);
     }
     this._initTheme(preferences.theme);
 

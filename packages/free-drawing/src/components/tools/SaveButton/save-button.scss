@@ -1,0 +1,27 @@
+@use '@/scss/variables' as *;
+
+// next to view position, only while auto save is off
+.drawer-container .drawer-save-button-container {
+  display: flex;
+
+  &[hidden] {
+    display: none;
+  }
+
+  .drawer-button {
+    position: relative;
+    border-radius: $radius-lg;
+  }
+
+  // changes not saved yet
+  .is-unsaved::after {
+    content: '';
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background-color: $primary;
+  }
+}

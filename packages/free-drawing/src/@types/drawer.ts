@@ -61,6 +61,8 @@ export type DrawerOptions = {
   translations: CustomTranslations;
   /** Layers panel listing shapes (select, rename, reorder, lock, hide, delete), button in header (default true) */
   layersPanel: boolean;
+  /** Button in header saving the drawing while auto save is off, a dot shows unsaved changes (default true) */
+  saveButton: boolean;
   /** Drawing can't be modified by user (only pan, zoom, view options, export), API methods still modify it (default false) */
   readOnly: boolean;
   /** Zoom factor of one wheel step (default 1.11) */

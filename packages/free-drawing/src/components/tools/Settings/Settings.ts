@@ -11,6 +11,7 @@ import ZenIcon from '@/icons/zen.svg?raw';
 import MoonIcon from '@/icons/moon.svg?raw';
 import StoreIcon from '@/icons/store.svg?raw';
 import SaveIcon from '@/icons/save.svg?raw';
+import SaveNowIcon from '@/icons/save-now.svg?raw';
 import LinkIcon from '@/icons/link.svg?raw';
 import UsersIcon from '@/icons/users.svg?raw';
 import LanguageIcon from '@/icons/language.svg?raw';
@@ -82,7 +83,7 @@ export class Settings extends Dropdown {
     this.$commandsButton.setAttribute('aria-keyshortcuts', 'Control+K');
     this.$openButton = this._createItem(OpenIcon, 'menu.open', 'Ctrl+O');
     this.$openButton.setAttribute('aria-keyshortcuts', 'Control+O');
-    this.$saveButton = this._createItem(SaveIcon, 'menu.save');
+    this.$saveButton = this._createItem(SaveNowIcon, 'menu.save');
     // changes not saved yet
     const $saveState = document.createElement('span');
 

@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.11.0](https://github.com/fabienwnklr/free-drawing/compare/v7.10.0...v7.11.0) (2026-10-16)
+
+
+### Features
+
+* **save:** save button in the header while auto save is off (`saveButton` option), a dot shows changes not saved yet; "Save now" has its own icon (floppy disk), the download one stays for "Save as file"
+
+
+### Bug Fixes
+
+* **settings:** "Save now" of the settings menu is hidden while auto save is on
+
 ## [7.10.0](https://github.com/fabienwnklr/free-drawing/compare/v7.9.4...v7.10.0) (2026-10-16)
 
 
