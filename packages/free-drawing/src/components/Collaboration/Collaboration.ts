@@ -179,8 +179,8 @@ export class Collaboration {
     if (this.#laser === on) return;
 
     this.#laser = on;
-    // end told at once, pointer may not move
-    this._sendPointer(this.drawer.stage.getRelativePointerPosition());
+    // end told at once, pointer may not move (or be out of canvas)
+    this._sendPointer(this.drawer._hasPointer() ? this.drawer._getRelativePointerPos() : null);
   }
 
   /**

@@ -3,6 +3,7 @@ import { getFrameOfTitle } from '@/utils/frame';
 import { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import TextIcon from '@/icons/text.svg?raw';
 import { Text } from 'konva/lib/shapes/Text';
+import type { Vector2d } from 'konva/lib/types';
 import { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { shapeName } from '@/constants';
 import { TextOverlay } from '@/components/tools/Overlay/TextOverlay/TextOverlay';
@@ -57,8 +58,12 @@ export class TextWidget extends BaseWidget {
    * @param text Text content
    * @returns
    */
-  addTextNode(text: string = '') {
-    const { x, y } = this.drawer._getRelativePointerPos();
+  /**
+   * New text at a position of drawing (pointer by default, center of view when it is out of canvas)
+   * @param {string} text
+   * @param {Vector2d} position
+   */
+  addTextNode(text: string = '', { x, y }: Vector2d = this.drawer._getRelativePointerPos()) {
     const { textStyle } = this.drawer.options;
 
     const textNode = new Text({

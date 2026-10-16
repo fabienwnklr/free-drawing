@@ -735,20 +735,27 @@ export class Drawer extends MicroEvent {
     });
   }
 
-  _getRelativePointerPos(): { x: number; y: number } {
-    const { x, y } = this.stage.getRelativePointerPosition() ?? { x: 0, y: 0 };
-    return {
-      x,
-      y,
-    };
+  /**
+   * Pointer registered by stage: over canvas, or during a pointer action (konva forgets it when pointer leaves canvas)
+   */
+  _hasPointer(): boolean {
+    return this.stage._pointerPositions.length > 0 || this.stage._changedPointerPositions.length > 0;
   }
 
-  _getPointerPos(): { x: number; y: number } {
-    const { x, y } = this.stage.getPointerPosition() ?? { x: 0, y: 0 };
-    return {
-      x,
-      y,
-    };
+  /**
+   * Pointer in drawing (view moved and zoomed), center of view when pointer is out of canvas (menu, keyboard)
+   */
+  _getRelativePointerPos(): Vector2d {
+    return this.stage.getAbsoluteTransform().copy().invert().point(this._getPointerPos());
+  }
+
+  /**
+   * Pointer in view, center of view when pointer is out of canvas (menu, keyboard)
+   */
+  _getPointerPos(): Vector2d {
+    const pos = this._hasPointer() ? this.stage.getPointerPosition() : null;
+
+    return pos ?? { x: this.stage.width() / 2, y: this.stage.height() / 2 };
   }
 
   /**

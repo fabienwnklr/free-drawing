@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.9.2](https://github.com/fabienwnklr/free-drawing/compare/v7.9.1...v7.9.2) (2026-10-16)
+
+
+### Bug Fixes
+
+* **text:** "Paste" of the context menu puts the text where the menu was opened (it went to the top left corner of the view), Ctrl / Cmd + V with the pointer out of the drawing puts it at the center of the view, no more Konva warning "Pointer position is missing"
+
 ## [7.9.1](https://github.com/fabienwnklr/free-drawing/compare/v7.9.0...v7.9.1) (2026-10-16)
 
 

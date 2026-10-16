@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeAll } from 'vitest';
+import { describe, expect, it, beforeAll, vi } from 'vitest';
 import { Drawer } from '@/Drawer';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
@@ -167,6 +167,25 @@ describe('User interface', () => {
     drawer.$drawerContainer.dispatchEvent(paste);
 
     expect((drawer.getDrawingShapeByName('text')[0] as unknown as { text(): string })?.text()).toBe('pasted text');
+  });
+
+  it('Paste with pointer out of canvas: text at center of view, no konva warning', () => {
+    const drawer = createDrawer();
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const paste = new Event('paste', { bubbles: true });
+
+    Object.defineProperty(paste, 'clipboardData', { value: { getData: () => 'pasted text' } });
+    // view moved and zoomed, pointer never on canvas
+    drawer.stage.position({ x: 100, y: 50 });
+    drawer.stage.scale({ x: 2, y: 2 });
+    expect(drawer._hasPointer()).toBe(false);
+    drawer.$drawerContainer.dispatchEvent(paste);
+
+    const [text] = drawer.getDrawingShapes();
+
+    expect(text.getAbsolutePosition()).toEqual({ x: drawer.stage.width() / 2, y: drawer.stage.height() / 2 });
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
   });
 
   it('Modal opened by a click stays open, closes on outside click', async () => {

@@ -1,6 +1,7 @@
 import type { Drawer } from '@/Drawer';
 import type { Node } from 'konva/lib/Node';
 import type { KonvaEventObject } from 'konva/lib/Node';
+import type { Vector2d } from 'konva/lib/types';
 import type { DrawingShape, ShapeOrder } from '@/@types/drawer';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { TextWidget } from '@/components/toolbar/widgets/Text/Text';
@@ -28,6 +29,8 @@ export class ContextMenu {
   $gridBtn!: HTMLButtonElement;
   /** Groups of items, separated when several are shown */
   #sections: { $section: HTMLElement; items: Item[] }[] = [];
+  /** Place of right click in drawing: pasted text goes there (pointer is on menu then) */
+  #position: Vector2d | null = null;
 
   constructor(drawer: Drawer) {
     this.drawer = drawer;
@@ -238,6 +241,7 @@ export class ContextMenu {
       if (e.target !== this.drawer.$drawerContainer) return;
 
       e.preventDefault();
+      this.#position = null;
       this.show();
 
       const { clientWidth, clientHeight } = this.drawer.$drawerContainer;
@@ -247,6 +251,7 @@ export class ContextMenu {
 
     this.drawer.stage.on('contextmenu', (e) => {
       e.evt.preventDefault();
+      this.#position = this.drawer._getRelativePointerPos();
       this._selectAt(e);
       this.show();
 
@@ -306,7 +311,7 @@ export class ContextMenu {
 
       if (!text) return;
 
-      this.drawer.getWidget<TextWidget>('text')?.addTextNode(text);
+      this.drawer.getWidget<TextWidget>('text')?.addTextNode(text, this.#position ?? undefined);
       this.drawer.stage.fire('change');
     } catch (error) {
       this.drawer.toast(this.drawer.t('toast.clipboardUnavailable', { error: (error as Error).message }), 'warning');

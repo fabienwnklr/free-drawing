@@ -46,6 +46,27 @@ describe('Context menu', () => {
     vi.unstubAllGlobals();
   });
 
+  it('Paste puts text at right click, pointer on menu (out of canvas) when it is chosen', async () => {
+    const drawer = createDrawer();
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    vi.stubGlobal('navigator', { ...navigator, clipboard: { readText: async () => 'pasted text' } });
+    drawer.stage.position({ x: 100, y: 50 });
+    drawer.stage.scale({ x: 2, y: 2 });
+    rightClick(drawer, 300, 250);
+    // pointer leaves canvas for the menu: konva forgets it
+    drawer.$stageContainer.dispatchEvent(new MouseEvent('mouseleave'));
+    expect(drawer._hasPointer()).toBe(false);
+    drawer.contextMenu.$pasteBtn.click();
+    await new Promise((resolve) => setTimeout(resolve));
+
+    const [text] = drawer.getDrawingShapes();
+
+    expect(text.getAbsolutePosition()).toEqual({ x: 300, y: 250 });
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
   it('Right click on a shape selects it: actions on selection with their shortcuts', () => {
     const drawer = createDrawer({ language: 'en' });
     const rect = createRect(drawer, 100, 100);
