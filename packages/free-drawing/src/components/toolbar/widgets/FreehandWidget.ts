@@ -19,6 +19,9 @@ export type FreehandSettings = {
 
 /**
  * Points of a straight stroke, regularly spaced (same width all along)
+ * @param from Start of the stroke
+ * @param to End of the stroke (pointer)
+ * @returns Points from start to end, 4 units apart at most, both ends included
  */
 function straightPoints(from: Vector2d, to: Vector2d): Vector2d[] {
   const steps = Math.max(1, Math.ceil(Math.hypot(to.x - from.x, to.y - from.y) / 4));
@@ -41,26 +44,34 @@ export abstract class FreehandWidget extends BaseWidget {
 
   /**
    * Style of new strokes (color, opacity, name...)
+   * @returns Attributes of the konva line of a new stroke
    */
   protected abstract lineStyle(): LineConfig;
 
   /**
    * Width of strokes
+   * @returns Diameter of the stroke given to perfect-freehand (`size`)
    */
   protected abstract strokeSize(): number;
 
   /**
    * Settings of perfect-freehand
+   * @returns Thinning, smoothing and streamline of new strokes
    */
   protected abstract freehandSettings(): FreehandSettings;
 
   /**
+   * Stroke being drawn (pointer action in progress)
    * @deprecated use `inAction`
    */
   get isPaint() {
     return this.inAction;
   }
 
+  /**
+   * Draw by drag: closed line added on pointer down, its outline follows the pointer (shared live), finished on
+   * pointer up
+   */
   protected initEvents(): void {
     this.onStage('mousedown touchstart', (e) => {
       if (e.evt.button === 2) return;
@@ -114,13 +125,18 @@ export abstract class FreehandWidget extends BaseWidget {
     });
   }
 
-  // Shift pressed or released while drawing
+  /**
+   * Shift pressed or released while drawing: stroke straight from its start, or back to the pointer path
+   * @param constrain Shift pressed
+   */
   protected onConstrainChange(constrain: boolean): void {
     this._updateLine(false, constrain);
   }
 
   /**
    * Stroke to pointer position, straight from its start with Shift
+   * @param last Last point of the stroke (pointer up): perfect-freehand ends it
+   * @param straight Straight stroke from start to pointer, replacing the points of the path
    */
   private _updateLine(last?: boolean, straight = false) {
     const realPos = this.drawer._getRelativePointerPos();

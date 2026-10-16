@@ -15,6 +15,11 @@ const textInputTypes = ['text', 'search', 'number', 'email', 'url', 'tel', 'pass
 export class HotKey {
   /** Drawer whose shortcuts are handled */
   drawer: Drawer;
+
+  /**
+   * Listens to shortcuts on keydown of the drawer container
+   * @param drawer drawer whose shortcuts are handled
+   */
   constructor(drawer: Drawer) {
     this.drawer = drawer;
 

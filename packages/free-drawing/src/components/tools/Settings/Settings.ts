@@ -69,6 +69,10 @@ export class Settings extends Dropdown {
   /** Background color choice calling `drawer.setBgColor`, transparent included */
   bgColorPicker: ColorPicker;
 
+  /**
+   * Create the menu items (commands, collaboration and save now only when available) and the button in header
+   * @param drawer Drawer the menu acts on, whose options give the items shown
+   */
   constructor(drawer: Drawer) {
     super();
 
@@ -216,7 +220,7 @@ export class Settings extends Dropdown {
 
   /**
    * Set active background color button
-   * @param {ColorLike} color
+   * @param color Background color of the drawing (custom color when not in palette)
    */
   updateBgColor(color: ColorLike) {
     this.bgColorPicker.setColor(color);
@@ -224,6 +228,10 @@ export class Settings extends Dropdown {
 
   /**
    * Menu item: icon, translated label and shortcut
+   * @param icon Svg icon shown first
+   * @param label Key of the item text, translated again on language change
+   * @param shortcut Keys shown after the text (hidden from screen readers), none when missing
+   * @returns Item button, not appended yet
    */
   private _createItem(icon: string, label: TranslationKey, shortcut?: string) {
     const $item = createButton('drawer-button', 'drawer-button-neutral', 'drawer-dropdown-list-item');
@@ -246,6 +254,7 @@ export class Settings extends Dropdown {
 
   /**
    * Language choice: browser one or a language
+   * @returns Item holding the label and the language select (set to current choice)
    */
   private _createLanguageItem() {
     const $item = document.createElement('div');
@@ -294,6 +303,7 @@ export class Settings extends Dropdown {
 
   /**
    * Separator between groups of menu items
+   * @returns New `hr` element
    */
   getSeparator() {
     const $separator = document.createElement('hr');

@@ -25,6 +25,10 @@ export class EraserWidget extends BaseWidget {
   /** Trail behind pointer while erasing */
   #trail: Trail;
 
+  /**
+   * Create the eraser tool, shortcut E, with its trail in the selection layer
+   * @param drawer Drawer of this widget
+   */
   constructor(drawer: Drawer) {
     super(drawer, 'eraser', 'Eraser', EraserIcon, 'e');
 
@@ -32,12 +36,16 @@ export class EraserWidget extends BaseWidget {
   }
 
   /**
+   * Erasing in progress (pointer action)
    * @deprecated use `inAction`
    */
   get isErasing() {
     return this.inAction;
   }
 
+  /**
+   * Erase by drag (shapes crossed shown as outlines, erased on pointer up, trail behind pointer) or by click
+   */
   protected initEvents(): void {
     this.onStage('mousedown touchstart', (e) => {
       if (e.target !== this.drawer.stage) {
@@ -95,6 +103,8 @@ export class EraserWidget extends BaseWidget {
 
   /**
    * Drawing shape of a node (shape of a group: whole group is erased, shape of a frame: alone)
+   * @param node Konva node under pointer, null when none
+   * @returns Drawing shape holding the node, undefined when the node is not in the drawing layer
    */
   private _getDrawingShape(node: Node | null): DrawingShape | undefined {
     return node && node.getLayer() === this.drawer.drawLayer ? getDrawingShape(node, this.drawer.drawLayer) : undefined;
@@ -111,6 +121,7 @@ export class EraserWidget extends BaseWidget {
 
   /**
    * Shape replaced by its thin outline until pointer up: visible whatever shape color and opacity, shape unchanged
+   * @param shape Drawing shape to erase, hidden meanwhile
    * @returns outline, in selection layer
    */
   private _showOutline(shape: DrawingShape) {
@@ -140,7 +151,9 @@ export class EraserWidget extends BaseWidget {
     return outline;
   }
 
-  // erasing stopped before pointer up (tool changed): shapes kept as they were
+  /**
+   * Erasing stopped before pointer up (tool changed): shapes kept as they were, trail removed
+   */
   protected onDesactive(): void {
     this.#toRemoved.forEach((outline, shape) => {
       outline.destroy();

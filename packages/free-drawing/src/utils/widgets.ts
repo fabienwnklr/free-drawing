@@ -3,7 +3,8 @@ import { widgetNames } from '@/constants';
 
 /**
  * Names of widgets option (list or object), in given order, unknown names are ignored
- * @param {WidgetsOptions} widgets
+ * @param widgets `widgets` option: list of names, or options by name
+ * @returns known widget names (a warning for each unknown one)
  */
 export function getWidgetNames(widgets: WidgetsOptions): WidgetName[] {
   const names = Array.isArray(widgets) ? widgets : (Object.keys(widgets) as WidgetName[]);
@@ -17,8 +18,9 @@ export function getWidgetNames(widgets: WidgetsOptions): WidgetName[] {
 
 /**
  * Groups of widgets option with widgets of toolbar only (a widget in one group), groups without widgets ignored
- * @param {WidgetGroupOptions[]} groups
- * @param {WidgetName[]} names Widgets of toolbar
+ * @param groups `widgetGroups` option
+ * @param names Widgets of toolbar
+ * @returns copies of the groups with their valid widgets (a widget only in its first group)
  */
 export function getWidgetGroups(groups: WidgetGroupOptions[], names: WidgetName[]): WidgetGroupOptions[] {
   const grouped = new Set<WidgetName>();
@@ -37,8 +39,9 @@ export function getWidgetGroups(groups: WidgetGroupOptions[], names: WidgetName[
 
 /**
  * Options of a widget from widgets option (empty with list form)
- * @param {WidgetsOptions} widgets
- * @param {AvailableTools} id
+ * @param widgets `widgets` option: list of names, or options by name
+ * @param id name of the widget
+ * @returns options given for the widget, empty object when none
  */
 export function getWidgetOptions<T extends WidgetOptions = WidgetOptions>(widgets: WidgetsOptions, id: AvailableTools): T {
   if (Array.isArray(widgets)) return {} as T;

@@ -96,6 +96,11 @@ export class BaseOverlay {
   /** Sections and titles given by the subclass, defaults when missing */
   options?: Partial<OverlayOptions>;
 
+  /**
+   * Create the panel and its sections in floating region (hidden until `show`), fields following option changes
+   * @param drawer Drawer whose options and selection the fields change
+   * @param options Sections shown and titles, defaults for missing ones
+   */
   constructor(drawer: Drawer, options?: Partial<OverlayOptions>) {
     this.options = options;
     this.drawer = drawer;
@@ -353,6 +358,8 @@ export class BaseOverlay {
 
   /**
    * Section title, referenced by its fields
+   * @param text Key of the title text, translated again on language change
+   * @returns Title element with a unique id (for `aria-labelledby`)
    */
   protected _createTitle(text: TranslationKey) {
     const $title = document.createElement('h6');
@@ -366,6 +373,8 @@ export class BaseOverlay {
 
   /**
    * Group of fields named by its title
+   * @param title Key of the section title
+   * @returns Section element (title then fields element) and its fields element, not appended yet
    */
   protected _createSection(title: TranslationKey) {
     /** Section element: group named by its title */
@@ -385,6 +394,11 @@ export class BaseOverlay {
 
   /**
    * Toggle button of a field, `label` is its accessible name (icon or short content)
+   * @param content HTML of the button: svg icon or short text
+   * @param attr Data attribute holding the value, used by `updateFields` to find the active button
+   * @param value Option value the button chooses
+   * @param label Key of the accessible name
+   * @returns Button not pressed, not appended yet
    */
   protected _createButton(content: string, attr: string, value: string, label: TranslationKey) {
     const $btn = createButton('drawer-button', this.selectors.button);
@@ -399,6 +413,7 @@ export class BaseOverlay {
 
   /**
    * Append sections at the end of the panel
+   * @param elements Sections appended in this order
    */
   appendContent(elements: HTMLElement[]) {
     this.$overlayContainer.append(...elements);
@@ -436,6 +451,8 @@ export class BaseOverlay {
 
   /**
    * Set given button active in its container (null to only remove active one)
+   * @param $btnContainer Fields element whose buttons are updated
+   * @param $btn Button set pressed, the others are released; null releases all
    */
   protected _setActiveBtn($btnContainer: HTMLDivElement, $btn: Element | null) {
     $btnContainer
@@ -445,7 +462,7 @@ export class BaseOverlay {
 
   /**
    * Update fields state, only given keys are updated
-   * @param {OptionsChange} change
+   * @param change Changed options (from `drawer.options.change`) or values of the shape shown
    */
   updateFields(change: OptionsChange) {
     if (change.strokeColor !== undefined) {
@@ -490,7 +507,7 @@ export class BaseOverlay {
 
   /**
    * Show / hide stroke style buttons (dash), only relevant for outline shapes
-   * @param {boolean} visible
+   * @param visible True to show the section, false to hide it
    */
   toggleStyleBtns(visible: boolean) {
     this.$strokeStyleContainer.style.display = visible ? '' : 'none';
@@ -498,7 +515,7 @@ export class BaseOverlay {
 
   /**
    * Show / hide background color buttons, only relevant for rectangle and ellipse
-   * @param {boolean} visible
+   * @param visible True to show the section, false to hide it
    */
   toggleFillBtns(visible: boolean) {
     this.$fillColorContainer.style.display = visible ? '' : 'none';
@@ -506,7 +523,7 @@ export class BaseOverlay {
 
   /**
    * Show / hide corners buttons, only relevant for rectangles
-   * @param {boolean} visible
+   * @param visible True to show the section, false to hide it
    */
   toggleEdgesBtns(visible: boolean) {
     this.$edgesContainer.style.display = visible ? '' : 'none';

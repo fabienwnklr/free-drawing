@@ -11,17 +11,25 @@ export class PanWidget extends BaseWidget {
   hasMoved: boolean = false;
   protected cursor = grabCursor;
 
+  /**
+   * Create the pan tool, shortcut H
+   * @param drawer Drawer of this widget
+   */
   constructor(drawer: Drawer) {
     super(drawer, 'pan', 'Pan', PanIcon, 'h');
   }
 
   /**
+   * View being dragged (pointer action in progress)
    * @deprecated use `inAction`
    */
   get isGrabbing() {
     return this.inAction;
   }
 
+  /**
+   * Grabbing cursor while pointer is down, change fired on pointer up when the view moved (view saved)
+   */
   protected initEvents(): void {
     this.onStage('mousedown touchstart', () => {
       this.startAction();
@@ -45,10 +53,16 @@ export class PanWidget extends BaseWidget {
     });
   }
 
+  /**
+   * Stage draggable: a drag moves the view
+   */
   protected onActive(): void {
     this.drawer.stage.draggable(true);
   }
 
+  /**
+   * Stage no longer draggable
+   */
   protected onDesactive(): void {
     this.drawer.stage.draggable(false);
   }

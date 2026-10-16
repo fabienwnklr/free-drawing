@@ -12,10 +12,19 @@ export class FrameWidget extends ShapeWidget<Frame> {
   // no style
   protected showOverlayOnActive = false;
 
+  /**
+   * Create the frame tool, shortcut F
+   * @param drawer Drawer of this widget
+   */
   constructor(drawer: Drawer) {
     super(drawer, 'frame', 'Frame', FrameIcon, 'f');
   }
 
+  /**
+   * Frame of size 0 at drag start, titled with the next frame number
+   * @param start Drag start, in drawing coordinates
+   * @returns Frame named "Frame n" in the language of the drawer
+   */
   protected createShape(start: Vector2d) {
     const number = this.drawer.getDrawingShapes().filter(isFrame).length + 1;
 
@@ -27,6 +36,13 @@ export class FrameWidget extends ShapeWidget<Frame> {
     });
   }
 
+  /**
+   * Frame of the dragged box
+   * @param frame Frame being drawn
+   * @param start Drag start, in drawing coordinates
+   * @param end Pointer, in drawing coordinates
+   * @param constrain Shift pressed: square frame
+   */
   protected updateShape(frame: Frame, start: Vector2d, end: Vector2d, constrain: boolean) {
     const { x, y, width, height } = dragBox(start, end, constrain);
 
@@ -34,6 +50,10 @@ export class FrameWidget extends ShapeWidget<Frame> {
     setFrameSize(frame, width, height);
   }
 
+  /**
+   * Frame drawn: moved under other shapes, takes the shapes entirely in it
+   * @param frame Frame drawn, null after a simple click
+   */
   protected onDrawEnd(frame: Frame | null) {
     if (!frame) return;
 

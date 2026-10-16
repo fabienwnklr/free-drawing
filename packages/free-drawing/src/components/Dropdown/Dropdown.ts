@@ -19,6 +19,9 @@ export class Dropdown extends MicroEvent {
   /** List item element with the item class, created for subclasses (not added to the list) */
   $dropdownItem: HTMLLIElement;
 
+  /**
+   * Create the button and the hidden menu holding an empty list, listen to clicks and Escape
+   */
   constructor() {
     super();
 
@@ -45,6 +48,7 @@ export class Dropdown extends MicroEvent {
 
   /**
    * Sets the content of the menu: an HTML string replaces it, a node is added at its end
+   * @param content HTML markup replacing the content, or node added after it
    */
   setContent(content: string | Node) {
     if (typeof content === 'string') {
@@ -72,6 +76,7 @@ export class Dropdown extends MicroEvent {
 
   /**
    * Whether the menu is shown
+   * @returns True while the menu is shown
    */
   isShown() {
     return this.$menu.classList.contains('show');
@@ -79,6 +84,7 @@ export class Dropdown extends MicroEvent {
 
   /**
    * Shows or hides the menu and updates `aria-expanded` of the button, without event
+   * @param shown True to show the menu, false to hide it
    */
   private _setShown(shown: boolean) {
     this.$menu.classList.toggle('show', shown);

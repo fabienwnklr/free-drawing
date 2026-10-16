@@ -33,6 +33,11 @@ export class Trail {
   #following = false;
   #frame = 0;
 
+  /**
+   * Create a trail, its line is added to the layer by `start`
+   * @param layer Layer of the trail line (selection layer: not saved), its scale keeps trail size the same
+   * @param options Color, size, duration and glow, defaults for missing ones
+   */
   constructor(
     /** Layer of the trail line (selection layer: not saved), its scale keeps trail size the same whatever zoom */
     private readonly layer: Layer,
@@ -63,6 +68,8 @@ export class Trail {
 
   /**
    * Add pointer position (layer coordinates)
+   * @param x Horizontal position of pointer, in layer coordinates
+   * @param y Vertical position of pointer, in layer coordinates
    */
   add(x: number, y: number) {
     if (this.#following) this.#points.push({ x, y, time: performance.now() });

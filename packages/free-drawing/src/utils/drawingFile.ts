@@ -21,10 +21,14 @@ export type DrawingFile = {
 };
 
 // files and links can come from anyone: only drawing shapes and groups of them are created
+/** Konva classes of drawing shapes allowed in files and links (with groups and frames) */
 const shapeClasses = ['Line', 'Arrow', 'Rect', 'Ellipse', 'Text', 'Path'];
 
 /**
  * Drawing shape or group of a file, null for other nodes
+ * @param shape node state read from the file (not trusted)
+ * @returns state with only `attrs`, `className` and valid children (groups and frames), null for other classes or
+ * without attributes
  */
 function parseShape(shape: ShapeState): ShapeState | null {
   if (typeof shape?.attrs !== 'object' || shape.attrs === null) return null;
@@ -46,6 +50,8 @@ function parseShape(shape: ShapeState): ShapeState | null {
 
 /**
  * Drawing file from its JSON, shapes other than drawing ones are ignored
+ * @param json content of a `.freedrawing` file or of a link
+ * @returns drawing file of version 1, white background when missing
  * @throws {Error} not a drawing file
  */
 export function parseDrawingFile(json: string): DrawingFile {
@@ -61,6 +67,11 @@ export function parseDrawingFile(json: string): DrawingFile {
   };
 }
 
+/**
+ * Base64url text of bytes (URL safe: `-` and `_`, no padding)
+ * @param bytes data to encode
+ * @returns encoded text
+ */
 function toBase64Url(bytes: Uint8Array): string {
   let binary = '';
 
@@ -72,18 +83,32 @@ function toBase64Url(bytes: Uint8Array): string {
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
+/**
+ * Bytes of base64url text (see `toBase64Url`)
+ * @param data encoded text, without padding
+ * @returns decoded bytes
+ * @throws {DOMException} `InvalidCharacterError` when not base64
+ */
 function fromBase64Url(data: string): Uint8Array<ArrayBuffer> {
   const binary = atob(data.replace(/-/g, '+').replace(/_/g, '/'));
 
   return Uint8Array.from(binary, (char) => char.charCodeAt(0));
 }
 
+/**
+ * Bytes compressed or decompressed by a stream
+ * @param bytes data to transform
+ * @param stream compression (`deflate-raw`) or decompression stream
+ * @returns transformed bytes
+ */
 async function transform(bytes: Uint8Array<ArrayBuffer>, stream: CompressionStream | DecompressionStream) {
   return new Uint8Array(await new Response(new Response(bytes).body!.pipeThrough(stream)).arrayBuffer());
 }
 
 /**
  * Text as link data (base64url), compressed when browser can: `z` prefix, else `j`
+ * @param text JSON of a drawing file
+ * @returns data to put in a link hash
  */
 export async function encodeLinkData(text: string): Promise<string> {
   const bytes = new TextEncoder().encode(text);
@@ -95,6 +120,8 @@ export async function encodeLinkData(text: string): Promise<string> {
 
 /**
  * Text of link data (see `encodeLinkData`)
+ * @param data data of a link hash, with its `z` or `j` prefix
+ * @returns decoded text (JSON of a drawing file)
  */
 export async function decodeLinkData(data: string): Promise<string> {
   const bytes = fromBase64Url(data.slice(1));
@@ -102,6 +129,7 @@ export async function decodeLinkData(data: string): Promise<string> {
   return new TextDecoder().decode(data[0] === 'z' ? await transform(bytes, new DecompressionStream('deflate-raw')) : bytes);
 }
 
+/** `showSaveFilePicker` of File System Access API (Chromium), not typed by TypeScript */
 type SaveFilePicker = (options: {
   suggestedName: string;
   types: { description: string; accept: Record<string, string[]> }[];
@@ -110,6 +138,7 @@ type SaveFilePicker = (options: {
 /**
  * Save content in a file: browser save dialog when available (Chromium), else download
  * @param name File name with extension
+ * @param content file content: text or binary data (exported image)
  * @param type Mime type of content
  * @throws {DOMException} `AbortError` when dialog is canceled
  */
@@ -146,6 +175,7 @@ export async function saveFile(name: string, content: Blob | string, type: strin
 /**
  * Text of a file chosen by user, null if canceled
  * @param accept File types (input `accept` attribute)
+ * @returns promise of the file text, of null when canceled or no file chosen
  */
 export function pickFile(accept: string): Promise<string | null> {
   return new Promise((resolve) => {

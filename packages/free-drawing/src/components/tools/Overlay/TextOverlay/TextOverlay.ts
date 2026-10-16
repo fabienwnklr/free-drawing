@@ -58,6 +58,10 @@ export class TextOverlay extends BaseOverlay {
   /** Element of left, center and right alignment buttons */
   $textAlignBtnContainer!: HTMLDivElement;
 
+  /**
+   * Create the text panel: common sections without stroke width, text sections between color and opacity
+   * @param drawer Drawer whose text options and selected texts the fields change
+   */
   constructor(drawer: Drawer) {
     super(drawer, { widthBtns: false, colorTitle: 'overlay.color', label: 'overlay.text' });
     this.$overlayContainer.classList.add('drawer-text-overlay');
@@ -145,6 +149,7 @@ export class TextOverlay extends BaseOverlay {
   /**
    * Build fontStyle or textDecoration value from active toggle buttons
    * @param attr data attribute of toggled button
+   * @returns `fontStyle` (italic and bold, else normal) or `textDecoration` (empty for none) of active buttons
    */
   private _getToggledStyle(attr: string): Partial<TextStyle> {
     const isActive = (value: string) => !!this.$fontStyleBtnContainer.querySelector(`[${attr}="${value}"].active`);
@@ -187,6 +192,8 @@ export class TextOverlay extends BaseOverlay {
 
   /**
    * Text style of a text node, shown by text fields
+   * @param text Selected text node whose style is read
+   * @returns Font family, size, style, decoration and alignment of the text
    */
   private _getTextStyle(text: Text): TextStyle {
     return {
@@ -198,6 +205,10 @@ export class TextOverlay extends BaseOverlay {
     };
   }
 
+  /**
+   * Update common fields, then text fields when text style changed
+   * @param change Changed options (from `drawer.options.change`) or values of the shape shown
+   */
   updateFields(change: OptionsChange) {
     super.updateFields(change);
 
@@ -206,7 +217,7 @@ export class TextOverlay extends BaseOverlay {
 
   /**
    * Update text fields state, only given style keys are updated
-   * @param {Partial<TextStyle>} style
+   * @param style Text style of the selected text or of `textStyle` option, possibly partial
    */
   updateTextFields(style: Partial<TextStyle>) {
     const { fontFamily, fontSize, fontStyle, textDecoration, align } = style;

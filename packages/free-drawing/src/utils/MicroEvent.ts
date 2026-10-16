@@ -5,10 +5,13 @@ import { deprecatedEvents } from '@/constants';
  */
 export type TCallback = (...args: any) => any;
 
+/** Deprecated event names already warned about */
 const warned = new Set<string>();
 
 /**
  * Current name of an event: names of previous versions are deprecated (warned once)
+ * @param event event name, current or of a previous version
+ * @returns current name of the event (the name itself when not deprecated)
  */
 function eventName(event: string): string {
   const name = deprecatedEvents[event];
@@ -25,6 +28,8 @@ function eventName(event: string): string {
 /**
  * Execute callback for each event in space separated list of event names
  *
+ * @param events event names separated by white space
+ * @param callback called with the current name of each event
  */
 function forEvents(events: string, callback: (event: string) => any) {
   events.split(/\s+/).forEach((event) => {
@@ -40,6 +45,7 @@ export default class MicroEvent {
   /** Listeners by event name, in order of registration */
   public _events: { [key: string]: TCallback[] } = {};
 
+  /** Creates an emitter without listeners */
   constructor() {
     this._events = {};
   }

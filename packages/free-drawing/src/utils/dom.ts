@@ -1,5 +1,6 @@
 /**
  * Disable an element: `aria-disabled` and `disabled` class, `disabled` property of buttons
+ * @param $el button, menu item or other element to disable
  */
 export function disableElement($el: HTMLElement) {
   $el.setAttribute('aria-disabled', 'true');
@@ -12,6 +13,7 @@ export function disableElement($el: HTMLElement) {
 
 /**
  * Enable an element disabled by `disableElement`
+ * @param $el element to enable
  */
 export function enableElement($el: HTMLElement) {
   $el.removeAttribute('aria-disabled');
@@ -24,6 +26,8 @@ export function enableElement($el: HTMLElement) {
 
 /**
  * Button with given classes, `type="button"`: default type `submit` would submit a form of the page
+ * @param classNames CSS classes of the button
+ * @returns new button, not added to the page
  */
 export function createButton(...classNames: string[]) {
   const $btn = document.createElement('button');
@@ -36,6 +40,8 @@ export function createButton(...classNames: string[]) {
 
 /**
  * On / off switch: checkbox announced as a switch (state read as on / off), keyboard (Space) and pointer as a checkbox
+ * @param checked initial state, on when true
+ * @returns new checkbox with role `switch`, not added to the page
  */
 export function createSwitch(checked = false) {
   const $switch = document.createElement('input');
@@ -47,10 +53,13 @@ export function createSwitch(checked = false) {
   return $switch;
 }
 
+/** Number of the last id given by `uniqueId` */
 let lastId = 0;
 
 /**
  * Unique element id, for aria references (aria-labelledby, aria-controls...)
+ * @param prefix kind of element, put in the id
+ * @returns `drawer-<prefix>-<number>` id, unique in the page
  */
 export function uniqueId(prefix: string) {
   return `drawer-${prefix}-${++lastId}`;
@@ -58,6 +67,8 @@ export function uniqueId(prefix: string) {
 
 /**
  * Accessible name of an element (icon button...), also shown as tooltip
+ * @param $el element to name
+ * @param label translated name, set as `aria-label` and `title`
  */
 export function setLabel($el: HTMLElement, label: string) {
   $el.setAttribute('aria-label', label);
@@ -66,6 +77,8 @@ export function setLabel($el: HTMLElement, label: string) {
 
 /**
  * Toggle button state: active class and aria-pressed (aria-checked for menu items)
+ * @param $el toggle button or `menuitemcheckbox` item
+ * @param pressed true when on
  */
 export function setPressed($el: HTMLElement, pressed: boolean) {
   const attr = $el.getAttribute('role') === 'menuitemcheckbox' ? 'aria-checked' : 'aria-pressed';
@@ -77,6 +90,9 @@ export function setPressed($el: HTMLElement, pressed: boolean) {
 /**
  * Arrow keys move focus between items (last to first and back), Home / End to first / last item.
  * Handled keys are not propagated, so drawer shortcuts (e.g. arrows moving selection) are not triggered.
+ * @param $container element listening to keydown of its items
+ * @param getItems items in navigation order, read on each key (disabled buttons skipped)
+ * @param orientation horizontal: left / right arrows, vertical: up / down arrows
  * @param onMove called with the newly focused item
  */
 export function arrowNavigation(

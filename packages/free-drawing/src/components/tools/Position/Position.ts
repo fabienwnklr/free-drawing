@@ -19,6 +19,10 @@ export class Position {
   #$x: HTMLSpanElement;
   #$y: HTMLSpanElement;
 
+  /**
+   * Create coordinates and recenter button in header, showing the current position
+   * @param drawer Drawer whose view position is shown
+   */
   constructor(drawer: Drawer) {
     this.drawer = drawer;
 
@@ -47,6 +51,7 @@ export class Position {
 
   /**
    * Axis name and its value
+   * @param axis Axis name shown before its value
    * @returns value element
    */
   private _createAxis(axis: 'x' | 'y') {
@@ -63,6 +68,7 @@ export class Position {
 
   /**
    * Move of view center from origin, in canvas coordinates: 0, 0 at start, zoom on view center does not change it
+   * @returns Rounded x and y of the move (never -0)
    */
   getPosition(): Vector2d {
     const { stage } = this.drawer;

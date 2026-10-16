@@ -40,6 +40,11 @@ export class ColorPicker {
   /** Options given on creation */
   private readonly options: ColorPickerOptions;
 
+  /**
+   * Create palette buttons and custom color input, none pressed until `setColor`
+   * @param $container Element receiving the buttons, then the custom input
+   * @param options Palette, attribute and class of buttons, transparent button, change callback and texts
+   */
   constructor($container: HTMLElement, options: ColorPickerOptions) {
     this.options = options;
 
@@ -80,6 +85,7 @@ export class ColorPicker {
 
   /**
    * Show current color: its palette button, or custom input when not in palette
+   * @param color Current color, compared with palette colors once normalized
    */
   setColor(color: ColorLike) {
     const normalized = normalizeColor(color);

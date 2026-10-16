@@ -13,8 +13,9 @@ const overlays = new WeakMap<Drawer, ShapeOverlay>();
 
 /**
  * Point at the same distance from start as end, in the nearest 45 degrees direction
- * @param {Vector2d} start
- * @param {Vector2d} end
+ * @param start Fixed point (drag start)
+ * @param end Point to snap (pointer)
+ * @returns End moved on the nearest multiple of 45 degrees around start
  */
 export function snapAngle(start: Vector2d, end: Vector2d): Vector2d {
   const step = Math.PI / 4;
@@ -26,9 +27,10 @@ export function snapAngle(start: Vector2d, end: Vector2d): Vector2d {
 
 /**
  * Box from drag start to end (whatever the drag direction)
- * @param {Vector2d} start
- * @param {Vector2d} end
- * @param {boolean} square Same width and height
+ * @param start Corner where the drag started
+ * @param end Opposite corner (pointer)
+ * @param square Same width and height
+ * @returns Top left corner and positive size of the box
  */
 export function dragBox(start: Vector2d, end: Vector2d, square: boolean) {
   let width = end.x - start.x;
@@ -67,6 +69,14 @@ export abstract class ShapeWidget<T extends DrawingShape> extends BaseWidget {
   /** Last pointer event of drawing (modifier keys) */
   protected pointerEvent: MouseEvent | TouchEvent | null = null;
 
+  /**
+   * Create the widget with the shape overlay shared by shape tools of the drawer
+   * @param drawer Drawer of this widget
+   * @param id Id of the tool
+   * @param title Title of the button without translation of the id
+   * @param icon Svg markup of the button icon
+   * @param shortcut Default key activating the tool
+   */
   constructor(drawer: Drawer, id: AvailableTools, title: string, icon: string, shortcut?: string) {
     super(drawer, id, title, icon, shortcut);
 
@@ -81,6 +91,7 @@ export abstract class ShapeWidget<T extends DrawingShape> extends BaseWidget {
   }
 
   /**
+   * Shape being drawn (pointer action in progress)
    * @deprecated use `inAction`
    */
   get isPaint() {
@@ -89,12 +100,16 @@ export abstract class ShapeWidget<T extends DrawingShape> extends BaseWidget {
 
   /**
    * New shape at drag start
-   * @param {Vector2d} start
+   * @param start Drag start, in drawing coordinates
+   * @returns Shape of the tool at start, added to drawing then updated while dragging
    */
   protected abstract createShape(start: Vector2d): T;
 
   /**
    * Update shape geometry from drag start to end
+   * @param shape Shape being drawn, created by `createShape`
+   * @param start Drag start, in drawing coordinates
+   * @param end Pointer, in drawing coordinates
    * @param constrain Shift key pressed (square, circle, 45 degrees...)
    */
   protected abstract updateShape(shape: T, start: Vector2d, end: Vector2d, constrain: boolean): void;
@@ -125,20 +140,30 @@ export abstract class ShapeWidget<T extends DrawingShape> extends BaseWidget {
 
   /**
    * Drawing ended: shape drawn, or null (removed: simple click)
+   * @param shape Shape drawn, in its final geometry and placed in frames, null after a simple click
    */
   protected onDrawEnd?(shape: T | null): void;
 
-  // Shift pressed or released while drawing
+  /**
+   * Shift pressed or released while drawing: shape updated to the pointer with or without constraint
+   * @param constrain Shift pressed
+   */
   protected onConstrainChange(constrain: boolean): void {
     if (this.#shape) this.updateShape(this.#shape, this.#start, this.drawer._getRelativePointerPos(), constrain);
   }
 
-  // overlay shared by shape tools: background color only for shapes having one
+  /**
+   * Overlay shared by shape tools: background color and edges only for shapes having them
+   */
   protected onActive(): void {
     this.overlay.toggleFillBtns(this.hasFill);
     this.overlay.toggleEdgesBtns(this.hasEdges);
   }
 
+  /**
+   * Draw by drag: shape created on pointer down, updated on move (shared live), finished on pointer up (removed after
+   * a simple click)
+   */
   protected initEvents(): void {
     this.onStage('mousedown touchstart', (e) => {
       if (e.evt.button === 2) return;

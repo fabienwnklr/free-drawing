@@ -28,6 +28,11 @@ export class ConfirmModal extends Modal {
   _options: ConfirmModalOptions;
   #messageId = uniqueId('confirm-message');
 
+  /**
+   * Create the dialog (hidden, without header) with its message and buttons
+   * @param drawer Drawer the dialog belongs to
+   * @param options Message, button labels and actions, missing ones taken from {@link confirmModalDefaultOpts}
+   */
   constructor(drawer: Drawer, options: Partial<ConfirmModalOptions> = {}) {
     super(drawer, { showHeader: false });
 
@@ -60,6 +65,7 @@ export class ConfirmModal extends Modal {
 
   /**
    * Message asking confirmation
+   * @param message Text of the message, kept when the language changes
    */
   setMessage(message: string) {
     this._options.message = message;

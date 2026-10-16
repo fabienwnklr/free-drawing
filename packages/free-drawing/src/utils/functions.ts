@@ -9,7 +9,7 @@ export function isObject(item: any): boolean {
 
 /**
  * Check if an item is set: not undefined, null or empty string (false and 0 are)
- * @param {any} t - The item that needs to be checked
+ * @param t - The item that needs to be checked
  * @returns Whether or not `t` is set
  */
 export function isTruthy(t: any): boolean {
@@ -18,9 +18,10 @@ export function isTruthy(t: any): boolean {
 
 /**
  * Merge deeply 2 object with check of validity
- * @param target
- * @param source
- * @returns {Object} Merged object
+ * @param target default values (e.g. `defaultOptions`), not modified
+ * @param source given values: replace those of `target`, except undefined, null and empty string; arrays replaced,
+ * objects merged into objects
+ * @returns Merged object
  */
 export function deepMerge<T extends object>(target: T, source: Partial<T> | T): T {
   if (!source) return target;
@@ -40,6 +41,7 @@ export function deepMerge<T extends object>(target: T, source: Partial<T> | T): 
 
 /**
  * Unique id of a drawing shape (collaboration), `crypto.randomUUID` needs a secure context (https)
+ * @returns id of time and random characters (base 36)
  */
 export function createId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
@@ -47,8 +49,9 @@ export function createId(): string {
 
 /**
  * Element created from HTML code (its first element)
- * @typeParam T type of the element
+ * @template T type of the element
  * @param string HTML code of one element
+ * @returns first element of the code, not added to the page (null without element)
  */
 export function stringToNode<T>(string: string): T {
   const placeholder = document.createElement('div');

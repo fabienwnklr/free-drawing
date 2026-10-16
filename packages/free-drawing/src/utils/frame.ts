@@ -20,6 +20,7 @@ export const frameParts = {
 
 /** Color of frame border and title */
 const frameColor = '#868e96';
+/** Font size of frame title */
 const titleSize = 14;
 
 /**
@@ -34,6 +35,8 @@ export class Frame extends Group {
   /**
    * Box of the frame, title and shapes out of it not counted (transformer, selection, snapping, export),
    * drawn rect for konva drawing (cache)
+   * @param config konva options: `relativeTo` (absolute by default), `skipTransform` (own coordinates)
+   * @returns box of the frame, rect of everything drawn for konva drawing
    */
   getClientRect(config: GetClientRectConfig = {}): IRect {
     // as drawn (cache...)
@@ -51,6 +54,8 @@ _registerNode(Frame);
 
 /**
  * Node is a frame: to exclude frames from checks of groups of shapes (`instanceof Group`)
+ * @param node any node, or nothing
+ * @returns true for a frame
  */
 export function isFrame(node: Node | null | undefined): node is Frame {
   return node instanceof Frame;
@@ -58,6 +63,7 @@ export function isFrame(node: Node | null | undefined): node is Frame {
 
 /**
  * New frame of given box and name
+ * @returns frame with its box, title and empty content, not added to a layer
  */
 export function createFrame({ x, y, width, height, label }: IRect & { label: string }): Frame {
   const frame = new Frame({ name: shapeName.frame, x, y, width, height, label });
@@ -83,6 +89,8 @@ export function createFrame({ x, y, width, height, label }: IRect & { label: str
 
 /**
  * Group of the shapes of a frame (cut at its box)
+ * @param frame frame created by `createFrame` (or loaded)
+ * @returns content group of the frame
  */
 export function getFrameContent(frame: Frame): Group {
   return frame.findOne<Group>(`.${frameParts.content}`)!;
@@ -90,6 +98,8 @@ export function getFrameContent(frame: Frame): Group {
 
 /**
  * Title text of a frame, above its box
+ * @param frame frame created by `createFrame` (or loaded)
+ * @returns title text node of the frame
  */
 export function getFrameTitle(frame: Frame): Text {
   return frame.findOne<Text>(`.${frameParts.title}`)!;
@@ -97,6 +107,8 @@ export function getFrameTitle(frame: Frame): Text {
 
 /**
  * Shapes of a frame
+ * @param frame frame whose shapes are read
+ * @returns drawing shapes of its content, bottom first
  */
 export function getFrameShapes(frame: Frame): DrawingShape[] {
   return getFrameContent(frame).getChildren() as DrawingShape[];
@@ -104,6 +116,9 @@ export function getFrameShapes(frame: Frame): DrawingShape[] {
 
 /**
  * Size of frame: its box, cut of its shapes, title above it
+ * @param frame frame to resize
+ * @param width new width, in frame coordinates
+ * @param height new height, in frame coordinates
  */
 export function setFrameSize(frame: Frame, width: number, height: number) {
   frame.size({ width, height });
@@ -114,6 +129,8 @@ export function setFrameSize(frame: Frame, width: number, height: number) {
 
 /**
  * Name of frame: its title
+ * @param frame frame to rename
+ * @param label new name, set as `label` attribute and title text
  */
 export function setFrameLabel(frame: Frame, label: string) {
   frame.setAttr('label', label);
@@ -122,6 +139,8 @@ export function setFrameLabel(frame: Frame, label: string) {
 
 /**
  * Frame of a title, if it is one
+ * @param node any node (hit node, double clicked node...)
+ * @returns frame whose title is the node, null for other nodes
  */
 export function getFrameOfTitle(node: Node): Frame | null {
   const parent = node.getParent();
@@ -131,6 +150,9 @@ export function getFrameOfTitle(node: Node): Frame | null {
 
 /**
  * Container of drawing shapes: draw layer, or content of a frame
+ * @param node node to check (parent of a shape), or nothing
+ * @param layer draw layer
+ * @returns true for the draw layer or the content group of a frame
  */
 export function isShapesContainer(node: Node | null, layer: Container): boolean {
   return node === layer || !!node?.hasName(frameParts.content);
@@ -139,6 +161,9 @@ export function isShapesContainer(node: Node | null, layer: Container): boolean 
 /**
  * Drawing shape of a node of draw layer: the node itself, or its top group, in draw layer or in a frame
  * (a part of a frame gives the frame)
+ * @param node node of the draw layer (hit shape, shape of a group...)
+ * @param layer draw layer
+ * @returns drawing shape containing the node, the node itself when it is one
  */
 export function getDrawingShape(node: Node, layer: Container): DrawingShape {
   let shape = node;
@@ -150,7 +175,8 @@ export function getDrawingShape(node: Node, layer: Container): DrawingShape {
 
 /**
  * Drawing shapes and shapes of frames, from bottom to top (shapes of a frame after it)
- * @param {DrawingShape[]} shapes Drawing shapes (of draw layer)
+ * @param shapes Drawing shapes (of draw layer)
+ * @returns the shapes, each frame followed by its shapes
  */
 export function withFrameShapes(shapes: DrawingShape[]): DrawingShape[] {
   return shapes.flatMap((shape) => (isFrame(shape) ? [shape, ...getFrameShapes(shape)] : [shape]));
@@ -158,6 +184,9 @@ export function withFrameShapes(shapes: DrawingShape[]): DrawingShape[] {
 
 /**
  * Frame whose box contains the center of a shape (top one), null if none
+ * @param shape shape to place (drawn, dragged, transformed...)
+ * @param frames frames of the drawing, bottom first (hidden ones ignored)
+ * @returns topmost visible frame containing the shape center (absolute coordinates), null if none
  */
 export function findFrameAt(shape: DrawingShape, frames: Frame[]): Frame | null {
   const box = shape.getClientRect();
@@ -175,6 +204,8 @@ export function findFrameAt(shape: DrawingShape, frames: Frame[]): Frame | null 
 
 /**
  * Move a shape to another container (draw layer or content of a frame), at the same place on screen
+ * @param shape drawing shape to move
+ * @param container new parent: draw layer or content group of a frame (nothing done when already its parent)
  */
 export function moveShapeTo(shape: DrawingShape, container: Container) {
   if (shape.getParent() === container) return;

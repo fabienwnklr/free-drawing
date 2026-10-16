@@ -72,7 +72,11 @@ export type Command = {
 /** Accents of decomposed letters (U+0300 to U+036F) */
 const accents = new RegExp(`[${String.fromCharCode(0x300)}-${String.fromCharCode(0x36f)}]`, 'g');
 
-/** Text compared with search: lower case, without accents */
+/**
+ * Text compared with search: lower case, without accents
+ * @param text Search or text of a command (label, group, id)
+ * @returns Text decomposed (NFD), without accents, in lower case
+ */
 const normalize = (text: string) => text.normalize('NFD').replace(accents, '').toLowerCase();
 
 /**
@@ -93,6 +97,10 @@ export class CommandPalette extends Modal {
   /** Index of the active option in shown commands */
   #active = 0;
 
+  /**
+   * Build the palette without header nor footer: search field, list of commands and empty message
+   * @param drawer Drawer whose commands are listed and run
+   */
   constructor(drawer: Drawer) {
     super(drawer, { showHeader: false });
     this.$modal.classList.add('drawer-modal-commands');
@@ -150,6 +158,7 @@ export class CommandPalette extends Modal {
 
   /**
    * Close palette (focus back in drawer), then run command
+   * @param command Command chosen (Enter or click)
    */
   execute(command: Command) {
     this.hide();
@@ -202,6 +211,8 @@ export class CommandPalette extends Modal {
 
   /**
    * Option of a command: icon, label, check mark when checked, shortcut. Hover makes it active, click runs it
+   * @param command Command shown by the option
+   * @returns Option element (`role="option"`), added to its group by `_render`
    */
   private _createOption(command: Command) {
     const $option = document.createElement('div');
@@ -259,6 +270,7 @@ export class CommandPalette extends Modal {
 
   /**
    * Keys of the search field: Down / Up move the active option (looping), Enter runs it
+   * @param e Keydown of the search field (ignored during composition)
    */
   private _onKeydown(e: KeyboardEvent) {
     const count = this.#shown.length;
@@ -277,6 +289,7 @@ export class CommandPalette extends Modal {
   /**
    * Commands available now: widgets of toolbar, actions allowed (read only, selection, history),
    * components shown (zoom, position, layers), states of toggles
+   * @returns Available commands with the title of their group, in order of groups (tools, editor, view, file, language)
    */
   private _getCommands(): Command[] {
     const { drawer } = this;

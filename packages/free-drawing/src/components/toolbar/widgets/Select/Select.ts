@@ -116,6 +116,11 @@ export class SelectWidget extends BaseWidget {
   // overlay of selected shapes, not of the tool
   protected showOverlayOnActive = false;
 
+  /**
+   * Create the selection tool, shortcut S: transformer events (frames resized, texts rewrapped, change fired on
+   * transform or drag end), Shift moves along an axis, resize anchors snapped
+   * @param drawer Drawer of this widget
+   */
   constructor(drawer: Drawer) {
     super(drawer, 'selection', 'Select', SelectIcon, 's');
 
@@ -199,6 +204,10 @@ export class SelectWidget extends BaseWidget {
     this.transformer.on('transformend.guides', () => this._clearGuides());
   }
 
+  /**
+   * Press selects the shape under pointer (dragged at once) or drags the selection from its box, else starts a
+   * selection rectangle; release selects shapes touched by the rectangle, or the shape clicked (`_selectAt`)
+   */
   protected initEvents(): void {
     this.onStage('mousedown touchstart', (e) => {
       this.#pressOnTransformer = e.target.getParent() === this.transformer;
@@ -337,7 +346,7 @@ export class SelectWidget extends BaseWidget {
    * Select shapes (none clears selection): transformer, anchors, selection options instead of options of active tool.
    * Hidden shapes are not selectable, locked ones only without other shapes: selected as a whole (locked group)
    * to be unlocked, not modified (no anchors, options nor move)
-   * @param {(Shape<ShapeConfig> | Group)[]} shapes
+   * @param shapes Drawing shapes or shapes of groups to select, replacing the selection
    */
   select(shapes: (Shape<ShapeConfig> | Group)[]) {
     // shapes of a selected frame are selected with it
@@ -372,6 +381,7 @@ export class SelectWidget extends BaseWidget {
 
   /**
    * Selected shapes are locked: selected to be unlocked, not modified
+   * @returns True when shapes are selected and none of them listens (locked)
    */
   isLocked(): boolean {
     const nodes = this.transformer.nodes();
@@ -383,9 +393,10 @@ export class SelectWidget extends BaseWidget {
    * Shapes (or groups) under a point (absolute position), from top to bottom: drawn there (fill, stroke, text box),
    * then rectangles and ellipses without background around it, smallest first, then locked shapes (or their locked
    * groups) in the same order
-   * @param {Vector2d} pos
-   * @param {DrawingShape | null} hit Shape drawn on top (konva hit of pointer event, or its group), none by default
-   * @param {boolean} deep Shapes of groups instead of groups
+   * @param pos Point in view (pointer), absolute position
+   * @param hit Shape drawn on top (konva hit of pointer event, or its group), none by default
+   * @param deep Shapes of groups instead of groups
+   * @returns Visible shapes at the point, the first one is selected by a click
    */
   getShapesAt(pos: Vector2d, hit: DrawingShape | null = null, deep: boolean = false): DrawingShape[] {
     // shapes of frames above their frame
@@ -416,6 +427,8 @@ export class SelectWidget extends BaseWidget {
 
   /**
    * Drawing shape (or group) of a node of draw layer: the node itself or its top group, in drawing or in a frame
+   * @param node Node of draw layer (konva hit, part of a frame)
+   * @returns Node or group selected by a click on it
    */
   private _getDrawingShape(node: Node): DrawingShape {
     return getDrawingShape(node, this.drawer.drawLayer);
@@ -423,6 +436,7 @@ export class SelectWidget extends BaseWidget {
 
   /**
    * Selected shapes of groups are dragged alone (shapes of groups are moved with their group)
+   * @param shapes Selected shapes of groups, draggable while the selection tool is active (previous ones no longer)
    */
   private _setNested(shapes: DrawingShape[]) {
     this.#nested.forEach((shape) => shape.draggable(false));
@@ -432,6 +446,8 @@ export class SelectWidget extends BaseWidget {
 
   /**
    * Point (absolute position) in box of selection, rotated with it (dragged from it), not for locked shapes
+   * @param pos Point in view (pointer)
+   * @returns True when the point is in the transformer box of an unlocked selection
    */
   private _inSelectionBox(pos: Vector2d) {
     const back = this.transformer.findOne<Shape<ShapeConfig>>('.back');
@@ -441,6 +457,7 @@ export class SelectWidget extends BaseWidget {
 
   /**
    * Selected nodes (drawing shapes)
+   * @returns Nodes of the transformer
    */
   private _getSelected() {
     return this.transformer.nodes() as (Shape<ShapeConfig> | Group)[];
@@ -448,6 +465,8 @@ export class SelectWidget extends BaseWidget {
 
   /**
    * Click selection: shape under pointer, Shift adds or removes it, Alt selects the one behind selected shape
+   * @param pos Point clicked in view (pointer)
+   * @param hit Shape pressed (konva hit, or its group), null on empty place
    * @param keep Selection kept without shape under pointer (click in selection box)
    */
   private _selectAt(
@@ -471,6 +490,9 @@ export class SelectWidget extends BaseWidget {
     }
   }
 
+  /**
+   * New selection rectangle in selection layer, drawing shapes (also of frames) draggable
+   */
   protected onActive(): void {
     this.selectionRectangle = new Rect({
       fill: 'rgba(152, 158, 255, .2)',
@@ -489,7 +511,7 @@ export class SelectWidget extends BaseWidget {
 
   /**
    * Show overlay for selected shapes, text overlay if selection contains only text
-   * @param {(Shape<ShapeConfig> | Group)[]} nodes Selected shapes (shapes of groups are used)
+   * @param nodes Selected shapes (shapes of groups are used)
    */
   showOverlay(nodes: (Shape<ShapeConfig> | Group)[]) {
     const textOverlay = this.drawer.getWidget<TextWidget>('text')?.overlay;
@@ -554,8 +576,8 @@ export class SelectWidget extends BaseWidget {
   /**
    * Anchors of selected shapes: text has no top / bottom anchors (it would be stretched), its side anchors
    * resize text box and its corners scale it; locked shapes have none (dashed box around their outline)
-   * @param {(Shape<ShapeConfig> | Group)[]} shapes
-   * @param {boolean} locked
+   * @param shapes Shapes being selected
+   * @param locked Shapes are locked: no anchors nor rotation, dashed box
    */
   private _setupAnchors(shapes: (Shape<ShapeConfig> | Group)[], locked: boolean) {
     const onlyText = shapes.length > 0 && shapes.every((s) => s.hasName(shapeName.text));
@@ -576,6 +598,7 @@ export class SelectWidget extends BaseWidget {
   }
 
   /**
+   * Selection rectangle being drawn (pointer action in progress)
    * @deprecated use `inAction`
    */
   get isSelecting() {
@@ -594,6 +617,9 @@ export class SelectWidget extends BaseWidget {
     this.drawer.focus();
   }
 
+  /**
+   * Selection rectangle removed, selection cleared, drawing shapes no longer draggable
+   */
   protected onDesactive(): void {
     this.selectionRectangle.destroy();
     this.clearSelection();
@@ -665,6 +691,9 @@ export class SelectWidget extends BaseWidget {
   /**
    * Resize anchor position (absolute): side or corner aligned on edges and centers of other shapes (snapping), else
    * on grid. Not when rotating, nor for a rotated selection
+   * @param oldPos Anchor position before this move (absolute)
+   * @param newPos Anchor position given by the pointer (absolute)
+   * @returns Position of the anchor, snapped or unchanged
    */
   private _boundAnchor(oldPos: Vector2d, newPos: Vector2d): Vector2d {
     const anchor = this.transformer.getActiveAnchor();
@@ -709,6 +738,7 @@ export class SelectWidget extends BaseWidget {
   /**
    * Positions a shape can snap to (absolute): borders and center of stage, edges and centers of drawing shapes
    * @param skipShapes Moved shapes, not guides themselves (nor their groups)
+   * @returns Positions of vertical and horizontal guides
    */
   private _getLineGuideStops(skipShapes: Node[]): {
     /** X of vertical guides */
@@ -738,6 +768,8 @@ export class SelectWidget extends BaseWidget {
 
   /**
    * Points of a dragged node which snap to guides: its edges and center on each axis (absolute)
+   * @param node Node being dragged
+   * @returns Points of its box on each axis, with the offset to its position
    */
   private _getObjectSnappingEdges(node: Shape<ShapeConfig> | Stage) {
     const box = node.getClientRect();
@@ -928,7 +960,7 @@ export class SelectWidget extends BaseWidget {
 
   /**
    * Apply update on each selected shape, then fire change once
-   * @param update
+   * @param update Change of one shape, called for each selected shape (shapes of groups, not locked shapes nor frames)
    */
   private _updateSelected(update: (shape: Shape<ShapeConfig>) => void) {
     // shapes of groups too, locked shapes and frames are not modified
@@ -947,7 +979,7 @@ export class SelectWidget extends BaseWidget {
 
   /**
    * Change background color of selected rectangles and ellipses
-   * @param {ColorLike} color `'transparent'` for none
+   * @param color `'transparent'` for none
    */
   setFillColor(color: ColorLike) {
     this._updateSelected((s) => {
@@ -957,6 +989,8 @@ export class SelectWidget extends BaseWidget {
   }
 
   /**
+   * Change background color of selected rectangles and ellipses
+   * @param color `'transparent'` for none
    * @deprecated use `setFillColor`
    */
   setBgColor(color: ColorLike) {
@@ -965,7 +999,7 @@ export class SelectWidget extends BaseWidget {
 
   /**
    * Set color for draw
-   * @param {ColorLike} color
+   * @param color Fill and stroke of lines and arrows (fill only of highlights), fill of texts, stroke of other shapes
    */
   setColor(color: ColorLike) {
     this._updateSelected((s) => {
@@ -983,7 +1017,7 @@ export class SelectWidget extends BaseWidget {
 
   /**
    * Set stroke width for draw
-   * @param {Number} width
+   * @param width Stroke width of selected shapes (not highlights), dashes and arrow heads follow it
    */
   setStrokeWidth(width: number) {
     this._updateSelected((s) => {
@@ -1005,7 +1039,7 @@ export class SelectWidget extends BaseWidget {
 
   /**
    * Set stroke style of selected outline shapes (not brush lines, which are filled outlines)
-   * @param {StrokeStyle} style
+   * @param style Solid, dashed or dotted: dash computed from stroke width of each shape
    */
   setStrokeStyle(style: StrokeStyle) {
     this._updateSelected((s) => {
@@ -1018,7 +1052,7 @@ export class SelectWidget extends BaseWidget {
 
   /**
    * Set corners of selected rectangles: sharp, round (radius from their size) or radius
-   * @param {Edges} edges
+   * @param edges 'sharp', 'round' or corner radius
    */
   setEdges(edges: Edges) {
     this._updateSelected((s) => {
@@ -1030,7 +1064,7 @@ export class SelectWidget extends BaseWidget {
 
   /**
    * Set opacity of shape 0 to 1
-   * @param opacity
+   * @param opacity Opacity of selected shapes, from 0 (transparent) to 1
    */
   setOpacity(opacity: number) {
     this._updateSelected((s) => s.opacity(opacity));
@@ -1038,7 +1072,7 @@ export class SelectWidget extends BaseWidget {
 
   /**
    * Set text style of selected text
-   * @param {Partial<TextStyle>} style
+   * @param style Text attributes to change (font, size, style, alignment...), width kept or widened for font changes
    */
   setTextStyle(style: Partial<TextStyle>) {
     // font metrics change: width is updated to keep the same line breaks

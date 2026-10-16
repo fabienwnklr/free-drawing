@@ -20,6 +20,10 @@ export class Zoom {
   /** Zoom in button */
   $btnPlus: HTMLButtonElement;
 
+  /**
+   * Create the zoom buttons in footer, zoom level shown in drawer language
+   * @param drawer Drawer whose stage is zoomed
+   */
   constructor(drawer: Drawer) {
     this.drawer = drawer;
 
@@ -98,6 +102,7 @@ export class Zoom {
 
   /**
    * Zoom level as a whole percentage in drawer language (e.g. 110%)
+   * @returns Localized percentage text
    */
   private _formatPercentage() {
     return Number(this.drawer.getZoomLevel()).toLocaleString(this.drawer.language, {

@@ -10,7 +10,7 @@
       "ecmaVersion": "latest",
       "sourceType": "module"
     },
-    "plugins": ["@typescript-eslint"],
+    "plugins": ["@typescript-eslint", "jsdoc"],
     "rules": {
       "@typescript-eslint/no-explicit-any": "off"
     },
@@ -22,7 +22,26 @@
           "no-restricted-imports": [
             "error",
             { "patterns": [{ "group": ["./**", "../**"], "message": "Import with @/ alias (src)." }] }
-          ]
+          ],
+          "jsdoc/require-jsdoc": [
+            "error",
+            {
+              "require": { "ClassDeclaration": true, "FunctionDeclaration": true, "MethodDefinition": true },
+              "checkConstructors": true,
+              "checkGetters": true,
+              "checkSetters": true
+            }
+          ],
+          "jsdoc/require-description": "error",
+          "jsdoc/require-param": ["error", { "checkDestructuredRoots": false }],
+          "jsdoc/require-param-name": "error",
+          "jsdoc/require-param-description": "error",
+          "jsdoc/check-param-names": ["error", { "checkDestructured": false }],
+          "jsdoc/require-returns": ["error", { "checkGetters": false }],
+          "jsdoc/require-returns-description": "error",
+          "jsdoc/check-tag-names": ["error", { "definedTags": ["typeParam", "remarks"] }],
+          "jsdoc/no-types": "error",
+          "jsdoc/no-undefined-types": "off"
         }
       },
       {

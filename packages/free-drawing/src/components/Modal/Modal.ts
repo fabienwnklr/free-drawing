@@ -32,6 +32,11 @@ export class Modal {
   /** Element focused before showing modal, focused again on hide */
   #opener: HTMLElement | null = null;
 
+  /**
+   * Create the dialog (hidden) in the `floating` region of the layout
+   * @param drawer Drawer the dialog belongs to (layout, texts, focus given back on hide)
+   * @param options Options of the dialog, missing ones taken from `defaultOptionsModal`
+   */
   constructor(drawer: Drawer, options?: Partial<ModalOptions>) {
     try {
       this.drawer = drawer;
@@ -76,6 +81,7 @@ export class Modal {
 
   /**
    * Title in header
+   * @param title Text of the title (nothing without header)
    */
   setTitle(title: string) {
     const $title = this.$modalHeader.querySelector('.drawer-modal-title');
@@ -117,6 +123,7 @@ export class Modal {
 
   /**
    * Drawer removed from page while modal is shown (e.g. view of app changed): keys and clicks of page not taken anymore
+   * @returns True when the dialog left the page (document listeners removed)
    */
   #removedFromPage() {
     if (this.$modal.isConnected) return false;
@@ -125,6 +132,9 @@ export class Modal {
     return true;
   }
 
+  /**
+   * Removes the document listeners of a shown dialog (click outside, Escape and Tab)
+   */
   #removeDocumentListeners() {
     document.removeEventListener('click', this.#onDocumentClick);
     document.removeEventListener('keydown', this.#onDocumentKeydown, true);
@@ -132,6 +142,7 @@ export class Modal {
 
   /**
    * Tab and Shift+Tab cycle in modal
+   * @param event Keydown of Tab on the document, default prevented when focus wraps
    */
   private _trapFocus(event: KeyboardEvent) {
     const $focusables = this._getFocusables();
@@ -149,6 +160,7 @@ export class Modal {
 
   /**
    * Enabled elements of the dialog taking keyboard focus, in document order
+   * @returns Buttons, links, fields and elements with a tab index of the dialog
    */
   private _getFocusables() {
     return Array.from(this.$modal.querySelectorAll<HTMLElement>(focusableSelector));
@@ -183,6 +195,7 @@ export class Modal {
 
   /**
    * Replaces the header with an HTML string (an empty string keeps the current header)
+   * @param content HTML markup of the header
    */
   setHeaderContent(content: string) {
     if (content) {
@@ -192,6 +205,7 @@ export class Modal {
 
   /**
    * Replaces the body with an HTML string
+   * @param content HTML markup of the body, empty to clear it
    */
   setBodyContent(content: string) {
     this.$modalBody.innerHTML = content;
@@ -199,6 +213,7 @@ export class Modal {
 
   /**
    * Adds text at the end of the body (as text, not parsed as HTML)
+   * @param content Text added after the body content
    */
   appendBodyContent(content: string) {
     this.$modalBody.append(content);
@@ -206,6 +221,7 @@ export class Modal {
 
   /**
    * Replaces the footer with an HTML string
+   * @param content HTML markup of the footer (buttons), empty to clear it
    */
   setFooterContent(content: string) {
     this.$modalFooter.innerHTML = content;
@@ -260,6 +276,7 @@ export class Modal {
 
   /**
    * Whether the dialog is shown
+   * @returns True while the dialog is shown
    */
   isVisible(): boolean {
     return this.$modal.classList.contains('show');

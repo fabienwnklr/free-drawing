@@ -11,9 +11,10 @@
 - [x] selection tool dosn't work if i don't select every objet
 - [x] create logo for drawer
 - [x] if i disable auto save, how save? add button
-- [ ] use jsdoc with @param etc.
+- [x] use jsdoc with @param etc.
 - [ ] if i select multiple object, for example text, square, hand draw, i want every available tool on panel
 - [ ] scan files and fix error/warning
+- [ ] locked element can't move, why not?
 
 ## Security (collaboration, server)
 

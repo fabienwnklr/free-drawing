@@ -28,6 +28,10 @@ export class ExportModal extends Modal {
   /** Buttons of the footer: save as PNG, SVG, PDF, drawing file, then copy, disabled when nothing to export */
   $buttons: HTMLButtonElement[];
 
+  /**
+   * Build the dialog: preview, options (switches, scales) updating it, save and copy buttons
+   * @param drawer Drawer whose drawing or selection is exported
+   */
   constructor(drawer: Drawer) {
     super(drawer, { title: drawer.t('export.title') });
     this.$modal.classList.add('drawer-modal-export');
@@ -111,6 +115,9 @@ export class ExportModal extends Modal {
 
   /**
    * Adds a switch with its translated label to the options
+   * @param $container Group of options receiving the labelled switch
+   * @param text Key of the label text (translated again when language changes)
+   * @param checked Initial state of the switch
    * @returns the switch input
    */
   private _createSwitch($container: HTMLElement, text: TranslationKey, checked = false) {
@@ -176,6 +183,7 @@ export class ExportModal extends Modal {
 
   /**
    * Save image or drawing file (selected shapes or whole drawing)
+   * @param format Image format, or `json` for a drawing file (`.freedrawing`)
    */
   async save(format: ImageFormat | 'json') {
     try {

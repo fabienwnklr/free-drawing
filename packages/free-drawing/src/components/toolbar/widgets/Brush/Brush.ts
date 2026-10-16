@@ -18,12 +18,20 @@ export class BrushWidget extends FreehandWidget {
   overlay: BrushOverlay;
   declare readonly options: BrushWidgetOptions;
 
+  /**
+   * Create the brush tool, shortcut B, with its overlay
+   * @param drawer Drawer of this widget
+   */
   constructor(drawer: Drawer) {
     super(drawer, 'brush', 'Brush', BrushIcon, 'b');
 
     this.overlay = new BrushOverlay(drawer);
   }
 
+  /**
+   * Style of brush strokes, from drawer options
+   * @returns Color, opacity and width of options, normal blending, name of brush strokes
+   */
   protected lineStyle() {
     const { strokeColor, opacity, strokeWidth } = this.drawer.options;
 
@@ -43,10 +51,18 @@ export class BrushWidget extends FreehandWidget {
     };
   }
 
+  /**
+   * Width of brush strokes
+   * @returns `strokeWidth` option
+   */
   protected strokeSize() {
     return this.drawer.options.strokeWidth;
   }
 
+  /**
+   * Settings of perfect-freehand from brush widget options
+   * @returns Given settings, defaults for missing ones
+   */
   protected freehandSettings() {
     const { thinning, smoothing, streamline } = { ...freehandDefaults, ...this.options };
 

@@ -37,6 +37,10 @@ export class CollaborationModal extends Modal {
   /** Id of user who shared the link */
   invitedBy?: string;
 
+  /**
+   * Build the dialog: name field, session part (link, users, QR code) and buttons, updated on collaboration changes
+   * @param drawer Drawer whose collaboration sessions are started, joined and shown
+   */
   constructor(drawer: Drawer) {
     super(drawer, { title: drawer.t('collab.title') });
     this.$modal.classList.add('drawer-modal-collaboration');
@@ -113,6 +117,9 @@ export class CollaborationModal extends Modal {
 
   /**
    * Labelled input, in a field container
+   * @param text Key of the label text (translated again when language changes)
+   * @param type Type of the input
+   * @returns Input, in its field container (`.drawer-collaboration-field`) to add to the dialog
    */
   private _createField(text: TranslationKey, type: string) {
     const $field = document.createElement('div');

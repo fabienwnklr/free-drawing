@@ -19,11 +19,17 @@ export const defaultOptionsModal: ModalOptions = {
  * Default actions of confirmation dialog (texts: translated ones)
  */
 export const confirmModalDefaultOpts = {
-  /** Hides the dialog */
+  /**
+   * Hides the dialog
+   * @param modal Confirmation dialog whose Cancel button was clicked
+   */
   onCancel: (modal: ConfirmModal) => {
     modal.hide();
   },
-  /** Clears the drawing without asking again, then hides the dialog */
+  /**
+   * Clears the drawing without asking again, then hides the dialog
+   * @param modal Confirmation dialog whose Confirm button was clicked (its drawer is cleared)
+   */
   onConfirm: (modal: ConfirmModal) => {
     modal.drawer.clearCanvas(true);
     modal.hide();

@@ -17,6 +17,14 @@ export class Toast extends MicroEvent {
   /** Time in ms before hiding the toast once shown (0: stays until hidden) */
   timeout: number = 5000;
 
+  /**
+   * Create the toast (hidden until `show`) in the stack of toasts of the drawer, created on first toast
+   * @param drawer Drawer showing the toast
+   * @param message Text of the toast (not parsed as HTML)
+   * @param type Kind of message: gives style, icon and role (`alert` for warning, error, danger)
+   * @param timeout Time in ms before hiding the toast once shown (0: stays until hidden)
+   * @param showIcon Icon of the type before the message (neutral has none)
+   */
   constructor(
     drawer: Drawer,
     message: string,

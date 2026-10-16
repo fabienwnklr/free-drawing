@@ -42,6 +42,10 @@ export class PreferencesModal extends Modal {
   /** Fields changed since shown: not replaced by preferences changed elsewhere */
   #changed = false;
 
+  /**
+   * Build the dialog: sections of fields (name with `collaboration` option), Cancel and Save buttons
+   * @param drawer Drawer whose preferences are shown and applied
+   */
   constructor(drawer: Drawer) {
     super(drawer, { title: drawer.t('preferences.title') });
     this.$modal.classList.add('drawer-modal-preferences');
@@ -172,6 +176,8 @@ export class PreferencesModal extends Modal {
 
   /**
    * Group of fields with its title
+   * @param title Key of the title (translated again when language changes), names the section
+   * @returns Section holding its title, fields are added after it
    */
   private _createSection(title: TranslationKey) {
     const $section = document.createElement('section');
@@ -187,6 +193,9 @@ export class PreferencesModal extends Modal {
 
   /**
    * Field with its label (select, text input)
+   * @param label Key of the label text (translated again when language changes)
+   * @param $field Select or text input, put in the label
+   * @returns Label holding text and field, to add to a section
    */
   private _createField(label: TranslationKey, $field: HTMLInputElement | HTMLSelectElement) {
     const $label = document.createElement('label');
@@ -201,6 +210,9 @@ export class PreferencesModal extends Modal {
 
   /**
    * Radio with its label
+   * @param $container Fieldset receiving the labelled radio
+   * @param label Key of the label text (translated again when language changes)
+   * @returns Radio input, its name and value are set by the caller
    */
   private _createRadio($container: HTMLElement, label: TranslationKey) {
     const $label = document.createElement('label');
@@ -217,6 +229,10 @@ export class PreferencesModal extends Modal {
 
   /**
    * Switch at the end of its row: label, shortcut doing the same (if any)
+   * @param $container Section receiving the row
+   * @param label Key of the label text (translated again when language changes)
+   * @param shortcut Keys doing the same out of the dialog, shown and set as `aria-keyshortcuts`
+   * @returns Switch input, unchecked until `update`
    */
   private _createSwitch($container: HTMLElement, label: TranslationKey, shortcut?: string) {
     const $label = document.createElement('label');

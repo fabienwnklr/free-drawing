@@ -16,6 +16,10 @@ export class UndoRedo extends History {
   /** Redo button (Ctrl+Y), disabled without next state or in read only */
   $btnRedo: HTMLButtonElement;
 
+  /**
+   * Create the history and its undo and redo buttons in footer
+   * @param drawer Drawer whose shapes are saved and restored
+   */
   constructor(drawer: Drawer) {
     super(drawer);
     this.$undoRedoContainer = document.createElement('div');

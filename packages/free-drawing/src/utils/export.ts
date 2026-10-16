@@ -47,10 +47,14 @@ export type Box = {
 };
 
 // space around shapes
+/** Space around exported shapes, in layer units */
 const padding = 16;
 
 /**
  * Box of shapes with padding, in coordinates of their layer, null without shapes
+ * @param shapes exported shapes (also shapes of groups exported alone)
+ * @param layer draw layer, coordinates of the box are relative to it
+ * @returns box rounded to whole units outwards, null without shapes
  */
 export function getExportBox(shapes: DrawingShape[], layer: Container): Box | null {
   const rects = shapes.map((shape) => shape.getClientRect({ relativeTo: layer }));
@@ -67,6 +71,8 @@ export function getExportBox(shapes: DrawingShape[], layer: Container): Box | nu
 
 /**
  * Color of dark mode, as css filter `invert(93%) hue-rotate(180deg)`: lightness inverted, hue kept
+ * @param color any CSS color of a shape or background
+ * @returns `#rrggbb` color, `rgba(...)` when not opaque (alpha kept)
  */
 export function toDarkColor(color: string): string {
   const normalized = normalizeColor(color);
@@ -89,6 +95,9 @@ export function toDarkColor(color: string): string {
 
 /**
  * Exported shapes are rendered with dark mode colors or not
+ * @param color fill or stroke of a shape (attribute value: may be missing or not a string)
+ * @param dark true for dark mode colors (see `toDarkColor`)
+ * @returns color to export, undefined when missing, empty or not a string
  */
 function colorOf(color: unknown, dark?: boolean): string | undefined {
   if (typeof color !== 'string' || !color) return undefined;
@@ -98,6 +107,8 @@ function colorOf(color: unknown, dark?: boolean): string | undefined {
 
 /**
  * Transform of a node in its layer: shapes of groups exported alone are placed as drawn
+ * @param node exported shape or group
+ * @returns transform from node to layer coordinates (to stage without layer)
  */
 function layerTransform(node: Node) {
   return node.getAbsoluteTransform(node.getLayer() ?? undefined);
@@ -106,7 +117,10 @@ function layerTransform(node: Node) {
 /**
  * Shapes rendered on a canvas (png, pdf, clipboard), same rendering as drawer: clones of shapes in a stage out of
  * page, titles of frames hidden
+ * @param shapes exported shapes, bottom first (shapes of groups placed as drawn)
  * @param box Exported area (see `getExportBox`)
+ * @param options background, dark mode colors and pixel ratio
+ * @returns canvas of `box` size multiplied by `scale`
  */
 export function renderCanvas(shapes: DrawingShape[], box: Box, options: ImageOptions = {}): HTMLCanvasElement {
   const { background, dark, scale = 2 } = options;
@@ -140,11 +154,26 @@ export function renderCanvas(shapes: DrawingShape[], box: Box, options: ImageOpt
 }
 
 // svg numbers with 2 decimals at most
+/**
+ * Number of svg and pdf, 2 decimals at most
+ * @param n coordinate, size or angle
+ * @returns number as text, rounded
+ */
 const num = (n: number) => String(Math.round(n * 100) / 100);
 
+/**
+ * Text escaped for xml content and attribute values
+ * @param text text of a shape or attribute value
+ * @returns text with `&`, `<`, `>` and `"` as entities
+ */
 const escapeXml = (text: string) =>
   text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
+/**
+ * Svg attributes (` name="value"`), undefined and empty values left out
+ * @param values values by attribute name: numbers rounded (see `num`), texts escaped
+ * @returns attributes, each preceded by a space
+ */
 const attrs = (values: Record<string, string | number | undefined>) =>
   Object.entries(values)
     .filter(([, value]) => value !== undefined && value !== '')
@@ -153,6 +182,8 @@ const attrs = (values: Record<string, string | number | undefined>) =>
 
 /**
  * Path of a line, as konva draws it (tension curves)
+ * @param line line or arrow (closed for brush strokes)
+ * @returns svg path data in line coordinates, empty without points
  */
 function linePath(line: Line): string {
   const points = line.points();
@@ -182,6 +213,11 @@ function linePath(line: Line): string {
 
 /**
  * Svg element of a drawing shape or group, in its parent coordinates (`matrix`: transform in another one)
+ * @param shape drawing shape, group or frame (children exported, titles of frames left out)
+ * @param dark true for dark mode colors (see `toDarkColor`)
+ * @param matrix transform of the shape, its own transform by default (layer transform for shapes of groups exported
+ * alone)
+ * @returns svg `g` element, empty for unknown shape classes
  */
 function shapeToSvg(shape: Node, dark?: boolean, matrix = shape.getTransform().getMatrix()): string {
   const [a, b, c, d, e, f] = matrix;
@@ -297,6 +333,10 @@ function shapeToSvg(shape: Node, dark?: boolean, matrix = shape.getTransform().g
 
 /**
  * Shapes as svg (vector) image
+ * @param shapes exported shapes, bottom first (shapes of groups placed as drawn)
+ * @param box Exported area (see `getExportBox`), view box of the image
+ * @param options background and dark mode colors (`scale` ignored)
+ * @returns svg document
  */
 export function renderSvg(shapes: DrawingShape[], box: Box, options: ImageOptions = {}): string {
   const { background, dark } = options;
@@ -313,6 +353,10 @@ export function renderSvg(shapes: DrawingShape[], box: Box, options: ImageOption
 
 /**
  * Blob of a canvas image
+ * @param canvas rendered image (see `renderCanvas`)
+ * @param type Mime type of the image (png by default, jpeg for pdf)
+ * @param quality quality of lossy formats, from 0 to 1
+ * @returns promise of the image, rejected when the browser could not create it
  */
 export function canvasToBlob(canvas: HTMLCanvasElement, type = 'image/png', quality?: number): Promise<Blob> {
   return new Promise((resolve, reject) =>
@@ -326,6 +370,7 @@ export function canvasToBlob(canvas: HTMLCanvasElement, type = 'image/png', qual
  * @param width Image width in pixels
  * @param height Image height in pixels
  * @param scale Pixel ratio of image: page has the drawing size (96 dpi)
+ * @returns pdf file
  */
 export function createPdf(jpeg: Uint8Array<ArrayBuffer>, width: number, height: number, scale: number): Blob {
   // css pixel to pdf point

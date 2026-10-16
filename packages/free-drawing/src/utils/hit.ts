@@ -14,6 +14,8 @@ const hitStrokeWidth = 20;
 /**
  * Hit region of rectangles and ellipses as drawn: inside only with a background, an empty inside does not hide
  * shapes under it from pointer
+ * @param context hit canvas context given by konva
+ * @param shape rectangle or ellipse whose hit region is drawn
  */
 function outlineHitFunc(context: Context, shape: Shape<ShapeConfig>) {
   const hitContext = shape.hasFill()
@@ -25,6 +27,7 @@ function outlineHitFunc(context: Context, shape: Shape<ShapeConfig>) {
 
 /**
  * Hit region of a drawing shape (shapes added, loaded...), shapes of a group: as drawn, strokes wider
+ * @param node drawing shape or group (its shapes set up too)
  */
 export function setupHit(node: Node) {
   if (node instanceof Group) node.getChildren().forEach(setupHit);
@@ -39,6 +42,8 @@ export function setupHit(node: Node) {
 
 /**
  * Shapes of a node: itself, or shapes of a group and its groups
+ * @param node shape, group or frame
+ * @returns the shape itself, the shapes in a group at any depth, else none
  */
 export function getShapes(node: Node): Shape<ShapeConfig>[] {
   if (node instanceof Shape) return [node];
@@ -48,6 +53,9 @@ export function getShapes(node: Node): Shape<ShapeConfig>[] {
 
 /**
  * A visible shape of a node is drawn at a point (absolute position): fill, stroke, text box
+ * @param node shape or group
+ * @param point absolute position (pointer)
+ * @returns true when the hit region of one of its visible shapes is at the point (not for locked shapes)
  */
 export function isDrawnAt(node: Node, point: Vector2d): boolean {
   return getShapes(node).some((shape) => shape.isVisible() && shape.intersects(point));
@@ -55,6 +63,9 @@ export function isDrawnAt(node: Node, point: Vector2d): boolean {
 
 /**
  * A visible shape of a node is drawn at a point, also when it is locked (konva draws hits of listening nodes only)
+ * @param node shape or group, locked or in a locked group
+ * @param point absolute position (pointer)
+ * @returns true when one of its visible shapes is drawn at the point
  */
 export function isDrawnAtLocked(node: Node, point: Vector2d): boolean {
   const locked = [...node.getAncestors(), node, ...(node instanceof Group ? node.find(() => true) : [])].filter(
@@ -71,6 +82,8 @@ export function isDrawnAtLocked(node: Node, point: Vector2d): boolean {
 
 /**
  * Locked node of a locked shape: its top locked group, else itself (selected and unlocked as a whole)
+ * @param shape locked drawing shape (or shape of a locked group)
+ * @returns top group not listening among its parent groups, else the shape
  */
 export function getLockedNode(shape: DrawingShape): DrawingShape {
   let locked = shape;
@@ -84,6 +97,9 @@ export function getLockedNode(shape: DrawingShape): DrawingShape {
 
 /**
  * Point is inside outline of a rectangle or an ellipse of a node (shape or group)
+ * @param node shape or group
+ * @param point absolute position (pointer)
+ * @returns true when inside one of its visible rectangles or ellipses, with or without background
  */
 export function isInsideNode(node: Node, point: Vector2d): boolean {
   return getShapes(node).some(
@@ -93,6 +109,9 @@ export function isInsideNode(node: Node, point: Vector2d): boolean {
 
 /**
  * Inner box is entirely in outer box
+ * @param outer containing box (selection rectangle...)
+ * @param inner contained box, same coordinates
+ * @returns true when inner is in outer, edges included
  */
 export function rectContains(outer: IRect, inner: IRect): boolean {
   return (
@@ -105,6 +124,8 @@ export function rectContains(outer: IRect, inner: IRect): boolean {
 
 /**
  * Point in box (edges included)
+ * @param box box of positive size
+ * @returns true when the point is in the box
  */
 function boxHasPoint(box: IRect, { x, y }: Vector2d): boolean {
   return x >= box.x && x <= box.x + box.width && y >= box.y && y <= box.y + box.height;
@@ -112,6 +133,10 @@ function boxHasPoint(box: IRect, { x, y }: Vector2d): boolean {
 
 /**
  * Segment crosses box or is in it (Liang-Barsky clipping)
+ * @param box box of positive size
+ * @param a start of segment, same coordinates
+ * @param b end of segment
+ * @returns true when a part of the segment is in the box
  */
 function segmentTouches(box: IRect, a: Vector2d, b: Vector2d): boolean {
   const dx = b.x - a.x;
@@ -145,6 +170,10 @@ function segmentTouches(box: IRect, a: Vector2d, b: Vector2d): boolean {
 /**
  * Polygon (absolute points in order, closed or not) touched by box: one of its points is in box or one of its sides
  * crosses it. A box entirely inside a closed polygon does not touch it
+ * @param box touching box (absolute coordinates)
+ * @param points points of the polygon or polyline
+ * @param closed true when the last point is joined to the first one
+ * @returns true when touched
  */
 function polygonTouches(box: IRect, points: Vector2d[], closed: boolean): boolean {
   const sides = points.slice(1).map((point, i) => [points[i], point]);
@@ -156,6 +185,9 @@ function polygonTouches(box: IRect, points: Vector2d[], closed: boolean): boolea
 
 /**
  * Box (absolute coordinates, e.g. a frame) touched by another box: crossed by it or in it, not when entirely around it
+ * @param box touching box (selection rectangle)
+ * @param rect touched box (frame), same coordinates
+ * @returns true when a corner of `rect` is in `box` or a side of it crosses `box`
  */
 export function rectTouches(box: IRect, rect: IRect): boolean {
   const { x, y, width, height } = rect;
@@ -176,6 +208,9 @@ export function rectTouches(box: IRect, rect: IRect): boolean {
  * Drawing shape touched by a box (absolute coordinates, e.g. selection rectangle): lines and strokes along their
  * points, other shapes along their box (rotated, scaled with them), shapes of groups too. A box entirely inside a shape
  * does not touch it (box drawn in a big shape)
+ * @param box touching box, in absolute coordinates
+ * @param node drawing shape or group (hidden shapes ignored)
+ * @returns true when one of its visible shapes is touched
  */
 export function isTouchedBy(box: IRect, node: DrawingShape): boolean {
   return getShapes(node).some((shape) => {
@@ -205,10 +240,15 @@ export function isTouchedBy(box: IRect, node: DrawingShape): boolean {
   });
 }
 
+/** Canvas context testing points in paths, created on first use */
 let pathContext: CanvasRenderingContext2D | null | undefined;
 
 /**
  * Point (shape coordinates) inside the path of a path shape (triangle, diamond, heart, cloud)
+ * @param shape path shape
+ * @param x horizontal position, in shape coordinates
+ * @param y vertical position, in shape coordinates
+ * @returns true when inside the path (false without canvas context)
  */
 function isInsidePath(shape: Path, x: number, y: number) {
   pathContext ??= document.createElement('canvas').getContext('2d');
@@ -219,6 +259,9 @@ function isInsidePath(shape: Path, x: number, y: number) {
 /**
  * Point (absolute position) is inside outline of a rectangle, an ellipse or a path shape, filled or not, whatever
  * its transform
+ * @param shape rectangle, ellipse or path shape (other shapes checked by their box)
+ * @param point absolute position (pointer)
+ * @returns true when inside, edges included
  */
 export function isInsideOutline(shape: Shape<ShapeConfig>, point: Vector2d): boolean {
   const { x, y } = shape.getAbsoluteTransform().copy().invert().point(point);

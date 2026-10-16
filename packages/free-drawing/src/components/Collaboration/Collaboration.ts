@@ -131,6 +131,11 @@ export class Collaboration {
   /** Cursors of other users, by user id */
   #cursors = new Map<string, Group>();
 
+  /**
+   * Listen to the socket (join on connect, changes, users, pointers) and to the pointer on the stage
+   * @param drawer Drawer whose drawing is shared
+   * @param socket Socket connected to the collaboration server
+   */
   constructor(
     drawer: Drawer,
     socket: CollaborationSocket,
@@ -184,6 +189,8 @@ export class Collaboration {
 
   /**
    * Send a message after live interval at most (latest state is read when sent)
+   * @param key Kind of message (pointer, live): one timer and one last sent time per kind
+   * @param send Sends the message, called once the interval elapsed (ignored when one is already waiting)
    */
   private _schedule(key: string, send: () => void) {
     if (this.#timers[key]) return;
@@ -199,6 +206,7 @@ export class Collaboration {
 
   /**
    * Pointer position in drawing (null: out of drawer) and laser state sent to other users, at live interval at most
+   * @param position Pointer position in drawing coordinates (rounded), null when it left the drawer
    */
   private _sendPointer(position: Vector2d | null) {
     this.#pointer = position && {
@@ -212,7 +220,7 @@ export class Collaboration {
 
   /**
    * Laser used (pressed) by this user: its trail is shown to other users with pointer
-   * @param {boolean} on
+   * @param on Laser pressed (trail shown), false when released
    */
   setLaser(on: boolean) {
     if (this.#laser === on) return;
@@ -224,6 +232,7 @@ export class Collaboration {
 
   /**
    * Shapes being drawn or moved shown to other users while drawing, final state is sent by `send` on change
+   * @param shapes Shapes being drawn or moved (shapes of groups send their whole group)
    */
   sendLive(shapes: DrawingShape[]) {
     // shapes of groups: whole group
@@ -281,6 +290,8 @@ export class Collaboration {
 
   /**
    * Color of a user: their cursor and laser
+   * @param id Id of the user
+   * @returns Color of `cursorColors` picked from the id, the same on every client
    */
   private _color(id: string) {
     return cursorColors[[...id].reduce((sum, char) => sum + char.charCodeAt(0), 0) % cursorColors.length];
@@ -288,6 +299,8 @@ export class Collaboration {
 
   /**
    * Cursor of another user in their color: arrow pointing to their position and label of their name
+   * @param id Id of the user, gives the color
+   * @returns Group of the cursor (not listening), scaled to the zoom, not added to a layer yet
    */
   private _createCursor(id: string) {
     const color = this._color(id);
@@ -308,6 +321,7 @@ export class Collaboration {
 
   /**
    * Cursor scaled by inverse of zoom: same size on screen whatever zoom
+   * @param cursor Cursor of another user
    */
   private _scaleCursor(cursor: Group) {
     const scale = 1 / this.drawer.getZoomLevel();
@@ -339,6 +353,8 @@ export class Collaboration {
 
   /**
    * Give or remove the right to draw to a user of the room (owner only, checked by server)
+   * @param userId Id of the user of the room
+   * @param canEdit True to let them draw, false to make them view only
    */
   setRight(userId: string, canEdit: boolean) {
     this.socket.emit(socketEvents.RIGHTS, { userId, canEdit });
@@ -346,6 +362,7 @@ export class Collaboration {
 
   /**
    * Change name shown to other users
+   * @param name New name, sent to the server
    */
   setName(name: string) {
     this.name = name;
@@ -390,6 +407,7 @@ export class Collaboration {
 
   /**
    * Apply change of another client, after current pointer action (not to alter shape being drawn)
+   * @param change Change received from the server (live previews are applied at once)
    */
   receive(change: DrawingChange) {
     // preview of other users drawing: shown at once, not saved nor added to history (final change follows)

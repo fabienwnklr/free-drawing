@@ -20,6 +20,10 @@ export class HighlighterWidget extends FreehandWidget {
   /** Width of strokes, see `highlighterSizes` */
   size: number = highlighterSizes[1].size;
 
+  /**
+   * Create the highlighter tool, shortcut M, with its overlay of colors and sizes
+   * @param drawer Drawer of this widget
+   */
   constructor(drawer: Drawer) {
     super(drawer, 'highlighter', 'Highlighter', HighlighterIcon, 'm');
 
@@ -33,6 +37,10 @@ export class HighlighterWidget extends FreehandWidget {
     });
   }
 
+  /**
+   * Style of highlighter strokes
+   * @returns Fill of highlighter color without stroke, multiply blending, name of highlighter strokes
+   */
   protected lineStyle() {
     return {
       /** Outline of the stroke filled with highlighter color (no stroke: it would be darker, multiplied) */
@@ -46,10 +54,18 @@ export class HighlighterWidget extends FreehandWidget {
     };
   }
 
+  /**
+   * Width of highlighter strokes
+   * @returns Size chosen in the overlay
+   */
   protected strokeSize() {
     return this.size;
   }
 
+  /**
+   * Settings of perfect-freehand of a marker
+   * @returns Constant width, medium smoothing and stabilization
+   */
   protected freehandSettings() {
     return {
       /** Same width all along, as a marker */

@@ -19,6 +19,10 @@ export class TextWidget extends BaseWidget {
   overlay: TextOverlay;
   protected cursor = 'text';
 
+  /**
+   * Create the text tool, shortcut T: double click on texts of the drawing edits them, fonts preloaded
+   * @param drawer Drawer of this widget
+   */
   constructor(drawer: Drawer) {
     super(drawer, 'text', 'Text', TextIcon, 't');
 
@@ -61,9 +65,9 @@ export class TextWidget extends BaseWidget {
   /**
    * New text at a position of drawing (pointer by default, center of view when it is out of canvas), in the frame
    * containing it, then selection tool active
-   * @param {string} text Content, its width fits its longest line when given
-   * @param {Vector2d} position
-   * @returns {Text} The added text node
+   * @param text Content, its width fits its longest line when given
+   * @param position Top left corner of the text, in drawing coordinates
+   * @returns The added text node
    */
   addTextNode(text: string = '', { x, y }: Vector2d = this.drawer._getRelativePointerPos()) {
     const { textStyle } = this.drawer.options;
@@ -95,6 +99,9 @@ export class TextWidget extends BaseWidget {
     return textNode;
   }
 
+  /**
+   * Click adds an empty text at pointer and edits it
+   */
   protected initEvents(): void {
     this.onStage('click tap', () => {
       this.#lastText = this.addTextNode();
@@ -105,7 +112,7 @@ export class TextWidget extends BaseWidget {
   /**
    * Edit a text in a textarea at its place (same font, size, rotation), text and transformer hidden meanwhile.
    * Enter or a click elsewhere validates, Shift + Enter adds a line, Escape cancels; an empty text is removed.
-   * @param {Text} textNode Text of drawing, or title of a frame
+   * @param textNode Text of drawing, or title of a frame
    */
   editTextNode(textNode: Text) {
     textNode.hide();
@@ -144,6 +151,7 @@ export class TextWidget extends BaseWidget {
   /**
    * Textarea over a text, in `floating` region: same position, size, font and color whatever zoom and scale, with
    * room around it for glyphs higher than line height
+   * @param textNode Text edited, its absolute position and scale place the textarea
    * @returns the textarea, added to the layout
    */
   private _createTextarea(textNode: Text) {
@@ -196,6 +204,8 @@ export class TextWidget extends BaseWidget {
    * Textarea grows with its content; Enter or a click out of it sets the text, Escape keeps the previous one.
    * Then textarea removed, text shown again (removed if empty, except frame titles which rename their frame) and
    * change fired.
+   * @param textNode Text edited, hidden until the textarea is removed
+   * @param textarea Textarea over the text, created by `_createTextarea`
    */
   private _initEventsTextarea(textNode: Text, textarea: HTMLTextAreaElement) {
     const removeTextarea = () => {

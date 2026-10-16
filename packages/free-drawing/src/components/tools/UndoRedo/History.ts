@@ -18,11 +18,17 @@ export type ShapeState = {
 
 /**
  * State of a drawing shape or group (history, collaboration, files), without `draggable` which depends on active tool
+ * @param shape Drawing shape or group (with its shapes) to serialize
+ * @returns Konva object of the shape, `draggable` removed at every level
  */
 export function getShapeState(shape: DrawingShape): ShapeState {
   return toState(shape.toObject());
 }
 
+/**
+ * Konva object of a node and of its children without `draggable` (attrs changed in place)
+ * @returns State with the same attrs and class name, children converted too
+ */
 function toState({ attrs, className, children }: ShapeState): ShapeState {
   delete attrs.draggable;
 
@@ -31,6 +37,8 @@ function toState({ attrs, className, children }: ShapeState): ShapeState {
 
 /**
  * JSON of a drawing shape state
+ * @param shape Drawing shape or group to serialize
+ * @returns JSON string of `getShapeState`, an item of history states
  */
 export function serializeShape(shape: DrawingShape): string {
   return JSON.stringify(getShapeState(shape));
@@ -49,6 +57,10 @@ export class History {
   /** Drawer whose shapes are saved and restored */
   drawer: Drawer;
 
+  /**
+   * Create a history with an empty drawing as only state
+   * @param drawer Drawer whose shapes are saved and restored
+   */
   constructor(drawer: Drawer) {
     this.drawer = drawer;
   }
@@ -78,7 +90,7 @@ export class History {
 
   /**
    * Add state after current one (removes redo states), keeps the last `historyLimit` states
-   * @param state
+   * @param state JSON array of drawing shape states, becomes the current state
    */
   private _push(state: string) {
     this.appHistory = this.appHistory.slice(0, this.appHistoryStep + 1);
@@ -101,6 +113,7 @@ export class History {
 
   /**
    * A state is before the current one
+   * @returns True when undo can restore a previous state
    */
   canUndo() {
     return !!this.appHistory[this.appHistoryStep - 1];
@@ -118,6 +131,7 @@ export class History {
 
   /**
    * A state undone is after the current one
+   * @returns True when redo can restore a next state
    */
   canRedo() {
     return !!this.appHistory[this.appHistoryStep + 1];
@@ -135,7 +149,7 @@ export class History {
 
   /**
    * Replace drawing by given state
-   * @param state
+   * @param state JSON array of drawing shape states (an item of `appHistory`)
    */
   private _restoreState(state: string) {
     this.drawer.getWidget<SelectWidget>('selection')?.clearSelection();

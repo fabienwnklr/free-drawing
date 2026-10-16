@@ -74,7 +74,7 @@ export class DrawerLayout {
 
   /**
    * Stage created in container (konva empties it): its canvas, then header and footer drawn over it
-   * @param {Stage} stage
+   * @param stage Konva stage of the drawer, its content put first in container
    */
   setStage(stage: Stage) {
     this.$container.replaceChildren(stage.content, this.$header, this.$footer);
@@ -89,9 +89,9 @@ export class DrawerLayout {
 
   /**
    * Add an element of the interface to a region
-   * @param {LayoutRegion} region
-   * @param {HTMLElement} $element
-   * @param {LayoutItemOptions} options
+   * @param region Region receiving the element: `header`, `footerStart`, `footer` or `floating`
+   * @param $element Element of the interface
+   * @param options Hidden in zen mode (`hideInZen`), placed after an element (`after`) instead of end of region
    */
   add(region: LayoutRegion, $element: HTMLElement, { hideInZen = false, after }: LayoutItemOptions = {}) {
     $element.classList.toggle('drawer-zen-hidden', hideInZen);
@@ -113,7 +113,7 @@ export class DrawerLayout {
 
   /**
    * Zen mode: elements added with `hideInZen` hidden
-   * @param {boolean} zen
+   * @param zen True hides these elements (`is-zen` class), false shows them
    */
   setZen(zen: boolean) {
     this.zen = zen;
@@ -122,7 +122,7 @@ export class DrawerLayout {
 
   /**
    * Interface receives pointer or not (during pointer actions: drawing, selecting...), see `--drawer-pointer-events`
-   * @param {'all' | 'none'} state
+   * @param state 'none' ignores pointer on panels, 'all' gives it back
    */
   setPointerEvents(state: 'all' | 'none') {
     // on drawer container, other drawers of the page are not concerned

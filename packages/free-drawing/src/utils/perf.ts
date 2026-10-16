@@ -1,16 +1,16 @@
 /**
  * Function returned by `throttle`: same parameters and result as the throttled function
- * @typeParam T throttled function
+ * @template T throttled function
  */
 export declare type ThrottledFunction<T extends (...args: any) => any> = (...args: Parameters<T>) => ReturnType<T>;
 
 /**
  * Function calling `callback` once calls stop for `delay` ms: each call within the delay restarts the timer
  *
- * @typeParam T debounced function
- * @param {Function} callback function to call, with the arguments of the last call
- * @param {Number} delay time without call before calling `callback` (ms)
- * @returns {Function} debounced function
+ * @template T debounced function
+ * @param callback function to call, with the arguments of the last call
+ * @param delay time without call before calling `callback` (ms)
+ * @returns debounced function
  *
  * @example
  * // Define the function that updates the layout
@@ -42,10 +42,10 @@ export function debounce<T extends (...args: any[]) => any>(
  * Function calling `func` at most once every `limit` ms, for events fired very often (scroll, resize, mouse move...):
  * calls in between are ignored and return the last result
  *
- * @typeParam T throttled function
- * @param {Function} func function to call
- * @param {Number} limit time before `func` can be called again (ms)
- * @returns {Function} throttled function
+ * @template T throttled function
+ * @param func function to call
+ * @param limit time before `func` can be called again (ms)
+ * @returns throttled function
  *
  * @example
  * // Define the function that updates the layout
@@ -78,7 +78,7 @@ export function throttle<T extends (...args: any) => any>(func: T, limit: number
 
 /**
  * Measure time executing function, logged in console
- * @typeParam T measured function
+ * @template T measured function
  * @param func function called without arguments
  * @param label label of the time in console
  */

@@ -28,6 +28,10 @@ export class Help extends Modal {
   $button: HTMLButtonElement;
   /** Footer element of the button, hidden in zen mode */
   $helpContainer: HTMLDivElement;
+  /**
+   * Create the dialog and its footer button, content rendered again on each language change
+   * @param drawer Drawer whose toolbar widgets and options give the shortcuts shown
+   */
   constructor(drawer: Drawer) {
     super(drawer, { title: drawer.t('help.title') });
 
@@ -57,6 +61,7 @@ export class Help extends Modal {
 
   /**
    * Links and shortcuts in current language
+   * @param t Translation function of the current language
    */
   private _render(t: Translate) {
     const editor: Shortcut[] = [
@@ -154,6 +159,8 @@ export class Help extends Modal {
 
   /**
    * Shortcuts of toolbar widgets (only the available ones, with their title and shortcut options)
+   * @param t Translation function of the current language
+   * @returns Widgets with a shortcut, then keep tool (Q) and Shift constrain when these are available
    */
   private _getToolsShortcuts(t: Translate) {
     const widgets = Array.from(this.drawer.toolbar.widgets.values());
@@ -172,6 +179,8 @@ export class Help extends Modal {
 
   /**
    * Item of shortcut list: action then keys
+   * @param t Translation function of the current language (text between alternative keys)
+   * @returns List item: label, keys in `kbd` elements, then text after them
    */
   private _createShortcut(t: Translate, { label, keys, or, after }: Shortcut) {
     const $item = document.createElement('li');

@@ -93,6 +93,10 @@ export class LayersPanel {
   /** Row from which Shift selects a range: last one selected alone or added */
   #anchor: string | null = null;
 
+  /**
+   * Add the header button and the hidden panel, listen to drawing, selection, read only and language changes
+   * @param drawer Drawer whose shapes are listed
+   */
   constructor(drawer: Drawer) {
     this.drawer = drawer;
 
@@ -190,6 +194,7 @@ export class LayersPanel {
 
   /**
    * Whether the panel is shown
+   * @returns True while the panel is shown
    */
   isVisible() {
     return this.$panel.classList.contains('show');
@@ -197,7 +202,7 @@ export class LayersPanel {
 
   /**
    * Show or hide panel
-   * @param {boolean} show Toggle by default
+   * @param show Toggle by default
    */
   toggle(show: boolean = !this.isVisible()) {
     this.$panel.classList.toggle('show', show);
@@ -216,6 +221,11 @@ export class LayersPanel {
 
   /**
    * Icon button of the panel header, named by its translated label, shortcut in tooltip (if any)
+   * @param icon SVG markup of the icon
+   * @param label Key of the accessible name (translated again when language changes)
+   * @param shortcut Keys of the same action (`Ctrl+G`), shown in tooltip and `aria-keyshortcuts`, empty for none
+   * @param action Run on click
+   * @returns Header button, to add to the header actions
    */
   private _createHeaderButton(icon: string, label: TranslationKey, shortcut: string, action: () => void) {
     const $btn = createButton('drawer-button', 'drawer-button-neutral');
@@ -233,6 +243,8 @@ export class LayersPanel {
 
   /**
    * Expand or collapse a group
+   * @param group Group (or frame) whose shapes are listed under its row
+   * @param expanded True to list its shapes, false to hide them
    */
   setExpanded(group: Group, expanded: boolean) {
     if (expanded) this.#expanded.add(group.id());
@@ -334,6 +346,7 @@ export class LayersPanel {
 
   /**
    * Row reached with Tab (roving tab index), others with arrows
+   * @param $current Row whose buttons are in tab order, none when not a row
    */
   private _setCurrent($current: Element | null | undefined) {
     [...this.$list.children].forEach(($item) => {
@@ -343,6 +356,9 @@ export class LayersPanel {
 
   /**
    * Rows of shapes, top one first, followed by rows of shapes of expanded groups
+   * @param shapes Shapes of the drawing or of a group, bottom one first (stacking order)
+   * @param depth Nesting level of the shapes (0 in drawing), indents their rows
+   * @returns Rows in list order
    */
   private _createItems(shapes: DrawingShape[], depth: number): HTMLLIElement[] {
     return [...shapes].reverse().flatMap((shape) => {
@@ -360,6 +376,9 @@ export class LayersPanel {
   /**
    * Row of a shape, indented by `depth`: drag handle, expand button (groups), name with type icon (selects,
    * renames), hide, lock and delete buttons
+   * @param shape Shape of the row, recorded in `#shapes`
+   * @param depth Nesting level of the shape (0 in drawing)
+   * @returns Row of the shape
    */
   private _createItem(shape: DrawingShape, depth: number) {
     const label = this.drawer.getShapeLabel(shape);
@@ -447,6 +466,12 @@ export class LayersPanel {
 
   /**
    * Action of a row, toggle when `pressed` is a boolean
+   * @param part `data-part` of the button (visibility, lock, delete): focus kept on it after update
+   * @param icon SVG markup of the icon
+   * @param label Accessible name, already translated
+   * @param pressed State of a toggle, null for a plain button
+   * @param action Run on click
+   * @returns Action button, disabled in read only
    */
   private _createAction(part: string, icon: string, label: string, pressed: boolean | null, action: () => void) {
     const $btn = createButton('drawer-button', 'drawer-button-neutral', 'drawer-layers-action');
@@ -463,6 +488,8 @@ export class LayersPanel {
 
   /**
    * Row of a shape
+   * @param shape Shape listed in the panel
+   * @returns Its row, undefined when it is not listed (collapsed group)
    */
   private _getItem(shape: DrawingShape) {
     return ([...this.$list.children] as HTMLElement[]).find(($item) => $item.dataset.id === shape.id());
@@ -471,6 +498,9 @@ export class LayersPanel {
   /**
    * Keys of a row name: F2 renames, Shift + arrows select a range, Ctrl + Space adds or removes, Alt + arrows
    * reorder, Right / Left expand / collapse a group (Left then goes to its group), Delete or Backspace deletes
+   * @param e Keydown of the name button, stopped when handled
+   * @param shape Shape of the row
+   * @param $name Name button of the row (replaced by a field to rename)
    */
   private _onNameKeydown(e: KeyboardEvent, shape: DrawingShape, $name: HTMLButtonElement) {
     const siblings = shape.getParent()?.children.length ?? 0;
@@ -519,6 +549,8 @@ export class LayersPanel {
   /**
    * Select shape of a row with selection tool (hidden shapes are not, locked ones only without others): `one` alone,
    * `toggle` added or removed (Ctrl + click, Ctrl + Space), `range` with rows from anchor (Shift + click, Shift + arrows)
+   * @param shape Shape of the row
+   * @param mode How the selection changes: `one`, `toggle` or `range`
    */
   private _select(shape: DrawingShape, mode: 'one' | 'toggle' | 'range') {
     const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
@@ -542,6 +574,8 @@ export class LayersPanel {
 
   /**
    * Selectable shapes of rows from anchor to this one, in same group (null without anchor in it)
+   * @param shape Shape of the row ending the range
+   * @returns Visible shapes of the range in list order, null when the anchor is missing or in another group
    */
   private _getRange(shape: DrawingShape): DrawingShape[] | null {
     const ids = ([...this.$list.children] as HTMLElement[]).map(($item) => $item.dataset.id!);
@@ -559,6 +593,8 @@ export class LayersPanel {
 
   /**
    * Name field instead of name of a row: Enter or leaving it saves, Escape cancels, empty gives back default name
+   * @param shape Shape renamed (its `label`)
+   * @param $name Name button of the row, replaced by the field
    */
   private _rename(shape: DrawingShape, $name: HTMLButtonElement) {
     if (this.drawer.readOnly) return;
@@ -599,7 +635,9 @@ export class LayersPanel {
 
   /**
    * Move a shape to a place of its group (or drawing): 0 is top
-   * @returns {boolean} true if it moved (change saved)
+   * @param shape Shape moved among the shapes of its parent
+   * @param index Place from the top (row order), clamped to the shapes of the parent
+   * @returns true if it moved (change saved)
    */
   moveShape(shape: DrawingShape, index: number): boolean {
     const count = shape.getParent()?.children.length ?? 0;
@@ -615,6 +653,9 @@ export class LayersPanel {
 
   /**
    * Drag of a row by its handle, among rows of the same group: drop place shown between rows
+   * @param e Pointer down on the handle (main button only)
+   * @param shape Shape of the dragged row, moved on drop
+   * @param $item Dragged row
    */
   private _drag(e: PointerEvent, shape: DrawingShape, $item: HTMLElement) {
     if (this.drawer.readOnly || e.button !== 0) return;

@@ -68,6 +68,8 @@ export type GroupWidgetOptions = {
 /**
  * Svg code of options without what runs code (scripts, event attributes, javascript links), parsed in an inert
  * document (nothing loaded nor run)
+ * @param code Svg markup given as group icon
+ * @returns Svg element imported in the page, null when the code is not an svg
  */
 function parseSvg(code: string): SVGElement | null {
   const svg = new DOMParser().parseFromString(code, 'image/svg+xml').documentElement;
@@ -86,6 +88,8 @@ function parseSvg(code: string): SVGElement | null {
 
 /**
  * Icon of a group: name of `groupIcons` or svg code, default icon for an unknown name or invalid code
+ * @param icon Name of `groupIcons` or svg markup, 'shapes' by default
+ * @returns Decorative svg element (hidden to assistive technologies)
  */
 export function getGroupIcon(icon: string = 'shapes'): SVGElement {
   const $icon = icon.trim().startsWith('<')
@@ -122,6 +126,10 @@ export class GroupWidget {
   /** Menu of widget buttons (role `group`), above group button in fixed position, hidden until shown */
   readonly $menu: HTMLDivElement;
 
+  /**
+   * Create the group button and the menu of its widgets
+   * @param drawer Drawer of this group
+   */
   constructor(drawer: Drawer, { widgets, icon, title }: GroupWidgetOptions) {
     this.drawer = drawer;
     this.widgets = widgets;
@@ -156,6 +164,7 @@ export class GroupWidget {
 
   /**
    * Adds group button and its widgets to `parent` (toolbar)
+   * @param parent Toolbar root receiving the group container
    * @internal
    */
   addTo(parent: HTMLElement) {
@@ -165,6 +174,7 @@ export class GroupWidget {
 
   /**
    * Menu of widgets is shown
+   * @returns True while the menu is not hidden
    */
   isShown() {
     return !this.$menu.hidden;

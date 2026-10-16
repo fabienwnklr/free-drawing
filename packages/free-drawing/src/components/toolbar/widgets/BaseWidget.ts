@@ -51,6 +51,14 @@ export abstract class BaseWidget {
   /** Stage cursor while widget is active */
   protected cursor: string = 'default';
 
+  /**
+   * Create the button of the widget (added to toolbar by `addTo`) and its shortcut
+   * @param drawer Drawer of this widget
+   * @param id Id of the tool, also its translation key `tools.<id>`
+   * @param title Title of the button without `title` option nor translation of the id
+   * @param $icon Icon of the button: svg element or svg markup
+   * @param shortcut Default key activating the tool, replaced by `shortcut` option
+   */
   constructor(
     /** Drawer of this widget */
     protected drawer: Drawer,
@@ -82,8 +90,8 @@ export abstract class BaseWidget {
   }
 
   /**
-   * Adds this to `parent`.
-   * Returns the element that was just added to `parent`.
+   * Adds the button of this widget (icon, shortcut letter) in its container, at the end of `parent`
+   * @param parent Element receiving the button container: toolbar root or menu of a group
    * @internal
    */
   addTo(parent: HTMLElement) {
@@ -134,7 +142,7 @@ export abstract class BaseWidget {
    * Listen stage events while widget is active.
    * Events are namespaced with widget id, so they are removed on deactivation without removing other listeners.
    * @param events Space separated event names
-   * @param handler
+   * @param handler Konva listener called with the stage event
    */
   protected onStage(events: string, handler: KonvaEventListener<Stage, any>) {
     const namespaced = events
@@ -199,6 +207,7 @@ export abstract class BaseWidget {
 
   /**
    * Shapes being drawn shown to collaborators while drawing (final state is sent on change)
+   * @param shapes Shapes in their current state, sent as a live change of the collaboration session
    */
   protected shareLive(...shapes: DrawingShape[]) {
     this.drawer.collaboration?.sendLive(shapes);

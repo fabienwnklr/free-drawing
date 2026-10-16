@@ -51,7 +51,8 @@ export type CustomTranslations = Partial<Record<Language, Partial<Translations>>
 
 /**
  * Language of a locale (`fr-FR` gives `fr`), English when not supported
- * @param {string} locale Browser language by default
+ * @param locale Browser language by default
+ * @returns Supported language of the locale, else `en`
  */
 export function getLanguage(locale: string | undefined = globalThis.navigator?.language): Language {
   const language = locale?.slice(0, 2).toLowerCase();
@@ -71,6 +72,7 @@ export class I18n {
   #updates: ((t: Translate) => void)[] = [];
 
   /**
+   * Texts in a language, with custom texts of the app
    * @param language Language of texts
    * @param custom Texts replacing default ones, per language
    */
@@ -81,6 +83,9 @@ export class I18n {
 
   /**
    * Text of interface in current language, placeholders replaced
+   * @param key Key of the text: custom text, else of current language, else English, else the key itself
+   * @param params Values of `{name}` placeholders, unknown placeholders kept
+   * @returns Translated text
    */
   t: Translate = (key, params = {}) => {
     const text = this.#custom[this.language]?.[key] ?? languages[this.language].translations[key] ?? en[key] ?? key;
@@ -99,6 +104,7 @@ export class I18n {
 
   /**
    * Change language: texts given to `translate` are updated
+   * @param language New language of texts
    */
   setLanguage(language: Language) {
     this.language = language;

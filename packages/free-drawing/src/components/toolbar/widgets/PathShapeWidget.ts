@@ -4,9 +4,10 @@ import { ShapeWidget, dragBox } from '@/components/toolbar/widgets/ShapeWidget';
 
 /**
  * Svg path of a box of width and height 1 (absolute commands of points: M, L, C, Z) scaled to a box
- * @param {string} path
- * @param {number} width
- * @param {number} height
+ * @param path Svg path of the box of size 1, numbers are x and y of points in turn
+ * @param width Width of the box to fill
+ * @param height Height of the box to fill
+ * @returns Path with x multiplied by width and y by height, rounded to 2 decimals
  */
 export function scalePath(path: string, width: number, height: number): string {
   let index = 0;
@@ -28,6 +29,11 @@ export abstract class PathShapeWidget extends ShapeWidget<Path> {
   /** Path in a box of width and height 1, see `scalePath` */
   protected abstract path: string;
 
+  /**
+   * Empty path at drag start, round joins
+   * @param start Drag start, in drawing coordinates
+   * @returns Path named by `shapeName`
+   */
   protected createShape(start: Vector2d) {
     return new Path({
       ...this.shapeStyle,
@@ -40,6 +46,13 @@ export abstract class PathShapeWidget extends ShapeWidget<Path> {
     });
   }
 
+  /**
+   * Path scaled to the dragged box
+   * @param shape Path being drawn
+   * @param start Drag start, in drawing coordinates
+   * @param end Pointer, in drawing coordinates
+   * @param constrain Shift pressed: square box
+   */
   protected updateShape(shape: Path, start: Vector2d, end: Vector2d, constrain: boolean) {
     const { x, y, width, height } = dragBox(start, end, constrain);
 

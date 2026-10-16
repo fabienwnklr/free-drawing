@@ -55,6 +55,11 @@ export class HighlighterOverlay {
   /** Width buttons, one per `highlighterSizes` (width in `data-size`) */
   readonly $sizeButtons: HTMLButtonElement[];
 
+  /**
+   * Create the panel (color and width sections) in floating region, hidden until `show`
+   * @param drawer Drawer of the highlighter widget
+   * @param options Choices of the widget, shown by the fields and changed in place by `setChange`
+   */
   constructor(
     /** Drawer of the highlighter widget */
     private readonly drawer: Drawer,
@@ -93,6 +98,7 @@ export class HighlighterOverlay {
 
   /**
    * Color or size chosen: fields updated, widget told
+   * @param change Chosen color or width, merged into the widget choices
    */
   setChange(change: { color?: ColorLike; size?: number }) {
     Object.assign(this.options, change);
@@ -124,6 +130,8 @@ export class HighlighterOverlay {
 
   /**
    * Group of fields named by its title (as other overlays)
+   * @param title Key of the section title, translated again on language change
+   * @returns Section element (title then buttons element) and its buttons element, not appended yet
    */
   private _createSection(title: TranslationKey) {
     /** Section element: group named by its title */

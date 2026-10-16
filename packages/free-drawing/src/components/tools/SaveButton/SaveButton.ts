@@ -15,6 +15,10 @@ export class SaveButton {
   /** Button saving the drawing (`saveNow`), its name tells when changes are not saved */
   $button: HTMLButtonElement;
 
+  /**
+   * Create the button in header, updated when changes are saved or not, auto save or language changes
+   * @param drawer Drawer saved by the button
+   */
   constructor(drawer: Drawer) {
     this.drawer = drawer;
 

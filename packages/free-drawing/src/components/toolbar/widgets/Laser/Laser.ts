@@ -10,8 +10,9 @@ export const laserColor = '#ff3b30';
 
 /**
  * Glowing trail of a laser, fading after a second
- * @param {Layer} layer
- * @param {string} color
+ * @param layer Layer of the trail (selection layer: not saved)
+ * @param color Color of the trail and its glow: of this user, or of the cursor of another user
+ * @returns Trail to start, then fed with pointer positions
  */
 export function createLaserTrail(layer: Layer, color: string = laserColor): Trail {
   return new Trail(layer, { color, size: 6, duration: 1000, glow: color });
@@ -25,10 +26,17 @@ export class LaserWidget extends BaseWidget {
   protected cursor = crosshairCursor;
   #trail: Trail | null = null;
 
+  /**
+   * Create the laser pointer tool, shortcut K
+   * @param drawer Drawer of this widget
+   */
   constructor(drawer: Drawer) {
     super(drawer, 'laser', 'Laser pointer', LaserIcon, 'k');
   }
 
+  /**
+   * New trail on pointer down (shared with collaborators), fed on move, faded out on pointer up
+   */
   protected initEvents(): void {
     this.onStage('mousedown touchstart', (e) => {
       if (e.evt.button === 2) return;
@@ -60,6 +68,9 @@ export class LaserWidget extends BaseWidget {
     });
   }
 
+  /**
+   * Tool changed: laser stopped
+   */
   protected onDesactive(): void {
     this._stop();
   }

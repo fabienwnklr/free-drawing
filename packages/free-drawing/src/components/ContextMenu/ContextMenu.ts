@@ -38,6 +38,10 @@ export class ContextMenu {
   /** Place of right click in drawing: pasted text goes there (pointer is on menu then) */
   #position: Vector2d | null = null;
 
+  /**
+   * Create the menu (hidden) in the floating region and listen to right clicks and the context menu key
+   * @param drawer Drawer the menu acts on
+   */
   constructor(drawer: Drawer) {
     this.drawer = drawer;
     this._init();
@@ -203,7 +207,11 @@ export class ContextMenu {
 
   /**
    * Menu item, focused with arrow keys, shortcut shown at its end
+   * @param label Key of the item text (translated again when language changes)
+   * @param shortcut Keys shown at the end of the item (hidden to assistive technologies)
+   * @param role `menuitemcheckbox` for a toggle (snapping, grid), else `menuitem`
    * @param keyshortcuts `aria-keyshortcuts` when shown shortcut is not one
+   * @returns Item button (not in tab order), its click listener is added by `_init`
    */
   private _createItem(
     label: TranslationKey,
@@ -230,6 +238,7 @@ export class ContextMenu {
 
   /**
    * Shown items, in menu order
+   * @returns Items not hidden, navigated with arrow keys
    */
   private _getItems() {
     return Array.from(this.$list.querySelectorAll<HTMLElement>('[role^="menuitem"]:not([hidden])'));
@@ -279,6 +288,7 @@ export class ContextMenu {
   /**
    * Shape under pointer selected (its group, with selection tool) unless it is selected,
    * selection kept in its box, removed elsewhere
+   * @param e Konva contextmenu event of the stage, its target is the hit node
    */
   private _selectAt(e: KonvaEventObject<PointerEvent>) {
     const { drawer, selectWidget } = this;
@@ -303,6 +313,8 @@ export class ContextMenu {
 
   /**
    * Drawing shape of a node of draw layer: the node itself or its top group, in drawing or in a frame
+   * @param node Node hit by the right click
+   * @returns Drawing shape holding the node
    */
   private _getDrawingShape(node: Node): DrawingShape {
     return getDrawingShape(node, this.drawer.drawLayer);
@@ -310,6 +322,8 @@ export class ContextMenu {
 
   /**
    * Menu at a position of drawer, kept in it
+   * @param left Wanted left of the menu from the drawer container left (px)
+   * @param top Wanted top of the menu from the drawer container top (px)
    */
   private _moveTo(left: number, top: number) {
     const { clientWidth, clientHeight } = this.drawer.$drawerContainer;
@@ -380,6 +394,7 @@ export class ContextMenu {
 
   /**
    * Whether the menu is shown
+   * @returns True while the menu is shown
    */
   isVisible() {
     return this.$menu.classList.contains('show');

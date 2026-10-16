@@ -7,6 +7,8 @@ import type { ShapeOrder } from '@/@types/drawer';
  * Move shapes in stacking order of their layer, relative order of moved shapes is kept.
  * `forward` / `backward`: above / below the next shape they overlap (moving past other shapes changes nothing),
  * `front` / `back`: above / below all shapes
+ * @param shapes top nodes to move (selection), children of the same parent; shapes without parent ignored
+ * @param order where to move them
  * @returns true if a shape moved
  */
 export function reorderShapes(shapes: Node[], order: ShapeOrder): boolean {

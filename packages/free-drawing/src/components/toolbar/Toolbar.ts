@@ -62,6 +62,10 @@ export class Toolbar {
   /** Keep tool after drawing (`keepTool` preference), first button, with selection widget only */
   $keepToolButton: HTMLButtonElement | null = null;
 
+  /**
+   * Create the toolbar in the footer with widgets and groups of drawer options
+   * @param drawer Drawer whose tools the toolbar shows
+   */
   constructor(drawer: Drawer) {
     this.drawer = drawer;
 
@@ -118,7 +122,7 @@ export class Toolbar {
 
   /**
    * Add a widget at the end of toolbar, out of groups
-   * @param {BaseWidget} widget
+   * @param widget Widget whose button is added, registered by its id
    */
   addWidget(widget: BaseWidget) {
     this.widgets.set(widget.id, widget);
@@ -128,7 +132,7 @@ export class Toolbar {
 
   /**
    * Add a group of widgets (created by the app or the library), its widgets become widgets of toolbar
-   * @param {GroupWidget} group
+   * @param group Group whose button is added at the end of toolbar
    */
   addGroup(group: GroupWidget) {
     group.widgets.forEach((widget) => this.widgets.set(widget.id, widget));
@@ -140,7 +144,7 @@ export class Toolbar {
   /**
    * Make a widget the active tool of drawer (`activeWidget`, `activeTool`), its button (or group) the tab stop.
    * Called by `BaseWidget.setActive`, which activates a widget: call that one instead.
-   * @param {BaseWidget} widget
+   * @param widget Widget becoming the active tool
    */
   setActiveWidget(widget: BaseWidget) {
     this.drawer.activeWidget = widget;
@@ -151,7 +155,8 @@ export class Toolbar {
 
   /**
    * Button of a widget in toolbar: its own, or the button of its group
-   * @param {BaseWidget} widget
+   * @param widget Widget of toolbar
+   * @returns Button of the group holding the widget, else the button of the widget
    */
   getButton(widget: BaseWidget): HTMLButtonElement {
     return this.groups.find((group) => group.widgets.includes(widget))?.$button ?? widget.$button;
@@ -166,6 +171,7 @@ export class Toolbar {
 
   /**
    * Only given button of toolbar is reached with Tab (roving tabindex), arrow keys move between them
+   * @param $button Top button (widget or group) getting tabindex 0, others get -1
    */
   setTabStop($button: HTMLElement) {
     this._getButtons().forEach(($btn) => ($btn.tabIndex = $btn === $button ? 0 : -1));
@@ -205,6 +211,7 @@ export class Toolbar {
 
   /**
    * Buttons of toolbar in order: widgets and groups, not widgets of groups
+   * @returns Top buttons of toolbar, keep tool button first when shown
    */
   private _getButtons() {
     return [...this.$toolbarRoot.children]

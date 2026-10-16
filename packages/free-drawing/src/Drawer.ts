@@ -437,7 +437,7 @@ export class Drawer extends MicroEvent {
   /**
    * Read only: drawing can't be modified by user (tools except pan, shortcuts and menu items modifying drawing,
    * text edition), API methods still modify it
-   * @param {boolean} readOnly
+   * @param readOnly True disables tools modifying drawing (pan activated), false enables them and the previous tool
    */
   setReadOnly(readOnly: boolean) {
     if (readOnly === this.readOnly) return;
@@ -468,6 +468,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Right to draw of this user given or removed by owner of collaboration room
+   * @param canEdit True when this user may draw (still read only with `readOnly` option), told in a toast
    */
   _onCollaborationRight(canEdit: boolean) {
     this.setReadOnly(!canEdit || this.options.readOnly);
@@ -476,10 +477,10 @@ export class Drawer extends MicroEvent {
 
   /**
    * Start a live collaboration session in a room (`collaboration` option gives the server), current session is stopped
-   * @param {string} room Room id, new room by default
-   * @param {string} name Name shown to other users, saved for next sessions
-   * @param {string} invitedBy Id of user who shared the link (see `getCollaborationLink`), shown to owner
-   * @returns {Promise<string>} Link to join the room
+   * @param room Room id, new room by default
+   * @param name Name shown to other users, saved for next sessions
+   * @param invitedBy Id of user who shared the link (see `getCollaborationLink`), shown to owner
+   * @returns Link to join the room
    */
   async startCollaboration(room?: string, name: string = this.getUserName(), invitedBy?: string): Promise<string> {
     if (!this.options.collaboration) throw new Error('collaboration option is disabled');
@@ -537,7 +538,8 @@ export class Drawer extends MicroEvent {
 
   /**
    * Link to join a room: current page with `#room=<id>&by=<user id>`, owner knows who shared it
-   * @param {string} room Room id, room of current session by default
+   * @param room Room id, room of current session by default
+   * @returns Url of current page with room hash, without hash when there is no room
    */
   getCollaborationLink(room: string | undefined = this.collaboration?.room): string {
     const url = new URL(window.location.href);
@@ -551,8 +553,8 @@ export class Drawer extends MicroEvent {
   /**
    * Live collaboration dialog: owner starts / stops session, shares link and QR code, gives rights;
    * other users give their name
-   * @param {string} joinRoom Room of a link, joined once user gave a name
-   * @param {string} invitedBy Id of user who shared the link
+   * @param joinRoom Room of a link, joined once user gave a name
+   * @param invitedBy Id of user who shared the link
    */
   showCollaboration(joinRoom: string | null = null, invitedBy?: string) {
     this.collaborationModal ??= new CollaborationModal(this);
@@ -568,7 +570,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * User logged in or out: their id is used by next collaboration sessions, their name at once
-   * @param {DrawerUser | null} user null for anonymous user (id and name kept in browser)
+   * @param user null for anonymous user (id and name kept in browser)
    */
   setUser(user: DrawerUser | null) {
     this.#user = user;
@@ -582,6 +584,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Id of this user in collaboration sessions (rights given by owners): of `user` option, else kept in browser
+   * @returns Id of the user, or a new one saved in localStorage (new each session if storage is unavailable)
    */
   getUserId(): string {
     if (this.#user) return this.#user.id;
@@ -603,6 +606,8 @@ export class Drawer extends MicroEvent {
 
   /**
    * Secret of owner of a room created in this browser
+   * @param room Room id
+   * @returns Owner key kept for this room, undefined if this browser did not create it
    */
   private _getOwnerKey(room: string): string | undefined {
     try {
@@ -614,6 +619,8 @@ export class Drawer extends MicroEvent {
 
   /**
    * Keep secret of owner of a room in browser (20 last rooms), owner again when coming back to it
+   * @param room Room id
+   * @param ownerKey Secret proving to the server that this user owns the room
    */
   private _setOwnerKey(room: string, ownerKey: string) {
     const key = this.options.localStorageKey + '-owner';
@@ -630,6 +637,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Name shown to other users in collaboration sessions: given for this visit, else of `user` option, else kept in browser
+   * @returns User name, empty string if none was given
    */
   getUserName(): string {
     return this.#userName ?? this.#user?.name ?? this._getStorageItem(this.options.localStorageKey + '-name') ?? '';
@@ -637,6 +645,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Change name shown to other users (current session and next ones)
+   * @param name New name, trimmed and cut to 40 characters
    */
   setUserName(name: string) {
     name = name.trim().slice(0, 40);
@@ -651,6 +660,8 @@ export class Drawer extends MicroEvent {
 
   /**
    * Resolved when socket is connected, rejected if server can't be reached (no retry)
+   * @param socket Socket of the collaboration session being started
+   * @returns Promise resolved on connection, rejected with the connection error
    */
   private _connected(socket: CollaborationSocket): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -662,6 +673,7 @@ export class Drawer extends MicroEvent {
   /**
    * Socket connected to collaboration server: true is page origin, string is server url, options give url and
    * data read by server on connection (socket.io client is loaded only then)
+   * @returns New socket (new connection each session), connecting
    */
   protected async _createSocket(): Promise<CollaborationSocket> {
     const { collaboration } = this.options;
@@ -685,7 +697,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Get zoom level
-   * @returns {number}
+   * @returns Scale of the stage (1 = 100%)
    */
   getZoomLevel(): number {
     return this.stage.scaleX();
@@ -693,8 +705,8 @@ export class Drawer extends MicroEvent {
 
   /**
    * Set zoom level, limited from 10% to 3000%
-   * @param {number} scale Zoom level (1 = 100%)
-   * @param {Vector2d} point Absolute position that stays in place, stage center by default
+   * @param scale Zoom level (1 = 100%)
+   * @param point Absolute position that stays in place, stage center by default
    */
   setZoomLevel(scale: number, point: Vector2d = { x: this.stage.width() / 2, y: this.stage.height() / 2 }) {
     const oldScale = this.getZoomLevel();
@@ -721,7 +733,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Get all shape drawing
-   * @returns {Shape<ShapeConfig>[]}
+   * @returns Copy of the top nodes of draw layer (shapes and groups), bottom first
    */
   getDrawingShapes(): DrawingShape[] {
     // Return clone of array, else clean doesn't work
@@ -731,8 +743,8 @@ export class Drawer extends MicroEvent {
   /**
    * Add drawing shape (or group) to draw layer, draggable only with selection tool.
    * Every drawing shape must be added with this method (tools, history, collaboration...)
-   * @param {DrawingShape} shape
-   * @returns {DrawingShape} added shape
+   * @param shape Shape or group to add on top of drawing, given an id if it has none
+   * @returns added shape
    */
   addShape<T extends DrawingShape>(shape: T): T {
     shape.draggable(this.activeTool === 'selection');
@@ -745,6 +757,7 @@ export class Drawer extends MicroEvent {
   /**
    * Shape identity for collaboration and layers panel (kept in history and saves), also of shapes in groups (moved
    * with their group, not alone), hit region
+   * @param shape Shape or group added to drawing, shapes of frames set up too
    */
   private _setupShape(shape: DrawingShape) {
     if (!shape.id()) shape.id(createId());
@@ -769,8 +782,8 @@ export class Drawer extends MicroEvent {
 
   /**
    * Get all drawing shape by name
-   * @param {keyof typeof shapeName} shapeType Shape type
-   * @returns {(Group | Shape<ShapeConfig>)[]}
+   * @param shapeType Shape type
+   * @returns Top nodes of draw layer having the name of this type
    */
   getDrawingShapeByName(shapeType: keyof typeof shapeName): (Group | Shape<ShapeConfig>)[] {
     return this.drawLayer.children.filter((e) => {
@@ -782,6 +795,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Pointer registered by stage: over canvas, or during a pointer action (konva forgets it when pointer leaves canvas)
+   * @returns True when stage knows a pointer position
    */
   _hasPointer(): boolean {
     return this.stage._pointerPositions.length > 0 || this.stage._changedPointerPositions.length > 0;
@@ -789,6 +803,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Pointer in drawing (view moved and zoomed), center of view when pointer is out of canvas (menu, keyboard)
+   * @returns Position in drawing coordinates
    */
   _getRelativePointerPos(): Vector2d {
     return this.stage.getAbsoluteTransform().copy().invert().point(this._getPointerPos());
@@ -796,6 +811,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Pointer in view, center of view when pointer is out of canvas (menu, keyboard)
+   * @returns Position relative to the stage container
    */
   _getPointerPos(): Vector2d {
     const pos = this._hasPointer() ? this.stage.getPointerPosition() : null;
@@ -912,7 +928,8 @@ export class Drawer extends MicroEvent {
 
   /**
    * Get widget by name
-   * @param {AvailableTools} name
+   * @param name Widget id
+   * @returns Widget of the toolbar, undefined if it is not in toolbar
    */
   getWidget<T>(name: AvailableTools): T | undefined {
     return this.toolbar.getWidget<T>(name);
@@ -920,6 +937,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Pointer action of active tool or text edition in progress: shortcuts and interface ignore keys and pointer
+   * @returns True while an action or a text edition is in progress
    */
   _duringAction() {
     // pointer action of active tool (drawing, erasing, selecting...) or text edition
@@ -948,7 +966,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Save drawing in `storage` option (once its drawing is loaded), else in localStorage
-   * @returns {Promise<void>} Resolved once saved (errors are shown in a toast)
+   * @returns Resolved once saved (errors are shown in a toast)
    */
   save(): Promise<void> {
     const { storage, localStorageKey } = this.options;
@@ -976,6 +994,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Drawing has changes not saved yet: without auto save, until `save` (or `saveNow`)
+   * @returns True when changes are not saved
    */
   hasUnsavedChanges(): boolean {
     return this.#unsaved;
@@ -983,7 +1002,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Save drawing on each change, or only with `save` / `saveNow` (preference): pending changes saved when enabled
-   * @param {boolean} autoSave
+   * @param autoSave True saves on each change, false marks changes unsaved until a save
    */
   setAutoSave(autoSave: boolean) {
     if (autoSave === this.options.autoSave) return;
@@ -995,7 +1014,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Keep drawing tool after drawing a shape, else selection tool is activated, nothing selected (preference)
-   * @param {boolean} keepTool
+   * @param keepTool True keeps the drawing tool, false activates selection tool after each drawing
    */
   setKeepTool(keepTool: boolean) {
     if (keepTool === this.options.keepTool) return;
@@ -1006,6 +1025,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Drawing has changes not saved or is saved: `drawer.unsaved.change` event when it changes
+   * @param unsaved True when drawing has changes not saved, false once saved
    */
   private _setUnsaved(unsaved: boolean) {
     if (unsaved === this.#unsaved) return;
@@ -1016,6 +1036,8 @@ export class Drawer extends MicroEvent {
 
   /**
    * One save at a time: changes made during a save are saved once it ends (last drawing only)
+   * @param storage Storage of the app receiving the drawing file
+   * @returns Promise of the save in progress, resolved once last changes are saved (errors shown in a toast)
    */
   private _saveToStorage(storage: DrawerStorage): Promise<void> {
     if (this.#saving) {
@@ -1041,6 +1063,8 @@ export class Drawer extends MicroEvent {
 
   /**
    * Drawing stays in page, warned once until a save succeeds
+   * @param error Error of the save, its message shown in the toast
+   * @param type Toast type: warning for localStorage, error for app storage
    */
   private _onSaveError(error: Error, type: 'warning' | 'error') {
     if (this.#saveFailed) return;
@@ -1052,7 +1076,7 @@ export class Drawer extends MicroEvent {
   /**
    * Load drawing of `storage` option (on init, again after login...): it replaces drawing (kept if nothing is
    * stored), history starts from it, changes are saved in storage once it is loaded
-   * @returns {Promise<void>} Rejected if drawing can't be loaded (shown in a toast): changes are not saved
+   * @returns Rejected if drawing can't be loaded (shown in a toast): changes are not saved
    */
   async loadFromStorage(): Promise<void> {
     const { storage } = this.options;
@@ -1082,7 +1106,8 @@ export class Drawer extends MicroEvent {
 
   /**
    * Read localStorage item, null if storage is unavailable (blocked cookies, sandboxed iframe...)
-   * @param {string} key
+   * @param key Key of the item
+   * @returns Item value, null if missing or storage unavailable
    */
   private _getStorageItem(key: string): string | null {
     try {
@@ -1094,6 +1119,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Stage saved in localStorage, null if none or invalid (corrupted, other app data...)
+   * @returns Stage created from saved JSON with its required layers, else null
    */
   private _loadSavedStage(): Stage | null {
     const json = this._getStorageItem(this.options.localStorageKey);
@@ -1119,6 +1145,8 @@ export class Drawer extends MicroEvent {
 
   /**
    * Drawing as file content (`.freedrawing` file, link): background color and drawing shapes
+   * @param shapes Shapes written in the file, all drawing shapes by default
+   * @returns Drawing file with background color and states of shapes
    */
   getDrawingFile(shapes: DrawingShape[] = this.getDrawingShapes()): DrawingFile {
     return {
@@ -1131,6 +1159,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Drawing shapes selected with selection tool
+   * @returns Nodes of the transformer, empty without selection widget
    */
   getSelectedShapes(): DrawingShape[] {
     const nodes = this.getWidget<SelectWidget>('selection')?.transformer.nodes() ?? [];
@@ -1140,8 +1169,8 @@ export class Drawer extends MicroEvent {
 
   /**
    * Flip shapes (selected ones by default) around the center of their box, texts are still read from left to right
-   * @param {'horizontal' | 'vertical'} direction
-   * @param {DrawingShape[]} shapes
+   * @param direction Horizontal mirrors left and right, vertical mirrors top and bottom
+   * @param shapes Shapes to flip (frames ignored), selected shapes by default
    */
   flipShapes(direction: 'horizontal' | 'vertical', shapes: DrawingShape[] = this.getSelectedShapes()) {
     // frames are not flipped
@@ -1173,8 +1202,8 @@ export class Drawer extends MicroEvent {
 
   /**
    * Rotate shapes (selected ones by default) around the center of their box
-   * @param {number} angle Degrees, clockwise when positive (90: quarter turn right, -90: left)
-   * @param {DrawingShape[]} shapes
+   * @param angle Degrees, clockwise when positive (90: quarter turn right, -90: left)
+   * @param shapes Shapes to rotate (frames ignored), selected shapes by default
    */
   rotateShapes(angle: number, shapes: DrawingShape[] = this.getSelectedShapes()) {
     // frames are not rotated
@@ -1211,8 +1240,8 @@ export class Drawer extends MicroEvent {
   /**
    * Fit width of texts (selected ones by default, also texts of groups) to their content: box of their longest line,
    * lines no longer wrapped, text stays in place
-   * @param {DrawingShape[]} shapes
-   * @returns {boolean} true if a text changed (change saved)
+   * @param shapes Shapes whose texts are fitted, selected shapes by default
+   * @returns true if a text changed (change saved)
    */
   fitTextWidth(shapes: DrawingShape[] = this.getSelectedShapes()): boolean {
     const changed = getTexts(shapes).filter(fitTextWidth);
@@ -1224,6 +1253,8 @@ export class Drawer extends MicroEvent {
 
   /**
    * Center of the box of shapes (absolute position)
+   * @param shapes Shapes whose client rects make the box
+   * @returns Absolute position of the center of the box
    */
   private _getCenter(shapes: DrawingShape[]): Vector2d {
     const boxes = shapes.map((shape) => shape.getClientRect());
@@ -1239,8 +1270,8 @@ export class Drawer extends MicroEvent {
   /**
    * Copy image of selected shapes (whole drawing without selection) to clipboard: png image, or svg image and text
    * (pasted as svg code in editors), message shown
-   * @param {'png' | 'svg'} format
-   * @param {ExportImageOptions} options
+   * @param format Image format copied, png by default
+   * @param options Export options (selection only, background, dark mode, scale)
    */
   async copyImage(format: 'png' | 'svg' = 'png', options: ExportImageOptions = {}) {
     try {
@@ -1265,8 +1296,8 @@ export class Drawer extends MicroEvent {
 
   /**
    * Copy shapes (selected ones by default) a little further, copies are selected
-   * @param {DrawingShape[]} shapes
-   * @returns {DrawingShape[]} copies, on top of drawing (change saved)
+   * @param shapes Shapes to copy (removed ones ignored), selected shapes by default
+   * @returns copies, on top of drawing (change saved)
    */
   duplicateShapes(shapes: DrawingShape[] = this.getSelectedShapes()): DrawingShape[] {
     // same offset on screen whatever zoom
@@ -1317,8 +1348,8 @@ export class Drawer extends MicroEvent {
 
   /**
    * Remove shapes (selected ones by default), removed from selection
-   * @param {Shape<ShapeConfig>[]} shapes
-   * @returns {boolean} true if a shape was removed (change saved)
+   * @param shapes Shapes to remove (groups left empty removed too), selected shapes by default
+   * @returns true if a shape was removed (change saved)
    */
   deleteShapes(shapes: DrawingShape[] = this.getSelectedShapes()): boolean {
     const removed = shapes.filter((shape) => shape.getLayer());
@@ -1347,8 +1378,8 @@ export class Drawer extends MicroEvent {
   /**
    * Group shapes (selected ones by default, 2 at least, of the same group): moved, transformed, hidden, locked,
    * ordered and named together. The group takes place of top shape and is selected
-   * @param {DrawingShape[]} shapes
-   * @returns {Group | null} group (change saved)
+   * @param shapes Shapes to group, selected shapes by default
+   * @returns group (change saved), null if shapes can't be grouped
    */
   groupShapes(shapes: DrawingShape[] = this.getSelectedShapes()): Group | null {
     const parent = shapes[0]?.getParent();
@@ -1379,7 +1410,8 @@ export class Drawer extends MicroEvent {
 
   /**
    * Shapes can be grouped: 2 at least, of the same group (or drawing)
-   * @param {DrawingShape[]} shapes Selected shapes by default
+   * @param shapes Selected shapes by default
+   * @returns True for 2 shapes or more of the same parent, none of them a frame
    */
   canGroupShapes(shapes: DrawingShape[] = this.getSelectedShapes()): boolean {
     const parent = shapes[0]?.getParent();
@@ -1391,8 +1423,8 @@ export class Drawer extends MicroEvent {
   /**
    * Ungroup groups (selected ones by default): their shapes take their place with the same look (transform,
    * hidden, locked) and are selected
-   * @param {DrawingShape[]} shapes
-   * @returns {DrawingShape[]} shapes of groups (change saved)
+   * @param shapes Groups to ungroup (other shapes and frames ignored), selected shapes by default
+   * @returns shapes of groups (change saved)
    */
   ungroupShapes(shapes: DrawingShape[] = this.getSelectedShapes()): DrawingShape[] {
     const groups = shapes.filter(
@@ -1430,7 +1462,8 @@ export class Drawer extends MicroEvent {
 
   /**
    * Name of a shape (layers panel): name given by user, else first line of a text, else type of shape
-   * @param {Shape<ShapeConfig>} shape
+   * @param shape Shape or group to name
+   * @returns Label shown for the shape, in current language for a type of shape
    */
   getShapeLabel(shape: DrawingShape): string {
     // attributes read from node (konva types those of each class, not of a shape or group)
@@ -1444,10 +1477,10 @@ export class Drawer extends MicroEvent {
 
   /**
    * Give a name to a shape (saved with it), an empty name gives back its default name (frames: their title)
-   * @param {Shape<ShapeConfig>} shape
-   * @param {string} label
-   * @param {boolean} save Change saved (default true)
-   * @returns {boolean} true if name changed
+   * @param shape Shape or group to name
+   * @param label New name, trimmed (empty removes it)
+   * @param save Change saved (default true)
+   * @returns true if name changed
    */
   setShapeLabel(shape: DrawingShape, label: string, save: boolean = true): boolean {
     // frames always have a name, their title
@@ -1466,7 +1499,7 @@ export class Drawer extends MicroEvent {
   /**
    * Shapes (drawn, moved, transformed) put in the frame containing their center, or back in drawing out of frames.
    * Frames and shapes of groups are not concerned.
-   * @param {DrawingShape[]} shapes
+   * @param shapes Shapes drawn, moved or transformed
    */
   placeInFrames(shapes: DrawingShape[]) {
     const frames = this.getDrawingShapes().filter(isFrame);
@@ -1482,7 +1515,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Frame drawn or resized: takes shapes of drawing entirely in it, gives back to drawing its shapes out of it
-   * @param {Frame} frame
+   * @param frame Frame drawn or resized
    */
   fitFrame(frame: Frame) {
     const box = frame.getClientRect();
@@ -1497,9 +1530,9 @@ export class Drawer extends MicroEvent {
 
   /**
    * Lock shapes (selected ones by default): not moved, transformed nor erased on canvas, only selected to be unlocked
-   * @param {boolean} locked
-   * @param {Shape<ShapeConfig>[]} shapes
-   * @returns {boolean} true if a shape changed (change saved)
+   * @param locked True locks shapes, false unlocks them
+   * @param shapes Shapes to lock or unlock, selected shapes by default
+   * @returns true if a shape changed (change saved)
    */
   setShapesLocked(locked: boolean, shapes: DrawingShape[] = this.getSelectedShapes()): boolean {
     return this._setShapesState(
@@ -1510,9 +1543,9 @@ export class Drawer extends MicroEvent {
 
   /**
    * Hide shapes (selected ones by default): not drawn, selected nor exported
-   * @param {boolean} hidden
-   * @param {Shape<ShapeConfig>[]} shapes
-   * @returns {boolean} true if a shape changed (change saved)
+   * @param hidden True hides shapes, false shows them
+   * @param shapes Shapes to hide or show, selected shapes by default
+   * @returns true if a shape changed (change saved)
    */
   setShapesHidden(hidden: boolean, shapes: DrawingShape[] = this.getSelectedShapes()): boolean {
     return this._setShapesState(
@@ -1544,9 +1577,9 @@ export class Drawer extends MicroEvent {
   /**
    * Move shapes in stacking order: `forward` / `backward` above / below the next shape they overlap,
    * `front` / `back` above / below all shapes (relative order of moved shapes is kept)
-   * @param {ShapeOrder} order
-   * @param {Shape<ShapeConfig>[]} shapes Selected shapes by default
-   * @returns {boolean} true if a shape moved (change saved)
+   * @param order Move: `forward`, `backward`, `front` or `back`
+   * @param shapes Selected shapes by default
+   * @returns true if a shape moved (change saved)
    */
   reorderShapes(order: ShapeOrder, shapes: DrawingShape[] = this.getSelectedShapes()): boolean {
     const moved = reorderShapes(shapes, order);
@@ -1558,7 +1591,8 @@ export class Drawer extends MicroEvent {
 
   /**
    * Shapes to export: selected ones when there is a selection, else all drawing shapes
-   * @param {boolean} selected Selected shapes only
+   * @param selected Selected shapes only
+   * @returns Selected shapes, else visible drawing shapes
    */
   getExportShapes(selected: boolean = true): DrawingShape[] {
     const selection = selected ? this.getSelectedShapes() : [];
@@ -1568,6 +1602,9 @@ export class Drawer extends MicroEvent {
 
   /**
    * Drawing (or selected shapes) as png, svg or pdf image
+   * @param format Image format
+   * @param options Export options (selection only, background, dark mode, scale)
+   * @returns Image file of the format
    * @throws {Error} nothing to export
    */
   async exportImage(format: ImageFormat, options: ExportImageOptions = {}): Promise<Blob> {
@@ -1591,6 +1628,8 @@ export class Drawer extends MicroEvent {
 
   /**
    * Drawing (or selected shapes) rendered on a canvas as exported in png, synchronous (preview), null if nothing to export
+   * @param options Export options (selection only, background, dark mode, scale)
+   * @returns Canvas of the png image, null if nothing to export
    */
   exportCanvas(options: ExportImageOptions = {}): HTMLCanvasElement | null {
     const image = this._prepareExport('png', options);
@@ -1600,6 +1639,9 @@ export class Drawer extends MicroEvent {
 
   /**
    * Shapes, their box and image options of an export, null if nothing to export
+   * @param format Image format (pdf gets a white background when it has no color)
+   * @param options Export options, defaults applied
+   * @returns Shapes, box and rendering options, null if nothing to export
    */
   private _prepareExport(format: ImageFormat, options: ExportImageOptions) {
     const { selected = true, background = true, dark = false, scale = 2 } = options;
@@ -1655,7 +1697,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Replace drawing by a drawing file content, undo restores previous drawing
-   * @param {DrawingFile | string} file Content or its JSON
+   * @param file Content or its JSON
    * @throws {Error} not a drawing file
    */
   loadDrawing(file: DrawingFile | string) {
@@ -1671,7 +1713,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Save drawing in a `.freedrawing` file, with browser save dialog when available (Chromium) else downloaded
-   * @param {string} name File name without extension
+   * @param name File name without extension
    */
   async saveAs(name: string = 'drawing') {
     try {
@@ -1701,6 +1743,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Link to current page with drawing in its hash (`#<drawer id>=<data>`), no server needed
+   * @returns Url of current page with compressed drawing file in its hash
    */
   async getLink(): Promise<string> {
     const url = new URL(window.location.href);
@@ -1743,7 +1786,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Change background color
-   * @param {ColorLike} color
+   * @param color Color of the canvas background (change saved)
    */
   setBgColor(color: ColorLike) {
     // canvas background only, selected shapes fill is not changed
@@ -1755,7 +1798,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Notify overlays (and any listener) that options changed
-   * @param {OptionsChange} change Changed options only
+   * @param change Changed options only
    */
   private _triggerOptionsChange(change: OptionsChange) {
     this.trigger(drawerEvents.optionsChange, change);
@@ -1763,7 +1806,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Set color for draw
-   * @param {ColorLike} color
+   * @param color Stroke color of new shapes, applied to selected ones
    */
   setStrokeColor(color: ColorLike) {
     this.options.strokeColor = color;
@@ -1773,7 +1816,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Set background color of rectangles and ellipses (new and selected ones)
-   * @param {ColorLike} color `'transparent'` for none
+   * @param color `'transparent'` for none
    */
   setFillColor(color: ColorLike) {
     this.options.fillColor = color;
@@ -1783,7 +1826,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Set stroke width for draw
-   * @param {Number | String} width
+   * @param width Stroke width (px) of new shapes, applied to selected ones (string converted to number)
    */
   setStrokeWidth(width: string | number) {
     width = Number(width);
@@ -1795,7 +1838,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Set stroke style of lines, arrows, rectangles and ellipses (new and selected ones)
-   * @param {StrokeStyle} style 'solid', 'dashed' or 'dotted' (deprecated dash array gives 'dashed', undefined 'solid')
+   * @param style 'solid', 'dashed' or 'dotted' (deprecated dash array gives 'dashed', undefined 'solid')
    */
   setStrokeStyle(style: StrokeStyle | number[] | undefined) {
     const strokeStyle = typeof style === 'string' ? style : getStrokeStyle(style);
@@ -1807,8 +1850,9 @@ export class Drawer extends MicroEvent {
 
   /**
    * Text of interface in current language
-   * @param {TranslationKey} key
-   * @param {TranslationParams} params Values of `{name}` placeholders
+   * @param key Key of the text in translations
+   * @param params Values of `{name}` placeholders
+   * @returns Translated text with placeholders replaced
    */
   t(key: TranslationKey, params?: TranslationParams): string {
     return this.i18n.t(key, params);
@@ -1830,7 +1874,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Set language of interface (saved for next visits): every text is translated at once
-   * @param {Language | 'auto'} language 'en', 'fr', 'es', 'de' or 'auto' (browser one)
+   * @param language 'en', 'fr', 'es', 'de' or 'auto' (browser one)
    */
   setLanguage(language: Language | 'auto') {
     this.#languageChoice = language;
@@ -1842,6 +1886,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Interface settings of user (e.g. saved by the app for its logged in user)
+   * @returns Current theme, language choice, grid, snapping, zen mode, auto save and keep tool
    */
   getPreferences(): Preferences {
     return {
@@ -1857,7 +1902,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Apply interface settings (given ones only), one `drawer.preferences.change` event
-   * @param {Partial<Preferences>} preferences Grid wins when grid and snapping are both true
+   * @param preferences Grid wins when grid and snapping are both true
    */
   setPreferences({ theme, language, grid, snapping, zen, autoSave, keepTool }: Partial<Preferences>) {
     if (autoSave !== undefined) this.setAutoSave(autoSave);
@@ -1876,6 +1921,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Preferences saved in browser, and choices of previous versions (`<key>-theme`, `<key>-language`)
+   * @returns Valid saved preferences only, empty when none
    */
   private _readPreferences(): Partial<Preferences> {
     const key = this.options.localStorageKey;
@@ -1932,6 +1978,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Theme chosen in menu (saved) or by option, device theme followed with 'system'
+   * @param saved Theme of saved preferences, `theme` option when undefined
    */
   private _initTheme(saved?: Theme) {
     this.#systemDark = window.matchMedia?.('(prefers-color-scheme: dark)');
@@ -1954,7 +2001,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Set theme (saved for next visits): in dark mode, drawing is shown with inverted colors, its colors are kept
-   * @param {Theme} theme 'light', 'dark' or 'system' (device one)
+   * @param theme 'light', 'dark' or 'system' (device one)
    */
   setTheme(theme: Theme) {
     this.theme = theme;
@@ -1964,6 +2011,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Dark theme shown (chosen, or of device with 'system' theme)
+   * @returns True when dark theme is shown
    */
   isDarkMode(): boolean {
     return this.theme === 'dark' || (this.theme === 'system' && !!this.#systemDark?.matches);
@@ -1978,7 +2026,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Set corners of rectangles (new and selected ones)
-   * @param {Edges} value 'sharp', 'round' (radius following rectangle size) or radius (px, 0 is sharp)
+   * @param value 'sharp', 'round' (radius following rectangle size) or radius (px, 0 is sharp)
    */
   setEdges(value: Edges) {
     const edges = typeof value !== 'number' ? value : value > 0 ? Math.round(value * 100) / 100 : 'sharp';
@@ -1990,7 +2038,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Set opacity of shape 0 to 1
-   * @param opacity
+   * @param opacity Opacity of new shapes (0 transparent, 1 opaque), applied to selected ones
    */
   setOpacity(opacity: number) {
     this.options.opacity = opacity;
@@ -2000,7 +2048,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Set text style (font family, size, style, decoration, align) of new and selected text
-   * @param {Partial<TextStyle>} style
+   * @param style Changed properties only, merged with current text style
    */
   setTextStyle(style: Partial<TextStyle>) {
     this.options.textStyle = { ...this.options.textStyle, ...style };
@@ -2013,7 +2061,9 @@ export class Drawer extends MicroEvent {
    *
    * @param message Message to show
    * @param type Type of toast
-   * @returns {Toast}
+   * @param timeout Delay (ms) before it hides, 5000 by default, 0 keeps it shown
+   * @param showIcon Show the icon of its type (default true)
+   * @returns Toast shown
    */
   toast(message: string, type?: AvailableTypes, timeout?: number, showIcon?: boolean): Toast {
     const toast = new Toast(this, message, type, timeout, showIcon);
@@ -2024,6 +2074,8 @@ export class Drawer extends MicroEvent {
   }
 
   /**
+   * Interface panels receive pointer or not (`--drawer-pointer-events`)
+   * @param state 'none' during pointer actions, 'all' after
    * @deprecated use `layout.setPointerEvents`
    */
   UIPointerEvents(state: 'all' | 'none') {
@@ -2038,6 +2090,7 @@ export class Drawer extends MicroEvent {
   }
 
   /**
+   * Header region of the layout (top left: settings menu, layers button, position)
    * @deprecated use `layout.add('header', $element)`
    */
   get $headerContainer(): HTMLDivElement {
@@ -2045,6 +2098,7 @@ export class Drawer extends MicroEvent {
   }
 
   /**
+   * Footer region of the layout (toolbar, help)
    * @deprecated use `layout.add('footer', $element)`
    */
   get $footerContainer(): HTMLElement {
@@ -2052,6 +2106,7 @@ export class Drawer extends MicroEvent {
   }
 
   /**
+   * Start of the footer (zoom, undo / redo)
    * @deprecated use `layout.add('footerStart', $element)`
    */
   get $footerLeftElement(): HTMLDivElement {
@@ -2152,6 +2207,12 @@ export class Drawer extends MicroEvent {
 
     if (selectWidget) selectWidget.gridAnchorBound = gridAnchorBound;
 
+    /**
+     * Anchor position snapped to the closest grid lines (x, y or both) when they are less than 10px away
+     * @param oldPos Absolute position of the anchor before the move
+     * @param newPos Absolute position asked by the move
+     * @returns Snapped position, new position when far from old one or from grid lines
+     */
     function calc(oldPos: Vector2d, newPos: Vector2d) {
       const dist = Math.sqrt(Math.pow(newPos.x - oldPos.x, 2) + Math.pow(newPos.y - oldPos.y, 2));
 
@@ -2208,6 +2269,8 @@ export class Drawer extends MicroEvent {
 
   /**
    * Length of screen (px) in stage coordinates, at current zoom level
+   * @param val Length on screen (px)
+   * @returns Length in stage coordinates
    */
   private _unScale(val: number) {
     return val / this.getZoomLevel();
@@ -2265,7 +2328,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Focus drawer div container (usefull for keyevent for example)
-   * @param {FocusOptions} options
+   * @param options Focus options of the browser (e.g. `preventScroll`)
    */
   focus(options?: FocusOptions) {
     this.$drawerContainer.focus(options);
@@ -2291,6 +2354,8 @@ export class Drawer extends MicroEvent {
 
   /**
    * Resize the stage (px), e.g. when the window of a drawer of window size is resized
+   * @param width New width of the stage (px)
+   * @param height New height of the stage (px)
    */
   setSize(width: number, height: number) {
     this.stage.size({ width, height });

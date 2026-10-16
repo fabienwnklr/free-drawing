@@ -5,6 +5,8 @@ import { getFrameOfTitle, isFrame } from '@/utils/frame';
 
 /**
  * Texts of shapes and of their groups (not shapes of frames, nor titles of frames)
+ * @param shapes drawing shapes (selection)
+ * @returns texts among the shapes and in their groups at any depth
  */
 export function getTexts(shapes: DrawingShape[]): Text[] {
   return shapes
@@ -14,6 +16,8 @@ export function getTexts(shapes: DrawingShape[]): Text[] {
 
 /**
  * Width of a text box fitting its content: longest line as konva measures it, and padding
+ * @param text text node, measured with its style (font, size, padding)
+ * @returns width in text coordinates, rounded up, 1 at least
  */
 export function getContentWidth(text: Text): number {
   const attrs = { ...text.getAttrs() };
@@ -26,7 +30,8 @@ export function getContentWidth(text: Text): number {
 
 /**
  * Fit width of a text to its content (lines no longer wrapped), its lines stay in place whatever their alignment
- * @returns {boolean} true if width changed
+ * @param text text node to resize (moved along its x axis for center or right alignment)
+ * @returns true if width changed
  */
 export function fitTextWidth(text: Text): boolean {
   const width = getContentWidth(text);

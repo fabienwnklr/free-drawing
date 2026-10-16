@@ -13,7 +13,8 @@ import { withFrameShapes } from '@/utils/frame';
 
 /**
  * Arrow head size, proportional to stroke width
- * @param {number} strokeWidth
+ * @param strokeWidth Stroke width of the arrow
+ * @returns Length and width of the head (`pointerLength`, `pointerWidth`)
  */
 export const arrowPointerSize = (strokeWidth: number) => strokeWidth * 2 + 8;
 
@@ -30,10 +31,17 @@ export class ArrowWidget extends ShapeWidget<Arrow> {
   /** Shapes linked while drawing (or under pointer), highlighted with their sides */
   #highlights: Group[] = [];
 
+  /**
+   * Create the arrow tool, shortcut A
+   * @param drawer Drawer of this widget
+   */
   constructor(drawer: Drawer) {
     super(drawer, 'arrow', 'Arrow', ArrowIcon, 'a');
   }
 
+  /**
+   * Drawing events, and highlight of the shape under pointer (its sides) before drawing
+   */
   protected initEvents(): void {
     super.initEvents();
 
@@ -46,6 +54,11 @@ export class ArrowWidget extends ShapeWidget<Arrow> {
     });
   }
 
+  /**
+   * Arrow of length 0 at drag start, start linked to the shape there (kept for `updateShape`)
+   * @param start Drag start, in drawing coordinates
+   * @returns Arrow with filled head sized from stroke width
+   */
   protected createShape(start: Vector2d) {
     const style = this.shapeStyle;
     const pointerSize = arrowPointerSize(style.strokeWidth);
@@ -65,6 +78,13 @@ export class ArrowWidget extends ShapeWidget<Arrow> {
     });
   }
 
+  /**
+   * Arrow from drag start to pointer, ends linked to shapes near them (not both to the same shape), links highlighted
+   * @param arrow Arrow being drawn
+   * @param start Drag start, in drawing coordinates
+   * @param end Pointer, in drawing coordinates
+   * @param constrain Shift pressed: angle snapped to 45 degrees when the end is not linked
+   */
   protected updateShape(arrow: Arrow, start: Vector2d, end: Vector2d, constrain: boolean) {
     const free = constrain ? snapAngle(start, end) : end;
     const endBound = this._findEnd(end, arrow);
@@ -84,17 +104,24 @@ export class ArrowWidget extends ShapeWidget<Arrow> {
     this._highlight([startBound, linkedEnd]);
   }
 
+  /**
+   * Drawing ended: start link forgotten, highlights removed
+   */
   protected onDrawEnd() {
     this.#start = null;
     this._highlight([]);
   }
 
+  /**
+   * Tool changed: start link forgotten, highlights removed
+   */
   protected onDesactive() {
     this.onDrawEnd();
   }
 
   /**
    * Links disabled with Ctrl / Cmd
+   * @returns True when Ctrl or Cmd was pressed on last pointer event
    */
   private _unlinked() {
     return !!(this.pointerEvent?.ctrlKey || this.pointerEvent?.metaKey);
@@ -102,6 +129,9 @@ export class ArrowWidget extends ShapeWidget<Arrow> {
 
   /**
    * Arrow end at a point: linked to the shape there, at the side whose middle is near
+   * @param point End of the arrow, in drawing coordinates
+   * @param exclude Arrow being drawn, never its own target
+   * @returns Smallest shape at point and its side (anchor, undefined far from middles), null without shape or link
    */
   private _findEnd(point: Vector2d, exclude?: Arrow): BoundEnd | null {
     // shapes of frames too (smallest one: not their frame)
@@ -114,6 +144,7 @@ export class ArrowWidget extends ShapeWidget<Arrow> {
 
   /**
    * Frame around linked shapes and middle of their sides (fixed side filled)
+   * @param ends Ends linked to shapes (null: not linked), replace previous highlights
    */
   private _highlight(ends: (BoundEnd | null)[]) {
     const layer = this.drawer.drawLayer;

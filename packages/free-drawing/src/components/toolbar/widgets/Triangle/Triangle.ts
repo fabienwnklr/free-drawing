@@ -10,6 +10,10 @@ export class TriangleWidget extends PathShapeWidget {
   protected shapeName = shapeName.triangle;
   protected path = 'M0.5 0L1 1L0 1Z';
 
+  /**
+   * Create the triangle tool, without shortcut
+   * @param drawer Drawer of this widget
+   */
   constructor(drawer: Drawer) {
     super(drawer, 'triangle', 'Triangle', TriangleIcon);
   }

@@ -58,6 +58,10 @@ export class SelectionMenu {
   /** Separator before the delete button */
   $separator: HTMLSpanElement;
 
+  /**
+   * Create the menu (hidden) in the floating region, updated when the selection layer is drawn or shapes moved
+   * @param drawer Drawer whose selection the menu acts on
+   */
   constructor(drawer: Drawer) {
     this.drawer = drawer;
 
@@ -141,6 +145,11 @@ export class SelectionMenu {
 
   /**
    * Action button, named by its label, shortcut in tooltip
+   * @param icon SVG markup of the icon
+   * @param label Key of the accessible name (translated again when language changes)
+   * @param shortcut Keys of the same action (`Ctrl+D`, `Delete`), shown in tooltip and `aria-keyshortcuts`
+   * @param action Run on click
+   * @returns Button, to add to the menu
    */
   private _createButton(icon: string, label: TranslationKey, shortcut: string, action: () => void) {
     const $btn = createButton('drawer-button', 'drawer-button-neutral');
@@ -159,6 +168,7 @@ export class SelectionMenu {
 
   /**
    * Box of selected shapes in view, null if menu is not shown (no selection, shapes moved or edited...)
+   * @returns Client rect around selected shapes (view coordinates), null when the menu is hidden
    */
   private _getSelectionBox(): IRect | null {
     const transformer = this.transformer;
@@ -237,6 +247,7 @@ export class SelectionMenu {
   /**
    * Place of menu in view, out of transformer (selection box, resize and rotation anchors, wherever rotation puts them):
    * below, else above, else right, else left, else at bottom of view (selection bigger than view)
+   * @returns Left and top of the menu in view (px)
    */
   private _getPlace() {
     const { stage } = this.drawer;
@@ -299,6 +310,7 @@ export class SelectionMenu {
 
   /**
    * Whether the menu is shown
+   * @returns True while the menu is shown
    */
   isVisible() {
     return this.$menu.classList.contains('show');
