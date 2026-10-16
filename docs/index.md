@@ -13,7 +13,7 @@ hero:
       link: /get-started/
     - theme: alt
       text: API documentation
-      link: /api/README
+      link: /api/
 
 features:
   - title: Easy to use

@@ -12,6 +12,10 @@ dist
 
 # databases of server
 apps/server/data
+
+# docs: API generated from library sources (yarn doc:typedoc), cache of VitePress
+docs/api
+docs/.vitepress/cache
 dist-ssr
 *.local
 

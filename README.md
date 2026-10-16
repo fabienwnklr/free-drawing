@@ -29,7 +29,9 @@ Packages are [yarn workspaces](https://classic.yarnpkg.com/en/docs/workspaces): 
 | `yarn lint` | ESLint on the library |
 | `yarn build` | Library build in `packages/free-drawing/dist` |
 | `yarn build:static` | Web app in `apps/web/dist` (static demo site, or served by the server in production) |
-| `yarn docs` | Documentation site |
+| `yarn docs` | Documentation site (VitePress) on `http://localhost:5173`, `yarn docs:build` to build it |
+| `yarn doc:typedoc` | API pages of the documentation, from the JSDoc of the library (TypeDoc) |
+| `yarn doc:changelog` / `yarn doc:get-started` | Copy the changelog, README and CONTRIBUTING of the library into the documentation |
 | `yarn release` | Push with tags: the release workflow creates the GitHub release and publishes the library on npm |
 
 ## Contribute

@@ -151,7 +151,7 @@ drawer.language; // language shown: 'fr'
 drawer.t('menu.open'); // text of interface in current language: 'Ouvrir'
 ```
 
-`translations` option replaces texts of interface (keys of [src/i18n/en.ts](src/i18n/en.ts)):
+`translations` option replaces texts of interface (keys of [src/i18n/en.ts](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/i18n/en.ts)):
 
 ```js
 new Drawer($el, {
@@ -171,7 +171,7 @@ drawer.showCommandPalette();
 
 ## Use in an app
 
-Options and methods to connect the drawer to the server of your app (drawings saved per user, login, preferences). Their types are exported (`import type { DrawerStorage, DrawingFile, Preferences } from '@fabwcie/free-drawing'`). The web app of this repository ([apps/web](../../apps/web)) uses them with its server ([apps/server](../../apps/server)).
+Options and methods to connect the drawer to the server of your app (drawings saved per user, login, preferences). Their types are exported (`import type { DrawerStorage, DrawingFile, Preferences } from '@fabwcie/free-drawing'`). The web app of this repository ([apps/web](https://github.com/fabienwnklr/free-drawing/tree/master/apps/web)) uses them with its server ([apps/server](https://github.com/fabienwnklr/free-drawing/tree/master/apps/server)).
 
 `storage` option saves the drawing elsewhere than localStorage. Its drawing is loaded on init (`drawer.ready` is resolved then), it replaces the drawing and history starts from it. Then `save` is called on each change (with `autoSave`), one call at a time: changes made during a save are saved once it ends, with the last drawing. Nothing is saved before the drawing is loaded, nor if it can't be (error shown, `ready` rejected), so a stored drawing is never replaced by mistake.
 
@@ -395,7 +395,7 @@ Svg is vector (shapes, texts), pdf contains a png quality image of the drawing (
 
 ## Collaboration
 
-`collaboration` option adds "Live collaboration" to settings menu: a dialog to choose a name, start a session in a new room, share its link (or QR code to scan) and stop the session. Opening a room link (`#room=<id>&by=<user id>`) joins the room. Every drawing change (any tool, eraser, moves, styles, undo / redo...) is sent to the other users of the room through a [socket.io](https://socket.io/) server (see [apps/server](../../apps/server)), `socket.io-client` and the QR code generator are loaded only then.
+`collaboration` option adds "Live collaboration" to settings menu: a dialog to choose a name, start a session in a new room, share its link (or QR code to scan) and stop the session. Opening a room link (`#room=<id>&by=<user id>`) joins the room. Every drawing change (any tool, eraser, moves, styles, undo / redo...) is sent to the other users of the room through a [socket.io](https://socket.io/) server (see [apps/server](https://github.com/fabienwnklr/free-drawing/tree/master/apps/server)), `socket.io-client` and the QR code generator are loaded only then.
 
 ```js
 const link = await drawer.startCollaboration(); // new room (or given room id), name of user saved for next sessions

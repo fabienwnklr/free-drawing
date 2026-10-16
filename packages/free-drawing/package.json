@@ -41,7 +41,7 @@
     "lint": "eslint src tests --ext .ts",
     "typecheck": "tsc --noEmit -p . && tsc -p tests",
     "format": "prettier src/**/*.ts --write",
-    "doc:typedoc": "typedoc --options typedoc.json src/**/*.ts",
+    "doc:typedoc": "typedoc",
     "release": "git push --follow-tags origin master"
   },
   "devDependencies": {
@@ -54,8 +54,9 @@
     "jsdom": "^22.1.0",
     "konva": "^10.9.0",
     "sass": "^1.69.1",
-    "typedoc": "^0.25.2",
-    "typedoc-plugin-markdown": "^4.0.0-next.55",
+    "typedoc": "^0.28.20",
+    "typedoc-plugin-markdown": "^4.14.0",
+    "typedoc-vitepress-theme": "^1.1.4",
     "typescript": "^5.9.3",
     "vite": "^4.4.5",
     "vite-plugin-dts": "^3.6.0",

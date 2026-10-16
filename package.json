@@ -25,12 +25,11 @@
     "release": "yarn workspace @fabwcie/free-drawing release",
     "doc:typedoc": "yarn workspace @fabwcie/free-drawing doc:typedoc",
     "doc:changelog": "cp packages/free-drawing/CHANGELOG.md docs/changelog.md",
-    "doc:get-started": "cp packages/free-drawing/README.md docs/get-started/index.md",
+    "doc:get-started": "cp packages/free-drawing/README.md docs/get-started/index.md && cp CONTRIBUTING.md docs/get-started/contribute.md",
     "docs": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
-    "deploy:static": "sh script/deploy_static.sh",
-    "deploy:doc": "sh script/deploy_doc.sh"
+    "deploy:static": "sh script/deploy_static.sh"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.7.2",
@@ -42,6 +41,6 @@
     "prettier": "^3.0.3",
     "typescript": "^5.9.3",
     "vite-svg-loader": "^5.1.0",
-    "vitepress": "^1.0.0-rc.42"
+    "vitepress": "^1.6.4"
   }
 }
