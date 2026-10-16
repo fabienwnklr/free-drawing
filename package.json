@@ -28,8 +28,7 @@
     "doc:get-started": "cp packages/free-drawing/README.md docs/get-started/index.md && cp CONTRIBUTING.md docs/get-started/contribute.md",
     "docs": "vitepress dev docs",
     "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs",
-    "deploy:static": "sh script/deploy_static.sh"
+    "docs:preview": "vitepress preview docs"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.7.2",

@@ -26,7 +26,7 @@ Run at the root (scripts delegate with `yarn workspace <name> <script>`):
 | `yarn workspace @fabwcie/free-drawing tsc -p tests` | Type check tests (`tests/tsconfig.json`, needed for the `@/` alias in the IDE) |
 | `yarn lint` | ESLint on library `src` and `tests` (no type checking) |
 | `yarn build` | Library build in `packages/free-drawing/dist/`: `drawer.js` (es), `drawer.umd.cjs`, `index.d.ts`, `style.css` |
-| `yarn build:static` | Web app in `apps/web/dist/` (static demo deployed by `yarn deploy:static`, served by the server in production) |
+| `yarn build:static` | Web app in `apps/web/dist/` (static demo built and deployed by Netlify on each push to `master`, [apps/web/netlify.toml](apps/web/netlify.toml): site with package directory `apps/web`; served by the server in production) |
 | `yarn docs` / `yarn docs:build` | VitePress docs (`docs/`): dev server / build in `docs/.vitepress/dist` (run `yarn doc:typedoc` first for the API pages) |
 | `yarn doc:typedoc` / `doc:changelog` / `doc:get-started` | API pages from JSDoc (TypeDoc), copies of CHANGELOG, README and CONTRIBUTING into `docs/` |
 

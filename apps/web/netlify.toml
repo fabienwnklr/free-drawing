@@ -1,0 +1,12 @@
+# Static demo (web app without server: demo drawer only), built by Netlify on each push to master.
+# Its Netlify site has `apps/web` as package directory (this file), dependencies are installed and the build runs
+# at the root of the repository (yarn workspaces, library sources aliased by vite).
+[build]
+  base = "/"
+  command = "yarn build:static"
+  publish = "apps/web/dist"
+  # no build when nothing of the demo changed
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- apps/web packages/free-drawing/src packages/free-drawing/package.json packages/protocol package.json yarn.lock"
+
+[build.environment]
+  NODE_VERSION = "22"
