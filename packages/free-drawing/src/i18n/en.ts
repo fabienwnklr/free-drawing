@@ -287,6 +287,7 @@ export const en = {
   'collab.invitedBy': 'invited by {name}',
   'collab.canDrawLabel': '{name} can draw',
   'collab.canDraw': 'Can draw',
+  'collab.newUsersCanDraw': 'New participants can draw',
   'collab.owner': 'Owner',
   'collab.viewOnly': 'View only',
 };

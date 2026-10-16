@@ -9,6 +9,8 @@ type SocketData = {
   name: string;
   userId: string;
   invitedBy?: string;
+  /** Gave the secret of the room owner: gives rights, changes settings */
+  owner?: boolean;
 };
 
 type RoomData = {
@@ -21,6 +23,10 @@ type RoomData = {
   /** Secret given when the room was created, its user is owner */
   ownerKey?: string;
   ownerId?: string;
+  /** Ids of logged in users who came: never taken by anonymous users */
+  accounts: Set<string>;
+  /** Users coming for the first time can draw (owner setting), else they view only */
+  newUsersCanEdit: boolean;
 };
 
 type CollaborationSocket = Socket<any, any, any, SocketData>;
@@ -28,6 +34,7 @@ type CollaborationSocket = Socket<any, any, any, SocketData>;
 /** Messages of clients, checked on reception */
 type JoinMessage = { room?: unknown; name?: unknown; userId?: unknown; ownerKey?: unknown; invitedBy?: unknown };
 type RightsMessage = { userId?: unknown; canEdit?: unknown };
+type RoomMessage = { newUsersCanEdit?: unknown };
 type ChangeMessage = { upsert: string[]; remove: string[]; order?: string[]; live?: boolean };
 
 const userName = (name: unknown) =>
@@ -38,7 +45,10 @@ const isId = (id: unknown): id is string => typeof id === 'string' && /^[\w-]{1,
 
 /**
  * Live collaboration rooms: drawing kept for users joining later, owner gives or removes the right to draw.
- * Logged in users are identified by their account (id given by client ignored), others by the id of their browser.
+ * Logged in users are identified by their account (id given by client ignored), others by the id of their browser,
+ * which can't be the one of an account or of the owner: owner is the user who gives the secret of the room.
+ * @param io Socket.io server
+ * @param auth Accounts, to identify logged in users by their session cookie
  */
 export function attachCollaboration(io: Server, auth: Auth) {
   const rooms = new Map<string, RoomData>();
@@ -91,27 +101,44 @@ export function attachCollaboration(io: Server, auth: Auth) {
       const { account } = socket.data;
 
       leaveRoom(socket);
-      socket.data.room = room;
-      socket.data.name = userName(name) || account?.name || 'Anonymous';
-      socket.data.userId = account?.id ?? (isId(userId) ? userId : socket.id);
-      socket.data.invitedBy = isId(invitedBy) && invitedBy !== socket.data.userId ? invitedBy : undefined;
-      socket.join(room);
-      if (!rooms.has(room)) rooms.set(room, { shapes: new Map(), viewers: new Set(), names: new Map() });
+      if (!rooms.has(room)) {
+        rooms.set(room, {
+          shapes: new Map(),
+          viewers: new Set(),
+          names: new Map(),
+          accounts: new Set(),
+          newUsersCanEdit: true,
+        });
+      }
 
       const data = rooms.get(room)!;
 
-      data.names.set(socket.data.userId, socket.data.name);
-      // user recognizes itself in users of the room (owner, rights)
-      socket.emit(socketEvents.JOINED, { userId: socket.data.userId });
-
       // first secret given (room creation) makes its user owner
-      if (typeof ownerKey === 'string' && ownerKey) {
-        data.ownerKey ??= ownerKey;
-        if (data.ownerKey === ownerKey) {
-          data.ownerId = socket.data.userId;
-          data.viewers.delete(data.ownerId);
-        }
+      if (typeof ownerKey === 'string' && ownerKey) data.ownerKey ??= ownerKey;
+
+      const owner = typeof ownerKey === 'string' && !!ownerKey && data.ownerKey === ownerKey;
+      // id of browser, unless it is the one of an account or of the owner (secret not given)
+      const free = isId(userId) && !data.accounts.has(userId) && (owner || userId !== data.ownerId);
+
+      socket.data.room = room;
+      socket.data.owner = owner;
+      socket.data.name = userName(name) || account?.name || 'Anonymous';
+      socket.data.userId = account?.id ?? (free ? userId : socket.id);
+      socket.data.invitedBy = isId(invitedBy) && invitedBy !== socket.data.userId ? invitedBy : undefined;
+      socket.join(room);
+      if (account) data.accounts.add(account.id);
+
+      if (owner) {
+        data.ownerId = socket.data.userId;
+        data.viewers.delete(data.ownerId);
+      } else if (!data.names.has(socket.data.userId) && !data.newUsersCanEdit) {
+        // first time in the room: view only when the owner chose so (new ids of viewers too)
+        data.viewers.add(socket.data.userId);
       }
+      data.names.set(socket.data.userId, socket.data.name);
+      // user recognizes itself in users of the room (owner, rights), settings of the room
+      socket.emit(socketEvents.JOINED, { userId: socket.data.userId });
+      socket.emit(socketEvents.ROOM, { newUsersCanEdit: data.newUsersCanEdit });
 
       if (data.shapes.size) {
         socket.emit(socketEvents.CHANGE, {
@@ -136,11 +163,22 @@ export function attachCollaboration(io: Server, auth: Auth) {
       const { room } = socket.data;
       const data = room ? rooms.get(room) : undefined;
 
-      if (!room || !data || socket.data.userId !== data.ownerId || !isId(userId) || userId === data.ownerId) return;
+      if (!room || !data || !socket.data.owner || !isId(userId) || userId === data.ownerId) return;
 
       if (canEdit) data.viewers.delete(userId);
       else data.viewers.add(userId);
       sendUsers(room);
+    });
+
+    // owner changes the settings of the room: right to draw of users coming for the first time
+    socket.on(socketEvents.ROOM, ({ newUsersCanEdit }: RoomMessage = {}) => {
+      const { room } = socket.data;
+      const data = room ? rooms.get(room) : undefined;
+
+      if (!room || !data || !socket.data.owner || typeof newUsersCanEdit !== 'boolean') return;
+
+      data.newUsersCanEdit = newUsersCanEdit;
+      io.to(room).emit(socketEvents.ROOM, { newUsersCanEdit });
     });
 
     // { upsert: shapes JSON, remove: ids, order: ids from bottom to top when stacking order changed }

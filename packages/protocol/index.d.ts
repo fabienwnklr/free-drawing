@@ -18,4 +18,6 @@ export declare const socketEvents: {
   readonly LEAVE: 'LEAVE';
   /** Right to draw given or removed by owner of the room: `{ userId, canEdit }` */
   readonly RIGHTS: 'RIGHTS';
+  /** Settings of the room: `{ newUsersCanEdit }`, sent by server to its users, by owner to change them */
+  readonly ROOM: 'ROOM';
 };

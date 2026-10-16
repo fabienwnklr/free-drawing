@@ -34,6 +34,7 @@ type FakeSocket = CollaborationSocket & {
   id: string;
   userId?: string;
   invitedBy?: string;
+  owner?: boolean;
 };
 
 /**
@@ -48,6 +49,7 @@ const createServer = () => {
     ownerId?: string;
     viewers: Set<string>;
     names: Map<string, string>;
+    newUsersCanEdit: boolean;
   };
   const rooms = new Map<string, Room>();
   let lastId = 0;
@@ -90,16 +92,28 @@ const createServer = () => {
             shapes: new Map<string, string>(),
             viewers: new Set<string>(),
             names: new Map<string, string>(),
+            newUsersCanEdit: true,
           };
 
-          Object.assign(socket, { room, name, userId: socket.account ?? (userId || socket.id), invitedBy });
+          if (ownerKey) roomData.ownerKey ??= ownerKey;
+          const owner = !!ownerKey && roomData.ownerKey === ownerKey;
+          // id of the owner taken only with its secret
+          const free = userId && (owner || userId !== roomData.ownerId);
+
+          Object.assign(socket, {
+            room,
+            name,
+            owner,
+            userId: socket.account ?? (free ? userId : socket.id),
+            invitedBy,
+          });
           rooms.set(room, roomData);
+          if (owner) roomData.ownerId = socket.userId;
+          else if (!roomData.names.has(socket.userId!) && !roomData.newUsersCanEdit)
+            roomData.viewers.add(socket.userId!);
           roomData.names.set(socket.userId!, name);
           socket.receive('JOINED', { userId: socket.userId });
-          if (ownerKey) {
-            roomData.ownerKey ??= ownerKey;
-            if (roomData.ownerKey === ownerKey) roomData.ownerId = socket.userId;
-          }
+          socket.receive('ROOM', { newUsersCanEdit: roomData.newUsersCanEdit });
           if (roomData.shapes.size) {
             socket.receive('CHANGE', {
               upsert: [...roomData.shapes.values()],
@@ -112,10 +126,16 @@ const createServer = () => {
           const { userId, canEdit } = data as { userId: string; canEdit: boolean };
           const roomData = rooms.get(socket.room!)!;
 
-          if (socket.userId !== roomData.ownerId || userId === roomData.ownerId) return;
+          if (!socket.owner || userId === roomData.ownerId) return;
           if (canEdit) roomData.viewers.delete(userId);
           else roomData.viewers.add(userId);
           sendUsers(socket.room);
+        } else if (event === 'ROOM') {
+          const { newUsersCanEdit } = data as { newUsersCanEdit: boolean };
+
+          if (!socket.owner) return;
+          rooms.get(socket.room!)!.newUsersCanEdit = newUsersCanEdit;
+          inRoom(socket.room).forEach((s) => s.receive(event, { newUsersCanEdit }));
         } else if (event === 'NAME') {
           socket.name = data as string;
           rooms.get(socket.room!)!.names.set(socket.userId!, socket.name);
@@ -575,6 +595,55 @@ describe('Collaboration', () => {
     expect(bob.activeTool).toBe('brush');
     alice.collaboration!.setRight('alice', false);
     expect(alice.collaboration!.canEdit).toBe(true);
+    alice.collaborationModal!.hide();
+  });
+
+  it('Owner makes users coming for the first time view only', () => {
+    const connect = createServer();
+    const alice = createDrawer();
+    const bob = createDrawer();
+    const carol = createDrawer();
+    connect(alice, 'room', 'Alice', { userId: 'alice', ownerKey: 'secret' });
+    connect(bob, 'room', 'Bob', { userId: 'bob' });
+
+    // switch of the owner only (session of the dialog)
+    alice.showCollaboration();
+    const $switch = alice.collaborationModal!.$newUsersCanEdit;
+    expect($switch.getAttribute('role')).toBe('switch');
+    expect($switch.checked).toBe(true);
+    expect(alice.collaborationModal!.$session.contains($switch)).toBe(true);
+    expect(alice.collaborationModal!.$session.hidden).toBe(false);
+    expect($switch.closest('label')!.textContent).toBe('New participants can draw');
+    bob.showCollaboration();
+    expect(bob.collaborationModal!.$session.hidden).toBe(true);
+    bob.collaborationModal!.hide();
+
+    // only owner changes it
+    bob.collaboration!.setNewUsersCanEdit(false);
+    expect(alice.collaboration!.newUsersCanEdit).toBe(true);
+
+    $switch.checked = false;
+    $switch.dispatchEvent(new Event('change'));
+    expect(alice.collaboration!.newUsersCanEdit).toBe(false);
+    expect(bob.collaboration!.newUsersCanEdit).toBe(false);
+    expect($switch.checked).toBe(false);
+
+    // users already there keep their right, new ones (also a new id of a user) view only
+    expect(bob.collaboration!.canEdit).toBe(true);
+    connect(carol, 'room', 'Carol', { userId: 'carol' });
+    expect(carol.collaboration!.canEdit).toBe(false);
+    expect(carol.readOnly).toBe(true);
+
+    // a user can't take the id of the owner without its secret
+    const impostor = createDrawer();
+    connect(impostor, 'room', 'Impostor', { userId: 'alice' });
+    expect(impostor.collaboration!.isOwner).toBe(false);
+    expect(impostor.collaboration!.canEdit).toBe(false);
+    expect(alice.collaboration!.isOwner).toBe(true);
+
+    alice.collaboration!.setRight(carol.collaboration!.userId, true);
+    expect(carol.readOnly).toBe(false);
+    alice.collaborationModal!.hide();
   });
 
   it('Read only mode: drawing not modified by user, only pan, zoom and view options', () => {

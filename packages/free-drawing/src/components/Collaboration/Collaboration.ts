@@ -104,6 +104,8 @@ export class Collaboration {
   users: string[] = [];
   /** Users of the room with their rights, this one included */
   members: CollaborationMember[] = [];
+  /** Users coming for the first time can draw (setting of the owner), else they view only */
+  newUsersCanEdit = true;
   /** Id of this user: given by drawer, then by server when it joins (e.g. id of logged in account) */
   userId: string;
   /** Secret of the owner of the room, sent on join: the server makes this user its owner */
@@ -161,6 +163,13 @@ export class Collaboration {
     // server identifies this user (logged in account), before sending users of the room
     this.socket.on(socketEvents.JOINED, ({ userId }: { userId?: unknown } = {}) => {
       if (typeof userId === 'string' && userId) this.userId = userId;
+    });
+    // settings of the room (servers of previous versions: none)
+    this.socket.on(socketEvents.ROOM, ({ newUsersCanEdit }: { newUsersCanEdit?: unknown } = {}) => {
+      if (typeof newUsersCanEdit !== 'boolean') return;
+
+      this.newUsersCanEdit = newUsersCanEdit;
+      this.drawer.trigger(drawerEvents.collaborationChange);
     });
     this.socket.on(socketEvents.CHANGE, (change: DrawingChange) => this.receive(change));
     // names only from servers without rights
@@ -369,6 +378,14 @@ export class Collaboration {
    */
   setRight(userId: string, canEdit: boolean) {
     this.socket.emit(socketEvents.RIGHTS, { userId, canEdit });
+  }
+
+  /**
+   * Let users coming for the first time draw, or make them view only (owner only, checked by server)
+   * @param canEdit True to let them draw, false to make them view only until the owner gives them the right
+   */
+  setNewUsersCanEdit(canEdit: boolean) {
+    this.socket.emit(socketEvents.ROOM, { newUsersCanEdit: canEdit });
   }
 
   /**

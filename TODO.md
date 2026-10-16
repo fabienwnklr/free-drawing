@@ -13,12 +13,11 @@
 - [x] if i disable auto save, how save? add button
 - [x] use jsdoc with @param etc.
 - [x] if i select multiple object, for example text, square, hand draw, i want every available tool on panel
-- [ ] scan files and fix error/warning
-- [ ] locked element can't move, why not?
+- [x] scan files and fix error/warning
 
 ## Security (collaboration, server)
 
-- [ ] anonymous socket can take the identity of the room owner or any user: `userId` sent by client is trusted, owner then removes rights of everyone, viewers rejoin with a new id to draw (server `collaboration.ts`)
+- [x] anonymous socket can take the identity of the room owner or any user: `userId` sent by client is trusted, owner then removes rights of everyone, viewers rejoin with a new id to draw (server `collaboration.ts`)
 - [ ] empty room can be taken over: room and `ownerKey` deleted when last user leaves, next JOIN with any key becomes owner (server `collaboration.ts`)
 - [ ] received CHANGE creates any Konva class (`Node.create`, no allow list as `parseDrawingFile`): a `Stage` upsert empties a page element of every user, kept by server for later users (`Collaboration.ts`)
 - [ ] no limit on room data: shape count, size and rate of CHANGE / POINTER / NAME, anonymous sockets allowed, server memory can be exhausted; check a whole CHANGE before applying it and relay only checked fields (server `collaboration.ts`)
@@ -89,7 +88,7 @@
 
 ## Tooling
 
-- [ ] Prettier: `format` script glob not quoted (`src/**/*.ts` not recursive), 22 files not formatted; add a format check to lint, pre-push and CI
+- [x] Prettier: `format` script glob not quoted (`src/**/*.ts` not recursive), 22 files not formatted; add a format check to lint, pre-push and CI (done: `yarn lint` checks format, so pre-push too; CI with the item below)
 - [ ] CI only runs tests: add typecheck, lint and build; update `actions/checkout@v3` and `actions/setup-node@v3` (`vitest.yaml`)
 - [ ] old toolchain: vite 4, vitest 0.34, eslint 8 (end of life), husky 8 (`husky install` deprecated), `@playwright/test` 1.39 (can no longer launch Edge 155 for browser checks)
 - [ ] export types used by the public API (TypeDoc warnings): `AvailableTools` (option `tool`), `BrushWidgetOptions`, `ImageFormat`, `TranslationParams`, `ShapeState` (`DrawingFile`), `DrawerLayout`, `Frame`...

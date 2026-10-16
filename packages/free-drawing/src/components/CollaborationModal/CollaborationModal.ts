@@ -22,6 +22,8 @@ export class CollaborationModal extends Modal {
   $qrCode: HTMLDivElement;
   /** Number of connected users, title of the list of users */
   $users: HTMLParagraphElement;
+  /** Switch of the owner: users coming for the first time can draw, else they view only */
+  $newUsersCanEdit: HTMLInputElement;
   /** Users of the session (live region): name, who invited them, right to draw (switch for the owner) */
   $members: HTMLUListElement;
   /** Starts a session, shown without session nor link to join */
@@ -85,8 +87,27 @@ export class CollaborationModal extends Modal {
     // updated when users join, leave or get rights
     this.$members.setAttribute('aria-live', 'polite');
 
+    // owner: right to draw of users coming for the first time (new ids of viewers too)
+    const $newUsers = document.createElement('label');
+    const $newUsersText = document.createElement('span');
+
+    this.$newUsersCanEdit = createSwitch(true);
+    this.$newUsersCanEdit.addEventListener(
+      'change',
+      () => this.drawer.collaboration?.setNewUsersCanEdit(this.$newUsersCanEdit.checked)
+    );
+    $newUsers.classList.add('drawer-collaboration-new-users');
+    $newUsers.append(this.$newUsersCanEdit, $newUsersText);
+    this.drawer.i18n.translate((t) => ($newUsersText.textContent = t('collab.newUsersCanDraw')));
+
     // users and rights before QR code (visible without scrolling)
-    this.$session.append(this.$link.closest('.drawer-collaboration-field')!, this.$users, this.$members, this.$qrCode);
+    this.$session.append(
+      this.$link.closest('.drawer-collaboration-field')!,
+      $newUsers,
+      this.$users,
+      this.$members,
+      this.$qrCode
+    );
     this.$modalBody.prepend(this.$intro, this.$name.closest('.drawer-collaboration-field')!, this.$session);
 
     this.$startButton = createButton('drawer-button', 'drawer-button-primary');
@@ -207,6 +228,8 @@ export class CollaborationModal extends Modal {
     const collaboration = this.drawer.collaboration!;
     const { members, isOwner, userId } = collaboration;
     const t = this.drawer.t.bind(this.drawer);
+
+    this.$newUsersCanEdit.checked = collaboration.newUsersCanEdit;
 
     this.$users.textContent = members.length
       ? t('collab.connected', { count: members.length })

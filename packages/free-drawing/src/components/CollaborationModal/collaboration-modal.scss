@@ -59,6 +59,14 @@
     }
   }
 
+  // owner: right to draw of new users
+  .drawer-collaboration-new-users {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    cursor: pointer;
+  }
+
   .drawer-collaboration-users {
     margin-bottom: -$space-2;
     color: $text-muted;

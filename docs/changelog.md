@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.13.0](https://github.com/fabienwnklr/free-drawing/compare/v7.12.0...v7.13.0) (2026-10-16)
+
+
+### Features
+
+* **collaboration:** the owner of a session chooses in the dialog whether new participants can draw; when off, users joining for the first time (also with a new id) view only until the owner gives them the right
+
+### Bug Fixes
+
+* **collaboration:** an anonymous user can no longer take the place of the owner of a session or of a logged in user by sending their id: the owner is the user giving the secret of the room
+
 ## [7.12.0](https://github.com/fabienwnklr/free-drawing/compare/v7.11.0...v7.12.0) (2026-10-16)
 
 

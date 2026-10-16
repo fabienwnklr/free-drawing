@@ -315,5 +315,81 @@ describe('Collaboration', () => {
 
     expect(guest.userId).toBe('guest-1');
     expect(guest.users.map((user) => user.id)).toEqual([id, 'guest-1']);
+
+    // id of an account never given to an anonymous user
+    const impostor = await join({ room: 'room-1', name: 'Impostor', userId: id });
+
+    expect(impostor.userId).not.toBe(id);
+  });
+
+  type User = { id: string; name: string; owner: boolean; canEdit: boolean };
+
+  /** Socket of a new client, next message of an event */
+  const client = () => {
+    const socket = connect(url, { forceNew: true });
+    const next = <T>(event: string) => new Promise<T>((resolve) => socket.once(event, resolve));
+
+    sockets.push(socket);
+    return { socket, next };
+  };
+
+  /** Client joined to a room: its id and users of the room */
+  const joinRoom = async (message: object) => {
+    const user = client();
+    const joined = user.next<{ userId: string }>(socketEvents.JOINED);
+    const users = user.next<User[]>(socketEvents.USERS);
+
+    user.socket.emit(socketEvents.JOIN, message);
+    return { ...user, userId: (await joined).userId, users: await users };
+  };
+
+  it('Owner is the user giving the secret: its id is not given to others, rights only changed by it', async () => {
+    const owner = await joinRoom({ room: 'room-2', name: 'Owner', userId: 'owner-1', ownerKey: 'secret' });
+    const guest = await joinRoom({ room: 'room-2', name: 'Guest', userId: 'guest-2' });
+    const impostor = await joinRoom({ room: 'room-2', name: 'Impostor', userId: 'owner-1' });
+
+    expect(owner.userId).toBe('owner-1');
+    expect(impostor.userId).not.toBe('owner-1');
+    expect(impostor.users.filter((user) => user.owner).map((user) => user.id)).toEqual(['owner-1']);
+
+    // rights from the impostor ignored, from the owner applied
+    impostor.socket.emit(socketEvents.RIGHTS, { userId: 'guest-2', canEdit: false });
+    const updated = owner.next<User[]>(socketEvents.USERS);
+
+    owner.socket.emit(socketEvents.RIGHTS, { userId: impostor.userId, canEdit: false });
+    expect((await updated).map(({ id, canEdit }) => [id, canEdit])).toEqual([
+      ['owner-1', true],
+      ['guest-2', true],
+      [impostor.userId, false],
+    ]);
+    expect(guest.userId).toBe('guest-2');
+  });
+
+  it('Owner makes new users view only, also users coming back with a new id', async () => {
+    const owner = await joinRoom({ room: 'room-3', name: 'Owner', userId: 'owner-3', ownerKey: 'secret 3' });
+    const known = await joinRoom({ room: 'room-3', name: 'Known', userId: 'known-3' });
+    const setting = known.next<{ newUsersCanEdit: boolean }>(socketEvents.ROOM);
+
+    // not the owner: ignored
+    known.socket.emit(socketEvents.ROOM, { newUsersCanEdit: false });
+    owner.socket.emit(socketEvents.ROOM, { newUsersCanEdit: false });
+    expect(await setting).toEqual({ newUsersCanEdit: false });
+
+    const newcomer = await joinRoom({ room: 'room-3', name: 'New', userId: 'new-3' });
+    const canEdit = (users: User[], id: string) => users.find((user) => user.id === id)?.canEdit;
+
+    expect(canEdit(newcomer.users, 'new-3')).toBe(false);
+    // users who came before keep their right
+    known.socket.close();
+    const back = await joinRoom({ room: 'room-3', name: 'Known', userId: 'known-3' });
+
+    expect(canEdit(back.users, 'known-3')).toBe(true);
+
+    // turned on again: new users draw
+    const settingOn = back.next<{ newUsersCanEdit: boolean }>(socketEvents.ROOM);
+
+    owner.socket.emit(socketEvents.ROOM, { newUsersCanEdit: true });
+    expect(await settingOn).toEqual({ newUsersCanEdit: true });
+    expect(canEdit((await joinRoom({ room: 'room-3', name: 'Other', userId: 'other-3' })).users, 'other-3')).toBe(true);
   });
 });

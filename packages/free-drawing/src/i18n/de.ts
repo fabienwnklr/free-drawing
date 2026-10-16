@@ -273,6 +273,7 @@ export const de: Translations = {
   'collab.invitedBy': 'eingeladen von {name}',
   'collab.canDrawLabel': '{name} kann zeichnen',
   'collab.canDraw': 'Kann zeichnen',
+  'collab.newUsersCanDraw': 'Neue Teilnehmer dürfen zeichnen',
   'collab.owner': 'Besitzer',
   'collab.viewOnly': 'Nur ansehen',
 };

@@ -65,6 +65,6 @@ const drawer = new Drawer($el, {
 
 ## Live collaboration
 
-Socket events come from `@free-drawing/protocol` ([packages/protocol](../../packages/protocol)). A logged in user (session cookie of the connection) is identified by their account: the id sent by the client is ignored, so nobody can take the place of another user (owner of a room, rights). The server sends `JOINED` (`{ userId }`) to the user joining a room. Anonymous users keep the id of their browser.
+Socket events come from `@free-drawing/protocol` ([packages/protocol](../../packages/protocol)). A logged in user (session cookie of the connection) is identified by their account: the id sent by the client is ignored, so nobody can take the place of another user (owner of a room, rights). The server sends `JOINED` (`{ userId }`) to the user joining a room. Anonymous users keep the id of their browser, unless it is the id of an account who came in the room or of its owner: the owner is the socket giving the secret of the room (`ownerKey`), only it gives rights and changes the settings of the room (`ROOM`: `{ newUsersCanEdit }`, users coming for the first time view only when false).
 
 Rooms are kept in memory: the drawing of a room is lost when its last user leaves or the server restarts.
