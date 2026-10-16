@@ -67,7 +67,7 @@ export type DrawerOptions = {
   scaling: number;
   /** Drawing saved on each change, else with "Save now" (default true, user preference) */
   autoSave: boolean;
-  /** Drawing tool kept after drawing a shape, else selection tool activated with the drawn shape (user preference) */
+  /** Drawing tool kept after drawing a shape, else selection tool activated, nothing selected (user preference) */
   keepTool: boolean;
   /** Key of the drawing in localStorage and prefix of other saved data (tool, preferences...), unique for each drawer */
   localStorageKey: string;
@@ -124,7 +124,7 @@ export type Preferences = {
   zen: boolean;
   /** Drawing saved on each change, else with `saveNow` (menu, command palette) */
   autoSave: boolean;
-  /** Drawing tool kept after drawing a shape, else selection tool activated with the drawn shape */
+  /** Drawing tool kept after drawing a shape, else selection tool activated, nothing selected */
   keepTool: boolean;
 };
 

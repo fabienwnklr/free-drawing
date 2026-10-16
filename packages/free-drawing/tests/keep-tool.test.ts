@@ -29,7 +29,7 @@ describe('Keep tool', () => {
     expect(drawer.getSelectedShapes()).toEqual([]);
   });
 
-  it('Not kept: selection tool activated with the drawn shape', () => {
+  it('Not kept: selection tool activated, drawn shape not selected', () => {
     const drawer = createDrawer();
 
     drawer.setKeepTool(false);
@@ -43,17 +43,16 @@ describe('Keep tool', () => {
     const [rect] = drawer.getDrawingShapes();
 
     expect(drawer.activeTool).toBe('selection');
-    expect(drawer.getSelectedShapes()).toEqual([rect]);
+    expect(drawer.getSelectedShapes()).toEqual([]);
     // draggable as other shapes with selection tool
     expect(rect.draggable()).toBe(true);
 
     // freehand tools too
     drawer.getWidget<BaseWidget>('brush')!.setActive(true);
     drag(drawer, [100, 100], [150, 120]);
-    const line = drawer.getDrawingShapes()[1];
-
+    expect(drawer.getDrawingShapes()).toHaveLength(2);
     expect(drawer.activeTool).toBe('selection');
-    expect(drawer.getSelectedShapes()).toEqual([line]);
+    expect(drawer.getSelectedShapes()).toEqual([]);
   });
 
   it('Toggled with button and Q, saved preference, one event', async () => {

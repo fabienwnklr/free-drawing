@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.9.4](https://github.com/fabienwnklr/free-drawing/compare/v7.9.3...v7.9.4) (2026-10-16)
+
+
+### Bug Fixes
+
+* **toolbar:** with "Keep tool active" turned off, the selection tool is activated after drawing without selecting the drawn shape
+
 ## [7.9.3](https://github.com/fabienwnklr/free-drawing/compare/v7.9.2...v7.9.3) (2026-10-16)
 
 

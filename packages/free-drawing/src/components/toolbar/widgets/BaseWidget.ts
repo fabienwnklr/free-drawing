@@ -212,16 +212,14 @@ export abstract class BaseWidget {
   }
 
   /**
-   * Shapes drawn with this tool: selection tool activated with them, unless tool is kept (`keepTool` preference)
-   * @param {DrawingShape[]} shapes
+   * Shape drawn with this tool: selection tool activated, nothing selected, unless tool is kept (`keepTool` preference)
    */
-  protected afterDraw(shapes: DrawingShape[]) {
+  protected afterDraw() {
     const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
 
     if (this.drawer.options.keepTool || !selectWidget || selectWidget.isDisabled) return;
 
     selectWidget.setActive(true);
-    selectWidget.select(shapes);
   }
 
   /**

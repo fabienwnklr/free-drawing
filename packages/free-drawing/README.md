@@ -63,7 +63,7 @@ const drawer = new Drawer($el, {
   readOnly: false, // drawing can't be modified by user (only pan, zoom, view options, export), API still modifies it
   scaling: 1.11, // scaling on zoom
   autoSave: true, // drawing saved on each change (localStorage or storage), user preference (see Preferences)
-  keepTool: true, // drawing tool kept after drawing a shape, else selection tool activated with it, user preference (see Preferences)
+  keepTool: true, // drawing tool kept after drawing a shape, else selection tool activated, user preference (see Preferences)
   localStorageKey: 'free-drawing', // localStorage key used for store data, use a different key for each drawer of a page
   storage: null, // drawing saved somewhere else than localStorage (e.g. server of your app), see "Use in an app" below
   user: null, // user of your app ({ id, name }), used in collaboration sessions instead of id and name kept in browser
@@ -125,7 +125,7 @@ drawer.hasUnsavedChanges(); // true after a change, until saved
 await drawer.saveNow(); // save, "Drawing saved" message
 ```
 
-"Keep tool active" (pin button at the start of the toolbar, Q, also in the command palette) keeps the drawing tool after drawing a shape. Turned off, the selection tool is activated with the drawn shape (shapes, frames, brush, highlighter) to move or change it at once. The button is shown with the selection tool only.
+"Keep tool active" (pin button at the start of the toolbar, Q, also in the command palette) keeps the drawing tool after drawing a shape. Turned off, the selection tool is activated after drawing (shapes, frames, brush, highlighter), nothing selected. The button is shown with the selection tool only.
 
 ```js
 drawer.setKeepTool(false);

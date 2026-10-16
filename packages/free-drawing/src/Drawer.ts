@@ -988,7 +988,7 @@ export class Drawer extends MicroEvent {
   }
 
   /**
-   * Keep drawing tool after drawing a shape, else selection tool is activated with the drawn shape (preference)
+   * Keep drawing tool after drawing a shape, else selection tool is activated, nothing selected (preference)
    * @param {boolean} keepTool
    */
   setKeepTool(keepTool: boolean) {
