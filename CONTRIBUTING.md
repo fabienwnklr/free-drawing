@@ -92,7 +92,7 @@ Following is the list of tools in use.
 | ------------------ | ---------------------------------------------------------------------------------------------------------------------- |
 | `yarn test`        | Run project tests using `vitest`                                                                                       |
 | `yarn build`       | Compile the TypeScript project to JavaScript. The compiled output is written inside the `packages/free-drawing/dist` directory |
-| `yarn release`     | Build, push commits and version tags, then publish the current version on npm                                          |
+| `yarn release`     | Push commits and version tags: the release workflow creates the GitHub release and publishes the version on npm         |
 | `yarn lint`        | Lint the codebase using ESlint                                                                                         |
 | `yarn format`      | Format the codebase using Prettier                                                                                     |
 | `yarn sync-labels` | Sync the labels defined inside the `.github/labels.json` file with Github. This command is for the project admin only. |

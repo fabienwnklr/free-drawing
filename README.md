@@ -30,7 +30,7 @@ Packages are [yarn workspaces](https://classic.yarnpkg.com/en/docs/workspaces): 
 | `yarn build` | Library build in `packages/free-drawing/dist` |
 | `yarn build:static` | Web app in `apps/web/dist` (static demo site, or served by the server in production) |
 | `yarn docs` | Documentation site |
-| `yarn release` | Build, push with tags and publish the library |
+| `yarn release` | Push with tags: the release workflow creates the GitHub release and publishes the library on npm |
 
 ## Contribute
 

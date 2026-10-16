@@ -1,8 +1,9 @@
 name: Release
 
-# GitHub release of a version tag (vX.Y.Z), notes from its entry of the library changelog.
+# GitHub release of a version tag (vX.Y.Z), notes from its entry of the library changelog, then the library
+# published on npm (trusted publishing: no token, configured on npmjs.com for this workflow file).
 # A push of more than 3 tags at once triggers no workflow: run it from the Actions tab with the tag,
-# or with "all" for every tag of the changelog without release (oldest first).
+# or with "all" for every tag of the changelog without release (oldest first, nothing published).
 on:
   push:
     tags: ['v*']
@@ -81,3 +82,62 @@ jobs:
           if gh release view "$latest" > /dev/null 2>&1; then
             gh release edit "$latest" --latest
           fi
+
+  npm:
+    needs: release
+    # one version at a time
+    if: inputs.tag != 'all'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # identity of this workflow for npm (trusted publishing, provenance)
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+          fetch-depth: 0
+
+      # npm 11.5.1 or later for trusted publishing
+      - name: Use Node.js 24
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.x
+          cache: 'yarn'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Check version
+        id: version
+        env:
+          TAG: ${{ inputs.tag || github.ref_name }}
+        working-directory: packages/free-drawing
+        run: |
+          name=$(node -p "require('./package.json').name")
+          version=$(node -p "require('./package.json').version")
+          if [ "v$version" != "$TAG" ]; then
+            echo "::error::$TAG is not the version of package.json ($version)"
+            exit 1
+          fi
+          # an older version would become the "latest" one of npm
+          if [ "$TAG" != "$(git tag -l 'v*' --sort=-v:refname | head -1)" ]; then
+            echo "::notice::$TAG is not the highest version: not published"
+          elif npm view "$name@$version" version > /dev/null 2>&1; then
+            echo "::notice::$name@$version is already published"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install
+        if: steps.version.outputs.publish
+        run: yarn install --frozen-lockfile
+
+      - name: Test and build
+        if: steps.version.outputs.publish
+        run: yarn test && yarn build
+
+      - name: Publish
+        if: steps.version.outputs.publish
+        working-directory: packages/free-drawing
+        run: npm publish --access public

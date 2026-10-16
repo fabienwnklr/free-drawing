@@ -24,7 +24,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/fabienwnklr/free-drawing.git",
+    "url": "git+https://github.com/fabienwnklr/free-drawing.git",
     "directory": "packages/free-drawing"
   },
   "keywords": [
@@ -42,7 +42,7 @@
     "typecheck": "tsc --noEmit -p . && tsc -p tests",
     "format": "prettier src/**/*.ts --write",
     "doc:typedoc": "typedoc --options typedoc.json src/**/*.ts",
-    "release": "yarn build && git push --follow-tags origin master && npm publish --access public"
+    "release": "git push --follow-tags origin master"
   },
   "devDependencies": {
     "@free-drawing/protocol": "*",
