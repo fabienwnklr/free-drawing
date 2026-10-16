@@ -22,7 +22,7 @@
 
 #### Source
 
-[components/tools/Zoom/Zoom.ts:14](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Zoom/Zoom.ts#L14)
+[packages/free-drawing/src/components/tools/Zoom/Zoom.ts:15](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/Zoom/Zoom.ts#L15)
 
 ## Properties
 
@@ -32,7 +32,7 @@
 
 #### Source
 
-[components/tools/Zoom/Zoom.ts:10](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Zoom/Zoom.ts#L10)
+[packages/free-drawing/src/components/tools/Zoom/Zoom.ts:11](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/Zoom/Zoom.ts#L11)
 
 ***
 
@@ -42,7 +42,7 @@
 
 #### Source
 
-[components/tools/Zoom/Zoom.ts:12](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Zoom/Zoom.ts#L12)
+[packages/free-drawing/src/components/tools/Zoom/Zoom.ts:13](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/Zoom/Zoom.ts#L13)
 
 ***
 
@@ -52,7 +52,7 @@
 
 #### Source
 
-[components/tools/Zoom/Zoom.ts:11](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Zoom/Zoom.ts#L11)
+[packages/free-drawing/src/components/tools/Zoom/Zoom.ts:12](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/Zoom/Zoom.ts#L12)
 
 ***
 
@@ -62,7 +62,7 @@
 
 #### Source
 
-[components/tools/Zoom/Zoom.ts:9](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Zoom/Zoom.ts#L9)
+[packages/free-drawing/src/components/tools/Zoom/Zoom.ts:10](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/Zoom/Zoom.ts#L10)
 
 ***
 
@@ -72,7 +72,7 @@
 
 #### Source
 
-[components/tools/Zoom/Zoom.ts:8](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Zoom/Zoom.ts#L8)
+[packages/free-drawing/src/components/tools/Zoom/Zoom.ts:9](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/Zoom/Zoom.ts#L9)
 
 ## Methods
 
@@ -86,7 +86,7 @@
 
 #### Source
 
-[components/tools/Zoom/Zoom.ts:83](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Zoom/Zoom.ts#L83)
+[packages/free-drawing/src/components/tools/Zoom/Zoom.ts:54](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/Zoom/Zoom.ts#L54)
 
 ***
 
@@ -100,7 +100,7 @@
 
 #### Source
 
-[components/tools/Zoom/Zoom.ts:117](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Zoom/Zoom.ts#L117)
+[packages/free-drawing/src/components/tools/Zoom/Zoom.ts:64](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/Zoom/Zoom.ts#L64)
 
 ***
 
@@ -114,7 +114,7 @@
 
 #### Source
 
-[components/tools/Zoom/Zoom.ts:55](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Zoom/Zoom.ts#L55)
+[packages/free-drawing/src/components/tools/Zoom/Zoom.ts:50](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/Zoom/Zoom.ts#L50)
 
 ***
 
@@ -128,4 +128,4 @@
 
 #### Source
 
-[components/tools/Zoom/Zoom.ts:89](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Zoom/Zoom.ts#L89)
+[packages/free-drawing/src/components/tools/Zoom/Zoom.ts:60](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/Zoom/Zoom.ts#L60)

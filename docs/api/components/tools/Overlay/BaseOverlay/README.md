@@ -11,3 +11,7 @@
 ### Classes
 
 - [BaseOverlay](classes/BaseOverlay.md)
+
+### Type Aliases
+
+- [OverlayOptions](type-aliases/OverlayOptions.md)

@@ -11,3 +11,12 @@
 ### Classes
 
 - [History](classes/History.md)
+
+### Type Aliases
+
+- [ShapeState](type-aliases/ShapeState.md)
+
+### Functions
+
+- [getShapeState](functions/getShapeState.md)
+- [serializeShape](functions/serializeShape.md)

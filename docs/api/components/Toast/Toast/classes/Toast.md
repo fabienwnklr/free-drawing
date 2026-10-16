@@ -38,7 +38,7 @@
 
 #### Source
 
-[components/Toast/Toast.ts:13](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Toast/Toast.ts#L13)
+[packages/free-drawing/src/components/Toast/Toast.ts:14](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Toast/Toast.ts#L14)
 
 ## Properties
 
@@ -48,7 +48,7 @@
 
 #### Source
 
-[components/Toast/Toast.ts:10](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Toast/Toast.ts#L10)
+[packages/free-drawing/src/components/Toast/Toast.ts:11](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Toast/Toast.ts#L11)
 
 ***
 
@@ -66,7 +66,7 @@
 
 #### Source
 
-[utils/MicroEvent.ts:14](https://github.com/fabienwnklr/free-drawing/blob/master/src/utils/MicroEvent.ts#L14)
+[packages/free-drawing/src/utils/MicroEvent.ts:33](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/utils/MicroEvent.ts#L33)
 
 ***
 
@@ -76,7 +76,7 @@
 
 #### Source
 
-[components/Toast/Toast.ts:11](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Toast/Toast.ts#L11)
+[packages/free-drawing/src/components/Toast/Toast.ts:12](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Toast/Toast.ts#L12)
 
 ## Methods
 
@@ -90,7 +90,7 @@
 
 #### Source
 
-[components/Toast/Toast.ts:66](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Toast/Toast.ts#L66)
+[packages/free-drawing/src/components/Toast/Toast.ts:76](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Toast/Toast.ts#L76)
 
 ***
 
@@ -104,7 +104,7 @@
 
 #### Source
 
-[components/Toast/Toast.ts:58](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Toast/Toast.ts#L58)
+[packages/free-drawing/src/components/Toast/Toast.ts:70](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Toast/Toast.ts#L70)
 
 ***
 
@@ -128,7 +128,7 @@
 
 #### Source
 
-[utils/MicroEvent.ts:28](https://github.com/fabienwnklr/free-drawing/blob/master/src/utils/MicroEvent.ts#L28)
+[packages/free-drawing/src/utils/MicroEvent.ts:47](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/utils/MicroEvent.ts#L47)
 
 ***
 
@@ -152,7 +152,7 @@
 
 #### Source
 
-[utils/MicroEvent.ts:20](https://github.com/fabienwnklr/free-drawing/blob/master/src/utils/MicroEvent.ts#L20)
+[packages/free-drawing/src/utils/MicroEvent.ts:39](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/utils/MicroEvent.ts#L39)
 
 ***
 
@@ -166,7 +166,7 @@
 
 #### Source
 
-[components/Toast/Toast.ts:46](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Toast/Toast.ts#L46)
+[packages/free-drawing/src/components/Toast/Toast.ts:58](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Toast/Toast.ts#L58)
 
 ***
 
@@ -190,4 +190,4 @@
 
 #### Source
 
-[utils/MicroEvent.ts:49](https://github.com/fabienwnklr/free-drawing/blob/master/src/utils/MicroEvent.ts#L49)
+[packages/free-drawing/src/utils/MicroEvent.ts:70](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/utils/MicroEvent.ts#L70)

@@ -6,135 +6,103 @@
 
 # Class: GroupWidget
 
-## Extends
-
-- [`Dropdown`](../../../../Dropdown/Dropdown/classes/Dropdown.md)
+Group of toolbar widgets: one button (generic icon by default) shows its widgets above it, highlighted while one
+of them is active. Its widgets are still widgets of the toolbar (shortcuts, help, command palette, read only),
+added with it by `toolbar.addGroup`.
 
 ## Constructors
 
-### new GroupWidget(drawer, toolbar, widgets)
+### new GroupWidget(drawer, __namedParameters)
 
-> **new GroupWidget**(`drawer`, `toolbar`, `widgets`): [`GroupWidget`](GroupWidget.md)
+> **new GroupWidget**(`drawer`, `__namedParameters`): [`GroupWidget`](GroupWidget.md)
 
 #### Parameters
 
 • **drawer**: [`Drawer`](../../../../../Drawer/classes/Drawer.md)
 
-• **toolbar**: [`Toolbar`](../../../Toolbar/classes/Toolbar.md)
-
-• **widgets**: [`BaseWidget`](../../BaseWidget/classes/BaseWidget.md)[]
+• **\_\_namedParameters**: [`GroupWidgetOptions`](../type-aliases/GroupWidgetOptions.md)
 
 #### Returns
 
 [`GroupWidget`](GroupWidget.md)
 
-#### Overrides
-
-[`Dropdown`](../../../../Dropdown/Dropdown/classes/Dropdown.md).[`constructor`](../../../../Dropdown/Dropdown/classes/Dropdown.md#constructors)
-
 #### Source
 
-[components/toolbar/widgets/GroupWidget.ts:8](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/GroupWidget.ts#L8)
+[packages/free-drawing/src/components/toolbar/widgets/GroupWidget.ts:117](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/GroupWidget.ts#L117)
 
 ## Properties
 
 ### $button
 
-> **$button**: `HTMLButtonElement`
-
-#### Inherited from
-
-[`Dropdown`](../../../../Dropdown/Dropdown/classes/Dropdown.md).[`$button`](../../../../Dropdown/Dropdown/classes/Dropdown.md#$button)
+> **`readonly`** **$button**: `HTMLButtonElement`
 
 #### Source
 
-[components/Dropdown/Dropdown.ts:6](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Dropdown/Dropdown.ts#L6)
+[packages/free-drawing/src/components/toolbar/widgets/GroupWidget.ts:114](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/GroupWidget.ts#L114)
 
 ***
 
-### $dropdownContainer
+### $container
 
-> **$dropdownContainer**: `HTMLDivElement`
-
-#### Inherited from
-
-[`Dropdown`](../../../../Dropdown/Dropdown/classes/Dropdown.md).[`$dropdownContainer`](../../../../Dropdown/Dropdown/classes/Dropdown.md#$dropdowncontainer)
+> **`readonly`** **$container**: `HTMLDivElement`
 
 #### Source
 
-[components/Dropdown/Dropdown.ts:5](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Dropdown/Dropdown.ts#L5)
-
-***
-
-### $dropdownItem
-
-> **$dropdownItem**: `HTMLLIElement`
-
-#### Inherited from
-
-[`Dropdown`](../../../../Dropdown/Dropdown/classes/Dropdown.md).[`$dropdownItem`](../../../../Dropdown/Dropdown/classes/Dropdown.md#$dropdownitem)
-
-#### Source
-
-[components/Dropdown/Dropdown.ts:9](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Dropdown/Dropdown.ts#L9)
-
-***
-
-### $dropdownList
-
-> **$dropdownList**: `HTMLUListElement`
-
-#### Inherited from
-
-[`Dropdown`](../../../../Dropdown/Dropdown/classes/Dropdown.md).[`$dropdownList`](../../../../Dropdown/Dropdown/classes/Dropdown.md#$dropdownlist)
-
-#### Source
-
-[components/Dropdown/Dropdown.ts:8](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Dropdown/Dropdown.ts#L8)
+[packages/free-drawing/src/components/toolbar/widgets/GroupWidget.ts:113](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/GroupWidget.ts#L113)
 
 ***
 
 ### $menu
 
-> **$menu**: `HTMLDivElement`
-
-#### Inherited from
-
-[`Dropdown`](../../../../Dropdown/Dropdown/classes/Dropdown.md).[`$menu`](../../../../Dropdown/Dropdown/classes/Dropdown.md#$menu)
+> **`readonly`** **$menu**: `HTMLDivElement`
 
 #### Source
 
-[components/Dropdown/Dropdown.ts:7](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Dropdown/Dropdown.ts#L7)
-
-***
-
-### \_events
-
-> **\_events**: `object` = `{}`
-
-#### Index signature
-
- \[`key`: `string`\]: `TCallback`[]
-
-#### Inherited from
-
-[`Dropdown`](../../../../Dropdown/Dropdown/classes/Dropdown.md).[`_events`](../../../../Dropdown/Dropdown/classes/Dropdown.md#_events)
-
-#### Source
-
-[utils/MicroEvent.ts:14](https://github.com/fabienwnklr/free-drawing/blob/master/src/utils/MicroEvent.ts#L14)
+[packages/free-drawing/src/components/toolbar/widgets/GroupWidget.ts:115](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/GroupWidget.ts#L115)
 
 ***
 
 ### drawer
 
-> **drawer**: [`Drawer`](../../../../../Drawer/classes/Drawer.md)
+> **`readonly`** **drawer**: [`Drawer`](../../../../../Drawer/classes/Drawer.md)
 
 #### Source
 
-[components/toolbar/widgets/GroupWidget.ts:7](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/GroupWidget.ts#L7)
+[packages/free-drawing/src/components/toolbar/widgets/GroupWidget.ts:111](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/GroupWidget.ts#L111)
+
+***
+
+### widgets
+
+> **`readonly`** **widgets**: [`BaseWidget`](../../BaseWidget/classes/BaseWidget.md)[]
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/widgets/GroupWidget.ts:112](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/GroupWidget.ts#L112)
 
 ## Methods
+
+### addTo()
+
+`Internal`
+
+> **addTo**(`parent`): `void`
+
+Adds group button and its widgets to `parent` (toolbar)
+
+#### Parameters
+
+• **parent**: `HTMLElement`
+
+#### Returns
+
+`void`
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/widgets/GroupWidget.ts:153](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/GroupWidget.ts#L153)
+
+***
 
 ### hide()
 
@@ -144,13 +112,9 @@
 
 `void`
 
-#### Inherited from
-
-[`Dropdown`](../../../../Dropdown/Dropdown/classes/Dropdown.md).[`hide`](../../../../Dropdown/Dropdown/classes/Dropdown.md#hide)
-
 #### Source
 
-[components/Dropdown/Dropdown.ts:45](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Dropdown/Dropdown.ts#L45)
+[packages/free-drawing/src/components/toolbar/widgets/GroupWidget.ts:175](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/GroupWidget.ts#L175)
 
 ***
 
@@ -162,83 +126,9 @@
 
 `boolean`
 
-#### Inherited from
-
-[`Dropdown`](../../../../Dropdown/Dropdown/classes/Dropdown.md).[`isShown`](../../../../Dropdown/Dropdown/classes/Dropdown.md#isshown)
-
 #### Source
 
-[components/Dropdown/Dropdown.ts:51](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Dropdown/Dropdown.ts#L51)
-
-***
-
-### off()
-
-> **off**(`events`, `fct`): `void`
-
-#### Parameters
-
-• **events**: `string`
-
-• **fct**: `TCallback`
-
-#### Returns
-
-`void`
-
-#### Inherited from
-
-[`Dropdown`](../../../../Dropdown/Dropdown/classes/Dropdown.md).[`off`](../../../../Dropdown/Dropdown/classes/Dropdown.md#off)
-
-#### Source
-
-[utils/MicroEvent.ts:28](https://github.com/fabienwnklr/free-drawing/blob/master/src/utils/MicroEvent.ts#L28)
-
-***
-
-### on()
-
-> **on**(`events`, `fct`): `void`
-
-#### Parameters
-
-• **events**: `string`
-
-• **fct**: `TCallback`
-
-#### Returns
-
-`void`
-
-#### Inherited from
-
-[`Dropdown`](../../../../Dropdown/Dropdown/classes/Dropdown.md).[`on`](../../../../Dropdown/Dropdown/classes/Dropdown.md#on)
-
-#### Source
-
-[utils/MicroEvent.ts:20](https://github.com/fabienwnklr/free-drawing/blob/master/src/utils/MicroEvent.ts#L20)
-
-***
-
-### setContent()
-
-> **setContent**(`content`): `void`
-
-#### Parameters
-
-• **content**: `string` \| `Node`
-
-#### Returns
-
-`void`
-
-#### Inherited from
-
-[`Dropdown`](../../../../Dropdown/Dropdown/classes/Dropdown.md).[`setContent`](../../../../Dropdown/Dropdown/classes/Dropdown.md#setcontent)
-
-#### Source
-
-[components/Dropdown/Dropdown.ts:33](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Dropdown/Dropdown.ts#L33)
+[packages/free-drawing/src/components/toolbar/widgets/GroupWidget.ts:158](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/GroupWidget.ts#L158)
 
 ***
 
@@ -246,38 +136,28 @@
 
 > **show**(): `void`
 
+Show widgets, focus on active one (else first one): arrow keys move between them
+
 #### Returns
 
 `void`
 
-#### Inherited from
-
-[`Dropdown`](../../../../Dropdown/Dropdown/classes/Dropdown.md).[`show`](../../../../Dropdown/Dropdown/classes/Dropdown.md#show)
-
 #### Source
 
-[components/Dropdown/Dropdown.ts:41](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Dropdown/Dropdown.ts#L41)
+[packages/free-drawing/src/components/toolbar/widgets/GroupWidget.ts:165](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/GroupWidget.ts#L165)
 
 ***
 
-### trigger()
+### update()
 
-> **trigger**(`events`, ...`args`): `void`
+> **update**(): `void`
 
-#### Parameters
-
-• **events**: `string`
-
-• ...**args**: `any`
+Button highlighted while a widget of group is active, disabled when all its widgets are (read only)
 
 #### Returns
 
 `void`
 
-#### Inherited from
-
-[`Dropdown`](../../../../Dropdown/Dropdown/classes/Dropdown.md).[`trigger`](../../../../Dropdown/Dropdown/classes/Dropdown.md#trigger)
-
 #### Source
 
-[utils/MicroEvent.ts:49](https://github.com/fabienwnklr/free-drawing/blob/master/src/utils/MicroEvent.ts#L49)
+[packages/free-drawing/src/components/toolbar/widgets/GroupWidget.ts:183](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/GroupWidget.ts#L183)

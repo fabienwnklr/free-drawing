@@ -26,4 +26,4 @@ Measure time executing function
 
 ## Source
 
-[utils/perf.ts:80](https://github.com/fabienwnklr/free-drawing/blob/master/src/utils/perf.ts#L80)
+[packages/free-drawing/src/utils/perf.ts:80](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/utils/perf.ts#L80)

@@ -26,17 +26,19 @@
 
 #### Source
 
-[components/tools/UndoRedo/History.ts:11](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/UndoRedo/History.ts#L11)
+[packages/free-drawing/src/components/tools/UndoRedo/History.ts:40](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/UndoRedo/History.ts#L40)
 
 ## Properties
 
 ### appHistory
 
-> **appHistory**: `object`[][]
+> **appHistory**: `string`[]
+
+Drawing states, JSON of shapes array (string is lighter than objects and compared without serializing again)
 
 #### Source
 
-[components/tools/UndoRedo/History.ts:7](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/UndoRedo/History.ts#L7)
+[packages/free-drawing/src/components/tools/UndoRedo/History.ts:36](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/UndoRedo/History.ts#L36)
 
 ***
 
@@ -46,7 +48,7 @@
 
 #### Source
 
-[components/tools/UndoRedo/History.ts:8](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/UndoRedo/History.ts#L8)
+[packages/free-drawing/src/components/tools/UndoRedo/History.ts:37](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/UndoRedo/History.ts#L37)
 
 ***
 
@@ -56,7 +58,7 @@
 
 #### Source
 
-[components/tools/UndoRedo/History.ts:9](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/UndoRedo/History.ts#L9)
+[packages/free-drawing/src/components/tools/UndoRedo/History.ts:38](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/UndoRedo/History.ts#L38)
 
 ## Methods
 
@@ -70,7 +72,7 @@
 
 #### Source
 
-[components/tools/UndoRedo/History.ts:56](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/UndoRedo/History.ts#L56)
+[packages/free-drawing/src/components/tools/UndoRedo/History.ts:97](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/UndoRedo/History.ts#L97)
 
 ***
 
@@ -84,7 +86,7 @@
 
 #### Source
 
-[components/tools/UndoRedo/History.ts:25](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/UndoRedo/History.ts#L25)
+[packages/free-drawing/src/components/tools/UndoRedo/History.ts:86](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/UndoRedo/History.ts#L86)
 
 ***
 
@@ -98,13 +100,15 @@
 
 #### Source
 
-[components/tools/UndoRedo/History.ts:60](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/UndoRedo/History.ts#L60)
+[packages/free-drawing/src/components/tools/UndoRedo/History.ts:101](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/UndoRedo/History.ts#L101)
 
 ***
 
-### saveState()
+### reset()
 
-> **saveState**(): `void`
+> **reset**(): `void`
+
+Current drawing is the first state (e.g. loaded from storage): nothing to undo or redo
 
 #### Returns
 
@@ -112,7 +116,25 @@
 
 #### Source
 
-[components/tools/UndoRedo/History.ts:15](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/UndoRedo/History.ts#L15)
+[packages/free-drawing/src/components/tools/UndoRedo/History.ts:81](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/UndoRedo/History.ts#L81)
+
+***
+
+### saveState()
+
+> **saveState**(`fromSaved`): `void`
+
+#### Parameters
+
+• **fromSaved**: `boolean`= `false`
+
+#### Returns
+
+`void`
+
+#### Source
+
+[packages/free-drawing/src/components/tools/UndoRedo/History.ts:44](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/UndoRedo/History.ts#L44)
 
 ***
 
@@ -126,4 +148,4 @@
 
 #### Source
 
-[components/tools/UndoRedo/History.ts:28](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/UndoRedo/History.ts#L28)
+[packages/free-drawing/src/components/tools/UndoRedo/History.ts:90](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/UndoRedo/History.ts#L90)

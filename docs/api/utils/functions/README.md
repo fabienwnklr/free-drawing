@@ -10,6 +10,7 @@
 
 ### Functions
 
+- [createId](functions/createId.md)
 - [deepMerge](functions/deepMerge.md)
 - [isObject](functions/isObject.md)
 - [isTruthy](functions/isTruthy.md)

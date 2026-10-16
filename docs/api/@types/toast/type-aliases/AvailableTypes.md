@@ -10,4 +10,4 @@
 
 ## Source
 
-[@types/toast.d.ts:9](https://github.com/fabienwnklr/free-drawing/blob/master/src/@types/toast.d.ts#L9)
+[packages/free-drawing/src/@types/toast.ts:9](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/toast.ts#L9)

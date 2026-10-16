@@ -11,3 +11,7 @@
 ### Classes
 
 - [ArrowWidget](classes/ArrowWidget.md)
+
+### Functions
+
+- [arrowPointerSize](functions/arrowPointerSize.md)

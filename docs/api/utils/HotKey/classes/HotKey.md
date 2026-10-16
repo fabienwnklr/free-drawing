@@ -22,7 +22,7 @@
 
 #### Source
 
-[utils/HotKey.ts:5](https://github.com/fabienwnklr/free-drawing/blob/master/src/utils/HotKey.ts#L5)
+[packages/free-drawing/src/utils/HotKey.ts:12](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/utils/HotKey.ts#L12)
 
 ## Properties
 
@@ -32,4 +32,4 @@
 
 #### Source
 
-[utils/HotKey.ts:4](https://github.com/fabienwnklr/free-drawing/blob/master/src/utils/HotKey.ts#L4)
+[packages/free-drawing/src/utils/HotKey.ts:11](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/utils/HotKey.ts#L11)

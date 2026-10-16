@@ -22,4 +22,4 @@
 
 ## Source
 
-[utils/perf.ts:1](https://github.com/fabienwnklr/free-drawing/blob/master/src/utils/perf.ts#L1)
+[packages/free-drawing/src/utils/perf.ts:1](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/utils/perf.ts#L1)

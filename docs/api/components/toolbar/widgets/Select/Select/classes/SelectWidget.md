@@ -30,7 +30,7 @@
 
 #### Source
 
-[components/toolbar/widgets/Select/Select.ts:62](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Select/Select.ts#L62)
+[packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts:106](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts#L106)
 
 ## Properties
 
@@ -44,7 +44,7 @@
 
 #### Source
 
-[components/toolbar/widgets/BaseWidget.ts:9](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/BaseWidget.ts#L9)
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:21](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L21)
 
 ***
 
@@ -58,7 +58,7 @@
 
 #### Source
 
-[components/toolbar/widgets/BaseWidget.ts:6](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/BaseWidget.ts#L6)
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:18](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L18)
 
 ***
 
@@ -68,7 +68,23 @@
 
 #### Source
 
-[components/toolbar/widgets/Select/Select.ts:34](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Select/Select.ts#L34)
+[packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts:59](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts#L59)
+
+***
+
+### cursor
+
+> **`protected`** **cursor**: `string` = `'default'`
+
+Stage cursor while widget is active
+
+#### Inherited from
+
+[`BaseWidget`](../../../BaseWidget/classes/BaseWidget.md).[`cursor`](../../../BaseWidget/classes/BaseWidget.md#cursor)
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:33](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L33)
 
 ***
 
@@ -78,7 +94,7 @@
 
 #### Source
 
-[components/toolbar/widgets/Select/Select.ts:24](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Select/Select.ts#L24)
+[packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts:49](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts#L49)
 
 ***
 
@@ -92,13 +108,25 @@
 
 #### Source
 
-[components/toolbar/widgets/Select/Select.ts:62](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Select/Select.ts#L62)
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:36](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L36)
+
+***
+
+### gridAnchorBound
+
+> **gridAnchorBound**: `null` \| (`oldPos`, `newPos`) => `Vector2d` = `null`
+
+Snap of resize anchors to grid (set by drawer while grid is shown), applied when anchor is not snapped to objects
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts:100](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts#L100)
 
 ***
 
 ### id
 
-> **id**: `"pan"` \| `"selection"` \| `"brush"` \| `"eraser"` \| `"undo"` \| `"redo"` \| `"text"` \| `"rect"` \| `"circle"` \| `"ellipse"` \| `"square"` \| `"arrow"` \| `"line"` \| `"star"` \| `"triangle"` \| `"polygon"`
+> **id**: `"pan"` \| `"selection"` \| `"brush"` \| `"eraser"` \| `"undo"` \| `"redo"` \| `"text"` \| `"rect"` \| `"circle"` \| `"ellipse"` \| `"square"` \| `"arrow"` \| `"line"` \| `"star"` \| `"triangle"` \| `"polygon"` \| `"diamond"` \| `"heart"` \| `"cloud"` \| `"highlighter"` \| `"laser"` \| `"frame"`
 
 #### Inherited from
 
@@ -106,17 +134,39 @@
 
 #### Source
 
-[components/toolbar/widgets/BaseWidget.ts:10](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/BaseWidget.ts#L10)
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:22](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L22)
 
 ***
 
-### isSelecting
+### inAction
 
-> **isSelecting**: `boolean` = `false`
+> **inAction**: `boolean` = `false`
+
+Pointer action in progress (drawing, erasing, selecting...), see `startAction` / `endAction`
+
+#### Inherited from
+
+[`BaseWidget`](../../../BaseWidget/classes/BaseWidget.md).[`inAction`](../../../BaseWidget/classes/BaseWidget.md#inaction)
 
 #### Source
 
-[components/toolbar/widgets/Select/Select.ts:58](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Select/Select.ts#L58)
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:29](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L29)
+
+***
+
+### options
+
+> **`readonly`** **options**: [`WidgetOptions`](../../../../../../@types/toolbar/type-aliases/WidgetOptions.md)
+
+Widget options given with drawer `widgets` option
+
+#### Inherited from
+
+[`BaseWidget`](../../../BaseWidget/classes/BaseWidget.md).[`options`](../../../BaseWidget/classes/BaseWidget.md#options)
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:27](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L27)
 
 ***
 
@@ -124,9 +174,15 @@
 
 > **overlay**: [`SelectOverlay`](../../../../../tools/Overlay/SelectOverlay/SelectOverlay/classes/SelectOverlay.md)
 
+Options of the tool (color, width...), shown while widget is active (see `showOverlayOnActive`)
+
+#### Overrides
+
+[`BaseWidget`](../../../BaseWidget/classes/BaseWidget.md).[`overlay`](../../../BaseWidget/classes/BaseWidget.md#overlay)
+
 #### Source
 
-[components/toolbar/widgets/Select/Select.ts:60](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Select/Select.ts#L60)
+[packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts:102](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts#L102)
 
 ***
 
@@ -136,7 +192,7 @@
 
 #### Source
 
-[components/toolbar/widgets/Select/Select.ts:35](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Select/Select.ts#L35)
+[packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts:60](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts#L60)
 
 ***
 
@@ -150,7 +206,23 @@
 
 #### Source
 
-[components/toolbar/widgets/BaseWidget.ts:11](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/BaseWidget.ts#L11)
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:23](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L23)
+
+***
+
+### showOverlayOnActive
+
+> **`protected`** **showOverlayOnActive**: `boolean` = `false`
+
+Show `overlay` while widget is active (false when overlay depends on something else, e.g. selection)
+
+#### Overrides
+
+[`BaseWidget`](../../../BaseWidget/classes/BaseWidget.md).[`showOverlayOnActive`](../../../BaseWidget/classes/BaseWidget.md#showoverlayonactive)
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts:104](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts#L104)
 
 ***
 
@@ -160,7 +232,7 @@
 
 #### Source
 
-[components/toolbar/widgets/Select/Select.ts:59](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Select/Select.ts#L59)
+[packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts:101](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts#L101)
 
 ***
 
@@ -170,34 +242,41 @@
 
 #### Source
 
-[components/toolbar/widgets/Select/Select.ts:37](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Select/Select.ts#L37)
+[packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts:62](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts#L62)
 
-## Methods
+## Accessors
 
-### \_socketDraw()?
+### isDisabled
 
-> **`optional`** **\_socketDraw**(`data`): `void`
-
-Get the drawing data from the socket and basically
-draw on our canvas whatever the other person draws
-
-#### Parameters
-
-• **data**: `string`
+> **`get`** **isDisabled**(): `boolean`
 
 #### Returns
 
-`void`
-
-#### Inherited from
-
-[`BaseWidget`](../../../BaseWidget/classes/BaseWidget.md).[`_socketDraw`](../../../BaseWidget/classes/BaseWidget.md#_socketdraw)
+`boolean`
 
 #### Source
 
-[components/toolbar/widgets/BaseWidget.ts:73](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/BaseWidget.ts#L73)
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:103](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L103)
 
 ***
+
+### isSelecting
+
+> **`get`** **isSelecting**(): `boolean`
+
+#### Deprecated
+
+use `inAction`
+
+#### Returns
+
+`boolean`
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts:563](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts#L563)
+
+## Methods
 
 ### addTo()
 
@@ -222,13 +301,123 @@ Returns the element that was just added to `parent`.
 
 #### Source
 
-[components/toolbar/widgets/BaseWidget.ts:43](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/BaseWidget.ts#L43)
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:69](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L69)
+
+***
+
+### afterDraw()
+
+> **`protected`** **afterDraw**(`shapes`): `void`
+
+Shapes drawn with this tool: selection tool activated with them, unless tool is kept (`keepTool` preference)
+
+#### Parameters
+
+• **shapes**: [`DrawingShape`](../../../../../../@types/drawer/type-aliases/DrawingShape.md)[]
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+[`BaseWidget`](../../../BaseWidget/classes/BaseWidget.md).[`afterDraw`](../../../BaseWidget/classes/BaseWidget.md#afterdraw)
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:189](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L189)
+
+***
+
+### clearSelection()
+
+> **clearSelection**(): `void`
+
+Unselect shapes and hide selection overlays, overlay of active tool (brush, text...) is shown again
+
+#### Returns
+
+`void`
+
+#### Overrides
+
+[`BaseWidget`](../../../BaseWidget/classes/BaseWidget.md).[`clearSelection`](../../../BaseWidget/classes/BaseWidget.md#clearselection)
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts:506](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts#L506)
+
+***
+
+### endAction()
+
+> **`protected`** **endAction**(): `void`
+
+Pointer action ends (pointer up)
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+[`BaseWidget`](../../../BaseWidget/classes/BaseWidget.md).[`endAction`](../../../BaseWidget/classes/BaseWidget.md#endaction)
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:165](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L165)
+
+***
+
+### getShapesAt()
+
+> **getShapesAt**(`pos`, `hit`, `deep`): [`DrawingShape`](../../../../../../@types/drawer/type-aliases/DrawingShape.md)[]
+
+Shapes (or groups) under a point (absolute position), from top to bottom: drawn there (fill, stroke, text box),
+then rectangles and ellipses without background around it, smallest first, then locked shapes (or their locked
+groups) in the same order
+
+#### Parameters
+
+• **pos**: `Vector2d`
+
+• **hit**: `null` \| [`DrawingShape`](../../../../../../@types/drawer/type-aliases/DrawingShape.md)= `null`
+
+Shape drawn on top (konva hit of pointer event, or its group), none by default
+
+• **deep**: `boolean`= `false`
+
+Shapes of groups instead of groups
+
+#### Returns
+
+[`DrawingShape`](../../../../../../@types/drawer/type-aliases/DrawingShape.md)[]
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts:375](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts#L375)
+
+***
+
+### hideOverlay()
+
+> **hideOverlay**(): `void`
+
+#### Returns
+
+`void`
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts:498](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts#L498)
 
 ***
 
 ### initEvents()
 
 > **`protected`** **initEvents**(): `void`
+
+Add widget events (with `onStage`), called on activation
 
 #### Returns
 
@@ -240,13 +429,31 @@ Returns the element that was just added to `parent`.
 
 #### Source
 
-[components/toolbar/widgets/Select/Select.ts:80](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Select/Select.ts#L80)
+[packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts:189](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts#L189)
+
+***
+
+### isLocked()
+
+> **isLocked**(): `boolean`
+
+Selected shapes are locked: selected to be unlocked, not modified
+
+#### Returns
+
+`boolean`
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts:361](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts#L361)
 
 ***
 
 ### onActive()
 
 > **`protected`** **onActive**(): `void`
+
+Called on activation, after events, cursor and overlay setup
 
 #### Returns
 
@@ -258,13 +465,41 @@ Returns the element that was just added to `parent`.
 
 #### Source
 
-[components/toolbar/widgets/Select/Select.ts:203](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Select/Select.ts#L203)
+[packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts:459](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts#L459)
+
+***
+
+### onConstrainChange()?
+
+> **`protected`** **`optional`** **onConstrainChange**(`constrain`): `void`
+
+Shift pressed or released during a pointer action (square, circle, straight line...), without pointer move
+
+#### Parameters
+
+• **constrain**: `boolean`
+
+Shift pressed
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+[`BaseWidget`](../../../BaseWidget/classes/BaseWidget.md).[`onConstrainChange`](../../../BaseWidget/classes/BaseWidget.md#onconstrainchange)
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:148](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L148)
 
 ***
 
 ### onDesactive()
 
 > **`protected`** **onDesactive**(): `void`
+
+Called on deactivation, after events removal and overlay hidden
 
 #### Returns
 
@@ -276,7 +511,36 @@ Returns the element that was just added to `parent`.
 
 #### Source
 
-[components/toolbar/widgets/Select/Select.ts:233](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Select/Select.ts#L233)
+[packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts:576](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts#L576)
+
+***
+
+### onStage()
+
+> **`protected`** **onStage**(`events`, `handler`): `void`
+
+Listen stage events while widget is active.
+Events are namespaced with widget id, so they are removed on deactivation without removing other listeners.
+
+#### Parameters
+
+• **events**: `string`
+
+Space separated event names
+
+• **handler**: `KonvaEventListener`\<`Stage`, `any`\>
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+[`BaseWidget`](../../../BaseWidget/classes/BaseWidget.md).[`onStage`](../../../BaseWidget/classes/BaseWidget.md#onstage)
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:113](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L113)
 
 ***
 
@@ -284,17 +548,41 @@ Returns the element that was just added to `parent`.
 
 > **`protected`** **removeEvents**(): `void`
 
+Remove widget events, called on deactivation
+
 #### Returns
 
 `void`
 
-#### Overrides
+#### Inherited from
 
 [`BaseWidget`](../../../BaseWidget/classes/BaseWidget.md).[`removeEvents`](../../../BaseWidget/classes/BaseWidget.md#removeevents)
 
 #### Source
 
-[components/toolbar/widgets/Select/Select.ts:303](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Select/Select.ts#L303)
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:130](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L130)
+
+***
+
+### select()
+
+> **select**(`shapes`): `void`
+
+Select shapes (none clears selection): transformer, anchors, selection options instead of options of active tool.
+Hidden shapes are not selectable, locked ones only without other shapes: selected as a whole (locked group)
+to be unlocked, not modified (no anchors, options nor move)
+
+#### Parameters
+
+• **shapes**: (`Shape`\<`ShapeConfig`\> \| `Group`)[]
+
+#### Returns
+
+`void`
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts:327](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts#L327)
 
 ***
 
@@ -308,7 +596,7 @@ Returns the element that was just added to `parent`.
 
 #### Source
 
-[components/toolbar/widgets/Select/Select.ts:222](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Select/Select.ts#L222)
+[packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts:567](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts#L567)
 
 ***
 
@@ -330,15 +618,13 @@ Returns the element that was just added to `parent`.
 
 #### Source
 
-[components/toolbar/widgets/BaseWidget.ts:81](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/BaseWidget.ts#L81)
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:213](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L213)
 
 ***
 
-### setBgColor()
+### ~~setBgColor()~~
 
 > **setBgColor**(`color`): `void`
-
-Change background color
 
 #### Parameters
 
@@ -348,9 +634,13 @@ Change background color
 
 `void`
 
+#### Deprecated
+
+use `setFillColor`
+
 #### Source
 
-[components/toolbar/widgets/Select/Select.ts:503](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Select/Select.ts#L503)
+[packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts:901](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts#L901)
 
 ***
 
@@ -370,7 +660,71 @@ Set color for draw
 
 #### Source
 
-[components/toolbar/widgets/Select/Select.ts:527](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Select/Select.ts#L527)
+[packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts:909](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts#L909)
+
+***
+
+### setDisabled()
+
+> **setDisabled**(`disabled`): `void`
+
+#### Parameters
+
+• **disabled**: `boolean`
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+[`BaseWidget`](../../../BaseWidget/classes/BaseWidget.md).[`setDisabled`](../../../BaseWidget/classes/BaseWidget.md#setdisabled)
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:91](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L91)
+
+***
+
+### setEdges()
+
+> **setEdges**(`edges`): `void`
+
+Set corners of selected rectangles: sharp, round (radius from their size) or radius
+
+#### Parameters
+
+• **edges**: [`Edges`](../../../../../../@types/drawer/type-aliases/Edges.md)
+
+#### Returns
+
+`void`
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts:962](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts#L962)
+
+***
+
+### setFillColor()
+
+> **setFillColor**(`color`): `void`
+
+Change background color of selected rectangles and ellipses
+
+#### Parameters
+
+• **color**: [`ColorLike`](../../../../../../@types/drawer/type-aliases/ColorLike.md)
+
+`'transparent'` for none
+
+#### Returns
+
+`void`
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts:891](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts#L891)
 
 ***
 
@@ -390,17 +744,19 @@ Set opacity of shape 0 to 1
 
 #### Source
 
-[components/toolbar/widgets/Select/Select.ts:588](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Select/Select.ts#L588)
+[packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts:974](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts#L974)
 
 ***
 
 ### setStrokeStyle()
 
-> **setStrokeStyle**(`dash`): `void`
+> **setStrokeStyle**(`style`): `void`
+
+Set stroke style of selected outline shapes (not brush lines, which are filled outlines)
 
 #### Parameters
 
-• **dash**: `undefined` \| `number`[]
+• **style**: [`StrokeStyle`](../../../../../../@types/drawer/type-aliases/StrokeStyle.md)
 
 #### Returns
 
@@ -408,7 +764,7 @@ Set opacity of shape 0 to 1
 
 #### Source
 
-[components/toolbar/widgets/Select/Select.ts:569](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Select/Select.ts#L569)
+[packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts:949](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts#L949)
 
 ***
 
@@ -428,13 +784,99 @@ Set stroke width for draw
 
 #### Source
 
-[components/toolbar/widgets/Select/Select.ts:554](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Select/Select.ts#L554)
+[packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts:927](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts#L927)
+
+***
+
+### setTextStyle()
+
+> **setTextStyle**(`style`): `void`
+
+Set text style of selected text
+
+#### Parameters
+
+• **style**: `Partial`\<[`TextStyle`](../../../../../../@types/drawer/type-aliases/TextStyle.md)\>
+
+#### Returns
+
+`void`
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts:982](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts#L982)
+
+***
+
+### shareLive()
+
+> **`protected`** **shareLive**(...`shapes`): `void`
+
+Shapes being drawn shown to collaborators while drawing (final state is sent on change)
+
+#### Parameters
+
+• ...**shapes**: [`DrawingShape`](../../../../../../@types/drawer/type-aliases/DrawingShape.md)[]
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+[`BaseWidget`](../../../BaseWidget/classes/BaseWidget.md).[`shareLive`](../../../BaseWidget/classes/BaseWidget.md#sharelive)
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:174](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L174)
+
+***
+
+### showOverlay()
+
+> **showOverlay**(`nodes`): `void`
+
+Show overlay for selected shapes, text overlay if selection contains only text
+
+#### Parameters
+
+• **nodes**: (`Shape`\<`ShapeConfig`\> \| `Group`)[]
+
+#### Returns
+
+`void`
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts:479](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts#L479)
+
+***
+
+### startAction()
+
+> **`protected`** **startAction**(): `void`
+
+Pointer action starts (pointer down): shortcuts are disabled and UI (toolbar, overlays...) ignores pointer
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+[`BaseWidget`](../../../BaseWidget/classes/BaseWidget.md).[`startAction`](../../../BaseWidget/classes/BaseWidget.md#startaction)
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:157](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L157)
 
 ***
 
 ### toggleDisable()
 
 > **toggleDisable**(): `void`
+
+Disable / enable widget, a disabled widget can not be activated
 
 #### Returns
 
@@ -446,7 +888,7 @@ Set stroke width for draw
 
 #### Source
 
-[components/toolbar/widgets/BaseWidget.ts:56](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/BaseWidget.ts#L56)
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:87](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L87)
 
 ***
 
@@ -464,7 +906,7 @@ Set stroke width for draw
 
 #### Source
 
-[components/toolbar/widgets/Select/Select.ts:603](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Select/Select.ts#L603)
+[packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts:1005](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/Select/Select.ts#L1005)
 
 ***
 
@@ -476,10 +918,10 @@ Set stroke width for draw
 
 `void`
 
-#### Overrides
+#### Inherited from
 
 [`BaseWidget`](../../../BaseWidget/classes/BaseWidget.md).[`updateCursor`](../../../BaseWidget/classes/BaseWidget.md#updatecursor)
 
 #### Source
 
-[components/toolbar/widgets/Select/Select.ts:615](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Select/Select.ts#L615)
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:150](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L150)

@@ -10,9 +10,25 @@
 
 ## Type declaration
 
+### edges
+
+> **edges**: `string` = `'data-edges'`
+
+### fillColor
+
+> **fillColor**: `string` = `'data-fill-color'`
+
 ### fontSize
 
 > **fontSize**: `string` = `'data-font-size'`
+
+### fontStyle
+
+> **fontStyle**: `string` = `'data-font-style'`
+
+### order
+
+> **order**: `string` = `'data-order'`
 
 ### strokeColor
 
@@ -26,6 +42,14 @@
 
 > **strokeWidth**: `string` = `'data-stroke-width'`
 
+### textAlign
+
+> **textAlign**: `string` = `'data-text-align'`
+
+### textDecoration
+
+> **textDecoration**: `string` = `'data-text-decoration'`
+
 ## Source
 
-[constants.ts:28](https://github.com/fabienwnklr/free-drawing/blob/master/src/constants.ts#L28)
+[packages/free-drawing/src/constants.ts:200](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/constants.ts#L200)

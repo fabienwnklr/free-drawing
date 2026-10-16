@@ -30,7 +30,7 @@
 
 #### Source
 
-[components/tools/Settings/Settings.ts:27](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Settings/Settings.ts#L27)
+[packages/free-drawing/src/components/tools/Settings/Settings.ts:49](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/Settings/Settings.ts#L49)
 
 ## Properties
 
@@ -40,7 +40,7 @@
 
 #### Source
 
-[components/tools/Settings/Settings.ts:25](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Settings/Settings.ts#L25)
+[packages/free-drawing/src/components/tools/Settings/Settings.ts:46](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/Settings/Settings.ts#L46)
 
 ***
 
@@ -50,7 +50,7 @@
 
 #### Source
 
-[components/tools/Settings/Settings.ts:24](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Settings/Settings.ts#L24)
+[packages/free-drawing/src/components/tools/Settings/Settings.ts:45](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/Settings/Settings.ts#L45)
 
 ***
 
@@ -64,7 +64,7 @@
 
 #### Source
 
-[components/Dropdown/Dropdown.ts:6](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Dropdown/Dropdown.ts#L6)
+[packages/free-drawing/src/components/Dropdown/Dropdown.ts:8](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Dropdown/Dropdown.ts#L8)
 
 ***
 
@@ -74,7 +74,7 @@
 
 #### Source
 
-[components/tools/Settings/Settings.ts:19](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Settings/Settings.ts#L19)
+[packages/free-drawing/src/components/tools/Settings/Settings.ts:38](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/Settings/Settings.ts#L38)
 
 ***
 
@@ -84,7 +84,47 @@
 
 #### Source
 
-[components/tools/Settings/Settings.ts:23](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Settings/Settings.ts#L23)
+[packages/free-drawing/src/components/tools/Settings/Settings.ts:44](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/Settings/Settings.ts#L44)
+
+***
+
+### $collaborationButton
+
+> **$collaborationButton**: `HTMLButtonElement`
+
+#### Source
+
+[packages/free-drawing/src/components/tools/Settings/Settings.ts:37](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/Settings/Settings.ts#L37)
+
+***
+
+### $commandsButton
+
+> **$commandsButton**: `HTMLButtonElement`
+
+#### Source
+
+[packages/free-drawing/src/components/tools/Settings/Settings.ts:30](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/Settings/Settings.ts#L30)
+
+***
+
+### $copyLinkButton
+
+> **$copyLinkButton**: `HTMLButtonElement`
+
+#### Source
+
+[packages/free-drawing/src/components/tools/Settings/Settings.ts:36](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/Settings/Settings.ts#L36)
+
+***
+
+### $darkModeButton
+
+> **$darkModeButton**: `HTMLButtonElement`
+
+#### Source
+
+[packages/free-drawing/src/components/tools/Settings/Settings.ts:42](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/Settings/Settings.ts#L42)
 
 ***
 
@@ -98,7 +138,7 @@
 
 #### Source
 
-[components/Dropdown/Dropdown.ts:5](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Dropdown/Dropdown.ts#L5)
+[packages/free-drawing/src/components/Dropdown/Dropdown.ts:7](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Dropdown/Dropdown.ts#L7)
 
 ***
 
@@ -112,7 +152,7 @@
 
 #### Source
 
-[components/Dropdown/Dropdown.ts:9](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Dropdown/Dropdown.ts#L9)
+[packages/free-drawing/src/components/Dropdown/Dropdown.ts:11](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Dropdown/Dropdown.ts#L11)
 
 ***
 
@@ -126,7 +166,7 @@
 
 #### Source
 
-[components/Dropdown/Dropdown.ts:8](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Dropdown/Dropdown.ts#L8)
+[packages/free-drawing/src/components/Dropdown/Dropdown.ts:10](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Dropdown/Dropdown.ts#L10)
 
 ***
 
@@ -136,7 +176,7 @@
 
 #### Source
 
-[components/tools/Settings/Settings.ts:17](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Settings/Settings.ts#L17)
+[packages/free-drawing/src/components/tools/Settings/Settings.ts:29](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/Settings/Settings.ts#L29)
 
 ***
 
@@ -146,7 +186,17 @@
 
 #### Source
 
-[components/tools/Settings/Settings.ts:21](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Settings/Settings.ts#L21)
+[packages/free-drawing/src/components/tools/Settings/Settings.ts:40](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/Settings/Settings.ts#L40)
+
+***
+
+### $languageSelect
+
+> **$languageSelect**: `HTMLSelectElement`
+
+#### Source
+
+[packages/free-drawing/src/components/tools/Settings/Settings.ts:43](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/Settings/Settings.ts#L43)
 
 ***
 
@@ -160,7 +210,7 @@
 
 #### Source
 
-[components/Dropdown/Dropdown.ts:7](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Dropdown/Dropdown.ts#L7)
+[packages/free-drawing/src/components/Dropdown/Dropdown.ts:9](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Dropdown/Dropdown.ts#L9)
 
 ***
 
@@ -170,7 +220,39 @@
 
 #### Source
 
-[components/tools/Settings/Settings.ts:18](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Settings/Settings.ts#L18)
+[packages/free-drawing/src/components/tools/Settings/Settings.ts:32](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/Settings/Settings.ts#L32)
+
+***
+
+### $preferencesButton
+
+> **$preferencesButton**: `HTMLButtonElement`
+
+#### Source
+
+[packages/free-drawing/src/components/tools/Settings/Settings.ts:31](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/Settings/Settings.ts#L31)
+
+***
+
+### $saveAsButton
+
+> **$saveAsButton**: `HTMLButtonElement`
+
+#### Source
+
+[packages/free-drawing/src/components/tools/Settings/Settings.ts:33](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/Settings/Settings.ts#L33)
+
+***
+
+### $saveButton
+
+> **$saveButton**: `HTMLButtonElement`
+
+Save now, shown without auto save
+
+#### Source
+
+[packages/free-drawing/src/components/tools/Settings/Settings.ts:35](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/Settings/Settings.ts#L35)
 
 ***
 
@@ -180,7 +262,7 @@
 
 #### Source
 
-[components/tools/Settings/Settings.ts:20](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Settings/Settings.ts#L20)
+[packages/free-drawing/src/components/tools/Settings/Settings.ts:39](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/Settings/Settings.ts#L39)
 
 ***
 
@@ -190,7 +272,7 @@
 
 #### Source
 
-[components/tools/Settings/Settings.ts:22](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Settings/Settings.ts#L22)
+[packages/free-drawing/src/components/tools/Settings/Settings.ts:41](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/Settings/Settings.ts#L41)
 
 ***
 
@@ -208,7 +290,17 @@
 
 #### Source
 
-[utils/MicroEvent.ts:14](https://github.com/fabienwnklr/free-drawing/blob/master/src/utils/MicroEvent.ts#L14)
+[packages/free-drawing/src/utils/MicroEvent.ts:33](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/utils/MicroEvent.ts#L33)
+
+***
+
+### bgColorPicker
+
+> **bgColorPicker**: [`ColorPicker`](../../../../ColorPicker/ColorPicker/classes/ColorPicker.md)
+
+#### Source
+
+[packages/free-drawing/src/components/tools/Settings/Settings.ts:47](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/Settings/Settings.ts#L47)
 
 ***
 
@@ -218,7 +310,23 @@
 
 #### Source
 
-[components/tools/Settings/Settings.ts:16](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Settings/Settings.ts#L16)
+[packages/free-drawing/src/components/tools/Settings/Settings.ts:28](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/Settings/Settings.ts#L28)
+
+## Accessors
+
+### zenMode
+
+> **`get`** **zenMode**(): `boolean`
+
+Interface hidden except toolbar and menu
+
+#### Returns
+
+`boolean`
+
+#### Source
+
+[packages/free-drawing/src/components/tools/Settings/Settings.ts:330](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/Settings/Settings.ts#L330)
 
 ## Methods
 
@@ -232,7 +340,7 @@
 
 #### Source
 
-[components/tools/Settings/Settings.ts:120](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Settings/Settings.ts#L120)
+[packages/free-drawing/src/components/tools/Settings/Settings.ts:272](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/Settings/Settings.ts#L272)
 
 ***
 
@@ -250,7 +358,7 @@
 
 #### Source
 
-[components/Dropdown/Dropdown.ts:45](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Dropdown/Dropdown.ts#L45)
+[packages/free-drawing/src/components/Dropdown/Dropdown.ts:49](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Dropdown/Dropdown.ts#L49)
 
 ***
 
@@ -268,7 +376,7 @@
 
 #### Source
 
-[components/Dropdown/Dropdown.ts:51](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Dropdown/Dropdown.ts#L51)
+[packages/free-drawing/src/components/Dropdown/Dropdown.ts:55](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Dropdown/Dropdown.ts#L55)
 
 ***
 
@@ -292,7 +400,7 @@
 
 #### Source
 
-[utils/MicroEvent.ts:28](https://github.com/fabienwnklr/free-drawing/blob/master/src/utils/MicroEvent.ts#L28)
+[packages/free-drawing/src/utils/MicroEvent.ts:47](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/utils/MicroEvent.ts#L47)
 
 ***
 
@@ -316,7 +424,7 @@
 
 #### Source
 
-[utils/MicroEvent.ts:20](https://github.com/fabienwnklr/free-drawing/blob/master/src/utils/MicroEvent.ts#L20)
+[packages/free-drawing/src/utils/MicroEvent.ts:39](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/utils/MicroEvent.ts#L39)
 
 ***
 
@@ -338,7 +446,7 @@
 
 #### Source
 
-[components/Dropdown/Dropdown.ts:33](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Dropdown/Dropdown.ts#L33)
+[packages/free-drawing/src/components/Dropdown/Dropdown.ts:37](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Dropdown/Dropdown.ts#L37)
 
 ***
 
@@ -356,7 +464,7 @@
 
 #### Source
 
-[components/Dropdown/Dropdown.ts:41](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Dropdown/Dropdown.ts#L41)
+[packages/free-drawing/src/components/Dropdown/Dropdown.ts:45](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Dropdown/Dropdown.ts#L45)
 
 ***
 
@@ -370,7 +478,7 @@
 
 #### Source
 
-[components/tools/Settings/Settings.ts:175](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Settings/Settings.ts#L175)
+[packages/free-drawing/src/components/tools/Settings/Settings.ts:351](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/Settings/Settings.ts#L351)
 
 ***
 
@@ -384,7 +492,7 @@
 
 #### Source
 
-[components/tools/Settings/Settings.ts:167](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Settings/Settings.ts#L167)
+[packages/free-drawing/src/components/tools/Settings/Settings.ts:343](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/Settings/Settings.ts#L343)
 
 ***
 
@@ -398,7 +506,7 @@
 
 #### Source
 
-[components/tools/Settings/Settings.ts:153](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/tools/Settings/Settings.ts#L153)
+[packages/free-drawing/src/components/tools/Settings/Settings.ts:334](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/Settings/Settings.ts#L334)
 
 ***
 
@@ -422,4 +530,24 @@
 
 #### Source
 
-[utils/MicroEvent.ts:49](https://github.com/fabienwnklr/free-drawing/blob/master/src/utils/MicroEvent.ts#L49)
+[packages/free-drawing/src/utils/MicroEvent.ts:70](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/utils/MicroEvent.ts#L70)
+
+***
+
+### updateBgColor()
+
+> **updateBgColor**(`color`): `void`
+
+Set active background color button
+
+#### Parameters
+
+• **color**: [`ColorLike`](../../../../../@types/drawer/type-aliases/ColorLike.md)
+
+#### Returns
+
+`void`
+
+#### Source
+
+[packages/free-drawing/src/components/tools/Settings/Settings.ts:198](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/tools/Settings/Settings.ts#L198)

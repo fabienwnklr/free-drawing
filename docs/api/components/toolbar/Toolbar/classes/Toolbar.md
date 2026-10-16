@@ -22,9 +22,21 @@
 
 #### Source
 
-[components/toolbar/Toolbar.ts:21](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/Toolbar.ts#L21)
+[packages/free-drawing/src/components/toolbar/Toolbar.ts:57](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/Toolbar.ts#L57)
 
 ## Properties
+
+### $keepToolButton
+
+> **$keepToolButton**: `null` \| `HTMLButtonElement` = `null`
+
+Keep tool after drawing (`keepTool` preference), first button, with selection widget only
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/Toolbar.ts:55](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/Toolbar.ts#L55)
+
+***
 
 ### $toolbarContent
 
@@ -32,7 +44,7 @@
 
 #### Source
 
-[components/toolbar/Toolbar.ts:19](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/Toolbar.ts#L19)
+[packages/free-drawing/src/components/toolbar/Toolbar.ts:53](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/Toolbar.ts#L53)
 
 ***
 
@@ -42,7 +54,7 @@
 
 #### Source
 
-[components/toolbar/Toolbar.ts:17](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/Toolbar.ts#L17)
+[packages/free-drawing/src/components/toolbar/Toolbar.ts:49](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/Toolbar.ts#L49)
 
 ***
 
@@ -52,19 +64,51 @@
 
 #### Source
 
-[components/toolbar/Toolbar.ts:16](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/Toolbar.ts#L16)
+[packages/free-drawing/src/components/toolbar/Toolbar.ts:48](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/Toolbar.ts#L48)
+
+***
+
+### groups
+
+> **groups**: [`GroupWidget`](../../widgets/GroupWidget/classes/GroupWidget.md)[] = `[]`
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/Toolbar.ts:52](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/Toolbar.ts#L52)
 
 ***
 
 ### widgets
 
-> **widgets**: `Map`\<`"pan"` \| `"selection"` \| `"brush"` \| `"eraser"` \| `"undo"` \| `"redo"` \| `"text"` \| `"rect"` \| `"circle"` \| `"ellipse"` \| `"square"` \| `"arrow"` \| `"line"` \| `"star"` \| `"triangle"` \| `"polygon"`, [`BaseWidget`](../../widgets/BaseWidget/classes/BaseWidget.md)\>
+> **widgets**: `Map`\<`"pan"` \| `"selection"` \| `"brush"` \| `"eraser"` \| `"undo"` \| `"redo"` \| `"text"` \| `"rect"` \| `"circle"` \| `"ellipse"` \| `"square"` \| `"arrow"` \| `"line"` \| `"star"` \| `"triangle"` \| `"polygon"` \| `"diamond"` \| `"heart"` \| `"cloud"` \| `"highlighter"` \| `"laser"` \| `"frame"`, [`BaseWidget`](../../widgets/BaseWidget/classes/BaseWidget.md)\>
+
+Widgets of toolbar, also those of groups
 
 #### Source
 
-[components/toolbar/Toolbar.ts:18](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/Toolbar.ts#L18)
+[packages/free-drawing/src/components/toolbar/Toolbar.ts:51](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/Toolbar.ts#L51)
 
 ## Methods
+
+### addGroup()
+
+> **addGroup**(`group`): `void`
+
+Add a group of widgets (created by the app or the library), its widgets become widgets of toolbar
+
+#### Parameters
+
+• **group**: [`GroupWidget`](../../widgets/GroupWidget/classes/GroupWidget.md)
+
+#### Returns
+
+`void`
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/Toolbar.ts:117](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/Toolbar.ts#L117)
+
+***
 
 ### addWidget()
 
@@ -80,7 +124,27 @@
 
 #### Source
 
-[components/toolbar/Toolbar.ts:47](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/Toolbar.ts#L47)
+[packages/free-drawing/src/components/toolbar/Toolbar.ts:107](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/Toolbar.ts#L107)
+
+***
+
+### getButton()
+
+> **getButton**(`widget`): `HTMLButtonElement`
+
+Button of a widget in toolbar: its own, or the button of its group
+
+#### Parameters
+
+• **widget**: [`BaseWidget`](../../widgets/BaseWidget/classes/BaseWidget.md)
+
+#### Returns
+
+`HTMLButtonElement`
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/Toolbar.ts:135](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/Toolbar.ts#L135)
 
 ***
 
@@ -94,7 +158,7 @@
 
 #### Parameters
 
-• **name**: `"pan"` \| `"selection"` \| `"brush"` \| `"eraser"` \| `"undo"` \| `"redo"` \| `"text"` \| `"rect"` \| `"circle"` \| `"ellipse"` \| `"square"` \| `"arrow"` \| `"line"` \| `"star"` \| `"triangle"` \| `"polygon"`
+• **name**: `"pan"` \| `"selection"` \| `"brush"` \| `"eraser"` \| `"undo"` \| `"redo"` \| `"text"` \| `"rect"` \| `"circle"` \| `"ellipse"` \| `"square"` \| `"arrow"` \| `"line"` \| `"star"` \| `"triangle"` \| `"polygon"` \| `"diamond"` \| `"heart"` \| `"cloud"` \| `"highlighter"` \| `"laser"` \| `"frame"`
 
 #### Returns
 
@@ -102,7 +166,7 @@
 
 #### Source
 
-[components/toolbar/Toolbar.ts:57](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/Toolbar.ts#L57)
+[packages/free-drawing/src/components/toolbar/Toolbar.ts:203](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/Toolbar.ts#L203)
 
 ***
 
@@ -116,7 +180,7 @@
 
 #### Source
 
-[components/toolbar/Toolbar.ts:35](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/Toolbar.ts#L35)
+[packages/free-drawing/src/components/toolbar/Toolbar.ts:84](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/Toolbar.ts#L84)
 
 ***
 
@@ -134,4 +198,40 @@
 
 #### Source
 
-[components/toolbar/Toolbar.ts:52](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/Toolbar.ts#L52)
+[packages/free-drawing/src/components/toolbar/Toolbar.ts:124](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/Toolbar.ts#L124)
+
+***
+
+### setTabStop()
+
+> **setTabStop**(`$button`): `void`
+
+Only given button of toolbar is reached with Tab (roving tabindex), arrow keys move between them
+
+#### Parameters
+
+• **$button**: `HTMLElement`
+
+#### Returns
+
+`void`
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/Toolbar.ts:149](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/Toolbar.ts#L149)
+
+***
+
+### update()
+
+> **update**(): `void`
+
+State of groups buttons: highlighted while one of their widgets is active, disabled with them
+
+#### Returns
+
+`void`
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/Toolbar.ts:142](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/Toolbar.ts#L142)

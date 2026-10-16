@@ -32,7 +32,7 @@
 
 #### Source
 
-[components/Modal/ConfirmModal.ts:20](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Modal/ConfirmModal.ts#L20)
+[packages/free-drawing/src/components/Modal/ConfirmModal.ts:20](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Modal/ConfirmModal.ts#L20)
 
 ## Properties
 
@@ -46,7 +46,7 @@
 
 #### Source
 
-[components/Modal/Modal.ts:15](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Modal/Modal.ts#L15)
+[packages/free-drawing/src/components/Modal/Modal.ts:19](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Modal/Modal.ts#L19)
 
 ***
 
@@ -56,7 +56,7 @@
 
 #### Source
 
-[components/Modal/ConfirmModal.ts:11](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Modal/ConfirmModal.ts#L11)
+[packages/free-drawing/src/components/Modal/ConfirmModal.ts:13](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Modal/ConfirmModal.ts#L13)
 
 ***
 
@@ -66,7 +66,17 @@
 
 #### Source
 
-[components/Modal/ConfirmModal.ts:12](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Modal/ConfirmModal.ts#L12)
+[packages/free-drawing/src/components/Modal/ConfirmModal.ts:14](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Modal/ConfirmModal.ts#L14)
+
+***
+
+### $message
+
+> **$message**: `HTMLParagraphElement`
+
+#### Source
+
+[packages/free-drawing/src/components/Modal/ConfirmModal.ts:12](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Modal/ConfirmModal.ts#L12)
 
 ***
 
@@ -80,7 +90,7 @@
 
 #### Source
 
-[components/Modal/Modal.ts:9](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Modal/Modal.ts#L9)
+[packages/free-drawing/src/components/Modal/Modal.ts:13](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Modal/Modal.ts#L13)
 
 ***
 
@@ -94,7 +104,7 @@
 
 #### Source
 
-[components/Modal/Modal.ts:11](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Modal/Modal.ts#L11)
+[packages/free-drawing/src/components/Modal/Modal.ts:15](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Modal/Modal.ts#L15)
 
 ***
 
@@ -108,7 +118,7 @@
 
 #### Source
 
-[components/Modal/Modal.ts:12](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Modal/Modal.ts#L12)
+[packages/free-drawing/src/components/Modal/Modal.ts:16](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Modal/Modal.ts#L16)
 
 ***
 
@@ -122,7 +132,7 @@
 
 #### Source
 
-[components/Modal/Modal.ts:10](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Modal/Modal.ts#L10)
+[packages/free-drawing/src/components/Modal/Modal.ts:14](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Modal/Modal.ts#L14)
 
 ***
 
@@ -132,27 +142,7 @@
 
 #### Source
 
-[components/Modal/ConfirmModal.ts:18](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Modal/ConfirmModal.ts#L18)
-
-***
-
-### cancelLabel
-
-> **cancelLabel**: `string`
-
-#### Source
-
-[components/Modal/ConfirmModal.ts:14](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Modal/ConfirmModal.ts#L14)
-
-***
-
-### confirmLabel
-
-> **confirmLabel**: `string`
-
-#### Source
-
-[components/Modal/ConfirmModal.ts:16](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Modal/ConfirmModal.ts#L16)
+[packages/free-drawing/src/components/Modal/ConfirmModal.ts:17](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Modal/ConfirmModal.ts#L17)
 
 ***
 
@@ -166,17 +156,7 @@
 
 #### Source
 
-[components/Modal/ConfirmModal.ts:10](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Modal/ConfirmModal.ts#L10)
-
-***
-
-### message
-
-> **message**: `string`
-
-#### Source
-
-[components/Modal/ConfirmModal.ts:13](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Modal/ConfirmModal.ts#L13)
+[packages/free-drawing/src/components/Modal/ConfirmModal.ts:11](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Modal/ConfirmModal.ts#L11)
 
 ***
 
@@ -194,7 +174,7 @@
 
 #### Source
 
-[components/Modal/ConfirmModal.ts:15](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Modal/ConfirmModal.ts#L15)
+[packages/free-drawing/src/components/Modal/ConfirmModal.ts:15](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Modal/ConfirmModal.ts#L15)
 
 ***
 
@@ -212,7 +192,7 @@
 
 #### Source
 
-[components/Modal/ConfirmModal.ts:17](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Modal/ConfirmModal.ts#L17)
+[packages/free-drawing/src/components/Modal/ConfirmModal.ts:16](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Modal/ConfirmModal.ts#L16)
 
 ***
 
@@ -226,7 +206,7 @@
 
 #### Source
 
-[components/Modal/Modal.ts:13](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Modal/Modal.ts#L13)
+[packages/free-drawing/src/components/Modal/Modal.ts:17](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Modal/Modal.ts#L17)
 
 ## Methods
 
@@ -248,7 +228,7 @@
 
 #### Source
 
-[components/Modal/Modal.ts:118](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Modal/Modal.ts#L118)
+[packages/free-drawing/src/components/Modal/Modal.ts:170](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Modal/Modal.ts#L170)
 
 ***
 
@@ -266,21 +246,7 @@
 
 #### Source
 
-[components/Modal/Modal.ts:145](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Modal/Modal.ts#L145)
-
-***
-
-### fill()
-
-> **fill**(): `void`
-
-#### Returns
-
-`void`
-
-#### Source
-
-[components/Modal/ConfirmModal.ts:37](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Modal/ConfirmModal.ts#L37)
+[packages/free-drawing/src/components/Modal/Modal.ts:222](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Modal/Modal.ts#L222)
 
 ***
 
@@ -298,7 +264,7 @@
 
 #### Source
 
-[components/Modal/Modal.ts:133](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Modal/Modal.ts#L133)
+[packages/free-drawing/src/components/Modal/Modal.ts:202](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Modal/Modal.ts#L202)
 
 ***
 
@@ -316,7 +282,7 @@
 
 #### Source
 
-[components/Modal/Modal.ts:141](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Modal/Modal.ts#L141)
+[packages/free-drawing/src/components/Modal/Modal.ts:218](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Modal/Modal.ts#L218)
 
 ***
 
@@ -338,7 +304,7 @@
 
 #### Source
 
-[components/Modal/Modal.ts:114](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Modal/Modal.ts#L114)
+[packages/free-drawing/src/components/Modal/Modal.ts:166](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Modal/Modal.ts#L166)
 
 ***
 
@@ -360,7 +326,7 @@
 
 #### Source
 
-[components/Modal/Modal.ts:122](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Modal/Modal.ts#L122)
+[packages/free-drawing/src/components/Modal/Modal.ts:174](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Modal/Modal.ts#L174)
 
 ***
 
@@ -382,7 +348,51 @@
 
 #### Source
 
-[components/Modal/Modal.ts:108](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Modal/Modal.ts#L108)
+[packages/free-drawing/src/components/Modal/Modal.ts:160](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Modal/Modal.ts#L160)
+
+***
+
+### setMessage()
+
+> **setMessage**(`message`): `void`
+
+Message asking confirmation
+
+#### Parameters
+
+• **message**: `string`
+
+#### Returns
+
+`void`
+
+#### Source
+
+[packages/free-drawing/src/components/Modal/ConfirmModal.ts:53](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Modal/ConfirmModal.ts#L53)
+
+***
+
+### setTitle()
+
+> **setTitle**(`title`): `void`
+
+Title in header
+
+#### Parameters
+
+• **title**: `string`
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+[`Modal`](../../Modal/classes/Modal.md).[`setTitle`](../../Modal/classes/Modal.md#settitle)
+
+#### Source
+
+[packages/free-drawing/src/components/Modal/Modal.ts:65](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Modal/Modal.ts#L65)
 
 ***
 
@@ -400,4 +410,4 @@
 
 #### Source
 
-[components/Modal/Modal.ts:126](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Modal/Modal.ts#L126)
+[packages/free-drawing/src/components/Modal/Modal.ts:178](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Modal/Modal.ts#L178)

@@ -14,7 +14,7 @@
 
 #### Source
 
-[@types/modal.d.ts:9](https://github.com/fabienwnklr/free-drawing/blob/master/src/@types/modal.d.ts#L9)
+[packages/free-drawing/src/@types/modal.ts:11](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/modal.ts#L11)
 
 ***
 
@@ -24,7 +24,7 @@
 
 #### Source
 
-[@types/modal.d.ts:5](https://github.com/fabienwnklr/free-drawing/blob/master/src/@types/modal.d.ts#L5)
+[packages/free-drawing/src/@types/modal.ts:7](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/modal.ts#L7)
 
 ***
 
@@ -34,7 +34,7 @@
 
 #### Source
 
-[@types/modal.d.ts:7](https://github.com/fabienwnklr/free-drawing/blob/master/src/@types/modal.d.ts#L7)
+[packages/free-drawing/src/@types/modal.ts:9](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/modal.ts#L9)
 
 ***
 
@@ -44,7 +44,7 @@
 
 #### Source
 
-[@types/modal.d.ts:8](https://github.com/fabienwnklr/free-drawing/blob/master/src/@types/modal.d.ts#L8)
+[packages/free-drawing/src/@types/modal.ts:10](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/modal.ts#L10)
 
 ***
 
@@ -54,7 +54,7 @@
 
 #### Source
 
-[@types/modal.d.ts:6](https://github.com/fabienwnklr/free-drawing/blob/master/src/@types/modal.d.ts#L6)
+[packages/free-drawing/src/@types/modal.ts:8](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/modal.ts#L8)
 
 ***
 
@@ -64,7 +64,7 @@
 
 #### Source
 
-[@types/modal.d.ts:2](https://github.com/fabienwnklr/free-drawing/blob/master/src/@types/modal.d.ts#L2)
+[packages/free-drawing/src/@types/modal.ts:4](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/modal.ts#L4)
 
 ***
 
@@ -74,7 +74,7 @@
 
 #### Source
 
-[@types/modal.d.ts:4](https://github.com/fabienwnklr/free-drawing/blob/master/src/@types/modal.d.ts#L4)
+[packages/free-drawing/src/@types/modal.ts:6](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/modal.ts#L6)
 
 ***
 
@@ -84,4 +84,4 @@
 
 #### Source
 
-[@types/modal.d.ts:3](https://github.com/fabienwnklr/free-drawing/blob/master/src/@types/modal.d.ts#L3)
+[packages/free-drawing/src/@types/modal.ts:5](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/modal.ts#L5)

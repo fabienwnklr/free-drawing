@@ -11,3 +11,7 @@
 ### Classes
 
 - [BaseWidget](classes/BaseWidget.md)
+
+### Type Aliases
+
+- [ToolOverlay](type-aliases/ToolOverlay.md)

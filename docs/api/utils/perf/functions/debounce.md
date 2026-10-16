@@ -54,4 +54,4 @@ window.addEventListener("resize", debouncedUpdateLayout);
 
 ## Source
 
-[utils/perf.ts:22](https://github.com/fabienwnklr/free-drawing/blob/master/src/utils/perf.ts#L22)
+[packages/free-drawing/src/utils/perf.ts:22](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/utils/perf.ts#L22)

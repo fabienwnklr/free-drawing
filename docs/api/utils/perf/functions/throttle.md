@@ -43,4 +43,4 @@ window.addEventListener("scroll", throttledUpdateLayout);
 
 ## Source
 
-[utils/perf.ts:58](https://github.com/fabienwnklr/free-drawing/blob/master/src/utils/perf.ts#L58)
+[packages/free-drawing/src/utils/perf.ts:58](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/utils/perf.ts#L58)

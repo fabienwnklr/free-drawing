@@ -8,19 +8,9 @@
 
 > **`const`** **confirmModalDefaultOpts**: `object`
 
+Default actions of confirmation dialog (texts: translated ones)
+
 ## Type declaration
-
-### cancelLabel
-
-> **cancelLabel**: `string` = `'Cancel'`
-
-### confirmLabel
-
-> **confirmLabel**: `string` = `'Confirm'`
-
-### message
-
-> **message**: `string` = `'Would you confirm action ?'`
 
 ### onCancel()
 
@@ -48,4 +38,4 @@
 
 ## Source
 
-[components/Modal/constants.ts:17](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/Modal/constants.ts#L17)
+[packages/free-drawing/src/components/Modal/constants.ts:20](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/Modal/constants.ts#L20)

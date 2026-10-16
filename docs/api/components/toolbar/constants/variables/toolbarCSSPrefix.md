@@ -10,4 +10,4 @@
 
 ## Source
 
-[components/toolbar/constants.ts:1](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/constants.ts#L1)
+[packages/free-drawing/src/components/toolbar/constants.ts:1](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/constants.ts#L1)

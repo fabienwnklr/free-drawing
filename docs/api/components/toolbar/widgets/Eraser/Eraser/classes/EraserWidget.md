@@ -30,7 +30,7 @@
 
 #### Source
 
-[components/toolbar/widgets/Eraser/Eraser.ts:12](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Eraser/Eraser.ts#L12)
+[packages/free-drawing/src/components/toolbar/widgets/Eraser/Eraser.ts:24](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/Eraser/Eraser.ts#L24)
 
 ## Properties
 
@@ -44,7 +44,7 @@
 
 #### Source
 
-[components/toolbar/widgets/BaseWidget.ts:9](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/BaseWidget.ts#L9)
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:21](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L21)
 
 ***
 
@@ -58,7 +58,23 @@
 
 #### Source
 
-[components/toolbar/widgets/BaseWidget.ts:6](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/BaseWidget.ts#L6)
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:18](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L18)
+
+***
+
+### cursor
+
+> **`protected`** **cursor**: `string` = `crosshairCursor`
+
+Stage cursor while widget is active
+
+#### Overrides
+
+[`BaseWidget`](../../../BaseWidget/classes/BaseWidget.md).[`cursor`](../../../BaseWidget/classes/BaseWidget.md#cursor)
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/widgets/Eraser/Eraser.ts:20](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/Eraser/Eraser.ts#L20)
 
 ***
 
@@ -72,13 +88,13 @@
 
 #### Source
 
-[components/toolbar/widgets/Eraser/Eraser.ts:12](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Eraser/Eraser.ts#L12)
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:36](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L36)
 
 ***
 
 ### id
 
-> **id**: `"pan"` \| `"selection"` \| `"brush"` \| `"eraser"` \| `"undo"` \| `"redo"` \| `"text"` \| `"rect"` \| `"circle"` \| `"ellipse"` \| `"square"` \| `"arrow"` \| `"line"` \| `"star"` \| `"triangle"` \| `"polygon"`
+> **id**: `"pan"` \| `"selection"` \| `"brush"` \| `"eraser"` \| `"undo"` \| `"redo"` \| `"text"` \| `"rect"` \| `"circle"` \| `"ellipse"` \| `"square"` \| `"arrow"` \| `"line"` \| `"star"` \| `"triangle"` \| `"polygon"` \| `"diamond"` \| `"heart"` \| `"cloud"` \| `"highlighter"` \| `"laser"` \| `"frame"`
 
 #### Inherited from
 
@@ -86,17 +102,55 @@
 
 #### Source
 
-[components/toolbar/widgets/BaseWidget.ts:10](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/BaseWidget.ts#L10)
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:22](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L22)
 
 ***
 
-### isErasing
+### inAction
 
-> **isErasing**: `boolean` = `false`
+> **inAction**: `boolean` = `false`
+
+Pointer action in progress (drawing, erasing, selecting...), see `startAction` / `endAction`
+
+#### Inherited from
+
+[`BaseWidget`](../../../BaseWidget/classes/BaseWidget.md).[`inAction`](../../../BaseWidget/classes/BaseWidget.md#inaction)
 
 #### Source
 
-[components/toolbar/widgets/Eraser/Eraser.ts:9](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Eraser/Eraser.ts#L9)
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:29](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L29)
+
+***
+
+### options
+
+> **`readonly`** **options**: [`WidgetOptions`](../../../../../../@types/toolbar/type-aliases/WidgetOptions.md)
+
+Widget options given with drawer `widgets` option
+
+#### Inherited from
+
+[`BaseWidget`](../../../BaseWidget/classes/BaseWidget.md).[`options`](../../../BaseWidget/classes/BaseWidget.md#options)
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:27](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L27)
+
+***
+
+### overlay?
+
+> **`optional`** **overlay**: [`ToolOverlay`](../../../BaseWidget/type-aliases/ToolOverlay.md)
+
+Options of the tool (color, width...), shown while widget is active (see `showOverlayOnActive`)
+
+#### Inherited from
+
+[`BaseWidget`](../../../BaseWidget/classes/BaseWidget.md).[`overlay`](../../../BaseWidget/classes/BaseWidget.md#overlay)
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:25](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L25)
 
 ***
 
@@ -110,34 +164,57 @@
 
 #### Source
 
-[components/toolbar/widgets/BaseWidget.ts:11](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/BaseWidget.ts#L11)
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:23](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L23)
 
-## Methods
+***
 
-### \_socketDraw()?
+### showOverlayOnActive
 
-> **`optional`** **\_socketDraw**(`data`): `void`
+> **`protected`** **showOverlayOnActive**: `boolean` = `true`
 
-Get the drawing data from the socket and basically
-draw on our canvas whatever the other person draws
-
-#### Parameters
-
-• **data**: `string`
-
-#### Returns
-
-`void`
+Show `overlay` while widget is active (false when overlay depends on something else, e.g. selection)
 
 #### Inherited from
 
-[`BaseWidget`](../../../BaseWidget/classes/BaseWidget.md).[`_socketDraw`](../../../BaseWidget/classes/BaseWidget.md#_socketdraw)
+[`BaseWidget`](../../../BaseWidget/classes/BaseWidget.md).[`showOverlayOnActive`](../../../BaseWidget/classes/BaseWidget.md#showoverlayonactive)
 
 #### Source
 
-[components/toolbar/widgets/BaseWidget.ts:73](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/BaseWidget.ts#L73)
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:31](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L31)
+
+## Accessors
+
+### isDisabled
+
+> **`get`** **isDisabled**(): `boolean`
+
+#### Returns
+
+`boolean`
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:103](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L103)
 
 ***
+
+### isErasing
+
+> **`get`** **isErasing**(): `boolean`
+
+#### Deprecated
+
+use `inAction`
+
+#### Returns
+
+`boolean`
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/widgets/Eraser/Eraser.ts:33](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/Eraser/Eraser.ts#L33)
+
+## Methods
 
 ### addTo()
 
@@ -162,13 +239,79 @@ Returns the element that was just added to `parent`.
 
 #### Source
 
-[components/toolbar/widgets/BaseWidget.ts:43](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/BaseWidget.ts#L43)
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:69](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L69)
+
+***
+
+### afterDraw()
+
+> **`protected`** **afterDraw**(`shapes`): `void`
+
+Shapes drawn with this tool: selection tool activated with them, unless tool is kept (`keepTool` preference)
+
+#### Parameters
+
+• **shapes**: [`DrawingShape`](../../../../../../@types/drawer/type-aliases/DrawingShape.md)[]
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+[`BaseWidget`](../../../BaseWidget/classes/BaseWidget.md).[`afterDraw`](../../../BaseWidget/classes/BaseWidget.md#afterdraw)
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:189](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L189)
+
+***
+
+### clearSelection()
+
+> **clearSelection**(): `void`
+
+Unselect shapes, with selection widget (implemented by it)
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+[`BaseWidget`](../../../BaseWidget/classes/BaseWidget.md).[`clearSelection`](../../../BaseWidget/classes/BaseWidget.md#clearselection)
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:181](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L181)
+
+***
+
+### endAction()
+
+> **`protected`** **endAction**(): `void`
+
+Pointer action ends (pointer up)
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+[`BaseWidget`](../../../BaseWidget/classes/BaseWidget.md).[`endAction`](../../../BaseWidget/classes/BaseWidget.md#endaction)
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:165](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L165)
 
 ***
 
 ### initEvents()
 
 > **`protected`** **initEvents**(): `void`
+
+Add widget events (with `onStage`), called on activation
 
 #### Returns
 
@@ -180,7 +323,7 @@ Returns the element that was just added to `parent`.
 
 #### Source
 
-[components/toolbar/widgets/Eraser/Eraser.ts:17](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Eraser/Eraser.ts#L17)
+[packages/free-drawing/src/components/toolbar/widgets/Eraser/Eraser.ts:37](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/Eraser/Eraser.ts#L37)
 
 ***
 
@@ -188,23 +331,53 @@ Returns the element that was just added to `parent`.
 
 > **`protected`** **onActive**(): `void`
 
+Called on activation, after events, cursor and overlay setup
+
 #### Returns
 
 `void`
 
-#### Overrides
+#### Inherited from
 
 [`BaseWidget`](../../../BaseWidget/classes/BaseWidget.md).[`onActive`](../../../BaseWidget/classes/BaseWidget.md#onactive)
 
 #### Source
 
-[components/toolbar/widgets/Eraser/Eraser.ts:82](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Eraser/Eraser.ts#L82)
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:137](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L137)
+
+***
+
+### onConstrainChange()?
+
+> **`protected`** **`optional`** **onConstrainChange**(`constrain`): `void`
+
+Shift pressed or released during a pointer action (square, circle, straight line...), without pointer move
+
+#### Parameters
+
+• **constrain**: `boolean`
+
+Shift pressed
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+[`BaseWidget`](../../../BaseWidget/classes/BaseWidget.md).[`onConstrainChange`](../../../BaseWidget/classes/BaseWidget.md#onconstrainchange)
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:148](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L148)
 
 ***
 
 ### onDesactive()
 
 > **`protected`** **onDesactive**(): `void`
+
+Called on deactivation, after events removal and overlay hidden
 
 #### Returns
 
@@ -216,7 +389,36 @@ Returns the element that was just added to `parent`.
 
 #### Source
 
-[components/toolbar/widgets/Eraser/Eraser.ts:87](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Eraser/Eraser.ts#L87)
+[packages/free-drawing/src/components/toolbar/widgets/Eraser/Eraser.ts:137](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/Eraser/Eraser.ts#L137)
+
+***
+
+### onStage()
+
+> **`protected`** **onStage**(`events`, `handler`): `void`
+
+Listen stage events while widget is active.
+Events are namespaced with widget id, so they are removed on deactivation without removing other listeners.
+
+#### Parameters
+
+• **events**: `string`
+
+Space separated event names
+
+• **handler**: `KonvaEventListener`\<`Stage`, `any`\>
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+[`BaseWidget`](../../../BaseWidget/classes/BaseWidget.md).[`onStage`](../../../BaseWidget/classes/BaseWidget.md#onstage)
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:113](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L113)
 
 ***
 
@@ -224,17 +426,19 @@ Returns the element that was just added to `parent`.
 
 > **`protected`** **removeEvents**(): `void`
 
+Remove widget events, called on deactivation
+
 #### Returns
 
 `void`
 
-#### Overrides
+#### Inherited from
 
 [`BaseWidget`](../../../BaseWidget/classes/BaseWidget.md).[`removeEvents`](../../../BaseWidget/classes/BaseWidget.md#removeevents)
 
 #### Source
 
-[components/toolbar/widgets/Eraser/Eraser.ts:71](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Eraser/Eraser.ts#L71)
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:130](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L130)
 
 ***
 
@@ -256,13 +460,81 @@ Returns the element that was just added to `parent`.
 
 #### Source
 
-[components/toolbar/widgets/BaseWidget.ts:81](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/BaseWidget.ts#L81)
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:213](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L213)
+
+***
+
+### setDisabled()
+
+> **setDisabled**(`disabled`): `void`
+
+#### Parameters
+
+• **disabled**: `boolean`
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+[`BaseWidget`](../../../BaseWidget/classes/BaseWidget.md).[`setDisabled`](../../../BaseWidget/classes/BaseWidget.md#setdisabled)
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:91](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L91)
+
+***
+
+### shareLive()
+
+> **`protected`** **shareLive**(...`shapes`): `void`
+
+Shapes being drawn shown to collaborators while drawing (final state is sent on change)
+
+#### Parameters
+
+• ...**shapes**: [`DrawingShape`](../../../../../../@types/drawer/type-aliases/DrawingShape.md)[]
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+[`BaseWidget`](../../../BaseWidget/classes/BaseWidget.md).[`shareLive`](../../../BaseWidget/classes/BaseWidget.md#sharelive)
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:174](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L174)
+
+***
+
+### startAction()
+
+> **`protected`** **startAction**(): `void`
+
+Pointer action starts (pointer down): shortcuts are disabled and UI (toolbar, overlays...) ignores pointer
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+[`BaseWidget`](../../../BaseWidget/classes/BaseWidget.md).[`startAction`](../../../BaseWidget/classes/BaseWidget.md#startaction)
+
+#### Source
+
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:157](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L157)
 
 ***
 
 ### toggleDisable()
 
 > **toggleDisable**(): `void`
+
+Disable / enable widget, a disabled widget can not be activated
 
 #### Returns
 
@@ -274,7 +546,7 @@ Returns the element that was just added to `parent`.
 
 #### Source
 
-[components/toolbar/widgets/BaseWidget.ts:56](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/BaseWidget.ts#L56)
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:87](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L87)
 
 ***
 
@@ -286,10 +558,10 @@ Returns the element that was just added to `parent`.
 
 `void`
 
-#### Overrides
+#### Inherited from
 
 [`BaseWidget`](../../../BaseWidget/classes/BaseWidget.md).[`updateCursor`](../../../BaseWidget/classes/BaseWidget.md#updatecursor)
 
 #### Source
 
-[components/toolbar/widgets/Eraser/Eraser.ts:78](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/toolbar/widgets/Eraser/Eraser.ts#L78)
+[packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts:150](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/toolbar/widgets/BaseWidget.ts#L150)

@@ -14,7 +14,7 @@
 
 #### Source
 
-[@types/toolbar.d.ts:13](https://github.com/fabienwnklr/free-drawing/blob/master/src/@types/toolbar.d.ts#L13)
+[packages/free-drawing/src/@types/toolbar.ts:13](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/toolbar.ts#L13)
 
 ***
 
@@ -24,7 +24,7 @@
 
 #### Source
 
-[@types/toolbar.d.ts:4](https://github.com/fabienwnklr/free-drawing/blob/master/src/@types/toolbar.d.ts#L4)
+[packages/free-drawing/src/@types/toolbar.ts:4](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/toolbar.ts#L4)
 
 ***
 
@@ -34,7 +34,27 @@
 
 #### Source
 
-[@types/toolbar.d.ts:10](https://github.com/fabienwnklr/free-drawing/blob/master/src/@types/toolbar.d.ts#L10)
+[packages/free-drawing/src/@types/toolbar.ts:10](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/toolbar.ts#L10)
+
+***
+
+### cloud
+
+> **cloud**: `"cloud"`
+
+#### Source
+
+[packages/free-drawing/src/@types/toolbar.ts:20](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/toolbar.ts#L20)
+
+***
+
+### diamond
+
+> **diamond**: `"diamond"`
+
+#### Source
+
+[packages/free-drawing/src/@types/toolbar.ts:18](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/toolbar.ts#L18)
 
 ***
 
@@ -44,7 +64,7 @@
 
 #### Source
 
-[@types/toolbar.d.ts:11](https://github.com/fabienwnklr/free-drawing/blob/master/src/@types/toolbar.d.ts#L11)
+[packages/free-drawing/src/@types/toolbar.ts:11](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/toolbar.ts#L11)
 
 ***
 
@@ -54,7 +74,47 @@
 
 #### Source
 
-[@types/toolbar.d.ts:5](https://github.com/fabienwnklr/free-drawing/blob/master/src/@types/toolbar.d.ts#L5)
+[packages/free-drawing/src/@types/toolbar.ts:5](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/toolbar.ts#L5)
+
+***
+
+### frame
+
+> **frame**: `"frame"`
+
+#### Source
+
+[packages/free-drawing/src/@types/toolbar.ts:23](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/toolbar.ts#L23)
+
+***
+
+### heart
+
+> **heart**: `"heart"`
+
+#### Source
+
+[packages/free-drawing/src/@types/toolbar.ts:19](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/toolbar.ts#L19)
+
+***
+
+### highlighter
+
+> **highlighter**: `"highlighter"`
+
+#### Source
+
+[packages/free-drawing/src/@types/toolbar.ts:21](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/toolbar.ts#L21)
+
+***
+
+### laser
+
+> **laser**: `"laser"`
+
+#### Source
+
+[packages/free-drawing/src/@types/toolbar.ts:22](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/toolbar.ts#L22)
 
 ***
 
@@ -64,7 +124,7 @@
 
 #### Source
 
-[@types/toolbar.d.ts:14](https://github.com/fabienwnklr/free-drawing/blob/master/src/@types/toolbar.d.ts#L14)
+[packages/free-drawing/src/@types/toolbar.ts:14](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/toolbar.ts#L14)
 
 ***
 
@@ -74,7 +134,7 @@
 
 #### Source
 
-[@types/toolbar.d.ts:2](https://github.com/fabienwnklr/free-drawing/blob/master/src/@types/toolbar.d.ts#L2)
+[packages/free-drawing/src/@types/toolbar.ts:2](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/toolbar.ts#L2)
 
 ***
 
@@ -84,7 +144,7 @@
 
 #### Source
 
-[@types/toolbar.d.ts:17](https://github.com/fabienwnklr/free-drawing/blob/master/src/@types/toolbar.d.ts#L17)
+[packages/free-drawing/src/@types/toolbar.ts:17](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/toolbar.ts#L17)
 
 ***
 
@@ -94,7 +154,7 @@
 
 #### Source
 
-[@types/toolbar.d.ts:9](https://github.com/fabienwnklr/free-drawing/blob/master/src/@types/toolbar.d.ts#L9)
+[packages/free-drawing/src/@types/toolbar.ts:9](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/toolbar.ts#L9)
 
 ***
 
@@ -104,7 +164,7 @@
 
 #### Source
 
-[@types/toolbar.d.ts:7](https://github.com/fabienwnklr/free-drawing/blob/master/src/@types/toolbar.d.ts#L7)
+[packages/free-drawing/src/@types/toolbar.ts:7](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/toolbar.ts#L7)
 
 ***
 
@@ -114,7 +174,7 @@
 
 #### Source
 
-[@types/toolbar.d.ts:3](https://github.com/fabienwnklr/free-drawing/blob/master/src/@types/toolbar.d.ts#L3)
+[packages/free-drawing/src/@types/toolbar.ts:3](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/toolbar.ts#L3)
 
 ***
 
@@ -124,7 +184,7 @@
 
 #### Source
 
-[@types/toolbar.d.ts:12](https://github.com/fabienwnklr/free-drawing/blob/master/src/@types/toolbar.d.ts#L12)
+[packages/free-drawing/src/@types/toolbar.ts:12](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/toolbar.ts#L12)
 
 ***
 
@@ -134,7 +194,7 @@
 
 #### Source
 
-[@types/toolbar.d.ts:15](https://github.com/fabienwnklr/free-drawing/blob/master/src/@types/toolbar.d.ts#L15)
+[packages/free-drawing/src/@types/toolbar.ts:15](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/toolbar.ts#L15)
 
 ***
 
@@ -144,7 +204,7 @@
 
 #### Source
 
-[@types/toolbar.d.ts:8](https://github.com/fabienwnklr/free-drawing/blob/master/src/@types/toolbar.d.ts#L8)
+[packages/free-drawing/src/@types/toolbar.ts:8](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/toolbar.ts#L8)
 
 ***
 
@@ -154,7 +214,7 @@
 
 #### Source
 
-[@types/toolbar.d.ts:16](https://github.com/fabienwnklr/free-drawing/blob/master/src/@types/toolbar.d.ts#L16)
+[packages/free-drawing/src/@types/toolbar.ts:16](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/toolbar.ts#L16)
 
 ***
 
@@ -164,4 +224,4 @@
 
 #### Source
 
-[@types/toolbar.d.ts:6](https://github.com/fabienwnklr/free-drawing/blob/master/src/@types/toolbar.d.ts#L6)
+[packages/free-drawing/src/@types/toolbar.ts:6](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/toolbar.ts#L6)

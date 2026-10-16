@@ -28,4 +28,4 @@ Merged object
 
 ## Source
 
-[utils/functions.ts:26](https://github.com/fabienwnklr/free-drawing/blob/master/src/utils/functions.ts#L26)
+[packages/free-drawing/src/utils/functions.ts:26](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/utils/functions.ts#L26)

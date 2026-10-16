@@ -6,8 +6,8 @@
 
 # Type alias: ColorLike
 
-> **ColorLike**: [`RGB`](RGB.md) \| [`RGBA`](RGBA.md) \| [`HEX`](HEX.md) \| [`CssColorNames`](CssColorNames.md)
+> **ColorLike**: `RGB` \| `RGBA` \| `HEX` \| `CssColorNames` \| `"transparent"`
 
 ## Source
 
-[@types/drawer.d.ts:172](https://github.com/fabienwnklr/free-drawing/blob/master/src/@types/drawer.d.ts#L172)
+[packages/free-drawing/src/@types/drawer.ts:303](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/drawer.ts#L303)

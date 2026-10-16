@@ -18,4 +18,4 @@
 
 ## Source
 
-[utils/dom.ts:1](https://github.com/fabienwnklr/free-drawing/blob/master/src/utils/dom.ts#L1)
+[packages/free-drawing/src/utils/dom.ts:1](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/utils/dom.ts#L1)

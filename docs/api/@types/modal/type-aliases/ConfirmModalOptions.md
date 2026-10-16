@@ -10,17 +10,19 @@
 
 ## Type declaration
 
-### cancelLabel
+### cancelLabel?
 
-> **cancelLabel**: `string`
+> **`optional`** **cancelLabel**: `string`
 
-### confirmLabel
+### confirmLabel?
 
-> **confirmLabel**: `string`
+> **`optional`** **confirmLabel**: `string`
 
-### message
+### message?
 
-> **message**: `string`
+> **`optional`** **message**: `string`
+
+Translated texts by default
 
 ### onCancel()
 
@@ -28,7 +30,7 @@
 
 #### Parameters
 
-• **modal**: `ConfirmModal`
+• **modal**: [`ConfirmModal`](../../../components/Modal/ConfirmModal/classes/ConfirmModal.md)
 
 #### Returns
 
@@ -40,7 +42,7 @@
 
 #### Parameters
 
-• **modal**: `ConfirmModal`
+• **modal**: [`ConfirmModal`](../../../components/Modal/ConfirmModal/classes/ConfirmModal.md)
 
 #### Returns
 
@@ -48,4 +50,4 @@
 
 ## Source
 
-[@types/modal.d.ts:12](https://github.com/fabienwnklr/free-drawing/blob/master/src/@types/modal.d.ts#L12)
+[packages/free-drawing/src/@types/modal.ts:14](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/modal.ts#L14)

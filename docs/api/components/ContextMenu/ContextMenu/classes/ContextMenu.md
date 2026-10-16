@@ -6,6 +6,11 @@
 
 # Class: ContextMenu
 
+Menu of right click (or context menu key, Shift + F10): actions on selection when a shape is under pointer
+or selected (order, rotate, flip, fit width of texts, duplicate, lock, delete, copy as image; unlock for locked
+shapes), else actions on
+drawing (paste, select all, copy as image, snapping, grid), with their shortcuts
+
 ## Constructors
 
 ### new ContextMenu(drawer)
@@ -22,7 +27,7 @@
 
 #### Source
 
-[components/ContextMenu/ContextMenu.ts:19](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/ContextMenu/ContextMenu.ts#L19)
+[packages/free-drawing/src/components/ContextMenu/ContextMenu.ts:35](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/ContextMenu/ContextMenu.ts#L35)
 
 ## Properties
 
@@ -32,27 +37,17 @@
 
 #### Source
 
-[components/ContextMenu/ContextMenu.ts:15](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/ContextMenu/ContextMenu.ts#L15)
+[packages/free-drawing/src/components/ContextMenu/ContextMenu.ts:29](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/ContextMenu/ContextMenu.ts#L29)
 
 ***
 
 ### $list
 
-> **$list**: `HTMLUListElement`
+> **$list**: `HTMLDivElement`
 
 #### Source
 
-[components/ContextMenu/ContextMenu.ts:11](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/ContextMenu/ContextMenu.ts#L11)
-
-***
-
-### $lockShapeBtn
-
-> **$lockShapeBtn**: `HTMLButtonElement`
-
-#### Source
-
-[components/ContextMenu/ContextMenu.ts:16](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/ContextMenu/ContextMenu.ts#L16)
+[packages/free-drawing/src/components/ContextMenu/ContextMenu.ts:26](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/ContextMenu/ContextMenu.ts#L26)
 
 ***
 
@@ -62,7 +57,7 @@
 
 #### Source
 
-[components/ContextMenu/ContextMenu.ts:10](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/ContextMenu/ContextMenu.ts#L10)
+[packages/free-drawing/src/components/ContextMenu/ContextMenu.ts:25](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/ContextMenu/ContextMenu.ts#L25)
 
 ***
 
@@ -72,7 +67,7 @@
 
 #### Source
 
-[components/ContextMenu/ContextMenu.ts:13](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/ContextMenu/ContextMenu.ts#L13)
+[packages/free-drawing/src/components/ContextMenu/ContextMenu.ts:27](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/ContextMenu/ContextMenu.ts#L27)
 
 ***
 
@@ -82,17 +77,7 @@
 
 #### Source
 
-[components/ContextMenu/ContextMenu.ts:14](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/ContextMenu/ContextMenu.ts#L14)
-
-***
-
-### currentShape
-
-> **currentShape**: `null` \| `Shape`\<`ShapeConfig`\> = `null`
-
-#### Source
-
-[components/ContextMenu/ContextMenu.ts:9](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/ContextMenu/ContextMenu.ts#L9)
+[packages/free-drawing/src/components/ContextMenu/ContextMenu.ts:28](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/ContextMenu/ContextMenu.ts#L28)
 
 ***
 
@@ -102,17 +87,7 @@
 
 #### Source
 
-[components/ContextMenu/ContextMenu.ts:8](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/ContextMenu/ContextMenu.ts#L8)
-
-***
-
-### focusedShape
-
-> **focusedShape**: `null` \| `Shape`\<`ShapeConfig`\> \| `Stage` = `null`
-
-#### Source
-
-[components/ContextMenu/ContextMenu.ts:17](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/ContextMenu/ContextMenu.ts#L17)
+[packages/free-drawing/src/components/ContextMenu/ContextMenu.ts:24](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/ContextMenu/ContextMenu.ts#L24)
 
 ## Methods
 
@@ -120,7 +95,7 @@
 
 > **hide**(): `void`
 
-Hide the context menu
+Hide the context menu, focus back on drawer if it was in menu
 
 #### Returns
 
@@ -128,7 +103,21 @@ Hide the context menu
 
 #### Source
 
-[components/ContextMenu/ContextMenu.ts:141](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/ContextMenu/ContextMenu.ts#L141)
+[packages/free-drawing/src/components/ContextMenu/ContextMenu.ts:352](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/ContextMenu/ContextMenu.ts#L352)
+
+***
+
+### isVisible()
+
+> **isVisible**(): `boolean`
+
+#### Returns
+
+`boolean`
+
+#### Source
+
+[packages/free-drawing/src/components/ContextMenu/ContextMenu.ts:359](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/ContextMenu/ContextMenu.ts#L359)
 
 ***
 
@@ -136,7 +125,7 @@ Hide the context menu
 
 > **show**(): `void`
 
-Show the context menu
+Show items of selection or drawing, first one focused (keyboard navigation)
 
 #### Returns
 
@@ -144,4 +133,4 @@ Show the context menu
 
 #### Source
 
-[components/ContextMenu/ContextMenu.ts:134](https://github.com/fabienwnklr/free-drawing/blob/master/src/components/ContextMenu/ContextMenu.ts#L134)
+[packages/free-drawing/src/components/ContextMenu/ContextMenu.ts:332](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/components/ContextMenu/ContextMenu.ts#L332)

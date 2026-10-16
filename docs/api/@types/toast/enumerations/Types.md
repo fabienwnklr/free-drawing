@@ -14,7 +14,7 @@
 
 #### Source
 
-[@types/toast.d.ts:5](https://github.com/fabienwnklr/free-drawing/blob/master/src/@types/toast.d.ts#L5)
+[packages/free-drawing/src/@types/toast.ts:5](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/toast.ts#L5)
 
 ***
 
@@ -24,7 +24,7 @@
 
 #### Source
 
-[@types/toast.d.ts:6](https://github.com/fabienwnklr/free-drawing/blob/master/src/@types/toast.d.ts#L6)
+[packages/free-drawing/src/@types/toast.ts:6](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/toast.ts#L6)
 
 ***
 
@@ -34,7 +34,7 @@
 
 #### Source
 
-[@types/toast.d.ts:3](https://github.com/fabienwnklr/free-drawing/blob/master/src/@types/toast.d.ts#L3)
+[packages/free-drawing/src/@types/toast.ts:3](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/toast.ts#L3)
 
 ***
 
@@ -44,7 +44,7 @@
 
 #### Source
 
-[@types/toast.d.ts:2](https://github.com/fabienwnklr/free-drawing/blob/master/src/@types/toast.d.ts#L2)
+[packages/free-drawing/src/@types/toast.ts:2](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/toast.ts#L2)
 
 ***
 
@@ -54,4 +54,4 @@
 
 #### Source
 
-[@types/toast.d.ts:4](https://github.com/fabienwnklr/free-drawing/blob/master/src/@types/toast.d.ts#L4)
+[packages/free-drawing/src/@types/toast.ts:4](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/toast.ts#L4)

@@ -15,3 +15,8 @@
 ### Type Aliases
 
 - [AvailableTools](type-aliases/AvailableTools.md)
+- [BrushWidgetOptions](type-aliases/BrushWidgetOptions.md)
+- [WidgetGroupOptions](type-aliases/WidgetGroupOptions.md)
+- [WidgetName](type-aliases/WidgetName.md)
+- [WidgetOptions](type-aliases/WidgetOptions.md)
+- [WidgetsOptions](type-aliases/WidgetsOptions.md)

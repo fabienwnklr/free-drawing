@@ -11,3 +11,15 @@
 ### Classes
 
 - [GroupWidget](classes/GroupWidget.md)
+
+### Type Aliases
+
+- [GroupWidgetOptions](type-aliases/GroupWidgetOptions.md)
+
+### Variables
+
+- [groupIcons](variables/groupIcons.md)
+
+### Functions
+
+- [getGroupIcon](functions/getGroupIcon.md)

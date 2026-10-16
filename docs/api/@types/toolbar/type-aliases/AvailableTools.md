@@ -10,4 +10,4 @@
 
 ## Source
 
-[@types/toolbar.d.ts:20](https://github.com/fabienwnklr/free-drawing/blob/master/src/@types/toolbar.d.ts#L20)
+[packages/free-drawing/src/@types/toolbar.ts:26](https://github.com/fabienwnklr/free-drawing/blob/master/packages/free-drawing/src/@types/toolbar.ts#L26)
