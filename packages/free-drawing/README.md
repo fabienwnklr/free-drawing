@@ -288,6 +288,8 @@ With the selection tool:
 - a selection rectangle selects the shapes it touches (Shift adds them): lines and strokes where they are drawn, rotated shapes as drawn. Drawn inside a big shape or a frame, it selects the shapes it touches there, not the big shape;
 - a pressed shape is selected and dragged alone, the selection is dragged from any place of its box.
 
+The options panel of a selection shows the options of every kind of selected shape: stroke and its style, background, corners, text font, size, style and alignment... Each option changes the selected shapes it applies to (e.g. the background of rectangles and ellipses, the font of texts). A selection of texts only shows the text panel.
+
 Shift constrains drawing and selected shapes, also pressed or released without moving pointer:
 
 | Action | With Shift |

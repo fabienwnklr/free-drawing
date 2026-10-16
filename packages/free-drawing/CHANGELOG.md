@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.12.0](https://github.com/fabienwnklr/free-drawing/compare/v7.11.0...v7.12.0) (2026-10-16)
+
+
+### Features
+
+* **selection:** the options panel of a mixed selection (e.g. text, rectangle and brush stroke) shows the options of every kind of selected shape, text options included, each one applied to the shapes it fits; fields show the values of the shapes they apply to
+
 ## [7.11.0](https://github.com/fabienwnklr/free-drawing/compare/v7.10.0...v7.11.0) (2026-10-16)
 
 

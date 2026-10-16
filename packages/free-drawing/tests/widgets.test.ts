@@ -339,8 +339,11 @@ describe('Widgets', () => {
     expect(filled.fill()).toBeUndefined();
     expect(filled.toObject().attrs.fill).toBeUndefined();
 
+    // with brush line: shown, applied to rectangles and ellipses only
     selectWidget.transformer.nodes([filled, brushLine]);
     selectWidget.showOverlay([filled, brushLine]);
+    expect(fillShown(selectWidget)).toBe(true);
+    selectWidget.showOverlay([brushLine]);
     expect(fillShown(selectWidget)).toBe(false);
     const brushColor = brushLine.fill();
     drawer.setFillColor('#ffc9c9');

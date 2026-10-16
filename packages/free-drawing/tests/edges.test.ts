@@ -54,10 +54,11 @@ describe('Edges', () => {
     const ellipse = drawer.addShape(new Ellipse({ name: shapeName.ellipse, radiusX: 20, radiusY: 20 }));
     const onOptions = vi.fn();
 
-    selectWidget.select([rect]);
-    expect(selectWidget.overlay.$edgesContainer.style.display).toBe('');
-    selectWidget.select([rect, ellipse]);
+    selectWidget.select([ellipse]);
     expect(selectWidget.overlay.$edgesContainer.style.display).toBe('none');
+    // with a rectangle: applied to it only
+    selectWidget.select([rect, ellipse]);
+    expect(selectWidget.overlay.$edgesContainer.style.display).toBe('');
 
     drawer.on('drawer.options.change', onOptions);
     drawer.setEdges('round');

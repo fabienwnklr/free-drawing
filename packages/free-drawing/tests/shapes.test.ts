@@ -117,7 +117,7 @@ describe('Shape tools', () => {
     expect(overlay.$strokeStyleContainer.style.display).not.toBe('none');
   });
 
-  it('Selection overlay shows stroke style for outline shapes only', () => {
+  it('Selection overlay shows stroke style when outline shapes are selected', () => {
     const drawer = drawerWithTool('square');
     drag(drawer, [10, 10], [110, 60]);
     drawer.getWidget<BaseWidget>('brush')!.setActive(true);
@@ -128,7 +128,11 @@ describe('Shape tools', () => {
     selectWidget.showOverlay([rect]);
     expect(selectWidget.overlay.$strokeStyleContainer.style.display).not.toBe('none');
 
+    // with brush line: applied to rectangle only
     selectWidget.showOverlay([rect, brushLine]);
+    expect(selectWidget.overlay.$strokeStyleContainer.style.display).not.toBe('none');
+
+    selectWidget.showOverlay([brushLine]);
     expect(selectWidget.overlay.$strokeStyleContainer.style.display).toBe('none');
   });
 

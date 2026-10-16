@@ -3,7 +3,7 @@ import type { OptionsChange, TextStyle } from '@/@types/drawer';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Group } from 'konva/lib/Group';
 import { Text } from 'konva/lib/shapes/Text';
-import { BaseOverlay } from '@/components/tools/Overlay/BaseOverlay';
+import { BaseOverlay, type OverlayOptions } from '@/components/tools/Overlay/BaseOverlay';
 import { dataAttributes } from '@/constants';
 import { setPressed } from '@/utils/dom';
 import AlignLeftIcon from '@/icons/align-left.svg?raw';
@@ -61,9 +61,10 @@ export class TextOverlay extends BaseOverlay {
   /**
    * Create the text panel: common sections without stroke width, text sections between color and opacity
    * @param drawer Drawer whose text options and selected texts the fields change
+   * @param options Options of the panel, e.g. stroke width shown by the selection panel
    */
-  constructor(drawer: Drawer) {
-    super(drawer, { widthBtns: false, colorTitle: 'overlay.color', label: 'overlay.text' });
+  constructor(drawer: Drawer, options?: Partial<OverlayOptions>) {
+    super(drawer, { widthBtns: false, colorTitle: 'overlay.color', label: 'overlay.text', ...options });
     this.$overlayContainer.classList.add('drawer-text-overlay');
 
     this._createFontFamilyField();
@@ -203,6 +204,16 @@ export class TextOverlay extends BaseOverlay {
       textDecoration: text.textDecoration() as TextStyle['textDecoration'],
       align: text.align() as TextStyle['align'],
     };
+  }
+
+  /**
+   * Show / hide text sections (font family, size, style, alignment), e.g. selection with texts
+   * @param visible True to show the sections, false to hide them
+   */
+  toggleTextFields(visible: boolean) {
+    [this.$fontFamilyContainer, this.$fontSizeContainer, this.$fontStyleContainer, this.$textAlignContainer].forEach(
+      ($section) => ($section.style.display = visible ? '' : 'none')
+    );
   }
 
   /**

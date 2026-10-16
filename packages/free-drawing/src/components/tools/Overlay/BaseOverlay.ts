@@ -12,7 +12,8 @@ import BringToFrontIcon from '@/icons/bring-to-front.svg?raw';
 import '@/components/tools/Overlay/overlay.scss';
 import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { Group } from 'konva/lib/Group';
-import { dataAttributes, drawerEvents, fillShapes } from '@/constants';
+import { Text } from 'konva/lib/shapes/Text';
+import { dataAttributes, drawerEvents, edgesShapes, fillShapes, shapeName, strokeStyleShapes } from '@/constants';
 import { ColorPicker } from '@/components/ColorPicker/ColorPicker';
 import { createButton, setLabel, setPressed, uniqueId } from '@/utils/dom';
 import { getEdges, getStrokeStyle } from '@/utils/stroke';
@@ -44,8 +45,10 @@ export class BaseOverlay {
   /** Drawer whose options and selection the fields change */
   drawer: Drawer;
 
-  /** Stroke color section (text color for texts), titled by `colorTitle` option */
+  /** Stroke color section (text color for texts), titled by `colorTitle` option or `setColorTitle` */
   $strokeColorContainer!: HTMLDivElement;
+  /** Key of the title of stroke color section */
+  #colorTitle: TranslationKey = 'overlay.stroke';
   /** Element of stroke color buttons */
   $strokeColorBtnContainer!: HTMLDivElement;
   /** Stroke color choice calling `drawer.setStrokeColor`, without transparent: drawing would be invisible */
@@ -154,9 +157,15 @@ export class BaseOverlay {
    * Stroke color section: palette (black, red, green, blue, orange) and custom color
    */
   private _createStrokeColorFields() {
-    const { $container, $btnContainer } = this._createSection(this.options?.colorTitle ?? 'overlay.stroke');
+    this.#colorTitle = this.options?.colorTitle ?? 'overlay.stroke';
+
+    const { $container, $btnContainer } = this._createSection(this.#colorTitle);
+    const $title = $container.querySelector<HTMLElement>('.title')!;
+
     this.$strokeColorContainer = $container;
     this.$strokeColorBtnContainer = $btnContainer;
+    // title changed by setColorTitle
+    this.drawer.i18n.translate((t) => ($title.textContent = t(this.#colorTitle)));
 
     const strokeColors: { color: ColorLike; label: TranslationKey }[] = [
       { color: '#000', label: 'color.black' },
@@ -429,20 +438,25 @@ export class BaseOverlay {
     this.$orderContainer.style.display = shape?.length ? '' : 'none';
 
     const { strokeColor, fillColor, strokeWidth, strokeStyle, edges, opacity } = this.drawer.options;
+    const shapes = (shape ?? []).filter((s): s is Shape<ShapeConfig> => s instanceof Shape);
     let data: OptionsChange = { strokeColor, fillColor, strokeWidth, strokeStyle, edges, opacity };
 
-    if (shape && shape[0] instanceof Shape) {
-      const hasFill = fillShapes.some((name) => shape[0].hasName(name));
+    if (shapes.length) {
+      const [first] = shapes;
+      // each section shows the first selected shape it applies to
+      const find = (names: string[]) => shapes.find((s) => names.some((name) => s.hasName(name)));
+      const filled = find(fillShapes);
+      const outlined = shapes.find((s) => !(s instanceof Text) && !s.hasName(shapeName.highlighter)) ?? first;
 
       data = {
         // text color is stored in fill
-        strokeColor: (shape[0].stroke() || shape[0].fill()) as ColorLike,
+        strokeColor: (first.stroke() || first.fill()) as ColorLike,
         // no fill is transparent
-        fillColor: hasFill ? ((shape[0].fill() || 'transparent') as ColorLike) : fillColor,
-        strokeWidth: shape[0].strokeWidth(),
-        strokeStyle: getStrokeStyle(shape[0].dash()),
-        edges: getEdges(shape[0].getAttr('cornerRadius')),
-        opacity: shape[0].opacity(),
+        fillColor: filled ? ((filled.fill() || 'transparent') as ColorLike) : fillColor,
+        strokeWidth: outlined.strokeWidth(),
+        strokeStyle: getStrokeStyle((find(strokeStyleShapes) ?? first).dash()),
+        edges: getEdges((find(edgesShapes) ?? first).getAttr('cornerRadius')),
+        opacity: first.opacity(),
       };
     }
 
@@ -527,6 +541,23 @@ export class BaseOverlay {
    */
   toggleEdgesBtns(visible: boolean) {
     this.$edgesContainer.style.display = visible ? '' : 'none';
+  }
+
+  /**
+   * Show / hide stroke width buttons, not relevant for texts and highlights
+   * @param visible True to show the section, false to hide it
+   */
+  toggleWidthBtns(visible: boolean) {
+    this.$strokeWidthContainer.style.display = visible ? '' : 'none';
+  }
+
+  /**
+   * Change the title of the color section: stroke of shapes, color when it is also the one of texts
+   * @param title Key of the title, e.g. `'overlay.stroke'` or `'overlay.color'`
+   */
+  setColorTitle(title: TranslationKey) {
+    this.#colorTitle = title;
+    this.$strokeColorContainer.querySelector('.title')!.textContent = this.drawer.t(title);
   }
 
   /**
