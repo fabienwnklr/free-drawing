@@ -313,7 +313,8 @@ export class Drawer extends MicroEvent {
         this._setupShape(shape as DrawingShape);
       });
       this.background = this.bgLayer.findOne(`.${shapeName.background}`) as Rect;
-      activeTool = (this._getStorageItem(this.options.localStorageKey + '-tool') as AvailableTools | null) ?? activeTool;
+      activeTool =
+        (this._getStorageItem(this.options.localStorageKey + '-tool') as AvailableTools | null) ?? activeTool;
       saved = true;
     } else {
       this.stage = new Stage({
@@ -772,10 +773,12 @@ export class Drawer extends MicroEvent {
         child.draggable(this.activeTool === 'selection');
       });
     } else if (shape instanceof Group) {
-      shape.find(() => true).forEach((node) => {
-        if (!node.id()) node.id(createId());
-        node.draggable(false);
-      });
+      shape
+        .find(() => true)
+        .forEach((node) => {
+          if (!node.id()) node.id(createId());
+          node.draggable(false);
+        });
     }
     setupHit(shape);
   }

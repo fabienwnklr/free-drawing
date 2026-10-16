@@ -22,8 +22,8 @@ describe('utilities', () => {
     expect(isObject(null)).toBe(false);
     expect(isObject('')).toBe(false);
     expect(isObject(() => {})).toBe(false);
-    expect(isObject({ prop: 'value'})).toBe(true);
-  })
+    expect(isObject({ prop: 'value' })).toBe(true);
+  });
 
   test('isTruthy', () => {
     expect(isTruthy(null)).toBe(false);
@@ -32,8 +32,8 @@ describe('utilities', () => {
     expect(isTruthy(false)).toBe(true);
     expect(isTruthy(0)).toBe(true);
     expect(isTruthy(() => {})).toBe(true);
-    expect(isTruthy({ prop: 'value'})).toBe(true);
-  })
+    expect(isTruthy({ prop: 'value' })).toBe(true);
+  });
 
   test('MicroEvent off with unknown handler keeps other handlers', () => {
     const emitter = new MicroEvent();

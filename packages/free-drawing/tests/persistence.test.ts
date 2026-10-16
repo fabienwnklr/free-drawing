@@ -19,8 +19,9 @@ afterEach(() => {
 describe('Persistence and performance', () => {
   document.body.innerHTML = `<div id="test"></div>`;
 
-  it('Corrupted saved data is ignored', () => {
+  it('Corrupted saved data is ignored, with a warning', () => {
     const localStorageKey = 'test-' + Math.random();
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     for (const saved of ['{not json', JSON.stringify({ className: 'Stage', attrs: {}, children: [] })]) {
       localStorage.setItem(localStorageKey, saved);
@@ -29,6 +30,8 @@ describe('Persistence and performance', () => {
       expect(drawer.drawLayer).toBeDefined();
       expect(drawer.getDrawingShapes().length).toBe(0);
     }
+    expect(warn).toHaveBeenCalledWith(`[free-drawing] invalid saved data "${localStorageKey}" ignored`);
+    warn.mockRestore();
   });
 
   it('Unavailable storage does not break drawer', () => {
@@ -112,6 +115,11 @@ describe('Persistence and performance', () => {
     expect(second.gridLayer.listening()).toBe(false);
     expect(second.gridLayer.clipWidth()).toBeUndefined();
     // layers order: background, grid, drawing, selection
-    expect(second.stage.children.map((layer) => layer.name().trim())).toEqual(['background', 'grid', 'draw', 'selection']);
+    expect(second.stage.children.map((layer) => layer.name().trim())).toEqual([
+      'background',
+      'grid',
+      'draw',
+      'selection',
+    ]);
   });
 });

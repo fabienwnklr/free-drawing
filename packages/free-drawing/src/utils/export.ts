@@ -88,9 +88,7 @@ export function toDarkColor(color: string): string {
     0.426 * ir + 1.43 * ig - 0.856 * ib,
   ].map((c) => Math.round(Math.min(1, Math.max(0, c)) * 255));
 
-  return a < 1
-    ? `rgba(${rgb.join(', ')}, ${a})`
-    : '#' + rgb.map((c) => c.toString(16).padStart(2, '0')).join('');
+  return a < 1 ? `rgba(${rgb.join(', ')}, ${a})` : '#' + rgb.map((c) => c.toString(16).padStart(2, '0')).join('');
 }
 
 /**
@@ -200,10 +198,14 @@ function linePath(line: Line): string {
 
     if (!closed) d += `Q${tp.slice(0, 4).map(num).join(' ')}`;
     while (n < tp.length - 2) {
-      d += `C${tp.slice(n, n + 6).map(num).join(' ')}`;
+      d += `C${tp
+        .slice(n, n + 6)
+        .map(num)
+        .join(' ')}`;
       n += 6;
     }
-    if (!closed) d += `Q${[tp[tp.length - 2], tp[tp.length - 1], points[length - 2], points[length - 1]].map(num).join(' ')}`;
+    if (!closed)
+      d += `Q${[tp[tp.length - 2], tp[tp.length - 1], points[length - 2], points[length - 1]].map(num).join(' ')}`;
   } else {
     for (let n = 2; n < length; n += 2) d += `L${num(points[n])} ${num(points[n + 1])}`;
   }
@@ -257,7 +259,12 @@ function shapeToSvg(shape: Node, dark?: boolean, matrix = shape.getTransform().g
   if (shape instanceof Rect) {
     const radius = shape.cornerRadius();
 
-    return `<g${group}><rect${attrs({ width: shape.width(), height: shape.height(), rx: typeof radius === 'number' && radius ? radius : undefined, fill })}${strokeAttrs()}/></g>`;
+    return `<g${group}><rect${attrs({
+      width: shape.width(),
+      height: shape.height(),
+      rx: typeof radius === 'number' && radius ? radius : undefined,
+      fill,
+    })}${strokeAttrs()}/></g>`;
   }
 
   if (shape instanceof Ellipse) {
@@ -285,7 +292,10 @@ function shapeToSvg(shape: Node, dark?: boolean, matrix = shape.getTransform().g
 
   if (shape instanceof Line) {
     // closed line (brush) is filled
-    return `<g${group}><path${attrs({ d: linePath(shape), fill: shape.closed() ? fill : 'none' })}${strokeAttrs()}/></g>`;
+    return `<g${group}><path${attrs({
+      d: linePath(shape),
+      fill: shape.closed() ? fill : 'none',
+    })}${strokeAttrs()}/></g>`;
   }
 
   if (shape instanceof Text) {
@@ -309,7 +319,11 @@ function shapeToSvg(shape: Node, dark?: boolean, matrix = shape.getTransform().g
       const y = baseline + i * lineHeight;
       // decorations drawn as konva draws them
       const decorationLine = (dy: number) =>
-        `<path${attrs({ d: `M${num(x)} ${num(y + dy)}h${num(Math.round(line.width))}`, stroke: fill, 'stroke-width': fontSize / 15 })}/>`;
+        `<path${attrs({
+          d: `M${num(x)} ${num(y + dy)}h${num(Math.round(line.width))}`,
+          stroke: fill,
+          'stroke-width': fontSize / 15,
+        })}/>`;
 
       return (
         `<text${attrs({ x, y })} xml:space="preserve">${escapeXml(line.text)}</text>` +
@@ -344,7 +358,9 @@ export function renderSvg(shapes: DrawingShape[], box: Box, options: ImageOption
   const backgroundRect = background ? `<rect${attrs({ ...box, fill: colorOf(background, dark) })}/>` : '';
 
   return (
-    `<svg xmlns="http://www.w3.org/2000/svg"${size}${attrs({ viewBox: [box.x, box.y, box.width, box.height].join(' ') })}>` +
+    `<svg xmlns="http://www.w3.org/2000/svg"${size}${attrs({
+      viewBox: [box.x, box.y, box.width, box.height].join(' '),
+    })}>` +
     backgroundRect +
     shapes.map((shape) => shapeToSvg(shape, dark, layerTransform(shape).getMatrix())).join('') +
     '</svg>'

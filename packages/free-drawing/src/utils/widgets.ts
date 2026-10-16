@@ -43,7 +43,10 @@ export function getWidgetGroups(groups: WidgetGroupOptions[], names: WidgetName[
  * @param id name of the widget
  * @returns options given for the widget, empty object when none
  */
-export function getWidgetOptions<T extends WidgetOptions = WidgetOptions>(widgets: WidgetsOptions, id: AvailableTools): T {
+export function getWidgetOptions<T extends WidgetOptions = WidgetOptions>(
+  widgets: WidgetsOptions,
+  id: AvailableTools
+): T {
   if (Array.isArray(widgets)) return {} as T;
 
   return (widgets[id as WidgetName] ?? {}) as T;

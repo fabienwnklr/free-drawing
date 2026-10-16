@@ -7,17 +7,17 @@ import { Settings } from '@/components/tools/Settings/Settings';
 import { readdirSync, lstatSync } from 'fs';
 import { join } from 'path';
 
-const folderWidgets = "./src/components/toolbar/widgets";
-const widgets = readdirSync(folderWidgets).filter(fileName => !lstatSync(join(folderWidgets, fileName)).isFile());
+const folderWidgets = './src/components/toolbar/widgets';
+const widgets = readdirSync(folderWidgets).filter((fileName) => !lstatSync(join(folderWidgets, fileName)).isFile());
 
 console.log(widgets);
 
 beforeAll(() => {
-  function noOp () { }
+  function noOp() {}
 
-if (typeof window.URL.createObjectURL === 'undefined') {
-  Object.defineProperty(window.URL, 'createObjectURL', { value: noOp})
-}
+  if (typeof window.URL.createObjectURL === 'undefined') {
+    Object.defineProperty(window.URL, 'createObjectURL', { value: noOp });
+  }
 });
 
 describe('Basic integration', () => {

@@ -126,7 +126,9 @@ export async function encodeLinkData(text: string): Promise<string> {
 export async function decodeLinkData(data: string): Promise<string> {
   const bytes = fromBase64Url(data.slice(1));
 
-  return new TextDecoder().decode(data[0] === 'z' ? await transform(bytes, new DecompressionStream('deflate-raw')) : bytes);
+  return new TextDecoder().decode(
+    data[0] === 'z' ? await transform(bytes, new DecompressionStream('deflate-raw')) : bytes
+  );
 }
 
 /** `showSaveFilePicker` of File System Access API (Chromium), not typed by TypeScript */

@@ -26,13 +26,35 @@ export type Database = {
 };
 
 /**
+ * SQLite module of Node, without its experimental warning (stable for this app since Node 22.13).
+ * Not imported: vite of tests does not know this built-in module
+ * @returns The `node:sqlite` module
+ */
+function loadSqlite(): typeof import('node:sqlite') {
+  const { emitWarning } = process;
+
+  // warning emitted once, when the module is loaded
+  process.emitWarning = ((warning: string | Error, ...args: unknown[]) => {
+    if (!String(warning instanceof Error ? warning.message : warning).includes('SQLite is an experimental feature')) {
+      Reflect.apply(emitWarning, process, [warning, ...args]);
+    }
+  }) as typeof process.emitWarning;
+  try {
+    return process.getBuiltinModule('node:sqlite');
+  } finally {
+    process.emitWarning = emitWarning;
+  }
+}
+
+/**
  * SQLite database of Node (no native module to build), shared by Better Auth and the app
+ * @param path File of the database, `:memory:` for tests
+ * @returns Kysely instance on the database, foreign keys enforced
  */
 export function createDatabase(path: string): Kysely<Database> {
   if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true });
 
-  // not imported: vite of tests does not know this built-in module
-  const { DatabaseSync } = process.getBuiltinModule('node:sqlite');
+  const { DatabaseSync } = loadSqlite();
   const database = new DatabaseSync(path);
 
   // users removed with their drawings and preferences

@@ -210,7 +210,7 @@ export class Settings extends Dropdown {
         this.getSeparator(),
         this.$clearStorageButton,
         this.getSeparator(),
-        this.$bgColorContainer
+        this.$bgColorContainer,
       ]
     );
     this.drawer.layout.add('header', this.$dropdownContainer);
@@ -402,7 +402,7 @@ export class Settings extends Dropdown {
     } else {
       this.drawer.showGrid();
     }
-    this.drawer.focus()
+    this.drawer.focus();
     this.drawer.stage.fire('change');
   }
 }

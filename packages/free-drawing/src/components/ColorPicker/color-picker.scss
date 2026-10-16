@@ -13,8 +13,7 @@
 
   // white with red diagonal: no color
   .drawer-color-transparent {
-    background:
-      linear-gradient(
+    background: linear-gradient(
         to top right,
         transparent calc(50% - 1px),
         $danger calc(50% - 1px),

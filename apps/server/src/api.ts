@@ -76,12 +76,12 @@ export function createApi(auth: Auth, db: Kysely<Database>) {
 
   router.get(
     '/me',
-    withUser(async (req, res, user) => res.json(user))
+    withUser(async (_req, res, user) => res.json(user))
   );
 
   router.get(
     '/preferences',
-    withUser(async (req, res, user) => {
+    withUser(async (_req, res, user) => {
       const row = await db.selectFrom('preferences').select('content').where('userId', '=', user.id).executeTakeFirst();
 
       res.json(row ? JSON.parse(row.content) : {});
@@ -107,7 +107,7 @@ export function createApi(auth: Auth, db: Kysely<Database>) {
 
   router.get(
     '/drawings',
-    withUser(async (req, res, user) => {
+    withUser(async (_req, res, user) => {
       const rows = await db
         .selectFrom('drawing')
         .select(['id', 'name', 'createdAt', 'updatedAt'])
@@ -188,10 +188,10 @@ export function createApi(auth: Auth, db: Kysely<Database>) {
     })
   );
 
-  router.use((req, res) => res.status(404).json({ error: 'not found' }));
+  router.use((_req, res) => res.status(404).json({ error: 'not found' }));
 
   // body too large, invalid JSON: client errors, others logged
-  const onError: ErrorRequestHandler = (error, req, res, next) => {
+  const onError: ErrorRequestHandler = (error, _req, res, next) => {
     if (res.headersSent) return next(error);
 
     const status = typeof error?.status === 'number' && error.status < 500 ? error.status : 500;

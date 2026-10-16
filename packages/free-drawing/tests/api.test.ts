@@ -83,6 +83,4 @@ describe('Use drawer api', () => {
     drawer.setTextStyle({ fontSize: text.fontSize() * 2 });
     expect(text.width()).toBe(800);
   });
-
-
 });

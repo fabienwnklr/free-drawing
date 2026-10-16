@@ -74,8 +74,8 @@ describe('Widgets option', () => {
 
   it('Help lists available tools with their shortcuts', () => {
     const drawer = createDrawer({ widgets: { brush: { title: 'Pinceau', shortcut: 'p' }, eraser: {} } });
-    const tools = Array.from(drawer.help.$modalBody.querySelectorAll('[data-help-tools] li')).map((li) =>
-      li.textContent?.replace(/\s+/g, ' ').trim()
+    const tools = Array.from(drawer.help.$modalBody.querySelectorAll('[data-help-tools] li')).map(
+      (li) => li.textContent?.replace(/\s+/g, ' ').trim()
     );
 
     expect(tools).toEqual(['Pinceau P', 'Eraser E']);

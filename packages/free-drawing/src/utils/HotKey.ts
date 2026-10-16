@@ -123,9 +123,7 @@ export class HotKey {
 
       // Toolbar shortcut, the letter displayed on widget button (whatever caps lock)
       if (!mod && !e.altKey && !e.shiftKey) {
-        const widget = Array.from(this.drawer.toolbar.widgets.values()).find(
-          (w) => w.shortcut === e.key.toLowerCase()
-        );
+        const widget = Array.from(this.drawer.toolbar.widgets.values()).find((w) => w.shortcut === e.key.toLowerCase());
 
         if (widget) {
           widget.setActive(true);

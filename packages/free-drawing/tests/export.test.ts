@@ -33,11 +33,15 @@ const readBinary = (blob: Blob) =>
 const drawerWithShapes = () => {
   const drawer = createDrawer();
   const rect = drawer.addShape(new Rect({ x: 10, y: 10, width: 100, height: 50, stroke: '#000', strokeWidth: 2 }));
-  const ellipse = drawer.addShape(new Ellipse({ x: 200, y: 50, radiusX: 40, radiusY: 20, stroke: '#1971c2', fill: '#a5d8ff' }));
+  const ellipse = drawer.addShape(
+    new Ellipse({ x: 200, y: 50, radiusX: 40, radiusY: 20, stroke: '#1971c2', fill: '#a5d8ff' })
+  );
   const brush = drawer.addShape(
     new Line({ points: [0, 100, 20, 120, 40, 110, 60, 130], tension: 0.3, closed: true, fill: '#000', stroke: '#000' })
   );
-  const arrow = drawer.addShape(new Arrow({ points: [300, 10, 400, 60], stroke: '#e03131', fill: '#e03131', dash: [4, 6] }));
+  const arrow = drawer.addShape(
+    new Arrow({ points: [300, 10, 400, 60], stroke: '#e03131', fill: '#e03131', dash: [4, 6] })
+  );
   const text = drawer.getWidget<TextWidget>('text')!.addTextNode('Hello <world>');
   drawer.getWidget<SelectWidget>('selection')!.clearSelection();
 
@@ -67,7 +71,9 @@ describe('Export', () => {
     expect(svg).toMatch(/<path d="M0 100C[^"]+Z" fill="#000"/);
     // arrow: dashed line, head without dash
     expect(svg).toContain('stroke-dasharray="4 6"');
-    expect(svg).toMatch(/<path d="M0 0L-?\d+(\.\d+)? \d+(\.\d+)?L[^"]+Z" transform="translate\(400 60\) rotate\(26.57\)" fill="#e03131"/);
+    expect(svg).toMatch(
+      /<path d="M0 0L-?\d+(\.\d+)? \d+(\.\d+)?L[^"]+Z" transform="translate\(400 60\) rotate\(26.57\)" fill="#e03131"/
+    );
     expect(svg).toContain('&lt;world&gt;</text>');
 
     const dark = renderSvg(shapes, box, { background: '#fff', dark: true });

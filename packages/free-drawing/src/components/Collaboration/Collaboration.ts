@@ -183,7 +183,9 @@ export class Collaboration {
     });
 
     // pointer shown to other users
-    this.drawer.stage.on('pointermove.collaboration', () => this._sendPointer(this.drawer.stage.getRelativePointerPosition()));
+    this.drawer.stage.on('pointermove.collaboration', () =>
+      this._sendPointer(this.drawer.stage.getRelativePointerPosition())
+    );
     this.drawer.stage.on('mouseleave.collaboration', () => this._sendPointer(null));
   }
 
@@ -309,7 +311,14 @@ export class Collaboration {
 
     // arrow pointing to position
     cursor.add(
-      new Line({ points: [0, 0, 0, 17, 4.5, 13, 7.5, 20, 10, 19, 7, 12, 12.5, 12], closed: true, fill: color, stroke: '#fff', strokeWidth: 1.5, lineJoin: 'round' })
+      new Line({
+        points: [0, 0, 0, 17, 4.5, 13, 7.5, 20, 10, 19, 7, 12, 12.5, 12],
+        closed: true,
+        fill: color,
+        stroke: '#fff',
+        strokeWidth: 1.5,
+        lineJoin: 'round',
+      })
     );
     label.add(new Tag({ fill: color, cornerRadius: 4 }));
     label.add(new Text({ fontFamily: 'system-ui, sans-serif', fontSize: 12, padding: 4, fill: '#fff' }));
@@ -341,7 +350,9 @@ export class Collaboration {
    */
   get isOwner(): boolean {
     // owner secret: known before users list
-    return !!this.members.find((member) => member.id === this.userId)?.owner || (!this.members.length && !!this.ownerKey);
+    return (
+      !!this.members.find((member) => member.id === this.userId)?.owner || (!this.members.length && !!this.ownerKey)
+    );
   }
 
   /**
@@ -464,7 +475,9 @@ export class Collaboration {
         shape = this.drawer.addShape(Node.create(json) as DrawingShape);
         shape.zIndex(index);
         if (selected.some((node) => !node.getLayer())) {
-          this.drawer.getWidget<SelectWidget>('selection')?.select([...selected.filter((node) => node.getLayer()), shape]);
+          this.drawer
+            .getWidget<SelectWidget>('selection')
+            ?.select([...selected.filter((node) => node.getLayer()), shape]);
         }
       } else if (shape) {
         // same node (kept in selection): attributes removed by other client are removed, not local ones (draggable,

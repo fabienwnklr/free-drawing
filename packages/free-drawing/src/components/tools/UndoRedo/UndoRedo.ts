@@ -97,7 +97,7 @@ export class UndoRedo extends History {
    * Update both buttons: drawer created or changed, history reset, read only changed
    */
   manageButtons() {
-    this.manageUndoBtn()
-    this.manageRedoBtn()
+    this.manageUndoBtn();
+    this.manageRedoBtn();
   }
 }

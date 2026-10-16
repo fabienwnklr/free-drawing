@@ -192,7 +192,9 @@ describe('Shape tools', () => {
     expect(drawer.options.strokeStyle).toBe('dashed');
 
     // shape of a previous version: dash recomputed with its style when width changes
-    const rect = drawer.addShape(new Rect({ name: 'drawer-rect', width: 50, height: 50, stroke: '#000', dash: [33, 10] }));
+    const rect = drawer.addShape(
+      new Rect({ name: 'drawer-rect', width: 50, height: 50, stroke: '#000', dash: [33, 10] })
+    );
     const selectWidget = drawer.getWidget<SelectWidget>('selection')!;
     selectWidget.transformer.nodes([rect]);
     drawer.setStrokeWidth(3);

@@ -104,9 +104,9 @@ describe('User interface', () => {
 
     // palette color, same as one of buttons whatever its notation
     drawer.setStrokeColor('#000000');
-    expect(overlay.$strokeColorBtnContainer.querySelector('[data-stroke-color="#000"]')?.getAttribute('aria-pressed')).toBe(
-      'true'
-    );
+    expect(
+      overlay.$strokeColorBtnContainer.querySelector('[data-stroke-color="#000"]')?.getAttribute('aria-pressed')
+    ).toBe('true');
     expect($input.classList.contains('active')).toBe(false);
     // picker opens on current color
     expect($input.value).toBe('#000000');
@@ -115,7 +115,9 @@ describe('User interface', () => {
   it('Background color can be transparent or custom, menu stays open while picking', () => {
     const drawer = createDrawer();
     const setting = drawer.setting;
-    const $transparent = setting.$bgColorBtnContainer.querySelector<HTMLButtonElement>('[data-bg-color="transparent"]')!;
+    const $transparent = setting.$bgColorBtnContainer.querySelector<HTMLButtonElement>(
+      '[data-bg-color="transparent"]'
+    )!;
     const $input = setting.$bgColorBtnContainer.querySelector<HTMLInputElement>('input[type="color"]')!;
 
     expect($transparent.getAttribute('aria-label')).toBe('Transparent');

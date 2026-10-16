@@ -15,6 +15,8 @@ export default defineConfig({
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' }],
   ],
   cleanUrls: true,
+  // local search index of every page (API included, about 2.3 MB), loaded when search is opened
+  vite: { build: { chunkSizeWarningLimit: 3000 } },
   themeConfig: {
     logo: '/logo.svg',
     search: { provider: 'local' },

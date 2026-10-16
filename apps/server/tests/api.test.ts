@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import request from 'supertest';
 import { io as connect, type Socket } from 'socket.io-client';
 import type { AddressInfo } from 'node:net';
@@ -32,6 +32,10 @@ beforeAll(async () => {
 
 afterAll(() => server.close());
 
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
 /**
  * New user, logged in: agent keeping their session cookie
  */
@@ -62,12 +66,15 @@ describe('Accounts', () => {
     expect((await agent.post('/api/auth/sign-out').set('Origin', config.baseURL)).status).toBe(200);
     expect((await agent.get('/api/me')).status).toBe(401);
 
+    // logged by Better Auth, not printed by tests
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const wrong = await agent
       .post('/api/auth/sign-in/email')
       .set('Origin', config.baseURL)
       .send({ email, password: 'nope nope nope' });
 
     expect(wrong.status).toBe(401);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('Invalid password'));
     await agent.post('/api/auth/sign-in/email').set('Origin', config.baseURL).send({ email, password });
     expect((await agent.get('/api/me')).body.email).toBe(email);
   });
@@ -115,6 +122,8 @@ describe('Account', () => {
 
   it('Account deleted with its password, with drawings and preferences', async () => {
     const { agent, email } = await signUp();
+    // sign in of deleted user logged by Better Auth, not printed by tests
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
     const post = (path: string, body: object) =>
       agent.post(`/api/auth${path}`).set('Origin', config.baseURL).send(body);
     const { id } = (await agent.post('/api/drawings').send({ content: drawing })).body;

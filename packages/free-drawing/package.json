@@ -38,9 +38,9 @@
     "build:watch": "tsc && vite build --watch",
     "test": "vitest run",
     "test:watch": "vitest dev",
-    "lint": "eslint src tests --ext .ts",
+    "lint": "eslint src tests --ext .ts && prettier --check \"src/**/*.{ts,scss}\" \"tests/**/*.ts\"",
     "typecheck": "tsc --noEmit -p . && tsc -p tests",
-    "format": "prettier src/**/*.ts --write",
+    "format": "prettier --write \"src/**/*.{ts,scss}\" \"tests/**/*.ts\"",
     "doc:typedoc": "typedoc",
     "release": "git push --follow-tags origin master"
   },

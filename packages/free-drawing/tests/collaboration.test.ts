@@ -3,11 +3,7 @@ import { Rect } from 'konva/lib/shapes/Rect';
 import { Drawer } from '@/Drawer';
 import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
-import {
-  Collaboration,
-  type CollaborationSocket,
-  type DrawingChange,
-} from '@/components/Collaboration/Collaboration';
+import { Collaboration, type CollaborationSocket, type DrawingChange } from '@/components/Collaboration/Collaboration';
 import { createDrawer, fireMouse, keydown, setPointer } from './helpers';
 import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import type { Group } from 'konva/lib/Group';
@@ -372,7 +368,10 @@ describe('Collaboration', () => {
   it('Room link joins the room, collaboration needs its option', async () => {
     const server = createServer();
     const socket = server.createSocket();
-    const createSocket = vi.spyOn(Drawer.prototype as unknown as { _createSocket(): Promise<FakeSocket> }, '_createSocket');
+    const createSocket = vi.spyOn(
+      Drawer.prototype as unknown as { _createSocket(): Promise<FakeSocket> },
+      '_createSocket'
+    );
 
     createSocket.mockImplementation(async () => {
       setTimeout(() => socket.receive('connect'));
@@ -400,7 +399,9 @@ describe('Collaboration', () => {
     expect(drawer.collaboration?.room).toBe('abc123');
     expect(drawer.collaboration?.name).toBe('Bob');
     // link of the room shared by this user
-    expect(drawer.getCollaborationLink()).toBe(`${window.location.origin}${window.location.pathname}#room=abc123&by=${drawer.getUserId()}`);
+    expect(drawer.getCollaborationLink()).toBe(
+      `${window.location.origin}${window.location.pathname}#room=abc123&by=${drawer.getUserId()}`
+    );
     expect(window.location.hash).toBe(`#room=abc123&by=${drawer.getUserId()}`);
     drawer.stopCollaboration();
 
@@ -635,9 +636,9 @@ describe('Collaboration', () => {
     expect(modal.$intro.textContent).toBe('You joined the live collaboration session of Alice.');
     expect(modal.$name.closest('.drawer-collaboration-field')!.hasAttribute('hidden')).toBe(false);
     expect(modal.$session.hidden).toBe(true);
-    expect([modal.$stopButton, modal.$startButton, modal.$joinButton, modal.$cancelButton].every(($btn) => $btn.hidden)).toBe(
-      true
-    );
+    expect(
+      [modal.$stopButton, modal.$startButton, modal.$joinButton, modal.$cancelButton].every(($btn) => $btn.hidden)
+    ).toBe(true);
   });
 
   it('Stacking order is sent, kept by server for users joining later', () => {
