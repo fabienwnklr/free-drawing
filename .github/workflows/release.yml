@@ -30,11 +30,22 @@ jobs:
           TAG: ${{ inputs.tag || github.ref_name }}
         run: |
           version="${TAG#v}"
-          # entry of the version: lines after its title, until the title of the previous version
+          # entry of the version: lines after its title, until the title of the previous version,
+          # then link of its title comparing previous tag with this one
           awk -v version="$version" '
-            /^## / { if (found) exit; found = index($0, "[" version "]") > 0; next }
+            /^## / {
+              if (found) exit
+              found = index($0, "[" version "]") > 0
+              if (found && match($0, /\(https:[^)]*\)/)) link = substr($0, RSTART + 1, RLENGTH - 2)
+              next
+            }
             found
+            END { if (link) printf "\n**Full Changelog**: %s\n", link }
           ' packages/free-drawing/CHANGELOG.md > notes.md
+          if ! grep -q '[^[:space:]]' notes.md; then
+            echo "::error::No entry for $version in packages/free-drawing/CHANGELOG.md"
+            exit 1
+          fi
           if gh release view "$TAG" > /dev/null 2>&1; then
             gh release edit "$TAG" --notes-file notes.md
           else
