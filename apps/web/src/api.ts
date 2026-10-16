@@ -6,6 +6,16 @@ export type User = { id: string; name: string; email: string };
 /** Drawing of the user, without its content */
 export type DrawingSummary = { id: string; name: string; createdAt: string; updatedAt: string };
 
+/** Drawings of a user: of their account on server (`api`), or of the browser (`localDrawings`) */
+export type DrawingsStore = {
+  /** Last updated first */
+  listDrawings(): Promise<DrawingSummary[]>;
+  createDrawing(drawing: { name?: string; content?: DrawingFile }): Promise<DrawingSummary>;
+  getDrawing(id: string): Promise<DrawingSummary & { content: DrawingFile }>;
+  updateDrawing(id: string, changes: { name?: string; content?: DrawingFile }): Promise<DrawingSummary>;
+  deleteDrawing(id: string): Promise<unknown>;
+};
+
 /**
  * Error of the server: message, HTTP status and code (Better Auth errors)
  */

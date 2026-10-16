@@ -1,6 +1,6 @@
 import { Drawer, type DrawerStorage, type Preferences } from '@fabwcie/free-drawing';
-import { type DrawingSummary, type User, api } from './api';
-import { local } from './local';
+import { type DrawingSummary, type DrawingsStore, type User, api } from './api';
+import { local, localDrawings } from './local';
 import { Texts } from './texts';
 import { AccountDialog } from './AccountDialog';
 import { DrawingsDialog } from './DrawingsDialog';
@@ -9,15 +9,17 @@ import { ProfileDialog } from './ProfileDialog';
 type SaveState = '' | 'saving' | 'saved' | 'error' | 'unsaved';
 
 /**
- * App served by the server of free-drawing: account, drawings saved on server, preferences of account.
- * Anonymous users draw in their browser.
+ * App of free-drawing: drawings kept in browser, or with an account when served by the server of free-drawing
+ * (drawings and preferences saved on server, collaboration). Static site: drawings of browser only.
  */
 export class App {
   readonly drawer: Drawer;
   readonly texts: Texts;
+  /** Served by the server of free-drawing: accounts */
+  readonly server: boolean;
   /** Logged in user */
   user: User | null = null;
-  /** Drawing open (logged in user), saved on server */
+  /** Drawing open: of account on server (logged in user), else of browser */
   drawing: DrawingSummary | null = null;
   readonly $bar: HTMLElement;
   readonly $main: HTMLElement;
@@ -34,7 +36,8 @@ export class App {
   /** Session read and drawing chosen: drawing is loaded after it */
   readonly #started: Promise<void>;
 
-  constructor($root: HTMLElement, collaboration: boolean) {
+  constructor($root: HTMLElement, { server, collaboration }: { server: boolean; collaboration: boolean }) {
+    this.server = server;
     $root.classList.add('app');
     $root.innerHTML = /*html*/ `
       <header class="app-bar">
@@ -45,8 +48,8 @@ export class App {
           <span class="app-toggle-track" aria-hidden="true"></span><span data-label></span>
         </button>
         <span class="app-spacer"></span>
-        <button type="button" class="app-button" data-drawings hidden></button>
-        <button type="button" class="app-button" data-account></button>
+        <button type="button" class="app-button" data-drawings></button>
+        <button type="button" class="app-button" data-account hidden></button>
       </header>
       <main class="app-main"></main>
     `;
@@ -80,30 +83,36 @@ export class App {
   }
 
   /**
-   * Drawings of logged in user saved on server, else in browser
+   * Drawings of logged in user, else of browser
+   */
+  get store(): DrawingsStore {
+    return this.user ? api : localDrawings;
+  }
+
+  /**
+   * Drawing open: of account on server (logged in user), else of browser
    */
   private _createStorage(): DrawerStorage {
     return {
       load: async () => {
         await this.#started;
-        if (!this.drawing) return local.loadDrawing();
 
-        const { content, ...drawing } = await api.getDrawing(this.drawing.id);
+        const { content, ...drawing } = await this.store.getDrawing(this.drawing!.id);
 
         this.drawing = drawing;
-        local.setLastDrawingId(drawing.id);
+        this._remember(drawing);
         this.render();
         return content;
       },
       save: async (file) => {
-        const { drawing } = this;
+        const { drawing, store } = this;
 
-        // drawing of an account never kept in browser (e.g. deleted one)
-        if (!drawing) return this.user ? undefined : local.saveDrawing(file);
+        // deleted drawing: not saved again
+        if (!drawing) return;
 
         this._setSaveState('saving');
         try {
-          const saved = await api.updateDrawing(drawing.id, { content: file });
+          const saved = await store.updateDrawing(drawing.id, { content: file });
 
           if (this.drawing?.id === saved.id) this.drawing = saved;
           this._setSaveState('saved');
@@ -117,25 +126,41 @@ export class App {
   }
 
   /**
-   * User of the session (none when not logged in or server unavailable) and their drawing to open
+   * User of the session (none when not logged in, server unavailable or static site) and the drawing to open
    */
   private async _restoreSession() {
-    try {
-      this.user = await api.me();
-    } catch {
-      return;
+    if (this.server) {
+      try {
+        this.user = await api.me();
+      } catch {
+        // drawings of browser
+      }
     }
     // a room link fills a new drawing: last one kept
-    this.drawing = window.location.hash.startsWith('#room=') ? await api.createDrawing({}) : await this._lastDrawing();
+    this.drawing = window.location.hash.startsWith('#room=')
+      ? await this.store.createDrawing({})
+      : await this._lastDrawing();
   }
 
   /**
-   * Drawing open on last visit, else last updated one, else a new one
+   * Drawing of account or browser open on last visit, else last updated one, else a new one (first drawing of browser:
+   * the one drawn before drawings of browser, or in the demo)
    */
   private async _lastDrawing() {
-    const drawings = await api.listDrawings();
+    const { store } = this;
+    const lastId = this.user ? local.lastDrawingId() : local.lastLocalDrawingId();
+    const content = !this.user && local.isFirstVisit() ? local.previousDrawing() : undefined;
+    const drawings = await store.listDrawings();
 
-    return drawings.find(({ id }) => id === local.lastDrawingId()) ?? drawings[0] ?? (await api.createDrawing({}));
+    return drawings.find(({ id }) => id === lastId) ?? drawings[0] ?? (await store.createDrawing({ content }));
+  }
+
+  /**
+   * Drawing opened again on next visit
+   */
+  private _remember({ id }: DrawingSummary) {
+    if (this.user) local.setLastDrawingId(id);
+    else local.setLastLocalDrawingId(id);
   }
 
   /**
@@ -224,7 +249,7 @@ export class App {
 
     const loaded = this.drawer.loadFromStorage();
 
-    local.setLastDrawingId(drawing.id);
+    this._remember(drawing);
     this._setSaveState('');
     await loaded.catch(() => {});
   }
@@ -259,15 +284,17 @@ export class App {
    */
   private async _leaveAccount() {
     this.user = null;
+    // not saved meanwhile
     this.drawing = null;
     this.drawer.setUser(null);
     this._setSaveState('');
+    this.drawing = await this._lastDrawing();
     await this.drawer.loadFromStorage();
     this.render();
   }
 
   /**
-   * Open a drawing of user, changes of current one saved before
+   * Open a drawing of account or browser, changes of current one saved before
    */
   async openDrawing(drawing: DrawingSummary) {
     await this.drawer.save();
@@ -276,7 +303,7 @@ export class App {
   }
 
   async newDrawing() {
-    await this.openDrawing(await api.createDrawing({}));
+    await this.openDrawing(await this.store.createDrawing({}));
   }
 
   async rename(name: string) {
@@ -284,7 +311,7 @@ export class App {
 
     if (!drawing || name.trim() === drawing.name) return;
     try {
-      const renamed = await api.updateDrawing(drawing.id, { name });
+      const renamed = await this.store.updateDrawing(drawing.id, { name });
 
       if (this.drawing?.id === renamed.id) this.drawing = renamed;
     } catch (error) {
@@ -316,8 +343,9 @@ export class App {
     this.$autoSaveButton.setAttribute('aria-checked', String(this.drawer.options.autoSave));
     this.$autoSaveButton.querySelector('[data-label]')!.textContent = t('autoSave');
     this.$autoSaveButton.title = t('autoSaveHint');
-    this.$drawingsButton.hidden = !this.user;
     this.$drawingsButton.textContent = t('myDrawings');
+    // static site: no accounts
+    this.$accountButton.hidden = !this.server;
     this.$accountButton.textContent = t(this.user ? 'account' : 'signIn');
     this.accountDialog?.render();
     this.profileDialog?.render();

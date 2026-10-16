@@ -1,10 +1,16 @@
 import type { DrawingFile } from '@fabwcie/free-drawing';
+import type { DrawingSummary, DrawingsStore } from './api';
 
 const keys = {
-  /** Drawing of anonymous user (drawing file) */
-  drawing: 'free-drawing-web-drawing',
+  /** Drawings of browser: summaries (content of each one in `content` + id) */
+  drawings: 'free-drawing-web-drawings',
+  content: 'free-drawing-web-drawing-',
+  /** Last drawing of browser open, opened again on next visit */
+  lastLocalDrawing: 'free-drawing-web-last-local-drawing',
   /** Last drawing open by logged in user, opened again on next visit */
   lastDrawing: 'free-drawing-web-last-drawing',
+  /** Drawing of anonymous user before drawings of browser (drawing file) */
+  drawing: 'free-drawing-web-drawing',
   /** Stage saved by the drawer without storage option (demo before this app) */
   stage: 'free-drawing',
 };
@@ -47,11 +53,11 @@ function fromStage(json: string): DrawingFile | null {
 }
 
 /**
- * Data kept in browser: drawing of anonymous user, last drawing of logged in user
+ * Data kept in browser: last drawings open (of browser, of logged in user), drawing of previous versions
  */
 export const local = {
-  /** Drawing of anonymous user, else the one of the demo, else an empty one (drawing of an account never kept) */
-  loadDrawing(): DrawingFile {
+  /** Drawing of anonymous user before drawings of browser, else the one of the demo, else an empty one */
+  previousDrawing(): DrawingFile {
     for (const [key, parse] of [
       [keys.drawing, JSON.parse],
       [keys.stage, fromStage],
@@ -68,7 +74,80 @@ export const local = {
     }
     return emptyDrawing();
   },
-  saveDrawing: (file: DrawingFile) => write(keys.drawing, JSON.stringify(file)),
+  /** No drawing of browser created yet (first visit since drawings of browser) */
+  isFirstVisit: () => read(keys.drawings) === null,
+  lastLocalDrawingId: () => read(keys.lastLocalDrawing),
+  setLastLocalDrawingId: (id: string) => write(keys.lastLocalDrawing, id),
   lastDrawingId: () => read(keys.lastDrawing),
   setLastDrawingId: (id: string) => write(keys.lastDrawing, id),
+};
+
+/** Drawings of browser, last updated first */
+const summaries = (): DrawingSummary[] => {
+  try {
+    const list = JSON.parse(read(keys.drawings) ?? '[]');
+
+    return Array.isArray(list) ? list : [];
+  } catch {
+    return [];
+  }
+};
+
+/** Errors when storage is full or unavailable: drawing not saved */
+const saveSummaries = (list: DrawingSummary[]) =>
+  localStorage.setItem(keys.drawings, JSON.stringify(list.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))));
+
+const find = (id: string) => {
+  const drawing = summaries().find((summary) => summary.id === id);
+
+  if (!drawing) throw new Error('drawing not found');
+  return drawing;
+};
+
+/** Trimmed, 100 characters at most (as on server) */
+const drawingName = (name = '') => name.trim().slice(0, 100);
+
+const newId = () => crypto.randomUUID?.() ?? `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`;
+
+/**
+ * Drawings kept in browser (anonymous user, static site), same functions as drawings of an account on server
+ */
+export const localDrawings: DrawingsStore = {
+  listDrawings: async () => summaries(),
+  async createDrawing({ name, content = emptyDrawing() }) {
+    const now = new Date().toISOString();
+    const drawing = { id: newId(), name: drawingName(name), createdAt: now, updatedAt: now };
+
+    localStorage.setItem(keys.content + drawing.id, JSON.stringify(content));
+    saveSummaries([drawing, ...summaries()]);
+    return drawing;
+  },
+  async getDrawing(id) {
+    const drawing = find(id);
+    const json = read(keys.content + id);
+    let content = emptyDrawing();
+
+    try {
+      if (json) content = JSON.parse(json);
+    } catch {
+      // invalid data: empty drawing
+    }
+    return { ...drawing, content };
+  },
+  async updateDrawing(id, { name, content }) {
+    const drawing = {
+      ...find(id),
+      ...(name !== undefined && { name: drawingName(name) }),
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (content) localStorage.setItem(keys.content + id, JSON.stringify(content));
+    saveSummaries([drawing, ...summaries().filter((summary) => summary.id !== id)]);
+    return drawing;
+  },
+  async deleteDrawing(id) {
+    localStorage.removeItem(keys.content + id);
+    saveSummaries(summaries().filter((summary) => summary.id !== id));
+    return null;
+  },
 };

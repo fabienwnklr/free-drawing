@@ -42,14 +42,6 @@ body {
   font-size: 0.875rem;
 }
 
-/* demo without server: drawer of window size */
-#app.demo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-}
-
 .app {
   display: flex;
   flex-direction: column;
@@ -322,6 +314,11 @@ body {
 
 .app-drawings {
   width: min(30rem, calc(100% - 2rem));
+}
+
+/* drawings of browser: where they are kept, above new drawing button */
+.app-drawings p[data-local] {
+  margin-bottom: 0.75rem;
 }
 
 .app-drawings-list {

@@ -1,4 +1,4 @@
-import { type DrawingSummary, api } from './api';
+import type { DrawingSummary } from './api';
 import type { App } from './App';
 
 let lastId = 0;
@@ -8,12 +8,14 @@ const trashIcon = /*html*/ `<svg aria-hidden="true" focusable="false" viewBox="0
 </svg>`;
 
 /**
- * Drawings of logged in user: open one, create one, delete one
+ * Drawings of logged in user, else of browser: open one, create one, delete one
  */
 export class DrawingsDialog {
   readonly $dialog: HTMLDialogElement;
   readonly $list: HTMLUListElement;
   readonly $empty: HTMLElement;
+  /** Drawings of browser (not logged in) */
+  readonly $local: HTMLElement;
   readonly $new: HTMLButtonElement;
   drawings: DrawingSummary[] = [];
 
@@ -30,12 +32,14 @@ export class DrawingsDialog {
           <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg>
         </button>
       </header>
+      <p class="text-muted" data-local hidden></p>
       <button type="button" class="app-button app-button-primary" data-new></button>
       <ul class="app-drawings-list" aria-labelledby="${id}-title"></ul>
       <p class="text-muted" data-empty hidden></p>
     `;
     this.$list = this.$dialog.querySelector('ul')!;
     this.$empty = this.$dialog.querySelector('[data-empty]')!;
+    this.$local = this.$dialog.querySelector('[data-local]')!;
     this.$new = this.$dialog.querySelector('[data-new]')!;
     document.body.append(this.$dialog);
 
@@ -48,7 +52,7 @@ export class DrawingsDialog {
 
   async show() {
     try {
-      this.drawings = await api.listDrawings();
+      this.drawings = await this.app.store.listDrawings();
     } catch (error) {
       this.app.drawer.toast(this.app.texts.t('error', { error: (error as Error).message }), 'error');
       return;
@@ -67,6 +71,8 @@ export class DrawingsDialog {
     this.$dialog.querySelector('[data-close]')!.setAttribute('aria-label', t('close'));
     this.$new.textContent = t('newDrawing');
     this.$empty.textContent = t('empty');
+    this.$local.textContent = t('localDrawings');
+    this.$local.hidden = !!this.app.user;
     this.$empty.hidden = this.drawings.length > 0;
     this.$list.replaceChildren(
       ...this.drawings.map((drawing) => {
@@ -109,14 +115,14 @@ export class DrawingsDialog {
 
     if (!window.confirm(t('deleteConfirm', { name }))) return;
     try {
-      await api.deleteDrawing(drawing.id);
+      await this.app.store.deleteDrawing(drawing.id);
       this.drawings = this.drawings.filter(({ id }) => id !== drawing.id);
       if (this.app.drawing?.id === drawing.id) {
         // not saved again in deleted drawing
         this.app.drawing = null;
         if (this.drawings[0]) await this.app.openDrawing(this.drawings[0]);
         else await this.app.newDrawing();
-        this.drawings = await api.listDrawings();
+        this.drawings = await this.app.store.listDrawings();
       }
     } catch (error) {
       this.app.drawer.toast(t('error', { error: (error as Error).message }), 'error');
