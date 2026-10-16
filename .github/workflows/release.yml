@@ -1,14 +1,15 @@
 name: Release
 
 # GitHub release of a version tag (vX.Y.Z), notes from its entry of the library changelog.
-# A push of more than 3 tags at once triggers no workflow: run it from the Actions tab with the tag.
+# A push of more than 3 tags at once triggers no workflow: run it from the Actions tab with the tag,
+# or with "all" for every tag of the changelog without release (oldest first).
 on:
   push:
     tags: ['v*']
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag of the version (e.g. v7.9.0)'
+        description: 'Tag of the version (e.g. v7.9.2), or "all" for every tag without release'
         required: true
 
 permissions:
@@ -22,32 +23,61 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
-          ref: ${{ inputs.tag || github.ref }}
+          # tag of the release, branch (whole changelog) for "all"
+          ref: ${{ inputs.tag != 'all' && inputs.tag || github.ref }}
+          # tags for "all"
+          fetch-depth: 0
 
-      - name: Create or update release
+      - name: Create or update releases
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ inputs.tag || github.ref_name }}
         run: |
-          version="${TAG#v}"
-          # entry of the version: lines after its title, until the title of the previous version,
+          changelog=packages/free-drawing/CHANGELOG.md
+
+          # entry of a version: lines after its title, until the title of the previous version,
           # then link of its title comparing previous tag with this one
-          awk -v version="$version" '
-            /^## / {
-              if (found) exit
-              found = index($0, "[" version "]") > 0
-              if (found && match($0, /\(https:[^)]*\)/)) link = substr($0, RSTART + 1, RLENGTH - 2)
-              next
-            }
-            found
-            END { if (link) printf "\n**Full Changelog**: %s\n", link }
-          ' packages/free-drawing/CHANGELOG.md > notes.md
-          if ! grep -q '[^[:space:]]' notes.md; then
-            echo "::error::No entry for $version in packages/free-drawing/CHANGELOG.md"
-            exit 1
+          notes() {
+            awk -v version="${1#v}" '
+              /^## / {
+                if (found) exit
+                found = index($0, "[" version "]") > 0
+                if (found && match($0, /\(https:[^)]*\)/)) link = substr($0, RSTART + 1, RLENGTH - 2)
+                next
+              }
+              found
+              END { if (link) printf "\n**Full Changelog**: %s\n", link }
+            ' "$changelog"
+          }
+
+          # release of a tag, created or updated, "Latest" when true is given
+          release() {
+            notes "$1" > notes.md
+            if ! grep -q '[^[:space:]]' notes.md; then
+              echo "::error::No entry for $1 in $changelog"
+              return 1
+            fi
+            if gh release view "$1" > /dev/null 2>&1; then
+              gh release edit "$1" --notes-file notes.md
+            else
+              gh release create "$1" --title "$1" --notes-file notes.md --verify-tag --latest="$2"
+            fi
+          }
+
+          # highest version: the only "Latest" one (an older tag released later is not)
+          latest=$(git tag -l 'v*' --sort=-v:refname | head -1)
+
+          if [ "$TAG" != all ]; then
+            release "$TAG" "$([ "$TAG" = "$latest" ] && echo true || echo false)"
+            exit
           fi
-          if gh release view "$TAG" > /dev/null 2>&1; then
-            gh release edit "$TAG" --notes-file notes.md
-          else
-            gh release create "$TAG" --title "$TAG" --notes-file notes.md --verify-tag
+
+          # missing releases of versions in changelog, oldest first
+          for tag in $(git tag -l 'v*' --sort=v:refname); do
+            if grep -q "^## \[${tag#v}\]" "$changelog" && ! gh release view "$tag" > /dev/null 2>&1; then
+              release "$tag" false
+            fi
+          done
+          if gh release view "$latest" > /dev/null 2>&1; then
+            gh release edit "$latest" --latest
           fi
