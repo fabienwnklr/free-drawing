@@ -8,7 +8,7 @@ import { join as joinPath } from 'node:path';
 import { socketEvents } from '@free-drawing/protocol';
 import { createServer } from '../src/app';
 import type { ServerConfig } from '../src/config';
-import { roomLifetime } from '../src/collaboration';
+import { limits, roomLifetime } from '../src/collaboration';
 
 const config: ServerConfig = {
   port: 0,
@@ -432,6 +432,94 @@ describe('Collaboration', () => {
     const saved = await server.db.selectFrom('room').where('id', '=', 'room-4').selectAll().executeTakeFirstOrThrow();
 
     expect(saved.content).not.toContain('secret 4');
+  });
+
+  /** JSON of a rectangle of a change */
+  const rect = (id: string) => JSON.stringify({ attrs: { id, width: 10 }, className: 'Rect' });
+
+  it('Changes are checked as a whole, only checked fields are relayed', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const owner = await joinRoom({ room: 'room-6', name: 'Owner', userId: 'owner-6', ownerKey: 'secret 6' });
+    const guest = await joinRoom({ room: 'room-6', name: 'Guest', userId: 'guest-6' });
+    const relayed = guest.next(socketEvents.CHANGE);
+
+    // a stage or an invalid shape: whole change ignored
+    owner.socket.emit(socketEvents.CHANGE, {
+      upsert: [rect('r0'), JSON.stringify({ attrs: { id: 's1', container: 'app' }, className: 'Stage' })],
+      remove: [],
+    });
+    owner.socket.emit(socketEvents.CHANGE, { upsert: [rect('r0'), '{ not json'], remove: [] });
+    owner.socket.emit(socketEvents.CHANGE, {
+      upsert: [
+        JSON.stringify({ attrs: { id: 'g1' }, className: 'Group', children: [{ attrs: {}, className: 'Layer' }] }),
+      ],
+      remove: [],
+    });
+    owner.socket.emit(socketEvents.CHANGE, { upsert: [rect('r1')], remove: [], junk: 'x'.repeat(1000) });
+
+    expect(await relayed).toEqual({ upsert: [rect('r1')], remove: [] });
+    expect(warn).toHaveBeenCalledTimes(3);
+
+    // drawing sent to joining users: valid change only
+    const later = client();
+    const drawing = later.next<{ upsert: string[] }>(socketEvents.CHANGE);
+
+    later.socket.emit(socketEvents.JOIN, { room: 'room-6', name: 'Later', userId: 'later-6' });
+    expect((await drawing).upsert).toEqual([rect('r1')]);
+
+    // pointer: position only
+    const pointers = guest.next<{ position: unknown }>(socketEvents.POINTER);
+
+    owner.socket.emit(socketEvents.POINTER, { x: 10, y: 20, laser: true, junk: 'x' });
+    expect((await pointers).position).toEqual({ x: 10, y: 20, laser: true });
+
+    const invalid = guest.next<{ position: unknown }>(socketEvents.POINTER);
+
+    owner.socket.emit(socketEvents.POINTER, { x: 'big', y: 20 });
+    expect((await invalid).position).toBeNull();
+  });
+
+  it('Rooms and messages are limited: drawing, users, rate', async () => {
+    const saved = { ...limits };
+
+    Object.assign(limits, { shapes: 2, users: 2 });
+    try {
+      const owner = await joinRoom({ room: 'room-7', name: 'Owner', userId: 'owner-7', ownerKey: 'secret 7' });
+      const guest = await joinRoom({ room: 'room-7', name: 'Guest', userId: 'guest-7' });
+
+      // room full
+      const third = client();
+      const refused = third.next(socketEvents.REJECTED);
+
+      third.socket.emit(socketEvents.JOIN, { room: 'room-7', name: 'Third', userId: 'third-7' });
+      expect(await refused).toEqual({ event: socketEvents.JOIN, reason: 'full' });
+
+      // drawing with too many shapes refused, not relayed
+      const tooBig = owner.next(socketEvents.REJECTED);
+      const relayed = guest.next<{ upsert: string[] }>(socketEvents.CHANGE);
+
+      owner.socket.emit(socketEvents.CHANGE, { upsert: [rect('a'), rect('b'), rect('c')], remove: [] });
+      expect(await tooBig).toEqual({ event: socketEvents.CHANGE, reason: 'too-big' });
+      owner.socket.emit(socketEvents.CHANGE, { upsert: [rect('a'), rect('b')], remove: [] });
+      expect((await relayed).upsert).toEqual([rect('a'), rect('b')]);
+
+      // as many shapes: allowed
+      const replaced = guest.next<{ upsert: string[]; remove: string[] }>(socketEvents.CHANGE);
+
+      owner.socket.emit(socketEvents.CHANGE, { upsert: [rect('c')], remove: ['a'] });
+      expect(await replaced).toEqual({ upsert: [rect('c')], remove: ['a'] });
+
+      // names changed too often: more ignored (10 at once, then 2 per second)
+      let updates = 0;
+
+      guest.socket.on(socketEvents.USERS, () => updates++);
+      for (let i = 0; i < 30; i++) owner.socket.emit(socketEvents.NAME, `Owner ${i}`);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      expect(updates).toBeGreaterThanOrEqual(5);
+      expect(updates).toBeLessThanOrEqual(11);
+    } finally {
+      Object.assign(limits, saved);
+    }
   });
 
   it('Rooms are kept after a restart, forgotten after a while without use', async () => {

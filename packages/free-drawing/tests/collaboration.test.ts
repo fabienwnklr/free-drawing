@@ -645,6 +645,26 @@ describe('Collaboration', () => {
     $page.remove();
   });
 
+  it('Refused messages: drawing too big tells it, full room stops the session', () => {
+    const connect = createServer();
+    const drawer = createDrawer();
+    const socket = connect(drawer, 'room', 'Ada', { userId: 'ada' });
+    const toast = vi.spyOn(drawer, 'toast');
+
+    // once for several refused changes
+    socket.receive('REJECTED', { event: 'CHANGE', reason: 'too-big' });
+    socket.receive('REJECTED', { event: 'CHANGE', reason: 'too-big' });
+    expect(toast.mock.calls).toEqual([
+      ['Drawing too big for the collaboration session: your changes are not shared', 'warning'],
+    ]);
+    expect(drawer.collaboration).not.toBeNull();
+
+    socket.receive('REJECTED', { event: 'JOIN', reason: 'full' });
+    expect(toast).toHaveBeenLastCalledWith('This collaboration session is full', 'error');
+    expect(drawer.collaboration).toBeNull();
+    expect(socket.disconnect).toHaveBeenCalled();
+  });
+
   it('Owner makes users coming for the first time view only', () => {
     const connect = createServer();
     const alice = createDrawer();

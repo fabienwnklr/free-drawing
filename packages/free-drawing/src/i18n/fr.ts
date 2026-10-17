@@ -8,6 +8,8 @@ export const fr: Translations = {
   'language.auto': 'Automatique (navigateur)',
 
   'toast.collaborationUnavailable': 'Collaboration indisponible : {error}',
+  'toast.collaborationFull': 'Cette session de collaboration est complète',
+  'toast.collaborationTooBig': 'Dessin trop volumineux pour la session de collaboration : vos modifications ne sont pas partagées',
   'toast.canDraw': 'Vous pouvez dessiner : le propriétaire de la session vous y a autorisé',
   'toast.viewOnly': 'Lecture seule : le propriétaire de la session vous a retiré le droit de dessiner',
   'toast.saveFailed': "Le dessin n'a pas pu être enregistré : {error}",

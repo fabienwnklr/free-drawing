@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import type { Kysely } from 'kysely';
 import type { Server, Socket } from 'socket.io';
-import { socketEvents } from '@free-drawing/protocol';
+import { groupClasses, shapeClasses, socketEvents } from '@free-drawing/protocol';
 import { type Auth, type User, getUser } from './auth';
 import type { Database } from './db';
 
@@ -14,11 +14,17 @@ type SocketData = {
   invitedBy?: string;
   /** Gave the secret of the room owner: gives rights, changes settings */
   owner?: boolean;
+  /** Messages allowed now by event (token bucket, see `rates`) and time they were counted */
+  buckets?: Record<string, { tokens: number; at: number }>;
+  /** Rooms created by this connection (`limits.newRooms`) */
+  newRooms?: number;
 };
 
 type RoomData = {
   /** Drawing: shapes JSON by id, in stacking order */
   shapes: Map<string, string>;
+  /** Size of the drawing: length of its shapes JSON */
+  size: number;
   /** Users without right to draw */
   viewers: Set<string>;
   /** Names of users who came, for who invited who */
@@ -50,13 +56,120 @@ type CollaborationSocket = Socket<any, any, any, SocketData>;
 type JoinMessage = { room?: unknown; name?: unknown; userId?: unknown; ownerKey?: unknown; invitedBy?: unknown };
 type RightsMessage = { userId?: unknown; canEdit?: unknown };
 type RoomMessage = { newUsersCanEdit?: unknown };
-type ChangeMessage = { upsert: string[]; remove: string[]; order?: string[]; live?: boolean };
+type PointerMessage = { x?: unknown; y?: unknown; laser?: unknown } | null;
+
+/** Node state of a shape in a change (konva `toObject`), not trusted */
+type ShapeJson = { attrs?: { id?: unknown } | null; className?: unknown; children?: unknown };
+
+/** Change of drawing checked as a whole: only its checked fields, shapes JSON by id */
+type CheckedChange = { upsert: Map<string, string>; remove: string[]; order?: string[]; live: boolean };
+
+/** Limits of rooms, protecting the memory of the server and other users from a client (tests lower them) */
+export const limits = {
+  /** Shapes of the drawing of a room */
+  shapes: 10_000,
+  /** Size of the drawing of a room: length of its shapes JSON (as drawing files, 5 MB) */
+  drawingSize: 5_000_000,
+  /** Size of the drawings of all rooms */
+  totalSize: 500_000_000,
+  /** Users connected to a room at once */
+  users: 50,
+  /** Different users a room remembers (names, rights) */
+  knownUsers: 1_000,
+  /** Rooms created by a connection */
+  newRooms: 10,
+};
+
+/** Messages a client may send by event: per second and at once (burst), more are ignored (unknown events too) */
+const rates: Record<string, [perSecond: number, burst: number]> = {
+  [socketEvents.JOIN]: [1, 5],
+  [socketEvents.NAME]: [2, 10],
+  [socketEvents.RIGHTS]: [10, 20],
+  [socketEvents.ROOM]: [2, 10],
+  // live previews every 50 ms, final changes, undo repeated
+  [socketEvents.CHANGE]: [40, 100],
+  [socketEvents.POINTER]: [30, 60],
+};
 
 const userName = (name: unknown) =>
   String(name ?? '')
     .trim()
     .slice(0, 40);
 const isId = (id: unknown): id is string => typeof id === 'string' && /^[\w-]{1,64}$/.test(id);
+// ids of shapes: also of files made by other apps
+const isShapeId = (id: unknown): id is string => typeof id === 'string' && id.length > 0 && id.length <= 200;
+
+/**
+ * Drawing shape, or group of them (nested up to 50 levels), as the library creates them from files
+ * @param state Parsed JSON of a shape (not trusted)
+ * @param depth Level of the shape in groups
+ * @returns true for a drawing shape class, or a group class whose children are drawing shapes
+ */
+const isShape = (state: ShapeJson, depth = 0): boolean => {
+  if (typeof state?.attrs !== 'object' || state.attrs === null || typeof state.className !== 'string') return false;
+  if (!groupClasses.includes(state.className)) {
+    return shapeClasses.includes(state.className) && state.children === undefined;
+  }
+
+  return (
+    depth < 50 &&
+    (state.children === undefined ||
+      (Array.isArray(state.children) && state.children.every((child: ShapeJson) => isShape(child, depth + 1))))
+  );
+};
+
+/**
+ * Change of a client checked as a whole before it is applied: ids, and JSON of drawing shapes with an id
+ * @param change Message of the client (not trusted)
+ * @returns Checked change, null when anything is invalid (nothing applied nor relayed)
+ */
+const checkChange = (change: unknown): CheckedChange | null => {
+  if (typeof change !== 'object' || change === null) return null;
+
+  const { upsert, remove, order, live } = change as Record<string, unknown>;
+
+  if (!Array.isArray(upsert) || !Array.isArray(remove) || !remove.every(isShapeId)) return null;
+  if (order !== undefined && (!Array.isArray(order) || !order.every(isShapeId))) return null;
+
+  const shapes = new Map<string, string>();
+
+  for (const json of upsert) {
+    let state: ShapeJson;
+
+    try {
+      state = typeof json === 'string' ? JSON.parse(json) : null;
+    } catch {
+      return null;
+    }
+    if (!isShape(state) || !isShapeId(state.attrs?.id)) return null;
+    shapes.set(state.attrs.id, json);
+  }
+
+  return { upsert: shapes, remove, order: order as string[] | undefined, live: live === true };
+};
+
+/**
+ * Rate of messages of a client, by event (token bucket of `rates`)
+ * @param socket Socket of the client
+ * @param event Event of the message
+ * @returns true when the message is handled, false when the client sends too many (or an unknown event)
+ */
+const allow = (socket: CollaborationSocket, event: string) => {
+  const rate = rates[event];
+
+  if (!rate) return false;
+
+  const [perSecond, burst] = rate;
+  const now = Date.now();
+  const bucket = ((socket.data.buckets ??= {})[event] ??= { tokens: burst, at: now });
+
+  bucket.tokens = Math.min(burst, bucket.tokens + ((now - bucket.at) / 1000) * perSecond);
+  bucket.at = now;
+  if (bucket.tokens < 1) return false;
+  bucket.tokens -= 1;
+
+  return true;
+};
 
 /** Rooms unused for this time (ms) are forgotten: their id is free again */
 export const roomLifetime = 30 * 24 * 60 * 60 * 1000;
@@ -74,6 +187,7 @@ const hashKey = (key: string) => createHash('sha256').update(key).digest('base64
  */
 const newRoom = (): RoomData => ({
   shapes: new Map(),
+  size: 0,
   viewers: new Set(),
   names: new Map(),
   accounts: new Set(),
@@ -87,6 +201,8 @@ const newRoom = (): RoomData => ({
  * which can't be the one of an account or of the owner: owner is the user who gives the secret of the room.
  * Owner, rights and settings of rooms are saved in database (not drawings): kept while a room is empty and after a
  * restart, so nobody takes an empty room over; rooms unused for `roomLifetime` are forgotten.
+ * Messages are checked as a whole and limited (`rates`, `limits`): a change making a drawing too big or a join of a
+ * full room is refused (`REJECTED` sent to the client), only checked fields are relayed.
  * @param io Socket.io server
  * @param auth Accounts, to identify logged in users by their session cookie
  * @param db Database of the app, rooms of previous runs are read from it first
@@ -94,6 +210,8 @@ const newRoom = (): RoomData => ({
  */
 export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Database>) {
   const rooms = new Map<string, RoomData>();
+  // size of the drawings of all rooms
+  let totalSize = 0;
   // writes of rooms one after the other (database closed after them)
   let writes = Promise.resolve();
 
@@ -145,6 +263,7 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
 
       rooms.set(id, {
         shapes: new Map(),
+        size: 0,
         ownerKey: typeof saved.ownerKey === 'string' ? saved.ownerKey : undefined,
         ownerId: isId(saved.ownerId) ? saved.ownerId : undefined,
         viewers: new Set(saved.viewers),
@@ -198,7 +317,9 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
 
     // last user gone: drawing removed (users send theirs when they join again), owner, rights and settings kept
     if (data) {
+      totalSize -= data.size;
       data.shapes = new Map();
+      data.size = 0;
       saveRoom(room, data);
     }
   };
@@ -214,13 +335,26 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
   });
 
   io.on('connection', (socket: CollaborationSocket) => {
+    // messages of a client limited by event, more are ignored
+    socket.use(([event], next) => {
+      if (allow(socket, event)) next();
+    });
+
+    // join refused: room full, too many rooms created
+    const refuseJoin = () => socket.emit(socketEvents.REJECTED, { event: socketEvents.JOIN, reason: 'full' });
+
     socket.on(socketEvents.JOIN, ({ room, name, userId, ownerKey, invitedBy }: JoinMessage = {}) => {
       if (!isId(room)) return;
 
       const { account } = socket.data;
 
       leaveRoom(socket);
-      if (!rooms.has(room)) rooms.set(room, newRoom());
+      if ((io.sockets.adapter.rooms.get(room)?.size ?? 0) >= limits.users) return refuseJoin();
+      if (!rooms.has(room)) {
+        if ((socket.data.newRooms ?? 0) >= limits.newRooms) return refuseJoin();
+        socket.data.newRooms = (socket.data.newRooms ?? 0) + 1;
+        rooms.set(room, newRoom());
+      }
 
       const data = rooms.get(room)!;
       const key = typeof ownerKey === 'string' && ownerKey ? hashKey(ownerKey) : undefined;
@@ -231,11 +365,15 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
       const owner = !!key && data.ownerKey === key;
       // id of browser, unless it is the one of an account or of the owner (secret not given)
       const free = isId(userId) && !data.accounts.has(userId) && (owner || userId !== data.ownerId);
+      const id = account?.id ?? (free ? userId : socket.id);
+
+      // a new user remembered by a full room
+      if (!data.names.has(id) && data.names.size >= limits.knownUsers) return refuseJoin();
 
       socket.data.room = room;
       socket.data.owner = owner;
       socket.data.name = userName(name) || account?.name || 'Anonymous';
-      socket.data.userId = account?.id ?? (free ? userId : socket.id);
+      socket.data.userId = id;
       socket.data.invitedBy = isId(invitedBy) && invitedBy !== socket.data.userId ? invitedBy : undefined;
       socket.join(room);
       if (account) data.accounts.add(account.id);
@@ -280,7 +418,9 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
       const { room } = socket.data;
       const data = room ? rooms.get(room) : undefined;
 
+      // users who came only (bounded)
       if (!room || !data || !socket.data.owner || !isId(userId) || userId === data.ownerId) return;
+      if (!data.names.has(userId)) return;
 
       if (canEdit) data.viewers.delete(userId);
       else data.viewers.add(userId);
@@ -300,36 +440,74 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
       io.to(room).emit(socketEvents.ROOM, { newUsersCanEdit });
     });
 
-    // { upsert: shapes JSON, remove: ids, order: ids from bottom to top when stacking order changed }
-    socket.on(socketEvents.CHANGE, (change: ChangeMessage) => {
+    // { upsert: shapes JSON, remove: ids, order: ids from bottom to top when stacking order changed, live }
+    socket.on(socketEvents.CHANGE, (message: unknown) => {
       const { room } = socket.data;
       const data = room ? rooms.get(room) : undefined;
 
       // users without right to draw: ignored
       if (!room || !data || data.viewers.has(socket.data.userId)) return;
-      try {
-        const { shapes } = data;
 
-        for (const id of change.remove) shapes.delete(id);
-        for (const json of change.upsert) shapes.set(JSON.parse(json).attrs.id, json);
-        // drawing kept in stacking order (sent so to joining users), unknown shapes after
-        if (Array.isArray(change.order)) {
-          const ordered = new Map(change.order.filter((id) => shapes.has(id)).map((id) => [id, shapes.get(id)!]));
+      const change = checkChange(message);
 
-          for (const [id, json] of shapes) ordered.set(id, json);
-          data.shapes = ordered;
-        }
-      } catch (error) {
-        console.warn(`Invalid change (id: ${socket.id}): ${(error as Error).message}`);
+      if (!change) {
+        console.warn(`Invalid change (id: ${socket.id})`);
         return;
       }
-      // to other users of the room, author already has it (live preview: dropped rather than delayed)
-      (change.live ? socket.to(room).volatile : socket.to(room)).emit(socketEvents.CHANGE, change);
+
+      // drawing once changed: removed shapes (not upserted again), then added or updated ones
+      const { shapes } = data;
+      const removed = change.remove.filter((id) => shapes.has(id) && !change.upsert.has(id));
+      let size = data.size - removed.reduce((sum, id) => sum + shapes.get(id)!.length, 0);
+      let count = shapes.size - removed.length;
+
+      for (const [id, json] of change.upsert) {
+        const old = shapes.get(id);
+
+        size += json.length - (old?.length ?? 0);
+        if (old === undefined) count++;
+      }
+      // a bigger drawing over the limits refused (smaller changes still allowed)
+      if (
+        (count > limits.shapes && count > shapes.size) ||
+        (size > data.size && (size > limits.drawingSize || totalSize + size - data.size > limits.totalSize))
+      ) {
+        if (!change.live) socket.emit(socketEvents.REJECTED, { event: socketEvents.CHANGE, reason: 'too-big' });
+        return;
+      }
+
+      for (const id of change.remove) shapes.delete(id);
+      for (const [id, json] of change.upsert) shapes.set(id, json);
+      totalSize += size - data.size;
+      data.size = size;
+      // drawing kept in stacking order (sent so to joining users), unknown shapes after
+      if (change.order) {
+        const ordered = new Map(change.order.filter((id) => shapes.has(id)).map((id) => [id, shapes.get(id)!]));
+
+        for (const [id, json] of shapes) ordered.set(id, json);
+        data.shapes = ordered;
+      }
+
+      // checked fields only, to other users of the room: author already has it (live preview: dropped rather than
+      // delayed)
+      const relayed = {
+        upsert: [...change.upsert.values()],
+        remove: change.remove,
+        ...(change.order && { order: change.order }),
+        ...(change.live && { live: true }),
+      };
+
+      (change.live ? socket.to(room).volatile : socket.to(room)).emit(socketEvents.CHANGE, relayed);
     });
 
-    // pointer position in drawing (null out of drawer), not kept
-    socket.on(socketEvents.POINTER, (position: unknown) => {
+    // pointer position in drawing (null out of drawer, laser while pressed), not kept
+    socket.on(socketEvents.POINTER, (pointer: PointerMessage) => {
       const { room, name } = socket.data;
+      const { x, y, laser } = pointer ?? {};
+      const position =
+        Number.isFinite(x) && Number.isFinite(y)
+          ? { x: x as number, y: y as number, ...(laser === true && { laser }) }
+          : null;
 
       if (room) socket.to(room).volatile.emit(socketEvents.POINTER, { id: socket.id, name, position });
     });

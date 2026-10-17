@@ -1,5 +1,6 @@
 import type { ColorLike } from '@/@types/drawer';
 import type { ShapeState } from '@/components/tools/UndoRedo/History';
+import { groupClasses, shapeClasses } from '@free-drawing/protocol';
 
 /**
  * Extension of drawing files (JSON)
@@ -21,9 +22,7 @@ export type DrawingFile = {
 };
 
 // files, links and shapes of other users of a collaboration can come from anyone: only drawing shapes and groups of
-// them are created
-/** Konva classes of drawing shapes allowed in files, links and collaboration changes (with groups and frames) */
-const shapeClasses = ['Line', 'Arrow', 'Rect', 'Ellipse', 'Text', 'Path'];
+// them are created (`shapeClasses`, `groupClasses` of the protocol, also checked by the server)
 
 /**
  * Attributes of a node state, without `__proto__` (konva would set it as prototype of the node attributes)
@@ -43,7 +42,7 @@ function parseShape(shape: ShapeState): ShapeState | null {
   if (typeof shape?.attrs !== 'object' || shape.attrs === null) return null;
 
   // groups, frames
-  if (shape.className === 'Group' || shape.className === 'Frame') {
+  if (groupClasses.includes(shape.className)) {
     const children = Array.isArray(shape.children) ? shape.children.map(parseShape) : [];
 
     return {

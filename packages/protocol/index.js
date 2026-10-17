@@ -20,4 +20,16 @@ export const socketEvents = {
   RIGHTS: 'RIGHTS',
   /** Settings of the room: `{ newUsersCanEdit }`, sent by server to its users, by owner to change them */
   ROOM: 'ROOM',
+  /** Message of the user refused by server: `{ event, reason }`, reason `full` (room) or `too-big` (drawing) */
+  REJECTED: 'REJECTED',
 };
+
+/**
+ * Konva classes of drawing shapes: only these nodes are created from files, links and changes of other users
+ */
+export const shapeClasses = ['Line', 'Arrow', 'Rect', 'Ellipse', 'Text', 'Path'];
+
+/**
+ * Konva classes of groups of drawing shapes (frames: box, title and content group)
+ */
+export const groupClasses = ['Group', 'Frame'];

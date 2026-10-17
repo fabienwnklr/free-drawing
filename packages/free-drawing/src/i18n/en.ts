@@ -8,6 +8,8 @@ export const en = {
 
   // messages
   'toast.collaborationUnavailable': 'Collaboration unavailable: {error}',
+  'toast.collaborationFull': 'This collaboration session is full',
+  'toast.collaborationTooBig': 'Drawing too big for the collaboration session: your changes are not shared',
   'toast.canDraw': 'You can draw: the owner of the session allowed you',
   'toast.viewOnly': 'View only: the owner of the session removed your right to draw',
   'toast.saveFailed': "Drawing can't be saved: {error}",

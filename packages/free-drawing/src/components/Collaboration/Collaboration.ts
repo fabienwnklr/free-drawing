@@ -117,6 +117,8 @@ export class Collaboration {
   private readonly drawer: Drawer;
   /** Shapes as other clients know them, by id, in stacking order */
   #synced = new Map<string, string>();
+  /** Time of the last warning of a change refused by the server (drawing too big), shown again after a while */
+  #tooBigAt = 0;
   /** Changes received during a pointer action of this client, applied when it ends */
   #pending: DrawingChange[] = [];
   /** Shapes being drawn or moved, sent at next live message */
@@ -173,6 +175,16 @@ export class Collaboration {
       this.drawer.trigger(drawerEvents.collaborationChange);
     });
     this.socket.on(socketEvents.CHANGE, (change: DrawingChange) => this.receive(change));
+    // message refused by the server: room full (session stopped), drawing too big (changes not shared)
+    this.socket.on(socketEvents.REJECTED, ({ reason }: { reason?: unknown } = {}) => {
+      if (reason === 'full') {
+        this.drawer.toast(this.drawer.t('toast.collaborationFull'), 'error');
+        this.drawer.stopCollaboration();
+      } else if (reason === 'too-big' && Date.now() - this.#tooBigAt > 10_000) {
+        this.#tooBigAt = Date.now();
+        this.drawer.toast(this.drawer.t('toast.collaborationTooBig'), 'warning');
+      }
+    });
     // names only from servers without rights
     this.socket.on(socketEvents.USERS, (users: (CollaborationMember | string)[]) => {
       const canEdit = this.canEdit;

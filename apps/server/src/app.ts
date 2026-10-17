@@ -8,7 +8,7 @@ import type { ServerConfig } from './config';
 import { createDatabase, migrateApp } from './db';
 import { createAuth } from './auth';
 import { createApi } from './api';
-import { attachCollaboration } from './collaboration';
+import { attachCollaboration, limits } from './collaboration';
 
 // web app (apps/web): its vite config in development, its build in production
 const webRoot = fileURLToPath(new URL('../../web/', import.meta.url));
@@ -87,7 +87,11 @@ export async function createServer(config: ServerConfig) {
 
   if (config.web) await serveWeb(app, httpServer, config.dev);
 
-  const io = new Server(httpServer, { cors: { origin: config.trustedOrigins, credentials: true } });
+  const io = new Server(httpServer, {
+    cors: { origin: config.trustedOrigins, credentials: true },
+    // a change can hold a whole drawing (shapes JSON escaped in the message)
+    maxHttpBufferSize: limits.drawingSize * 2,
+  });
 
   // rooms of previous runs read before connections
   const collaboration = await attachCollaboration(io, auth, db);
