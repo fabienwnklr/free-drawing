@@ -23,6 +23,14 @@ export type Database = {
     content: string;
     updatedAt: string;
   };
+  /** Collaboration rooms: owner, rights and settings, kept while the room is empty (not its drawing) */
+  room: {
+    id: string;
+    /** State JSON (`SavedRoom` of `collaboration.ts`) */
+    content: string;
+    /** Last use (user joining, rights or settings changed), rooms unused for a while are removed */
+    updatedAt: string;
+  };
 };
 
 /**
@@ -85,6 +93,17 @@ const migrations: Record<string, Migration> = {
         .addColumn('content', 'text', (col) => col.notNull())
         .addColumn('updatedAt', 'text', (col) => col.notNull())
         .execute();
+    },
+  },
+  '002-rooms': {
+    async up(db) {
+      await db.schema
+        .createTable('room')
+        .addColumn('id', 'text', (col) => col.primaryKey())
+        .addColumn('content', 'text', (col) => col.notNull())
+        .addColumn('updatedAt', 'text', (col) => col.notNull())
+        .execute();
+      await db.schema.createIndex('room_updatedAt').on('room').column('updatedAt').execute();
     },
   },
 };

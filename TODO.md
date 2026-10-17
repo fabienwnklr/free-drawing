@@ -19,7 +19,7 @@
 ## Security (collaboration, server)
 
 - [x] anonymous socket can take the identity of the room owner or any user: `userId` sent by client is trusted, owner then removes rights of everyone, viewers rejoin with a new id to draw (server `collaboration.ts`)
-- [ ] empty room can be taken over: room and `ownerKey` deleted when last user leaves, next JOIN with any key becomes owner (server `collaboration.ts`)
+- [x] empty room can be taken over: room and `ownerKey` deleted when last user leaves, next JOIN with any key becomes owner (server `collaboration.ts`)
 - [ ] received CHANGE creates any Konva class (`Node.create`, no allow list as `parseDrawingFile`): a `Stage` upsert empties a page element of every user, kept by server for later users (`Collaboration.ts`)
 - [ ] no limit on room data: shape count, size and rate of CHANGE / POINTER / NAME, anonymous sockets allowed, server memory can be exhausted; check a whole CHANGE before applying it and relay only checked fields (server `collaboration.ts`)
 - [ ] account deleted without password while session is fresh (Better Auth `/delete-user`, password only required by UI): reject it without password in a hook (server `auth.ts`)

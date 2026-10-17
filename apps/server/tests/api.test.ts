@@ -2,9 +2,13 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest
 import request from 'supertest';
 import { io as connect, type Socket } from 'socket.io-client';
 import type { AddressInfo } from 'node:net';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join as joinPath } from 'node:path';
 import { socketEvents } from '@free-drawing/protocol';
 import { createServer } from '../src/app';
 import type { ServerConfig } from '../src/config';
+import { roomLifetime } from '../src/collaboration';
 
 const config: ServerConfig = {
   port: 0,
@@ -324,9 +328,9 @@ describe('Collaboration', () => {
 
   type User = { id: string; name: string; owner: boolean; canEdit: boolean };
 
-  /** Socket of a new client, next message of an event */
-  const client = () => {
-    const socket = connect(url, { forceNew: true });
+  /** Socket of a new client (of this server by default), next message of an event */
+  const client = (server = url) => {
+    const socket = connect(server, { forceNew: true });
     const next = <T>(event: string) => new Promise<T>((resolve) => socket.once(event, resolve));
 
     sockets.push(socket);
@@ -334,8 +338,8 @@ describe('Collaboration', () => {
   };
 
   /** Client joined to a room: its id and users of the room */
-  const joinRoom = async (message: object) => {
-    const user = client();
+  const joinRoom = async (message: object, server = url) => {
+    const user = client(server);
     const joined = user.next<{ userId: string }>(socketEvents.JOINED);
     const users = user.next<User[]>(socketEvents.USERS);
 
@@ -391,5 +395,88 @@ describe('Collaboration', () => {
     owner.socket.emit(socketEvents.ROOM, { newUsersCanEdit: true });
     expect(await settingOn).toEqual({ newUsersCanEdit: true });
     expect(canEdit((await joinRoom({ room: 'room-3', name: 'Other', userId: 'other-3' })).users, 'other-3')).toBe(true);
+  });
+
+  it('Owner, rights and settings of an empty room are kept: nobody takes it over', async () => {
+    const owner = await joinRoom({ room: 'room-4', name: 'Owner', userId: 'owner-4', ownerKey: 'secret 4' });
+    const viewer = await joinRoom({ room: 'room-4', name: 'Viewer', userId: 'viewer-4' });
+    const updated = owner.next<User[]>(socketEvents.USERS);
+    const setting = owner.next(socketEvents.ROOM);
+    const find = (users: User[], id: string) => users.find((user) => user.id === id);
+
+    owner.socket.emit(socketEvents.RIGHTS, { userId: 'viewer-4', canEdit: false });
+    await updated;
+    owner.socket.emit(socketEvents.ROOM, { newUsersCanEdit: false });
+    await setting;
+
+    // everyone left
+    owner.socket.close();
+    viewer.socket.close();
+    await vi.waitFor(() => expect(server.io.sockets.adapter.rooms.has('room-4')).toBe(false));
+
+    // another secret, id of the owner: neither owner nor drawing
+    const intruder = await joinRoom({ room: 'room-4', name: 'Intruder', userId: 'owner-4', ownerKey: 'other secret' });
+
+    expect(intruder.userId).not.toBe('owner-4');
+    expect(intruder.users).toEqual([expect.objectContaining({ id: intruder.userId, owner: false, canEdit: false })]);
+    expect(
+      find((await joinRoom({ room: 'room-4', name: 'Viewer', userId: 'viewer-4' })).users, 'viewer-4')
+    ).toMatchObject({
+      canEdit: false,
+    });
+
+    const back = await joinRoom({ room: 'room-4', name: 'Owner', userId: 'owner-4', ownerKey: 'secret 4' });
+
+    expect(find(back.users, 'owner-4')).toMatchObject({ owner: true, canEdit: true });
+    // secret not kept, its hash only
+    const saved = await server.db.selectFrom('room').where('id', '=', 'room-4').selectAll().executeTakeFirstOrThrow();
+
+    expect(saved.content).not.toContain('secret 4');
+  });
+
+  it('Rooms are kept after a restart, forgotten after a while without use', async () => {
+    const dir = mkdtempSync(joinPath(tmpdir(), 'free-drawing-'));
+    const start = async () => {
+      const started = await createServer({ ...config, databasePath: joinPath(dir, 'app.db') });
+
+      await new Promise<void>((resolve) => started.httpServer.listen(0, resolve));
+      return { ...started, url: `http://localhost:${(started.httpServer.address() as AddressInfo).port}` };
+    };
+
+    try {
+      const first = await start();
+      const owner = await joinRoom(
+        { room: 'room-5', name: 'Owner', userId: 'owner-5', ownerKey: 'secret 5' },
+        first.url
+      );
+      const old = new Date(Date.now() - roomLifetime - 60_000).toISOString();
+
+      // room unused for too long
+      await first.db
+        .insertInto('room')
+        .values({ id: 'room-old', content: JSON.stringify({ ownerKey: 'hash', names: [] }), updatedAt: old })
+        .execute();
+      owner.socket.close();
+      await first.close();
+
+      const second = await start();
+
+      try {
+        const intruder = await joinRoom(
+          { room: 'room-5', name: 'Intruder', userId: 'owner-5', ownerKey: 'other secret' },
+          second.url
+        );
+        const newOwner = await joinRoom({ room: 'room-old', name: 'New', ownerKey: 'new secret' }, second.url);
+
+        expect(intruder.users).toEqual([expect.objectContaining({ owner: false })]);
+        expect(newOwner.users).toEqual([expect.objectContaining({ owner: true })]);
+        intruder.socket.close();
+        newOwner.socket.close();
+      } finally {
+        await second.close();
+      }
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

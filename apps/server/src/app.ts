@@ -89,7 +89,8 @@ export async function createServer(config: ServerConfig) {
 
   const io = new Server(httpServer, { cors: { origin: config.trustedOrigins, credentials: true } });
 
-  attachCollaboration(io, auth);
+  // rooms of previous runs read before connections
+  const collaboration = await attachCollaboration(io, auth, db);
 
   return {
     app,
@@ -97,9 +98,10 @@ export async function createServer(config: ServerConfig) {
     io,
     auth,
     db,
-    /** Stop server and close database */
+    /** Stop server and close database (after writes of rooms) */
     async close() {
       io.close();
+      await collaboration.close();
       await db.destroy();
     },
   };
