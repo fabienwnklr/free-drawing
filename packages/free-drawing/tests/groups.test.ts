@@ -133,7 +133,10 @@ describe('Groups', () => {
     drawer.groupShapes([rect, ellipse]);
     drawer.on('drawer.change', onChange);
     drawer.getWidget<EraserWidget>('eraser')!.setActive(true);
-    rect.fire('click', { evt: {} }, true);
+    // no hit canvas in jsdom
+    vi.spyOn(drawer.drawLayer, 'getIntersection').mockReturnValue(rect);
+    fireMouse(drawer, 'mousedown', 10, 10);
+    fireMouse(drawer, 'mouseup', 10, 10);
 
     expect(classNames(drawer)).toEqual(['Rect']);
     expect(onChange).toHaveBeenCalled();

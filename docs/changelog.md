@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.14.0](https://github.com/fabienwnklr/free-drawing/compare/v7.13.0...v7.14.0) (2026-10-18)
+
+
+### Features
+
+* **eraser:** shapes to erase are faded until the pointer is released, instead of red outlines, whatever their kind (strokes, filled shapes, texts, groups); thin shapes crossed quickly are found along the whole pointer path
+
+### Bug Fixes
+
+* **eraser:** a stroke starting on a shape erases it and the shapes it crosses next
+* **eraser, text:** right and middle clicks no longer erase a shape or add a text
+
 ## [7.13.0](https://github.com/fabienwnklr/free-drawing/compare/v7.12.0...v7.13.0) (2026-10-16)
 
 

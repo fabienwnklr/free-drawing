@@ -1,26 +1,32 @@
-import { Drawer } from '@/Drawer';
+import type { Drawer } from '@/Drawer';
 import { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import EraserIcon from '@/icons/eraser.svg?raw';
 import type { Node } from 'konva/lib/Node';
-import { Text } from 'konva/lib/shapes/Text';
+import type { Vector2d } from 'konva/lib/types';
 import { crosshairCursor } from '@/constants';
-import { getShapes } from '@/utils/hit';
 import { getDrawingShape } from '@/utils/frame';
 import type { DrawingShape } from '@/@types/drawer';
 import { Trail } from '@/components/toolbar/widgets/Eraser/Trail';
 
 /**
- * Outline color of shapes to erase
+ * Opacity of shapes to erase until pointer up, factor of their own opacity
  */
-const erasingColor = '#e03131';
+const erasingOpacity = 0.2;
 
 /**
- * Eraser: a click erases the shape under pointer, a drag erases every shape it crosses on pointer up (shown as red
- * outlines meanwhile), with a trail behind pointer. Shapes of groups erase their whole group.
+ * Distance between points of the pointer path looked for shapes (screen pixels), so thin shapes crossed quickly are found
+ */
+const hitStep = 4;
+
+/**
+ * Eraser: shapes crossed by pointer while pressed (also the pressed one: a click erases it) are faded, then erased on
+ * pointer up, with a trail behind pointer. Shapes of groups erase their whole group, locked shapes are kept.
  */
 export class EraserWidget extends BaseWidget {
-  /** Shapes erased on pointer up, with their outline shown meanwhile */
-  #toRemoved = new Map<DrawingShape, DrawingShape>();
+  /** Shapes erased on pointer up, faded meanwhile, with their own opacity */
+  #toErase = new Map<DrawingShape, number>();
+  /** Last pointer position looked for shapes (stage coordinates), null out of an erasing */
+  #last: Vector2d | null = null;
   protected cursor = crosshairCursor;
   /** Trail behind pointer while erasing */
   #trail: Trail;
@@ -44,61 +50,63 @@ export class EraserWidget extends BaseWidget {
   }
 
   /**
-   * Erase by drag (shapes crossed shown as outlines, erased on pointer up, trail behind pointer) or by click
+   * Erase by click or drag: shapes crossed faded, erased on pointer up, trail behind pointer
    */
   protected initEvents(): void {
     this.onStage('mousedown touchstart', (e) => {
-      if (e.target !== this.drawer.stage) {
-        return;
-      }
+      // right or middle button: no erasing (context menu)
+      if (e.evt.button > 0) return;
       e.evt.preventDefault();
 
       this.startAction();
       this.#trail.start();
       this._addTrailPoint();
+      this._findAlong(this.drawer._getPointerPos());
     });
 
-    // and core function - drawing
     this.onStage('mousemove touchmove', (e) => {
-      if (!this.inAction) {
-        return;
-      }
+      if (!this.inAction) return;
       // prevent scrolling on touch devices
       e.evt.preventDefault();
       this._addTrailPoint();
-      const shape = this._getDrawingShape(this.drawer.stage.getIntersection(this.drawer._getPointerPos()));
-
-      if (!shape || this.#toRemoved.has(shape)) return;
-
-      this.#toRemoved.set(shape, this._showOutline(shape));
+      this._findAlong(this.drawer._getPointerPos());
     });
 
     this.onStage('mouseup touchend', (e) => {
+      if (!this.inAction) return;
+      e.evt.preventDefault();
       this.endAction();
       this.#trail.stop();
+      this.#last = null;
       this.clearSelection();
 
-      e.evt.preventDefault();
+      if (!this.#toErase.size) return;
 
-      if (this.#toRemoved.size) {
-        this.#toRemoved.forEach((outline, shape) => {
-          outline.destroy();
-          shape.destroy();
-        });
-        this.#toRemoved.clear();
-        this.drawer.stage.fire('change');
-      }
-    });
-
-    // click on a shape (not an erasing move)
-    this.onStage('click tap', (e) => {
-      const shape = this._getDrawingShape(e.target);
-
-      if (!shape) return;
-
-      shape.destroy();
+      for (const shape of this.#toErase.keys()) shape.destroy();
+      this.#toErase.clear();
       this.drawer.stage.fire('change');
     });
+  }
+
+  /**
+   * Fade the shapes under the pointer path since last position, erased on pointer up
+   * @param pos Pointer position (stage coordinates)
+   */
+  private _findAlong(pos: Vector2d) {
+    const from = this.#last ?? pos;
+    const steps = Math.max(1, Math.ceil(Math.hypot(pos.x - from.x, pos.y - from.y) / hitStep));
+
+    for (let i = 1; i <= steps; i++) {
+      const point = { x: from.x + ((pos.x - from.x) * i) / steps, y: from.y + ((pos.y - from.y) * i) / steps };
+      // shapes of drawing only (not cursors of other users above them)
+      const shape = this._getDrawingShape(this.drawer.drawLayer.getIntersection(point));
+
+      if (shape && !this.#toErase.has(shape)) {
+        this.#toErase.set(shape, shape.opacity());
+        shape.opacity(shape.opacity() * erasingOpacity);
+      }
+    }
+    this.#last = pos;
   }
 
   /**
@@ -120,46 +128,12 @@ export class EraserWidget extends BaseWidget {
   }
 
   /**
-   * Shape replaced by its thin outline until pointer up: visible whatever shape color and opacity, shape unchanged
-   * @param shape Drawing shape to erase, hidden meanwhile
-   * @returns outline, in selection layer
-   */
-  private _showOutline(shape: DrawingShape) {
-    const outline = shape.clone({ name: 'erasing', opacity: 1, listening: false, draggable: false }) as DrawingShape;
-
-    // shapes of groups too
-    getShapes(outline).forEach((s) => {
-      s.setAttrs({
-        stroke: erasingColor,
-        strokeWidth: 1.5,
-        // same width whatever zoom
-        strokeScaleEnabled: false,
-        fillEnabled: false,
-        dash: undefined,
-        opacity: 1,
-      });
-
-      if (s instanceof Text) {
-        // struck out, decoration line is drawn with fill color
-        s.setAttrs({ fill: erasingColor, strokeWidth: 1, textDecoration: 'line-through' });
-      }
-    });
-
-    this.drawer.selectionLayer.add(outline);
-    shape.hide();
-
-    return outline;
-  }
-
-  /**
-   * Erasing stopped before pointer up (tool changed): shapes kept as they were, trail removed
+   * Erasing stopped before pointer up (tool changed): shapes kept with their opacity, trail removed
    */
   protected onDesactive(): void {
-    this.#toRemoved.forEach((outline, shape) => {
-      outline.destroy();
-      shape.show();
-    });
-    this.#toRemoved.clear();
+    for (const [shape, opacity] of this.#toErase) shape.opacity(opacity);
+    this.#toErase.clear();
+    this.#last = null;
     this.#trail.destroy();
   }
 }

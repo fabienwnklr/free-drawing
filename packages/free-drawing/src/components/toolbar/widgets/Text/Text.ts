@@ -100,10 +100,11 @@ export class TextWidget extends BaseWidget {
   }
 
   /**
-   * Click adds an empty text at pointer and edits it
+   * Click adds an empty text at pointer and edits it (not right or middle button)
    */
   protected initEvents(): void {
-    this.onStage('click tap', () => {
+    this.onStage('click tap', (e) => {
+      if (e.evt.button > 0) return;
       this.#lastText = this.addTextNode();
       this.editTextNode(this.#lastText);
     });

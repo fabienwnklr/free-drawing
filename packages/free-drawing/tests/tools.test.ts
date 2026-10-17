@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { Path } from 'konva/lib/shapes/Path';
 import type { Line } from 'konva/lib/shapes/Line';
+import type { Shape } from 'konva/lib/Shape';
 import type { HighlighterWidget } from '@/components/toolbar/widgets/Highlighter/Highlighter';
 import { Rect } from 'konva/lib/shapes/Rect';
 import { Node } from 'konva/lib/Node';
@@ -248,7 +249,10 @@ describe('Frame', () => {
     // eraser: shape of frame alone
     const shape = getFrameShapes(restored)[0];
     drawer.getWidget<BaseWidget>('eraser')!.setActive(true);
-    shape.fire('click', { evt: {} }, true);
+    // no hit canvas in jsdom
+    vi.spyOn(drawer.drawLayer, 'getIntersection').mockReturnValue(shape as Shape);
+    fireMouse(drawer, 'mousedown', 10, 10);
+    fireMouse(drawer, 'mouseup', 10, 10);
     expect(getFrameShapes(restored)).toEqual([]);
     expect(restored.getLayer()).toBe(drawer.drawLayer);
   });

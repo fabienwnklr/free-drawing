@@ -249,6 +249,8 @@ Brush options (freehand stroke, see [perfect-freehand](https://github.com/stever
 - `smoothing`: softness of stroke edges, from 0 to 1 (`1` by default)
 - `streamline`: how much stroke is stabilized, from 0 to 1 (`0.5` by default)
 
+Eraser (E): a click erases the shape under pointer, a drag erases every shape it crosses, faded until the pointer is released (changing tool meanwhile keeps them). A shape of a group erases its group, a shape of a frame is erased alone, locked shapes are kept. Right and middle buttons do not erase.
+
 If `tool` option (or the tool saved in localStorage) is not in `widgets`, the first widget is activated.
 
 ### Groups of widgets

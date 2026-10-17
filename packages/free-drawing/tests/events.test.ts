@@ -187,22 +187,48 @@ describe('Test drawer event', () => {
     expect(line.points()).toEqual(points);
   });
 
-  it('Eraser removes shape whatever its opacity', () => {
+  it('Eraser click erases the pressed shape, whatever its opacity, not with right or middle button', () => {
     const drawer = createDrawer();
     fireMouse(drawer, 'mousedown', 10, 10);
     fireMouse(drawer, 'mouseup', 150, 80);
     const line = drawer.drawLayer.children[0] as Line;
+    const onChange = vi.fn();
     line.opacity(0.5);
 
     drawer.getWidget<EraserWidget>('eraser')!.setActive(true);
+    drawer.on('drawer.change', onChange);
     // no hit canvas in jsdom
-    vi.spyOn(drawer.stage, 'getIntersection').mockReturnValue(line);
+    vi.spyOn(drawer.drawLayer, 'getIntersection').mockReturnValue(line);
+    for (const button of [1, 2]) {
+      fireMouse(drawer, 'mousedown', 10, 10, { button });
+      fireMouse(drawer, 'mouseup', 10, 10, { button });
+    }
+    expect(line.getLayer()).toBe(drawer.drawLayer);
+    expect(line.opacity()).toBe(0.5);
+
+    // stroke starting on the shape
     fireMouse(drawer, 'mousedown', 10, 10);
-    fireMouse(drawer, 'mousemove', 50, 30);
-    fireMouse(drawer, 'mouseup', 50, 30);
+    fireMouse(drawer, 'mouseup', 10, 10);
+    expect(drawer.drawLayer.children.length).toBe(0);
+    expect(onChange).toHaveBeenCalledTimes(1);
+  });
+
+  it('Eraser finds thin shapes crossed quickly, along the pointer path', () => {
+    const drawer = createDrawer();
+    fireMouse(drawer, 'mousedown', 100, 10);
+    fireMouse(drawer, 'mouseup', 100, 200);
+    const line = drawer.drawLayer.children[0] as Line;
+
+    drawer.getWidget<EraserWidget>('eraser')!.setActive(true);
+    // vertical line 2px wide at x = 100
+    vi.spyOn(drawer.drawLayer, 'getIntersection').mockImplementation(({ x }) => (x >= 100 && x <= 102 ? line : null));
+    fireMouse(drawer, 'mousedown', 10, 50);
+    // one move across the line
+    fireMouse(drawer, 'mousemove', 300, 50);
+    expect(line.opacity()).toBeCloseTo(0.2);
+    fireMouse(drawer, 'mouseup', 300, 50);
 
     expect(drawer.drawLayer.children.length).toBe(0);
-    expect(drawer.selectionLayer.find('.erasing').length).toBe(0);
   });
 
   it('Eraser shows a trail behind pointer, faded out after pointer up', async () => {
@@ -224,33 +250,48 @@ describe('Test drawer event', () => {
     expect(trail()).toBeUndefined();
   });
 
-  it('Eraser shows shapes to erase as outline, restored if erasing stops', () => {
+  it('Eraser fades shapes to erase, their opacity restored if erasing stops', () => {
     const drawer = createDrawer();
     fireMouse(drawer, 'mousedown', 10, 10);
     fireMouse(drawer, 'mouseup', 150, 80);
     const line = drawer.drawLayer.children[0] as Line;
     const eraser = drawer.getWidget<EraserWidget>('eraser')!;
-    const outlines = () => drawer.selectionLayer.find('.erasing');
-    line.opacity(0.3);
+    line.opacity(0.5);
 
     eraser.setActive(true);
-    // no hit canvas in jsdom
-    vi.spyOn(drawer.stage, 'getIntersection').mockReturnValue(line);
+    // no hit canvas in jsdom: shape under pointer once moved
+    vi.spyOn(drawer.drawLayer, 'getIntersection').mockImplementation(({ x }) => (x > 40 ? line : null));
     fireMouse(drawer, 'mousedown', 10, 10);
+    expect(line.opacity()).toBe(0.5);
     fireMouse(drawer, 'mousemove', 50, 30);
-    // outline instead of shape, visible whatever shape opacity
-    expect(line.visible()).toBe(false);
-    expect(outlines().length).toBe(1);
-    expect(outlines()[0].opacity()).toBe(1);
-    expect(line.opacity()).toBe(0.3);
+    fireMouse(drawer, 'mousemove', 60, 30);
+    // faded once, still visible
+    expect(line.opacity()).toBeCloseTo(0.1);
+    expect(line.visible()).toBe(true);
 
     // tool changed before pointer up: shape kept as it was, action ended
     drawer.getWidget<BrushWidget>('brush')!.setActive(true);
-    expect(line.visible()).toBe(true);
-    expect(outlines().length).toBe(0);
+    expect(line.opacity()).toBe(0.5);
     expect(drawer.drawLayer.children.length).toBe(1);
     expect(eraser.inAction).toBe(false);
     expect(drawer.$drawerContainer.style.getPropertyValue('--drawer-pointer-events')).toBe('all');
+  });
+
+  it('Text tool adds a text on click, not on right or middle click', () => {
+    const drawer = createDrawer();
+    const texts = () => drawer.drawLayer.find('Text');
+
+    drawer.getWidget<TextWidget>('text')!.setActive(true);
+    fireMouse(drawer, 'click', 100, 100, { button: 2 });
+    fireMouse(drawer, 'click', 100, 100, { button: 1 });
+    expect(texts().length).toBe(0);
+
+    fireMouse(drawer, 'click', 100, 100);
+    expect(texts().length).toBe(1);
+    // empty text removed when editing is cancelled
+    const $textarea = document.querySelector<HTMLTextAreaElement>('.drawer-container textarea')!;
+    $textarea.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', bubbles: true }));
+    expect(texts().length).toBe(0);
   });
 
   it('Ctrl + wheel zoom keeps the point under cursor', () => {
