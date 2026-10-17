@@ -100,13 +100,13 @@ jobs:
           ref: ${{ inputs.tag || github.ref }}
           fetch-depth: 0
 
-      # npm 11.5.1 or later for trusted publishing
+      # npm 11.5.1 or later for trusted publishing. No registry-url: its placeholder token would be used when
+      # trusted publishing fails, with a misleading 404 instead of an authentication error
       - name: Use Node.js 24
         uses: actions/setup-node@v6
         with:
           node-version: 24.x
           cache: 'yarn'
-          registry-url: 'https://registry.npmjs.org'
 
       - name: Check version
         id: version
@@ -140,4 +140,9 @@ jobs:
       - name: Publish
         if: steps.version.outputs.publish
         working-directory: packages/free-drawing
-        run: npm publish --access public
+        run: |
+          echo "npm $(npm --version)"
+          if ! npm publish --access public; then
+            echo "::error::Not published: the package needs a trusted publisher on npmjs.com (package settings): GitHub Actions, repository $GITHUB_REPOSITORY, workflow release.yml, no environment"
+            exit 1
+          fi
