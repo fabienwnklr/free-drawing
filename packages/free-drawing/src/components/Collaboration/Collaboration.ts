@@ -14,6 +14,7 @@ import { serializeShape } from '@/components/tools/UndoRedo/History';
 import { drawerEvents } from '@/constants';
 import { socketEvents } from '@free-drawing/protocol';
 import { applyOrder } from '@/utils/order';
+import { parseShapeState } from '@/utils/drawingFile';
 import type { DrawingShape } from '@/@types/drawer';
 
 /**
@@ -469,18 +470,26 @@ export class Collaboration {
 
   /**
    * Apply a change of another client: shapes removed, updated (groups replaced, selection kept) or added, stacking
-   * order applied. Shapes are recorded as synced, so the change is not sent back
+   * order applied. Shapes are recorded as synced, so the change is not sent back. Only drawing shapes are created, as
+   * from files: other nodes (stage, layers...) and invalid shapes are ignored
    */
   private _apply({ upsert, remove, order }: DrawingChange) {
     const shapes = new Map(this.drawer.getDrawingShapes().map((shape) => [shape.id(), shape]));
 
-    remove.forEach((id) => {
+    for (const id of Array.isArray(remove) ? remove : []) {
       shapes.get(id)?.destroy();
       this.#synced.delete(id);
-    });
+    }
 
-    upsert.forEach((json) => {
-      const { attrs, className } = JSON.parse(json) as { attrs: ShapeConfig; className: string };
+    for (const json of Array.isArray(upsert) ? upsert : []) {
+      const state = parseShapeState(json);
+
+      if (!state) {
+        console.warn('Shape of another user ignored: not a drawing shape');
+        continue;
+      }
+
+      const { attrs, className } = state as { attrs: ShapeConfig; className: string };
       let shape = shapes.get(attrs.id as string);
 
       // groups replaced with their shapes, at same place, still selected
@@ -489,7 +498,7 @@ export class Collaboration {
         const selected = this.drawer.getSelectedShapes();
 
         shape.destroy();
-        shape = this.drawer.addShape(Node.create(json) as DrawingShape);
+        shape = this.drawer.addShape(Node.create(state) as DrawingShape);
         shape.zIndex(index);
         if (selected.some((node) => !node.getLayer())) {
           this.drawer
@@ -507,13 +516,13 @@ export class Collaboration {
         for (const key of removed) node.setAttr(key, undefined);
         shape.setAttrs(attrs);
       } else {
-        shape = this.drawer.addShape(Node.create(json) as DrawingShape);
+        shape = this.drawer.addShape(Node.create(state) as DrawingShape);
       }
       // as serialized here, not to send it back
       this.#synced.set(shape.id(), serializeShape(shape));
-    });
+    }
 
-    if (order) {
+    if (Array.isArray(order)) {
       applyOrder(this.drawer.getDrawingShapes(), order);
       // known in this order, not to send it back
       this.#synced = new Map(
@@ -526,6 +535,7 @@ export class Collaboration {
 
     // removed shapes are not selected anymore
     const transformer = this.drawer.getWidget<SelectWidget>('selection')?.transformer;
-    if (transformer && remove.length) transformer.nodes(transformer.nodes().filter((node) => node.getLayer()));
+    if (transformer && Array.isArray(remove) && remove.length)
+      transformer.nodes(transformer.nodes().filter((node) => node.getLayer()));
   }
 }

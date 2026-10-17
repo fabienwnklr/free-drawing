@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.14.1](https://github.com/fabienwnklr/free-drawing/compare/v7.14.0...v7.14.1) (2026-10-18)
+
+
+### Bug Fixes
+
+* **collaboration:** shapes received from other users are checked as shapes of files: only drawing shapes are created, so a stage or a layer sent by a user of the session can no longer empty an element of the page of every user; an invalid shape is ignored without stopping the rest of the change
+
 ## [7.14.0](https://github.com/fabienwnklr/free-drawing/compare/v7.13.0...v7.14.0) (2026-10-18)
 
 

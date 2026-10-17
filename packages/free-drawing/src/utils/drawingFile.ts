@@ -20,9 +20,18 @@ export type DrawingFile = {
   shapes: ShapeState[];
 };
 
-// files and links can come from anyone: only drawing shapes and groups of them are created
-/** Konva classes of drawing shapes allowed in files and links (with groups and frames) */
+// files, links and shapes of other users of a collaboration can come from anyone: only drawing shapes and groups of
+// them are created
+/** Konva classes of drawing shapes allowed in files, links and collaboration changes (with groups and frames) */
 const shapeClasses = ['Line', 'Arrow', 'Rect', 'Ellipse', 'Text', 'Path'];
+
+/**
+ * Attributes of a node state, without `__proto__` (konva would set it as prototype of the node attributes)
+ * @param attrs Attributes read from a file or a change (not trusted)
+ * @returns Own attributes, in a new object
+ */
+const parseAttrs = (attrs: object): Record<string, unknown> =>
+  Object.fromEntries(Object.entries(attrs).filter(([key]) => key !== '__proto__'));
 
 /**
  * Drawing shape or group of a file, null for other nodes
@@ -38,14 +47,29 @@ function parseShape(shape: ShapeState): ShapeState | null {
     const children = Array.isArray(shape.children) ? shape.children.map(parseShape) : [];
 
     return {
-      attrs: shape.attrs,
+      attrs: parseAttrs(shape.attrs),
       className: shape.className,
       children: children.filter((child): child is ShapeState => !!child),
     };
   }
 
   // no children (konva would add them)
-  return shapeClasses.includes(shape.className) ? { attrs: shape.attrs, className: shape.className } : null;
+  return shapeClasses.includes(shape.className) ? { attrs: parseAttrs(shape.attrs), className: shape.className } : null;
+}
+
+/**
+ * Drawing shape received from another user of a collaboration, checked as shapes of files
+ * @param json JSON of a shape state (konva `toObject`), not trusted
+ * @returns state with only drawing shapes (see `parseDrawingFile`), null for other nodes, without id or invalid JSON
+ */
+export function parseShapeState(json: unknown): ShapeState | null {
+  try {
+    const state = typeof json === 'string' ? parseShape(JSON.parse(json)) : null;
+
+    return state && typeof state.attrs.id === 'string' && state.attrs.id ? state : null;
+  } catch {
+    return null;
+  }
 }
 
 /**

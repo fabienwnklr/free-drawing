@@ -600,6 +600,51 @@ describe('Collaboration', () => {
     alice.collaborationModal!.hide();
   });
 
+  it('Only drawing shapes of other users are created, as from files', () => {
+    const connect = createServer();
+    const drawer = createDrawer();
+    const socket = connect(drawer, 'room', 'Ada', { userId: 'ada' });
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const $page = document.createElement('div');
+    const json = (state: object) => JSON.stringify(state);
+
+    $page.id = 'page';
+    $page.innerHTML = '<p>Page of the app</p>';
+    document.body.append($page);
+    socket.receive('CHANGE', {
+      upsert: [
+        // stage emptying an element of the page, layer
+        json({ className: 'Stage', attrs: { id: 's1', container: 'page' } }),
+        json({ className: 'Layer', attrs: { id: 'l1' } }),
+        // group: only its drawing shapes, attributes without prototype
+        json({
+          className: 'Group',
+          attrs: { id: 'g1', ['__proto__']: { draggable: true } },
+          children: [
+            { className: 'Stage', attrs: { id: 's2', container: 'page' } },
+            { className: 'Rect', attrs: { id: 'r2', width: 5 } },
+          ],
+        }),
+        '{ not json',
+        json({ className: 'Rect', attrs: { width: 10 } }),
+        json({ className: 'Rect', attrs: { id: 'r1', width: 10 } }),
+      ],
+      remove: [],
+    });
+
+    expect($page.innerHTML).toBe('<p>Page of the app</p>');
+    expect(drawer.getDrawingShapes().map((shape) => [shape.getClassName(), shape.id()])).toEqual([
+      ['Group', 'g1'],
+      ['Rect', 'r1'],
+    ]);
+    const group = drawer.getDrawingShapes()[0] as Group;
+    expect(group.getChildren().map((shape) => shape.id())).toEqual(['r2']);
+    expect(Object.getPrototypeOf(group.attrs)).toBe(Object.prototype);
+    // stage, layer, invalid JSON, shape without id
+    expect(warn).toHaveBeenCalledTimes(4);
+    $page.remove();
+  });
+
   it('Owner makes users coming for the first time view only', () => {
     const connect = createServer();
     const alice = createDrawer();
