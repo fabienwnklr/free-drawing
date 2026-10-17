@@ -185,7 +185,9 @@ export class CommandPalette extends Modal {
   private _render() {
     const groups = new Map<TranslationKey, Command[]>();
 
-    this.#shown.forEach((command) => groups.set(command.group, [...(groups.get(command.group) ?? []), command]));
+    for (const command of this.#shown) {
+      groups.set(command.group, [...(groups.get(command.group) ?? []), command]);
+    }
     this.#shown = [...groups.values()].flat();
     this.$list.replaceChildren(
       ...[...groups].map(([group, commands]) => {
@@ -259,7 +261,7 @@ export class CommandPalette extends Modal {
     const $active = $options[index];
 
     this.#active = index;
-    $options.forEach(($option) => $option.setAttribute('aria-selected', String($option === $active)));
+    for (const $option of $options) $option.setAttribute('aria-selected', String($option === $active));
     if ($active) {
       this.$input.setAttribute('aria-activedescendant', $active.id);
       $active.scrollIntoView?.({ block: 'nearest' });

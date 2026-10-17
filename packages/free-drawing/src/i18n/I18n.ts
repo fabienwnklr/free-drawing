@@ -108,6 +108,6 @@ export class I18n {
    */
   setLanguage(language: Language) {
     this.language = language;
-    this.#updates.forEach((update) => update(this.t));
+    for (const update of this.#updates) update(this.t);
   }
 }

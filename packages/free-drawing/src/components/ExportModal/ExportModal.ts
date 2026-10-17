@@ -166,7 +166,7 @@ export class ExportModal extends Modal {
     const $canvas = this.drawer.exportCanvas({ ...this.exportOptions, scale });
 
     this.$empty.hidden = !!$canvas;
-    this.$buttons.forEach(($btn) => ($btn.disabled = !$canvas));
+    for (const $btn of this.$buttons) $btn.disabled = !$canvas;
     this.$preview.hidden = !$canvas;
     if (!$canvas) return;
 

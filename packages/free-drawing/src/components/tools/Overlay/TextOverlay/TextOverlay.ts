@@ -211,9 +211,14 @@ export class TextOverlay extends BaseOverlay {
    * @param visible True to show the sections, false to hide them
    */
   toggleTextFields(visible: boolean) {
-    [this.$fontFamilyContainer, this.$fontSizeContainer, this.$fontStyleContainer, this.$textAlignContainer].forEach(
-      ($section) => ($section.style.display = visible ? '' : 'none')
-    );
+    for (const $section of [
+      this.$fontFamilyContainer,
+      this.$fontSizeContainer,
+      this.$fontStyleContainer,
+      this.$textAlignContainer,
+    ]) {
+      $section.style.display = visible ? '' : 'none';
+    }
   }
 
   /**

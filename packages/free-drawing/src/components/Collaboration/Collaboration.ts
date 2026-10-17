@@ -351,7 +351,7 @@ export class Collaboration {
    * Cursors size kept after zoom
    */
   updateCursors() {
-    this.#cursors.forEach((cursor) => this._scaleCursor(cursor));
+    for (const cursor of this.#cursors.values()) this._scaleCursor(cursor);
   }
 
   /**
@@ -403,10 +403,10 @@ export class Collaboration {
   stop() {
     this.socket.disconnect();
     this.drawer.stage.off('.collaboration');
-    Object.values(this.#timers).forEach((timer) => clearTimeout(timer));
-    this.#cursors.forEach((cursor) => cursor.destroy());
+    for (const timer of Object.values(this.#timers)) clearTimeout(timer);
+    for (const cursor of this.#cursors.values()) cursor.destroy();
     this.#cursors.clear();
-    this.#lasers.forEach((laser) => laser.destroy());
+    for (const laser of this.#lasers.values()) laser.destroy();
     this.#lasers.clear();
   }
 
@@ -462,7 +462,7 @@ export class Collaboration {
     const pending = this.#pending;
 
     this.#pending = [];
-    pending.forEach((change) => this._apply(change));
+    for (const change of pending) this._apply(change);
 
     return pending.length > 0;
   }
@@ -500,10 +500,11 @@ export class Collaboration {
         // same node (kept in selection): attributes removed by other client are removed, not local ones (draggable,
         // hit function)
         const node: Node = shape;
+        const removed = Object.keys(node.attrs).filter(
+          (key) => !(key in attrs) && key !== 'draggable' && typeof node.getAttr(key) !== 'function'
+        );
 
-        Object.keys(node.attrs)
-          .filter((key) => !(key in attrs) && key !== 'draggable' && typeof node.getAttr(key) !== 'function')
-          .forEach((key) => node.setAttr(key, undefined));
+        for (const key of removed) node.setAttr(key, undefined);
         shape.setAttrs(attrs);
       } else {
         shape = this.drawer.addShape(Node.create(json) as DrawingShape);

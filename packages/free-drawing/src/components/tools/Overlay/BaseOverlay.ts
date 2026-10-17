@@ -469,9 +469,9 @@ export class BaseOverlay {
    * @param $btn Button set pressed, the others are released; null releases all
    */
   protected _setActiveBtn($btnContainer: HTMLDivElement, $btn: Element | null) {
-    $btnContainer
-      .querySelectorAll<HTMLElement>(`.${this.selectors.button}`)
-      .forEach(($b) => setPressed($b, $b === $btn));
+    for (const $b of $btnContainer.querySelectorAll<HTMLElement>(`.${this.selectors.button}`)) {
+      setPressed($b, $b === $btn);
+    }
   }
 
   /**

@@ -283,7 +283,7 @@ describe('Collaboration', () => {
   });
 
   afterAll(() => {
-    sockets.forEach((socket) => socket.close());
+    for (const socket of sockets) socket.close();
     server.httpServer.close();
   });
 

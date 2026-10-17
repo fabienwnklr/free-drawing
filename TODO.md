@@ -14,6 +14,7 @@
 - [x] use jsdoc with @param etc.
 - [x] if i select multiple object, for example text, square, hand draw, i want every available tool on panel
 - [x] scan files and fix error/warning
+- [ ] the eraser effect on object isn't really great for any case, find something else
 
 ## Security (collaboration, server)
 

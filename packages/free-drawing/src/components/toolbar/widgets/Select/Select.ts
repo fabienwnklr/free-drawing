@@ -141,7 +141,9 @@ export class SelectWidget extends BaseWidget {
       const nodes = this._getSelected();
 
       // resized frames take shapes entirely in them, other shapes in frame containing them
-      if (e.type === 'transformend') nodes.filter(isFrame).forEach((frame) => this.drawer.fitFrame(frame));
+      if (e.type === 'transformend') {
+        for (const frame of nodes.filter(isFrame)) this.drawer.fitFrame(frame);
+      }
       this.drawer.placeInFrames(nodes);
       this.drawer.stage.fire('change');
     });
@@ -167,7 +169,7 @@ export class SelectWidget extends BaseWidget {
 
       setFrameSize(frame, Math.abs(frame.width() * frame.scaleX()), Math.abs(frame.height() * frame.scaleY()));
       frame.scale({ x: 1, y: 1 });
-      getFrameShapes(frame).forEach((shape) => shape.move({ x: -dx, y: -dy }));
+      for (const shape of getFrameShapes(frame)) shape.move({ x: -dx, y: -dy });
       framePositions.set(frame, frame.position());
     });
 
@@ -439,9 +441,9 @@ export class SelectWidget extends BaseWidget {
    * @param shapes Selected shapes of groups, draggable while the selection tool is active (previous ones no longer)
    */
   private _setNested(shapes: DrawingShape[]) {
-    this.#nested.forEach((shape) => shape.draggable(false));
+    for (const shape of this.#nested) shape.draggable(false);
     this.#nested = shapes;
-    this.#nested.forEach((shape) => shape.draggable(this.drawer.activeTool === 'selection'));
+    for (const shape of this.#nested) shape.draggable(this.drawer.activeTool === 'selection');
   }
 
   /**
@@ -631,7 +633,7 @@ export class SelectWidget extends BaseWidget {
   protected onDesactive(): void {
     this.selectionRectangle.destroy();
     this.clearSelection();
-    withFrameShapes(this.drawer.getDrawingShapes()).forEach((d) => d.draggable(false));
+    for (const d of withFrameShapes(this.drawer.getDrawingShapes())) d.draggable(false);
   }
 
   /**
@@ -693,7 +695,7 @@ export class SelectWidget extends BaseWidget {
    * Remove snapping guides of selection layer
    */
   private _clearGuides() {
-    this.drawer.selectionLayer.find(`.${shapeName.guideLine}`).forEach((l) => l.destroy());
+    for (const l of this.drawer.selectionLayer.find(`.${shapeName.guideLine}`)) l.destroy();
   }
 
   /**

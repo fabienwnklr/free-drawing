@@ -152,7 +152,7 @@ export class ArrowWidget extends ShapeWidget<Arrow> {
     const unit = 1 / this.drawer.getZoomLevel();
     const color = this.drawer.getWidget<SelectWidget>('selection')?.color ?? '#646cff';
 
-    this.#highlights.forEach((highlight) => highlight.destroy());
+    for (const highlight of this.#highlights) highlight.destroy();
     this.#highlights = ends
       .filter((end): end is BoundEnd => !!end)
       .map(({ shape, anchor }) => {

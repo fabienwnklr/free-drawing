@@ -456,9 +456,9 @@ export class Drawer extends MicroEvent {
       this.#readOnlyWidgets = [...this.toolbar.widgets.values()].filter(
         (w) => w.id !== 'pan' && w.id !== 'laser' && !w.isDisabled
       );
-      this.#readOnlyWidgets.forEach((widget) => widget.setDisabled(true));
+      for (const widget of this.#readOnlyWidgets) widget.setDisabled(true);
     } else {
-      this.#readOnlyWidgets.forEach((widget) => widget.setDisabled(false));
+      for (const widget of this.#readOnlyWidgets) widget.setDisabled(false);
       this.#readOnlyWidgets = [];
       this.#toolBeforeReadOnly?.setActive(true);
     }
@@ -789,11 +789,7 @@ export class Drawer extends MicroEvent {
    * @returns Top nodes of draw layer having the name of this type
    */
   getDrawingShapeByName(shapeType: keyof typeof shapeName): (Group | Shape<ShapeConfig>)[] {
-    return this.drawLayer.children.filter((e) => {
-      if (e.hasName(shapeName[shapeType])) {
-        return e;
-      }
-    });
+    return this.drawLayer.children.filter((e) => e.hasName(shapeName[shapeType]));
   }
 
   /**
@@ -1522,13 +1518,15 @@ export class Drawer extends MicroEvent {
    */
   fitFrame(frame: Frame) {
     const box = frame.getClientRect();
+    const left = getFrameShapes(frame).filter((shape) => findFrameAt(shape, [frame]) !== frame);
 
-    getFrameShapes(frame)
-      .filter((shape) => findFrameAt(shape, [frame]) !== frame)
-      .forEach((shape) => moveShapeTo(shape, this.drawLayer));
-    this.getDrawingShapes()
-      .filter((shape) => !isFrame(shape) && rectContains(box, shape.getClientRect()))
-      .forEach((shape) => moveShapeTo(shape, getFrameContent(frame)));
+    for (const shape of left) moveShapeTo(shape, this.drawLayer);
+    // shapes of drawing now inside, after the ones moved out
+    const inside = this.getDrawingShapes().filter(
+      (shape) => !isFrame(shape) && rectContains(box, shape.getClientRect())
+    );
+
+    for (const shape of inside) moveShapeTo(shape, getFrameContent(frame));
   }
 
   /**
@@ -1708,8 +1706,8 @@ export class Drawer extends MicroEvent {
     const { background, shapes } = parseDrawingFile(typeof file === 'string' ? file : JSON.stringify(file));
 
     this.getWidget<SelectWidget>('selection')?.clearSelection();
-    this.getDrawingShapes().forEach((shape) => shape.destroy());
-    shapes.forEach((shape) => this.addShape(Node.create(shape) as Shape<ShapeConfig>));
+    for (const shape of this.getDrawingShapes()) shape.destroy();
+    for (const shape of shapes) this.addShape(Node.create(shape) as Shape<ShapeConfig>);
     // fires change: history, saved, sent to collaborators
     this.setBgColor(background);
   }
@@ -2132,7 +2130,7 @@ export class Drawer extends MicroEvent {
       if (!shapes.length) return;
 
       this.getWidget<SelectWidget>('selection')?.clearSelection();
-      shapes.forEach((shape) => shape.destroy());
+      for (const shape of shapes) shape.destroy();
       this.stage.fire('change');
     }
   }

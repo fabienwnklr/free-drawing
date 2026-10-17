@@ -198,12 +198,14 @@ describe('Context menu', () => {
       return shapes.map((shape) => turn.copy().multiply(shape.getAbsoluteTransform()).getMatrix());
     };
     const expectMatrices = (shapes: Rect[], matrices: number[][]) =>
-      shapes.forEach((shape, i) =>
+      shapes.forEach((shape, i) => {
         shape
           .getAbsoluteTransform()
           .getMatrix()
-          .forEach((n, j) => expect(n).toBeCloseTo(matrices[i][j]))
-      );
+          .forEach((n, j) => {
+            expect(n).toBeCloseTo(matrices[i][j]);
+          });
+      });
 
     // box 0..100 x 0..50: center 50, 25
     drawer.rotateShapes(90, [rect]);
@@ -211,7 +213,7 @@ describe('Context menu', () => {
     drawer.rotateShapes(-90, [rect]);
     expect([rect.x(), rect.y(), rect.rotation()]).toEqual([0, 0, 0]);
     // 4 quarter turns: back
-    [1, 2, 3, 4].forEach(() => drawer.rotateShapes(90, [rect]));
+    for (let turn = 0; turn < 4; turn++) drawer.rotateShapes(90, [rect]);
     expect([rect.x(), rect.y(), rect.rotation()]).toEqual([0, 0, 0]);
 
     // several shapes around center of their box

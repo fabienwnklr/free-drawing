@@ -350,7 +350,9 @@ export class LayersPanel {
    */
   private _setCurrent($current: Element | null | undefined) {
     [...this.$list.children].forEach(($item) => {
-      $item.querySelectorAll<HTMLElement>('button').forEach(($btn) => ($btn.tabIndex = $item === $current ? 0 : -1));
+      for (const $btn of $item.querySelectorAll<HTMLElement>('button')) {
+        $btn.tabIndex = $item === $current ? 0 : -1;
+      }
     });
   }
 
@@ -686,7 +688,7 @@ export class LayersPanel {
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', end);
       window.removeEventListener('pointercancel', end);
-      $items.forEach(($el) => $el.classList.remove('drop-before', 'drop-after', 'is-dragged'));
+      for (const $el of $items) $el.classList.remove('drop-before', 'drop-after', 'is-dragged');
       this.#busy = false;
 
       // place once removed from list

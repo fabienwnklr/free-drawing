@@ -10,7 +10,9 @@ const opened: { hide(): void }[] = [];
 describe('Preferences', () => {
   document.body.innerHTML = `<div id="test"></div>`;
 
-  afterEach(() => opened.splice(0).forEach((modal) => modal.hide()));
+  afterEach(() => {
+    for (const modal of opened.splice(0)) modal.hide();
+  });
 
   it('Saved in browser, restored on next visit', () => {
     const drawer = createDrawer({ language: 'en' });

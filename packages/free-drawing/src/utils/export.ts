@@ -133,14 +133,18 @@ export function renderCanvas(shapes: DrawingShape[], box: Box, options: ImageOpt
     const clone = shape.clone({ draggable: false }) as DrawingShape;
 
     // title of frames not exported
-    if (clone instanceof Group) clone.find(`.${frameParts.title}`).forEach((title) => title.hide());
+    if (clone instanceof Group) {
+      for (const title of clone.find(`.${frameParts.title}`)) title.hide();
+    }
     // shape of a group exported alone
     if (shape.getParent() !== shape.getLayer()) {
       clone.setAttrs({ ...layerTransform(shape).decompose(), offsetX: 0, offsetY: 0 });
     }
     // shapes of groups too
     if (dark) {
-      getShapes(clone).forEach((s) => s.setAttrs({ fill: colorOf(s.fill(), dark), stroke: colorOf(s.stroke(), dark) }));
+      for (const s of getShapes(clone)) {
+        s.setAttrs({ fill: colorOf(s.fill(), dark), stroke: colorOf(s.stroke(), dark) });
+      }
     }
     layer.add(clone);
   });
@@ -426,7 +430,7 @@ export function createPdf(jpeg: Uint8Array<ArrayBuffer>, width: number, height: 
   const xref = length;
 
   add(`xref\n0 ${offsets.length + 1}\n0000000000 65535 f \n`);
-  offsets.forEach((offset) => add(`${String(offset).padStart(10, '0')} 00000 n \n`));
+  for (const offset of offsets) add(`${String(offset).padStart(10, '0')} 00000 n \n`);
   add(`trailer\n<< /Size ${offsets.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
 
   return new Blob(parts, { type: 'application/pdf' });

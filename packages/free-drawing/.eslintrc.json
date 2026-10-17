@@ -12,7 +12,8 @@
     },
     "plugins": ["@typescript-eslint", "jsdoc"],
     "rules": {
-      "@typescript-eslint/no-explicit-any": "off"
+      "@typescript-eslint/no-explicit-any": "off",
+      "array-callback-return": ["error", { "checkForEach": true }]
     },
     "ignorePatterns": ["**/*.css", "**/*.scss", "**/*.svg", "**/*.ttf"],
     "overrides": [

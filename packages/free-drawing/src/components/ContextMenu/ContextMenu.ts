@@ -186,12 +186,12 @@ export class ContextMenu {
       $section.setAttribute('role', 'group');
       $section.append(...items.map(({ $item }) => $item));
       this.$list.append($section);
-      items.forEach(({ $item, run }) =>
+      for (const { $item, run } of items) {
         $item.addEventListener('click', () => {
           this.hide();
           run();
-        })
-      );
+        });
+      }
 
       return { $section, items };
     });
@@ -369,7 +369,7 @@ export class ContextMenu {
     let first = true;
 
     this.#sections.forEach(({ $section, items }) => {
-      items.forEach(({ $item, visible }) => ($item.hidden = !visible()));
+      for (const { $item, visible } of items) $item.hidden = !visible();
 
       const shown = items.some(({ $item }) => !$item.hidden);
 

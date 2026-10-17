@@ -135,7 +135,7 @@ export class Toolbar {
    * @param group Group whose button is added at the end of toolbar
    */
   addGroup(group: GroupWidget) {
-    group.widgets.forEach((widget) => this.widgets.set(widget.id, widget));
+    for (const widget of group.widgets) this.widgets.set(widget.id, widget);
     this.groups.push(group);
     group.addTo(this.$toolbarRoot);
     this._initTabStop();
@@ -166,7 +166,7 @@ export class Toolbar {
    * State of groups buttons: highlighted while one of their widgets is active, disabled with them
    */
   update() {
-    this.groups.forEach((group) => group.update());
+    for (const group of this.groups) group.update();
   }
 
   /**
@@ -174,9 +174,11 @@ export class Toolbar {
    * @param $button Top button (widget or group) getting tabindex 0, others get -1
    */
   setTabStop($button: HTMLElement) {
-    this._getButtons().forEach(($btn) => ($btn.tabIndex = $btn === $button ? 0 : -1));
+    for (const $btn of this._getButtons()) $btn.tabIndex = $btn === $button ? 0 : -1;
     // widgets of groups reached with arrow keys
-    this.groups.forEach((group) => group.widgets.forEach((widget) => (widget.$button.tabIndex = -1)));
+    for (const group of this.groups) {
+      for (const widget of group.widgets) widget.$button.tabIndex = -1;
+    }
   }
 
   /**

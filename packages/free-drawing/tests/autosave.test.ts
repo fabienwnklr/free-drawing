@@ -16,7 +16,7 @@ describe('Auto save', () => {
   document.body.innerHTML = `<div id="test"></div>`;
 
   afterEach(() => {
-    document.querySelectorAll('.drawer-modal').forEach(($modal) => $modal.remove());
+    for (const $modal of document.querySelectorAll('.drawer-modal')) $modal.remove();
   });
 
   it('On by default: each change saved, nothing left to save', () => {

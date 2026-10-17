@@ -65,14 +65,16 @@ describe('Layout', () => {
     expect($first.classList.contains('drawer-zen-hidden')).toBe(true);
     expect($second.classList.contains('drawer-zen-hidden')).toBe(false);
     // zoom, position, help, undo / redo, layers button and panel hidden; toolbar and menu shown
-    [
+    for (const $el of [
       drawer.zoom!.$zoomContainer,
       drawer.position!.$positionContainer,
       drawer.help.$helpContainer,
       drawer.undoRedo.$undoRedoContainer,
       drawer.layersPanel!.$buttonContainer,
       drawer.layersPanel!.$panel,
-    ].forEach(($el) => expect($el.classList.contains('drawer-zen-hidden')).toBe(true));
+    ]) {
+      expect($el.classList.contains('drawer-zen-hidden')).toBe(true);
+    }
     expect(drawer.toolbar.$toolbarContent.classList.contains('drawer-zen-hidden')).toBe(false);
     expect(drawer.setting.$dropdownContainer.classList.contains('drawer-zen-hidden')).toBe(false);
 

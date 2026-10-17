@@ -32,7 +32,9 @@ const activeOption = (palette: CommandPalette) =>
 describe('Command palette', () => {
   document.body.innerHTML = `<div id="test"></div>`;
 
-  afterEach(() => palettes.forEach((palette) => palette.hide()));
+  afterEach(() => {
+    for (const palette of palettes) palette.hide();
+  });
 
   it('Menu item and Ctrl+K open palette, focus in search field', () => {
     const drawer = createDrawer({ language: 'en' });

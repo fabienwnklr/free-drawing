@@ -246,7 +246,9 @@ describe('Selection', () => {
     const other = addRect(drawer, 400, 0, 50, '#ffc9c9');
 
     // no hit canvas in jsdom: shapes drawn at this point
-    [bottom, middle, other].forEach((shape) => vi.spyOn(shape, 'intersects').mockReturnValue(shape !== other));
+    for (const shape of [bottom, middle, other]) {
+      vi.spyOn(shape, 'intersects').mockReturnValue(shape !== other);
+    }
 
     click(drawer, top, 100, 100, { altKey: true });
     expect(selected()).toEqual([top]);

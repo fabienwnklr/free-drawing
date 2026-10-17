@@ -72,11 +72,11 @@ export function isDrawnAtLocked(node: Node, point: Vector2d): boolean {
     (n) => !n.listening()
   );
 
-  locked.forEach((n) => n.listening(true));
+  for (const n of locked) n.listening(true);
   try {
     return isDrawnAt(node, point);
   } finally {
-    locked.forEach((n) => n.listening(false));
+    for (const n of locked) n.listening(false);
   }
 }
 

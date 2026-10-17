@@ -95,7 +95,7 @@ export class HotKey {
       } else if (edit && editable.length && e.key in arrowMoves && !inField) {
         // only arrow keys, other keys keep their default behavior (F5, Tab...)
         if (!arrowMoved) unbindMoved(editable);
-        editable.forEach((shape) => shape.move(arrowMoves[e.key]));
+        for (const shape of editable) shape.move(arrowMoves[e.key]);
         arrowMoved = true;
         e.preventDefault();
       }

@@ -191,13 +191,13 @@ export function attachCollaboration(io: Server, auth: Auth) {
       try {
         const { shapes } = data;
 
-        change.remove.forEach((id) => shapes.delete(id));
-        change.upsert.forEach((json) => shapes.set(JSON.parse(json).attrs.id, json));
+        for (const id of change.remove) shapes.delete(id);
+        for (const json of change.upsert) shapes.set(JSON.parse(json).attrs.id, json);
         // drawing kept in stacking order (sent so to joining users), unknown shapes after
         if (Array.isArray(change.order)) {
           const ordered = new Map(change.order.filter((id) => shapes.has(id)).map((id) => [id, shapes.get(id)!]));
 
-          shapes.forEach((json, id) => ordered.set(id, json));
+          for (const [id, json] of shapes) ordered.set(id, json);
           data.shapes = ordered;
         }
       } catch (error) {

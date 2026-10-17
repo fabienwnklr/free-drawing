@@ -324,11 +324,12 @@ export class Settings extends Dropdown {
     this.$exportButton.addEventListener('click', () => this.drawer.showExport());
     this.$collaborationButton.addEventListener('click', () => this.drawer.showCollaboration());
     // read only: no item modifying drawing
-    this.drawer.on(drawerEvents.readOnlyChange, (readOnly: boolean) =>
-      [this.$openButton, this.$clearCanvasButton].forEach(($item) =>
-        readOnly ? disableElement($item) : enableElement($item)
-      )
-    );
+    this.drawer.on(drawerEvents.readOnlyChange, (readOnly: boolean) => {
+      for (const $item of [this.$openButton, this.$clearCanvasButton]) {
+        if (readOnly) disableElement($item);
+        else enableElement($item);
+      }
+    });
     // session state shown in menu
     this.drawer.on(drawerEvents.collaborationChange, () => this._updateCollaborationState());
     // language set by api

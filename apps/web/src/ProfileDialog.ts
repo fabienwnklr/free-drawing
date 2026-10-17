@@ -99,7 +99,9 @@ export class ProfileDialog {
     const { t } = this.app.texts;
     const text = (selector: string, value: string) => (this.$dialog.querySelector(selector)!.textContent = value);
     const labels = (form: HTMLFormElement, values: string[]) =>
-      form.querySelectorAll('label > span').forEach(($label, i) => ($label.textContent = values[i]));
+      form.querySelectorAll('label > span').forEach(($label, i) => {
+        $label.textContent = values[i];
+      });
 
     text('h2', t('account'));
     this.$dialog.querySelector('[data-close]')!.setAttribute('aria-label', t('close'));
@@ -115,9 +117,9 @@ export class ProfileDialog {
     text('[data-warning]', t('deleteAccountWarning'));
     labels(this.$delete, [t('password')]);
     text('[data-delete] [type=submit]', t('deleteMyAccount'));
-    this.$dialog
-      .querySelectorAll<HTMLInputElement>('[name=username]')
-      .forEach(($input) => ($input.value = this.app.user?.email ?? ''));
+    for (const $input of this.$dialog.querySelectorAll<HTMLInputElement>('[name=username]')) {
+      $input.value = this.app.user?.email ?? '';
+    }
   }
 
   private _field(form: HTMLFormElement, name: string) {

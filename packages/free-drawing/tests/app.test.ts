@@ -25,7 +25,7 @@ const toasts = (drawer: ReturnType<typeof createDrawer>) =>
 const fileWith = (...values: string[]): DrawingFile => {
   const source = createDrawer();
 
-  values.forEach((value) => addText(source, value));
+  for (const value of values) addText(source, value);
   return source.getDrawingFile();
 };
 

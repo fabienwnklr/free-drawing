@@ -33,9 +33,9 @@ export function reorderShapes(shapes: Node[], order: ShapeOrder): boolean {
   };
 
   if (order === 'front') {
-    sorted.forEach((shape) => shape.moveToTop());
+    for (const shape of sorted) shape.moveToTop();
   } else if (order === 'back') {
-    sorted.reverse().forEach((shape) => shape.moveToBottom());
+    for (const shape of sorted.reverse()) shape.moveToBottom();
   } else {
     const step = order === 'forward' ? 1 : -1;
 
@@ -66,7 +66,9 @@ export function applyOrder(nodes: Node[], ids: string[]) {
   const target = [...listed[0].getParent()!.children];
   const places = listed.map((node) => node.index).sort((a, b) => a - b);
 
-  places.forEach((place, i) => (target[place] = listed[i]));
+  places.forEach((place, i) => {
+    target[place] = listed[i];
+  });
   target.forEach((node, index) => {
     if (node.index !== index) node.zIndex(index);
   });

@@ -64,7 +64,7 @@ const createServer = () => {
       invitedBy: user.invitedBy && data.names.get(user.invitedBy),
     }));
 
-    inRoom(room).forEach((s) => s.receive('USERS', users));
+    for (const s of inRoom(room)) s.receive('USERS', users);
   };
 
   /** New socket, connected when `receive('connect')` */
@@ -73,10 +73,12 @@ const createServer = () => {
     const socket = {
       on: (event: string, handler: (data?: unknown) => void) => (handlers[event] ??= []).push(handler),
       once: (event: string, handler: (data?: unknown) => void) => (handlers[event] ??= []).push(handler),
-      receive: (event: string, data?: unknown) => handlers[event]?.forEach((handler) => handler(data)),
+      receive: (event: string, data?: unknown) => {
+        for (const handler of handlers[event] ?? []) handler(data);
+      },
       disconnect: vi.fn(() => {
         sockets.splice(sockets.indexOf(socket), 1);
-        inRoom(socket.room).forEach((s) => s.receive('LEAVE', socket.id));
+        for (const s of inRoom(socket.room)) s.receive('LEAVE', socket.id);
         sendUsers(socket.room);
       }),
       emit: vi.fn((event: string, data: unknown) => {
@@ -135,15 +137,15 @@ const createServer = () => {
 
           if (!socket.owner) return;
           rooms.get(socket.room!)!.newUsersCanEdit = newUsersCanEdit;
-          inRoom(socket.room).forEach((s) => s.receive(event, { newUsersCanEdit }));
+          for (const s of inRoom(socket.room)) s.receive(event, { newUsersCanEdit });
         } else if (event === 'NAME') {
           socket.name = data as string;
           rooms.get(socket.room!)!.names.set(socket.userId!, socket.name);
           sendUsers(socket.room);
         } else if (event === 'POINTER') {
-          inRoom(socket.room)
-            .filter((s) => s !== socket)
-            .forEach((s) => s.receive(event, { id: socket.id, name: socket.name, position: data }));
+          for (const s of inRoom(socket.room).filter((s) => s !== socket)) {
+            s.receive(event, { id: socket.id, name: socket.name, position: data });
+          }
         } else if (event === 'CHANGE') {
           const change = data as DrawingChange;
           const roomData = rooms.get(socket.room!)!;
@@ -152,17 +154,17 @@ const createServer = () => {
           // without right to draw: ignored
           if (viewers.has(socket.userId!)) return;
 
-          change.remove.forEach((id) => shapes.delete(id));
-          change.upsert.forEach((json) => shapes.set(JSON.parse(json).attrs.id, json));
+          for (const id of change.remove) shapes.delete(id);
+          for (const json of change.upsert) shapes.set(JSON.parse(json).attrs.id, json);
           if (change.order) {
             const ordered = new Map(change.order.filter((id) => shapes.has(id)).map((id) => [id, shapes.get(id)!]));
 
-            shapes.forEach((json, id) => ordered.set(id, json));
+            for (const [id, json] of shapes) ordered.set(id, json);
             roomData.shapes = ordered;
           }
-          inRoom(socket.room)
-            .filter((s) => s !== socket)
-            .forEach((s) => s.receive(event, change));
+          for (const s of inRoom(socket.room).filter((s) => s !== socket)) {
+            s.receive(event, change);
+          }
         }
       }),
     } as unknown as FakeSocket;

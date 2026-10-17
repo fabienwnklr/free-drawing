@@ -58,7 +58,7 @@ export class TextWidget extends BaseWidget {
       return;
     }
 
-    texts().forEach((text) => text._setTextData());
+    for (const text of texts()) text._setTextData();
     this.drawer.drawLayer.batchDraw();
   }
 

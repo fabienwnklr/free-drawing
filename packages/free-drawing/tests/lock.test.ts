@@ -34,7 +34,9 @@ const palettes = new Set<CommandPalette>();
 describe('Locked shapes', () => {
   document.body.innerHTML = `<div id="test"></div>`;
 
-  afterEach(() => palettes.forEach((palette) => palette.hide()));
+  afterEach(() => {
+    for (const palette of palettes) palette.hide();
+  });
 
   it('Click selects a locked shape alone, without anchors: not moved nor modified', () => {
     const { drawer, selectWidget, locked } = createLocked();

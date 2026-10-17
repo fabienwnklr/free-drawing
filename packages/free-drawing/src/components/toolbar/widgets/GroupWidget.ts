@@ -76,12 +76,12 @@ function parseSvg(code: string): SVGElement | null {
 
   if (svg.nodeName !== 'svg') return null;
 
-  svg.querySelectorAll('script, foreignObject').forEach(($el) => $el.remove());
-  [svg, ...svg.querySelectorAll('*')].forEach(($el) =>
+  for (const $el of svg.querySelectorAll('script, foreignObject')) $el.remove();
+  for (const $el of [svg, ...svg.querySelectorAll('*')]) {
     [...$el.attributes].forEach(({ name, value }) => {
       if (/^on/i.test(name) || /^\s*javascript:/i.test(value)) $el.removeAttribute(name);
-    })
-  );
+    });
+  }
 
   return document.importNode(svg, true) as unknown as SVGElement;
 }
@@ -157,7 +157,7 @@ export class GroupWidget {
       this.$menu.setAttribute('aria-label', label);
     });
 
-    widgets.forEach((widget) => widget.addTo(this.$menu));
+    for (const widget of widgets) widget.addTo(this.$menu);
     this.$container.append(this.$button, this.$menu);
     this._initEvents();
   }

@@ -218,7 +218,7 @@ export class SelectionMenu {
 
     // locked shapes are only unlocked
     this.$unlockBtn.hidden = !locked;
-    [
+    for (const $element of [
       this.$duplicateBtn,
       this.$rotateLeftBtn,
       this.$rotateRightBtn,
@@ -227,7 +227,9 @@ export class SelectionMenu {
       this.$lockBtn,
       this.$separator,
       this.$deleteBtn,
-    ].forEach(($element) => ($element.hidden = locked));
+    ]) {
+      $element.hidden = locked;
+    }
     // group 2 shapes at least, ungroup groups
     this.$groupBtn.hidden = locked || !this.drawer.canGroupShapes(shapes);
     this.$ungroupBtn.hidden = locked || !shapes.some((shape) => shape instanceof Group && !isFrame(shape));

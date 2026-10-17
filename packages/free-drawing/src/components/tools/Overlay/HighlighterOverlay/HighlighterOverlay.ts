@@ -125,7 +125,9 @@ export class HighlighterOverlay {
    */
   private _update() {
     this.colorPicker.setColor(this.options.color);
-    this.$sizeButtons.forEach(($btn) => setPressed($btn, Number($btn.dataset.size) === this.options.size));
+    for (const $btn of this.$sizeButtons) {
+      setPressed($btn, Number($btn.dataset.size) === this.options.size);
+    }
   }
 
   /**

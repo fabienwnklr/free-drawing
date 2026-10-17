@@ -164,7 +164,7 @@ export class PreferencesModal extends Modal {
   update() {
     const preferences: Preferences = this.drawer.getPreferences();
 
-    this.$themes.forEach(($radio) => ($radio.checked = $radio.value === preferences.theme));
+    for (const $radio of this.$themes) $radio.checked = $radio.value === preferences.theme;
     this.$language.value = preferences.language;
     this.$zen.checked = preferences.zen;
     this.$grid.checked = preferences.grid;
