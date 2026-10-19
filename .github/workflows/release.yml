@@ -143,6 +143,8 @@ jobs:
         run: |
           echo "npm $(npm --version)"
           if ! npm publish --access public; then
+            # what npm receives: claims of the GitHub token, answer of its token exchange
+            node ../../.github/scripts/npm-oidc-check.mjs "$(node -p "require('./package.json').name")" || true
             echo "::error::Not published: the package needs a trusted publisher on npmjs.com (package settings): GitHub Actions, repository $GITHUB_REPOSITORY, workflow release.yml, no environment"
             exit 1
           fi
