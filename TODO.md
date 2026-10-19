@@ -29,7 +29,7 @@
 ## Bugs
 
 - [x] switching drawing, login or logout during a collaboration session replaces the drawing of the room for everyone with the opened one (web `App.ts`: stop or leave session first)
-- [ ] reconnection sends a stale copy of the drawing that overwrites newer changes of others, deleted shapes come back (`Collaboration.ts` connect)
+- [x] reconnection sends a stale copy of the drawing that overwrites newer changes of others, deleted shapes come back (`Collaboration.ts` connect)
 - [ ] undo / redo during collaboration restore whole snapshots: changes of other users are reverted for everyone (`History.ts`)
 - [ ] save state says saved when nothing was saved: `save()` clears unsaved before saving (storage not loaded, storage or quota error), no leave warning during a save or after a failed one, `#saveFailed` only reset with storage (`Drawer.ts`)
 - [ ] view changes (pan, grid, snapping, preferences with theme only) fire `change`: drawing marked unsaved, or same drawing sent again to storage (`Pan.ts`, `Settings.ts`, `Drawer.setPreferences`)

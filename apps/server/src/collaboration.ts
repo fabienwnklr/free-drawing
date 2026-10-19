@@ -395,13 +395,13 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
       socket.emit(socketEvents.JOINED, { userId: socket.data.userId });
       socket.emit(socketEvents.ROOM, { newUsersCanEdit: data.newUsersCanEdit });
 
-      if (data.shapes.size) {
-        socket.emit(socketEvents.CHANGE, {
-          upsert: [...data.shapes.values()],
-          remove: [],
-          order: [...data.shapes.keys()],
-        });
-      }
+      // whole drawing of the room, also empty: a user joining again merges it with its changes made meanwhile
+      socket.emit(socketEvents.CHANGE, {
+        upsert: [...data.shapes.values()],
+        remove: [],
+        order: [...data.shapes.keys()],
+        full: true,
+      });
       sendUsers(room);
     });
 

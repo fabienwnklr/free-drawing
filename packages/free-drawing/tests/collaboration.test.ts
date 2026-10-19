@@ -119,13 +119,12 @@ const createServer = () => {
           roomData.names.set(socket.userId!, name);
           socket.receive('JOINED', { userId: socket.userId });
           socket.receive('ROOM', { newUsersCanEdit: roomData.newUsersCanEdit });
-          if (roomData.shapes.size) {
-            socket.receive('CHANGE', {
-              upsert: [...roomData.shapes.values()],
-              remove: [],
-              order: [...roomData.shapes.keys()],
-            });
-          }
+          socket.receive('CHANGE', {
+            upsert: [...roomData.shapes.values()],
+            remove: [],
+            order: [...roomData.shapes.keys()],
+            full: true,
+          });
           sendUsers(room);
         } else if (event === 'RIGHTS') {
           const { userId, canEdit } = data as { userId: string; canEdit: boolean };
@@ -193,7 +192,7 @@ const createServer = () => {
     return socket;
   };
 
-  return Object.assign(connect, { createSocket });
+  return Object.assign(connect, { createSocket, rooms });
 };
 
 const addText = (drawer: Drawer, text: string) => {
@@ -601,6 +600,69 @@ describe('Collaboration', () => {
     alice.collaboration!.setRight('alice', false);
     expect(alice.collaboration!.canEdit).toBe(true);
     alice.collaborationModal!.hide();
+  });
+
+  it('Reconnection merges the drawing of the room with changes made meanwhile, not a stale copy', () => {
+    const connect = createServer();
+    const alice = createDrawer();
+    const bob = createDrawer();
+    const texts = (drawer: Drawer) =>
+      drawer
+        .getDrawingShapes()
+        .map((shape) => shape.attrs.text as string)
+        .sort();
+    connect(alice, 'room', 'Alice', { userId: 'alice', ownerKey: 'secret' });
+    const bobSocket = connect(bob, 'room', 'Bob', { userId: 'bob' });
+
+    const a = addText(alice, 'A');
+    const d = addText(alice, 'D');
+    addText(bob, 'B');
+    expect(texts(bob)).toEqual(['A', 'B', 'D']);
+
+    // connection of bob lost
+    bobSocket.room = undefined;
+    bobSocket.receive('disconnect');
+    // alice meanwhile: A removed, D changed
+    a.destroy();
+    alice.stage.fire('change');
+    d.text('D2');
+    alice.stage.fire('change');
+    // bob meanwhile: B changed, C added, not sent
+    (bob.getDrawingShapes().find((shape) => shape.attrs.text === 'B') as Text).text('B2');
+    bob.stage.fire('change');
+    addText(bob, 'C');
+    expect(texts(alice)).toEqual(['B', 'D2']);
+
+    // connected again: A stays removed, D2 kept, changes of bob sent
+    bobSocket.receive('connect');
+    expect(texts(bob)).toEqual(['B2', 'C', 'D2']);
+    expect(texts(alice)).toEqual(['B2', 'C', 'D2']);
+  });
+
+  it('Reconnection to a room without drawing gives it again, merged after a pointer action', () => {
+    const connect = createServer();
+    const alice = createDrawer();
+    const bob = createDrawer();
+    connect(alice, 'room', 'Alice', { userId: 'alice', ownerKey: 'secret' });
+    const bobSocket = connect(bob, 'room', 'Bob', { userId: 'bob' });
+
+    addText(bob, 'B');
+    // drawing of the room lost (emptied, server restarted)
+    bobSocket.room = undefined;
+    bobSocket.receive('disconnect');
+    connect.rooms.get('room')!.shapes.clear();
+
+    // drawing with the brush: merged when it ends
+    bob.getWidget<BaseWidget>('brush')!.setActive(true);
+    fireMouse(bob, 'mousedown', 10, 10);
+    bobSocket.receive('connect');
+    expect(connect.rooms.get('room')!.shapes.size).toBe(0);
+    fireMouse(bob, 'mousemove', 50, 50);
+    fireMouse(bob, 'mouseup', 50, 50);
+
+    // text and stroke of bob sent again
+    expect(connect.rooms.get('room')!.shapes.size).toBe(2);
+    expect(alice.getDrawingShapes().map((shape) => shape.getClassName())).toEqual(['Text', 'Line']);
   });
 
   it('Only drawing shapes of other users are created, as from files', () => {

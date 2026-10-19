@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.14.3](https://github.com/fabienwnklr/free-drawing/compare/v7.14.2...v7.14.3) (2026-10-20)
+
+
+### Bug Fixes
+
+* **collaboration:** a user connected again after losing the connection no longer sends a stale copy of the drawing: shapes removed by other users meanwhile no longer come back and their changes are kept; the drawing of the room is merged with the changes made meanwhile, which are sent (also the ones made while disconnected)
+
 ## [7.14.2](https://github.com/fabienwnklr/free-drawing/compare/v7.14.1...v7.14.2) (2026-10-18)
 
 

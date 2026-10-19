@@ -550,12 +550,19 @@ describe('Collaboration', () => {
     expect(await relayed).toEqual({ upsert: [rect('r1')], remove: [] });
     expect(warn).toHaveBeenCalledTimes(3);
 
-    // drawing sent to joining users: valid change only
+    // whole drawing sent to joining users (`full`): valid change only
     const later = client();
     const drawing = later.next<{ upsert: string[] }>(socketEvents.CHANGE);
 
     later.socket.emit(socketEvents.JOIN, { room: 'room-6', name: 'Later', userId: 'later-6' });
-    expect((await drawing).upsert).toEqual([rect('r1')]);
+    expect(await drawing).toEqual({ upsert: [rect('r1')], remove: [], order: ['r1'], full: true });
+
+    // also empty: users joining again know the drawing of the room was lost
+    const empty = client();
+    const nothing = empty.next(socketEvents.CHANGE);
+
+    empty.socket.emit(socketEvents.JOIN, { room: 'room-6-empty', name: 'Empty', userId: 'empty-6' });
+    expect(await nothing).toEqual({ upsert: [], remove: [], order: [], full: true });
 
     // pointer: position only
     const pointers = guest.next<{ position: unknown }>(socketEvents.POINTER);

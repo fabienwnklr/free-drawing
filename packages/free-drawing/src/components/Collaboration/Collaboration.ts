@@ -31,6 +31,8 @@ export type DrawingChange = {
   order?: string[];
   /** Preview of shapes being drawn or moved: applied without history, the final change follows */
   live?: boolean;
+  /** Whole drawing of the room, sent by the server to a joining user (also empty) */
+  full?: boolean;
 };
 
 /** Pointer of another user: position in drawing (null out of drawer), laser used */
@@ -121,6 +123,14 @@ export class Collaboration {
   #tooBigAt = 0;
   /** Changes received during a pointer action of this client, applied when it ends */
   #pending: DrawingChange[] = [];
+  /** Connected to the server: changes made while disconnected are sent once joined again */
+  #connected = false;
+  /** Joined the room before: a reconnection merges the drawing of the room with changes made meanwhile */
+  #joined = false;
+  /** Joined again, drawing of the room awaited: nothing sent meanwhile */
+  #rejoining = false;
+  /** Drawing of the room received again during a pointer action of this client, merged when it ends */
+  #rejoinDrawing: DrawingChange | null = null;
   /** Shapes being drawn or moved, sent at next live message */
   #live = new Set<DrawingShape>();
   /** Last pointer position of this user in drawing (null out of drawer), sent at next pointer message */
@@ -158,10 +168,21 @@ export class Collaboration {
       if (this.drawer.debug) console.log('🌍 Connected to collaboration server');
       const { room, name, userId, ownerKey, invitedBy } = this;
 
+      const rejoin = this.#joined;
+
+      // before the answer of the server: connected again, drawing of the room merged with changes made meanwhile
+      // (`_merge`), not a copy of this one
+      this.#connected = true;
+      this.#joined = true;
+      this.#rejoining = rejoin;
       this.socket.emit(socketEvents.JOIN, { room, name, userId, ownerKey, invitedBy });
-      // (re)connected: whole drawing sent, merged with other ones of the room
+      if (rejoin) return;
+      // first join: whole drawing sent, merged with other ones of the room
       this.#synced.clear();
       this.send();
+    });
+    this.socket.on('disconnect', () => {
+      this.#connected = false;
     });
     // server identifies this user (logged in account), before sending users of the room
     this.socket.on(socketEvents.JOINED, ({ userId }: { userId?: unknown } = {}) => {
@@ -174,7 +195,10 @@ export class Collaboration {
       this.newUsersCanEdit = newUsersCanEdit;
       this.drawer.trigger(drawerEvents.collaborationChange);
     });
-    this.socket.on(socketEvents.CHANGE, (change: DrawingChange) => this.receive(change));
+    this.socket.on(socketEvents.CHANGE, (change: DrawingChange) => {
+      if (change.full && this.#rejoining) this._rejoin(change);
+      else this.receive(change);
+    });
     // message refused by the server: room full (session stopped), drawing too big (changes not shared)
     this.socket.on(socketEvents.REJECTED, ({ reason }: { reason?: unknown } = {}) => {
       if (reason === 'full') {
@@ -188,6 +212,13 @@ export class Collaboration {
     // names only from servers without rights
     this.socket.on(socketEvents.USERS, (users: (CollaborationMember | string)[]) => {
       const canEdit = this.canEdit;
+
+      // joined again a server without drawing of the room (`full`, sent before users): whole drawing sent as before
+      if (this.#rejoining) {
+        this.#rejoining = false;
+        this.#synced.clear();
+        this.send();
+      }
 
       this.members = users.map((user) =>
         typeof user === 'string' ? { id: '', name: user, owner: false, canEdit: true } : user
@@ -427,6 +458,9 @@ export class Collaboration {
    * Send shapes changed since last sync, called on drawer change
    */
   send() {
+    // sent once joined again (drawing of the room merged first): not marked synced meanwhile
+    if (!this.#connected || this.#rejoining || this.#rejoinDrawing) return;
+
     const current = new Map(this.drawer.getDrawingShapes().map((shape) => [shape.id(), serializeShape(shape)]));
     const upsert = [...current].filter(([id, json]) => this.#synced.get(id) !== json).map(([, json]) => json);
     const remove = [...this.#synced.keys()].filter((id) => !current.has(id));
@@ -473,11 +507,66 @@ export class Collaboration {
    */
   flush() {
     const pending = this.#pending;
+    const rejoinDrawing = this.#rejoinDrawing;
 
     this.#pending = [];
+    this.#rejoinDrawing = null;
     for (const change of pending) this._apply(change);
+    // after changes received before the disconnection
+    if (rejoinDrawing) this._merge(rejoinDrawing);
 
-    return pending.length > 0;
+    return pending.length > 0 || !!rejoinDrawing;
+  }
+
+  /**
+   * Joined again after a disconnection: drawing of the room merged with this one, after the current pointer action
+   * @param change Whole drawing of the room (`full`)
+   */
+  private _rejoin(change: DrawingChange) {
+    this.#rejoining = false;
+    if (this.drawer._duringAction()) {
+      this.#rejoinDrawing = change;
+      return;
+    }
+
+    this._merge(change);
+    // saved, added to history, changes made meanwhile sent
+    this.drawer.stage.fire('change');
+  }
+
+  /**
+   * Drawing of the room merged with this one after a disconnection: shapes added or changed here meanwhile are kept
+   * (sent next), others take their state in the room, shapes removed by other users meanwhile are removed (unless
+   * changed here). A room without drawing (emptied, server restarted) gets the whole drawing again
+   * @param change Whole drawing of the room (`full`)
+   */
+  private _merge({ upsert, order }: DrawingChange) {
+    const room = new Map<string, string>();
+
+    for (const json of Array.isArray(upsert) ? upsert : []) {
+      const state = parseShapeState(json);
+
+      if (state) room.set(state.attrs.id as string, json);
+    }
+    if (!room.size) {
+      this.#synced.clear();
+      return;
+    }
+
+    const current = new Map(this.drawer.getDrawingShapes().map((shape) => [shape.id(), serializeShape(shape)]));
+    const synced = this.#synced;
+    // since last sync: added or changed here, removed here
+    const changed = new Set([...current].filter(([id, json]) => synced.get(id) !== json).map(([id]) => id));
+    const removed = [...synced.keys()].filter((id) => !current.has(id));
+
+    this._apply({
+      upsert: [...room].filter(([id]) => !changed.has(id) && !removed.includes(id)).map(([, json]) => json),
+      remove: [...current.keys()].filter((id) => !room.has(id) && !changed.has(id)),
+      ...(Array.isArray(order) && { order }),
+    });
+    // sent next: changes made here as new ones, removals of shapes still in the room
+    for (const id of changed) this.#synced.delete(id);
+    for (const id of removed) if (room.has(id)) this.#synced.set(id, room.get(id)!);
   }
 
   /**
