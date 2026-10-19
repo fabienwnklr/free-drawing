@@ -1,4 +1,5 @@
-import { type TranslationKey, type Translations, en } from '@/i18n/en';
+import { en } from '@/i18n/en';
+import type { Language, Translate, CustomTranslations } from '@/@types/i18n';
 import { fr } from '@/i18n/fr';
 import { es } from '@/i18n/es';
 import { de } from '@/i18n/de';
@@ -36,18 +37,6 @@ export const languages = {
     translations: de,
   },
 };
-
-/** Code of a language of interface (`en`, `fr`, `es`, `de`) */
-export type Language = keyof typeof languages;
-
-/** Values of `{name}` placeholders of a text */
-export type TranslationParams = Record<string, string | number>;
-
-/** Function giving the text of a key in current language, placeholders replaced by params (`drawer.t`) */
-export type Translate = (key: TranslationKey, params?: TranslationParams) => string;
-
-/** Texts of languages replacing default ones (e.g. `{ fr: { 'menu.open': 'Ouvrir un dessin' } }`) */
-export type CustomTranslations = Partial<Record<Language, Partial<Translations>>>;
 
 /**
  * Language of a locale (`fr-FR` gives `fr`), English when not supported

@@ -1,6 +1,12 @@
 import type { DrawerOptions } from '@/@types/drawer';
 import type { WidgetName } from '@/@types/toolbar';
-import type { TranslationKey } from '@/i18n/en';
+import type { TranslationKey } from '@/@types/i18n';
+import type { ShapeOrder } from '@/@types/drawer';
+import type { ShortcutChoice } from '@/@types/ui';
+import SendToBackIcon from '@/icons/send-to-back.svg?raw';
+import SendBackwardIcon from '@/icons/send-backward.svg?raw';
+import BringForwardIcon from '@/icons/bring-forward.svg?raw';
+import BringToFrontIcon from '@/icons/bring-to-front.svg?raw';
 
 /**
  * Widgets of toolbar, default order
@@ -254,3 +260,13 @@ export const dataAttributes = {
   /** Stacking order move of selected shapes (`ShapeOrder`) */
   order: 'data-order',
 };
+
+/**
+ * Stacking orders of the selection, from bottom to top: buttons of options panels, commands of the palette
+ */
+export const shapeOrders: ShortcutChoice<ShapeOrder>[] = [
+  { value: 'back', label: 'action.sendToBack', icon: SendToBackIcon, shortcut: 'Ctrl+Shift+Down' },
+  { value: 'backward', label: 'action.sendBackward', icon: SendBackwardIcon, shortcut: 'Ctrl+Down' },
+  { value: 'forward', label: 'action.bringForward', icon: BringForwardIcon, shortcut: 'Ctrl+Up' },
+  { value: 'front', label: 'action.bringToFront', icon: BringToFrontIcon, shortcut: 'Ctrl+Shift+Up' },
+];

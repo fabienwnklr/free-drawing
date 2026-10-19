@@ -4,18 +4,7 @@ import type { Vector2d } from 'konva/lib/types';
 import { getStroke } from 'perfect-freehand';
 import { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import { crosshairCursor } from '@/constants';
-
-/**
- * Settings of perfect-freehand: effect of speed on width, softness of edges, stabilization
- */
-export type FreehandSettings = {
-  /** Effect of drawing speed on stroke width, from -1 to 1 (0 for constant width) */
-  thinning: number;
-  /** Softness of stroke edges, from 0 to 1 */
-  smoothing: number;
-  /** How much stroke is stabilized (follows pointer less closely), from 0 to 1 */
-  streamline: number;
-};
+import type { FreehandSettings } from '@/@types/toolbar';
 
 /**
  * Points of a straight stroke, regularly spaced (same width all along)
@@ -38,7 +27,7 @@ function straightPoints(from: Vector2d, to: Vector2d): Vector2d[] {
  */
 export abstract class FreehandWidget extends BaseWidget {
   #lastLine: Line = new Line();
-  #allPoints: { x: number; y: number }[] = [];
+  #allPoints: Vector2d[] = [];
   #start: Vector2d = { x: 0, y: 0 };
   protected cursor = crosshairCursor;
 

@@ -1,4 +1,4 @@
-import type { AvailableTools, WidgetOptions } from '@/@types/toolbar';
+import type { AvailableTools, WidgetOptions, ToolOverlay } from '@/@types/toolbar';
 import type { Drawer } from '@/Drawer';
 import { stringToNode } from '@/utils/functions';
 import { getWidgetOptions } from '@/utils/widgets';
@@ -6,20 +6,10 @@ import type { KonvaEventListener } from 'konva/lib/Node';
 import type { Stage } from 'konva/lib/Stage';
 import type { DrawingShape } from '@/@types/drawer';
 
-/**
- * Options of a tool, shown while it is active (`BaseOverlay` and others)
- */
-export type ToolOverlay = {
-  /** Element of the overlay, in the `floating` region of the layout */
-  $overlayContainer: HTMLElement;
-  /** Show overlay: fields show options of given shapes (selection), else options of drawer */
-  show(shapes?: DrawingShape[]): void;
-  /** Hide overlay */
-  hide(): void;
-};
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { createButton, disableElement, enableElement, setLabel, setPressed } from '@/utils/dom';
-import { type TranslationKey, en } from '@/i18n/en';
+import { en } from '@/i18n/en';
+import type { TranslationKey } from '@/@types/i18n';
 
 /**
  * Base of every toolbar widget (tool): button with icon and shortcut, widget options (`title`, `shortcut` from

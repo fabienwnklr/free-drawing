@@ -1,10 +1,10 @@
 import '@/components/ExportModal/export-modal.scss';
-import type { Drawer, ExportImageOptions } from '@/Drawer';
+import type { Drawer } from '@/Drawer';
+import type { ExportImageOptions, ImageFormat } from '@/@types/file';
 import { Modal } from '@/components/Modal/Modal';
-import type { ImageFormat } from '@/utils/export';
 import { drawingFileExtension, saveFile } from '@/utils/drawingFile';
 import { createButton, createSwitch, setLabel, uniqueId } from '@/utils/dom';
-import type { TranslationKey } from '@/i18n/en';
+import type { TranslationKey } from '@/@types/i18n';
 
 /**
  * Export dialog: preview, options (selected shapes or whole drawing, background, dark mode, scale),
@@ -74,15 +74,11 @@ export class ExportModal extends Modal {
 
     this.$modalBody.append(this.$previewContainer, $options);
 
-    const formats: { format: ImageFormat | 'json'; label: string }[] = [
-      { format: 'png', label: 'PNG' },
-      { format: 'svg', label: 'SVG' },
-      { format: 'pdf', label: 'PDF' },
-      { format: 'json', label: 'JSON' },
-    ];
+    const formats: (ImageFormat | 'json')[] = ['png', 'svg', 'pdf', 'json'];
 
-    this.$buttons = formats.map(({ format, label }) => {
+    this.$buttons = formats.map((format) => {
       const $btn = createButton('drawer-button', 'drawer-button-neutral');
+      const label = format.toUpperCase();
 
       $btn.textContent = label;
       drawer.i18n.translate((t) =>

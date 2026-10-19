@@ -5,7 +5,6 @@ import { Toolbar } from '@/components/toolbar/Toolbar';
 import { Rect } from 'konva/lib/shapes/Rect';
 import type { AvailableTools } from '@/@types/toolbar';
 import type {
-  CollaborationOptions,
   ColorLike,
   DrawerOptions,
   DrawerStorage,
@@ -19,18 +18,18 @@ import type {
   TextStyle,
   Theme,
 } from '@/@types/drawer';
+import type { CollaborationOptions, CollaborationSocket } from '@/@types/collaboration';
 import { createId, deepMerge } from '@/utils/functions';
 import { defaultOptions, drawerEvents, gridSize, shapeLabels, shapeName, zoomLimits } from '@/constants';
 import { setPressed } from '@/utils/dom';
 import { getStrokeStyle } from '@/utils/stroke';
 import { reorderShapes } from '@/utils/order';
 import { rectContains, setupHit } from '@/utils/hit';
-import { I18n, type Language, type TranslationParams, getLanguage, languages } from '@/i18n/I18n';
-import type { TranslationKey } from '@/i18n/en';
+import { I18n, getLanguage, languages } from '@/i18n/I18n';
+import type { Language, TranslationParams, TranslationKey } from '@/@types/i18n';
 import { bindingAttrs, unbindMoved, updateBindings } from '@/utils/binding';
 import { fitTextWidth, getTexts } from '@/utils/text';
 import {
-  type DrawingFile,
   decodeLinkData,
   drawingFileExtension,
   encodeLinkData,
@@ -38,8 +37,9 @@ import {
   pickFile,
   saveFile,
 } from '@/utils/drawingFile';
-import { type ShapeState, getShapeState } from '@/components/tools/UndoRedo/History';
-import { type ImageFormat, canvasToBlob, createPdf, getExportBox, renderCanvas, renderSvg } from '@/utils/export';
+import type { DrawingFile, ShapeState, ImageFormat, ExportImageOptions } from '@/@types/file';
+import { getShapeState } from '@/components/tools/UndoRedo/History';
+import { canvasToBlob, createPdf, getExportBox, renderCanvas, renderSvg } from '@/utils/export';
 import { toHexColor } from '@/utils/color';
 import { ExportModal } from '@/components/ExportModal/ExportModal';
 import { CommandPalette } from '@/components/CommandPalette/CommandPalette';
@@ -58,7 +58,6 @@ import {
 
 // types of options, storage, preferences and files, for apps using the drawer
 export type {
-  CollaborationOptions,
   ColorLike,
   DrawerOptions,
   DrawerStorage,
@@ -71,29 +70,22 @@ export type {
   TextStyle,
   Theme,
 } from '@/@types/drawer';
-export type { DrawingFile } from '@/utils/drawingFile';
-export type { LayoutItemOptions, LayoutRegion } from '@/DrawerLayout';
-export type { WidgetGroupOptions, WidgetName, WidgetsOptions } from '@/@types/toolbar';
-export type { CustomTranslations, Language } from '@/i18n/I18n';
-export type { TranslationKey, Translations } from '@/i18n/en';
+export type { CollaborationOptions } from '@/@types/collaboration';
+export type { DrawingFile, ExportImageOptions, ImageFormat, ShapeState } from '@/@types/file';
+export type { LayoutItemOptions, LayoutRegion } from '@/@types/ui';
+export type {
+  AvailableTools,
+  BrushWidgetOptions,
+  WidgetGroupOptions,
+  WidgetName,
+  WidgetsOptions,
+} from '@/@types/toolbar';
+export type { CustomTranslations, Language, TranslationKey, TranslationParams, Translations } from '@/@types/i18n';
 
-/**
- * Options of an image export (`exportImage`, `exportCanvas`, export dialog)
- */
-export type ExportImageOptions = {
-  /** Selected shapes only, when there is a selection (default true) */
-  selected?: boolean;
-  /** With background color (default true), pdf always has a background */
-  background?: boolean;
-  /** Dark mode colors (default false) */
-  dark?: boolean;
-  /** Pixel ratio of png and pdf (default 2) */
-  scale?: number;
-};
 import { Zoom } from '@/components/tools/Zoom/Zoom';
 import { Position } from '@/components/tools/Position/Position';
 import { Help } from '@/components/tools/Help/Help';
-import { Collaboration, type CollaborationSocket } from '@/components/Collaboration/Collaboration';
+import { Collaboration } from '@/components/Collaboration/Collaboration';
 import { CollaborationModal } from '@/components/CollaborationModal/CollaborationModal';
 
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
@@ -115,7 +107,7 @@ import { Group } from 'konva/lib/Group';
 import { Text } from 'konva/lib/shapes/Text';
 import { Shape, type ShapeConfig } from 'konva/lib/Shape';
 import type { Vector2d } from 'konva/lib/types';
-import type { AvailableTypes } from '@/@types/toast';
+import type { AvailableTypes } from '@/@types/ui';
 import { HotKey } from '@/utils/HotKey';
 
 // default id of each drawer of the page

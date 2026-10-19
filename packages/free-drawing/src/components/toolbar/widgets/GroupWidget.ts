@@ -23,6 +23,7 @@ import CloudIcon from '@/icons/cloud.svg?raw';
 import HighlighterIcon from '@/icons/highlighter.svg?raw';
 import LaserIcon from '@/icons/laser.svg?raw';
 import FrameIcon from '@/icons/frame.svg?raw';
+import type { GroupWidgetOptions } from '@/@types/toolbar';
 
 /** Space between group button and its widgets, between widgets and drawer edges (px) */
 const gap = 8;
@@ -51,18 +52,6 @@ export const groupIcons: Record<string, string> = {
   highlighter: HighlighterIcon,
   laser: LaserIcon,
   frame: FrameIcon,
-};
-
-/**
- * Options of a `GroupWidget` created by code (the `widgetGroups` drawer option gives names of widgets instead)
- */
-export type GroupWidgetOptions = {
-  /** Widgets of the group, in this order (created by the app or the library, not added to toolbar yet) */
-  widgets: BaseWidget[];
-  /** Name of `groupIcons` or svg code, 'shapes' by default */
-  icon?: string;
-  /** Button tooltip, "More tools" translated by default */
-  title?: string;
 };
 
 /**

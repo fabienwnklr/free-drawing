@@ -3,9 +3,8 @@ import type { Drawer } from '@/Drawer';
 import { Group } from 'konva/lib/Group';
 import { Modal } from '@/components/Modal/Modal';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
-import type { ShapeOrder } from '@/@types/drawer';
-import type { TranslationKey } from '@/i18n/en';
-import { type Language, languages } from '@/i18n/I18n';
+import type { TranslationKey, Language } from '@/@types/i18n';
+import { languages } from '@/i18n/I18n';
 import { uniqueId } from '@/utils/dom';
 import SearchIcon from '@/icons/search.svg?raw';
 import CheckIcon from '@/icons/check.svg?raw';
@@ -15,10 +14,6 @@ import SelectIcon from '@/icons/select.svg?raw';
 import DuplicateIcon from '@/icons/duplicate.svg?raw';
 import GroupIcon from '@/icons/group.svg?raw';
 import UngroupIcon from '@/icons/ungroup.svg?raw';
-import SendToBackIcon from '@/icons/send-to-back.svg?raw';
-import SendBackwardIcon from '@/icons/send-backward.svg?raw';
-import BringForwardIcon from '@/icons/bring-forward.svg?raw';
-import BringToFrontIcon from '@/icons/bring-to-front.svg?raw';
 import TrashIcon from '@/icons/trash.svg?raw';
 import GridIcon from '@/icons/grid.svg?raw';
 import ZenIcon from '@/icons/zen.svg?raw';
@@ -48,26 +43,8 @@ import RotateRightIcon from '@/icons/rotate-right.svg?raw';
 import RotateLeftIcon from '@/icons/rotate-left.svg?raw';
 import FlipVerticalIcon from '@/icons/flip-vertical.svg?raw';
 import FitWidthIcon from '@/icons/fit-width.svg?raw';
-
-/**
- * Command of palette
- */
-export type Command = {
-  /** English words, also searched */
-  id: string;
-  /** Translated name */
-  label: string;
-  /** Title of its group */
-  group: TranslationKey;
-  /** SVG markup of its icon, shown before the label */
-  icon?: string;
-  /** Keys doing the same, shown at the end of the option */
-  shortcut?: string;
-  /** State of a toggle (grid, zen mode...) or current choice (tool, language) */
-  checked?: boolean;
-  /** Action, run once the palette is closed */
-  run: () => void;
-};
+import type { Command, CommandGroup } from '@/@types/ui';
+import { shapeOrders } from '@/constants';
 
 /** Accents of decomposed letters (U+0300 to U+036F) */
 const accents = new RegExp(`[${String.fromCharCode(0x300)}-${String.fromCharCode(0x36f)}]`, 'g');
@@ -304,13 +281,7 @@ export class CommandPalette extends Modal {
     const editSelection = edit && selected.length > 0;
     const hasShapes = drawer.getDrawingShapes().length > 0;
     const { zoom, position, layersPanel } = drawer;
-    const orders: { order: ShapeOrder; label: TranslationKey; icon: string; shortcut: string }[] = [
-      { order: 'front', label: 'action.bringToFront', icon: BringToFrontIcon, shortcut: 'Ctrl+Shift+Up' },
-      { order: 'forward', label: 'action.bringForward', icon: BringForwardIcon, shortcut: 'Ctrl+Up' },
-      { order: 'backward', label: 'action.sendBackward', icon: SendBackwardIcon, shortcut: 'Ctrl+Down' },
-      { order: 'back', label: 'action.sendToBack', icon: SendToBackIcon, shortcut: 'Ctrl+Shift+Down' },
-    ];
-    const groups: [TranslationKey, (Omit<Command, 'group'> | false | null | undefined)[]][] = [
+    const groups: CommandGroup[] = [
       [
         'help.tools',
         [
@@ -385,8 +356,9 @@ export class CommandPalette extends Modal {
               shortcut: 'Ctrl+Shift+G',
               run: () => drawer.ungroupShapes(),
             },
-          ...orders.map(
-            ({ order, label, icon, shortcut }) =>
+          // top first
+          ...[...shapeOrders].reverse().map(
+            ({ value: order, label, icon, shortcut }) =>
               editSelection && {
                 id: `order layer ${order}`,
                 label: t(label),

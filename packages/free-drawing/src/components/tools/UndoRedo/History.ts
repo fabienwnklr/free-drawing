@@ -3,18 +3,7 @@ import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { Node } from 'konva/lib/Node';
 import type { DrawingShape } from '@/@types/drawer';
 import { historyLimit } from '@/constants';
-
-/**
- * Serialized drawing shape (konva `toObject` format), any shape type can be restored, groups with their shapes
- */
-export type ShapeState = {
-  /** Konva attributes of the node (position, colors, name, id, label...) */
-  attrs: Record<string, unknown>;
-  /** Konva class name used by `Node.create` (Rect, Line, Group, Frame...) */
-  className: string;
-  /** States of the shapes of a group */
-  children?: ShapeState[];
-};
+import type { ShapeState } from '@/@types/file';
 
 /**
  * State of a drawing shape or group (history, collaboration, files), without `draggable` which depends on active tool

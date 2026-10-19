@@ -1,60 +1,15 @@
-/**
- * Names of tools: widgets of toolbar (see `WidgetName`) and names kept for other tools
- */
-export enum Tools {
-  /** Move the view by dragging */
-  pan = 'pan',
-  /** Select, move, resize and rotate shapes */
-  selection = 'selection',
-  /** Freehand stroke */
-  brush = 'brush',
-  /** Erase shapes touched by pointer (erased on pointer up) */
-  eraser = 'eraser',
-  /** Undo (not a widget: undo / redo buttons of footer) */
-  undo = 'undo',
-  /** Redo (not a widget: undo / redo buttons of footer) */
-  redo = 'redo',
-  /** Text, edited in place */
-  text = 'text',
-  /** Rectangle (not a widget: `square` draws rectangles) */
-  rect = 'rect',
-  /** Ellipse, circle with Shift */
-  circle = 'circle',
-  /** Ellipse (not a widget: `circle` draws ellipses) */
-  ellipse = 'ellipse',
-  /** Rectangle, square with Shift */
-  square = 'square',
-  /** Arrow, its ends can be linked to shapes */
-  arrow = 'arrow',
-  /** Straight line */
-  line = 'line',
-  /** Star (no widget) */
-  star = 'star',
-  /** Triangle */
-  triangle = 'triangle',
-  /** Polygon (no widget) */
-  polygon = 'polygon',
-  /** Diamond */
-  diamond = 'diamond',
-  /** Heart */
-  heart = 'heart',
-  /** Cloud */
-  cloud = 'cloud',
-  /** Wide freehand stroke multiplied with the drawing under it */
-  highlighter = 'highlighter',
-  /** Laser pointer: trail following pointer, not saved in drawing */
-  laser = 'laser',
-  /** Frame holding shapes, with a title */
-  frame = 'frame',
-}
+import type { ColorLike, DrawingShape } from '@/@types/drawer';
+import type { TranslationKey } from '@/@types/i18n';
+import type { TextChoice } from '@/@types/ui';
+import type { Vector2d } from 'konva/lib/types';
+import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 
 /**
- * Name of a tool (`tool` option, `getWidget`), name of a `Tools` member
- */
-export type AvailableTools = keyof typeof Tools;
-
-/**
- * Widgets of toolbar
+ * Widgets of toolbar: `pan` (move the view), `selection` (select, move, resize, rotate), `brush` (freehand stroke),
+ * `eraser`, `text` (edited in place), `line`, `square` (rectangle, square with Shift), `circle` (ellipse, circle with
+ * Shift), `arrow` (ends linked to shapes), `triangle`, `diamond`, `heart`, `cloud`, `highlighter` (wide stroke
+ * multiplied with the drawing under it), `laser` (trail following pointer, not saved), `frame` (holds shapes, with a
+ * title)
  */
 export type WidgetName =
   | 'pan'
@@ -73,6 +28,13 @@ export type WidgetName =
   | 'highlighter'
   | 'laser'
   | 'frame';
+
+/**
+ * Name of a tool (`tool` option, `getWidget`): widgets of toolbar and names kept for other tools, `undo` and `redo`
+ * (buttons of footer), `rect` (`square` draws rectangles), `ellipse` (`circle` draws ellipses), `star` and `polygon`
+ * (no widget)
+ */
+export type AvailableTools = WidgetName | 'undo' | 'redo' | 'rect' | 'ellipse' | 'star' | 'polygon';
 
 /**
  * Options of every widget
@@ -117,3 +79,107 @@ export type WidgetsOptions =
       /** Brush options, with freehand stroke settings */
       brush?: BrushWidgetOptions;
     });
+
+/**
+ * Options of a `GroupWidget` created by code (the `widgetGroups` drawer option gives names of widgets instead)
+ */
+export type GroupWidgetOptions = {
+  /** Widgets of the group, in this order (created by the app or the library, not added to toolbar yet) */
+  widgets: BaseWidget[];
+  /** Name of `groupIcons` or svg code, 'shapes' by default */
+  icon?: string;
+  /** Button tooltip, "More tools" translated by default */
+  title?: string;
+};
+
+/**
+ * Settings of perfect-freehand: effect of speed on width, softness of edges, stabilization
+ */
+export type FreehandSettings = {
+  /** Effect of drawing speed on stroke width, from -1 to 1 (0 for constant width) */
+  thinning: number;
+  /** Softness of stroke edges, from 0 to 1 */
+  smoothing: number;
+  /** How much stroke is stabilized (follows pointer less closely), from 0 to 1 */
+  streamline: number;
+};
+
+/**
+ * Options of a `Trail` (eraser, laser), defaults: translucent black, 8 px, 200 ms, no glow
+ */
+export type TrailOptions = {
+  /** Fill color */
+  color: string;
+  /** Width at pointer, in screen pixels (same whatever zoom) */
+  size: number;
+  /** Life time of a point, in ms */
+  duration: number;
+  /** Color of a glow around trail (laser), none by default */
+  glow?: string;
+};
+
+/**
+ * Point of a `Trail`: position in drawing and time it was added, removed after the duration of the trail
+ */
+export type TrailPoint = Vector2d & {
+  /** Time it was added (ms) */
+  time: number;
+};
+
+/**
+ * Options of a tool, shown while it is active (`BaseOverlay` and others)
+ */
+export type ToolOverlay = {
+  /** Element of the overlay, in the `floating` region of the layout */
+  $overlayContainer: HTMLElement;
+  /** Show overlay: fields show options of given shapes (selection), else options of drawer */
+  show(shapes?: DrawingShape[]): void;
+  /** Hide overlay */
+  hide(): void;
+};
+
+/**
+ * Sections shown by an overlay and their titles, given by each subclass
+ */
+export type OverlayOptions = {
+  /** Show stroke style buttons (default false) */
+  styleBtns: boolean;
+  /** Show stroke width buttons (default true) */
+  widthBtns: boolean;
+  /** Show background color buttons, for rectangle and ellipse (default false) */
+  fillBtns: boolean;
+  /** Title of color section (default stroke) */
+  colorTitle: TranslationKey;
+  /** Accessible name of overlay (default tool options) */
+  label: TranslationKey;
+};
+
+/**
+ * Color or size of highlighter strokes chosen in its overlay
+ */
+export type HighlighterChange = {
+  /** Color chosen */
+  color?: ColorLike;
+  /** Width chosen */
+  size?: number;
+};
+
+/**
+ * Current choices of highlighter widget, updated by the overlay
+ */
+export type HighlighterOverlayOptions = {
+  /** Color of strokes, one of `highlighterColors` or custom */
+  color: ColorLike;
+  /** Width of strokes, one of `highlighterSizes` */
+  size: number;
+  /** Color or size chosen */
+  onChange: (change: HighlighterChange) => void;
+};
+
+/**
+ * Font style button of the text options: style (bold, italic) or decoration (underline, line-through)
+ */
+export type FontStyleChoice = TextChoice<string> & {
+  /** Data attribute of the button: style or decoration */
+  attr: string;
+};

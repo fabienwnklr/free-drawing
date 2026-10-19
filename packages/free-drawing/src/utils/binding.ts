@@ -5,6 +5,7 @@ import { Shape } from 'konva/lib/Shape';
 import type { IRect, Vector2d } from 'konva/lib/types';
 import type { DrawingShape } from '@/@types/drawer';
 import { shapeName } from '@/constants';
+import type { Anchor, BoundEnd } from '@/@types/shapes';
 
 /**
  * Arrows linked to shapes: their start and end stay on outline of shapes (`startBinding` / `endBinding` attributes:
@@ -15,23 +16,8 @@ export const bindingAttrs = ['startBinding', 'endBinding'] as const;
 /** Sides arrow ends are fixed to, same order as `bindingAttrs` */
 export const anchorAttrs = ['startAnchor', 'endAnchor'] as const;
 
-/**
- * Side of a shape (its middle) an arrow end is fixed to
- */
-export type Anchor = 'top' | 'right' | 'bottom' | 'left';
-
 /** Sides of a shape an arrow end can be fixed to, clockwise from top */
 export const anchors: Anchor[] = ['top', 'right', 'bottom', 'left'];
-
-/**
- * Arrow end linked to a shape: at a side, or on its outline aiming at the other end
- */
-export type BoundEnd = {
-  /** Shape the end is linked to */
-  shape: Node;
-  /** Side whose middle the end is fixed to, else end on outline */
-  anchor?: Anchor;
-};
 
 /** Space between arrow end and shape outline */
 const gap = 6;

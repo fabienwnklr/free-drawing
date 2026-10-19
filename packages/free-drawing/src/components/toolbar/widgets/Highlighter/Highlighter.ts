@@ -16,9 +16,9 @@ import { shapeName } from '@/constants';
 export class HighlighterWidget extends FreehandWidget {
   overlay: HighlighterOverlay;
   /** Color of strokes, see `highlighterColors` */
-  color: ColorLike = highlighterColors[0].color;
+  color: ColorLike = highlighterColors[0].value;
   /** Width of strokes, see `highlighterSizes` */
-  size: number = highlighterSizes[1].size;
+  size: number = highlighterSizes[1].value;
 
   /**
    * Create the highlighter tool, shortcut M, with its overlay of colors and sizes

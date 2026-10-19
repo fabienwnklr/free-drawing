@@ -293,9 +293,3 @@ export const en = {
   'collab.owner': 'Owner',
   'collab.viewOnly': 'View only',
 };
-
-/** Key of a text of interface */
-export type TranslationKey = keyof typeof en;
-
-/** All texts of interface in a language */
-export type Translations = Record<TranslationKey, string>;

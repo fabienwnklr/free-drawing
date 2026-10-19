@@ -4,7 +4,7 @@ import { Group } from 'konva/lib/Group';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import type { DrawingShape } from '@/@types/drawer';
 import { drawerEvents, shapeName } from '@/constants';
-import type { TranslationKey } from '@/i18n/en';
+import type { TranslationKey } from '@/@types/i18n';
 import {
   arrowNavigation,
   createButton,

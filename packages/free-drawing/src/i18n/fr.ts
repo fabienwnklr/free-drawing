@@ -1,4 +1,4 @@
-import type { Translations } from '@/i18n/en';
+import type { Translations } from '@/@types/i18n';
 
 /**
  * Textes de l'interface en français

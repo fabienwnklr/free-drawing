@@ -9,10 +9,8 @@ import '@/components/ContextMenu/context-menu.scss';
 import { arrowNavigation, createButton, setPressed } from '@/utils/dom';
 import { getDrawingShape } from '@/utils/frame';
 import { getTexts } from '@/utils/text';
-import type { TranslationKey } from '@/i18n/en';
-
-/** Item of menu: shown in a context, action run once menu is hidden */
-type Item = { $item: HTMLButtonElement; visible: () => boolean; run: () => void };
+import type { TranslationKey } from '@/@types/i18n';
+import type { ContextMenuItem, ContextMenuSection } from '@/@types/ui';
 
 /**
  * Menu of right click (or context menu key, Shift + F10): actions on selection when a shape is under pointer
@@ -34,7 +32,7 @@ export class ContextMenu {
   /** Checkbox item of the grid (Alt+G), checked by the drawer when the grid is shown or hidden */
   $gridBtn!: HTMLButtonElement;
   /** Groups of items, separated when several are shown */
-  #sections: { $section: HTMLElement; items: Item[] }[] = [];
+  #sections: ContextMenuSection[] = [];
   /** Place of right click in drawing: pasted text goes there (pointer is on menu then) */
   #position: Vector2d | null = null;
 
@@ -66,22 +64,22 @@ export class ContextMenu {
     const selection = () => edit() && drawer.getSelectedShapes().length > 0 && !locked();
     const canvas = () => drawer.getSelectedShapes().length === 0;
     const hasShapes = () => drawer.getDrawingShapes().length > 0;
-    const order = (label: TranslationKey, value: ShapeOrder, shortcut: string): Item => ({
+    const order = (label: TranslationKey, value: ShapeOrder, shortcut: string): ContextMenuItem => ({
       $item: this._createItem(label, shortcut),
       visible: selection,
       run: () => drawer.reorderShapes(value),
     });
-    const paste: Item = {
+    const paste: ContextMenuItem = {
       $item: this._createItem('context.paste', 'Ctrl+V'),
       visible: () => edit() && canvas() && !!drawer.getWidget('text'),
       run: () => this._paste(),
     };
-    const snapping: Item = {
+    const snapping: ContextMenuItem = {
       $item: this._createItem('context.snap', 'Alt+S', 'menuitemcheckbox'),
       visible: () => canvas() && !!this.selectWidget,
       run: () => drawer.setting.toggleSnapping(),
     };
-    const grid: Item = {
+    const grid: ContextMenuItem = {
       $item: this._createItem('menu.showGrid', 'Alt+G', 'menuitemcheckbox'),
       visible: canvas,
       run: () => drawer.setting.toggleGrid(),
@@ -100,7 +98,7 @@ export class ContextMenu {
     this.$list.className = 'drawer-context-menu-list';
     this.$menu.append(this.$list);
 
-    const sections: Item[][] = [
+    const sections: ContextMenuItem[][] = [
       [paste],
       [
         {

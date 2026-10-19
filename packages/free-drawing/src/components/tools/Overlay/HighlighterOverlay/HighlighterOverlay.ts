@@ -1,48 +1,28 @@
 import type { Drawer } from '@/Drawer';
 import type { ColorLike } from '@/@types/drawer';
-import type { TranslationKey } from '@/i18n/en';
+import type { TranslationKey } from '@/@types/i18n';
 import LineIcon from '@/icons/line.svg?raw';
 import '@/components/tools/Overlay/overlay.scss';
 import { ColorPicker } from '@/components/ColorPicker/ColorPicker';
 import { createButton, setLabel, setPressed, uniqueId } from '@/utils/dom';
+import type { HighlighterOverlayOptions, HighlighterChange } from '@/@types/toolbar';
+import type { Choice } from '@/@types/ui';
 
 /** Fluorescent colors of highlighter, yellow first (default) */
-export const highlighterColors: {
-  /** Color of strokes */
-  color: ColorLike;
-  /** Accessible name of its button */
-  label: TranslationKey;
-}[] = [
-  { color: '#ffe066', label: 'color.yellow' },
-  { color: '#8ce99a', label: 'color.green' },
-  { color: '#74c0fc', label: 'color.blue' },
-  { color: '#faa2c1', label: 'color.pink' },
-  { color: '#ffc078', label: 'color.orange' },
+export const highlighterColors: Choice<ColorLike>[] = [
+  { value: '#ffe066', label: 'color.yellow' },
+  { value: '#8ce99a', label: 'color.green' },
+  { value: '#74c0fc', label: 'color.blue' },
+  { value: '#faa2c1', label: 'color.pink' },
+  { value: '#ffc078', label: 'color.orange' },
 ];
 
 /** Widths of highlighter strokes, medium by default */
-export const highlighterSizes: {
-  /** Width of strokes */
-  size: number;
-  /** Accessible name of its button */
-  label: TranslationKey;
-}[] = [
-  { size: 12, label: 'width.thin' },
-  { size: 20, label: 'width.medium' },
-  { size: 32, label: 'width.thick' },
+export const highlighterSizes: Choice<number>[] = [
+  { value: 12, label: 'width.thin' },
+  { value: 20, label: 'width.medium' },
+  { value: 32, label: 'width.thick' },
 ];
-
-/**
- * Current choices of highlighter widget, updated by the overlay
- */
-export type HighlighterOverlayOptions = {
-  /** Color of strokes, one of `highlighterColors` or custom */
-  color: ColorLike;
-  /** Width of strokes, one of `highlighterSizes` */
-  size: number;
-  /** Color or size chosen */
-  onChange: (change: { color?: ColorLike; size?: number }) => void;
-};
 
 /**
  * Options of highlighter: its own colors and widths, not those of other tools
@@ -81,7 +61,7 @@ export class HighlighterOverlay {
       buttonClass: 'overlay-picker__button',
       onChange: (color) => this.setChange({ color }),
     });
-    this.$sizeButtons = highlighterSizes.map(({ size, label }) => {
+    this.$sizeButtons = highlighterSizes.map(({ value: size, label }) => {
       const $btn = createButton('drawer-button', 'overlay-picker__button');
 
       $btn.innerHTML = LineIcon.replace('stroke-width="2.5"', `stroke-width="${size / 3}"`);
@@ -100,7 +80,7 @@ export class HighlighterOverlay {
    * Color or size chosen: fields updated, widget told
    * @param change Chosen color or width, merged into the widget choices
    */
-  setChange(change: { color?: ColorLike; size?: number }) {
+  setChange(change: HighlighterChange) {
     Object.assign(this.options, change);
     this._update();
     this.options.onChange(change);

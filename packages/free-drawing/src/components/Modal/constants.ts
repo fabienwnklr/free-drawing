@@ -1,4 +1,4 @@
-import type { ModalOptions } from '@/@types/modal';
+import type { ModalOptions } from '@/@types/ui';
 import type { ConfirmModal } from '@/components/Modal/ConfirmModal';
 
 /**

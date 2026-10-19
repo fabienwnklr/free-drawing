@@ -1,39 +1,29 @@
 import type { Drawer } from '@/Drawer';
-import type { ColorLike, Edges, OptionsChange, ShapeOrder, StrokeStyle } from '@/@types/drawer';
+import type { ColorLike, Edges, OptionsChange, StrokeStyle } from '@/@types/drawer';
 import LineIcon from '@/icons/line.svg?raw';
 import LineDottedIcon from '@/icons/line-dotted.svg?raw';
 import LineDashedIcon from '@/icons/line-dashed.svg?raw';
 import EdgesSharpIcon from '@/icons/edges-sharp.svg?raw';
 import EdgesRoundIcon from '@/icons/edges-round.svg?raw';
-import SendToBackIcon from '@/icons/send-to-back.svg?raw';
-import SendBackwardIcon from '@/icons/send-backward.svg?raw';
-import BringForwardIcon from '@/icons/bring-forward.svg?raw';
-import BringToFrontIcon from '@/icons/bring-to-front.svg?raw';
 import '@/components/tools/Overlay/overlay.scss';
 import { Shape, type ShapeConfig } from 'konva/lib/Shape';
 import type { Group } from 'konva/lib/Group';
 import { Text } from 'konva/lib/shapes/Text';
-import { dataAttributes, drawerEvents, edgesShapes, fillShapes, shapeName, strokeStyleShapes } from '@/constants';
+import {
+  dataAttributes,
+  drawerEvents,
+  edgesShapes,
+  fillShapes,
+  shapeName,
+  strokeStyleShapes,
+  shapeOrders,
+} from '@/constants';
 import { ColorPicker } from '@/components/ColorPicker/ColorPicker';
 import { createButton, setLabel, setPressed, uniqueId } from '@/utils/dom';
 import { getEdges, getStrokeStyle } from '@/utils/stroke';
-import type { TranslationKey } from '@/i18n/en';
-
-/**
- * Sections shown by an overlay and their titles, given by each subclass
- */
-export type OverlayOptions = {
-  /** Show stroke style buttons (default false) */
-  styleBtns: boolean;
-  /** Show stroke width buttons (default true) */
-  widthBtns: boolean;
-  /** Show background color buttons, for rectangle and ellipse (default false) */
-  fillBtns: boolean;
-  /** Title of color section (default stroke) */
-  colorTitle: TranslationKey;
-  /** Accessible name of overlay (default tool options) */
-  label: TranslationKey;
-};
+import type { TranslationKey } from '@/@types/i18n';
+import type { OverlayOptions } from '@/@types/toolbar';
+import type { Choice, IconChoice } from '@/@types/ui';
 
 /**
  * Options panel of a tool or of the selection, common to all shapes: stroke and background colors, stroke width and
@@ -167,12 +157,12 @@ export class BaseOverlay {
     // title changed by setColorTitle
     this.drawer.i18n.translate((t) => ($title.textContent = t(this.#colorTitle)));
 
-    const strokeColors: { color: ColorLike; label: TranslationKey }[] = [
-      { color: '#000', label: 'color.black' },
-      { color: '#e03131', label: 'color.red' },
-      { color: '#2f9e44', label: 'color.green' },
-      { color: '#1971c2', label: 'color.blue' },
-      { color: '#f08c00', label: 'color.orange' },
+    const strokeColors: Choice<ColorLike>[] = [
+      { value: '#000', label: 'color.black' },
+      { value: '#e03131', label: 'color.red' },
+      { value: '#2f9e44', label: 'color.green' },
+      { value: '#1971c2', label: 'color.blue' },
+      { value: '#f08c00', label: 'color.orange' },
     ];
 
     // no transparent color: drawing would be invisible
@@ -196,10 +186,10 @@ export class BaseOverlay {
     this.fillColorPicker = new ColorPicker(this.$fillColorBtnContainer, {
       i18n: this.drawer.i18n,
       colors: [
-        { color: '#ffc9c9', label: 'color.lightRed' },
-        { color: '#b2f2bb', label: 'color.lightGreen' },
-        { color: '#a5d8ff', label: 'color.lightBlue' },
-        { color: '#ffec99', label: 'color.lightYellow' },
+        { value: '#ffc9c9', label: 'color.lightRed' },
+        { value: '#b2f2bb', label: 'color.lightGreen' },
+        { value: '#a5d8ff', label: 'color.lightBlue' },
+        { value: '#ffec99', label: 'color.lightYellow' },
       ],
       attr: dataAttributes.fillColor,
       buttonClass: this.selectors.button,
@@ -218,14 +208,14 @@ export class BaseOverlay {
     this.$strokeWidthContainer = $container;
     this.$strokeWidthBtnContainer = $btnContainer;
 
-    const strokeWidths: { width: number; label: TranslationKey }[] = [
-      { width: 3, label: 'width.thin' },
-      { width: 5, label: 'width.medium' },
-      { width: 8, label: 'width.thick' },
-      { width: 12, label: 'width.extraThick' },
+    const strokeWidths: Choice<number>[] = [
+      { value: 3, label: 'width.thin' },
+      { value: 5, label: 'width.medium' },
+      { value: 8, label: 'width.thick' },
+      { value: 12, label: 'width.extraThick' },
     ];
 
-    strokeWidths.forEach(({ width, label }) => {
+    strokeWidths.forEach(({ value: width, label }) => {
       const icon = LineIcon.replace('stroke-width="2.5"', `stroke-width="${width}"`);
       const $btn = this._createButton(icon, dataAttributes.strokeWidth, width.toString(), label);
 
@@ -244,13 +234,13 @@ export class BaseOverlay {
     this.$strokeStyleContainer = $container;
     this.$strokeStyleBtnContainer = $btnContainer;
 
-    const strokeStyles: { icon: string; style: StrokeStyle; label: TranslationKey }[] = [
-      { icon: LineIcon, style: 'solid', label: 'style.solid' },
-      { icon: LineDashedIcon, style: 'dashed', label: 'style.dashed' },
-      { icon: LineDottedIcon, style: 'dotted', label: 'style.dotted' },
+    const strokeStyles: IconChoice<StrokeStyle>[] = [
+      { value: 'solid', label: 'style.solid', icon: LineIcon },
+      { value: 'dashed', label: 'style.dashed', icon: LineDashedIcon },
+      { value: 'dotted', label: 'style.dotted', icon: LineDottedIcon },
     ];
 
-    strokeStyles.forEach(({ icon, style, label }) => {
+    strokeStyles.forEach(({ value: style, label, icon }) => {
       const $btn = this._createButton(icon, dataAttributes.strokeStyle, style, label);
 
       $btn.addEventListener('click', () => this.drawer.setStrokeStyle(style));
@@ -268,12 +258,12 @@ export class BaseOverlay {
     this.$edgesContainer = $container;
     this.$edgesBtnContainer = $btnContainer;
 
-    const edges: { icon: string; value: Exclude<Edges, number>; label: TranslationKey }[] = [
-      { icon: EdgesSharpIcon, value: 'sharp', label: 'edges.sharp' },
-      { icon: EdgesRoundIcon, value: 'round', label: 'edges.round' },
+    const edges: IconChoice<Exclude<Edges, number>>[] = [
+      { value: 'sharp', label: 'edges.sharp', icon: EdgesSharpIcon },
+      { value: 'round', label: 'edges.round', icon: EdgesRoundIcon },
     ];
 
-    edges.forEach(({ icon, value, label }) => {
+    edges.forEach(({ value, label, icon }) => {
       const $btn = this._createButton(icon, dataAttributes.edges, value, label);
 
       $btn.addEventListener('click', () => this.drawer.setEdges(value));
@@ -335,14 +325,7 @@ export class BaseOverlay {
     const { $container, $btnContainer } = this._createSection('overlay.layers');
     this.$orderContainer = $container;
 
-    const orders: { icon: string; order: ShapeOrder; label: TranslationKey; shortcut: string }[] = [
-      { icon: SendToBackIcon, order: 'back', label: 'action.sendToBack', shortcut: 'Ctrl+Shift+Down' },
-      { icon: SendBackwardIcon, order: 'backward', label: 'action.sendBackward', shortcut: 'Ctrl+Down' },
-      { icon: BringForwardIcon, order: 'forward', label: 'action.bringForward', shortcut: 'Ctrl+Up' },
-      { icon: BringToFrontIcon, order: 'front', label: 'action.bringToFront', shortcut: 'Ctrl+Shift+Up' },
-    ];
-
-    orders.forEach(({ icon, order, label, shortcut }) => {
+    shapeOrders.forEach(({ value: order, label, icon, shortcut }) => {
       // action, not a toggle
       const $btn = createButton('drawer-button', this.selectors.button);
 

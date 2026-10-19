@@ -14,37 +14,8 @@ import { normalizeColor } from '@/utils/color';
 import { getShapes } from '@/utils/hit';
 import { frameParts } from '@/utils/frame';
 import type { DrawingShape } from '@/@types/drawer';
-
-/**
- * Format of exported images
- */
-export type ImageFormat = 'png' | 'svg' | 'pdf';
-
-/**
- * Options of exported images, same rendering in every format
- */
-export type ImageOptions = {
-  /** Background color, transparent when undefined */
-  background?: string;
-  /** Dark mode colors (see `toDarkColor`) */
-  dark?: boolean;
-  /** Pixel ratio of png and pdf (default 2) */
-  scale?: number;
-};
-
-/**
- * Exported area, in coordinates of the draw layer
- */
-export type Box = {
-  /** Left of area */
-  x: number;
-  /** Top of area */
-  y: number;
-  /** Width of area, width of image at scale 1 */
-  width: number;
-  /** Height of area, height of image at scale 1 */
-  height: number;
-};
+import type { ImageOptions } from '@/@types/file';
+import type { IRect } from 'konva/lib/types';
 
 // space around shapes
 /** Space around exported shapes, in layer units */
@@ -56,7 +27,7 @@ const padding = 16;
  * @param layer draw layer, coordinates of the box are relative to it
  * @returns box rounded to whole units outwards, null without shapes
  */
-export function getExportBox(shapes: DrawingShape[], layer: Container): Box | null {
+export function getExportBox(shapes: DrawingShape[], layer: Container): IRect | null {
   const rects = shapes.map((shape) => shape.getClientRect({ relativeTo: layer }));
 
   if (!rects.length) return null;
@@ -120,7 +91,7 @@ function layerTransform(node: Node) {
  * @param options background, dark mode colors and pixel ratio
  * @returns canvas of `box` size multiplied by `scale`
  */
-export function renderCanvas(shapes: DrawingShape[], box: Box, options: ImageOptions = {}): HTMLCanvasElement {
+export function renderCanvas(shapes: DrawingShape[], box: IRect, options: ImageOptions = {}): HTMLCanvasElement {
   const { background, dark, scale = 2 } = options;
   // not in page
   const stage = new Stage({ container: document.createElement('div'), width: box.width, height: box.height });
@@ -356,7 +327,7 @@ function shapeToSvg(shape: Node, dark?: boolean, matrix = shape.getTransform().g
  * @param options background and dark mode colors (`scale` ignored)
  * @returns svg document
  */
-export function renderSvg(shapes: DrawingShape[], box: Box, options: ImageOptions = {}): string {
+export function renderSvg(shapes: DrawingShape[], box: IRect, options: ImageOptions = {}): string {
   const { background, dark } = options;
   const size = attrs({ width: box.width, height: box.height });
   const backgroundRect = background ? `<rect${attrs({ ...box, fill: colorOf(background, dark) })}/>` : '';

@@ -3,35 +3,39 @@ import type { OptionsChange, TextStyle } from '@/@types/drawer';
 import type { Shape, ShapeConfig } from 'konva/lib/Shape';
 import type { Group } from 'konva/lib/Group';
 import { Text } from 'konva/lib/shapes/Text';
-import { BaseOverlay, type OverlayOptions } from '@/components/tools/Overlay/BaseOverlay';
+import { BaseOverlay } from '@/components/tools/Overlay/BaseOverlay';
+import type { OverlayOptions, FontStyleChoice } from '@/@types/toolbar';
 import { dataAttributes } from '@/constants';
 import { setPressed } from '@/utils/dom';
 import AlignLeftIcon from '@/icons/align-left.svg?raw';
 import AlignCenterIcon from '@/icons/align-center.svg?raw';
 import AlignRightIcon from '@/icons/align-right.svg?raw';
 import '@/components/tools/Overlay/TextOverlay/text-overlay.scss';
-import type { TranslationKey } from '@/i18n/en';
+import type { TextChoice, IconChoice } from '@/@types/ui';
 
 const fontFamilies = ['Ubuntu', 'Arial', 'Verdana', 'Georgia', 'Times New Roman', 'Courier New', 'Comic Sans MS'];
 
-const fontSizes: { label: string; title: TranslationKey; value: number }[] = [
-  { label: 'S', title: 'text.small', value: 12 },
-  { label: 'M', title: 'text.medium', value: 16 },
-  { label: 'L', title: 'text.large', value: 24 },
-  { label: 'XL', title: 'text.extraLarge', value: 32 },
+/** Font sizes of text options */
+const fontSizes: TextChoice<number>[] = [
+  { value: 12, label: 'text.small', text: 'S' },
+  { value: 16, label: 'text.medium', text: 'M' },
+  { value: 24, label: 'text.large', text: 'L' },
+  { value: 32, label: 'text.extraLarge', text: 'XL' },
 ];
 
-const fontStyles: { label: string; title: TranslationKey; attr: string; value: string }[] = [
-  { label: 'B', title: 'text.bold', attr: dataAttributes.fontStyle, value: 'bold' },
-  { label: 'I', title: 'text.italic', attr: dataAttributes.fontStyle, value: 'italic' },
-  { label: 'U', title: 'text.underline', attr: dataAttributes.textDecoration, value: 'underline' },
-  { label: 'S', title: 'text.strikethrough', attr: dataAttributes.textDecoration, value: 'line-through' },
+/** Font styles and decorations of text options, combined */
+const fontStyles: FontStyleChoice[] = [
+  { value: 'bold', label: 'text.bold', text: 'B', attr: dataAttributes.fontStyle },
+  { value: 'italic', label: 'text.italic', text: 'I', attr: dataAttributes.fontStyle },
+  { value: 'underline', label: 'text.underline', text: 'U', attr: dataAttributes.textDecoration },
+  { value: 'line-through', label: 'text.strikethrough', text: 'S', attr: dataAttributes.textDecoration },
 ];
 
-const textAligns: { icon: string; title: TranslationKey; value: TextStyle['align'] }[] = [
-  { icon: AlignLeftIcon, title: 'text.alignLeft', value: 'left' },
-  { icon: AlignCenterIcon, title: 'text.alignCenter', value: 'center' },
-  { icon: AlignRightIcon, title: 'text.alignRight', value: 'right' },
+/** Alignments of text options */
+const textAligns: IconChoice<TextStyle['align']>[] = [
+  { value: 'left', label: 'text.alignLeft', icon: AlignLeftIcon },
+  { value: 'center', label: 'text.alignCenter', icon: AlignCenterIcon },
+  { value: 'right', label: 'text.alignRight', icon: AlignRightIcon },
 ];
 
 /**
@@ -121,7 +125,7 @@ export class TextOverlay extends BaseOverlay {
     this.$fontSizeBtnContainer = $btnContainer;
 
     fontSizes.forEach((size) => {
-      const $btn = this._createButton(size.label, dataAttributes.fontSize, size.value.toString(), size.title);
+      const $btn = this._createButton(size.text, dataAttributes.fontSize, size.value.toString(), size.label);
       $btn.addEventListener('click', () => this.drawer.setTextStyle({ fontSize: size.value }));
       this.$fontSizeBtnContainer.append($btn);
     });
@@ -136,7 +140,7 @@ export class TextOverlay extends BaseOverlay {
     this.$fontStyleBtnContainer = $btnContainer;
 
     fontStyles.forEach((style) => {
-      const $btn = this._createButton(style.label, style.attr, style.value, style.title);
+      const $btn = this._createButton(style.text, style.attr, style.value, style.label);
       $btn.classList.add(`text-style-${style.value}`);
       $btn.addEventListener('click', () => {
         // toggle buttons, bold & italic (or underline & line-through) can be combined
@@ -173,7 +177,7 @@ export class TextOverlay extends BaseOverlay {
     this.$textAlignBtnContainer = $btnContainer;
 
     textAligns.forEach((align) => {
-      const $btn = this._createButton(align.icon, dataAttributes.textAlign, align.value, align.title);
+      const $btn = this._createButton(align.icon, dataAttributes.textAlign, align.value, align.label);
       $btn.addEventListener('click', () => this.drawer.setTextStyle({ align: align.value }));
       this.$textAlignBtnContainer.append($btn);
     });

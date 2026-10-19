@@ -2,7 +2,7 @@ import type { Drawer } from '@/Drawer';
 import { Modal } from '@/components/Modal/Modal';
 import { deepMerge } from '@/utils/functions';
 import { confirmModalDefaultOpts } from '@/components/Modal/constants';
-import type { ConfirmModalOptions } from '@/@types/modal';
+import type { ConfirmModalOptions } from '@/@types/ui';
 import { createButton, uniqueId } from '@/utils/dom';
 
 import '@/components/Modal/modal-confirm.scss';

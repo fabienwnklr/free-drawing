@@ -3,7 +3,7 @@ import type { Drawer } from '@/Drawer';
 import { Modal } from '@/components/Modal/Modal';
 import { createButton, createSwitch, uniqueId } from '@/utils/dom';
 import { drawerEvents } from '@/constants';
-import type { TranslationKey } from '@/i18n/en';
+import type { TranslationKey } from '@/@types/i18n';
 
 /**
  * Live collaboration dialog: start a session, join one from a link (name required), session link with copy button

@@ -8,7 +8,8 @@ import { Group } from 'konva/lib/Group';
 import type { Vector2d } from 'konva/lib/types';
 import { ShapeWidget, snapAngle } from '@/components/toolbar/widgets/ShapeWidget';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
-import { type BoundEnd, anchors, findBindingTarget, getAnchorAt, getAnchorPoints, getBoundEnds } from '@/utils/binding';
+import { anchors, findBindingTarget, getAnchorAt, getAnchorPoints, getBoundEnds } from '@/utils/binding';
+import type { BoundEnd } from '@/@types/shapes';
 import { withFrameShapes } from '@/utils/frame';
 
 /**

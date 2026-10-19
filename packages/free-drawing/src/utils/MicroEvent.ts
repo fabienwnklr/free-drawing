@@ -1,9 +1,5 @@
 import { deprecatedEvents } from '@/constants';
-
-/**
- * Event listener, called with the arguments given to `trigger` (`this`: the emitter)
- */
-export type TCallback = (...args: any) => any;
+import type { Listener } from '@/@types/utils';
 
 /** Deprecated event names already warned about */
 const warned = new Set<string>();
@@ -43,7 +39,7 @@ function forEvents(events: string, callback: (event: string) => any) {
  */
 export default class MicroEvent {
   /** Listeners by event name, in order of registration */
-  public _events: { [key: string]: TCallback[] } = {};
+  public _events: Record<string, Listener[]> = {};
 
   /** Creates an emitter without listeners */
   constructor() {
@@ -55,7 +51,7 @@ export default class MicroEvent {
    * @param events event name, or several separated by spaces
    * @param fct listener, called on each trigger
    */
-  on(events: string, fct: TCallback) {
+  on(events: string, fct: Listener) {
     forEvents(events, (event) => {
       const event_array = this._events[event] || [];
       event_array.push(fct);
@@ -68,7 +64,7 @@ export default class MicroEvent {
    * @param events event name, or several separated by spaces
    * @param fct listener given to `on`
    */
-  off(events?: string, fct?: TCallback) {
+  off(events?: string, fct?: Listener) {
     if (events === undefined) {
       this._events = {};
       return;

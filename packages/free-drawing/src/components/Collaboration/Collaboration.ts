@@ -1,5 +1,4 @@
 import type { Drawer } from '@/Drawer';
-import type { Socket } from 'socket.io-client';
 import { Node } from 'konva/lib/Node';
 import type { Trail } from '@/components/toolbar/widgets/Eraser/Trail';
 import { createLaserTrail } from '@/components/toolbar/widgets/Laser/Laser';
@@ -16,76 +15,17 @@ import { socketEvents } from '@free-drawing/protocol';
 import { applyOrder } from '@/utils/order';
 import { parseShapeState } from '@/utils/drawingFile';
 import type { DrawingShape } from '@/@types/drawer';
-
-/**
- * Drawing change sent to other clients: shapes added or updated (konva JSON), ids of removed shapes,
- * `order`: ids of all shapes from bottom to top when stacking order changed,
- * `live`: preview of shapes being drawn or moved (final change follows)
- */
-export type DrawingChange = {
-  /** Shapes added or updated: konva JSON of top nodes (groups with their shapes) */
-  upsert: string[];
-  /** Ids of removed shapes */
-  remove: string[];
-  /** Ids of all shapes from bottom to top, only when stacking order changed */
-  order?: string[];
-  /** Preview of shapes being drawn or moved: applied without history, the final change follows */
-  live?: boolean;
-  /** Whole drawing of the room, sent by the server to a joining user (also empty) */
-  full?: boolean;
-};
-
-/** Pointer of another user: position in drawing (null out of drawer), laser used */
-export type RemotePointer = {
-  /** Id of the user, identifies their cursor and laser trail */
-  id: string;
-  /** Name shown in their cursor (anonymous when empty) */
-  name?: string;
-  /** Position in drawing, null when the pointer left the drawer (cursor hidden) */
-  position:
-    | (Vector2d & {
-        /** Laser pressed: trail of their color follows the pointer */
-        laser?: boolean;
-      })
-    | null;
-};
-
-/**
- * Part of a socket.io client socket used by collaboration (connected by the drawer, replaced by fakes in tests)
- */
-export type CollaborationSocket = Pick<Socket, 'on' | 'once' | 'emit' | 'disconnect' | 'volatile'>;
-
-/**
- * User of a room (sent by server): owner (created the room) gives or removes the right to draw
- */
-export type CollaborationMember = {
-  /** Id of the user (account id of a logged in user) */
-  id: string;
-  /** Name shown to other users */
-  name: string;
-  /** Created the room: gives or removes the right to draw */
-  owner: boolean;
-  /** Can draw (right given by the owner), else views only */
-  canEdit: boolean;
-  /** Name of user who shared the link used to join */
-  invitedBy?: string;
-};
-
-/**
- * Session of a {@link Collaboration}: room to join and identity of this user
- */
-export type CollaborationOptions = {
-  /** Id of the room (`#room=` of links) */
-  room: string;
-  /** Name shown to other users */
-  name: string;
-  /** User id, kept between sessions (rights) */
-  userId?: string;
-  /** Secret of owner of the room, given when the room is created */
-  ownerKey?: string;
-  /** Id of user who shared the link used to join */
-  invitedBy?: string;
-};
+import type {
+  DrawingChange,
+  RemotePointer,
+  CollaborationSocket,
+  CollaborationMember,
+  CollaborationSession,
+  PointerPosition,
+  JoinedMessage,
+  RoomMessage,
+  RejectedMessage,
+} from '@/@types/collaboration';
 
 /** Minimum interval of pointer and live drawing messages (ms) */
 const liveInterval = 50;
@@ -134,7 +74,7 @@ export class Collaboration {
   /** Shapes being drawn or moved, sent at next live message */
   #live = new Set<DrawingShape>();
   /** Last pointer position of this user in drawing (null out of drawer), sent at next pointer message */
-  #pointer: (Vector2d & { laser?: boolean }) | null = null;
+  #pointer: PointerPosition | null = null;
   /** Laser used by this user, see `setLaser` */
   #laser = false;
   /** Laser trails of other users, by user id */
@@ -154,7 +94,7 @@ export class Collaboration {
   constructor(
     drawer: Drawer,
     socket: CollaborationSocket,
-    { room, name, userId = '', ownerKey, invitedBy }: CollaborationOptions
+    { room, name, userId = '', ownerKey, invitedBy }: CollaborationSession
   ) {
     this.drawer = drawer;
     this.socket = socket;
@@ -185,11 +125,11 @@ export class Collaboration {
       this.#connected = false;
     });
     // server identifies this user (logged in account), before sending users of the room
-    this.socket.on(socketEvents.JOINED, ({ userId }: { userId?: unknown } = {}) => {
+    this.socket.on(socketEvents.JOINED, ({ userId }: JoinedMessage = {}) => {
       if (typeof userId === 'string' && userId) this.userId = userId;
     });
     // settings of the room (servers of previous versions: none)
-    this.socket.on(socketEvents.ROOM, ({ newUsersCanEdit }: { newUsersCanEdit?: unknown } = {}) => {
+    this.socket.on(socketEvents.ROOM, ({ newUsersCanEdit }: RoomMessage = {}) => {
       if (typeof newUsersCanEdit !== 'boolean') return;
 
       this.newUsersCanEdit = newUsersCanEdit;
@@ -200,7 +140,7 @@ export class Collaboration {
       else this.receive(change);
     });
     // message refused by the server: room full (session stopped), drawing too big (changes not shared)
-    this.socket.on(socketEvents.REJECTED, ({ reason }: { reason?: unknown } = {}) => {
+    this.socket.on(socketEvents.REJECTED, ({ reason }: RejectedMessage = {}) => {
       if (reason === 'full') {
         this.drawer.toast(this.drawer.t('toast.collaborationFull'), 'error');
         this.drawer.stopCollaboration();
@@ -590,7 +530,8 @@ export class Collaboration {
         continue;
       }
 
-      const { attrs, className } = state as { attrs: ShapeConfig; className: string };
+      const { className } = state;
+      const attrs = state.attrs as ShapeConfig;
       let shape = shapes.get(attrs.id as string);
 
       // groups replaced with their shapes, at same place, still selected

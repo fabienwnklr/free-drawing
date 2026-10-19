@@ -15,7 +15,7 @@ import RotateRightIcon from '@/icons/rotate-right.svg?raw';
 import FitWidthIcon from '@/icons/fit-width.svg?raw';
 import { Group } from 'konva/lib/Group';
 import { arrowNavigation, createButton, setLabel } from '@/utils/dom';
-import type { TranslationKey } from '@/i18n/en';
+import type { TranslationKey } from '@/@types/i18n';
 import { drawerEvents } from '@/constants';
 import { getFrameTitle, isFrame } from '@/utils/frame';
 import { getTexts } from '@/utils/text';

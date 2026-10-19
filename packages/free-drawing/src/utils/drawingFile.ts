@@ -1,25 +1,10 @@
-import type { ColorLike } from '@/@types/drawer';
-import type { ShapeState } from '@/components/tools/UndoRedo/History';
+import type { ShapeState, DrawingFile, FilePickerWindow } from '@/@types/file';
 import { groupClasses, shapeClasses } from '@free-drawing/protocol';
 
 /**
  * Extension of drawing files (JSON)
  */
 export const drawingFileExtension = '.freedrawing';
-
-/**
- * Content of a drawing file or link: background color and drawing shapes (konva `toObject` format)
- */
-export type DrawingFile = {
-  /** Identifies drawing files */
-  type: 'free-drawing';
-  /** Version of the file format */
-  version: 1;
-  /** Background color of the drawing */
-  background: ColorLike;
-  /** Drawing shapes (top nodes, with children of groups and frames), bottom first */
-  shapes: ShapeState[];
-};
 
 // files, links and shapes of other users of a collaboration can come from anyone: only drawing shapes and groups of
 // them are created (`shapeClasses`, `groupClasses` of the protocol, also checked by the server)
@@ -154,12 +139,6 @@ export async function decodeLinkData(data: string): Promise<string> {
   );
 }
 
-/** `showSaveFilePicker` of File System Access API (Chromium), not typed by TypeScript */
-type SaveFilePicker = (options: {
-  suggestedName: string;
-  types: { description: string; accept: Record<string, string[]> }[];
-}) => Promise<{ createWritable(): Promise<{ write(data: Blob | string): Promise<void>; close(): Promise<void> }> }>;
-
 /**
  * Save content in a file: browser save dialog when available (Chromium), else download
  * @param name File name with extension
@@ -169,7 +148,7 @@ type SaveFilePicker = (options: {
  */
 export async function saveFile(name: string, content: Blob | string, type: string = 'application/json') {
   const extension = name.slice(name.lastIndexOf('.'));
-  const showSaveFilePicker = (window as unknown as { showSaveFilePicker?: SaveFilePicker }).showSaveFilePicker;
+  const { showSaveFilePicker } = window as FilePickerWindow;
 
   if (showSaveFilePicker) {
     try {

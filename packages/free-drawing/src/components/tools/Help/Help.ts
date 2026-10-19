@@ -5,19 +5,8 @@ import HelpIcon from '@/icons/help.svg?raw';
 import ExternalLink from '@/icons/external-link.svg?raw';
 import { ShapeWidget } from '@/components/toolbar/widgets/ShapeWidget';
 import { createButton, setLabel } from '@/utils/dom';
-import type { Translate } from '@/i18n/I18n';
-
-/** Shortcut: action, keys (several: alternatives or second action), text after keys */
-export type Shortcut = {
-  /** Translated action */
-  label: string;
-  /** Keys shown, each in a `kbd` element (alternatives with `or`, else a second action such as ungroup) */
-  keys: string[];
-  /** Keys are alternatives, separated by translated "or" */
-  or?: boolean;
-  /** Translated text after keys, e.g. while drawing */
-  after?: string;
-};
+import type { Translate } from '@/@types/i18n';
+import type { Shortcut } from '@/@types/ui';
 
 /**
  * Help dialog, opened by its footer button: links to documentation and issues, shortcuts of tools, editor and view

@@ -1,8 +1,9 @@
 import type { AvailableTools, WidgetGroupOptions, WidgetsOptions } from '@/@types/toolbar';
 import type { Shape, ShapeConfig } from 'konva/lib/Shape';
 import type { Group } from 'konva/lib/Group';
-import type { CustomTranslations, Language } from '@/i18n/I18n';
-import type { DrawingFile } from '@/utils/drawingFile';
+import type { CustomTranslations, Language } from '@/@types/i18n';
+import type { DrawingFile } from '@/@types/file';
+import type { CollaborationOptions } from '@/@types/collaboration';
 
 /**
  * Node of drawing: a shape or a group of drawing nodes
@@ -77,16 +78,6 @@ export type DrawerOptions = {
   user: DrawerUser | null;
   /** Storage of drawing instead of localStorage (e.g. server of the app), see `DrawerStorage` */
   storage: DrawerStorage | null;
-};
-
-/**
- * Collaboration server and data sent on connection
- */
-export type CollaborationOptions = {
-  /** Server url, page origin by default */
-  url?: string;
-  /** Data read by server on connection (`socket.handshake.auth`, e.g. token of logged in user), or function giving it on each connection */
-  auth?: Record<string, unknown> | ((callback: (data: Record<string, unknown>) => void) => void);
 };
 
 /**

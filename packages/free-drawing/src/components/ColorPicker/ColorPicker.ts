@@ -3,31 +3,7 @@ import type { ColorLike } from '@/@types/drawer';
 import { createButton, setLabel, setPressed } from '@/utils/dom';
 import { normalizeColor, toHexColor } from '@/utils/color';
 import { toDarkColor } from '@/utils/export';
-import type { I18n } from '@/i18n/I18n';
-import type { TranslationKey } from '@/i18n/en';
-
-/**
- * Options of a {@link ColorPicker}
- */
-export type ColorPickerOptions = {
-  /** Palette, with translation of accessible name of each color */
-  colors: {
-    /** Color of the palette button */
-    color: ColorLike;
-    /** Translation key of the accessible name of the color */
-    label: TranslationKey;
-  }[];
-  /** Attribute of palette buttons, its value is the color */
-  attr: string;
-  /** Class of palette buttons */
-  buttonClass: string;
-  /** Transparent button (default false) */
-  transparent?: boolean;
-  /** Color chosen with a button or the custom input */
-  onChange: (color: ColorLike) => void;
-  /** Texts of drawer */
-  i18n: I18n;
-};
+import type { ColorPickerOptions } from '@/@types/ui';
 
 /**
  * Palette buttons, optional transparent button and custom color input, added to given container
@@ -50,9 +26,9 @@ export class ColorPicker {
 
     const colors = [...options.colors];
 
-    if (options.transparent) colors.push({ color: 'transparent', label: 'color.transparent' });
+    if (options.transparent) colors.push({ value: 'transparent', label: 'color.transparent' });
 
-    colors.forEach(({ color, label }) => {
+    colors.forEach(({ value: color, label }) => {
       const $btn = createButton(options.buttonClass);
 
       $btn.setAttribute(options.attr, color);

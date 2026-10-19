@@ -2,12 +2,13 @@ import '@/components/PreferencesModal/preferences-modal.scss';
 import type { Drawer } from '@/Drawer';
 import type { Preferences, Theme } from '@/@types/drawer';
 import { Modal } from '@/components/Modal/Modal';
-import { type Language, languages } from '@/i18n/I18n';
-import type { TranslationKey } from '@/i18n/en';
+import { languages } from '@/i18n/I18n';
+import type { Language, TranslationKey } from '@/@types/i18n';
 import { drawerEvents } from '@/constants';
 import { createButton, createSwitch, uniqueId } from '@/utils/dom';
+import type { Choice } from '@/@types/ui';
 
-const themes: { value: Theme; label: TranslationKey }[] = [
+const themes: Choice<Theme>[] = [
   { value: 'light', label: 'preferences.light' },
   { value: 'dark', label: 'preferences.dark' },
   { value: 'system', label: 'preferences.system' },

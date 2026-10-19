@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.15.0](https://github.com/fabienwnklr/free-drawing/compare/v7.14.3...v7.15.0) (2026-10-20)
+
+
+### Features
+
+* **types:** `AvailableTools`, `BrushWidgetOptions`, `ImageFormat`, `ShapeState` and `TranslationParams` are exported with the other types of the library (options of `tool`, of the brush, export formats, shapes of drawing files, parameters of texts)
+
 ## [7.14.3](https://github.com/fabienwnklr/free-drawing/compare/v7.14.2...v7.14.3) (2026-10-20)
 
 

@@ -22,8 +22,9 @@ import type { ColorLike } from '@/@types/drawer';
 import { createButton, disableElement, enableElement, setLabel, setPressed, uniqueId } from '@/utils/dom';
 import { ColorPicker } from '@/components/ColorPicker/ColorPicker';
 import { drawerEvents } from '@/constants';
-import { type Language, languages } from '@/i18n/I18n';
-import type { TranslationKey } from '@/i18n/en';
+import { languages } from '@/i18n/I18n';
+import type { Language, TranslationKey } from '@/@types/i18n';
+import type { Choice } from '@/@types/ui';
 
 /**
  * Settings menu of header (dropdown): file actions, collaboration, view toggles, language, preferences and
@@ -150,12 +151,12 @@ export class Settings extends Dropdown {
     this.$bgColorBtnContainer = document.createElement('div');
     this.$bgColorBtnContainer.classList.add('color-picker-btn-container');
 
-    const bgColors: { color: ColorLike; label: TranslationKey }[] = [
-      { color: '#fff', label: 'color.white' },
-      { color: '#f8f9fa', label: 'color.lightGray' },
-      { color: '#f5faff', label: 'color.lightBlue' },
-      { color: '#fffce8', label: 'color.lightYellow' },
-      { color: '#fdf8f6', label: 'color.lightBeige' },
+    const bgColors: Choice<ColorLike>[] = [
+      { value: '#fff', label: 'color.white' },
+      { value: '#f8f9fa', label: 'color.lightGray' },
+      { value: '#f5faff', label: 'color.lightBlue' },
+      { value: '#fffce8', label: 'color.lightYellow' },
+      { value: '#fdf8f6', label: 'color.lightBeige' },
     ];
 
     this.bgColorPicker = new ColorPicker(this.$bgColorBtnContainer, {

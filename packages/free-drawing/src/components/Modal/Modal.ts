@@ -2,7 +2,7 @@ import '@/components/Modal/modal.scss';
 import { defaultOptionsModal } from '@/components/Modal/constants';
 import { stringToNode } from '@/utils/functions';
 import type { Drawer } from '@/Drawer';
-import type { ModalOptions } from '@/@types/modal';
+import type { ModalOptions } from '@/@types/ui';
 import CloseIcon from '@/icons/close.svg?raw';
 import { uniqueId } from '@/utils/dom';
 

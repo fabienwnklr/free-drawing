@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import type { DrawerStorage } from '@/@types/drawer';
-import type { DrawingFile } from '@/utils/drawingFile';
+import type { DrawingFile } from '@/@types/file';
 import { createDrawer } from './helpers';
 
 const { io } = vi.hoisted(() => ({ io: vi.fn(() => ({})) }));

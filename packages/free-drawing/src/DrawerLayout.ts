@@ -1,25 +1,7 @@
 import type { Stage } from 'konva/lib/Stage';
 import type { Drawer } from '@/Drawer';
 import { debounce } from '@/utils/perf';
-
-/**
- * Regions of the interface of a drawer:
- * - `header`: top left (settings menu, layers button, position)
- * - `footerStart`: bottom left (zoom, undo / redo)
- * - `footer`: bottom, after its start (toolbar in the middle, help on the right)
- * - `floating`: over the canvas, placed by their component (menus, panels, overlays, dialogs, toasts, text editor)
- */
-export type LayoutRegion = 'header' | 'footerStart' | 'footer' | 'floating';
-
-/**
- * Options of an element added to a region of the interface (`layout.add`)
- */
-export type LayoutItemOptions = {
-  /** Hidden in zen mode */
-  hideInZen?: boolean;
-  /** Placed right after this element of the region, else last */
-  after?: Element;
-};
+import type { LayoutRegion, LayoutItemOptions } from '@/@types/ui';
 
 /**
  * Layout of a drawer: its container in the element of the drawer (canvas of the stage, interface over it), regions of

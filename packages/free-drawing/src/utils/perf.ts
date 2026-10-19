@@ -1,9 +1,4 @@
-/**
- * Function returned by `throttle`: same parameters and result as the throttled function
- * @template T throttled function
- */
-export declare type ThrottledFunction<T extends (...args: any) => any> = (...args: Parameters<T>) => ReturnType<T>;
-
+import type { ThrottledFunction } from '@/@types/utils';
 /**
  * Function calling `callback` once calls stop for `delay` ms: each call within the delay restarts the timer
  *
