@@ -28,6 +28,7 @@ export default defineConfig({
     // https://vitepress.dev/reference/default-theme-config
     nav: [
       { text: 'Get started', link: '/get-started/' },
+      { text: 'Features', link: '/features' },
       { text: 'API', link: '/api/' },
       { text: 'Changelog', link: '/changelog' },
       { text: 'Demo', link: 'https://free-drawing-demo.netlify.app/', target: '_blank' },
