@@ -8,6 +8,12 @@ import type { ServerConfig } from './config';
 import type { Database } from './db';
 
 /**
+ * Header giving the address of the client to Better Auth (rate limits of sign in, sessions): set by the server from
+ * the connection or its trusted proxies (`trustProxy`), never the one sent by the client
+ */
+export const clientIpHeader = 'x-free-drawing-client-ip';
+
+/**
  * Deletion of an account always needs its password: Better Auth deletes it without password while the session is
  * fresh (signed in less than a day ago), e.g. from a session left open or a stolen cookie
  */
@@ -40,6 +46,8 @@ function getOptions(config: ServerConfig, db: Kysely<Database>) {
       deleteUser: { enabled: true },
     },
     hooks: { before: passwordToDelete },
+    // not X-Forwarded-For: sent by any client, a new rate limit for each value
+    advanced: { ipAddress: { ipAddressHeaders: [clientIpHeader] } },
   } satisfies BetterAuthOptions;
 }
 

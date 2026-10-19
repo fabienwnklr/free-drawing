@@ -25,6 +25,9 @@ yarn workspace @free-drawing/server start   # production (NODE_ENV=production)
 | `BASE_URL` | `http://localhost:<port>` | Public URL of the server (cookies, auth) |
 | `BETTER_AUTH_SECRET` | development secret | Secret signing sessions, 32 characters at least, required in production |
 | `TRUSTED_ORIGINS` | | Other origins of apps calling the API (comma separated): CORS with cookies |
+| `TRUST_PROXY` | | Proxies in front of the server (Express `trust proxy`: number of proxies, `true`, or addresses and subnets, comma separated): their `X-Forwarded-For` gives the address of clients. Without it, the address of the connection |
+
+Better Auth limits sign in, sign up and account changes per address of client (in production): the address of the connection, or the one given by the proxies of `TRUST_PROXY`, never an `X-Forwarded-For` sent by the client itself (a new limit for each value). Behind a reverse proxy, set `TRUST_PROXY` (e.g. `1` or `loopback`), else every client has the address of the proxy and shares its limits.
 
 ## API
 

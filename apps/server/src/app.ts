@@ -6,7 +6,7 @@ import { Server } from 'socket.io';
 import { toNodeHandler } from 'better-auth/node';
 import type { ServerConfig } from './config';
 import { createDatabase, migrateApp } from './db';
-import { createAuth } from './auth';
+import { clientIpHeader, createAuth } from './auth';
 import { createApi } from './api';
 import { attachCollaboration, limits } from './collaboration';
 
@@ -31,6 +31,16 @@ function cors(origins: string[]): RequestHandler {
     next();
   };
 }
+
+/**
+ * Address of the client given to Better Auth in `clientIpHeader` (rate limits, sessions), replacing any value sent by
+ * the client
+ */
+const clientIp: RequestHandler = (req, _res, next) => {
+  if (req.ip) req.headers[clientIpHeader] = req.ip;
+  else delete req.headers[clientIpHeader];
+  next();
+};
 
 /**
  * Web app (apps/web) with metas of this server: accounts and drawings API, live collaboration.
@@ -78,9 +88,11 @@ export async function createServer(config: ServerConfig) {
   const app = express();
 
   app.disable('x-powered-by');
+  // address of clients (req.ip): of the connection, or given by trusted proxies
+  app.set('trust proxy', config.trustProxy ?? false);
   app.use('/api', cors(config.trustedOrigins));
-  // before body parsers: Better Auth reads the body itself
-  app.all('/api/auth/*', toNodeHandler(auth));
+  // before body parsers: Better Auth reads the body itself, with the address of the client in its header
+  app.all('/api/auth/*', clientIp, toNodeHandler(auth));
   app.use('/api', createApi(auth, db));
 
   const httpServer = createHttpServer(app);

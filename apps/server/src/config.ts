@@ -17,13 +17,33 @@ export type ServerConfig = {
   secret: string;
   /** Other origins of apps calling the API and collaboration server (CORS with cookies) */
   trustedOrigins: string[];
+  /**
+   * Proxies in front of the server whose `X-Forwarded-For` gives the address of clients (Express `trust proxy`: number
+   * of proxies, `true`, addresses or subnets), none by default: address of the connection
+   */
+  trustProxy?: boolean | number | string;
 };
 
 const devSecret = 'free-drawing development secret, never use it in production';
 
 /**
+ * Express `trust proxy` setting of `TRUST_PROXY`
+ * @param value Number of proxies, `true`, or addresses and subnets (comma separated), empty without proxy
+ * @returns Setting of Express, false without proxy
+ */
+function parseTrustProxy(value = ''): boolean | number | string {
+  const setting = value.trim();
+
+  if (!setting || setting === 'false') return false;
+  if (setting === 'true') return true;
+
+  return /^\d+$/.test(setting) ? Number(setting) : setting;
+}
+
+/**
  * Settings of environment: PORT (3000), NODE_ENV, DATABASE_PATH (data/free-drawing.db),
- * BASE_URL (http://localhost:<port>), BETTER_AUTH_SECRET (required in production), TRUSTED_ORIGINS (comma separated)
+ * BASE_URL (http://localhost:<port>), BETTER_AUTH_SECRET (required in production), TRUSTED_ORIGINS (comma separated),
+ * TRUST_PROXY (proxies giving the address of clients, see `parseTrustProxy`)
  */
 export function getConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
   const dev = env.NODE_ENV !== 'production';
@@ -43,5 +63,6 @@ export function getConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
       .split(',')
       .map((origin) => origin.trim())
       .filter(Boolean),
+    trustProxy: parseTrustProxy(env.TRUST_PROXY),
   };
 }

@@ -1,5 +1,6 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import request from 'supertest';
+import type { Kysely } from 'kysely';
 import { io as connect, type Socket } from 'socket.io-client';
 import type { AddressInfo } from 'node:net';
 import { mkdtempSync, rmSync } from 'node:fs';
@@ -270,6 +271,36 @@ describe('Drawings', () => {
 });
 
 describe('Apps of other origins', () => {
+  /** Address of the session of a new user, signed up with forged headers of addresses */
+  async function signUpIp(app: typeof server.app, db: typeof server.db) {
+    const res = await request(app)
+      .post('/api/auth/sign-up/email')
+      .set('Origin', config.baseURL)
+      .set('X-Forwarded-For', '203.0.113.7')
+      .set('X-Free-Drawing-Client-Ip', '198.51.100.9')
+      .send({ email: `user${++count}@example.com`, password, name: 'Ip' });
+    const session = await (db as unknown as Kysely<Record<string, { userId: string; ipAddress: string }>>)
+      .selectFrom('session')
+      .select('ipAddress')
+      .where('userId', '=', res.body.user.id)
+      .executeTakeFirstOrThrow();
+
+    return session.ipAddress;
+  }
+
+  it('Rate limits and sessions use the address of the connection, not headers of the client', async () => {
+    expect(await signUpIp(server.app, server.db)).toMatch(/^(127\.0\.0\.1|::1|::ffff:127\.0\.0\.1)$/);
+
+    // behind a trusted proxy: address it gives
+    const proxied = await createServer({ ...config, trustProxy: 'loopback' });
+
+    try {
+      expect(await signUpIp(proxied.app, proxied.db)).toBe('203.0.113.7');
+    } finally {
+      await proxied.close();
+    }
+  });
+
   it('Trusted origins only get CORS headers', async () => {
     const trusted = await request(server.app).options('/api/drawings').set('Origin', 'http://app.example');
 
