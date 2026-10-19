@@ -1,4 +1,5 @@
 import type { Node } from 'konva/lib/Node';
+import type { Frame } from '@/utils/frame';
 
 /**
  * Side of a shape (its middle) an arrow end is fixed to
@@ -13,4 +14,14 @@ export type BoundEnd = {
   shape: Node;
   /** Side whose middle the end is fixed to, else end on outline */
   anchor?: Anchor;
+};
+
+/**
+ * Frames entered and left by shapes moved in or out of them
+ */
+export type FrameChanges = {
+  /** Frames receiving shapes */
+  entered: Frame[];
+  /** Frames losing shapes */
+  left: Frame[];
 };

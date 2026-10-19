@@ -198,7 +198,8 @@ export class HotKey {
     this.drawer.$drawerContainer.addEventListener('keyup', (e) => {
       if (arrowMoved && e.key in arrowMoves) {
         arrowMoved = false;
-        this.drawer.placeInFrames(this.drawer.getSelectedShapes());
+        // frames entered or left shown
+        this.drawer.frameHighlight.flash(this.drawer.placeInFrames(this.drawer.getSelectedShapes()));
         this.drawer.stage.fire('change');
       }
     });

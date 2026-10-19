@@ -47,14 +47,18 @@ import { PreferencesModal } from '@/components/PreferencesModal/PreferencesModal
 import { DrawerLayout } from '@/DrawerLayout';
 import {
   type Frame,
+  drawAbove,
   findFrameAt,
   getFrameContent,
   getFrameShapes,
+  getShapeFrame,
   isFrame,
   isShapesContainer,
   moveShapeTo,
   setFrameLabel,
 } from '@/utils/frame';
+import { FrameHighlight } from '@/utils/frameHighlight';
+import type { FrameChanges } from '@/@types/shapes';
 
 // types of options, storage, preferences and files, for apps using the drawer
 export type {
@@ -73,6 +77,7 @@ export type {
 export type { CollaborationOptions } from '@/@types/collaboration';
 export type { DrawingFile, ExportImageOptions, ImageFormat, ShapeState } from '@/@types/file';
 export type { LayoutItemOptions, LayoutRegion } from '@/@types/ui';
+export type { FrameChanges } from '@/@types/shapes';
 export type {
   AvailableTools,
   BrushWidgetOptions,
@@ -151,6 +156,10 @@ export class Drawer extends MicroEvent {
   drawLayer: Layer;
   /** Transient nodes: transformer, selection rectangle, snapping guides, cursors of collaborators */
   selectionLayer: Layer;
+  /** Highlights of frames entered and left by moved shapes, in the selection layer */
+  frameHighlight!: FrameHighlight;
+  /** Shapes being dragged or transformed: frames they come from, end of drawing above the drawing (`drawAbove`) */
+  #moving: { shapes: DrawingShape[]; from: Map<DrawingShape, Frame | null>; drawInFrames: () => void } | null = null;
   /** Toolbar of the footer: widgets (tools) and their groups */
   toolbar: Toolbar;
   /** Id of active tool, see `activeWidget` */
@@ -827,6 +836,7 @@ export class Drawer extends MicroEvent {
     this._initHotKey();
     this._initZoomWheel();
     this._initKeyboardFocus();
+    this._initFrameMoves();
 
     this.stage.on('dragmove', (e) => {
       // shapes drag events bubble to stage, only stage drag (pan) moves the view
@@ -838,6 +848,7 @@ export class Drawer extends MicroEvent {
     });
 
     // shape moved, listened on layer so any shape is concerned (created, loaded, restored from history...)
+    // (frames entered or left: see `_initFrameMoves`)
     this.drawLayer.on('dragend.change', (e) => {
       const selected = this.getSelectedShapes();
 
@@ -1489,19 +1500,110 @@ export class Drawer extends MicroEvent {
 
   /**
    * Shapes (drawn, moved, transformed) put in the frame containing their center, or back in drawing out of frames.
-   * Frames and shapes of groups are not concerned.
+   * Frames and shapes of groups are not concerned. Ends a move of shapes (`_endMove`): frames it highlighted fade out.
    * @param shapes Shapes drawn, moved or transformed
+   * @returns frames entered and left by the shapes
    */
-  placeInFrames(shapes: DrawingShape[]) {
+  placeInFrames(shapes: DrawingShape[]): FrameChanges {
+    this._endMove();
+
     const frames = this.getDrawingShapes().filter(isFrame);
+    const entered = new Set<Frame>();
+    const left = new Set<Frame>();
 
-    shapes.forEach((shape) => {
-      if (isFrame(shape) || !shape.getLayer() || !isShapesContainer(shape.getParent(), this.drawLayer)) return;
-
+    for (const shape of shapes.filter((shape) => this._isPlaceable(shape))) {
+      const from = getShapeFrame(shape);
       const frame = findFrameAt(shape, frames);
 
       moveShapeTo(shape, frame ? getFrameContent(frame) : this.drawLayer);
-    });
+      if (frame === from) continue;
+      if (frame) entered.add(frame);
+      if (from) left.add(from);
+    }
+
+    return { entered: [...entered], left: [...left] };
+  }
+
+  /**
+   * Shape placed in frames by `placeInFrames`: not a frame nor a shape of a group
+   * @param shape drawing shape
+   * @returns true for a shape of the drawing or of a frame
+   */
+  private _isPlaceable(shape: DrawingShape) {
+    return !isFrame(shape) && !!shape.getLayer() && isShapesContainer(shape.getParent(), this.drawLayer);
+  }
+
+  /**
+   * Shapes dragged or transformed: drawn above the drawing while moved (not cut by their frame), frames they would
+   * enter or leave once dropped highlighted (`frameHighlight`), placed in frames when dropped (`placeInFrames`)
+   */
+  private _initFrameMoves() {
+    this.frameHighlight = new FrameHighlight(this.selectionLayer);
+
+    const transformer = this.getWidget<SelectWidget>('selection')?.transformer;
+    // dragged shape and the selected ones moved with it
+    const moved = (target: unknown) => {
+      const selected = this.getSelectedShapes();
+
+      return selected.includes(target as DrawingShape) ? selected : [target as DrawingShape];
+    };
+
+    this.drawLayer.on('dragstart.frames', (e) => this._startMove(moved(e.target)));
+    this.drawLayer.on('dragmove.frames', () => this._updateMove());
+    transformer?.on('transformstart.frames', () => this._startMove(transformer.nodes() as DrawingShape[]));
+    transformer?.on('transform.frames', () => this._updateMove());
+  }
+
+  /**
+   * Move of shapes started (drag, transform): frames they come from kept, shapes of frames drawn above the drawing
+   * @param shapes shapes moved (frames and shapes of groups ignored)
+   */
+  _startMove(shapes: DrawingShape[]) {
+    // several shapes dragged together: one move
+    if (this.#moving?.shapes.some((shape) => shape.isDragging())) return;
+    if (this.getWidget<SelectWidget>('selection')?.transformer.isTransforming() && this.#moving) return;
+    // move not ended (shape removed meanwhile...)
+    this._endMove();
+
+    const placeable = shapes.filter((shape) => this._isPlaceable(shape));
+
+    this.#moving = {
+      shapes: placeable,
+      from: new Map(placeable.map((shape) => [shape, getShapeFrame(shape)])),
+      drawInFrames: drawAbove(placeable, this.drawLayer),
+    };
+  }
+
+  /**
+   * Shapes moving: frames they would enter or leave if dropped now highlighted
+   */
+  _updateMove() {
+    if (!this.#moving) return;
+
+    const frames = this.getDrawingShapes().filter(isFrame);
+    const entered = new Set<Frame>();
+    const left = new Set<Frame>();
+
+    for (const shape of this.#moving.shapes) {
+      const from = this.#moving.from.get(shape) ?? null;
+      const frame = findFrameAt(shape, frames);
+
+      if (frame === from) continue;
+      if (frame) entered.add(frame);
+      if (from) left.add(from);
+    }
+    this.frameHighlight.show({ entered: [...entered], left: [...left] });
+  }
+
+  /**
+   * Move of shapes ended: shapes drawn in their frame again (placed after by `placeInFrames`), highlights faded out
+   */
+  _endMove() {
+    if (!this.#moving) return;
+
+    this.#moving.drawInFrames();
+    this.#moving = null;
+    this.frameHighlight.fade();
   }
 
   /**

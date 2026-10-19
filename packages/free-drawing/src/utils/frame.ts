@@ -1,6 +1,7 @@
 import { _registerNode } from 'konva/lib/Global';
 import { Group } from 'konva/lib/Group';
 import type { Container } from 'konva/lib/Container';
+import type { Layer } from 'konva/lib/Layer';
 import type { GetClientRectConfig, Node } from 'konva/lib/Node';
 import { Rect } from 'konva/lib/shapes/Rect';
 import { Text } from 'konva/lib/shapes/Text';
@@ -156,6 +157,81 @@ export function getFrameOfTitle(node: Node): Frame | null {
  */
 export function isShapesContainer(node: Node | null, layer: Container): boolean {
   return node === layer || !!node?.hasName(frameParts.content);
+}
+
+/**
+ * Frame holding a shape
+ * @param shape drawing shape
+ * @returns frame whose content holds the shape, null for a shape of the drawing
+ */
+export function getShapeFrame(shape: DrawingShape): Frame | null {
+  const content = shape.getParent();
+  const frame = content?.hasName(frameParts.content) ? content.getParent() : null;
+
+  return isFrame(frame) ? frame : null;
+}
+
+/**
+ * Position, rotation, scale and skew of a frame in the drawing, to place nodes like it (highlights)
+ * @param frame frame of the draw layer
+ * @returns transform attributes of the frame
+ */
+export function frameTransform(frame: Frame) {
+  return {
+    x: frame.x(),
+    y: frame.y(),
+    rotation: frame.rotation(),
+    scaleX: frame.scaleX(),
+    scaleY: frame.scaleY(),
+    skewX: frame.skewX(),
+    skewY: frame.skewY(),
+    offsetX: frame.offsetX(),
+    offsetY: frame.offsetY(),
+  };
+}
+
+/**
+ * Shapes of frames being moved drawn above the drawing, not cut at the edges of their frame: skipped by their frame,
+ * drawn by the draw layer after the drawing. Only drawn elsewhere: they stay in their frame (drawing saved, sent to
+ * collaborators, kept in history while moved), placed when dropped (`placeInFrames`)
+ * @param shapes shapes being moved (others ignored: of the drawing, frames, shapes of groups)
+ * @param layer draw layer
+ * @returns function drawing them in their frame again
+ */
+export function drawAbove(shapes: DrawingShape[], layer: Layer): () => void {
+  // bottom first: same stacking order above the drawing
+  const moved = shapes
+    .map((shape) => ({ shape, frame: getShapeFrame(shape) }))
+    .filter((item): item is { shape: DrawingShape; frame: Frame } => !!item.frame)
+    .sort((a, b) => a.frame.zIndex() - b.frame.zIndex() || a.shape.zIndex() - b.shape.zIndex())
+    .map(({ shape }) => shape);
+
+  if (!moved.length) return () => {};
+
+  const draws = moved.map((shape) => {
+    const node: Node = shape;
+    // drawing of its class, out of the cut of its frame (absolute transform and opacity)
+    const draw = node.drawScene;
+
+    // nothing drawn by its frame (own property, not an attribute: not saved)
+    Object.assign(node, { drawScene: () => node });
+
+    return () => {
+      // removed meanwhile (change of a collaborator, undo...)
+      if (node.getLayer() === layer) draw.call(node);
+    };
+  });
+
+  layer.on('draw.moved', () => {
+    for (const draw of draws) draw();
+  });
+  layer.batchDraw();
+
+  return () => {
+    layer.off('draw.moved');
+    for (const shape of moved) Reflect.deleteProperty(shape, 'drawScene');
+    layer.batchDraw();
+  };
 }
 
 /**

@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.16.0](https://github.com/fabienwnklr/free-drawing/compare/v7.15.0...v7.16.0) (2026-10-20)
+
+
+### Features
+
+* **frames:** frames a shape is moved into or out of are highlighted while it is dragged or resized (entered: solid and tinted, left: dashed), the highlight fades out once dropped, also after a move with arrow keys; `placeInFrames` returns the frames entered and left (`FrameChanges` type, exported)
+
+
+### Bug Fixes
+
+* **frames:** a shape of a frame dragged or resized out of it is drawn whole above the drawing instead of being cut at the edges of its frame (only its selection box was visible out of it)
+
 ## [7.15.0](https://github.com/fabienwnklr/free-drawing/compare/v7.14.3...v7.15.0) (2026-10-20)
 
 

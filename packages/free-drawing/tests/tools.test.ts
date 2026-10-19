@@ -1,18 +1,19 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { Path } from 'konva/lib/shapes/Path';
 import type { Line } from 'konva/lib/shapes/Line';
-import type { Shape } from 'konva/lib/Shape';
+import { Shape } from 'konva/lib/Shape';
 import type { HighlighterWidget } from '@/components/toolbar/widgets/Highlighter/Highlighter';
 import { Rect } from 'konva/lib/shapes/Rect';
 import { Node } from 'konva/lib/Node';
 import { Frame, getFrameShapes, getFrameTitle, isFrame } from '@/utils/frame';
+import { frameHighlightName } from '@/utils/frameHighlight';
 import type { DrawingShape } from '@/@types/drawer';
 import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { scalePath } from '@/components/toolbar/widgets/PathShapeWidget';
 import { shapeName } from '@/constants';
 import { parseDrawingFile } from '@/utils/drawingFile';
-import { createDrawer, drag, fireMouse } from './helpers';
+import { createDrawer, drag, fireMouse, keydown } from './helpers';
 
 /** Text of a blob (jsdom has no `blob.text()`) */
 const readText = (blob: Blob) =>
@@ -163,6 +164,87 @@ describe('Frame', () => {
     drag(drawer, [600, 300], [175, 175]);
     const arrow = drawer.getDrawingShapes().find((shape) => shape.hasName(shapeName.arrow))!;
     expect(arrow.attrs.endBinding).toBe(outside.id());
+  });
+
+  it('Shapes moved in or out of frames: drawn above while moved (not cut), frames entered or left highlighted', () => {
+    const { drawer, frame, inside, outside, selectWidget } = createFrame();
+    const highlights = () => drawer.selectionLayer.find<Rect>(`.${frameHighlightName}`);
+    // rectangles drawn by the draw layer, in drawing order
+    const drawn: Node[] = [];
+    const drawScene = vi.spyOn(Shape.prototype, 'drawScene').mockImplementation(function (this: Shape) {
+      drawn.push(this);
+      return this;
+    });
+    const drawOrder = () => {
+      drawn.length = 0;
+      drawer.drawLayer.draw();
+      return drawn.filter((node) => node === inside || node === outside);
+    };
+
+    expect(drawOrder()).toEqual([inside, outside]);
+    // shape of frame dragged: drawn above the drawing, out of the cut of its frame, still in it (saved, sent...)
+    inside.fire('dragstart', {}, true);
+    expect(drawOrder()).toEqual([outside, inside]);
+    expect(getFrameShapes(frame)).toEqual([inside]);
+    expect(drawer.getDrawingFile().shapes.map((s) => s.className)).toEqual(['Frame', 'Rect']);
+
+    // still in its frame: nothing highlighted
+    inside.absolutePosition({ x: 150, y: 130 });
+    inside.fire('dragmove', {}, true);
+    expect(highlights()).toHaveLength(0);
+    // out of it: frame left, dashed
+    inside.absolutePosition({ x: 800, y: 100 });
+    inside.fire('dragmove', {}, true);
+    expect(highlights().map((h) => [h.x(), h.y(), h.width(), h.height(), h.attrs.dash])).toEqual([
+      [100, 100, 200, 150, [6, 4]],
+    ]);
+
+    // dropped: in drawing, drawn once, highlight fading
+    inside.fire('dragend', {}, true);
+    expect(inside.getParent()).toBe(drawer.drawLayer);
+    expect(absolute(inside)).toEqual({ x: 800, y: 100 });
+    expect(drawOrder()).toEqual([outside, inside]);
+    drawScene.mockRestore();
+
+    // shape of drawing dragged in: frame entered, solid and tinted
+    selectWidget.select([outside]);
+    outside.fire('dragstart', {}, true);
+    outside.absolutePosition({ x: 150, y: 150 });
+    outside.fire('dragmove', {}, true);
+    // (highlight of the previous drag still fading)
+    const entered = highlights().find((h) => !h.attrs.dash)!;
+    expect([entered.x(), entered.y(), entered.fill()]).toEqual([100, 100, 'rgba(100, 108, 255, 0.08)']);
+    outside.fire('dragend', {}, true);
+    expect(getFrameShapes(frame)).toEqual([outside]);
+    // frames entered and left
+    expect(drawer.placeInFrames([outside])).toEqual({ entered: [], left: [] });
+    outside.absolutePosition({ x: 600, y: 600 });
+    expect(drawer.placeInFrames([outside])).toEqual({ entered: [], left: [frame] });
+  });
+
+  it('Shape moved in its frame keeps its place, moved out with arrow keys its frame is highlighted', () => {
+    const { drawer, frame, inside, selectWidget } = createFrame();
+
+    drawer.getWidget<BaseWidget>('square')!.setActive(true);
+    drag(drawer, [200, 180], [260, 230]);
+    const [, top] = getFrameShapes(frame);
+    expect(getFrameShapes(frame)).toEqual([inside, top]);
+
+    // shape under another one moved in the frame: still under it
+    inside.fire('dragstart', {}, true);
+    inside.absolutePosition({ x: 130, y: 125 });
+    inside.fire('dragmove', {}, true);
+    inside.fire('dragend', {}, true);
+    expect(getFrameShapes(frame)).toEqual([inside, top]);
+
+    // arrow key (4 px) putting its center out of the frame: frame left flashed
+    selectWidget.setActive(true);
+    selectWidget.select([inside]);
+    inside.absolutePosition({ x: 274, y: 125 });
+    keydown(drawer, { key: 'ArrowRight' });
+    drawer.$drawerContainer.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowRight' }));
+    expect(inside.getParent()).toBe(drawer.drawLayer);
+    expect(drawer.selectionLayer.find(`.${frameHighlightName}`).map((h) => h.attrs.dash)).toEqual([[6, 4]]);
   });
 
   it('Selection: shapes of frame alone, frame with its border or title, resized without scaling its shapes', () => {

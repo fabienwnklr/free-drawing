@@ -41,7 +41,7 @@ More in [Selection](/get-started/#selection).
 
 - **Layers panel** (Alt + L): every shape with its name, top first. Rename, hide, lock, drag to reorder, select ranges with Shift.
 - **Groups** move and style their shapes together, which can still be reached alone with Ctrl + click.
-- **Frames**: named areas holding the shapes drawn or moved into them, cut at their border, exported without their title.
+- **Frames**: named areas holding the shapes drawn or moved into them, cut at their border, exported without their title. A frame a shape is moved into or out of is highlighted, the moved shape is drawn whole.
 - **Linked arrows** follow the shapes they link when these are moved or resized, fixed to a side or to the outline.
 - **Stacking order**: forward and backward past the next overlapping shape, or to the front and back.
 
