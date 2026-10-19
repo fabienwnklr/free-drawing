@@ -1,7 +1,7 @@
 name: Release
 
 # GitHub release of a version tag (vX.Y.Z), notes from its entry of the library changelog, then the library
-# published on npm (trusted publishing: no token, configured on npmjs.com for this workflow file).
+# published on npm (trusted publishing: no token, configured on npmjs.com for this workflow file, allowing `npm publish`).
 # A push of more than 3 tags at once triggers no workflow: run it from the Actions tab with the tag,
 # or with "all" for every tag of the changelog without release (oldest first, nothing published).
 on:
@@ -143,8 +143,8 @@ jobs:
         run: |
           echo "npm $(npm --version)"
           if ! npm publish --access public; then
-            # what npm receives: claims of the GitHub token, answer of its token exchange
-            node ../../.github/scripts/npm-oidc-check.mjs "$(node -p "require('./package.json').name")" || true
-            echo "::error::Not published: the package needs a trusted publisher on npmjs.com (package settings): GitHub Actions, repository $GITHUB_REPOSITORY, workflow release.yml, no environment"
+            # what npm receives (claims of the GitHub token, answer of its token exchange), what to change on npmjs.com
+            node ../../.github/scripts/npm-oidc-check.mjs "$(node -p "require('./package.json').name")" "$GITHUB_REPOSITORY" ||
+              echo "::error::Not published: see the error of npm above"
             exit 1
           fi

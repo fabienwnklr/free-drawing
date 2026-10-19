@@ -1,12 +1,12 @@
 // Diagnosis of npm trusted publishing, run by the release workflow after a failed publish: claims of the GitHub
-// OIDC token sent to npm and answer of the npm token exchange, to compare with the trusted publisher of the package
-// on npmjs.com. No token is printed.
-// Usage: node npm-oidc-check.mjs <package name>
-const name = process.argv[2];
+// OIDC token sent to npm, answer of the npm token exchange and what to change in the trusted publisher of the package
+// on npmjs.com (error annotation of the workflow). No token is printed.
+// Usage: node npm-oidc-check.mjs <package name> <repository>
+const [name, repository] = process.argv.slice(2);
 const { ACTIONS_ID_TOKEN_REQUEST_URL: requestUrl, ACTIONS_ID_TOKEN_REQUEST_TOKEN: requestToken } = process.env;
 
 if (!requestUrl || !requestToken) {
-  console.log('No GitHub OIDC token: the job needs `permissions: id-token: write`');
+  console.log('::error::Not published: no GitHub OIDC token, the job needs `permissions: id-token: write`');
   process.exit();
 }
 
@@ -29,7 +29,15 @@ const res = await fetch(`https://registry.npmjs.org/-/npm/v1/oidc/token/exchange
 });
 const body = await res.json().catch(() => ({}));
 
-console.log(
-  `npm token exchange: ${res.status}`,
-  res.ok ? '(trusted publisher found, publish refused for another reason)' : body
-);
+console.log(`npm token exchange: ${res.status}`, res.ok ? '(trusted publisher found)' : body);
+if (res.ok) {
+  // 403 "OIDC permission denied for this action": trusted publishers created after 2026-09-03 allow
+  // `npm stage publish` only
+  console.log(
+    `::error::Not published: the trusted publisher of ${name} does not allow \`npm publish\`, tick it in its "Allowed actions" on npmjs.com (package settings)`
+  );
+} else {
+  console.log(
+    `::error::Not published: ${name} needs a trusted publisher on npmjs.com (package settings): GitHub Actions, repository ${repository}, workflow release.yml, no environment`
+  );
+}
