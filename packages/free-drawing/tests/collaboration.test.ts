@@ -70,9 +70,12 @@ const createServer = () => {
   /** New socket, connected when `receive('connect')` */
   const createSocket = () => {
     const handlers: Record<string, ((data?: unknown) => void)[]> = {};
+    const listen = (event: string, handler: (data?: unknown) => void) => {
+      handlers[event] = [...(handlers[event] ?? []), handler];
+    };
     const socket = {
-      on: (event: string, handler: (data?: unknown) => void) => (handlers[event] ??= []).push(handler),
-      once: (event: string, handler: (data?: unknown) => void) => (handlers[event] ??= []).push(handler),
+      on: listen,
+      once: listen,
       receive: (event: string, data?: unknown) => {
         for (const handler of handlers[event] ?? []) handler(data);
       },

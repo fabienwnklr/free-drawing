@@ -71,7 +71,7 @@ async function serveWeb(app: Express, httpServer: HttpServer, dev: boolean) {
       next(error);
     }
   });
-  app.use(vite ? vite.middlewares : express.static(webRoot + 'dist', { index: false }));
+  app.use(vite ? vite.middlewares : express.static(`${webRoot}dist`, { index: false }));
 }
 
 /**

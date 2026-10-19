@@ -13,7 +13,8 @@
     "plugins": ["@typescript-eslint", "jsdoc"],
     "rules": {
       "@typescript-eslint/no-explicit-any": "off",
-      "array-callback-return": ["error", { "checkForEach": true }]
+      "array-callback-return": ["error", { "checkForEach": true }],
+      "@typescript-eslint/consistent-type-imports": ["error", { "fixStyle": "inline-type-imports" }]
     },
     "ignorePatterns": ["**/*.css", "**/*.scss", "**/*.svg", "**/*.ttf"],
     "overrides": [

@@ -1,10 +1,10 @@
-import { Drawer } from '@/Drawer';
+import type { Drawer } from '@/Drawer';
 import { getFrameOfTitle } from '@/utils/frame';
 import { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import TextIcon from '@/icons/text.svg?raw';
 import { Text } from 'konva/lib/shapes/Text';
 import type { Vector2d } from 'konva/lib/types';
-import { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
+import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { shapeName } from '@/constants';
 import { TextOverlay } from '@/components/tools/Overlay/TextOverlay/TextOverlay';
 
@@ -124,7 +124,7 @@ export class TextWidget extends BaseWidget {
     const rotation = textNode.getAbsoluteRotation();
     let transform = '';
     if (rotation) {
-      transform += 'rotateZ(' + rotation + 'deg)';
+      transform += `rotateZ(${rotation}deg)`;
     }
 
     let px = 0;
@@ -134,14 +134,14 @@ export class TextWidget extends BaseWidget {
     if (isFirefox) {
       px += 2 + Math.round(textNode.fontSize() / 20);
     }
-    transform += 'translateY(-' + px + 'px)';
+    transform += `translateY(-${px}px)`;
 
     textarea.style.transform = transform;
 
     // reset height
     textarea.style.height = 'auto';
     // after browsers resized it we can set actual value
-    textarea.style.height = textarea.scrollHeight + 3 + 'px';
+    textarea.style.height = `${textarea.scrollHeight + 3}px`;
 
     textarea.focus();
 
@@ -172,14 +172,14 @@ export class TextWidget extends BaseWidget {
     textarea.value = textNode.text();
     textarea.style.position = 'absolute';
     // konva places lines like css (font box centered in line height)
-    textarea.style.top = this.drawer.stage.container().offsetTop + textPosition.y + textPadding - spacing + 'px';
-    textarea.style.left = this.drawer.stage.container().offsetLeft + textPosition.x + textPadding - spacing + 'px';
+    textarea.style.top = `${this.drawer.stage.container().offsetTop + textPosition.y + textPadding - spacing}px`;
+    textarea.style.left = `${this.drawer.stage.container().offsetLeft + textPosition.x + textPadding - spacing}px`;
     // content width is text width (border-box), so lines wrap the same way
-    textarea.style.width = (textNode.width() - textNode.padding() * 2) * scale + spacing * 2 + 'px';
-    textarea.style.height = (textNode.height() - textNode.padding() * 2) * scale + spacing * 2 + 'px';
-    textarea.style.fontSize = fontSize + 'px';
+    textarea.style.width = `${(textNode.width() - textNode.padding() * 2) * scale + spacing * 2}px`;
+    textarea.style.height = `${(textNode.height() - textNode.padding() * 2) * scale + spacing * 2}px`;
+    textarea.style.fontSize = `${fontSize}px`;
     textarea.style.border = 'none';
-    textarea.style.padding = spacing + 'px';
+    textarea.style.padding = `${spacing}px`;
     textarea.style.margin = '0px';
     textarea.style.overflow = 'hidden';
     textarea.style.background = 'none';
@@ -242,7 +242,7 @@ export class TextWidget extends BaseWidget {
 
     textarea.addEventListener('keydown', (e) => {
       textarea.style.height = 'auto';
-      textarea.style.height = textarea.scrollHeight + textNode.fontSize() + 'px';
+      textarea.style.height = `${textarea.scrollHeight + textNode.fontSize()}px`;
       // hide on enter
       // but don't hide on shift + enter
       if (e.code === 'Enter' && !e.shiftKey) {

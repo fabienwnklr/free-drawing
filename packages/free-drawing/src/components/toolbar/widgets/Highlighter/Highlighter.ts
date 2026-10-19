@@ -1,4 +1,4 @@
-import { Drawer } from '@/Drawer';
+import type { Drawer } from '@/Drawer';
 import HighlighterIcon from '@/icons/highlighter.svg?raw';
 import type { ColorLike } from '@/@types/drawer';
 import { FreehandWidget } from '@/components/toolbar/widgets/FreehandWidget';

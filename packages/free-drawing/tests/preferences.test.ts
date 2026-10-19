@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Drawer } from '@/Drawer';
 import { createDrawer, keydown } from './helpers';
 
-const saved = (drawer: Drawer) => JSON.parse(localStorage.getItem(drawer.options.localStorageKey + '-preferences')!);
+const saved = (drawer: Drawer) => JSON.parse(localStorage.getItem(`${drawer.options.localStorageKey}-preferences`)!);
 
 /** Dialogs opened by a test, closed after it (document listeners) */
 const opened: { hide(): void }[] = [];
@@ -47,20 +47,20 @@ describe('Preferences', () => {
   });
 
   it('Choices of previous versions kept, invalid data ignored', () => {
-    const key = 'test-' + Math.random();
+    const key = `test-${Math.random()}`;
 
-    localStorage.setItem(key + '-theme', 'dark');
-    localStorage.setItem(key + '-language', 'de');
+    localStorage.setItem(`${key}-theme`, 'dark');
+    localStorage.setItem(`${key}-language`, 'de');
     expect(createDrawer({ localStorageKey: key }).getPreferences()).toMatchObject({ theme: 'dark', language: 'de' });
 
-    localStorage.setItem(key + '-preferences', '{ invalid');
-    localStorage.removeItem(key + '-theme');
+    localStorage.setItem(`${key}-preferences`, '{ invalid');
+    localStorage.removeItem(`${key}-theme`);
     expect(createDrawer({ localStorageKey: key, language: 'en' }).getPreferences()).toMatchObject({
       theme: 'light',
       language: 'de',
     });
 
-    localStorage.setItem(key + '-preferences', JSON.stringify({ theme: 'pink', language: 'xx', grid: 'yes' }));
+    localStorage.setItem(`${key}-preferences`, JSON.stringify({ theme: 'pink', language: 'xx', grid: 'yes' }));
     expect(createDrawer({ localStorageKey: key, language: 'en' }).getPreferences()).toMatchObject({
       theme: 'light',
       language: 'de',

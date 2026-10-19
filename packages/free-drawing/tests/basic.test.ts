@@ -4,8 +4,8 @@ import { Toolbar } from '@/components/toolbar/Toolbar';
 import { Zoom } from '@/components/tools/Zoom/Zoom';
 import { Help } from '@/components/tools/Help/Help';
 import { Settings } from '@/components/tools/Settings/Settings';
-import { readdirSync, lstatSync } from 'fs';
-import { join } from 'path';
+import { readdirSync, lstatSync } from 'node:fs';
+import { join } from 'node:path';
 
 const folderWidgets = './src/components/toolbar/widgets';
 const widgets = readdirSync(folderWidgets).filter((fileName) => !lstatSync(join(folderWidgets, fileName)).isFile());

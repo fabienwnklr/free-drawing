@@ -28,13 +28,11 @@ export function debounce<T extends (...args: any[]) => any>(
   delay: number = 300
 ): (...args: Parameters<T>) => void {
   let timer: ReturnType<typeof setTimeout> | undefined;
-  return function (...args: Parameters<T>[]) {
+  return (...args: Parameters<T>) => {
     if (timer) {
       clearTimeout(timer);
     }
-    timer = setTimeout(function () {
-      callback(...args);
-    }, delay);
+    timer = setTimeout(() => callback(...args), delay);
   };
 }
 

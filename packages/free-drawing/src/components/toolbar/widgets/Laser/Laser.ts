@@ -1,5 +1,5 @@
 import type { Layer } from 'konva/lib/Layer';
-import { Drawer } from '@/Drawer';
+import type { Drawer } from '@/Drawer';
 import LaserIcon from '@/icons/laser.svg?raw';
 import { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import { Trail } from '@/components/toolbar/widgets/Eraser/Trail';

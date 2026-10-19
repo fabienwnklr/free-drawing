@@ -1,5 +1,5 @@
 import CircleIcon from '@/icons/circle.svg?raw';
-import { Drawer } from '@/Drawer';
+import type { Drawer } from '@/Drawer';
 import { shapeName } from '@/constants';
 import { Ellipse } from 'konva/lib/shapes/Ellipse';
 import type { Vector2d } from 'konva/lib/types';

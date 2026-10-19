@@ -1,5 +1,5 @@
 import FrameIcon from '@/icons/frame.svg?raw';
-import { Drawer } from '@/Drawer';
+import type { Drawer } from '@/Drawer';
 import type { Vector2d } from 'konva/lib/types';
 import { ShapeWidget, dragBox } from '@/components/toolbar/widgets/ShapeWidget';
 import { type Frame, createFrame, isFrame, setFrameSize } from '@/utils/frame';

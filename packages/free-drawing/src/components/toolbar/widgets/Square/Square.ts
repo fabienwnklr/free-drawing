@@ -1,5 +1,5 @@
 import SquareIcon from '@/icons/square.svg?raw';
-import { Drawer } from '@/Drawer';
+import type { Drawer } from '@/Drawer';
 import { shapeName } from '@/constants';
 import { Rect } from 'konva/lib/shapes/Rect';
 import type { Vector2d } from 'konva/lib/types';

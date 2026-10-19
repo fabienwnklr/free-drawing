@@ -1,5 +1,5 @@
 import '@/components/tools/Help/help.scss';
-import { Drawer } from '@/Drawer';
+import type { Drawer } from '@/Drawer';
 import { Modal } from '@/components/Modal/Modal';
 import HelpIcon from '@/icons/help.svg?raw';
 import ExternalLink from '@/icons/external-link.svg?raw';

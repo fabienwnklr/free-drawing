@@ -1,4 +1,4 @@
-import { DrawerOptions } from '@/@types/drawer';
+import type { DrawerOptions } from '@/@types/drawer';
 import type { WidgetName } from '@/@types/toolbar';
 import type { TranslationKey } from '@/i18n/en';
 
@@ -28,7 +28,7 @@ export const widgetNames: WidgetName[] = [
  * Default options of a drawer, merged with options given to `new Drawer($el, options)` (see `DrawerOptions`)
  */
 export const defaultOptions: DrawerOptions = {
-  id: 'drawer-' + Date.now(),
+  id: `drawer-${Date.now()}`,
   tool: 'brush',
   width: window.innerWidth,
   height: window.innerHeight,

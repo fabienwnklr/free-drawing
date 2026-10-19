@@ -136,9 +136,9 @@ async function transform(bytes: Uint8Array<ArrayBuffer>, stream: CompressionStre
 export async function encodeLinkData(text: string): Promise<string> {
   const bytes = new TextEncoder().encode(text);
 
-  if (typeof CompressionStream === 'undefined') return 'j' + toBase64Url(bytes);
+  if (typeof CompressionStream === 'undefined') return `j${toBase64Url(bytes)}`;
 
-  return 'z' + toBase64Url(await transform(bytes, new CompressionStream('deflate-raw')));
+  return `z${toBase64Url(await transform(bytes, new CompressionStream('deflate-raw')))}`;
 }
 
 /**

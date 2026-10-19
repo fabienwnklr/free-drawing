@@ -1,5 +1,5 @@
 import '@/components/tools/Zoom/zoom.scss';
-import { Drawer } from '@/Drawer';
+import type { Drawer } from '@/Drawer';
 import MinusIcon from '@/icons/minus.svg?raw';
 import PlusIcon from '@/icons/plus.svg?raw';
 import ZoomReset from '@/icons/zoom-reset.svg?raw';

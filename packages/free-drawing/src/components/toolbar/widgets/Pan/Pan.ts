@@ -1,4 +1,4 @@
-import { Drawer } from '@/Drawer';
+import type { Drawer } from '@/Drawer';
 import { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import PanIcon from '@/icons/pan.svg?raw';
 import { grabCursor, grabbingCursor } from '@/constants';

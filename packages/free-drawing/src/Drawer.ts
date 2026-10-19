@@ -3,8 +3,8 @@ import { Stage } from 'konva/lib/Stage';
 import { Layer } from 'konva/lib/Layer';
 import { Toolbar } from '@/components/toolbar/Toolbar';
 import { Rect } from 'konva/lib/shapes/Rect';
-import { AvailableTools } from '@/@types/toolbar';
-import {
+import type { AvailableTools } from '@/@types/toolbar';
+import type {
   CollaborationOptions,
   ColorLike,
   DrawerOptions,
@@ -108,14 +108,14 @@ import { ContextMenu } from '@/components/ContextMenu/ContextMenu';
 import { SelectionMenu } from '@/components/SelectionMenu/SelectionMenu';
 import { LayersPanel } from '@/components/LayersPanel/LayersPanel';
 import { SaveButton } from '@/components/tools/SaveButton/SaveButton';
-import { TextWidget } from '@/components/toolbar/widgets/Text/Text';
+import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import { Line } from 'konva/lib/shapes/Line';
 import { Toast } from '@/components/Toast/Toast';
 import { Group } from 'konva/lib/Group';
 import { Text } from 'konva/lib/shapes/Text';
-import { Shape, ShapeConfig } from 'konva/lib/Shape';
-import { Vector2d } from 'konva/lib/types';
-import { AvailableTypes } from '@/@types/toast';
+import { Shape, type ShapeConfig } from 'konva/lib/Shape';
+import type { Vector2d } from 'konva/lib/types';
+import type { AvailableTypes } from '@/@types/toast';
 import { HotKey } from '@/utils/HotKey';
 
 // default id of each drawer of the page
@@ -253,7 +253,7 @@ export class Drawer extends MicroEvent {
       {
         ...defaultOptions,
         // per instance, not when module is loaded
-        id: 'drawer-' + ++drawerCount,
+        id: `drawer-${++drawerCount}`,
         width: window.innerWidth,
         height: window.innerHeight,
       },
@@ -314,7 +314,7 @@ export class Drawer extends MicroEvent {
       });
       this.background = this.bgLayer.findOne(`.${shapeName.background}`) as Rect;
       activeTool =
-        (this._getStorageItem(this.options.localStorageKey + '-tool') as AvailableTools | null) ?? activeTool;
+        (this._getStorageItem(`${this.options.localStorageKey}-tool`) as AvailableTools | null) ?? activeTool;
       saved = true;
     } else {
       this.stage = new Stage({
@@ -590,7 +590,7 @@ export class Drawer extends MicroEvent {
   getUserId(): string {
     if (this.#user) return this.#user.id;
 
-    const key = this.options.localStorageKey + '-user';
+    const key = `${this.options.localStorageKey}-user`;
     let userId = this._getStorageItem(key);
 
     if (!userId) {
@@ -612,7 +612,7 @@ export class Drawer extends MicroEvent {
    */
   private _getOwnerKey(room: string): string | undefined {
     try {
-      return JSON.parse(this._getStorageItem(this.options.localStorageKey + '-owner') ?? '{}')[room];
+      return JSON.parse(this._getStorageItem(`${this.options.localStorageKey}-owner`) ?? '{}')[room];
     } catch {
       return undefined;
     }
@@ -624,7 +624,7 @@ export class Drawer extends MicroEvent {
    * @param ownerKey Secret proving to the server that this user owns the room
    */
   private _setOwnerKey(room: string, ownerKey: string) {
-    const key = this.options.localStorageKey + '-owner';
+    const key = `${this.options.localStorageKey}-owner`;
 
     try {
       const rooms = { ...JSON.parse(this._getStorageItem(key) ?? '{}'), [room]: ownerKey };
@@ -641,7 +641,7 @@ export class Drawer extends MicroEvent {
    * @returns User name, empty string if none was given
    */
   getUserName(): string {
-    return this.#userName ?? this.#user?.name ?? this._getStorageItem(this.options.localStorageKey + '-name') ?? '';
+    return this.#userName ?? this.#user?.name ?? this._getStorageItem(`${this.options.localStorageKey}-name`) ?? '';
   }
 
   /**
@@ -652,7 +652,7 @@ export class Drawer extends MicroEvent {
     name = name.trim().slice(0, 40);
     this.#userName = name;
     try {
-      localStorage.setItem(this.options.localStorageKey + '-name', name);
+      localStorage.setItem(`${this.options.localStorageKey}-name`, name);
     } catch {
       // not saved, kept for current session
     }
@@ -973,7 +973,7 @@ export class Drawer extends MicroEvent {
     this._setUnsaved(false);
     try {
       // tool of this browser
-      localStorage.setItem(localStorageKey + '-tool', this.activeTool);
+      localStorage.setItem(`${localStorageKey}-tool`, this.activeTool);
       if (!storage) localStorage.setItem(localStorageKey, this.stage.toJSON());
     } catch (error) {
       this._onSaveError(error as Error, 'warning');
@@ -1929,7 +1929,7 @@ export class Drawer extends MicroEvent {
     let saved: Record<string, unknown> = {};
 
     try {
-      saved = JSON.parse(this._getStorageItem(key + '-preferences') ?? '{}') ?? {};
+      saved = JSON.parse(this._getStorageItem(`${key}-preferences`) ?? '{}') ?? {};
     } catch {
       // invalid data ignored
     }
@@ -1938,8 +1938,8 @@ export class Drawer extends MicroEvent {
     const isLanguage = (value: unknown): value is Language | 'auto' =>
       typeof value === 'string' && (value === 'auto' || value in languages);
     // first valid one
-    const theme = [saved.theme, this._getStorageItem(key + '-theme')].find(isTheme);
-    const language = [saved.language, this._getStorageItem(key + '-language')].find(isLanguage);
+    const theme = [saved.theme, this._getStorageItem(`${key}-theme`)].find(isTheme);
+    const language = [saved.language, this._getStorageItem(`${key}-language`)].find(isLanguage);
     const preferences: Partial<Preferences> = { ...(theme && { theme }), ...(language && { language }) };
 
     (['grid', 'snapping', 'zen', 'autoSave', 'keepTool'] as const).forEach((name) => {
@@ -1957,7 +1957,7 @@ export class Drawer extends MicroEvent {
     if (!this.#preferences) return;
 
     try {
-      localStorage.setItem(this.options.localStorageKey + '-preferences', JSON.stringify(this.getPreferences()));
+      localStorage.setItem(`${this.options.localStorageKey}-preferences`, JSON.stringify(this.getPreferences()));
     } catch {
       // storage unavailable: kept for this visit
     }
@@ -2195,7 +2195,7 @@ export class Drawer extends MicroEvent {
         return newPos;
       }
 
-      const dist = Math.sqrt(Math.pow(newPos.x - oldPos.x, 2) + Math.pow(newPos.y - oldPos.y, 2));
+      const dist = Math.sqrt((newPos.x - oldPos.x) ** 2 + (newPos.y - oldPos.y) ** 2);
 
       // do not do any snapping with new absolute position (pointer position)
       // is too far away from old position
@@ -2215,7 +2215,7 @@ export class Drawer extends MicroEvent {
      * @returns Snapped position, new position when far from old one or from grid lines
      */
     function calc(oldPos: Vector2d, newPos: Vector2d) {
-      const dist = Math.sqrt(Math.pow(newPos.x - oldPos.x, 2) + Math.pow(newPos.y - oldPos.y, 2));
+      const dist = Math.sqrt((newPos.x - oldPos.x) ** 2 + (newPos.y - oldPos.y) ** 2);
 
       // do not do any snapping with new absolute position (pointer position)
       // is too far away from old position

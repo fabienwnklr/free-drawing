@@ -161,7 +161,11 @@ const allow = (socket: CollaborationSocket, event: string) => {
 
   const [perSecond, burst] = rate;
   const now = Date.now();
-  const bucket = ((socket.data.buckets ??= {})[event] ??= { tokens: burst, at: now });
+  const buckets = socket.data.buckets ?? {};
+  const bucket = buckets[event] ?? { tokens: burst, at: now };
+
+  socket.data.buckets = buckets;
+  buckets[event] = bucket;
 
   bucket.tokens = Math.min(burst, bucket.tokens + ((now - bucket.at) / 1000) * perSecond);
   bucket.at = now;

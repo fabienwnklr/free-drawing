@@ -1,6 +1,6 @@
 import '@/components/toolbar/toolbar.scss';
-import { Drawer } from '@/Drawer';
-import { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
+import type { Drawer } from '@/Drawer';
+import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import { BrushWidget } from '@/components/toolbar/widgets/Brush/Brush';
 import { EraserWidget } from '@/components/toolbar/widgets/Eraser/Eraser';
 import { SelectWidget } from '@/components/toolbar/widgets/Select/Select';

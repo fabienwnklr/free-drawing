@@ -1,7 +1,7 @@
 import type { Drawer } from '@/Drawer';
 import type { OptionsChange, TextStyle } from '@/@types/drawer';
-import { Shape, ShapeConfig } from 'konva/lib/Shape';
-import { Group } from 'konva/lib/Group';
+import type { Shape, ShapeConfig } from 'konva/lib/Shape';
+import type { Group } from 'konva/lib/Group';
 import { Text } from 'konva/lib/shapes/Text';
 import { BaseOverlay, type OverlayOptions } from '@/components/tools/Overlay/BaseOverlay';
 import { dataAttributes } from '@/constants';

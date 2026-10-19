@@ -4,7 +4,7 @@ import type { KonvaEventObject } from 'konva/lib/Node';
 import type { Vector2d } from 'konva/lib/types';
 import type { DrawingShape, ShapeOrder } from '@/@types/drawer';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
-import { TextWidget } from '@/components/toolbar/widgets/Text/Text';
+import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import '@/components/ContextMenu/context-menu.scss';
 import { arrowNavigation, createButton, setPressed } from '@/utils/dom';
 import { getDrawingShape } from '@/utils/frame';
@@ -329,8 +329,8 @@ export class ContextMenu {
     const { clientWidth, clientHeight } = this.drawer.$drawerContainer;
     const margin = 4;
 
-    this.$menu.style.left = Math.max(margin, Math.min(left, clientWidth - this.$menu.offsetWidth - margin)) + 'px';
-    this.$menu.style.top = Math.max(margin, Math.min(top, clientHeight - this.$menu.offsetHeight - margin)) + 'px';
+    this.$menu.style.left = `${Math.max(margin, Math.min(left, clientWidth - this.$menu.offsetWidth - margin))}px`;
+    this.$menu.style.top = `${Math.max(margin, Math.min(top, clientHeight - this.$menu.offsetHeight - margin))}px`;
   }
 
   /**

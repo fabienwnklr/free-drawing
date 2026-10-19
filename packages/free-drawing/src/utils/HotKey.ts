@@ -1,8 +1,8 @@
-import { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
-import { TextWidget } from '@/components/toolbar/widgets/Text/Text';
+import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
+import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import type { ShapeOrder } from '@/@types/drawer';
 import { unbindMoved } from '@/utils/binding';
-import { Drawer } from '@/Drawer';
+import type { Drawer } from '@/Drawer';
 
 /** Types of inputs with editable text */
 const textInputTypes = ['text', 'search', 'number', 'email', 'url', 'tel', 'password'];

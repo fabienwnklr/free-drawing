@@ -2,7 +2,7 @@ import { describe, expect, it, beforeAll } from 'vitest';
 import { Rect } from 'konva/lib/shapes/Rect';
 import { Ellipse } from 'konva/lib/shapes/Ellipse';
 import { Arrow } from 'konva/lib/shapes/Arrow';
-import { Line } from 'konva/lib/shapes/Line';
+import type { Line } from 'konva/lib/shapes/Line';
 import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import type { BaseOverlay } from '@/components/tools/Overlay/BaseOverlay';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';

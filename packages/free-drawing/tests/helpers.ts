@@ -7,7 +7,7 @@ import type { DrawerOptions } from '@/@types/drawer';
 export const createDrawer = (options: Partial<DrawerOptions> = {}) =>
   new Drawer(document.getElementById('test') as HTMLDivElement, {
     autoSave: false,
-    localStorageKey: 'test-' + Math.random(),
+    localStorageKey: `test-${Math.random()}`,
     ...options,
   });
 

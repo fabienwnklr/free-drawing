@@ -99,7 +99,7 @@ describe('Languages', () => {
     expect(drawer.help.$modal.querySelector('.drawer-modal-title')!.textContent).toBe('Hilfe');
     // tools list of help uses translated titles
     expect(drawer.help.$modalBody.querySelector('[data-help-tools]')!.textContent).toContain('Auswählen');
-    expect(JSON.parse(localStorage.getItem(drawer.options.localStorageKey + '-preferences')!).language).toBe('de');
+    expect(JSON.parse(localStorage.getItem(`${drawer.options.localStorageKey}-preferences`)!).language).toBe('de');
 
     // saved choice used instead of option
     const reloaded = createDrawer({ localStorageKey: drawer.options.localStorageKey, language: 'fr' });

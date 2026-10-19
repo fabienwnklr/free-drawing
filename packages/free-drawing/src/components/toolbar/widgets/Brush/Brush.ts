@@ -1,4 +1,4 @@
-import { Drawer } from '@/Drawer';
+import type { Drawer } from '@/Drawer';
 import BrushIcon from '@/icons/brush.svg?raw';
 import { BrushOverlay } from '@/components/tools/Overlay/BrushOverlay/BrushOverlay';
 import { FreehandWidget } from '@/components/toolbar/widgets/FreehandWidget';

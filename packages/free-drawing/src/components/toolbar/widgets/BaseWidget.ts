@@ -1,5 +1,5 @@
 import type { AvailableTools, WidgetOptions } from '@/@types/toolbar';
-import { Drawer } from '@/Drawer';
+import type { Drawer } from '@/Drawer';
 import { stringToNode } from '@/utils/functions';
 import { getWidgetOptions } from '@/utils/widgets';
 import type { KonvaEventListener } from 'konva/lib/Node';

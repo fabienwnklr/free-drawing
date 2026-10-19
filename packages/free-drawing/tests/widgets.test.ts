@@ -84,12 +84,12 @@ describe('Widgets', () => {
   });
 
   it('Loaded shapes are draggable only with selection tool', () => {
-    const localStorageKey = 'test-' + Math.random();
+    const localStorageKey = `test-${Math.random()}`;
     const first = createDrawer({ localStorageKey, autoSave: true });
     first.getWidget<TextWidget>('text')!.addTextNode('hello');
     // saved while selection tool is active, so text is draggable in saved state
     first.stage.fire('change');
-    localStorage.setItem(localStorageKey + '-tool', 'brush');
+    localStorage.setItem(`${localStorageKey}-tool`, 'brush');
 
     const second = new Drawer(document.getElementById('test') as HTMLDivElement, { localStorageKey });
 

@@ -129,7 +129,7 @@ export class ProfileDialog {
   /**
    * Submit of a form: button disabled meanwhile, error shown in form
    */
-  private _onSubmit(form: HTMLFormElement, action: () => Promise<string | void>) {
+  private _onSubmit(form: HTMLFormElement, action: () => Promise<unknown>) {
     const $submit = form.querySelector<HTMLButtonElement>('[type=submit]')!;
 
     form.addEventListener('submit', async (e) => {
@@ -137,7 +137,9 @@ export class ProfileDialog {
       $submit.disabled = true;
       this._setMessage(form, '');
       try {
-        this._setMessage(form, (await action()) ?? '');
+        const message = await action();
+
+        this._setMessage(form, typeof message === 'string' ? message : '');
       } catch (error) {
         this._setMessage(form, this.app.texts.error(error as Error), true);
       } finally {

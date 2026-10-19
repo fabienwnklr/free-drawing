@@ -68,15 +68,14 @@ export default class MicroEvent {
    * @param events event name, or several separated by spaces
    * @param fct listener given to `on`
    */
-  off(events: string, fct: TCallback) {
-    const n = arguments.length;
-    if (n === 0) {
+  off(events?: string, fct?: TCallback) {
+    if (events === undefined) {
       this._events = {};
       return;
     }
 
     forEvents(events, (event) => {
-      if (n === 1) {
+      if (fct === undefined) {
         delete this._events[event];
         return;
       }

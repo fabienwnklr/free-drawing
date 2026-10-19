@@ -1,5 +1,5 @@
 import ArrowIcon from '@/icons/arrow.svg?raw';
-import { Drawer } from '@/Drawer';
+import type { Drawer } from '@/Drawer';
 import { shapeName } from '@/constants';
 import { Arrow } from 'konva/lib/shapes/Arrow';
 import { Rect } from 'konva/lib/shapes/Rect';

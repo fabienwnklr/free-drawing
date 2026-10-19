@@ -1,6 +1,6 @@
 import { Dropdown } from '@/components/Dropdown/Dropdown';
 import '@/components/tools/Settings/settings.scss';
-import { Drawer } from '@/Drawer';
+import type { Drawer } from '@/Drawer';
 import SettingIcon from '@/icons/setting.svg?raw';
 import OpenIcon from '@/icons/open.svg?raw';
 import ExportIcon from '@/icons/export.svg?raw';
@@ -17,7 +17,7 @@ import UsersIcon from '@/icons/users.svg?raw';
 import LanguageIcon from '@/icons/language.svg?raw';
 import CommandIcon from '@/icons/command.svg?raw';
 import SlidersIcon from '@/icons/sliders.svg?raw';
-import { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
+import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import type { ColorLike } from '@/@types/drawer';
 import { createButton, disableElement, enableElement, setLabel, setPressed, uniqueId } from '@/utils/dom';
 import { ColorPicker } from '@/components/ColorPicker/ColorPicker';

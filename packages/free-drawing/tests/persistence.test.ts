@@ -20,7 +20,7 @@ describe('Persistence and performance', () => {
   document.body.innerHTML = `<div id="test"></div>`;
 
   it('Corrupted saved data is ignored, with a warning', () => {
-    const localStorageKey = 'test-' + Math.random();
+    const localStorageKey = `test-${Math.random()}`;
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     for (const saved of ['{not json', JSON.stringify({ className: 'Stage', attrs: {}, children: [] })]) {
@@ -100,7 +100,7 @@ describe('Persistence and performance', () => {
   });
 
   it('Grid saved with lines (previous versions) is restored', () => {
-    const localStorageKey = 'test-' + Math.random();
+    const localStorageKey = `test-${Math.random()}`;
     const first = createDrawer({ localStorageKey });
     first.gridLayer.add(new Line({ points: [0, 0, 0, 100], name: shapeName.gridLine }));
     first.gridLayer.add(new Line({ points: [0, 0, 100, 0], name: shapeName.gridLine }));

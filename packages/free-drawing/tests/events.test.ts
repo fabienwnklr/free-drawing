@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeAll, vi } from 'vitest';
 import { Drawer } from '@/Drawer';
-import { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
+import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import type { LineWidget } from '@/components/toolbar/widgets/Line/Line';
 import type { EraserWidget } from '@/components/toolbar/widgets/Eraser/Eraser';
@@ -363,7 +363,7 @@ describe('Test drawer event', () => {
   });
 
   it('Reload does not duplicate transformer', () => {
-    const localStorageKey = 'test-' + Math.random();
+    const localStorageKey = `test-${Math.random()}`;
     const create = () => new Drawer(document.getElementById('test') as HTMLDivElement, { localStorageKey });
 
     const first = create();

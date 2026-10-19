@@ -1,5 +1,5 @@
 import LineIcon from '@/icons/line2.svg?raw';
-import { Drawer } from '@/Drawer';
+import type { Drawer } from '@/Drawer';
 import { shapeName } from '@/constants';
 import { Line } from 'konva/lib/shapes/Line';
 import type { Vector2d } from 'konva/lib/types';

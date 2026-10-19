@@ -88,7 +88,7 @@ export function toDarkColor(color: string): string {
     0.426 * ir + 1.43 * ig - 0.856 * ib,
   ].map((c) => Math.round(Math.min(1, Math.max(0, c)) * 255));
 
-  return a < 1 ? `rgba(${rgb.join(', ')}, ${a})` : '#' + rgb.map((c) => c.toString(16).padStart(2, '0')).join('');
+  return a < 1 ? `rgba(${rgb.join(', ')}, ${a})` : `#${rgb.map((c) => c.toString(16).padStart(2, '0')).join('')}`;
 }
 
 /**
@@ -214,7 +214,7 @@ function linePath(line: Line): string {
     for (let n = 2; n < length; n += 2) d += `L${num(points[n])} ${num(points[n + 1])}`;
   }
 
-  return line.closed() ? d + 'Z' : d;
+  return line.closed() ? `${d}Z` : d;
 }
 
 /**

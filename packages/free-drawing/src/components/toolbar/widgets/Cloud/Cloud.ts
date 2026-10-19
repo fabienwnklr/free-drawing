@@ -1,5 +1,5 @@
 import CloudIcon from '@/icons/cloud.svg?raw';
-import { Drawer } from '@/Drawer';
+import type { Drawer } from '@/Drawer';
 import { shapeName } from '@/constants';
 import { PathShapeWidget } from '@/components/toolbar/widgets/PathShapeWidget';
 

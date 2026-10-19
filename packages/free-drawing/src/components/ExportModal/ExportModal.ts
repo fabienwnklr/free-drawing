@@ -190,7 +190,7 @@ export class ExportModal extends Modal {
       if (format === 'json') {
         const file = this.drawer.getDrawingFile(this.drawer.getExportShapes(this.exportOptions.selected));
 
-        await saveFile('drawing' + drawingFileExtension, JSON.stringify(file));
+        await saveFile(`drawing${drawingFileExtension}`, JSON.stringify(file));
       } else {
         const blob = await this.drawer.exportImage(format, this.exportOptions);
 

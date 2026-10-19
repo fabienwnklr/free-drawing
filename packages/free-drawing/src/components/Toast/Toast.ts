@@ -1,7 +1,7 @@
 import type { Drawer } from '@/Drawer';
 import '@/components/Toast/toast.scss';
 import MicroEvent from '@/utils/MicroEvent';
-import { AvailableTypes } from '@/@types/toast';
+import type { AvailableTypes } from '@/@types/toast';
 import InfoIcon from '@/icons/info.svg?raw';
 import WarningIcon from '@/icons/warning.svg?raw';
 import ErrorIcon from '@/icons/error.svg?raw';

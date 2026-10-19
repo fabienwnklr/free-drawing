@@ -65,7 +65,7 @@ describe('Export', () => {
 
     expect(svg).toMatch(/^<svg xmlns="http:\/\/www.w3.org\/2000\/svg"/);
     expect(svg).toContain(`viewBox="${box.x} ${box.y} ${box.width} ${box.height}"`);
-    expect(svg).toContain('<rect x="' + box.x);
+    expect(svg).toContain(`<rect x="${box.x}`);
     expect(svg).toContain('<ellipse rx="40" ry="20" fill="#a5d8ff" stroke="#1971c2"');
     // brush: closed tension curve, filled
     expect(svg).toMatch(/<path d="M0 100C[^"]+Z" fill="#000"/);

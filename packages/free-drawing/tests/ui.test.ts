@@ -207,7 +207,7 @@ describe('User interface', () => {
   });
 
   it('Reset restores drawer initial drawing options, keeps instance options', () => {
-    const localStorageKey = 'test-' + Math.random();
+    const localStorageKey = `test-${Math.random()}`;
     const drawer = createDrawer({ localStorageKey, strokeColor: '#e03131' });
     drawer.getWidget<TextWidget>('text')!.addTextNode('hello');
     drawer.setStrokeColor('#1971c2');
@@ -226,7 +226,7 @@ describe('User interface', () => {
     const first = createDrawer();
     const second = new Drawer(document.getElementById('test2') as HTMLDivElement, {
       autoSave: false,
-      localStorageKey: 'test-' + Math.random(),
+      localStorageKey: `test-${Math.random()}`,
     });
 
     first.UIPointerEvents('none');
