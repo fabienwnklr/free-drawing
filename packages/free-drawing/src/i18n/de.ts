@@ -9,7 +9,8 @@ export const de: Translations = {
 
   'toast.collaborationUnavailable': 'Zusammenarbeit nicht verfügbar: {error}',
   'toast.collaborationFull': 'Diese Sitzung der Zusammenarbeit ist voll',
-  'toast.collaborationTooBig': 'Zeichnung zu groß für die Sitzung der Zusammenarbeit: Ihre Änderungen werden nicht geteilt',
+  'toast.collaborationTooBig':
+    'Zeichnung zu groß für die Sitzung der Zusammenarbeit: Ihre Änderungen werden nicht geteilt',
   'toast.canDraw': 'Sie können zeichnen: der Besitzer der Sitzung hat es Ihnen erlaubt',
   'toast.viewOnly': 'Nur ansehen: der Besitzer der Sitzung hat Ihnen das Zeichnen entzogen',
   'toast.saveFailed': 'Die Zeichnung konnte nicht gespeichert werden: {error}',

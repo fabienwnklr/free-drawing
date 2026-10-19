@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.14.2](https://github.com/fabienwnklr/free-drawing/compare/v7.14.1...v7.14.2) (2026-10-18)
+
+
+### Bug Fixes
+
+* **collaboration:** a user is told when the server refuses their changes (drawing too big for the session: changes not shared) or their joining (session full: session stopped), with the `REJECTED` event
+
 ## [7.14.1](https://github.com/fabienwnklr/free-drawing/compare/v7.14.0...v7.14.1) (2026-10-18)
 
 
