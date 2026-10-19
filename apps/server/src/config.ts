@@ -42,7 +42,8 @@ function parseTrustProxy(value = ''): boolean | number | string {
 
 /**
  * Settings of environment: PORT (3000), NODE_ENV, DATABASE_PATH (data/free-drawing.db),
- * BASE_URL (http://localhost:<port>), BETTER_AUTH_SECRET (required in production), TRUSTED_ORIGINS (comma separated),
+ * BASE_URL (http://localhost:<port>, required in production), BETTER_AUTH_SECRET (required in production),
+ * TRUSTED_ORIGINS (comma separated),
  * TRUST_PROXY (proxies giving the address of clients, see `parseTrustProxy`)
  */
 export function getConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
@@ -51,6 +52,8 @@ export function getConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
   const secret = env.BETTER_AUTH_SECRET ?? (dev ? devSecret : '');
 
   if (secret.length < 32) throw new Error('BETTER_AUTH_SECRET of 32 characters at least is required in production');
+  // public URL: origin of the web app (checked origins of sockets and auth), Secure cookies with https
+  if (!dev && !env.BASE_URL) throw new Error('BASE_URL (public URL of the server) is required in production');
 
   return {
     port,

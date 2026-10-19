@@ -46,6 +46,8 @@ const en = {
   deleteAccountConfirm: "Delete your account and all your drawings? It can't be undone.",
   accountDeleted: 'Account deleted',
   errorCurrentPassword: 'Wrong password',
+  errorTooManyDrawings: 'Too many drawings: delete some to create a new one',
+  errorDrawingsTooBig: 'Drawings of your account are too big: delete some to save this one',
   error: 'Something went wrong: {error}',
 };
 
@@ -96,6 +98,8 @@ const fr: Record<Key, string> = {
   deleteAccountConfirm: 'Supprimer votre compte et tous vos dessins ? Cette action est définitive.',
   accountDeleted: 'Compte supprimé',
   errorCurrentPassword: 'Mot de passe incorrect',
+  errorTooManyDrawings: 'Trop de dessins : supprimez-en pour en créer un nouveau',
+  errorDrawingsTooBig: 'Les dessins de votre compte sont trop volumineux : supprimez-en pour enregistrer celui-ci',
   error: 'Une erreur est survenue : {error}',
 };
 
@@ -144,6 +148,8 @@ const es: Record<Key, string> = {
   deleteAccountConfirm: '¿Eliminar tu cuenta y todos tus dibujos? No se puede deshacer.',
   accountDeleted: 'Cuenta eliminada',
   errorCurrentPassword: 'Contraseña incorrecta',
+  errorTooManyDrawings: 'Demasiados dibujos: elimina algunos para crear uno nuevo',
+  errorDrawingsTooBig: 'Los dibujos de tu cuenta son demasiado grandes: elimina algunos para guardar este',
   error: 'Se produjo un error: {error}',
 };
 
@@ -193,6 +199,8 @@ const de: Record<Key, string> = {
   deleteAccountConfirm: 'Ihr Konto und alle Ihre Zeichnungen löschen? Das kann nicht rückgängig gemacht werden.',
   accountDeleted: 'Konto gelöscht',
   errorCurrentPassword: 'Falsches Passwort',
+  errorTooManyDrawings: 'Zu viele Zeichnungen: löschen Sie einige, um eine neue zu erstellen',
+  errorDrawingsTooBig: 'Die Zeichnungen Ihres Kontos sind zu groß: löschen Sie einige, um diese zu speichern',
   error: 'Ein Fehler ist aufgetreten: {error}',
 };
 
@@ -207,8 +215,8 @@ export class Texts {
   t = (key: Key, params: Record<string, string> = {}): string =>
     (texts[this.drawer.language] ?? en)[key].replace(/\{(\w+)\}/g, (match, name) => params[name] ?? match);
 
-  /** Error of the server, known errors of Better Auth explained */
-  error = (error: Error): string => {
+  /** Known error of the server (Better Auth, limits of drawings) explained, null for others */
+  private _known(error: Error): string | null {
     const code = error instanceof ApiError ? error.code ?? '' : '';
 
     if (code.includes('INVALID_EMAIL_OR_PASSWORD')) return this.t('errorCredentials');
@@ -216,8 +224,16 @@ export class Texts {
     if (code.includes('PASSWORD_TOO_SHORT')) return this.t('errorPassword');
     if (code === 'INVALID_PASSWORD') return this.t('errorCurrentPassword');
     if (code.includes('INVALID_EMAIL')) return this.t('errorEmail');
-    return this.t('error', { error: error.message });
-  };
+    if (code === 'TOO_MANY_DRAWINGS') return this.t('errorTooManyDrawings');
+    if (code === 'DRAWINGS_TOO_BIG') return this.t('errorDrawingsTooBig');
+    return null;
+  }
+
+  /** Error of the server, known errors explained */
+  error = (error: Error): string => this._known(error) ?? this.t('error', { error: error.message });
+
+  /** Reason of an error of the server: known errors explained, else its message */
+  reason = (error: Error): string => this._known(error) ?? error.message;
 
   /** Date and time of an ISO date */
   date = (iso: string): string =>

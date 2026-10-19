@@ -1,11 +1,18 @@
 import { randomUUID } from 'node:crypto';
 import express, { type ErrorRequestHandler, type Request, type RequestHandler, type Response } from 'express';
-import type { Kysely } from 'kysely';
+import { type Kysely, sql } from 'kysely';
 import { type Auth, type User, getUser } from './auth';
 import type { Database } from './db';
 
 /** Size of a drawing at most (JSON) */
 export const maxDrawingSize = '5mb';
+
+/** Drawings of an account at most: count, and size of their JSON (disk of the server), tests lower them */
+export const drawingsLimits = { count: 500, size: 100_000_000 };
+
+/** Refusal of a drawing beyond the limits of the account (`drawingsLimits`) */
+const tooMany = { error: 'too many drawings', code: 'TOO_MANY_DRAWINGS' };
+const tooBig = { error: 'drawings of the account too big', code: 'DRAWINGS_TOO_BIG' };
 
 const themes = ['light', 'dark', 'system'];
 
@@ -50,7 +57,7 @@ function toPreferences(value: Record<string, unknown>) {
 const toName = (name: unknown) => (typeof name === 'string' ? name.trim().slice(0, 100) : '');
 
 /**
- * API of logged in users (session cookie): `/me`, `/preferences`, `/drawings` (their own only)
+ * API of logged in users (session cookie): `/me`, `/preferences`, `/drawings` (their own only, `drawingsLimits`)
  */
 export function createApi(auth: Auth, db: Kysely<Database>) {
   const router = express.Router();
@@ -71,6 +78,16 @@ export function createApi(auth: Auth, db: Kysely<Database>) {
   const findDrawing = (id: string, user: User) =>
     db.selectFrom('drawing').selectAll().where('id', '=', id).where('userId', '=', user.id).executeTakeFirst();
   const summary = ({ id, name, createdAt, updatedAt }: Database['drawing']) => ({ id, name, createdAt, updatedAt });
+  // drawings of the user: count, size of their JSON
+  const usage = async (user: User) => {
+    const row = await db
+      .selectFrom('drawing')
+      .select([sql<number>`count(*)`.as('count'), sql<number>`coalesce(sum(length(content)), 0)`.as('size')])
+      .where('userId', '=', user.id)
+      .executeTakeFirstOrThrow();
+
+    return { count: Number(row.count), size: Number(row.size) };
+  };
 
   router.use(express.json({ limit: maxDrawingSize }));
 
@@ -136,6 +153,10 @@ export function createApi(auth: Auth, db: Kysely<Database>) {
         createdAt: now,
         updatedAt: now,
       };
+      const { count, size } = await usage(user);
+
+      if (count >= drawingsLimits.count) return res.status(403).json(tooMany);
+      if (size + drawing.content.length > drawingsLimits.size) return res.status(403).json(tooBig);
 
       await db.insertInto('drawing').values(drawing).execute();
       res.status(201).json(summary(drawing));
@@ -169,6 +190,15 @@ export function createApi(auth: Auth, db: Kysely<Database>) {
         ...(content !== undefined && { content: JSON.stringify(content) }),
         updatedAt: new Date().toISOString(),
       };
+
+      // bigger drawing: within the size of the account (smaller ones always saved)
+      if (changes.content && changes.content.length > drawing.content.length) {
+        const { size } = await usage(user);
+
+        if (size - drawing.content.length + changes.content.length > drawingsLimits.size) {
+          return res.status(403).json(tooBig);
+        }
+      }
 
       await db.updateTable('drawing').set(changes).where('id', '=', drawing.id).execute();
       res.json(summary({ ...drawing, ...changes }));

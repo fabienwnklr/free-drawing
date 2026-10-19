@@ -8,7 +8,8 @@ import { tmpdir } from 'node:os';
 import { join as joinPath } from 'node:path';
 import { socketEvents } from '@free-drawing/protocol';
 import { createServer } from '../src/app';
-import type { ServerConfig } from '../src/config';
+import { type ServerConfig, getConfig } from '../src/config';
+import { drawingsLimits } from '../src/api';
 import { limits, roomLifetime } from '../src/collaboration';
 
 const config: ServerConfig = {
@@ -52,6 +53,20 @@ async function signUp(name = 'Ada') {
   expect(res.status).toBe(200);
   return { agent, email, cookie: res.headers['set-cookie'] as unknown as string[] };
 }
+
+describe('Settings', () => {
+  it('Secret and public URL required in production', () => {
+    const secret = 'x'.repeat(32);
+
+    expect(() => getConfig({ NODE_ENV: 'production' })).toThrow('BETTER_AUTH_SECRET');
+    expect(() => getConfig({ NODE_ENV: 'production', BETTER_AUTH_SECRET: secret })).toThrow('BASE_URL');
+    expect(
+      getConfig({ NODE_ENV: 'production', BETTER_AUTH_SECRET: secret, BASE_URL: 'https://draw.example' })
+    ).toMatchObject({ dev: false, baseURL: 'https://draw.example', trustProxy: false });
+    expect(getConfig({ TRUST_PROXY: '1' }).trustProxy).toBe(1);
+    expect(getConfig({ TRUST_PROXY: 'loopback, 10.0.0.0/8' }).trustProxy).toBe('loopback, 10.0.0.0/8');
+  });
+});
 
 describe('Accounts', () => {
   it('API needs a session', async () => {
@@ -254,6 +269,29 @@ describe('Drawings', () => {
     expect((await owner.agent.get(`/api/drawings/${id}`)).body.name).toBe('');
   });
 
+  it('Drawings of an account are limited: count, size', async () => {
+    const { agent } = await signUp();
+    const saved = { ...drawingsLimits };
+    const big = { ...drawing, shapes: [{ className: 'Rect', attrs: { id: 'r1', label: 'x'.repeat(2000) } }] };
+
+    Object.assign(drawingsLimits, { count: 2, size: 1000 });
+    try {
+      const { id } = (await agent.post('/api/drawings').send({ content: drawing })).body;
+
+      expect((await agent.post('/api/drawings').send({})).status).toBe(201);
+      expect((await agent.post('/api/drawings').send({})).body).toMatchObject({ code: 'TOO_MANY_DRAWINGS' });
+
+      // bigger drawing beyond the size of the account refused, smaller ones saved
+      const res = await agent.put(`/api/drawings/${id}`).send({ content: big });
+
+      expect([res.status, res.body.code]).toEqual([403, 'DRAWINGS_TOO_BIG']);
+      expect((await agent.put(`/api/drawings/${id}`).send({ content: { ...drawing, shapes: [] } })).status).toBe(200);
+      expect((await agent.get(`/api/drawings/${id}`)).body.content.shapes).toEqual([]);
+    } finally {
+      Object.assign(drawingsLimits, saved);
+    }
+  });
+
   it('Invalid drawings and bodies refused', async () => {
     const { agent } = await signUp();
     const { id } = (await agent.post('/api/drawings').send({})).body;
@@ -326,6 +364,21 @@ describe('Collaboration', () => {
   afterAll(() => {
     for (const socket of sockets) socket.close();
     server.httpServer.close();
+  });
+
+  it('Sockets of pages of other origins refused (session cookies of the same site)', async () => {
+    const connected = (origin: string) =>
+      new Promise<boolean>((resolve) => {
+        const socket = connect(url, { forceNew: true, reconnection: false, extraHeaders: { origin } });
+
+        sockets.push(socket);
+        socket.once('connect', () => resolve(true));
+        socket.once('connect_error', () => resolve(false));
+      });
+
+    expect(await connected('http://evil.example')).toBe(false);
+    expect(await connected('http://localhost:3000')).toBe(true);
+    expect(await connected('http://app.example')).toBe(true);
   });
 
   type Joined = { userId: string; users: { id: string; name: string; owner: boolean }[] };

@@ -45,7 +45,12 @@ export class DrawingsDialog {
 
     this.$new.addEventListener('click', async () => {
       this.$dialog.close();
-      await this.app.newDrawing();
+      try {
+        await this.app.newDrawing();
+      } catch (error) {
+        // too many drawings...
+        this.app.drawer.toast(this.app.texts.error(error as Error), 'error');
+      }
     });
     this.$dialog.querySelector('[data-close]')!.addEventListener('click', () => this.$dialog.close());
   }

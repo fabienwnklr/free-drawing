@@ -99,8 +99,12 @@ export async function createServer(config: ServerConfig) {
 
   if (config.web) await serveWeb(app, httpServer, config.dev);
 
+  const origins = [new URL(config.baseURL).origin, ...config.trustedOrigins];
   const io = new Server(httpServer, {
     cors: { origin: config.trustedOrigins, credentials: true },
+    // pages of other origins (cookies of the same site sent with WebSocket, no CORS) can't use the session of the user;
+    // clients without origin are not browsers: no cookie of a user
+    allowRequest: (req, callback) => callback(null, !req.headers.origin || origins.includes(req.headers.origin)),
     // a change can hold a whole drawing (shapes JSON escaped in the message)
     maxHttpBufferSize: limits.drawingSize * 2,
   });

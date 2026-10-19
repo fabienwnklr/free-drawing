@@ -22,7 +22,7 @@ yarn workspace @free-drawing/server start   # production (NODE_ENV=production)
 | `PORT` | `3000` | Port of the server |
 | `NODE_ENV` | | `production`: web app served from its build (`yarn build:static`), secret required |
 | `DATABASE_PATH` | `apps/server/data/free-drawing.db` | SQLite database file |
-| `BASE_URL` | `http://localhost:<port>` | Public URL of the server (cookies, auth) |
+| `BASE_URL` | `http://localhost:<port>` | Public URL of the server (cookies, auth, origin of sockets), required in production (`https`: Secure cookies) |
 | `BETTER_AUTH_SECRET` | development secret | Secret signing sessions, 32 characters at least, required in production |
 | `TRUSTED_ORIGINS` | | Other origins of apps calling the API (comma separated): CORS with cookies |
 | `TRUST_PROXY` | | Proxies in front of the server (Express `trust proxy`: number of proxies, `true`, or addresses and subnets, comma separated): their `X-Forwarded-For` gives the address of clients. Without it, the address of the connection |
@@ -48,7 +48,7 @@ API of logged in users (401 without session):
 | `PUT /api/drawings/:id` | Update its `name` and / or `content` |
 | `DELETE /api/drawings/:id` | Remove it |
 
-Users only reach their own drawings (others: 404). Drawing files are checked (`type: 'free-drawing'`, background, shapes) and limited to 5 MB, clients validate shapes when they load them.
+Users only reach their own drawings (others: 404). An account keeps 500 drawings and 100 MB of drawings at most (`drawingsLimits` of `src/api.ts`): a new drawing beyond them, or a bigger one beyond the size, is refused with 403 and the code `TOO_MANY_DRAWINGS` or `DRAWINGS_TOO_BIG` (explained by the web app). Drawing files are checked (`type: 'free-drawing'`, background, shapes) and limited to 5 MB, clients validate shapes when they load them.
 
 With the `storage` option of the library:
 
@@ -68,7 +68,7 @@ const drawer = new Drawer($el, {
 
 ## Live collaboration
 
-Socket events come from `@free-drawing/protocol` ([packages/protocol](../../packages/protocol)). A logged in user (session cookie of the connection) is identified by their account: the id sent by the client is ignored, so nobody can take the place of another user (owner of a room, rights). The server sends `JOINED` (`{ userId }`) to the user joining a room. Anonymous users keep the id of their browser, unless it is the id of an account who came in the room or of its owner: the owner is the socket giving the secret of the room (`ownerKey`), only it gives rights and changes the settings of the room (`ROOM`: `{ newUsersCanEdit }`, users coming for the first time view only when false).
+Sockets of browsers are accepted from the origin of `BASE_URL` and `TRUSTED_ORIGINS` only: a page of another origin of the same site (its WebSocket carries the session cookie, without CORS) can't act as the user. Socket events come from `@free-drawing/protocol` ([packages/protocol](../../packages/protocol)). A logged in user (session cookie of the connection) is identified by their account: the id sent by the client is ignored, so nobody can take the place of another user (owner of a room, rights). The server sends `JOINED` (`{ userId }`) to the user joining a room. Anonymous users keep the id of their browser, unless it is the id of an account who came in the room or of its owner: the owner is the socket giving the secret of the room (`ownerKey`), only it gives rights and changes the settings of the room (`ROOM`: `{ newUsersCanEdit }`, users coming for the first time view only when false).
 
 The drawing of a room is kept in memory: it is lost when its last user leaves or the server restarts (users send theirs when they join again). Owner, rights and settings of rooms are saved in the database (`room` table, hash of the owner secret only): kept while a room is empty and after a restart, so nobody takes an empty room over by giving another secret. Rooms unused for 30 days are forgotten.
 

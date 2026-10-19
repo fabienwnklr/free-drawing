@@ -124,9 +124,9 @@ export class App {
           if (this.drawing?.id === saved.id) this.drawing = saved;
           this._setSaveState('saved');
         } catch (error) {
-          // shown by drawer once
+          // shown by drawer once, reason explained (drawings of the account too big)
           this._setSaveState('error');
-          throw error;
+          throw new Error(this.texts.reason(error as Error));
         }
       },
     };
