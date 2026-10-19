@@ -250,9 +250,21 @@ export class App {
   }
 
   /**
+   * Live collaboration left before another drawing is loaded: else the loaded drawing would replace the drawing of the
+   * session for its other users (they keep it, the session goes on without this user)
+   */
+  private _leaveSession() {
+    if (!this.drawer.collaboration) return;
+
+    this.drawer.stopCollaboration();
+    this.drawer.toast(this.texts.t('sessionLeft'), 'info');
+  }
+
+  /**
    * Drawing of user loaded at once: the one shown before is not saved in it (error shown by drawer)
    */
   private async _open(drawing: DrawingSummary) {
+    this._leaveSession();
     this.drawing = drawing;
 
     const loaded = this.drawer.loadFromStorage();
@@ -291,6 +303,7 @@ export class App {
    * Drawing of browser shown again: drawing of account is not kept in browser
    */
   private async _leaveAccount() {
+    this._leaveSession();
     this.user = null;
     // not saved meanwhile
     this.drawing = null;
