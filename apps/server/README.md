@@ -30,7 +30,7 @@ yarn workspace @free-drawing/server start   # production (NODE_ENV=production)
 
 Accounts (Better Auth, under `/api/auth`): `POST /sign-up/email` (`{ email, password, name }`), `POST /sign-in/email` (`{ email, password }`), `POST /sign-out`, `GET /get-session`. Requests of browsers send the session cookie.
 
-Account of the logged in user: `POST /update-user` (`{ name }`), `POST /change-email` (`{ newEmail }`, used at once since no email is sent; an email of another account is not taken, without error so emails are not revealed: read `/api/me` again), `POST /change-password` (`{ currentPassword, newPassword, revokeOtherSessions }`), `POST /delete-user` (`{ password }`: the account is removed with its drawings and preferences).
+Account of the logged in user: `POST /update-user` (`{ name }`), `POST /change-email` (`{ newEmail }`, used at once since no email is sent; an email of another account is not taken, without error so emails are not revealed: read `/api/me` again), `POST /change-password` (`{ currentPassword, newPassword, revokeOtherSessions }`), `POST /delete-user` (`{ password }`: the account is removed with its drawings and preferences; the password is always needed, `PASSWORD_REQUIRED` without it, also while the session is fresh).
 
 API of logged in users (401 without session):
 

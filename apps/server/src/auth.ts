@@ -1,11 +1,30 @@
 import type { IncomingHttpHeaders } from 'node:http';
 import type { Kysely } from 'kysely';
 import { type BetterAuthOptions, betterAuth } from 'better-auth';
+import { APIError, createAuthMiddleware } from 'better-auth/api';
 import { fromNodeHeaders } from 'better-auth/node';
 import { getMigrations } from 'better-auth/db/migration';
 import type { ServerConfig } from './config';
 import type { Database } from './db';
 
+/**
+ * Deletion of an account always needs its password: Better Auth deletes it without password while the session is
+ * fresh (signed in less than a day ago), e.g. from a session left open or a stolen cookie
+ */
+const passwordToDelete = createAuthMiddleware(async (ctx) => {
+  const { password } = (ctx.body ?? {}) as { password?: unknown };
+
+  if (ctx.path === '/delete-user' && (typeof password !== 'string' || !password)) {
+    throw new APIError('BAD_REQUEST', { code: 'PASSWORD_REQUIRED', message: 'Password required' });
+  }
+});
+
+/**
+ * Options of Better Auth: database of the app, accounts with email and password
+ * @param config Settings of the server (base URL, secret, trusted origins)
+ * @param db Database of the app
+ * @returns Options for `betterAuth` and its migrations
+ */
 function getOptions(config: ServerConfig, db: Kysely<Database>) {
   return {
     database: { db, type: 'sqlite' },
@@ -17,9 +36,10 @@ function getOptions(config: ServerConfig, db: Kysely<Database>) {
     user: {
       // no email sent (no verification): the new email is used at once, unless an account uses it
       changeEmail: { enabled: true, updateEmailWithoutVerification: true },
-      // with password, drawings and preferences removed with the user (foreign keys)
+      // with password (`passwordToDelete`), drawings and preferences removed with the user (foreign keys)
       deleteUser: { enabled: true },
     },
+    hooks: { before: passwordToDelete },
   } satisfies BetterAuthOptions;
 }
 

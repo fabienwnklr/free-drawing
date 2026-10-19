@@ -135,6 +135,12 @@ describe('Account', () => {
 
     await agent.put('/api/preferences').send({ theme: 'dark' });
     expect((await post('/delete-user', { password: 'wrong password' })).body.code).toBe('INVALID_PASSWORD');
+    // also without password while the session is fresh (signed in just now)
+    for (const body of [{}, { password: '' }, { password: 12 }]) {
+      const res = await post('/delete-user', body);
+
+      expect([res.status, res.body.code]).toEqual([400, 'PASSWORD_REQUIRED']);
+    }
     expect((await agent.get(`/api/drawings/${id}`)).status).toBe(200);
 
     expect((await post('/delete-user', { password })).status).toBe(200);
