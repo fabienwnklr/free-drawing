@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.19.7](https://github.com/fabienwnklr/free-drawing/compare/v7.19.6...v7.19.7) (2026-10-21)
+
+
+### Bug Fixes
+
+* **keyboard:** shortcuts work whatever the keyboard: Ctrl / Cmd shortcuts with Caps Lock on, Alt + S / Z / G / L with Option of macOS (it types other characters: the letter of the key is read on the keyboard layout), letters of AZERTY and other Latin layouts as typed (Shift + W fits texts on the W key, not on Z), keyboards of another alphabet by the place of the letter on a QWERTY keyboard; AltGr (Ctrl + Alt) typing a character no longer runs a shortcut
+* **plugins:** letters of commands of plugins are read the same way: `Alt+Z` on the key typing Z (it was the place of Z on a QWERTY keyboard)
+* **keyboard:** Alt shortcuts are not run in fields of the drawer, where Option of macOS types characters
+
 ## [7.19.6](https://github.com/fabienwnklr/free-drawing/compare/v7.19.5...v7.19.6) (2026-10-21)
 
 

@@ -193,6 +193,15 @@ export type Shortcut = {
   after?: string;
 };
 
+/** Navigator with the Keyboard API (Chromium, not typed by TypeScript): characters of the keys of the layout */
+export type KeyboardLayoutNavigator = Navigator & {
+  /** Keyboard of the device, undefined out of Chromium */
+  keyboard?: {
+    /** Character of each physical key on the current layout (`KeyQ`: 'a' on AZERTY...) */
+    getLayoutMap?: () => Promise<Iterable<[string, string]>>;
+  };
+};
+
 /** Part of the view where elements next to the selection are placed (selection menu, link editor), in px */
 export type ViewArea = {
   /** Left edge */

@@ -1,15 +1,64 @@
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import type { ShapeOrder } from '@/@types/drawer';
+import type { KeyboardLayoutNavigator } from '@/@types/ui';
 import { unbindMoved } from '@/utils/binding';
 import type { Drawer } from '@/Drawer';
 
 /** Types of inputs with editable text */
 const textInputTypes = ['text', 'search', 'number', 'email', 'url', 'tel', 'password'];
 
+/** Letters of the keyboard layout by physical key (`KeyQ`: 'a' on AZERTY), read from the browser or typed */
+const layoutLetters = new Map<string, string>();
+/** Letters of the layout asked to the browser (once for the page) */
+let layoutAsked = false;
+
+/**
+ * Letters of the keyboard layout from the Keyboard API (Chromium), once: letters typed since are kept (layout changed)
+ */
+function askLayout() {
+  if (layoutAsked) return;
+  layoutAsked = true;
+  (navigator as KeyboardLayoutNavigator).keyboard
+    ?.getLayoutMap?.()
+    .then((map) => {
+      for (const [code, key] of map) {
+        if (/^[a-z]$/i.test(key) && !layoutLetters.has(code)) layoutLetters.set(code, key.toLowerCase());
+      }
+    })
+    // not allowed (frame of another origin): letters typed only
+    .catch(() => {});
+}
+
+/**
+ * Letter of the physical key of a key event typed without Alt, remembered for the keys whose character Alt changes
+ * @param e Key pressed
+ */
+function learnLetter(e: KeyboardEvent) {
+  if (!e.altKey && /^[a-z]$/i.test(e.key) && /^Key[A-Z]$/.test(e.code)) layoutLetters.set(e.code, e.key.toLowerCase());
+}
+
+/**
+ * Letter of a key event, in lowercase (whatever Shift or Caps Lock): the letter typed, else with Option of macOS
+ * (changing it) the letter of its physical key on the keyboard layout (read in Chromium or typed before), else (keyboard
+ * of another alphabet) the letter at its place on a QWERTY keyboard, as Ctrl shortcuts of systems. Not with AltGr
+ * (Ctrl + Alt), which types other characters
+ * @param e Key pressed
+ * @returns Letter, or value of another key in lowercase (`delete`, `,`, `f2`...)
+ */
+export function keyLetter(e: KeyboardEvent): string {
+  const key = e.key.toLowerCase();
+  const code = /^Key([A-Z])$/.exec(e.code)?.[1];
+
+  if (/^[a-z]$/.test(key) || !code || (e.ctrlKey && e.altKey)) return key;
+
+  return (e.altKey && layoutLetters.get(e.code)) || code.toLowerCase();
+}
+
 /**
  * Key event of a shortcut: `Ctrl` (also Cmd), `Shift` and `Alt` exactly as given, then the key: a digit by its place
- * (Shift changes it), a letter by its place with Alt (Alt changes characters), else by its value (`Delete`, `F2`...)
+ * (Shift changes it), a letter by `keyLetter` (Alt and Caps Lock change characters), else by its value (`Delete`,
+ * `F2`...)
  * @param e Key pressed
  * @param shortcut Keys separated by `+`, e.g. `Ctrl+Shift+M`, `Alt+P`, `Delete`
  * @returns true when the event is the shortcut
@@ -23,9 +72,8 @@ export function matchesShortcut(e: KeyboardEvent, shortcut: string): boolean {
     return false;
   }
   if (/^\d$/.test(key)) return e.code === `Digit${key}` || e.code === `Numpad${key}`;
-  if (e.altKey && /^[a-z]$/.test(key)) return e.code === `Key${key.toUpperCase()}`;
 
-  return e.key.toLowerCase() === key;
+  return keyLetter(e) === key;
 }
 
 /**
@@ -61,11 +109,15 @@ export class HotKey {
     // selection moved with arrow keys, saved on key release (not on each repeated keydown)
     let arrowMoved = false;
 
+    askLayout();
     this.drawer.$drawerContainer.addEventListener('keydown', (e) => {
+      learnLetter(e);
       if (this.drawer._duringAction()) return;
 
       // Ctrl on Windows / Linux, Cmd on Mac
       const mod = e.ctrlKey || e.metaKey;
+      // whatever Caps Lock, Option of macOS, layout
+      const letter = keyLetter(e);
       const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
       const selectedNodes = selectWidget?.transformer.nodes() ?? [];
       // locked shapes are selected to be unlocked, not modified
@@ -95,20 +147,20 @@ export class HotKey {
         }
       }
 
-      if (mod && e.key === 'a' && !inTextField) {
+      if (mod && !e.shiftKey && letter === 'a' && !inTextField) {
         if (edit) selectWidget?.selectAll();
         // shapes, not page text (browser select all)
         e.preventDefault();
       }
 
       // instead of browser bookmark
-      if (edit && mod && e.key === 'd' && editable.length && !inField) {
+      if (edit && mod && !e.shiftKey && letter === 'd' && editable.length && !inField) {
         e.preventDefault();
         this.drawer.duplicateShapes();
       }
 
       // instead of browser find next
-      if (edit && mod && e.key.toLowerCase() === 'g' && editable.length && !inField) {
+      if (edit && mod && letter === 'g' && editable.length && !inField) {
         e.preventDefault();
         if (e.shiftKey) this.drawer.ungroupShapes();
         else this.drawer.groupShapes();
@@ -129,28 +181,28 @@ export class HotKey {
 
       // flip or rotate selection by a quarter turn, fit width of texts (Shift + letter is not a tool shortcut)
       if (edit && !mod && !e.altKey && e.shiftKey && editable.length && !inField) {
-        if (e.code === 'KeyH') this.drawer.flipShapes('horizontal');
-        if (e.code === 'KeyV') this.drawer.flipShapes('vertical');
-        if (e.code === 'KeyR') this.drawer.rotateShapes(90);
-        if (e.code === 'KeyL') this.drawer.rotateShapes(-90);
-        if (e.code === 'KeyW') this.drawer.fitTextWidth();
+        if (letter === 'h') this.drawer.flipShapes('horizontal');
+        if (letter === 'v') this.drawer.flipShapes('vertical');
+        if (letter === 'r') this.drawer.rotateShapes(90);
+        if (letter === 'l') this.drawer.rotateShapes(-90);
+        if (letter === 'w') this.drawer.fitTextWidth();
       }
 
       // lock selection, unlock locked one (still selected)
-      if (edit && mod && e.shiftKey && e.code === 'KeyL' && selectedNodes.length && !inField) {
+      if (edit && mod && e.shiftKey && letter === 'l' && selectedNodes.length && !inField) {
         e.preventDefault();
         this.drawer.setShapesLocked(!locked);
       }
 
-      // copy selection (whole drawing without selection) as image, physical keys (Alt changes characters)
-      if (e.altKey && e.shiftKey && !mod && (e.code === 'KeyC' || e.code === 'KeyS') && !inField) {
+      // copy selection (whole drawing without selection) as image
+      if (e.altKey && e.shiftKey && !mod && (letter === 'c' || letter === 's') && !inField) {
         e.preventDefault();
-        this.drawer.copyImage(e.code === 'KeyC' ? 'png' : 'svg');
+        this.drawer.copyImage(letter === 'c' ? 'png' : 'svg');
       }
 
       // Toolbar shortcut, the letter displayed on widget button (whatever caps lock)
       if (!mod && !e.altKey && !e.shiftKey) {
-        const widget = Array.from(this.drawer.toolbar.widgets.values()).find((w) => w.shortcut === e.key.toLowerCase());
+        const widget = Array.from(this.drawer.toolbar.widgets.values()).find((w) => w.shortcut === letter);
 
         if (widget) {
           widget.setActive(true);
@@ -159,30 +211,30 @@ export class HotKey {
         }
 
         // keep tool after drawing (button of toolbar)
-        if (e.key.toLowerCase() === 'q' && this.drawer.toolbar.$keepToolButton && !inField) {
+        if (letter === 'q' && this.drawer.toolbar.$keepToolButton && !inField) {
           this.drawer.setKeepTool(!this.drawer.options.keepTool);
         }
       }
 
-      if (e.altKey && e.key === 's') {
-        this.drawer.setting.toggleSnapping();
+      // view options, not in fields (Option of macOS types other characters there)
+      if (e.altKey && !e.shiftKey && !mod && !inField) {
+        if (letter === 's') this.drawer.setting.toggleSnapping();
+        if (letter === 'z') this.drawer.setting.toggleZenMode();
+        if (letter === 'g') this.drawer.setting.toggleGrid();
+        if (letter === 'l') this.drawer.layersPanel?.toggle();
       }
 
-      if (e.altKey && e.key === 'z') {
-        this.drawer.setting.toggleZenMode();
-      }
-
-      if (edit && mod && e.key === 'z') {
+      if (edit && mod && !e.shiftKey && letter === 'z') {
         this.drawer.undoRedo.undo();
       }
 
       // instead of browser save page and open file
-      if (mod && e.key === 's') {
+      if (mod && !e.shiftKey && letter === 's') {
         e.preventDefault();
         this.drawer.saveAs();
       }
 
-      if (mod && e.key === 'o') {
+      if (mod && !e.shiftKey && letter === 'o') {
         e.preventDefault();
         if (edit) this.drawer.open();
       }
@@ -193,30 +245,21 @@ export class HotKey {
       }
 
       // instead of browser search
-      if (mod && e.key.toLowerCase() === 'k' && !inField && this.drawer.options.commandPalette) {
+      if (mod && letter === 'k' && !inField && this.drawer.options.commandPalette) {
         e.preventDefault();
         this.drawer.showCommandPalette();
       }
 
-      if (mod && e.shiftKey && e.key.toLowerCase() === 'e') {
+      if (mod && e.shiftKey && letter === 'e') {
         e.preventDefault();
         this.drawer.showExport();
       }
 
-      if (edit && mod && e.key === 'y') {
+      if (edit && mod && !e.shiftKey && letter === 'y') {
         this.drawer.undoRedo.redo();
       }
 
-      if (e.altKey && e.key === 'g') {
-        this.drawer.setting.toggleGrid();
-      }
-
-      if (e.altKey && e.key === 'l') {
-        this.drawer.layersPanel?.toggle();
-      }
-
-      // physical key: Alt + Shift + D gives another character on some layouts (macOS)
-      if (e.altKey && e.shiftKey && e.code === 'KeyD') {
+      if (e.altKey && e.shiftKey && !mod && letter === 'd') {
         e.preventDefault();
         this.drawer.toggleDarkMode();
       }

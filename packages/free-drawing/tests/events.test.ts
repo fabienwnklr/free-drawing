@@ -6,6 +6,7 @@ import type { LineWidget } from '@/components/toolbar/widgets/Line/Line';
 import type { EraserWidget } from '@/components/toolbar/widgets/Eraser/Eraser';
 import type { BrushWidget } from '@/components/toolbar/widgets/Brush/Brush';
 import type { Line } from 'konva/lib/shapes/Line';
+import { matchesShortcut } from '@/utils/HotKey';
 import { createDrawer, fireMouse, keydown, setPointer } from './helpers';
 
 beforeAll(() => {
@@ -98,6 +99,54 @@ describe('Test drawer event', () => {
     keydown(drawer, { key: 'Backspace' });
 
     expect(drawer.undoRedo.entries.length).toBe(length);
+  });
+
+  it('Shortcuts whatever the keyboard: Caps Lock, Option of macOS, AZERTY, another alphabet, not AltGr', () => {
+    const drawer = createDrawer();
+    const text = drawer.getWidget<TextWidget>('text')!.addTextNode('hello');
+    drawer.stage.fire('change');
+    const grid = drawer.getPreferences().grid;
+
+    // Caps Lock
+    keydown(drawer, { key: 'A', code: 'KeyA', ctrlKey: true });
+    expect(drawer.getSelectedShapes()).toEqual([text]);
+
+    // Option of macOS changes characters: Option + G gives ©
+    keydown(drawer, { key: '©', code: 'KeyG', altKey: true });
+    expect(drawer.getPreferences().grid).toBe(!grid);
+
+    // AZERTY: letter typed, not its place on a QWERTY keyboard
+    const fit = vi.spyOn(drawer, 'fitTextWidth');
+    keydown(drawer, { key: 'W', code: 'KeyZ', shiftKey: true });
+    keydown(drawer, { key: 'Z', code: 'KeyW', shiftKey: true });
+    expect(fit).toHaveBeenCalledTimes(1);
+
+    // AZERTY of macOS: Option + Z on the key of QWERTY W, known once Z was typed
+    keydown(drawer, { key: 'z', code: 'KeyW' });
+    keydown(drawer, { key: 'Ω', code: 'KeyW', altKey: true });
+    expect(drawer.getPreferences().zen).toBe(true);
+    keydown(drawer, { key: 'Ω', code: 'KeyW', altKey: true });
+    // layout of other tests
+    keydown(drawer, { key: 'w', code: 'KeyW' });
+
+    // another alphabet: Ctrl + Z of a Russian keyboard
+    const undo = vi.spyOn(drawer.undoRedo, 'undo');
+    keydown(drawer, { key: 'я', code: 'KeyZ', ctrlKey: true });
+    expect(undo).toHaveBeenCalledTimes(1);
+
+    // AltGr (Ctrl + Alt) types characters: ś of a Polish keyboard does not save
+    const saveAs = vi.spyOn(drawer, 'saveAs').mockResolvedValue();
+    keydown(drawer, { key: 'ś', code: 'KeyS', ctrlKey: true, altKey: true });
+    expect(saveAs).not.toHaveBeenCalled();
+
+    // commands of plugins
+    expect(matchesShortcut(new KeyboardEvent('keydown', { key: 'z', code: 'KeyW', altKey: true }), 'Alt+Z')).toBe(true);
+    expect(matchesShortcut(new KeyboardEvent('keydown', { key: 'Dead', code: 'KeyN', altKey: true }), 'Alt+N')).toBe(
+      true
+    );
+    expect(
+      matchesShortcut(new KeyboardEvent('keydown', { key: 'M', code: 'Semicolon', ctrlKey: true }), 'Ctrl+M')
+    ).toBe(true);
   });
 
   it('Change without modification does not add history', () => {
