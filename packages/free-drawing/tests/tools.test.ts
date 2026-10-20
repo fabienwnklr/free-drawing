@@ -10,6 +10,7 @@ import { frameHighlightName } from '@/utils/frameHighlight';
 import type { DrawingShape } from '@/@types/drawer';
 import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
+import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import { scalePath } from '@/components/toolbar/widgets/PathShapeWidget';
 import { shapeName } from '@/constants';
 import { parseDrawingFile } from '@/utils/drawingFile';
@@ -102,6 +103,37 @@ describe('Frame', () => {
     return { drawer, frame, inside, outside, selectWidget: drawer.getWidget<SelectWidget>('selection')! };
   };
   const absolute = (shape: DrawingShape) => shape.getAbsolutePosition();
+
+  it('Title renamed in place, on one line: field at the title wherever the drawer is in the page', () => {
+    const { drawer, frame } = createFrame();
+    const title = getFrameTitle(frame);
+    const rect = (left: number, top: number) => ({ left, top }) as DOMRect;
+    // drawer below the bar of an app, view below its header
+    const drawerRect = vi.spyOn(drawer.$drawerContainer, 'getBoundingClientRect').mockReturnValue(rect(0, 48));
+    const viewRect = vi.spyOn(drawer.$stageContainer, 'getBoundingClientRect').mockReturnValue(rect(10, 60));
+
+    drawer.getWidget<TextWidget>('text')!.editTextNode(title);
+
+    const textarea = document.querySelector<HTMLTextAreaElement>('.drawer-text-editor')!;
+    const spacing = Math.ceil(title.fontSize() * 0.25);
+    const { x, y } = title.absolutePosition();
+
+    // view coordinates in the drawer container
+    expect([textarea.style.left, textarea.style.top]).toEqual([`${x - spacing + 10}px`, `${y - spacing + 12}px`]);
+    expect([textarea.wrap, textarea.style.whiteSpace]).toEqual(['off', 'pre']);
+
+    // no line break: Shift + Enter does nothing, pasted ones become spaces
+    const shiftEnter = new KeyboardEvent('keydown', { code: 'Enter', shiftKey: true, cancelable: true });
+
+    textarea.dispatchEvent(shiftEnter);
+    expect(shiftEnter.defaultPrevented).toBe(true);
+    textarea.value = 'Roadmap\n2027 ';
+    textarea.dispatchEvent(new KeyboardEvent('keydown', { code: 'Enter' }));
+    expect([title.text(), frame.getAttr('label'), title.y()]).toEqual(['Roadmap 2027', 'Roadmap 2027', -20]);
+    expect(document.querySelector('.drawer-text-editor')).toBe(null);
+    drawerRect.mockRestore();
+    viewRect.mockRestore();
+  });
 
   it('Drawn frame takes shapes entirely in it, under other shapes, named by its title', () => {
     const { drawer, frame, inside, outside } = createFrame();

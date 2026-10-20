@@ -13,11 +13,11 @@ import RotateLeftIcon from '@/icons/rotate-left.svg?raw';
 import RotateRightIcon from '@/icons/rotate-right.svg?raw';
 import FitWidthIcon from '@/icons/fit-width.svg?raw';
 import { Group } from 'konva/lib/Group';
-import { arrowNavigation, createButton, setLabel } from '@/utils/dom';
+import { arrowNavigation, createButton, placeInView, setLabel } from '@/utils/dom';
 import type { TranslationKey } from '@/@types/i18n';
 import { drawerEvents } from '@/constants';
 import { isFrame } from '@/utils/frame';
-import { getPlacementArea, getSelectionBox, getSelectionSurroundings, placeInView } from '@/utils/selection';
+import { getPlacementArea, getSelectionBox, getSelectionSurroundings } from '@/utils/selection';
 import { getTexts } from '@/utils/text';
 
 /** Space between selection and menu, between menu and drawer edges (px) */

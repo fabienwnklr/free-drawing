@@ -7,9 +7,9 @@ import type { Drawer } from '@/Drawer';
 import CloseIcon from '@/icons/close.svg?raw';
 import ExternalLinkIcon from '@/icons/external-link.svg?raw';
 import LinkIcon from '@/icons/link.svg?raw';
-import { createButton, setLabel } from '@/utils/dom';
+import { createButton, placeInView, setLabel } from '@/utils/dom';
 import { parseLink } from '@/utils/link';
-import { getPlacementArea, getSelectionBox, getSelectionSurroundings, placeInView, unionRect } from '@/utils/selection';
+import { getPlacementArea, getSelectionBox, getSelectionSurroundings, unionRect } from '@/utils/selection';
 
 /** Space between the selection (or its menu) and the editor, between the editor and the view edges (px) */
 const gap = 12;

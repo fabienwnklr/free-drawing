@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.17.1](https://github.com/fabienwnklr/free-drawing/compare/v7.17.0...v7.17.1) (2026-10-20)
+
+
+### Bug Fixes
+
+* **text:** the field editing a text is placed on the text wherever the drawer is in the page: it was moved down by the space above the drawer (bar of an app), e.g. into the frame when renaming it
+* **frames:** a frame title being renamed stays on one line above the frame: the field widens while typing instead of wrapping into the frame, Shift + Enter adds no line break and pasted ones become spaces
+
 ## [7.17.0](https://github.com/fabienwnklr/free-drawing/compare/v7.16.0...v7.17.0) (2026-10-20)
 
 

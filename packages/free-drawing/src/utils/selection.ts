@@ -93,18 +93,3 @@ export function getPlacementArea(drawer: Drawer, gap: number): ViewArea {
     bottom: stage.height() - drawer.layout.$footer.offsetHeight - gap,
   };
 }
-
-/**
- * Element placed in view: absolute position in the drawer container (floating region) from view coordinates
- * @param drawer drawer holding the element
- * @param $el element of the floating region
- * @param left left of the element in view (px)
- * @param top top of the element in view (px)
- */
-export function placeInView(drawer: Drawer, $el: HTMLElement, left: number, top: number) {
-  const view = drawer.$stageContainer.getBoundingClientRect();
-  const container = drawer.$drawerContainer.getBoundingClientRect();
-
-  $el.style.left = `${left + view.left - container.left}px`;
-  $el.style.top = `${top + view.top - container.top}px`;
-}

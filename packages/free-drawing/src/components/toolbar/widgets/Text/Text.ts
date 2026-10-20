@@ -7,6 +7,7 @@ import type { Vector2d } from 'konva/lib/types';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { shapeName } from '@/constants';
 import { TextOverlay } from '@/components/tools/Overlay/TextOverlay/TextOverlay';
+import { placeInView } from '@/utils/dom';
 
 /**
  * Text tool: a click adds a text and edits it in a textarea placed over it. A double click on any text (or title of
@@ -171,9 +172,9 @@ export class TextWidget extends BaseWidget {
 
     textarea.value = textNode.text();
     textarea.style.position = 'absolute';
-    // konva places lines like css (font box centered in line height)
-    textarea.style.top = `${this.drawer.stage.container().offsetTop + textPosition.y + textPadding - spacing}px`;
-    textarea.style.left = `${this.drawer.stage.container().offsetLeft + textPosition.x + textPadding - spacing}px`;
+    // konva places lines like css (font box centered in line height); in the drawer, wherever it is in the page (below
+    // the bar of an app...)
+    placeInView(this.drawer, textarea, textPosition.x + textPadding - spacing, textPosition.y + textPadding - spacing);
     // content width is text width (border-box), so lines wrap the same way
     textarea.style.width = `${(textNode.width() - textNode.padding() * 2) * scale + spacing * 2}px`;
     textarea.style.height = `${(textNode.height() - textNode.padding() * 2) * scale + spacing * 2}px`;
@@ -197,6 +198,11 @@ export class TextWidget extends BaseWidget {
     textarea.style.textAlign = textNode.align();
     // texts are filled with a color, not a gradient
     textarea.style.color = textNode.fill() as string;
+    // titles of frames: one line, field widened while typing (see `_initEventsTextarea`)
+    if (getFrameOfTitle(textNode)) {
+      textarea.wrap = 'off';
+      textarea.style.whiteSpace = 'pre';
+    }
 
     return textarea;
   }
@@ -209,6 +215,10 @@ export class TextWidget extends BaseWidget {
    * @param textarea Textarea over the text, created by `_createTextarea`
    */
   private _initEventsTextarea(textNode: Text, textarea: HTMLTextAreaElement) {
+    const title = !!getFrameOfTitle(textNode);
+    // titles of frames on one line: pasted line breaks become spaces
+    const value = () => (title ? textarea.value.replace(/\s*\n\s*/g, ' ') : textarea.value);
+    const minWidth = textarea.offsetWidth;
     const removeTextarea = () => {
       // keep focus on clicked element (e.g. font select of text overlay)
       const hasFocus = document.activeElement === textarea;
@@ -240,14 +250,22 @@ export class TextWidget extends BaseWidget {
       this.drawer.stage.fire('change');
     };
 
+    // title wider than the field: field widened, not wrapped into the frame
+    textarea.addEventListener('input', () => {
+      if (!title) return;
+      textarea.style.width = `${minWidth}px`;
+      textarea.style.width = `${Math.max(minWidth, textarea.scrollWidth + 2)}px`;
+    });
     textarea.addEventListener('keydown', (e) => {
       textarea.style.height = 'auto';
       textarea.style.height = `${textarea.scrollHeight + textNode.fontSize()}px`;
       // hide on enter
-      // but don't hide on shift + enter
+      // but don't hide on shift + enter (new line, not in titles of frames)
       if (e.code === 'Enter' && !e.shiftKey) {
-        textNode.text(textarea.value);
+        textNode.text(value());
         removeTextarea();
+      } else if (e.code === 'Enter' && title) {
+        e.preventDefault();
       }
       // on esc do not set value back to node
       if (e.code === 'Escape') {
@@ -257,7 +275,7 @@ export class TextWidget extends BaseWidget {
 
     const handleOutsideClick = (e: MouseEvent) => {
       if (e.target !== textarea) {
-        textNode.text(textarea.value);
+        textNode.text(value());
         removeTextarea();
       }
     };
