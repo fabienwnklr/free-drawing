@@ -2,7 +2,7 @@ name: Release
 
 # GitHub release of a version tag (vX.Y.Z), notes from its entry of the library changelog, then the library
 # published on npm (trusted publishing: no token, configured on npmjs.com for this workflow file, allowing `npm publish`),
-# and create-free-drawing-plugin when its version is not published yet.
+# and @fabwcie/create-free-drawing-plugin when its version is not published yet.
 # A push of more than 3 tags at once triggers no workflow: run it from the Actions tab with the tag,
 # or with "all" for every tag of the changelog without release (oldest first, nothing published).
 on:
@@ -150,7 +150,7 @@ jobs:
             exit 1
           fi
 
-  # create-free-drawing-plugin (`npm create free-drawing-plugin`, packages/create-plugin): its version is published with
+  # @fabwcie/create-free-drawing-plugin (`npm create @fabwcie/free-drawing-plugin`, packages/create-plugin): its version is published with
   # a release of the library once it is not on npm yet, nor lower than the last published one. Trusted publisher of this
   # package on npmjs.com: GitHub Actions, this repository, workflow release.yml, no environment, allowing `npm publish`
   npm-create:
@@ -194,7 +194,7 @@ jobs:
 
       - name: Test
         if: steps.version.outputs.publish
-        run: yarn workspace create-free-drawing-plugin test
+        run: yarn workspace @fabwcie/create-free-drawing-plugin test
 
       # prepack copies the template of plugin in the package
       - name: Publish

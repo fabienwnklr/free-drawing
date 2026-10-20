@@ -59,7 +59,7 @@ features:
     linkText: Accessibility
   - icon: 🔌
     title: Plugins
-    details: Add your own tools, commands, shortcuts and menu items, created with npm create free-drawing-plugin. They get help, palette, texts, saving, history and collaboration like the built-in ones.
+    details: Add your own tools, commands, shortcuts and menu items, created with npm create @fabwcie/free-drawing-plugin. They get help, palette, texts, saving, history and collaboration like the built-in ones.
     link: /plugins
     linkText: Extend it
   - icon: 🧩

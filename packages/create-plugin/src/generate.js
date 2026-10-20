@@ -189,7 +189,7 @@ export function readme({ packageName, names, css, options, start }, parts) {
     '',
     `${
       names.title
-    } plugin of [free-drawing](https://github.com/fabienwnklr/free-drawing), created with \`create-free-drawing-plugin\`${
+    } plugin of [free-drawing](https://github.com/fabienwnklr/free-drawing), created with \`@fabwcie/create-free-drawing-plugin\`${
       start === 'template' ? ' from the complete template (stamps, to adapt)' : ''
     }.`,
     '',

@@ -13,7 +13,7 @@ dist
 # databases of server
 apps/server/data
 
-# create-free-drawing-plugin: template copied when packed, packages of check:generated
+# @fabwcie/create-free-drawing-plugin: template copied when packed, packages of check:generated
 packages/create-plugin/template
 packages/create-plugin/.generated
 

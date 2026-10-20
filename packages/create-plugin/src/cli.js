@@ -24,8 +24,8 @@ import { generateFromTemplate } from './template.js';
 export const usage = `Create a plugin of free-drawing: questions, then a package ready to test, build and publish
 
 Usage:
-  npm create free-drawing-plugin@latest [folder] [-- options]
-  yarn create free-drawing-plugin [folder] [options]
+  npm create @fabwcie/free-drawing-plugin@latest [folder] [-- options]
+  yarn create @fabwcie/free-drawing-plugin [folder] [options]
 
 Options:
   --name <name>  name of the plugin (e.g. "Sticky notes"), classes and ids are derived from it
@@ -130,7 +130,7 @@ export async function main(argv = process.argv.slice(2), context = {}) {
     (values.yes ? createAnswersPrompter({}, (text) => output.write(`${text}\n`)) : createPrompter({ output }));
 
   try {
-    output.write(`\n${c.bold('create-free-drawing-plugin')}  ${c.dim(guideUrl)}\n\n`);
+    output.write(`\n${c.bold('@fabwcie/create-free-drawing-plugin')}  ${c.dim(guideUrl)}\n\n`);
 
     const answers = await ask(prompter, {
       name: values.name,

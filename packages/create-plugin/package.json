@@ -1,6 +1,6 @@
 {
-  "name": "create-free-drawing-plugin",
-  "description": "Create a plugin of free-drawing: npm create free-drawing-plugin",
+  "name": "@fabwcie/create-free-drawing-plugin",
+  "description": "Create a plugin of free-drawing: npm create @fabwcie/free-drawing-plugin",
   "version": "1.0.0",
   "type": "module",
   "license": "Apache-2.0",
@@ -23,6 +23,9 @@
     "directory": "packages/create-plugin"
   },
   "homepage": "https://free-drawing-docs.netlify.app/plugins",
+  "publishConfig": {
+    "access": "public"
+  },
   "keywords": [
     "free-drawing",
     "plugin",

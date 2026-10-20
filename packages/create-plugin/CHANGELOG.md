@@ -1,8 +1,8 @@
 # Changelog
 
-Changes of `create-free-drawing-plugin` (`npm create free-drawing-plugin`). Each version is published by the release workflow of the library once it is not on npm yet.
+Changes of `@fabwcie/create-free-drawing-plugin` (`npm create @fabwcie/free-drawing-plugin`). Each version is published by the release workflow of the library once it is not on npm yet.
 
-## 1.0.0 (2026-10-21)
+## 1.0.0 (2026-10-20)
 
 ### Features
 

@@ -67,7 +67,7 @@ describe('Command', () => {
     const cwd = createFolder();
 
     expect(await main(['--help'], { output })).toBe(0);
-    expect(output.text).toContain('npm create free-drawing-plugin@latest');
+    expect(output.text).toContain('npm create @fabwcie/free-drawing-plugin@latest');
     expect(await main(['--yes'], { output })).toBe(1);
     expect(output.text).toContain('--yes needs --name');
     expect(await main([], { cwd, output, prompter: createAnswersPrompter({ name: 'Notes', create: false }) })).toBe(1);

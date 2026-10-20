@@ -40,15 +40,15 @@ One command creates the package of a plugin, ready to test, build and publish:
 ::: code-group
 
 ```bash [npm]
-npm create free-drawing-plugin@latest
+npm create @fabwcie/free-drawing-plugin@latest
 ```
 
 ```bash [yarn]
-yarn create free-drawing-plugin
+yarn create @fabwcie/free-drawing-plugin
 ```
 
 ```bash [pnpm]
-pnpm create free-drawing-plugin
+pnpm create @fabwcie/free-drawing-plugin
 ```
 
 :::
@@ -323,7 +323,7 @@ expect(drawer.plugins.get(StampsPlugin).getStamps()).toHaveLength(1);
 
 ## Template
 
-The [plugin template](https://github.com/fabienwnklr/free-drawing/tree/master/packages/plugin-template) of the repository is a complete plugin to copy (or to start from with `npm create free-drawing-plugin@latest -- --template`), commented and tested with the library on each of its changes:
+The [plugin template](https://github.com/fabienwnklr/free-drawing/tree/master/packages/plugin-template) of the repository is a complete plugin to copy (or to start from with `npm create @fabwcie/free-drawing-plugin@latest -- --template`), commented and tested with the library on each of its changes:
 
 | File                                   | Shows                                                                                            |
 | -------------------------------------- | ------------------------------------------------------------------------------------------------ |

@@ -1,6 +1,6 @@
 # Plugin template
 
-A complete [free-drawing](https://github.com/fabienwnklr/free-drawing) plugin to copy: every part of a plugin, commented, and tested with the library on each change of the repository. The guide [Plugins](https://free-drawing-docs.netlify.app/plugins) explains each of them. `npm create free-drawing-plugin@latest -- --template` creates a package from it, renamed for your plugin.
+A complete [free-drawing](https://github.com/fabienwnklr/free-drawing) plugin to copy: every part of a plugin, commented, and tested with the library on each change of the repository. The guide [Plugins](https://free-drawing-docs.netlify.app/plugins) explains each of them. `npm create @fabwcie/free-drawing-plugin@latest -- --template` creates a package from it, renamed for your plugin.
 
 It adds stamps (circles with a symbol) to the drawer:
 

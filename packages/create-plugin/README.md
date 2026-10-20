@@ -1,12 +1,12 @@
-# create-free-drawing-plugin
+# @fabwcie/create-free-drawing-plugin
 
 Create a plugin of [free-drawing](https://github.com/fabienwnklr/free-drawing): a few questions, then a package ready to test, build and publish.
 
 ```bash
-npm create free-drawing-plugin@latest
+npm create @fabwcie/free-drawing-plugin@latest
 # or
-yarn create free-drawing-plugin
-pnpm create free-drawing-plugin
+yarn create @fabwcie/free-drawing-plugin
+pnpm create @fabwcie/free-drawing-plugin
 ```
 
 ## Questions
@@ -31,7 +31,7 @@ Names are derived from the name of the plugin: `StickyNotesPlugin` class and `pl
 ## Options
 
 ```bash
-npm create free-drawing-plugin@latest my-plugin -- --name "Sticky notes" --yes
+npm create @fabwcie/free-drawing-plugin@latest my-plugin -- --name "Sticky notes" --yes
 ```
 
 | Option          | Use                                 |
