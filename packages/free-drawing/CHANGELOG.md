@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.19.6](https://github.com/fabienwnklr/free-drawing/compare/v7.19.5...v7.19.6) (2026-10-21)
+
+
+### Bug Fixes
+
+* **keyboard:** arrow keys of the other direction in a menu or a toolbar (left / right in the context menu or a row of the layers panel, up / down in the toolbar, its groups or the selection menu) no longer move the selected shapes
+
 ## [7.19.5](https://github.com/fabienwnklr/free-drawing/compare/v7.19.4...v7.19.5) (2026-10-21)
 
 

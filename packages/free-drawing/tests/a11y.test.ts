@@ -112,6 +112,38 @@ describe('Accessibility', () => {
     expect(text.x()).toBe(x);
   });
 
+  it('Arrows of the other direction in menus, toolbar and layers rows do not move selected shapes either', () => {
+    const drawer = createDrawer();
+    const text = drawer.getWidget<TextWidget>('text')!.addTextNode('hello');
+    drawer.stage.fire('change');
+    drawer.getWidget<SelectWidget>('selection')!.select([text]);
+    const position = text.position();
+    const keys = ($item: HTMLElement, ...names: string[]) => {
+      for (const name of names) expect(key($item, name)).toBe(true);
+    };
+
+    // vertical menu
+    drawer.contextMenu.show();
+    keys(
+      drawer.contextMenu.$menu.querySelector<HTMLElement>('[role^="menuitem"]:not([hidden])')!,
+      'ArrowLeft',
+      'ArrowRight'
+    );
+    drawer.contextMenu.hide();
+    // horizontal toolbars
+    keys(drawer.selectionMenu!.$duplicateBtn, 'ArrowUp', 'ArrowDown');
+    keys(drawer.getWidget<BaseWidget>('brush')!.$button, 'ArrowUp', 'ArrowDown');
+    // row of a shape (not a group: nothing to expand)
+    drawer.layersPanel!.toggle(true);
+    keys(drawer.layersPanel!.$list.querySelector<HTMLElement>('.drawer-layers-name')!, 'ArrowLeft', 'ArrowRight');
+    expect(text.position()).toEqual(position);
+    drawer.layersPanel!.toggle(false);
+
+    // on the drawer
+    key(drawer.$drawerContainer, 'ArrowRight');
+    expect(text.x()).toBeGreaterThan(position.x);
+  });
+
   it('Overlay fields are labelled groups with pressed state', () => {
     const drawer = createDrawer();
     const overlay = drawer.getWidget<BrushWidget>('brush')!.overlay;

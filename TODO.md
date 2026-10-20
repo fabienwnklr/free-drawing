@@ -39,7 +39,7 @@
 - [x] eraser stroke starting on a shape erases nothing (`Eraser.ts`: press must be on stage)
 - [x] right and middle click run click actions: eraser erases the shape, text tool creates a text (`Eraser.ts`, `Text.ts`)
 - [x] paste in a field of the drawer (command palette, preferences or collaboration name, radius field) adds a text shape to the drawing instead (`HotKey.ts` paste listener)
-- [ ] arrow keys in selection menu, context menu or a layers panel row also move the selected shapes (`arrowNavigation` in `dom.ts` lets other arrows propagate)
+- [x] arrow keys in selection menu, context menu or a layers panel row also move the selected shapes (`arrowNavigation` in `dom.ts` lets other arrows propagate)
 - [ ] shortcuts with some keyboards: Alt + S / Z / G / L read `e.key` (macOS Option gives other characters), Shift + W is on Z key of AZERTY (`e.code`), Ctrl shortcuts ignored with Caps Lock (`HotKey.ts`)
 - [ ] "Save now" item of settings menu always shown: `display: flex` of `menu-item` overrides `hidden` (`dropdown.scss`)
 - [ ] group created or ungrouped in a frame can't be dragged until tool change (`Drawer.groupShapes` / `ungroupShapes`)

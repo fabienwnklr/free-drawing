@@ -91,7 +91,8 @@ export function setPressed($el: HTMLElement, pressed: boolean) {
 
 /**
  * Arrow keys move focus between items (last to first and back), Home / End to first / last item.
- * Handled keys are not propagated, so drawer shortcuts (e.g. arrows moving selection) are not triggered.
+ * Handled keys and arrows of the other orientation are not propagated, so drawer shortcuts (e.g. arrows moving
+ * selection) are not triggered from an item.
  * @param $container element listening to keydown of its items
  * @param getItems items in navigation order, read on each key (disabled buttons skipped)
  * @param orientation horizontal: left / right arrows, vertical: up / down arrows
@@ -110,7 +111,12 @@ export function arrowNavigation(
     const items = getItems().filter(($item) => !($item as HTMLButtonElement).disabled);
     const index = items.indexOf(e.target as HTMLElement);
 
-    if (index === -1 || ![prevKey, nextKey, 'Home', 'End'].includes(e.key)) return;
+    if (index === -1) return;
+    if (![prevKey, nextKey, 'Home', 'End'].includes(e.key)) {
+      // arrows of the other orientation: default kept, not a drawer shortcut either (moving selected shapes)
+      if (e.key.startsWith('Arrow')) e.stopPropagation();
+      return;
+    }
 
     const last = items.length - 1;
     const targets: Record<string, number> = {
