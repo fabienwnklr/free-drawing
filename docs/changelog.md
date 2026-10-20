@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.18.0](https://github.com/fabienwnklr/free-drawing/compare/v7.17.1...v7.18.0) (2026-10-20)
+
+
+### Features
+
+* **plugins:** other developers add features with plugins, classes extending `Plugin` given to the `plugins` option: a unique `pluginName`, plugins they `requires` (classes added when missing, or names), steps (constructor before the toolbar, `init` once the drawer is created, possibly asynchronous and waited by `drawer.ready`, `afterInit`, `destroy`), `addWidget` (tool placed by the `widgets` and `widgetGroups` options, else at the end of the toolbar), `addTranslations` and `t`, `addCommand` (command palette, shortcut shown in help, context menu of the selection or of the drawing, not in read only unless `readOnly`), `listenTo` (drawer events, konva nodes, DOM elements, removed by `destroy`), `forceDisabled` / `clearForceDisabled` (`drawer.plugin.change` event); `drawer.plugins` (`get`, `has`, `destroy`); `Plugin`, `BaseWidget`, `ShapeWidget`, `drawerEvents`, `shapeName`, `createButton`, `setLabel`, `setPressed` and the types of plugins are exported; the `translations` option can replace texts of plugins
+
+
+### Bug Fixes
+
+* **context menu:** the unlock item shows its shortcut (Ctrl+Shift+L), not the one of delete
+
 ## [7.17.1](https://github.com/fabienwnklr/free-drawing/compare/v7.17.0...v7.17.1) (2026-10-20)
 
 

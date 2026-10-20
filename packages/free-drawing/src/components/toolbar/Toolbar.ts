@@ -4,7 +4,8 @@ import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import { BrushWidget } from '@/components/toolbar/widgets/Brush/Brush';
 import { EraserWidget } from '@/components/toolbar/widgets/Eraser/Eraser';
 import { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
-import type { AvailableTools, WidgetGroupOptions, WidgetName } from '@/@types/toolbar';
+import type { AvailableTools, ToolbarWidgetName, WidgetGroupOptions, WidgetName } from '@/@types/toolbar';
+import type { WidgetClass } from '@/@types/plugin';
 import { PanWidget } from '@/components/toolbar/widgets/Pan/Pan';
 import { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import { LineWidget } from '@/components/toolbar/widgets/Line/Line';
@@ -22,7 +23,7 @@ import { GroupWidget } from '@/components/toolbar/widgets/GroupWidget';
 import { getWidgetGroups, getWidgetNames } from '@/utils/widgets';
 import { arrowNavigation, createButton, setLabel, setPressed } from '@/utils/dom';
 import { stringToNode } from '@/utils/functions';
-import { drawerEvents } from '@/constants';
+import { drawerEvents, widgetNames } from '@/constants';
 import PinIcon from '@/icons/pin.svg?raw';
 
 const widgetClasses: Record<WidgetName, new (drawer: Drawer) => BaseWidget> = {
@@ -94,30 +95,35 @@ export class Toolbar {
   }
 
   /**
-   * Create widgets of `widgets` option, in its order, and groups of `widgetGroups` option at the place of their first
-   * widget. Called by the constructor.
+   * Create widgets of `widgets` option, in its order, then widgets of plugins not in it, and groups of `widgetGroups`
+   * option at the place of their first widget. Called by the constructor.
    */
   init() {
+    const pluginWidgets = this.drawer.plugins.widgets;
     // widgets option (list or object), in given order, a group at the place of its first widget
-    const names = getWidgetNames(this.drawer.options.widgets);
+    const listed = getWidgetNames(this.drawer.options.widgets, [...widgetNames, ...pluginWidgets.keys()]);
+    const names = [...listed, ...[...pluginWidgets.keys()].filter((id) => !listed.includes(id))];
     const groups = getWidgetGroups(this.drawer.options.widgetGroups ?? [], names);
     const added = new Set<WidgetGroupOptions>();
+    const create = (name: ToolbarWidgetName) => {
+      const WidgetType = (widgetClasses as Partial<Record<string, WidgetClass>>)[name] ?? pluginWidgets.get(name)!;
+      const widget = new WidgetType(this.drawer);
 
-    names.forEach((name) => {
+      if (widget.id !== name) console.warn(`[free-drawing] widget "${name}" has the id "${widget.id}"`);
+
+      return widget;
+    };
+
+    for (const name of names) {
       const group = groups.find(({ widgets }) => widgets.includes(name));
 
       if (!group) {
-        this.addWidget(new widgetClasses[name](this.drawer));
+        this.addWidget(create(name));
       } else if (!added.has(group)) {
         added.add(group);
-        this.addGroup(
-          new GroupWidget(this.drawer, {
-            ...group,
-            widgets: group.widgets.map((n) => new widgetClasses[n](this.drawer)),
-          })
-        );
+        this.addGroup(new GroupWidget(this.drawer, { ...group, widgets: group.widgets.map(create) }));
       }
-    });
+    }
   }
 
   /**

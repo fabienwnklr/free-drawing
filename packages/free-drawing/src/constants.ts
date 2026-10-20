@@ -62,6 +62,7 @@ export const defaultOptions: DrawerOptions = {
   collaboration: false,
   user: null,
   storage: null,
+  plugins: [],
   widgets: widgetNames,
   // more tools in one button
   widgetGroups: [{ widgets: ['triangle', 'diamond', 'heart', 'cloud', 'highlighter', 'laser', 'frame'], icon: 'more' }],
@@ -220,6 +221,8 @@ export const drawerEvents = {
   dropdownHide: 'drawer.dropdown.hide',
   /** Toast hidden (event of toast) */
   toastHide: 'drawer.toast.hide',
+  /** Plugin disabled or enabled again (`forceDisabled`), with the plugin */
+  pluginChange: 'drawer.plugin.change',
 } as const;
 
 /**

@@ -183,6 +183,10 @@ describe('Locked shapes', () => {
     drawer.stage.fire('contextmenu', { evt: { clientX: 200, clientY: 150, preventDefault() {} } });
     expect(drawer.getSelectedShapes()).toEqual([locked]);
     expect(contextItems()).toEqual(['Unlock', 'Copy as PNG', 'Copy as SVG', 'Select all']);
+    // its shortcut (not the one of Delete)
+    expect(drawer.contextMenu.$menu.querySelector('[role^="menuitem"]:not([hidden]) kbd')!.textContent).toBe(
+      'Ctrl+Shift+L'
+    );
     [...drawer.contextMenu.$menu.querySelectorAll<HTMLElement>('[role^="menuitem"]:not([hidden])')][0].click();
     expect(locked.listening()).toBe(true);
 

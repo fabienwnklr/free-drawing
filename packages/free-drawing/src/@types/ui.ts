@@ -169,6 +169,18 @@ export type ContextMenuSection = {
   items: ContextMenuItem[];
 };
 
+/** Item added to the context menu (`ContextMenu.addSection`: commands of plugins) */
+export type ContextMenuItemOptions = {
+  /** Key of its text, or text */
+  label: string;
+  /** Keys doing the same, shown at its end */
+  shortcut?: string;
+  /** Item shown for the current selection or drawing */
+  visible: () => boolean;
+  /** Action, run once the menu is hidden */
+  run: () => void;
+};
+
 /** Shortcut: action, keys (several: alternatives or second action), text after keys */
 export type Shortcut = {
   /** Translated action */

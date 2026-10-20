@@ -580,6 +580,9 @@ export class CommandPalette extends Modal {
       ],
     ];
 
+    // commands of plugins, at the end of the editor group
+    groups.push(['help.editor', drawer.plugins._getPaletteCommands()]);
+
     return groups.flatMap(([group, commands]) =>
       commands
         .filter((command): command is Omit<Command, 'group'> => !!command)

@@ -8,7 +8,6 @@ import type { DrawingShape } from '@/@types/drawer';
 
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { createButton, disableElement, enableElement, setLabel, setPressed } from '@/utils/dom';
-import { en } from '@/i18n/en';
 import type { TranslationKey } from '@/@types/i18n';
 
 /**
@@ -69,7 +68,9 @@ export abstract class BaseWidget {
     // title option, else translated title of tool
     const key = `tools.${id}` as TranslationKey;
 
-    drawer.i18n.translate((t) => setLabel(this.$button, this.options.title ?? (key in en ? t(key) : title ?? id)));
+    drawer.i18n.translate((t) =>
+      setLabel(this.$button, this.options.title ?? (drawer.i18n.has(key) ? t(key) : title ?? id))
+    );
     setPressed(this.$button, false);
     this.$icon = typeof $icon === 'string' ? stringToNode<SVGElement>($icon) : $icon;
     // compared to lower case key (caps lock), false disables shortcut

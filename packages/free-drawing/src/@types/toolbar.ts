@@ -34,7 +34,13 @@ export type WidgetName =
  * (buttons of footer), `rect` (`square` draws rectangles), `ellipse` (`circle` draws ellipses), `star` and `polygon`
  * (no widget)
  */
-export type AvailableTools = WidgetName | 'undo' | 'redo' | 'rect' | 'ellipse' | 'star' | 'polygon';
+export type AvailableTools = WidgetName | 'undo' | 'redo' | 'rect' | 'ellipse' | 'star' | 'polygon' | PluginToolName;
+
+/** Name of a widget added by a plugin (`Plugin.addWidget`): any name, names of the library still suggested */
+export type PluginToolName = string & Record<never, never>;
+
+/** Name of a widget of the toolbar: of the library or of a plugin */
+export type ToolbarWidgetName = WidgetName | PluginToolName;
 
 /**
  * Options of every widget
@@ -62,8 +68,8 @@ export type BrushWidgetOptions = WidgetOptions & {
  * Group of toolbar widgets (`widgetGroups` option): one button showing its widgets, at the place of the first one
  */
 export type WidgetGroupOptions = {
-  /** Widgets of the group, in this order: widgets of `widgets` option only, each one in one group */
-  widgets: WidgetName[];
+  /** Widgets of the group, in this order: widgets of `widgets` option (or of plugins) only, each one in one group */
+  widgets: ToolbarWidgetName[];
   /** Icon: 'shapes' (default), 'more', 'grid', 'plus', name of a widget (e.g. 'square') or svg code */
   icon?: string;
   /** Button tooltip, "More tools" translated by default */
@@ -74,8 +80,8 @@ export type WidgetGroupOptions = {
  * Widgets option: list of widgets or object of widgets options, toolbar keeps the given order
  */
 export type WidgetsOptions =
-  | WidgetName[]
-  | (Partial<Record<WidgetName, WidgetOptions>> & {
+  | ToolbarWidgetName[]
+  | (Partial<Record<ToolbarWidgetName, WidgetOptions>> & {
       /** Brush options, with freehand stroke settings */
       brush?: BrushWidgetOptions;
     });

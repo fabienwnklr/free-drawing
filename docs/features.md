@@ -98,5 +98,6 @@ More in [Dark mode](/get-started/#dark-mode) and [Languages](/get-started/#langu
 - **Your storage**: the `storage` option loads and saves drawings in your app or server, the drawing is also a JSON file to keep anywhere.
 - **Events** follow the drawing, the selection, the preferences and the collaboration, preferences can follow user accounts.
 - **Control**: read only mode, user of the collaboration, every widget optional.
+- **Plugins**: add your tools, commands, shortcuts and items of the context menu with a `Plugin` class, which can require other plugins.
 
 The [demo](https://free-drawing-demo.netlify.app/) is the web app of the repository: drawings kept in the browser, and with its server, accounts, drawings saved on the server and live collaboration. More in [Use in an app](/get-started/#use-in-an-app) and the [API](/api/).

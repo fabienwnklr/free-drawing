@@ -5,7 +5,7 @@ import HelpIcon from '@/icons/help.svg?raw';
 import ExternalLink from '@/icons/external-link.svg?raw';
 import { ShapeWidget } from '@/components/toolbar/widgets/ShapeWidget';
 import { createButton, setLabel } from '@/utils/dom';
-import type { Translate } from '@/@types/i18n';
+import type { Translate, TranslationKey } from '@/@types/i18n';
 import type { Shortcut } from '@/@types/ui';
 
 /**
@@ -46,6 +46,13 @@ export class Help extends Modal {
     this.$button.addEventListener('click', () => {
       this.show();
     });
+  }
+
+  /**
+   * Shortcuts shown again, e.g. with the commands of plugins once they are initialized
+   */
+  refresh() {
+    this._render(this.drawer.i18n.t);
   }
 
   /**
@@ -100,6 +107,11 @@ export class Help extends Modal {
       { label: t('help.zoom'), keys: [`Ctrl+${t('key.wheel')}`] },
       { label: t('preferences.title'), keys: ['Ctrl+,'] },
     ];
+
+    // commands of plugins
+    for (const { command } of this.drawer.plugins.commands) {
+      if (command.shortcut) editor.push({ label: t(command.label as TranslationKey), keys: [command.shortcut] });
+    }
 
     this.$modalBody.innerHTML = /*html*/ `
     <div class="drawer-modal-help-links">

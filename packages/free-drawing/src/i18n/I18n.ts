@@ -1,5 +1,5 @@
 import { en } from '@/i18n/en';
-import type { Language, Translate, CustomTranslations } from '@/@types/i18n';
+import type { Language, Translate, CustomTranslations, PluginTexts, PluginTranslations } from '@/@types/i18n';
 import { fr } from '@/i18n/fr';
 import { es } from '@/i18n/es';
 import { de } from '@/i18n/de';
@@ -57,6 +57,8 @@ export class I18n {
   language: Language;
   /** Texts replacing default ones (`translations` option) */
   #custom: CustomTranslations;
+  /** Texts of plugins by language (`extend`), after the ones of the library */
+  #plugins: PluginTranslations = {};
   /** Functions given to `translate`, run again when language changes */
   #updates: ((t: Translate) => void)[] = [];
 
@@ -77,10 +79,39 @@ export class I18n {
    * @returns Translated text
    */
   t: Translate = (key, params = {}) => {
-    const text = this.#custom[this.language]?.[key] ?? languages[this.language].translations[key] ?? en[key] ?? key;
+    const text =
+      this.#custom[this.language]?.[key] ??
+      languages[this.language].translations[key] ??
+      this.#plugins[this.language]?.[key] ??
+      en[key] ??
+      this.#plugins.en?.[key] ??
+      key;
 
     return text.replace(/\{(\w+)\}/g, (match, name) => (name in params ? String(params[name]) : match));
   };
+
+  /**
+   * Texts of a plugin added (its own keys), in every language given, English for missing ones
+   * @param translations Texts of the plugin by language
+   */
+  extend(translations: PluginTranslations) {
+    for (const [language, texts] of Object.entries(translations) as [Language, PluginTexts][]) {
+      this.#plugins[language] = { ...this.#plugins[language], ...texts };
+    }
+  }
+
+  /**
+   * A key has a text: of the library, of a plugin or of the app
+   * @param key Key of a text
+   * @returns true when `t` gives a text, not the key itself
+   */
+  has(key: string): boolean {
+    return (
+      key in en ||
+      Object.values(this.#plugins).some((texts) => key in texts) ||
+      Object.values(this.#custom).some((texts) => !!texts && key in (texts as PluginTexts))
+    );
+  }
 
   /**
    * Apply texts now and when language changes

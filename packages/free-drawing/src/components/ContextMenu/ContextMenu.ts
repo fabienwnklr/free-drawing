@@ -10,7 +10,7 @@ import { arrowNavigation, createButton, setPressed } from '@/utils/dom';
 import { getDrawingShape } from '@/utils/frame';
 import { getTexts } from '@/utils/text';
 import type { TranslationKey } from '@/@types/i18n';
-import type { ContextMenuItem, ContextMenuSection } from '@/@types/ui';
+import type { ContextMenuItem, ContextMenuItemOptions, ContextMenuSection } from '@/@types/ui';
 
 /**
  * Menu of right click (or context menu key, Shift + F10): actions on selection when a shape is under pointer
@@ -84,6 +84,11 @@ export class ContextMenu {
       visible: canvas,
       run: () => drawer.setting.toggleGrid(),
     };
+    const remove: ContextMenuItem = {
+      $item: this._createItem('action.delete', drawer.t('key.delete'), 'menuitem', 'Delete'),
+      visible: selection,
+      run: () => drawer.deleteShapes(),
+    };
 
     this.$pasteBtn = paste.$item;
     this.$snappingBtn = snapping.$item;
@@ -122,11 +127,7 @@ export class ContextMenu {
           visible: locked,
           run: () => drawer.setShapesLocked(false),
         },
-        {
-          $item: this._createItem('action.delete', drawer.t('key.delete'), 'menuitem', 'Delete'),
-          visible: selection,
-          run: () => drawer.deleteShapes(),
-        },
+        remove,
       ],
       [
         order('action.bringToFront', 'front', 'Ctrl+Shift+↑'),
@@ -183,30 +184,47 @@ export class ContextMenu {
       [snapping, grid],
     ];
 
-    this.#sections = sections.map((items) => {
-      const $section = document.createElement('div');
-
-      $section.className = 'drawer-context-menu-section';
-      $section.setAttribute('role', 'group');
-      $section.append(...items.map(({ $item }) => $item));
-      this.$list.append($section);
-      for (const { $item, run } of items) {
-        $item.addEventListener('click', () => {
-          this.hide();
-          run();
-        });
-      }
-
-      return { $section, items };
-    });
+    for (const items of sections) this._addSection(items);
     // Delete key name in language
     drawer.i18n.translate((t) => {
-      const $delete = this.#sections[1].items[3].$item.querySelector('kbd')!;
-
-      $delete.textContent = t('key.delete');
+      remove.$item.querySelector('kbd')!.textContent = t('key.delete');
     });
 
     this.drawer.layout.add('floating', this.$menu);
+  }
+
+  /**
+   * Section of items at the end of the menu, each item hides the menu then runs its action
+   * @param items Items of the section
+   */
+  private _addSection(items: ContextMenuItem[]) {
+    const $section = document.createElement('div');
+
+    $section.className = 'drawer-context-menu-section';
+    $section.setAttribute('role', 'group');
+    $section.append(...items.map(({ $item }) => $item));
+    this.$list.append($section);
+    for (const { $item, run } of items) {
+      $item.addEventListener('click', () => {
+        this.hide();
+        run();
+      });
+    }
+    this.#sections.push({ $section, items });
+  }
+
+  /**
+   * Section of items added at the end of the menu (commands of plugins)
+   * @param items Text (key or text), shortcut, condition to be shown and action of each item
+   */
+  addSection(items: ContextMenuItemOptions[]) {
+    this._addSection(
+      items.map(({ label, shortcut, visible, run }) => ({
+        $item: this._createItem(label as TranslationKey, shortcut ?? ''),
+        visible,
+        run,
+      }))
+    );
   }
 
   /**

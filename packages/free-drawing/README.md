@@ -68,6 +68,7 @@ const drawer = new Drawer($el, {
   localStorageKey: 'free-drawing', // localStorage key used for store data, use a different key for each drawer of a page
   storage: null, // drawing saved somewhere else than localStorage (e.g. server of your app), see "Use in an app" below
   user: null, // user of your app ({ id, name }), used in collaboration sessions instead of id and name kept in browser
+  plugins: [], // plugins added to the drawer (classes extending Plugin), see Plugins below
   opacity: 1, // opacity of draw
   textStyle: {
     // style of new text
@@ -107,6 +108,7 @@ drawer.off('drawer.change', callback);
 | `drawer.language.change` | language | Language of interface changed |
 | `drawer.preferences.change` | preferences | Theme, language, grid or snapping changed (one event for several changes) |
 | `drawer.unsaved.change` | unsaved | Drawing has changes not saved yet (auto save off), or is saved again |
+| `drawer.plugin.change` | plugin | Plugin disabled (`forceDisabled`) or enabled again |
 
 Components trigger `drawer.dropdown.hide` (dropdown menu) and `drawer.toast.hide` (`drawer.toast()` result). Names of previous versions (`change`, `fd.options.change`...) still work, with a warning in console.
 
@@ -280,6 +282,72 @@ The default toolbar groups the tools below in "More tools" (`widgetGroups` repla
 - Highlighter (M): wide strokes of its own fluorescent colors (yellow by default, green, blue, pink, orange or custom) and widths, multiplied with the drawing under them so texts stay readable.
 - Laser pointer (K): trail following pointer while pressed, fading after a second, never saved. Users of a collaboration session see it with the color of the user's cursor. Usable in read only.
 - Frame (F): area with a name above it ("Frame 1"...: double click or layers panel renames it). Shapes entirely in a new frame belong to it, so do shapes drawn, moved or duplicated in it (their center), shapes moved out of it are back in the drawing. While shapes are dragged or resized, they are drawn whole above the drawing (not cut) and the frames they would enter (solid, tinted) or leave (dashed) are highlighted, briefly after a move with arrow keys. Its shapes are moved with it and cut at its edges, selected alone (click), or with it (its name or border). Resizing it does not scale its shapes, frames are not rotated, flipped, grouped nor styled. Exports cut its shapes, without its name.
+
+## Plugins
+
+Other developers add tools, commands, shortcuts and items of the context menu with plugins: classes extending `Plugin`, given to the `plugins` option.
+
+```js
+import { Drawer, Plugin, BaseWidget, drawerEvents, shapeName } from '@fabwcie/free-drawing';
+import { Rect } from 'konva/lib/shapes/Rect';
+
+const starIcon = '<svg aria-hidden="true" focusable="false" viewBox="0 0 24 24">...</svg>';
+
+// tool of the plugin: a click adds a stamp
+class StampWidget extends BaseWidget {
+  constructor(drawer) {
+    super(drawer, 'stamp', 'Stamp', starIcon, 'p'); // id, title without translation, svg icon, shortcut
+  }
+
+  initEvents() {
+    // events of the stage while the tool is active
+    this.onStage('click tap', () => this.drawer.plugins.get('Stamps').stamp(this.drawer.stage.getRelativePointerPosition()));
+  }
+}
+
+class Stamps extends Plugin {
+  static pluginName = 'Stamps'; // unique name (class names are changed by minification)
+  static requires = []; // plugins required: classes (added when missing) or names of given plugins
+
+  constructor(drawer) {
+    super(drawer);
+    // before the toolbar: texts and tools
+    this.addTranslations({
+      en: { 'tools.stamp': 'Stamp', 'stamps.center': 'Stamp in the middle' },
+      fr: { 'tools.stamp': 'Tampon', 'stamps.center': 'Tamponner au milieu' },
+    });
+    this.addWidget('stamp', StampWidget);
+  }
+
+  init() {
+    // drawer created: commands and listeners (a promise returned is waited by drawer.ready)
+    this.addCommand({
+      id: 'stamp middle center', // English words searched in the command palette
+      label: 'stamps.center', // key of its text
+      shortcut: 'Alt+P', // shown in help, command palette and context menu
+      contextMenu: 'drawing', // item of the context menu of the drawing ('selection': of selected shapes)
+      run: () => this.stamp({ x: 300, y: 300 }),
+    });
+    this.listenTo(this.drawer, drawerEvents.change, () => console.log('drawing changed')); // removed by destroy()
+  }
+
+  stamp({ x, y }) {
+    this.drawer.addShape(new Rect({ name: `${shapeName.rect} stamp`, x, y, width: 40, height: 40, fill: '#ffec99' }));
+    this.drawer.stage.fire('change'); // saved, added to history, sent to collaborators
+  }
+}
+
+const drawer = new Drawer($el, { plugins: [Stamps] });
+drawer.plugins.get(Stamps); // also by name: drawer.plugins.get('Stamps'), drawer.plugins.has(Stamps)
+```
+
+- Steps: constructor (before the toolbar: `addWidget`, `addTranslations`), `init()` (drawer created: `addCommand`, `listenTo`...), `afterInit()` (every plugin initialized), `destroy()` (`drawer.plugins.destroy()`, listeners of `listenTo` removed: call `super.destroy()` when overriding it). Required plugins are created and initialized first. A plugin missing, two plugins of the same name or plugins requiring each other throw an error when the drawer is created; an error of `init` is logged, other plugins are still initialized.
+- Tools are placed at their place in the `widgets` and `widgetGroups` options (e.g. `widgets: ['selection', 'stamp', 'brush']`), else at the end of the toolbar. Their title is the text of `tools.<id>`, their shortcut is shown in help and command palette. `ShapeWidget` is the base of tools drawing in the dragged box.
+- Commands are available unless their `isAvailable()` returns false, in read only only with `readOnly: true`. Shortcuts of plugins run before the ones of the library: avoid the ones listed in help.
+- `isEnabled` is false in read only, or while the plugin is disabled by `forceDisabled(reason)` (until `clearForceDisabled(reason)` for every reason): its tools and commands are disabled, `drawer.plugin.change` is triggered.
+- Texts: `this.t(key, params)`, in the language of the drawer; the `translations` option can replace them.
+- Shapes: draw with the shapes of the library (`Line`, `Arrow`, `Rect`, `Ellipse`, `Text`, `Path` and groups of them), marked with a name or attributes. Files, links and collaboration accept only these classes.
+- Exported for plugins: `Plugin`, `BaseWidget`, `ShapeWidget`, `drawerEvents`, `shapeName`, `createButton`, `setLabel`, `setPressed`, and types (`PluginClass`, `PluginCommand`, `PluginTranslations`, `WidgetClass`...).
 
 ## Selection
 

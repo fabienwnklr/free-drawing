@@ -83,11 +83,37 @@ export type { FrameChanges } from '@/@types/shapes';
 export type {
   AvailableTools,
   BrushWidgetOptions,
+  PluginToolName,
+  ToolbarWidgetName,
   WidgetGroupOptions,
   WidgetName,
+  WidgetOptions,
   WidgetsOptions,
 } from '@/@types/toolbar';
-export type { CustomTranslations, Language, TranslationKey, TranslationParams, Translations } from '@/@types/i18n';
+export type {
+  CustomTranslations,
+  Language,
+  PluginTexts,
+  PluginTranslations,
+  TranslationKey,
+  TranslationParams,
+  Translations,
+} from '@/@types/i18n';
+export type {
+  ListenedTarget,
+  PluginClass,
+  PluginCommand,
+  PluginCommandMenu,
+  PluginRequirement,
+  WidgetClass,
+} from '@/@types/plugin';
+// for plugins: their base, bases of widgets, events, names of shapes, buttons of their interface
+export { Plugin } from '@/plugins/Plugin';
+export { PluginCollection } from '@/plugins/PluginCollection';
+export { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
+export { ShapeWidget } from '@/components/toolbar/widgets/ShapeWidget';
+export { drawerEvents, shapeName } from '@/constants';
+export { createButton, setLabel, setPressed } from '@/utils/dom';
 
 import { Zoom } from '@/components/tools/Zoom/Zoom';
 import { Position } from '@/components/tools/Position/Position';
@@ -106,6 +132,7 @@ import { UndoRedo } from '@/components/tools/UndoRedo/UndoRedo';
 import { ContextMenu } from '@/components/ContextMenu/ContextMenu';
 import { SelectionMenu } from '@/components/SelectionMenu/SelectionMenu';
 import { LinkEditor } from '@/components/LinkEditor/LinkEditor';
+import { PluginCollection } from '@/plugins/PluginCollection';
 import { LayersPanel } from '@/components/LayersPanel/LayersPanel';
 import { SaveButton } from '@/components/tools/SaveButton/SaveButton';
 import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
@@ -184,6 +211,8 @@ export class Drawer extends MicroEvent {
   selectionMenu: SelectionMenu | undefined;
   /** Link of selected shapes above them (with selection widget, see `setShapeLink`) */
   linkEditor: LinkEditor | undefined;
+  /** Plugins of the drawer (`plugins` option): `get`, `has`, widgets and commands they added */
+  plugins!: PluginCollection;
   /** Panel listing shapes (`layersPanel` option) */
   layersPanel: LayersPanel | undefined;
   /** Button of header saving the drawing while auto save is off (`saveButton` option) */
@@ -221,7 +250,7 @@ export class Drawer extends MicroEvent {
   #saving: Promise<void> | null = null;
   /** Drawing changed during a save in storage: saved again once it ends */
   #saveAgain = false;
-  /** Resolved once drawing of `storage` option is loaded (rejected if it can't be), at once without it */
+  /** Resolved once drawing of `storage` option is loaded (rejected if it can't be) and plugins are initialized */
   ready: Promise<void>;
   /** See `user` option and `setUser` */
   #user: DrawerUser | null = null;
@@ -354,6 +383,9 @@ export class Drawer extends MicroEvent {
 
     this.$stageContainer = this.stage.content;
     this.layout.setStage(this.stage);
+    // before the toolbar and help: widgets and texts of plugins
+    this.plugins = new PluginCollection(this);
+    this.plugins._create(this.options.plugins);
 
     this.contextMenu = new ContextMenu(this);
     this.setting = new Settings(this);
@@ -400,6 +432,8 @@ export class Drawer extends MicroEvent {
     this.focus();
     this.undoRedo.manageButtons();
     this._initEvents();
+    // drawer created: commands, listeners of plugins (read only after: plugins may listen to it)
+    this.plugins._init();
 
     if (this.options.readOnly) this.setReadOnly(true);
 
@@ -414,6 +448,8 @@ export class Drawer extends MicroEvent {
       this.ready = Promise.resolve();
       this._openFromUrl();
     }
+    // also plugins initialized (asynchronous init)
+    this.ready = Promise.all([this.ready, this.plugins.ready]).then(() => undefined);
     this.#preferences = JSON.stringify(this.getPreferences());
     // drawing as loaded (grid of preferences...)
     this.#unsaved = false;

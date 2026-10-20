@@ -8,6 +8,27 @@ import type { Drawer } from '@/Drawer';
 const textInputTypes = ['text', 'search', 'number', 'email', 'url', 'tel', 'password'];
 
 /**
+ * Key event of a shortcut: `Ctrl` (also Cmd), `Shift` and `Alt` exactly as given, then the key: a digit by its place
+ * (Shift changes it), a letter by its place with Alt (Alt changes characters), else by its value (`Delete`, `F2`...)
+ * @param e Key pressed
+ * @param shortcut Keys separated by `+`, e.g. `Ctrl+Shift+M`, `Alt+P`, `Delete`
+ * @returns true when the event is the shortcut
+ */
+export function matchesShortcut(e: KeyboardEvent, shortcut: string): boolean {
+  const keys = shortcut.split('+').map((key) => key.trim().toLowerCase());
+  const key = keys.pop() ?? '';
+  const ctrl = keys.includes('ctrl') || keys.includes('cmd');
+
+  if (ctrl !== (e.ctrlKey || e.metaKey) || keys.includes('shift') !== e.shiftKey || keys.includes('alt') !== e.altKey) {
+    return false;
+  }
+  if (/^\d$/.test(key)) return e.code === `Digit${key}` || e.code === `Numpad${key}`;
+  if (e.altKey && /^[a-z]$/.test(key)) return e.code === `Key${key.toUpperCase()}`;
+
+  return e.key.toLowerCase() === key;
+}
+
+/**
  * Keyboard shortcuts of drawer, listened on its container: tools, selection (move, delete, duplicate, group, order,
  * flip, rotate), history, files, panels. Nothing runs during a pointer action, shortcuts modifying the drawing do
  * nothing in read only.
@@ -58,6 +79,12 @@ export class HotKey {
         (e.target instanceof HTMLInputElement && textInputTypes.includes(e.target.type));
       // read only: shortcuts modifying drawing do nothing
       const edit = !this.drawer.readOnly;
+
+      // commands of plugins, before shortcuts of the library
+      if (!inField && this.drawer.plugins._runShortcut(e)) {
+        e.preventDefault();
+        return;
+      }
 
       if (edit && (e.key === 'Backspace' || e.key === 'Delete')) {
         if (mod) {
