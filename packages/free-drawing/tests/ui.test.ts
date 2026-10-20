@@ -171,6 +171,43 @@ describe('User interface', () => {
     expect((drawer.getDrawingShapeByName('text')[0] as unknown as { text(): string })?.text()).toBe('pasted text');
   });
 
+  it('Paste in a field of the drawer: pasted in the field, nothing added to the drawing', () => {
+    const drawer = createDrawer();
+    const paste = ($field: HTMLElement) => {
+      const event = new Event('paste', { bubbles: true, cancelable: true });
+
+      Object.defineProperty(event, 'clipboardData', { value: { getData: () => 'pasted text' } });
+      return $field.dispatchEvent(event);
+    };
+
+    drawer.showCommandPalette();
+    for (const $field of [
+      drawer.commandPalette!.$input,
+      drawer.linkEditor!.$input,
+      drawer.getWidget<SelectWidget>('selection')!.overlay.$edgesRadius,
+    ]) {
+      expect(drawer.$drawerContainer.contains($field)).toBe(true);
+      // default kept: text pasted by the browser
+      expect(paste($field)).toBe(true);
+    }
+    drawer.commandPalette!.hide();
+    expect(drawer.getDrawingShapes()).toHaveLength(0);
+
+    // drawer focused: text added, also when fired on the body (Chromium out of editable elements)
+    drawer.focus();
+    expect(paste(drawer.$stageContainer)).toBe(false);
+    expect(paste(document.body)).toBe(false);
+    expect(drawer.getDrawingShapes()).toHaveLength(2);
+
+    // focus out of the drawer: paste of the page
+    const $outside = document.body.appendChild(document.createElement('button'));
+
+    $outside.focus();
+    expect(paste(document.body)).toBe(true);
+    expect(drawer.getDrawingShapes()).toHaveLength(2);
+    $outside.remove();
+  });
+
   it('Paste with pointer out of canvas: text at center of view, no konva warning', () => {
     const drawer = createDrawer();
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});

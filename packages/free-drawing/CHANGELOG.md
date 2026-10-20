@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.19.5](https://github.com/fabienwnklr/free-drawing/compare/v7.19.4...v7.19.5) (2026-10-21)
+
+
+### Bug Fixes
+
+* **clipboard:** pasting in a field of the drawer (search of the command palette, name in preferences or collaboration, link, radius) pastes in the field: it added a text to the drawing instead
+* **clipboard:** Ctrl / Cmd + V on the drawing adds the text in Chromium too (it fires the paste on the page out of fields), only in the drawer having the focus
+
 ## [7.19.4](https://github.com/fabienwnklr/free-drawing/compare/v7.19.3...v7.19.4) (2026-10-21)
 
 
