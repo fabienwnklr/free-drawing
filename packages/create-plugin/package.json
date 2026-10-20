@@ -1,0 +1,40 @@
+{
+  "name": "create-free-drawing-plugin",
+  "description": "Create a plugin of free-drawing: npm create free-drawing-plugin",
+  "version": "1.0.0",
+  "type": "module",
+  "license": "Apache-2.0",
+  "author": "Winkler Fabien <fabienwinkler@outlook.fr>",
+  "bin": {
+    "create-free-drawing-plugin": "index.js"
+  },
+  "files": [
+    "index.js",
+    "src",
+    "template",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=18.3.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fabienwnklr/free-drawing.git",
+    "directory": "packages/create-plugin"
+  },
+  "homepage": "https://free-drawing-docs.netlify.app/plugins",
+  "keywords": [
+    "free-drawing",
+    "plugin",
+    "create",
+    "scaffold"
+  ],
+  "scripts": {
+    "prepack": "node scripts/copy-template.js",
+    "test": "vitest run",
+    "typecheck": "tsc -p .",
+    "lint": "prettier --check \"*.{js,json,md}\" \"src/**/*.js\" \"scripts/**/*.js\" \"tests/**/*.js\"",
+    "format": "prettier --write \"*.{js,json,md}\" \"src/**/*.js\" \"scripts/**/*.js\" \"tests/**/*.js\"",
+    "check:generated": "node scripts/check-generated.js"
+  }
+}

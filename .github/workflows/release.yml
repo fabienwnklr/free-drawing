@@ -1,7 +1,8 @@
 name: Release
 
 # GitHub release of a version tag (vX.Y.Z), notes from its entry of the library changelog, then the library
-# published on npm (trusted publishing: no token, configured on npmjs.com for this workflow file, allowing `npm publish`).
+# published on npm (trusted publishing: no token, configured on npmjs.com for this workflow file, allowing `npm publish`),
+# and create-free-drawing-plugin when its version is not published yet.
 # A push of more than 3 tags at once triggers no workflow: run it from the Actions tab with the tag,
 # or with "all" for every tag of the changelog without release (oldest first, nothing published).
 on:
@@ -144,6 +145,64 @@ jobs:
           echo "npm $(npm --version)"
           if ! npm publish --access public; then
             # what npm receives (claims of the GitHub token, answer of its token exchange), what to change on npmjs.com
+            node ../../.github/scripts/npm-oidc-check.mjs "$(node -p "require('./package.json').name")" "$GITHUB_REPOSITORY" ||
+              echo "::error::Not published: see the error of npm above"
+            exit 1
+          fi
+
+  # create-free-drawing-plugin (`npm create free-drawing-plugin`, packages/create-plugin): its version is published with
+  # a release of the library once it is not on npm yet, nor lower than the last published one. Trusted publisher of this
+  # package on npmjs.com: GitHub Actions, this repository, workflow release.yml, no environment, allowing `npm publish`
+  npm-create:
+    needs: release
+    if: inputs.tag != 'all'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.x
+          cache: 'yarn'
+
+      - name: Check version
+        id: version
+        working-directory: packages/create-plugin
+        run: |
+          name=$(node -p "require('./package.json').name")
+          version=$(node -p "require('./package.json').version")
+          published=$(npm view "$name" version 2> /dev/null || true)
+          if npm view "$name@$version" version > /dev/null 2>&1; then
+            echo "::notice::$name@$version is already published"
+          elif [ -n "$published" ] && [ "$(printf '%s\n%s\n' "$published" "$version" | sort -V | tail -1)" != "$version" ]; then
+            echo "::notice::$name@$version is lower than $published: not published"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install
+        if: steps.version.outputs.publish
+        run: yarn install --frozen-lockfile
+
+      - name: Test
+        if: steps.version.outputs.publish
+        run: yarn workspace create-free-drawing-plugin test
+
+      # prepack copies the template of plugin in the package
+      - name: Publish
+        if: steps.version.outputs.publish
+        working-directory: packages/create-plugin
+        run: |
+          echo "npm $(npm --version)"
+          if ! npm publish --access public; then
             node ../../.github/scripts/npm-oidc-check.mjs "$(node -p "require('./package.json').name")" "$GITHUB_REPOSITORY" ||
               echo "::error::Not published: see the error of npm above"
             exit 1

@@ -33,6 +33,36 @@ What you write, and what the drawer does for you:
 | `this.listenTo(target, event, handler)`                     | Listeners removed when the plugin is destroyed                                                                                                                                    |
 | `this.getOptions(defaults)`                                 | Options given by each app (`pluginOptions`)                                                                                                                                       |
 
+## Create a plugin
+
+One command creates the package of a plugin, ready to test, build and publish:
+
+::: code-group
+
+```bash [npm]
+npm create free-drawing-plugin@latest
+```
+
+```bash [yarn]
+yarn create free-drawing-plugin
+```
+
+```bash [pnpm]
+pnpm create free-drawing-plugin
+```
+
+:::
+
+It asks for the name of the plugin, and derives the other names from it: `StickyNotesPlugin` class and `pluginName: 'StickyNotes'`, `stickyNotes` tool and `stickyNotes.*` text keys, `free-drawing-plugin-sticky-notes` package. Then it asks what the plugin has, with a default for each answer:
+
+- start from a new plugin, or from the [complete template](#template);
+- a tool: a click adds a shape (`BaseWidget`), or a shape drawn by dragging (`ShapeWidget`), with its shortcut;
+- a command: command palette, shortcut, context menu;
+- options given by the app, a button in the header, a style sheet;
+- texts in English and in French, Spanish or German, tests with Vitest.
+
+Shortcuts of the library are refused, free ones are suggested from the name. The package has its TypeScript sources, its tests, its README, and builds `dist/` (ES modules, types, style sheet). `--name "Sticky notes" --yes` creates it without questions, `--template` from the template.
+
 ## Quick start
 
 A plugin adding a command, with its shortcut, its item in the context menu and its texts:
@@ -293,7 +323,7 @@ expect(drawer.plugins.get(StampsPlugin).getStamps()).toHaveLength(1);
 
 ## Template
 
-The [plugin template](https://github.com/fabienwnklr/free-drawing/tree/master/packages/plugin-template) of the repository is a complete plugin to copy, commented and tested with the library on each of its changes:
+The [plugin template](https://github.com/fabienwnklr/free-drawing/tree/master/packages/plugin-template) of the repository is a complete plugin to copy (or to start from with `npm create free-drawing-plugin@latest -- --template`), commented and tested with the library on each of its changes:
 
 | File                                   | Shows                                                                                            |
 | -------------------------------------- | ------------------------------------------------------------------------------------------------ |

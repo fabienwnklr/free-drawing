@@ -286,7 +286,7 @@ The default toolbar groups the tools below in "More tools" (`widgetGroups` repla
 
 ## Plugins
 
-Other developers add tools, commands, shortcuts and items of the context menu with plugins: classes extending `Plugin`, given to the `plugins` option. The [plugins guide](https://free-drawing-docs.netlify.app/plugins) explains each part, the [plugin template](https://github.com/fabienwnklr/free-drawing/tree/master/packages/plugin-template) is a complete plugin to copy.
+Other developers add tools, commands, shortcuts and items of the context menu with plugins: classes extending `Plugin`, given to the `plugins` option. `npm create free-drawing-plugin@latest` creates the package of a plugin from a few questions (name, tool, command, options, styles, languages, tests). The [plugins guide](https://free-drawing-docs.netlify.app/plugins) explains each part, the [plugin template](https://github.com/fabienwnklr/free-drawing/tree/master/packages/plugin-template) is a complete plugin to copy.
 
 ```js
 import { Drawer, Plugin, BaseWidget, drawerEvents, shapeName } from '@fabwcie/free-drawing';

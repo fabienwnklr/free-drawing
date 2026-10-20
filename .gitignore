@@ -13,6 +13,10 @@ dist
 # databases of server
 apps/server/data
 
+# create-free-drawing-plugin: template copied when packed, packages of check:generated
+packages/create-plugin/template
+packages/create-plugin/.generated
+
 # docs: API generated from library sources (yarn doc:typedoc), cache of VitePress
 docs/api
 docs/.vitepress/cache
