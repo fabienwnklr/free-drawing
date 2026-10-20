@@ -108,7 +108,7 @@ drawer.off('drawer.change', callback);
 | `drawer.theme.change` | dark state | Light or dark theme shown |
 | `drawer.language.change` | language | Language of interface changed |
 | `drawer.preferences.change` | preferences | Theme, language, grid or snapping changed (one event for several changes) |
-| `drawer.unsaved.change` | unsaved | Drawing has changes not saved yet (auto save off), or is saved again |
+| `drawer.unsaved.change` | unsaved | Drawing has changes not saved yet (auto save off, save of `storage` in progress, failed save), or is saved again |
 | `drawer.plugin.change` | plugin | Plugin disabled (`forceDisabled`) or enabled again |
 
 Components trigger `drawer.dropdown.hide` (dropdown menu) and `drawer.toast.hide` (`drawer.toast()` result). Names of previous versions (`change`, `fd.options.change`...) still work, with a warning in console.
@@ -121,11 +121,11 @@ Components trigger `drawer.dropdown.hide` (dropdown menu) and `drawer.toast.hide
 drawer.showPreferences();
 ```
 
-Without auto save (preference or `autoSave` option), changes are saved with the save button of the header (`saveButton` option, a dot shows changes not saved yet) or "Save now" (settings menu, command palette), the menu shows "Not saved" until then, and leaving the page asks a confirmation. Turning auto save on again saves pending changes.
+Without auto save (preference or `autoSave` option), changes are saved with the save button of the header (`saveButton` option, a dot shows changes not saved yet) or "Save now" (settings menu, command palette), the menu shows "Not saved" until then, and leaving the page asks a confirmation. Turning auto save on again saves pending changes. With auto save too, changes are not saved until the save succeeds: leaving the page asks a confirmation during a save of `storage` or after a failed save (browser storage full, server unreachable).
 
 ```js
 drawer.setAutoSave(false);
-drawer.hasUnsavedChanges(); // true after a change, until saved
+drawer.hasUnsavedChanges(); // true after a change, until saved (also during a save of storage, after a failed save)
 await drawer.saveNow(); // save, "Drawing saved" message
 ```
 
@@ -177,7 +177,7 @@ drawer.showCommandPalette();
 
 Options and methods to connect the drawer to the server of your app (drawings saved per user, login, preferences). Their types are exported (`import type { DrawerStorage, DrawingFile, Preferences } from '@fabwcie/free-drawing'`). The web app of this repository ([apps/web](https://github.com/fabienwnklr/free-drawing/tree/master/apps/web)) uses them with its server ([apps/server](https://github.com/fabienwnklr/free-drawing/tree/master/apps/server)).
 
-`storage` option saves the drawing elsewhere than localStorage. Its drawing is loaded on init (`drawer.ready` is resolved then), it replaces the drawing and history starts from it. Then `save` is called on each change (with `autoSave`), one call at a time: changes made during a save are saved once it ends, with the last drawing. Nothing is saved before the drawing is loaded, nor if it can't be (error shown, `ready` rejected), so a stored drawing is never replaced by mistake.
+`storage` option saves the drawing elsewhere than localStorage. Its drawing is loaded on init (`drawer.ready` is resolved then), it replaces the drawing and history starts from it. Then `save` is called on each change (with `autoSave`), one call at a time: changes made during a save are saved once it ends, with the last drawing. Nothing is saved before the drawing is loaded, nor if it can't be (error shown, `ready` rejected), so a stored drawing is never replaced by mistake. Changes stay unsaved (`hasUnsavedChanges`) until a promise of `save` is resolved: a rejected one shows its error message and keeps them unsaved. When nothing is stored (`load` gives `null`), the drawing is kept and saved with auto save.
 
 ```js
 const drawer = new Drawer($el, {

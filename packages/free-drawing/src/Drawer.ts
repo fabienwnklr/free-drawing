@@ -463,9 +463,9 @@ export class Drawer extends MicroEvent {
     this.#preferences = JSON.stringify(this.getPreferences());
     // drawing as loaded (grid of preferences...)
     this.#unsaved = false;
-    // changes not saved (without auto save): page not left without warning
+    // changes not saved (without auto save, save in progress or failed): page not left without warning
     window.addEventListener('beforeunload', (e) => {
-      if (this.#unsaved && !this.options.autoSave && this.$drawerContainer.isConnected) e.preventDefault();
+      if (this.#unsaved && this.$drawerContainer.isConnected) e.preventDefault();
     });
   }
 
@@ -952,11 +952,10 @@ export class Drawer extends MicroEvent {
       updateBindings(this.drawLayer);
       this.collaboration?.send();
 
-      if (this.options.autoSave) {
-        this.save();
-      } else {
-        this._setUnsaved(true);
-      }
+      // unsaved until stored: at once in localStorage (unless it fails), once the save of `storage` option ends, or
+      // when the user saves
+      if (this.options.storage || !this.options.autoSave) this._setUnsaved(true);
+      if (this.options.autoSave) this.save();
 
       this.undoRedo.saveState();
       this.undoRedo.manageButtons();
@@ -1032,35 +1031,48 @@ export class Drawer extends MicroEvent {
   }
 
   /**
-   * Save drawing in `storage` option (once its drawing is loaded), else in localStorage
+   * Save drawing in `storage` option (once its drawing is loaded), else in localStorage. Changes are saved once it
+   * succeeds (`hasUnsavedChanges`), they stay unsaved if it fails or if the drawing of `storage` is not loaded
    * @returns Resolved once saved (errors are shown in a toast)
    */
   save(): Promise<void> {
     const { storage, localStorageKey } = this.options;
 
-    this._setUnsaved(false);
     try {
       // tool of this browser
       localStorage.setItem(`${localStorageKey}-tool`, this.activeTool);
-      if (!storage) localStorage.setItem(localStorageKey, this.stage.toJSON());
+    } catch {
+      // not part of the drawing: kept for this visit
+    }
+
+    if (storage) {
+      // stored drawing not replaced before it is loaded (nor if it can't be)
+      return this.#storageLoaded ? this._saveToStorage(storage) : Promise.resolve();
+    }
+
+    try {
+      localStorage.setItem(localStorageKey, this.stage.toJSON());
+      this._onSaved();
     } catch (error) {
+      this._setUnsaved(true);
       this._onSaveError(error as Error, 'warning');
     }
 
-    // stored drawing not replaced before it is loaded (nor if it can't be)
-    return storage && this.#storageLoaded ? this._saveToStorage(storage) : Promise.resolve();
+    return Promise.resolve();
   }
 
   /**
-   * Save drawing (`save`) and tell it, from menu and command palette
+   * Save drawing (`save`) and tell it, from menu and command palette: nothing told when it failed (error shown) or
+   * when nothing could be saved (drawing of `storage` option not loaded)
    */
   async saveNow() {
     await this.save();
-    if (!this.#saveFailed) this.toast(this.t('toast.saved'), 'info');
+    if (!this.#unsaved && (!this.options.storage || this.#storageLoaded)) this.toast(this.t('toast.saved'), 'info');
   }
 
   /**
-   * Drawing has changes not saved yet: without auto save, until `save` (or `saveNow`)
+   * Drawing has changes not saved yet: without auto save until `save` (or `saveNow`), during a save in `storage`
+   * option, after a failed save
    * @returns True when changes are not saved
    */
   hasUnsavedChanges(): boolean {
@@ -1113,19 +1125,33 @@ export class Drawer extends MicroEvent {
     }
 
     this.#saving = (async () => {
+      let saved = false;
+
       do {
         this.#saveAgain = false;
         try {
           await storage.save(this.getDrawingFile());
+          saved = true;
           this.#saveFailed = false;
         } catch (error) {
+          saved = false;
           this._onSaveError(error as Error, 'error');
         }
       } while (this.#saveAgain);
       this.#saving = null;
+      // last drawing saved, else changes stay unsaved
+      if (saved) this._onSaved();
     })();
 
     return this.#saving;
+  }
+
+  /**
+   * Drawing saved: no unsaved changes, next failure warned again
+   */
+  private _onSaved() {
+    this.#saveFailed = false;
+    this._setUnsaved(false);
   }
 
   /**
@@ -1161,8 +1187,13 @@ export class Drawer extends MicroEvent {
         this.undoRedo.manageButtons();
       }
       this.#storageLoaded = true;
-      // drawing as stored
-      this._setUnsaved(false);
+      if (file) {
+        // drawing as stored
+        this._setUnsaved(false);
+      } else if (this.#unsaved && this.options.autoSave) {
+        // nothing stored: drawing kept, its changes saved now
+        this.save();
+      }
     } catch (error) {
       this.toast(this.t('toast.loadFailed', { error: (error as Error).message }), 'error');
       throw error;

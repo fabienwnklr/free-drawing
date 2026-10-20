@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.19.2](https://github.com/fabienwnklr/free-drawing/compare/v7.19.1...v7.19.2) (2026-10-20)
+
+
+### Bug Fixes
+
+* **save:** changes are saved only once a save succeeds: a failed save (browser storage full, `storage` of an app rejecting it), a save of `storage` in progress or before its drawing is loaded keep them unsaved (`hasUnsavedChanges`, `drawer.unsaved.change`, save button and menu), "Drawing saved" is not shown then, and leaving the page asks a confirmation, also with auto save
+* **save:** a save failure after a successful save of browser storage is shown again, and "Save now" tells it saved again
+* **storage:** when nothing is stored (`load` gives `null`), changes made to the drawing kept are saved with auto save
+
 ## [7.19.1](https://github.com/fabienwnklr/free-drawing/compare/v7.19.0...v7.19.1) (2026-10-20)
 
 
