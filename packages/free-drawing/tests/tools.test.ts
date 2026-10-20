@@ -457,3 +457,63 @@ describe('Highlighter', () => {
     expect(svg).toContain('mix-blend-mode:multiply');
   });
 });
+
+describe('Pointer actions', () => {
+  document.body.innerHTML = `<div id="test"></div>`;
+
+  /** Mouse event out of the canvas (app bar, page...) */
+  const outside = (type: string, init: MouseEventInit = {}) =>
+    document.body.dispatchEvent(new MouseEvent(type, { bubbles: true, ...init }));
+  const pointerEvents = (drawer: ReturnType<typeof createDrawer>) =>
+    drawer.$drawerContainer.style.getPropertyValue('--drawer-pointer-events');
+
+  it('Pointer moved and released out of the canvas: shape follows it and ends there', () => {
+    const drawer = createDrawer({ keepTool: true });
+    drawer.getWidget<BaseWidget>('square')!.setActive(true);
+
+    fireMouse(drawer, 'mousedown', 10, 10);
+    outside('mousemove', { clientX: 900, clientY: 700, buttons: 1 });
+    expect(drawer.getDrawingShapes()[0].width()).toBe(890);
+
+    outside('mouseup', { clientX: 950, clientY: 750 });
+    expect(drawer._duringAction()).toBe(false);
+    expect(pointerEvents(drawer)).toBe('all');
+    expect(drawer.getDrawingShapes()[0].size()).toEqual({ width: 940, height: 740 });
+    expect(drawer.undoRedo.entries).toHaveLength(1);
+    // pointer forgotten out of the canvas: not the place of a paste
+    expect(drawer._hasPointer()).toBe(false);
+
+    // released on the canvas: konva tells it, nothing sent twice
+    drag(drawer, [10, 10], [50, 50]);
+    outside('mouseup');
+    expect(drawer.getDrawingShapes()).toHaveLength(2);
+    expect(drawer.undoRedo.entries).toHaveLength(2);
+  });
+
+  it('Released unseen (window left) or touch cancelled: action ended, next stroke without the previous one', () => {
+    const drawer = createDrawer({ keepTool: true });
+    const brush = drawer.getWidget<BaseWidget>('brush')!;
+    brush.setActive(true);
+
+    fireMouse(drawer, 'mousedown', 10, 10);
+    fireMouse(drawer, 'mousemove', 50, 50);
+    // back on the canvas, button released elsewhere
+    drawer.stage.content.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 60, clientY: 60 }));
+    expect(brush.inAction).toBe(false);
+    expect(drawer.undoRedo.entries).toHaveLength(1);
+
+    fireMouse(drawer, 'touchstart', 10, 10);
+    window.dispatchEvent(new TouchEvent('touchcancel'));
+    expect(brush.inAction).toBe(false);
+    expect(drawer.undoRedo.entries).toHaveLength(2);
+
+    // stroke ended by a tool change: next one starts empty
+    fireMouse(drawer, 'mousedown', 10, 10);
+    fireMouse(drawer, 'mousemove', 50, 50);
+    drawer.getWidget<BaseWidget>('square')!.setActive(true);
+    brush.setActive(true);
+    drag(drawer, [300, 300], [320, 310]);
+    const { x } = drawer.getDrawingShapes().at(-1)!.getClientRect({ skipTransform: true });
+    expect(x).toBeGreaterThan(250);
+  });
+});

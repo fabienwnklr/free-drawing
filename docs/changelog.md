@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.19.4](https://github.com/fabienwnklr/free-drawing/compare/v7.19.3...v7.19.4) (2026-10-21)
+
+
+### Bug Fixes
+
+* **tools:** a pointer released out of the canvas (bar of an app, page) ends the action of the tool where it is released: the shape, stroke, eraser, selection rectangle or pan follows the pointer out of the canvas and ends there. The tool stayed in action: interface ignoring the pointer, shortcuts disabled, stroke following the pointer back on the canvas
+* **tools:** a mouse button released while the window was left, or a cancelled touch, ends the action too; a brush stroke ended without pointer up (tool changed) is no longer contained in the next one
+
 ## [7.19.3](https://github.com/fabienwnklr/free-drawing/compare/v7.19.2...v7.19.3) (2026-10-21)
 
 

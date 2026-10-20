@@ -35,6 +35,8 @@ export abstract class BaseWidget {
   readonly options: WidgetOptions;
   /** Pointer action in progress (drawing, erasing, selecting...), see `startAction` / `endAction` */
   inAction: boolean = false;
+  /** Window listeners of the pointer action in progress (pointer out of the canvas), removed when it ends */
+  #actionListeners: AbortController | null = null;
   /** Show `overlay` while widget is active (false when overlay depends on something else, e.g. selection) */
   protected showOverlayOnActive: boolean = true;
   /** Stage cursor while widget is active */
@@ -188,11 +190,13 @@ export abstract class BaseWidget {
   }
 
   /**
-   * Pointer action starts (pointer down): shortcuts are disabled and UI (toolbar, overlays...) ignores pointer
+   * Pointer action starts (pointer down): shortcuts are disabled and UI (toolbar, overlays...) ignores pointer, pointer
+   * followed out of the canvas until it is released
    */
   protected startAction() {
     this.inAction = true;
     this.drawer.layout.setPointerEvents('none');
+    this._followPointer();
   }
 
   /**
@@ -200,8 +204,47 @@ export abstract class BaseWidget {
    */
   protected endAction() {
     this.inAction = false;
+    this.#actionListeners?.abort();
+    this.#actionListeners = null;
     this.drawer.layout.setPointerEvents('all');
     this.drawer._onActionEnd();
+  }
+
+  /**
+   * Pointer out of the canvas during a pointer action (konva listens to its canvas only): its moves and its release
+   * are sent to the stage as konva events at its position, so the action follows it and ends where it is released.
+   * Also ended by a mouse moved without pressed button (released while the window was left) or a cancelled touch
+   */
+  private _followPointer() {
+    const { stage } = this.drawer;
+    const controller = new AbortController();
+    const { signal } = controller;
+    const send = (type: string, evt: MouseEvent | TouchEvent) => {
+      stage.setPointersPositions(evt);
+      stage.fire(type, { evt });
+    };
+    const onMouse = (evt: MouseEvent) => {
+      if (!this.inAction) return;
+
+      const outside = !stage.content.contains(evt.target as globalThis.Node);
+
+      if (evt.type === 'mousemove' && evt.buttons === 0) send('mouseup', evt);
+      else if (outside) send(evt.type, evt);
+      else return;
+      // released out of the canvas: konva forgets the pointer there
+      if (outside && !this.inAction) {
+        stage._pointerPositions = [];
+        stage._changedPointerPositions = [];
+      }
+    };
+
+    // action started again without end (second finger...): listened once
+    this.#actionListeners?.abort();
+    this.#actionListeners = controller;
+    // before konva handles them on its canvas
+    window.addEventListener('mousemove', onMouse, { capture: true, signal });
+    window.addEventListener('mouseup', onMouse, { capture: true, signal });
+    window.addEventListener('touchcancel', (evt) => this.inAction && send('touchend', evt), { capture: true, signal });
   }
 
   /**

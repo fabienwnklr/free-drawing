@@ -158,16 +158,16 @@ class StampWidget extends BaseWidget {
 }
 ```
 
-| Member of `BaseWidget`                              | Use                                                                                                              |
-| --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `initEvents()` with `this.onStage(events, handler)` | Events of the stage while the tool is active (never `stage.on` directly: `onStage` removes them on deactivation) |
-| `cursor`                                            | Cursor of the canvas while the tool is active                                                                    |
-| `startAction()` / `endAction()`                     | Around a pointer action (pointer down to up): shortcuts disabled, the interface lets the pointer through         |
-| `shareLive(...shapes)`                              | Shapes being drawn shown live to the other users of a collaboration session                                      |
-| `afterDraw()`                                       | Shape drawn: the selection tool comes back, unless the user keeps the tool (pin of the toolbar)                  |
-| `onActive()` / `onDesactive()`                      | Tool chosen, another tool chosen                                                                                 |
-| `onConstrainChange(constrain)`                      | Shift pressed or released during a pointer action, pointer not moved                                             |
-| `clearSelection()`                                  | Nothing selected                                                                                                 |
+| Member of `BaseWidget`                              | Use                                                                                                                                                                                |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `initEvents()` with `this.onStage(events, handler)` | Events of the stage while the tool is active (never `stage.on` directly: `onStage` removes them on deactivation)                                                                   |
+| `cursor`                                            | Cursor of the canvas while the tool is active                                                                                                                                      |
+| `startAction()` / `endAction()`                     | Around a pointer action (pointer down to up): shortcuts disabled, the interface lets the pointer through, moves and release out of the canvas come to the stage events of the tool |
+| `shareLive(...shapes)`                              | Shapes being drawn shown live to the other users of a collaboration session                                                                                                        |
+| `afterDraw()`                                       | Shape drawn: the selection tool comes back, unless the user keeps the tool (pin of the toolbar)                                                                                    |
+| `onActive()` / `onDesactive()`                      | Tool chosen, another tool chosen                                                                                                                                                   |
+| `onConstrainChange(constrain)`                      | Shift pressed or released during a pointer action, pointer not moved                                                                                                               |
+| `clearSelection()`                                  | Nothing selected                                                                                                                                                                   |
 
 `ShapeWidget` draws in the dragged box: it creates the shape on press, updates it while the pointer moves (shared live), removes it after a simple click, places it in frames, saves the change and gives back the selection tool. The tool implements `createShape(start)` and `updateShape(shape, start, end, constrain)`, may implement `onDrawEnd(shape)`, and gets the options panel of shape tools (stroke, background with `hasFill`, width, opacity) with `shapeStyle`.
 

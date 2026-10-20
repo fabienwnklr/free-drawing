@@ -70,6 +70,8 @@ export abstract class FreehandWidget extends BaseWidget {
 
       const realPos = this.drawer._getRelativePointerPos();
       this.#start = realPos;
+      // new stroke, also after one ended without pointer up (tool changed)
+      this.#allPoints = [];
       this.#lastLine = new Line({
         tension: 0.3,
         hitStrokeWidth: 20,

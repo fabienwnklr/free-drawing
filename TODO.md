@@ -35,7 +35,7 @@
 - [ ] view changes (pan, grid, snapping, preferences with theme only) fire `change`: drawing marked unsaved, or same drawing sent again to storage (`Pan.ts`, `Settings.ts`, `Drawer.setPreferences`)
 - [x] a crafted file or link (frame without content, path `data` not a string) throws after current shapes were destroyed: empty or partial drawing saved at next change; build all nodes before replacing, check attribute types (`drawingFile.ts`, `Drawer.loadDrawing`)
 - [x] reloading a page with a room link creates a new empty drawing each time for a logged in user (web `App.ts`)
-- [ ] pointer released out of the canvas (or `touchcancel`): tool stays in action, UI ignores pointer, stroke follows the pointer; next brush stroke contains the previous one (`#allPoints` not reset) (`BaseWidget`, `FreehandWidget`, `ShapeWidget`)
+- [x] pointer released out of the canvas (or `touchcancel`): tool stays in action, UI ignores pointer, stroke follows the pointer; next brush stroke contains the previous one (`#allPoints` not reset) (`BaseWidget`, `FreehandWidget`, `ShapeWidget`)
 - [x] eraser stroke starting on a shape erases nothing (`Eraser.ts`: press must be on stage)
 - [x] right and middle click run click actions: eraser erases the shape, text tool creates a text (`Eraser.ts`, `Text.ts`)
 - [ ] paste in a field of the drawer (command palette, preferences or collaboration name, radius field) adds a text shape to the drawing instead (`HotKey.ts` paste listener)
