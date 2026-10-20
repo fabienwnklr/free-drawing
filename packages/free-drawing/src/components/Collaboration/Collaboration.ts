@@ -516,10 +516,13 @@ export class Collaboration {
    */
   private _apply({ upsert, remove, order }: DrawingChange) {
     const shapes = new Map(this.drawer.getDrawingShapes().map((shape) => [shape.id(), shape]));
+    // shapes of other users: not changes of this user in history
+    const changed: string[] = [];
 
     for (const id of Array.isArray(remove) ? remove : []) {
       shapes.get(id)?.destroy();
       this.#synced.delete(id);
+      changed.push(id);
     }
 
     for (const json of Array.isArray(upsert) ? upsert : []) {
@@ -562,6 +565,7 @@ export class Collaboration {
       }
       // as serialized here, not to send it back
       this.#synced.set(shape.id(), serializeShape(shape));
+      changed.push(shape.id());
     }
 
     if (Array.isArray(order)) {
@@ -579,5 +583,7 @@ export class Collaboration {
     const transformer = this.drawer.getWidget<SelectWidget>('selection')?.transformer;
     if (transformer && Array.isArray(remove) && remove.length)
       transformer.nodes(transformer.nodes().filter((node) => node.getLayer()));
+    // undo and redo of this user keep them, stacking order of others too
+    this.drawer.undoRedo.ignoreChanges(changed);
   }
 }

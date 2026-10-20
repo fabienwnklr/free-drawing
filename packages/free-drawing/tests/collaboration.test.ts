@@ -295,6 +295,89 @@ describe('Collaboration', () => {
     expect(byId(b, text.id())).toBeDefined();
   });
 
+  it('Undo and redo change shapes of this user only, changes of other users are kept', () => {
+    const connect = createServer();
+    const a = createDrawer();
+    const b = createDrawer();
+    connect(a);
+    connect(b);
+    const mine = addText(a, 'mine');
+    const x = mine.x();
+    const theirs = addText(b, 'theirs');
+
+    mine.x(x + 100);
+    a.stage.fire('change');
+    theirs.setAttr('text', 'changed');
+    b.stage.fire('change');
+
+    // move of a undone, not the text changed by b after it
+    a.undoRedo.undo();
+    for (const drawer of [a, b]) {
+      expect(byId(drawer, mine.id())!.x()).toBe(x);
+      expect(byId(drawer, theirs.id())!.getAttr('text')).toBe('changed');
+    }
+
+    // shapes of b are not changes of a
+    a.undoRedo.undo();
+    expect(a.undoRedo.canUndo()).toBe(false);
+    for (const drawer of [a, b]) {
+      expect(byId(drawer, mine.id())).toBeUndefined();
+      expect(byId(drawer, theirs.id())).toBeDefined();
+    }
+
+    a.undoRedo.redo();
+    a.undoRedo.redo();
+    for (const drawer of [a, b]) {
+      expect(byId(drawer, mine.id())!.x()).toBe(x + 100);
+      expect(byId(drawer, theirs.id())!.getAttr('text')).toBe('changed');
+      // at its place, below the shape added after it
+      expect(drawer.getDrawingShapes().map((shape) => shape.id())).toEqual([mine.id(), theirs.id()]);
+    }
+  });
+
+  it('Changes of shapes removed by other users have nothing to undo', () => {
+    const connect = createServer();
+    const a = createDrawer();
+    const b = createDrawer();
+    connect(a);
+    connect(b);
+    const mine = addText(a, 'mine');
+
+    mine.x(mine.x() + 100);
+    a.stage.fire('change');
+    byId(b, mine.id())!.destroy();
+    b.stage.fire('change');
+    expect(a.undoRedo.canUndo()).toBe(true);
+
+    // not put back for everyone, changes dropped
+    a.undoRedo.undo();
+    expect(byId(a, mine.id())).toBeUndefined();
+    expect(byId(b, mine.id())).toBeUndefined();
+    expect(a.undoRedo.canUndo()).toBe(false);
+    expect(a.undoRedo.canRedo()).toBe(false);
+  });
+
+  it('Undo puts removed shapes back at their place, shapes added since by other users stay above', () => {
+    const connect = createServer();
+    const a = createDrawer();
+    const b = createDrawer();
+    connect(a);
+    connect(b);
+    const ids = (drawer: Drawer) => drawer.getDrawingShapes().map((shape) => shape.id());
+    const [first, second, third] = ['first', 'second', 'third'].map((text) => addText(a, text));
+
+    second.destroy();
+    a.stage.fire('change');
+    const theirs = addText(b, 'theirs');
+
+    a.undoRedo.undo();
+    expect(ids(a)).toEqual([first.id(), second.id(), third.id(), theirs.id()]);
+    expect(ids(b)).toEqual(ids(a));
+
+    a.undoRedo.redo();
+    expect(ids(b)).toEqual([first.id(), third.id(), theirs.id()]);
+  });
+
   it('Drawings of connected drawers are merged', () => {
     const connect = createServer();
     const a = createDrawer();
@@ -872,6 +955,8 @@ describe('Collaboration', () => {
     const c = createDrawer();
     connect(c);
     expect(ids(c)).toEqual([second.id(), first.id()]);
+    // drawing of the room: not a change of this user
+    expect(c.undoRedo.canUndo()).toBe(false);
   });
 
   it('Updates received keep local hit region of shapes', () => {

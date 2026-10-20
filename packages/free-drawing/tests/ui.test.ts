@@ -141,13 +141,13 @@ describe('User interface', () => {
     const text = drawer.getWidget<TextWidget>('text')!.addTextNode('hello');
     drawer.stage.fire('change');
     drawer.getWidget<SelectWidget>('selection')!.transformer.nodes([text]);
-    const length = drawer.undoRedo.appHistory.length;
+    const length = drawer.undoRedo.entries.length;
 
     for (let i = 0; i < 3; i++) keydown(drawer, { key: 'ArrowRight' });
-    expect(drawer.undoRedo.appHistory.length).toBe(length);
+    expect(drawer.undoRedo.entries.length).toBe(length);
 
     drawer.$drawerContainer.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowRight' }));
-    expect(drawer.undoRedo.appHistory.length).toBe(length + 1);
+    expect(drawer.undoRedo.entries.length).toBe(length + 1);
   });
 
   it('Ctrl + Delete / Backspace ask to clear canvas without deleting selection', () => {

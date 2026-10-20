@@ -13,6 +13,33 @@ export type ShapeState = {
 };
 
 /**
+ * Drawing shape (top node) added, changed or removed by a history entry: JSON of its state before and after it
+ */
+export type HistoryChange = {
+  /** Id of the shape */
+  id: string;
+  /** JSON of the shape before the change (`serializeShape`), null for a shape added by it */
+  before: string | null;
+  /** JSON of the shape after the change, null for a shape removed by it */
+  after: string | null;
+};
+
+/**
+ * Change of the drawing made by this user, undone and redone shape by shape: changes of other users of a
+ * collaboration session are not in history, so undo and redo keep them
+ */
+export type HistoryEntry = {
+  /** Shapes added, changed or removed, bottom first */
+  changes: HistoryChange[];
+  /** Ids of drawing shapes before the change, bottom first: places of shapes put back by undo (removed, reordered) */
+  before?: string[];
+  /** Ids of drawing shapes after the change, bottom first: places of shapes put back by redo (added, reordered) */
+  after?: string[];
+  /** Stacking order of shapes changed (reorder): restored from `before` / `after` */
+  reordered?: boolean;
+};
+
+/**
  * Content of a drawing file or link: background color and drawing shapes (konva `toObject` format)
  */
 export type DrawingFile = {

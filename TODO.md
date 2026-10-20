@@ -30,7 +30,7 @@
 
 - [x] switching drawing, login or logout during a collaboration session replaces the drawing of the room for everyone with the opened one (web `App.ts`: stop or leave session first)
 - [x] reconnection sends a stale copy of the drawing that overwrites newer changes of others, deleted shapes come back (`Collaboration.ts` connect)
-- [ ] undo / redo during collaboration restore whole snapshots: changes of other users are reverted for everyone (`History.ts`)
+- [x] undo / redo during collaboration restore whole snapshots: changes of other users are reverted for everyone (`History.ts`)
 - [ ] save state says saved when nothing was saved: `save()` clears unsaved before saving (storage not loaded, storage or quota error), no leave warning during a save or after a failed one, `#saveFailed` only reset with storage (`Drawer.ts`)
 - [ ] view changes (pan, grid, snapping, preferences with theme only) fire `change`: drawing marked unsaved, or same drawing sent again to storage (`Pan.ts`, `Settings.ts`, `Drawer.setPreferences`)
 - [ ] a crafted file or link (frame without content, path `data` not a string) throws after current shapes were destroyed: empty or partial drawing saved at next change; build all nodes before replacing, check attribute types (`drawingFile.ts`, `Drawer.loadDrawing`)
@@ -68,7 +68,7 @@
 
 - [ ] `drawer.destroy()`: remove document, window, `matchMedia` and ResizeObserver listeners, for apps mounting and unmounting drawers
 - [ ] one `change` per drag: N selected shapes fire N + 1 changes (save, history, collaboration, layers panel each time)
-- [ ] history memory: 100 full JSON snapshots, cumulative ones built on reload; store shapes once or diffs (`History.ts`)
+- [x] history memory: 100 full JSON snapshots, cumulative ones built on reload; store shapes once or diffs (`History.ts`)
 - [ ] touch: track one pointer, pinch zoom and two finger pan, window `pointerup` / `pointercancel` or pointer capture
 - [ ] text tool follows `keepTool` and selects the validated text like other tools (`Text.ts`)
 - [ ] Ctrl / Cmd + S saves (`saveNow`) with `storage` or auto save off, download with another shortcut; Ctrl / Cmd + Shift + Z redo (macOS standard)

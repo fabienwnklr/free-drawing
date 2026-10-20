@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.19.1](https://github.com/fabienwnklr/free-drawing/compare/v7.19.0...v7.19.1) (2026-10-20)
+
+
+### Bug Fixes
+
+* **history:** undo and redo during a collaboration session change only the shapes changed by this user: changes of the other users are kept, for everyone. The history records the shapes added, changed or removed by each change instead of a copy of the whole drawing (also lighter, a drawing opened no longer builds 100 growing copies), the drawing of a joined room is not a change to undo, shapes put back by undo or redo return to their place in the stacking order, and changes of shapes removed since by other users are skipped
+* **types:** `HistoryEntry` and `HistoryChange`, entries of `drawer.undoRedo.entries`
+
+### Deprecations
+
+* `undoRedo.appHistory` and `undoRedo.appHistoryStep` (use `undoRedo.entries` and `undoRedo.step`): still readable, `appHistory` gives the changes as JSON instead of whole drawings
+
 ## [7.19.0](https://github.com/fabienwnklr/free-drawing/compare/v7.18.0...v7.19.0) (2026-10-20)
 
 

@@ -3,7 +3,9 @@ import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { Node } from 'konva/lib/Node';
 import type { DrawingShape } from '@/@types/drawer';
 import { historyLimit } from '@/constants';
-import type { ShapeState } from '@/@types/file';
+import type { HistoryChange, HistoryEntry, ShapeState } from '@/@types/file';
+import { applyOrder } from '@/utils/order';
+import { updateBindings } from '@/utils/binding';
 
 /**
  * State of a drawing shape or group (history, collaboration, files), without `draggable` which depends on active tool
@@ -27,27 +29,28 @@ function toState({ attrs, className, children }: ShapeState): ShapeState {
 /**
  * JSON of a drawing shape state
  * @param shape Drawing shape or group to serialize
- * @returns JSON string of `getShapeState`, an item of history states
+ * @returns JSON string of `getShapeState`, states of history entries
  */
 export function serializeShape(shape: DrawingShape): string {
   return JSON.stringify(getShapeState(shape));
 }
 
 /**
- * Undo / redo history of the drawing: states of drawing shapes, at most `historyLimit`
+ * Undo / redo history of the changes of this user: shapes added, changed or removed by each change, at most
+ * `historyLimit` states. Changes of other users (collaboration) are not recorded, undo and redo keep them
  */
 export class History {
-  /**
-   * Drawing states, JSON of shapes array (string is lighter than objects and compared without serializing again)
-   */
-  appHistory: string[] = ['[]'];
-  /** Index of current state in `appHistory`: states before it are undone, states after it redone */
-  appHistoryStep: number = 0;
+  /** Changes of the drawing made by this user, oldest first */
+  entries: HistoryEntry[] = [];
+  /** Number of entries done: entries before it are undone by undo, entries from it redone by redo */
+  step: number = 0;
   /** Drawer whose shapes are saved and restored */
   drawer: Drawer;
+  /** Drawing as last recorded (JSON of each shape by id, bottom first): next change of this user compared with it */
+  #known = new Map<string, string>();
 
   /**
-   * Create a history with an empty drawing as only state
+   * Create a history without change, the drawing being empty
    * @param drawer Drawer whose shapes are saved and restored
    */
   constructor(drawer: Drawer) {
@@ -55,97 +58,274 @@ export class History {
   }
 
   /**
-   * Add current drawing as a new state (on each drawer change), skipped when identical to current state
-   * @param fromSaved drawing loaded from a save: one state per shape added, so that each one can be undone
+   * States of previous versions: first item stands for the state before the oldest change, each other one is the JSON
+   * of a change (`HistoryEntry`)
+   * @deprecated changes are in `entries`
+   * @returns Items of states, as many as states kept
    */
-  saveState(fromSaved = false) {
-    const shapes = this.drawer.getDrawingShapes().map(serializeShape);
-
-    if (fromSaved) {
-      // add the first, first and second, first, second and third, etc. (only last ones, history is limited)
-      for (let i = Math.max(0, shapes.length - historyLimit); i < shapes.length; i++) {
-        this._push(`[${shapes.slice(0, i + 1).join(',')}]`);
-      }
-      return;
-    }
-
-    const state = `[${shapes.join(',')}]`;
-
-    // ignore change without drawing modification (pan, grid...), also keeps redo available
-    if (state === this.appHistory[this.appHistoryStep]) return;
-
-    this._push(state);
+  get appHistory(): string[] {
+    return ['[]', ...this.entries.map((entry) => JSON.stringify(entry))];
   }
 
   /**
-   * Add state after current one (removes redo states), keeps the last `historyLimit` states
-   * @param state JSON array of drawing shape states, becomes the current state
+   * Index of current state in `appHistory` of previous versions
+   * @deprecated use `step`
+   * @returns Number of entries done
    */
-  private _push(state: string) {
-    this.appHistory = this.appHistory.slice(0, this.appHistoryStep + 1);
-    this.appHistory.push(state);
+  get appHistoryStep(): number {
+    return this.step;
+  }
 
-    if (this.appHistory.length > historyLimit) {
-      this.appHistory = this.appHistory.slice(-historyLimit);
+  /**
+   * Record the change of the drawing made since last record (on each drawer change), nothing when the drawing did not
+   * change
+   * @param fromSaved drawing loaded from a save: one change per shape added, so that each one can be undone
+   */
+  saveState(fromSaved = false) {
+    const current = this._read();
+
+    if (fromSaved) {
+      const ids = [...current.keys()];
+
+      // only last ones, history is limited
+      for (let i = Math.max(0, ids.length + 1 - historyLimit); i < ids.length; i++) {
+        this._push({
+          changes: [{ id: ids[i], before: null, after: current.get(ids[i])! }],
+          after: ids.slice(0, i + 1),
+        });
+      }
+      this.#known = current;
+      return;
     }
 
-    this.appHistoryStep = this.appHistory.length - 1;
+    const entry = this._diff(this.#known, current);
+
+    this.#known = current;
+    // change without drawing modification (pan, grid...): also keeps redo available
+    if (entry) this._push(entry);
+  }
+
+  /**
+   * Shapes changed by other users (collaboration): their state becomes the known one, so the next change of this user
+   * records only its own modifications, and undo does not revert changes of others
+   * @param ids Ids of shapes added, changed or removed by another user
+   */
+  ignoreChanges(ids: Iterable<string>) {
+    const changed = new Set(ids);
+    const known = this.#known;
+    const shapes = new Map(this.drawer.getDrawingShapes().map((shape) => [shape.id(), shape]));
+    // in current order, shapes added here not recorded yet left out (recorded with their change)
+    const order = [...shapes.keys()].filter((id) => changed.has(id) || known.has(id));
+    const listed = new Set(order);
+    let below: string | undefined;
+
+    // shapes removed here not recorded yet (erased before the change fired): known at their place
+    for (const id of known.keys()) {
+      if (!listed.has(id) && !changed.has(id)) {
+        order.splice(below === undefined ? 0 : order.indexOf(below) + 1, 0, id);
+        listed.add(id);
+      }
+      if (listed.has(id)) below = id;
+    }
+
+    this.#known = new Map(
+      order.map((id) => {
+        const shape = shapes.get(id);
+
+        return [id, changed.has(id) && shape ? serializeShape(shape) : known.get(id)!];
+      })
+    );
+  }
+
+  /**
+   * JSON of each drawing shape
+   * @returns JSON by id, bottom first
+   */
+  private _read() {
+    return new Map(this.drawer.getDrawingShapes().map((shape) => [shape.id(), serializeShape(shape)]));
+  }
+
+  /**
+   * Change between two states of the drawing
+   * @param known Drawing as last recorded
+   * @param current Drawing now
+   * @returns Shapes added, changed and removed, with their places when needed; null without difference
+   */
+  private _diff(known: Map<string, string>, current: Map<string, string>): HistoryEntry | null {
+    const changes: HistoryChange[] = [];
+
+    for (const [id, after] of current) {
+      const before = known.get(id) ?? null;
+
+      if (before !== after) changes.push({ id, before, after });
+    }
+    for (const [id, before] of known) {
+      if (!current.has(id)) changes.push({ id, before, after: null });
+    }
+
+    const before = [...known.keys()];
+    const after = [...current.keys()];
+    const reordered = before.filter((id) => current.has(id)).join() !== after.filter((id) => known.has(id)).join();
+
+    if (!changes.length && !reordered) return null;
+
+    const removed = changes.some((change) => change.after === null);
+    const added = changes.some((change) => change.before === null);
+
+    // places of shapes put back: removed ones by undo, added ones by redo
+    return {
+      changes,
+      ...((removed || reordered) && { before }),
+      ...((added || reordered) && { after }),
+      ...(reordered && { reordered }),
+    };
+  }
+
+  /**
+   * Add an entry after the entries done (removes the ones undone), keeps the last ones
+   * @param entry Change of this user, done
+   */
+  private _push(entry: HistoryEntry) {
+    this.entries = this.entries.slice(0, this.step);
+    this.entries.push(entry);
+    // with the current state: `historyLimit` states
+    if (this.entries.length >= historyLimit) {
+      this.entries = this.entries.slice(1 - historyLimit);
+    }
+    this.step = this.entries.length;
   }
 
   /**
    * Current drawing is the first state (e.g. loaded from storage): nothing to undo or redo
    */
   reset() {
-    this.appHistory = [`[${this.drawer.getDrawingShapes().map(serializeShape).join(',')}]`];
-    this.appHistoryStep = 0;
+    this.entries = [];
+    this.step = 0;
+    this.#known = this._read();
   }
 
   /**
-   * A state is before the current one
+   * A change of this user can be undone
    * @returns True when undo can restore a previous state
    */
   canUndo() {
-    return !!this.appHistory[this.appHistoryStep - 1];
+    return this.step > 0;
   }
 
   /**
-   * Restore previous state, nothing when there is none
+   * Undo the last change of this user, nothing when there is none. A change of shapes removed since by other users
+   * has nothing left to undo: it is dropped, and the one before is undone
    */
   undo() {
-    if (!this.canUndo()) return;
-
-    this.appHistoryStep -= 1;
-    this._restoreState(this.appHistory[this.appHistoryStep]);
+    while (this.canUndo()) {
+      this.step -= 1;
+      if (this._apply(this.entries[this.step], 'before')) return;
+      this.entries.splice(this.step, 1);
+    }
   }
 
   /**
-   * A state undone is after the current one
+   * A change undone can be done again
    * @returns True when redo can restore a next state
    */
   canRedo() {
-    return !!this.appHistory[this.appHistoryStep + 1];
+    return this.step < this.entries.length;
   }
 
   /**
-   * Restore next state, nothing when there is none
+   * Do again the last change undone, nothing when there is none (changes without effect dropped, as by `undo`)
    */
   redo() {
-    if (!this.canRedo()) return;
-
-    this.appHistoryStep += 1;
-    this._restoreState(this.appHistory[this.appHistoryStep]);
+    while (this.canRedo()) {
+      if (this._apply(this.entries[this.step], 'after')) {
+        this.step += 1;
+        return;
+      }
+      this.entries.splice(this.step, 1);
+    }
   }
 
   /**
-   * Replace drawing by given state
-   * @param state JSON array of drawing shape states (an item of `appHistory`)
+   * Put the shapes of a change in their state before it (undo) or after it (redo), other shapes kept as they are
+   * (changes of other users). A shape changed by it and removed since by another user is not put back
+   * @param entry Change of this user
+   * @param side State to restore: 'before' to undo, 'after' to redo
+   * @returns True when the drawing changed
    */
-  private _restoreState(state: string) {
-    this.drawer.getWidget<SelectWidget>('selection')?.clearSelection();
-    for (const shape of this.drawer.getDrawingShapes()) shape.destroy();
+  private _apply(entry: HistoryEntry, side: 'before' | 'after') {
+    const other = side === 'before' ? 'after' : 'before';
+    const shapes = new Map(this.drawer.getDrawingShapes().map((shape) => [shape.id(), shape]));
+    const order = entry[side];
+    const restored = new Set<string>();
+    let applied = !!entry.reordered;
 
-    (JSON.parse(state) as ShapeState[]).forEach((shape) => {
-      this.drawer.addShape(Node.create(shape) as DrawingShape);
-    });
+    this.drawer.getWidget<SelectWidget>('selection')?.clearSelection();
+    for (const change of entry.changes) {
+      const state = change[side];
+      const shape = shapes.get(change.id);
+
+      if (state === null) {
+        // added by the change
+        if (shape) {
+          shape.destroy();
+          applied = true;
+        }
+        continue;
+      }
+      // removed by another user since
+      if (!shape && change[other] !== null) continue;
+
+      // replaced at its place, or put back
+      const index = shape?.zIndex();
+
+      shape?.destroy();
+      const node = this.drawer.addShape(Node.create(JSON.parse(state)) as DrawingShape);
+
+      if (index === undefined) restored.add(change.id);
+      else node.zIndex(index);
+      applied = true;
+    }
+
+    if (order && entry.reordered) {
+      // shapes reordered by the change, other ones at their place
+      const kept = new Set(entry[other]);
+
+      applyOrder(
+        this.drawer.getDrawingShapes(),
+        order.filter((id) => kept.has(id))
+      );
+    }
+    if (order && restored.size) this._place(restored, order);
+    if (!applied) return false;
+
+    // arrows of other users linked to these shapes follow them, as part of this change
+    updateBindings(this.drawer.drawLayer);
+    this.#known = this._read();
+    return true;
+  }
+
+  /**
+   * Put shapes back at their place: above the nearest shape below them in given order which is in the drawing
+   * @param ids Ids of shapes to place (added on top)
+   * @param order Ids of drawing shapes, bottom first (`before` of an entry undone, `after` of an entry redone)
+   */
+  private _place(ids: Set<string>, order: string[]) {
+    const shapes = new Map(this.drawer.getDrawingShapes().map((shape) => [shape.id(), shape]));
+    const waiting = new Set(ids);
+
+    for (const [index, id] of order.entries()) {
+      const shape = shapes.get(id);
+
+      if (!shape || !waiting.has(id)) continue;
+      waiting.delete(id);
+
+      let below: DrawingShape | undefined;
+
+      for (let i = index - 1; i >= 0 && !below; i--) {
+        if (!waiting.has(order[i])) below = shapes.get(order[i]);
+      }
+      // zIndex removes the shape first: index of a shape above it goes down by one
+      shape.zIndex(below ? below.zIndex() + (below.zIndex() < shape.zIndex() ? 1 : 0) : 0);
+    }
   }
 }

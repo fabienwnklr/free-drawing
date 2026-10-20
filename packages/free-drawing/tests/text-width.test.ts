@@ -27,18 +27,18 @@ describe('Fit width of texts', () => {
     expect(wrapped.textArr).toHaveLength(2);
     drawer.stage.fire('change');
     select(drawer, [text, wrapped]);
-    const changes = drawer.undoRedo.appHistory.length;
+    const changes = drawer.undoRedo.entries.length;
 
     expect(drawer.fitTextWidth()).toBe(true);
     expect([text.width(), wrapped.width()]).toEqual([5, 11]);
     expect(wrapped.textArr).toHaveLength(1);
     // left aligned: not moved
     expect(text.position()).toEqual({ x: 100, y: 100 });
-    expect(drawer.undoRedo.appHistory.length).toBe(changes + 1);
+    expect(drawer.undoRedo.entries.length).toBe(changes + 1);
 
     // already fitted
     expect(drawer.fitTextWidth()).toBe(false);
-    expect(drawer.undoRedo.appHistory.length).toBe(changes + 1);
+    expect(drawer.undoRedo.entries.length).toBe(changes + 1);
 
     drawer.undoRedo.undo();
     expect(drawer.getDrawingShapes().map((shape) => shape.width())).toEqual([50, 8]);

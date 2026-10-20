@@ -93,22 +93,22 @@ describe('Test drawer event', () => {
 
   it('Backspace without selection does not add history', () => {
     const drawer = createDrawer();
-    const length = drawer.undoRedo.appHistory.length;
+    const length = drawer.undoRedo.entries.length;
 
     keydown(drawer, { key: 'Backspace' });
 
-    expect(drawer.undoRedo.appHistory.length).toBe(length);
+    expect(drawer.undoRedo.entries.length).toBe(length);
   });
 
   it('Change without modification does not add history', () => {
     const drawer = createDrawer();
     drawer.getWidget<TextWidget>('text')!.addTextNode('hello');
     drawer.stage.fire('change');
-    const length = drawer.undoRedo.appHistory.length;
+    const length = drawer.undoRedo.entries.length;
 
     drawer.stage.fire('change');
 
-    expect(drawer.undoRedo.appHistory.length).toBe(length);
+    expect(drawer.undoRedo.entries.length).toBe(length);
   });
 
   it('Escape on new text removes it', () => {

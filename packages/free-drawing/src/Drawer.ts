@@ -77,7 +77,14 @@ export type {
   Theme,
 } from '@/@types/drawer';
 export type { CollaborationOptions } from '@/@types/collaboration';
-export type { DrawingFile, ExportImageOptions, ImageFormat, ShapeState } from '@/@types/file';
+export type {
+  DrawingFile,
+  ExportImageOptions,
+  HistoryChange,
+  HistoryEntry,
+  ImageFormat,
+  ShapeState,
+} from '@/@types/file';
 export type { LayoutItemOptions, LayoutRegion } from '@/@types/ui';
 export type { FrameChanges } from '@/@types/shapes';
 export type {

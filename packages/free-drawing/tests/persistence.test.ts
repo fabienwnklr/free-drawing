@@ -49,12 +49,12 @@ describe('Persistence and performance', () => {
     });
     const onChange = vi.fn();
     drawer.on('drawer.change', onChange);
-    const length = drawer.undoRedo.appHistory.length;
+    const length = drawer.undoRedo.entries.length;
 
     drawer.getWidget<TextWidget>('text')!.addTextNode('hello');
     expect(() => drawer.stage.fire('change')).not.toThrow();
 
-    expect(drawer.undoRedo.appHistory.length).toBe(length + 1);
+    expect(drawer.undoRedo.entries.length).toBe(length + 1);
     expect(onChange).toHaveBeenCalledTimes(1);
   });
 
@@ -67,7 +67,11 @@ describe('Persistence and performance', () => {
       drawer.stage.fire('change');
     }
 
+    // with current state: historyLimit states
+    expect(drawer.undoRedo.entries.length).toBe(historyLimit - 1);
+    // properties of previous versions
     expect(drawer.undoRedo.appHistory.length).toBe(historyLimit);
+    expect(drawer.undoRedo.appHistoryStep).toBe(historyLimit - 1);
 
     drawer.undoRedo.undo();
     expect(drawer.getDrawingShapes()[0].x()).toBe(historyLimit + 48);

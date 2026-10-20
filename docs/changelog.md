@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.19.1](https://github.com/fabienwnklr/free-drawing/compare/v7.19.0...v7.19.1) (2026-10-20)
+
+
+### Bug Fixes
+
+* **history:** undo and redo during a collaboration session change only the shapes changed by this user: changes of the other users are kept, for everyone. The history records the shapes added, changed or removed by each change instead of a copy of the whole drawing (also lighter, a drawing opened no longer builds 100 growing copies), the drawing of a joined room is not a change to undo, shapes put back by undo or redo return to their place in the stacking order, and changes of shapes removed since by other users are skipped
+* **types:** `HistoryEntry` and `HistoryChange`, entries of `drawer.undoRedo.entries`
+
+### Deprecations
+
+* `undoRedo.appHistory` and `undoRedo.appHistoryStep` (use `undoRedo.entries` and `undoRedo.step`): still readable, `appHistory` gives the changes as JSON instead of whole drawings
+
 ## [7.19.0](https://github.com/fabienwnklr/free-drawing/compare/v7.18.0...v7.19.0) (2026-10-20)
 
 
@@ -10,6 +22,11 @@ All notable changes to this project will be documented in this file. Each commit
 * **plugins:** options of plugins given by the app with the `pluginOptions` option (by plugin name), read by `Plugin.getOptions(defaults)`
 * **plugins:** `drawer.getPointerPosition()` gives the pointer in drawing coordinates (center of the view when it is out of the canvas), the `SelectWidget` type is exported to select shapes from code
 * **docs:** plugins guide (why plugins, steps, tools, commands, texts, options, shapes, events, packaging, testing) and a complete plugin template in the repository (`packages/plugin-template`)
+
+
+### Bug Fixes
+
+* **plugins:** commands of plugins marked `readOnly` (not modifying the drawing) stay available while their plugin is disabled by `forceDisabled`, as in read only
 
 ## [7.18.0](https://github.com/fabienwnklr/free-drawing/compare/v7.17.1...v7.18.0) (2026-10-20)
 
