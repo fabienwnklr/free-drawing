@@ -1,0 +1,19 @@
+{
+  "name": "@free-drawing/plugin-template",
+  "description": "Template of a free-drawing plugin: tools, commands, options, texts, listeners, a plugin requiring another one",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc -p .",
+    "lint": "prettier --check \"src/**/*.{ts,css}\" \"tests/**/*.ts\"",
+    "format": "prettier --write \"src/**/*.{ts,css}\" \"tests/**/*.ts\""
+  },
+  "peerDependencies": {
+    "@fabwcie/free-drawing": "^7.19.0",
+    "konva": "^10.9.0"
+  }
+}

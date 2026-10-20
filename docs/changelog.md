@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.19.0](https://github.com/fabienwnklr/free-drawing/compare/v7.18.0...v7.19.0) (2026-10-20)
+
+
+### Features
+
+* **plugins:** options of plugins given by the app with the `pluginOptions` option (by plugin name), read by `Plugin.getOptions(defaults)`
+* **plugins:** `drawer.getPointerPosition()` gives the pointer in drawing coordinates (center of the view when it is out of the canvas), the `SelectWidget` type is exported to select shapes from code
+* **docs:** plugins guide (why plugins, steps, tools, commands, texts, options, shapes, events, packaging, testing) and a complete plugin template in the repository (`packages/plugin-template`)
+
 ## [7.18.0](https://github.com/fabienwnklr/free-drawing/compare/v7.17.1...v7.18.0) (2026-10-20)
 
 

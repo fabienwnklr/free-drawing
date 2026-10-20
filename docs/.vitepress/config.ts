@@ -29,6 +29,7 @@ export default defineConfig({
     nav: [
       { text: 'Get started', link: '/get-started/' },
       { text: 'Features', link: '/features' },
+      { text: 'Plugins', link: '/plugins' },
       { text: 'API', link: '/api/' },
       { text: 'Changelog', link: '/changelog' },
       { text: 'Demo', link: 'https://free-drawing-demo.netlify.app/', target: '_blank' },

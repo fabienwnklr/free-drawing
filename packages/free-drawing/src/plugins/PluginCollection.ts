@@ -206,15 +206,13 @@ export class PluginCollection {
   }
 
   /**
-   * Command can be run now: plugin not disabled, drawer not read only (unless the command does not modify the
-   * drawing), available for the command
+   * Command can be run now: its plugin is enabled (not read only, not disabled by `forceDisabled`), unless the command
+   * does not modify the drawing (`readOnly`), and it is available for the command
    * @param registered Command and its plugin
    * @returns true when the command is shown and its shortcut runs it
    */
   _isAvailable({ plugin, command }: RegisteredCommand): boolean {
-    return (
-      !plugin.isForceDisabled && (!!command.readOnly || !this.drawer.readOnly) && (command.isAvailable?.() ?? true)
-    );
+    return (!!command.readOnly || plugin.isEnabled) && (command.isAvailable?.() ?? true);
   }
 
   /**

@@ -104,6 +104,7 @@ export type {
   PluginClass,
   PluginCommand,
   PluginCommandMenu,
+  PluginOptions,
   PluginRequirement,
   WidgetClass,
 } from '@/@types/plugin';
@@ -112,6 +113,8 @@ export { Plugin } from '@/plugins/Plugin';
 export { PluginCollection } from '@/plugins/PluginCollection';
 export { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 export { ShapeWidget } from '@/components/toolbar/widgets/ShapeWidget';
+// selection of shapes from code: `drawer.getWidget<SelectWidget>('selection')?.select(shapes)`
+export type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 export { drawerEvents, shapeName } from '@/constants';
 export { createButton, setLabel, setPressed } from '@/utils/dom';
 
@@ -852,6 +855,15 @@ export class Drawer extends MicroEvent {
    */
   _getRelativePointerPos(): Vector2d {
     return this.stage.getAbsoluteTransform().copy().invert().point(this._getPointerPos());
+  }
+
+  /**
+   * Pointer in drawing coordinates (view moved and zoomed), for apps and plugins: center of the view when the pointer
+   * is out of the canvas (menu, keyboard)
+   * @returns Position of the pointer in the drawing
+   */
+  getPointerPosition(): Vector2d {
+    return this._getRelativePointerPos();
   }
 
   /**

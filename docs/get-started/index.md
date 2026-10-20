@@ -69,6 +69,7 @@ const drawer = new Drawer($el, {
   storage: null, // drawing saved somewhere else than localStorage (e.g. server of your app), see "Use in an app" below
   user: null, // user of your app ({ id, name }), used in collaboration sessions instead of id and name kept in browser
   plugins: [], // plugins added to the drawer (classes extending Plugin), see Plugins below
+  pluginOptions: {}, // options of plugins by plugin name, e.g. { Stamps: { max: 20 } }
   opacity: 1, // opacity of draw
   textStyle: {
     // style of new text
@@ -285,7 +286,7 @@ The default toolbar groups the tools below in "More tools" (`widgetGroups` repla
 
 ## Plugins
 
-Other developers add tools, commands, shortcuts and items of the context menu with plugins: classes extending `Plugin`, given to the `plugins` option.
+Other developers add tools, commands, shortcuts and items of the context menu with plugins: classes extending `Plugin`, given to the `plugins` option. The [plugins guide](https://free-drawing-docs.netlify.app/plugins) explains each part, the [plugin template](https://github.com/fabienwnklr/free-drawing/tree/master/packages/plugin-template) is a complete plugin to copy.
 
 ```js
 import { Drawer, Plugin, BaseWidget, drawerEvents, shapeName } from '@fabwcie/free-drawing';
@@ -346,8 +347,10 @@ drawer.plugins.get(Stamps); // also by name: drawer.plugins.get('Stamps'), drawe
 - Commands are available unless their `isAvailable()` returns false, in read only only with `readOnly: true`. Shortcuts of plugins run before the ones of the library: avoid the ones listed in help.
 - `isEnabled` is false in read only, or while the plugin is disabled by `forceDisabled(reason)` (until `clearForceDisabled(reason)` for every reason): its tools and commands are disabled, `drawer.plugin.change` is triggered.
 - Texts: `this.t(key, params)`, in the language of the drawer; the `translations` option can replace them.
+- Options: the app gives them by plugin name, the plugin reads them with its defaults: `options = this.getOptions({ max: 0 })` with `pluginOptions: { Stamps: { max: 20 } }`.
+- Drawer API useful to plugins: `addShape`, `stage.fire('change')`, `placeInFrames`, `getPointerPosition()` (pointer in drawing coordinates), `getSelectedShapes()`, `getWidget<SelectWidget>('selection')?.select(shapes)`, `layout.add(region, element)`, `toast(message)`.
 - Shapes: draw with the shapes of the library (`Line`, `Arrow`, `Rect`, `Ellipse`, `Text`, `Path` and groups of them), marked with a name or attributes. Files, links and collaboration accept only these classes.
-- Exported for plugins: `Plugin`, `BaseWidget`, `ShapeWidget`, `drawerEvents`, `shapeName`, `createButton`, `setLabel`, `setPressed`, and types (`PluginClass`, `PluginCommand`, `PluginTranslations`, `WidgetClass`...).
+- Exported for plugins: `Plugin`, `BaseWidget`, `ShapeWidget`, `drawerEvents`, `shapeName`, `createButton`, `setLabel`, `setPressed`, and types (`PluginClass`, `PluginCommand`, `PluginOptions`, `PluginTranslations`, `SelectWidget`, `WidgetClass`...).
 
 ## Selection
 

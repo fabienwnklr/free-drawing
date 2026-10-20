@@ -57,6 +57,11 @@ features:
     details: Light and dark themes, English, French, Spanish and German, replaceable texts, labels for screen readers.
     link: /features#themes-languages-and-accessibility
     linkText: Accessibility
+  - icon: 🔌
+    title: Plugins
+    details: Add your own tools, commands, shortcuts and menu items. They get help, palette, texts, saving, history and collaboration like the built-in ones.
+    link: /plugins
+    linkText: Extend it
   - icon: 🧩
     title: Made for apps
     details: One element and one line, your own storage, events, preferences and typed API. Konva as only peer dependency.
@@ -105,7 +110,7 @@ const drawer = new Drawer(document.getElementById('drawer'), {
 drawer.on('drawer.change', () => console.log(drawer.getDrawingFile()));
 ```
 
-The [guide](/get-started/) describes every option, the [features](/features) page shows what the drawer can do and the [API](/api/) documents each class and method.
+The [guide](/get-started/) describes every option, the [features](/features) page shows what the drawer can do, the [plugins](/plugins) guide shows how to add your own features and the [API](/api/) documents each class and method.
 
 ## Open source
 

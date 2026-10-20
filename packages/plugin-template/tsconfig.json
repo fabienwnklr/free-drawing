@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "noUnusedLocals": true,
+    "useDefineForClassFields": true,
+    "types": ["vite/client"],
+    /* in this repository: sources of the library (out of it, the installed package is used, remove these paths) */
+    "paths": {
+      "@fabwcie/free-drawing": ["../free-drawing/src/Drawer.ts"],
+      "@/*": ["../free-drawing/src/*"]
+    }
+  },
+  "include": ["src", "tests"]
+}

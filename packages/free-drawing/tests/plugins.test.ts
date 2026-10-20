@@ -236,6 +236,29 @@ describe('Plugins', () => {
     expect(stamps.stamps).toBe(2);
   });
 
+  it('Options of a plugin: its defaults replaced by the ones of the app, under its name', () => {
+    class Limited extends Plugin {
+      static readonly pluginName = 'Limited';
+      /** Options of the plugin */
+      options = this.getOptions({ max: 10, color: '#f08c00' });
+    }
+
+    const configured = createDrawer({ plugins: [Limited], pluginOptions: { Limited: { max: 3 } } });
+    const defaults = createDrawer({ plugins: [Limited] });
+
+    expect(configured.plugins.get(Limited)!.options).toEqual({ max: 3, color: '#f08c00' });
+    expect(defaults.plugins.get(Limited)!.options).toEqual({ max: 10, color: '#f08c00' });
+  });
+
+  it('Pointer position in drawing coordinates for plugins, view moved and zoomed', () => {
+    const drawer = createDrawer();
+
+    drawer.stage.scale({ x: 2, y: 2 });
+    drawer.stage.position({ x: 10, y: 20 });
+    drawer.stage.setPointersPositions(new MouseEvent('mousemove', { clientX: 50, clientY: 60 }));
+    expect(drawer.getPointerPosition()).toEqual({ x: 20, y: 20 });
+  });
+
   it('Asynchronous init waited by drawer.ready, errors logged without stopping other plugins, listeners destroyed', async () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => {});
     const clicks = vi.fn();

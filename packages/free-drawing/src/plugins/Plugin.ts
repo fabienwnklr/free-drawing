@@ -90,8 +90,8 @@ export abstract class Plugin {
   }
 
   /**
-   * Disable the plugin (its widgets and commands) for a reason, until `clearForceDisabled` with the same id. Several
-   * reasons disable it until all of them are cleared
+   * Disable the plugin (its widgets, its commands modifying the drawing) for a reason, until `clearForceDisabled` with
+   * the same id. Several reasons disable it until all of them are cleared
    * @param id Reason disabling it (name of a feature...)
    */
   forceDisabled(id: string) {
@@ -108,6 +108,17 @@ export abstract class Plugin {
   clearForceDisabled(id: string) {
     if (!this.#disabledBy.delete(id) || this.#disabledBy.size) return;
     this._changed();
+  }
+
+  /**
+   * Options of the plugin: defaults of the plugin replaced by the ones the app gives in the `pluginOptions` drawer
+   * option, under the name of the plugin
+   * @template T options of the plugin
+   * @param defaults Default value of every option
+   * @returns defaults with the options of the app (merged one level deep)
+   */
+  getOptions<T extends object>(defaults: T): T {
+    return { ...defaults, ...(this.drawer.options.pluginOptions[this.name] as Partial<T> | undefined) };
   }
 
   /**

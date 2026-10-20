@@ -1,0 +1,15 @@
+/* Styles of a plugin: every rule under .drawer-container (nothing applies to the page), colors of the drawer theme
+   (--drawer-* custom properties, light and dark) */
+
+/* counter of the header: icon and number */
+.drawer-container .drawer-button.stamp-counter {
+  gap: 4px;
+  width: auto;
+  padding: 0 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* stamps disabled (limit, read only) */
+.drawer-container .drawer-button.stamp-counter.is-off {
+  color: var(--drawer-text-muted);
+}

@@ -12,6 +12,9 @@ export type PluginClass<T extends Plugin = Plugin> = (new (drawer: Drawer) => T)
   readonly requires?: readonly (PluginClass | string)[];
 };
 
+/** Options of plugins given by the app (`pluginOptions` drawer option), by plugin name, read by `Plugin.getOptions` */
+export type PluginOptions = Record<string, object>;
+
 /** Plugin required by another one: its class, or its name (plugin given to the `plugins` option) */
 export type PluginRequirement = PluginClass | string;
 
@@ -35,7 +38,7 @@ export type PluginCommand = {
   shortcut?: string;
   /** Item of the context menu for selected shapes, or for the drawing (nothing selected) */
   contextMenu?: PluginCommandMenu;
-  /** Also available in read only: does not modify the drawing (export...) */
+  /** Does not modify the drawing (export, count...): also available in read only and while the plugin is disabled */
   readOnly?: boolean;
   /** Command available now (shown and run by its shortcut), always by default */
   isAvailable?: () => boolean;

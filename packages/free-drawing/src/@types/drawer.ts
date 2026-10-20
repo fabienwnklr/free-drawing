@@ -4,7 +4,7 @@ import type { Group } from 'konva/lib/Group';
 import type { CustomTranslations, Language } from '@/@types/i18n';
 import type { DrawingFile } from '@/@types/file';
 import type { CollaborationOptions } from '@/@types/collaboration';
-import type { PluginClass } from '@/@types/plugin';
+import type { PluginClass, PluginOptions } from '@/@types/plugin';
 
 /**
  * Node of drawing: a shape or a group of drawing nodes
@@ -81,6 +81,8 @@ export type DrawerOptions = {
   storage: DrawerStorage | null;
   /** Plugins added to the drawer (classes extending `Plugin`), plugins they require are added too */
   plugins: PluginClass[];
+  /** Options of plugins by plugin name (e.g. `{ Stamps: { max: 20 } }`), read by `Plugin.getOptions` */
+  pluginOptions: PluginOptions;
 };
 
 /**

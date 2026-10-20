@@ -63,6 +63,7 @@ export const defaultOptions: DrawerOptions = {
   user: null,
   storage: null,
   plugins: [],
+  pluginOptions: {},
   widgets: widgetNames,
   // more tools in one button
   widgetGroups: [{ widgets: ['triangle', 'diamond', 'heart', 'cloud', 'highlighter', 'laser', 'frame'], icon: 'more' }],
