@@ -1,6 +1,5 @@
 import '@/components/SelectionMenu/selection-menu.scss';
 import type { Drawer } from '@/Drawer';
-import type { IRect } from 'konva/lib/types';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import DuplicateIcon from '@/icons/duplicate.svg?raw';
 import SendBackwardIcon from '@/icons/send-backward.svg?raw';
@@ -17,7 +16,8 @@ import { Group } from 'konva/lib/Group';
 import { arrowNavigation, createButton, setLabel } from '@/utils/dom';
 import type { TranslationKey } from '@/@types/i18n';
 import { drawerEvents } from '@/constants';
-import { getFrameTitle, isFrame } from '@/utils/frame';
+import { isFrame } from '@/utils/frame';
+import { getPlacementArea, getSelectionBox, getSelectionSurroundings, placeInView } from '@/utils/selection';
 import { getTexts } from '@/utils/text';
 
 /** Space between selection and menu, between menu and drawer edges (px) */
@@ -167,46 +167,10 @@ export class SelectionMenu {
   }
 
   /**
-   * Box of selected shapes in view, null if menu is not shown (no selection, shapes moved or edited...)
-   * @returns Client rect around selected shapes (view coordinates), null when the menu is hidden
-   */
-  private _getSelectionBox(): IRect | null {
-    const transformer = this.transformer;
-    const nodes = transformer?.nodes() ?? [];
-
-    if (
-      !transformer ||
-      !nodes.length ||
-      !transformer.isVisible() ||
-      this.drawer.readOnly ||
-      this.drawer._duringAction() ||
-      transformer.isTransforming() ||
-      nodes.some((node) => node.isDragging())
-    ) {
-      return null;
-    }
-
-    const boxes = nodes.map((node) => node.getClientRect());
-    const x = Math.min(...boxes.map((box) => box.x));
-    const y = Math.min(...boxes.map((box) => box.y));
-
-    return {
-      x,
-      y,
-      width: Math.max(...boxes.map((box) => box.x + box.width)) - x,
-      height: Math.max(...boxes.map((box) => box.y + box.height)) - y,
-    };
-  }
-
-  /**
-   * Show menu next to selection, or hide it
+   * Show menu next to selection, or hide it (no selection, shapes moved or edited, out of view...)
    */
   update() {
-    const box = this._getSelectionBox();
-    const { stage } = this.drawer;
-
-    // selection out of view
-    if (!box || box.x > stage.width() || box.y > stage.height() || box.x + box.width < 0 || box.y + box.height < 0) {
+    if (!getSelectionBox(this.drawer)) {
       this.hide();
       return;
     }
@@ -238,12 +202,8 @@ export class SelectionMenu {
     this.$fitWidthBtn.hidden = locked || !getTexts(shapes).length;
 
     const { left, top } = this._getPlace();
-    // view in drawer
-    const view = this.drawer.$stageContainer.getBoundingClientRect();
-    const container = this.drawer.$drawerContainer.getBoundingClientRect();
 
-    this.$menu.style.left = `${left + view.left - container.left}px`;
-    this.$menu.style.top = `${top + view.top - container.top}px`;
+    placeInView(this.drawer, this.$menu, left, top);
   }
 
   /**
@@ -252,31 +212,10 @@ export class SelectionMenu {
    * @returns Left and top of the menu in view (px)
    */
   private _getPlace() {
-    const { stage } = this.drawer;
     const { offsetWidth: width, offsetHeight: height } = this.$menu;
-    // hidden anchors are not counted, titles of frames above their box
-    const boxes = [
-      this.transformer!.getClientRect(),
-      ...this.drawer
-        .getSelectedShapes()
-        .filter(isFrame)
-        .map((frame) => getFrameTitle(frame).getClientRect()),
-    ];
-    const x = Math.min(...boxes.map((box) => box.x));
-    const y = Math.min(...boxes.map((box) => box.y));
-    const around = {
-      x,
-      y,
-      width: Math.max(...boxes.map((box) => box.x + box.width)) - x,
-      height: Math.max(...boxes.map((box) => box.y + box.height)) - y,
-    };
+    const around = getSelectionSurroundings(this.drawer);
     // above toolbar of footer
-    const area = {
-      left: gap,
-      top: gap,
-      right: stage.width() - gap,
-      bottom: stage.height() - this.drawer.layout.$footer.offsetHeight - gap,
-    };
+    const area = getPlacementArea(this.drawer, gap);
     const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(value, max));
     const centerLeft = clamp(around.x + around.width / 2 - width / 2, area.left, area.right - width);
     const centerTop = clamp(around.y + around.height / 2 - height / 2, area.top, area.bottom - height);

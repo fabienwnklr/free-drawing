@@ -340,6 +340,13 @@ export class CommandPalette extends Modal {
             shortcut: 'Ctrl+D',
             run: () => drawer.duplicateShapes(),
           },
+          editSelection &&
+            drawer.linkEditor && {
+              id: 'link url address web page',
+              label: t('action.link'),
+              icon: LinkIcon,
+              run: () => drawer.linkEditor?.edit(),
+            },
           edit &&
             drawer.canGroupShapes(selected) && {
               id: 'group',

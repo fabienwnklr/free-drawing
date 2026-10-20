@@ -29,6 +29,7 @@ import {
   rectTouches,
 } from '@/utils/hit';
 import {
+  type Frame,
   getDrawingShape,
   getFrameShapes,
   isFrame,
@@ -373,11 +374,8 @@ export class SelectWidget extends BaseWidget {
     // overlay of active tool (brush, shapes...) replaced by selection one
     if (this.drawer.activeWidget !== this) this.drawer.activeWidget?.overlay?.hide();
 
-    // frames have no style
-    const styled = selectable.filter((shape) => !isFrame(shape));
-
-    if (locked || !styled.length) this.hideOverlay();
-    else this.showOverlay(styled);
+    if (locked) this.hideOverlay();
+    else this.showOverlay(selectable);
     this.drawer.trigger(drawerEvents.selectionChange, selectable);
   }
 
@@ -512,15 +510,17 @@ export class SelectWidget extends BaseWidget {
   }
 
   /**
-   * Show overlay for selected shapes, text overlay if selection contains only text
-   * @param nodes Selected shapes (shapes of groups are used)
+   * Show overlay for selected shapes, text overlay if selection contains only text. Frames have no style: opacity,
+   * stacking order and actions only
+   * @param nodes Selected shapes (shapes of groups are used) and frames
    */
   showOverlay(nodes: (Shape<ShapeConfig> | Group)[]) {
     const textOverlay = this.drawer.getWidget<TextWidget>('text')?.overlay;
+    const frames = nodes.filter(isFrame);
     // shapes of groups
-    const shapes = nodes.flatMap(getShapes);
+    const shapes = nodes.filter((node) => !isFrame(node)).flatMap(getShapes);
     const isText = (s: Shape<ShapeConfig>) => s.hasName(shapeName.text);
-    const onlyText = shapes.length > 0 && shapes.every(isText);
+    const onlyText = shapes.length > 0 && !frames.length && shapes.every(isText);
     // a kind of selected shapes the section applies to
     const has = (names: string[]) => shapes.some((s) => names.some((name) => s.hasName(name)));
 
@@ -531,6 +531,7 @@ export class SelectWidget extends BaseWidget {
       textOverlay?.hide();
       // sections of every kind of selected shape, each one changes the shapes it applies to: dash of outline shapes
       // (not brush lines), background of rectangles and ellipses, corners of rectangles, width of outlines and strokes
+      this.overlay.toggleColorBtns(shapes.length > 0);
       this.overlay.toggleStyleBtns(has(strokeStyleShapes));
       this.overlay.toggleFillBtns(has(fillShapes));
       this.overlay.toggleEdgesBtns(has(edgesShapes));
@@ -538,7 +539,8 @@ export class SelectWidget extends BaseWidget {
       // with texts: their fields, color is also the one of texts
       this.overlay.toggleTextFields(shapes.some(isText));
       this.overlay.setColorTitle(shapes.some(isText) ? 'overlay.color' : 'overlay.stroke');
-      this.overlay.show(shapes);
+      // opacity of first shape, else of first frame
+      this.overlay.show([...shapes, ...frames]);
     }
   }
 
@@ -558,7 +560,7 @@ export class SelectWidget extends BaseWidget {
     this._setNested([]);
     this.hideOverlay();
 
-    if (this.drawer.activeWidget !== this) this.drawer.activeWidget?.overlay?.show();
+    if (this.drawer.activeWidget !== this) this.drawer.activeWidget?.showToolOverlay();
     this.drawer.trigger(drawerEvents.selectionChange, []);
   }
 
@@ -971,19 +973,18 @@ export class SelectWidget extends BaseWidget {
   /**
    * Apply update on each selected shape, then fire change once
    * @param update Change of one shape, called for each selected shape (shapes of groups, not locked shapes nor frames)
+   * @param updateFrame Change of a selected frame (as a whole), frames are not modified without it
    */
-  private _updateSelected(update: (shape: Shape<ShapeConfig>) => void) {
-    // shapes of groups too, locked shapes and frames are not modified
-    const shapes = this.isLocked()
-      ? []
-      : this.transformer
-          .nodes()
-          .filter((node) => !isFrame(node))
-          .flatMap(getShapes);
+  private _updateSelected(update: (shape: Shape<ShapeConfig>) => void, updateFrame?: (frame: Frame) => void) {
+    // shapes of groups too, locked shapes are not modified
+    const nodes = this.isLocked() ? [] : this.transformer.nodes();
+    const shapes = nodes.filter((node) => !isFrame(node)).flatMap(getShapes);
+    const frames = updateFrame ? nodes.filter(isFrame) : [];
 
-    if (!shapes.length) return;
+    if (!shapes.length && !frames.length) return;
 
     shapes.forEach(update);
+    if (updateFrame) frames.forEach(updateFrame);
     this.drawer.stage.fire('change');
   }
 
@@ -1074,10 +1075,13 @@ export class SelectWidget extends BaseWidget {
 
   /**
    * Set opacity of shape 0 to 1
-   * @param opacity Opacity of selected shapes, from 0 (transparent) to 1
+   * @param opacity Opacity of selected shapes, from 0 (transparent) to 1, of frames as a whole (border, title, shapes)
    */
   setOpacity(opacity: number) {
-    this._updateSelected((s) => s.opacity(opacity));
+    this._updateSelected(
+      (s) => s.opacity(opacity),
+      (frame) => frame.opacity(opacity)
+    );
   }
 
   /**

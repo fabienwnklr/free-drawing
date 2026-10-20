@@ -290,7 +290,16 @@ With the selection tool:
 - a selection rectangle selects the shapes it touches (Shift adds them): lines and strokes where they are drawn, rotated shapes as drawn. Drawn inside a big shape or a frame, it selects the shapes it touches there, not the big shape;
 - a pressed shape is selected and dragged alone, the selection is dragged from any place of its box.
 
-The options panel of a selection shows the options of every kind of selected shape: stroke and its style, background, corners, text font, size, style and alignment... Each option changes the selected shapes it applies to (e.g. the background of rectangles and ellipses, the font of texts). A selection of texts only shows the text panel.
+The options panel of a selection shows the options of every kind of selected shape: stroke and its style, background, corners, text font, size, style and alignment... Each option changes the selected shapes it applies to (e.g. the background of rectangles and ellipses, the font of texts). A selection of texts only shows the text panel. Frames have no style: a selected frame shows its opacity (of the whole frame: border, title and shapes), its stacking order and the actions. The actions of the panel duplicate (Ctrl+D), delete (Delete) or link the selection.
+
+Links: the link action (panel, context menu, command palette) shows the link of the selection above it, a web page or an email address (`https://` added without protocol, other protocols refused). Enter applies it, Escape cancels, its buttons open or remove it. A shape with a link shows it above itself when selected, and a link icon at its top right corner (at the end of the title of a frame): a click opens the link in a new tab, its address is shown on hover. Links are saved with shapes, shared with collaborators and kept around shapes in svg exports.
+
+```js
+drawer.setShapeLink('example.com/roadmap'); // selected shapes by default, false for an invalid address
+drawer.getShapeLink(shape); // 'https://example.com/roadmap', null without link
+drawer.openShapeLink(shape);
+drawer.setShapeLink(null, [shape]); // removed
+```
 
 Shift constrains drawing and selected shapes, also pressed or released without moving pointer:
 

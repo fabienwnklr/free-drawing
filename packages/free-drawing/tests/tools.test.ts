@@ -258,8 +258,9 @@ describe('Frame', () => {
     // shapes of a selected frame are selected with it
     selectWidget.select([frame, inside]);
     expect(drawer.getSelectedShapes()).toEqual([frame]);
-    // no style, no rotation
-    expect(selectWidget.overlay.$overlayContainer.classList.contains('show')).toBe(false);
+    // no style (panel without color: opacity, layers, actions), no rotation
+    expect(selectWidget.overlay.$overlayContainer.classList.contains('show')).toBe(true);
+    expect(selectWidget.overlay.$strokeColorContainer.style.display).toBe('none');
     expect(transformer.rotateEnabled()).toBe(false);
 
     // resized from left: shapes stay in place, size instead of scale

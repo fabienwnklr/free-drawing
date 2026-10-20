@@ -1,5 +1,6 @@
 import type { ShapeState, DrawingFile, FilePickerWindow } from '@/@types/file';
 import { groupClasses, shapeClasses } from '@free-drawing/protocol';
+import { parseLink } from '@/utils/link';
 
 /**
  * Extension of drawing files (JSON)
@@ -10,12 +11,17 @@ export const drawingFileExtension = '.freedrawing';
 // them are created (`shapeClasses`, `groupClasses` of the protocol, also checked by the server)
 
 /**
- * Attributes of a node state, without `__proto__` (konva would set it as prototype of the node attributes)
+ * Attributes of a node state, without `__proto__` (konva would set it as prototype of the node attributes) nor a link
+ * other than a web page or an email address (`parseLink`)
  * @param attrs Attributes read from a file or a change (not trusted)
  * @returns Own attributes, in a new object
  */
 const parseAttrs = (attrs: object): Record<string, unknown> =>
-  Object.fromEntries(Object.entries(attrs).filter(([key]) => key !== '__proto__'));
+  Object.fromEntries(
+    Object.entries(attrs)
+      .filter(([key, value]) => key !== '__proto__' && (key !== 'link' || parseLink(value)))
+      .map(([key, value]) => [key, key === 'link' ? parseLink(value) : value])
+  );
 
 /**
  * Drawing shape or group of a file, null for other nodes

@@ -180,3 +180,15 @@ export type Shortcut = {
   /** Translated text after keys, e.g. while drawing */
   after?: string;
 };
+
+/** Part of the view where elements next to the selection are placed (selection menu, link editor), in px */
+export type ViewArea = {
+  /** Left edge */
+  left: number;
+  /** Top edge */
+  top: number;
+  /** Right edge */
+  right: number;
+  /** Bottom edge, above the toolbar of the footer */
+  bottom: number;
+};

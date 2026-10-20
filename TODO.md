@@ -97,3 +97,9 @@
 - [ ] export classes used by the public API: `DrawerLayout` (`drawer.layout`), `Frame`... (types are exported from `src/@types`)
 - [x] deploy the static demo like the docs (Netlify from this repository, `yarn build:static`) instead of `deploy:static` pushing to free-drawing-demo (demo not updated since 2024)
 - [ ] npm package stuck at 2.0.1: publish the current version (`yarn release`)
+
+# Other
+
+- [ ] Generate 3 differents logo for drawer and propose to me one to chose
+- [ ] Create package to use drawer with react/vuejs
+- [ ] dans la docs mettre en valeur que c'est pour du vanilla comme du react/vue

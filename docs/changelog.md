@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.17.0](https://github.com/fabienwnklr/free-drawing/compare/v7.16.0...v7.17.0) (2026-10-20)
+
+
+### Features
+
+* **frames:** a selected frame shows the options panel with its opacity (of the whole frame: border, title and shapes), its stacking order and the actions
+* **selection:** actions section in the options panel of a selection: duplicate, delete and link
+* **links:** a web page or an email address can be attached to shapes (also groups and frames): edited above the selection (link action of the panel, context menu, command palette; Enter applies, Escape cancels, open and remove buttons), shown above a selected shape having one, link icon at the top right of shapes with a link (end of the title of frames) opening it on click, address shown on hover; saved with shapes, shared with collaborators, around shapes in svg exports; other protocols are refused, also in files, drawing links and changes of collaborators; `setShapeLink`, `getShapeLink` and `openShapeLink` methods
+
+
+### Bug Fixes
+
+* **frames:** the options panel of shape tools no longer shows up after drawing a frame, nor stays over the selection panel once the tool is changed
+* **selection:** the menu next to the selection is no longer placed under the options panel
+
 ## [7.16.0](https://github.com/fabienwnklr/free-drawing/compare/v7.15.0...v7.16.0) (2026-10-20)
 
 

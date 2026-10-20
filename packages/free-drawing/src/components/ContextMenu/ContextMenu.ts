@@ -14,7 +14,7 @@ import type { ContextMenuItem, ContextMenuSection } from '@/@types/ui';
 
 /**
  * Menu of right click (or context menu key, Shift + F10): actions on selection when a shape is under pointer
- * or selected (order, rotate, flip, fit width of texts, duplicate, lock, delete, copy as image; unlock for locked
+ * or selected (order, rotate, flip, fit width of texts, duplicate, link, lock, delete, copy as image; unlock for locked
  * shapes), else actions on
  * drawing (paste, select all, copy as image, snapping, grid), with their shortcuts
  */
@@ -105,6 +105,12 @@ export class ContextMenu {
           $item: this._createItem('action.duplicate', 'Ctrl+D'),
           visible: selection,
           run: () => drawer.duplicateShapes(),
+        },
+        {
+          // link editor above the selection
+          $item: this._createItem('action.link', ''),
+          visible: () => selection() && !!drawer.linkEditor,
+          run: () => drawer.linkEditor?.edit(),
         },
         {
           $item: this._createItem('context.lock', 'Ctrl+Shift+L'),
@@ -206,7 +212,7 @@ export class ContextMenu {
   /**
    * Menu item, focused with arrow keys, shortcut shown at its end
    * @param label Key of the item text (translated again when language changes)
-   * @param shortcut Keys shown at the end of the item (hidden to assistive technologies)
+   * @param shortcut Keys shown at the end of the item (hidden to assistive technologies), empty without one
    * @param role `menuitemcheckbox` for a toggle (snapping, grid), else `menuitem`
    * @param keyshortcuts `aria-keyshortcuts` when shown shortcut is not one
    * @returns Item button (not in tab order), its click listener is added by `_init`
@@ -228,7 +234,7 @@ export class ContextMenu {
     $item.append($label, $shortcut);
     this.drawer.i18n.translate((t) => ($label.textContent = t(label)));
     $item.setAttribute('role', role);
-    $item.setAttribute('aria-keyshortcuts', keyshortcuts);
+    if (keyshortcuts) $item.setAttribute('aria-keyshortcuts', keyshortcuts);
     $item.tabIndex = -1;
 
     return $item;

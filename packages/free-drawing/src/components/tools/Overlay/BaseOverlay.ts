@@ -5,6 +5,9 @@ import LineDottedIcon from '@/icons/line-dotted.svg?raw';
 import LineDashedIcon from '@/icons/line-dashed.svg?raw';
 import EdgesSharpIcon from '@/icons/edges-sharp.svg?raw';
 import EdgesRoundIcon from '@/icons/edges-round.svg?raw';
+import DuplicateIcon from '@/icons/duplicate.svg?raw';
+import TrashIcon from '@/icons/trash.svg?raw';
+import LinkIcon from '@/icons/link.svg?raw';
 import '@/components/tools/Overlay/overlay.scss';
 import { Shape, type ShapeConfig } from 'konva/lib/Shape';
 import type { Group } from 'konva/lib/Group';
@@ -27,7 +30,8 @@ import type { Choice, IconChoice } from '@/@types/ui';
 
 /**
  * Options panel of a tool or of the selection, common to all shapes: stroke and background colors, stroke width and
- * style, corners, opacity and stacking order. Buttons only call drawer setters, fields follow `drawer.options.change`
+ * style, corners, opacity, stacking order and actions (duplicate, delete, link) of the selection. Buttons only call
+ * drawer setters, fields follow `drawer.options.change`
  */
 export class BaseOverlay {
   /** Panel element (region named by `label` option) in floating region, shown with `show` */
@@ -75,6 +79,11 @@ export class BaseOverlay {
 
   /** Stacking order section (back, backward, forward, front), shown only for selected shapes */
   $orderContainer!: HTMLDivElement;
+
+  /** Actions section (duplicate, delete, link), shown only for selected shapes */
+  $actionsContainer!: HTMLDivElement;
+  /** Link button of actions section, shows the link editor above the selection (`drawer.linkEditor`) */
+  $linkBtn!: HTMLButtonElement;
 
   /** CSS classes of sections and of their buttons, shared with subclasses */
   selectors = {
@@ -130,6 +139,8 @@ export class BaseOverlay {
     this._createOpacityField();
     // stacking order of selected shapes
     this._createOrderFields();
+    // duplicate, delete, link of selected shapes
+    this._createActionsFields();
 
     // Then append to dom
     this.appendContent([
@@ -140,6 +151,7 @@ export class BaseOverlay {
       this.$edgesContainer,
       this.$opacityContainer,
       this.$orderContainer,
+      this.$actionsContainer,
     ]);
   }
 
@@ -325,20 +337,31 @@ export class BaseOverlay {
     const { $container, $btnContainer } = this._createSection('overlay.layers');
     this.$orderContainer = $container;
 
-    shapeOrders.forEach(({ value: order, label, icon, shortcut }) => {
-      // action, not a toggle
-      const $btn = createButton('drawer-button', this.selectors.button);
+    for (const { value: order, label, icon, shortcut } of shapeOrders) {
+      const $btn = this._createAction(icon, label, shortcut, () => this.drawer.reorderShapes(order));
 
-      $btn.innerHTML = icon;
       $btn.setAttribute(dataAttributes.order, order);
-      this.drawer.i18n.translate((t) => {
-        setLabel($btn, t(label));
-        $btn.title = `${t(label)} (${shortcut})`;
-      });
-      $btn.setAttribute('aria-keyshortcuts', shortcut.replace('Ctrl', 'Control').replace(/Up|Down/, 'Arrow$&'));
-      $btn.addEventListener('click', () => this.drawer.reorderShapes(order));
       $btnContainer.append($btn);
-    });
+    }
+  }
+
+  /**
+   * Actions section: duplicate, delete and link of selected shapes (link editor above the selection)
+   */
+  private _createActionsFields() {
+    const { $container, $btnContainer } = this._createSection('overlay.actions');
+
+    this.$actionsContainer = $container;
+    this.$linkBtn = this._createAction(LinkIcon, 'action.link', '', () => this.drawer.linkEditor?.edit());
+    $btnContainer.append(
+      this._createAction(DuplicateIcon, 'action.duplicate', 'Ctrl+D', () => this.drawer.duplicateShapes()),
+      this._createAction(TrashIcon, 'action.delete', 'Delete', () => {
+        this.drawer.deleteShapes();
+        // panel hidden with the selection
+        this.drawer.focus();
+      }),
+      this.$linkBtn
+    );
   }
 
   /**
@@ -385,6 +408,32 @@ export class BaseOverlay {
   }
 
   /**
+   * Button of an action (not a toggle), its shortcut in its tooltip and `aria-keyshortcuts`
+   * @param icon svg icon
+   * @param label Key of its accessible name and tooltip
+   * @param shortcut Keys of the same action (`Ctrl+D`, `Ctrl+Shift+Up`, `Delete`), empty without one
+   * @param run Called on click
+   * @returns Button not appended yet
+   */
+  protected _createAction(icon: string, label: TranslationKey, shortcut: string, run: () => void) {
+    const $btn = createButton('drawer-button', this.selectors.button);
+
+    $btn.innerHTML = icon;
+    this.drawer.i18n.translate((t) => {
+      const keys = shortcut === 'Delete' ? t('key.delete') : shortcut;
+
+      setLabel($btn, t(label));
+      $btn.title = keys ? `${t(label)} (${keys})` : t(label);
+    });
+    if (shortcut) {
+      $btn.setAttribute('aria-keyshortcuts', shortcut.replace('Ctrl', 'Control').replace(/Up|Down/, 'Arrow$&'));
+    }
+    $btn.addEventListener('click', run);
+
+    return $btn;
+  }
+
+  /**
    * Toggle button of a field, `label` is its accessible name (icon or short content)
    * @param content HTML of the button: svg icon or short text
    * @param attr Data attribute holding the value, used by `updateFields` to find the active button
@@ -413,12 +462,15 @@ export class BaseOverlay {
 
   /**
    * Show panel with fields of first given shape, else of drawer options (tool options)
-   * @param shape selected shapes, stacking order section shown only for them
+   * @param shape selected shapes (frames: opacity only), stacking order and actions sections shown only for them
    */
   show(shape?: (Shape<ShapeConfig> | Group)[]) {
+    const selected = !!shape?.length;
+
     this.$overlayContainer.classList.add('show');
-    // stacking order only for selected shapes, not for tool options
-    this.$orderContainer.style.display = shape?.length ? '' : 'none';
+    // stacking order and actions only for selected shapes, not for tool options
+    this.$orderContainer.style.display = selected ? '' : 'none';
+    this.$actionsContainer.style.display = selected ? '' : 'none';
 
     const { strokeColor, fillColor, strokeWidth, strokeStyle, edges, opacity } = this.drawer.options;
     const shapes = (shape ?? []).filter((s): s is Shape<ShapeConfig> => s instanceof Shape);
@@ -441,6 +493,9 @@ export class BaseOverlay {
         edges: getEdges((find(edgesShapes) ?? first).getAttr('cornerRadius')),
         opacity: first.opacity(),
       };
+    } else if (shape?.length) {
+      // frames
+      data.opacity = shape[0].opacity();
     }
 
     this.updateFields(data);
@@ -500,6 +555,14 @@ export class BaseOverlay {
       this.$opacityRange.value = (change.opacity * 10).toString();
       this._updateOpacityText();
     }
+  }
+
+  /**
+   * Show / hide stroke color buttons, not relevant for frames
+   * @param visible True to show the section, false to hide it
+   */
+  toggleColorBtns(visible: boolean) {
+    this.$strokeColorContainer.style.display = visible ? '' : 'none';
   }
 
   /**

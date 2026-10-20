@@ -29,8 +29,9 @@ The toolbar, its groups and the shortcuts are set with the [`widgets` and `widge
 
 - **Select** a shape with a click, add one with Shift + click, reach the shapes behind with Alt + click, or drag a rectangle selecting every shape it touches.
 - **Move, resize and rotate**: Shift keeps proportions, rotates by steps of 15° and moves along an axis. Shapes snap to other shapes and to the grid.
-- **Options of mixed selections**: the panel shows the options of every kind of selected shape, and applies each one to the shapes it fits.
+- **Options of mixed selections**: the panel shows the options of every kind of selected shape, and applies each one to the shapes it fits, with actions to duplicate, delete or link the selection.
 - **Selection menu** next to the shapes: duplicate, group, rotate, stacking order, lock and delete.
+- **Links**: attach a web page or an email address to a shape, edited above it, opened from its link icon.
 - **Edit faster**: duplicate (Ctrl + D), group (Ctrl + G), flip (Shift + H / V), rotate by 90° (Shift + R / L), move with the arrow keys, undo and redo up to 100 steps.
 
 More in [Selection](/get-started/#selection).
@@ -41,7 +42,7 @@ More in [Selection](/get-started/#selection).
 
 - **Layers panel** (Alt + L): every shape with its name, top first. Rename, hide, lock, drag to reorder, select ranges with Shift.
 - **Groups** move and style their shapes together, which can still be reached alone with Ctrl + click.
-- **Frames**: named areas holding the shapes drawn or moved into them, cut at their border, exported without their title. A frame a shape is moved into or out of is highlighted, the moved shape is drawn whole.
+- **Frames**: named areas holding the shapes drawn or moved into them, cut at their border, exported without their title. A frame a shape is moved into or out of is highlighted, the moved shape is drawn whole. A selected frame has its opacity, stacking order and actions.
 - **Linked arrows** follow the shapes they link when these are moved or resized, fixed to a side or to the outline.
 - **Stacking order**: forward and backward past the next overlapping shape, or to the front and back.
 

@@ -58,6 +58,8 @@ import {
   setFrameLabel,
 } from '@/utils/frame';
 import { FrameHighlight } from '@/utils/frameHighlight';
+import { parseLink } from '@/utils/link';
+import { ShapeLinks } from '@/utils/shapeLinks';
 import type { FrameChanges } from '@/@types/shapes';
 
 // types of options, storage, preferences and files, for apps using the drawer
@@ -103,6 +105,7 @@ import { ConfirmModal } from '@/components/Modal/ConfirmModal';
 import { UndoRedo } from '@/components/tools/UndoRedo/UndoRedo';
 import { ContextMenu } from '@/components/ContextMenu/ContextMenu';
 import { SelectionMenu } from '@/components/SelectionMenu/SelectionMenu';
+import { LinkEditor } from '@/components/LinkEditor/LinkEditor';
 import { LayersPanel } from '@/components/LayersPanel/LayersPanel';
 import { SaveButton } from '@/components/tools/SaveButton/SaveButton';
 import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
@@ -158,6 +161,8 @@ export class Drawer extends MicroEvent {
   selectionLayer: Layer;
   /** Highlights of frames entered and left by moved shapes, in the selection layer */
   frameHighlight!: FrameHighlight;
+  /** Icons of shapes having a link, in the selection layer (see `setShapeLink`) */
+  shapeLinks!: ShapeLinks;
   /** Shapes being dragged or transformed: frames they come from, end of drawing above the drawing (`drawAbove`) */
   #moving: { shapes: DrawingShape[]; from: Map<DrawingShape, Frame | null>; drawInFrames: () => void } | null = null;
   /** Toolbar of the footer: widgets (tools) and their groups */
@@ -177,6 +182,8 @@ export class Drawer extends MicroEvent {
   position: Position | undefined;
   /** Menu next to selected shapes (`selectionMenu` option) */
   selectionMenu: SelectionMenu | undefined;
+  /** Link of selected shapes above them (with selection widget, see `setShapeLink`) */
+  linkEditor: LinkEditor | undefined;
   /** Panel listing shapes (`layersPanel` option) */
   layersPanel: LayersPanel | undefined;
   /** Button of header saving the drawing while auto save is off (`saveButton` option) */
@@ -368,6 +375,8 @@ export class Drawer extends MicroEvent {
     if (this.options.selectionMenu && this.getWidget('selection')) {
       this.selectionMenu = new SelectionMenu(this);
     }
+    // after the selection menu: placed out of it
+    if (this.getWidget('selection')) this.linkEditor = new LinkEditor(this);
     if (this.options.layersPanel) {
       this.layersPanel = new LayersPanel(this);
     }
@@ -837,6 +846,7 @@ export class Drawer extends MicroEvent {
     this._initZoomWheel();
     this._initKeyboardFocus();
     this._initFrameMoves();
+    this.shapeLinks = new ShapeLinks(this);
 
     this.stage.on('dragmove', (e) => {
       // shapes drag events bubble to stage, only stage drag (pan) moves the view
@@ -1621,6 +1631,54 @@ export class Drawer extends MicroEvent {
     );
 
     for (const shape of inside) moveShapeTo(shape, getFrameContent(frame));
+  }
+
+  /**
+   * Link of shapes (selected ones by default): web page or email address, opened from the link icon of the shape or from
+   * the selection panel
+   * @param link address (`https://` added without protocol, see `parseLink`), null or empty to remove the link
+   * @param shapes Shapes linked (removed ones ignored), selected shapes by default
+   * @returns true if a link changed (change saved), false for an invalid address (nothing changed)
+   */
+  setShapeLink(link: string | null, shapes: DrawingShape[] = this.getSelectedShapes()): boolean {
+    const url = link?.trim() ? parseLink(link) : null;
+
+    if (link?.trim() && !url) return false;
+
+    const changed = shapes.filter((shape) => shape.getLayer() && this.getShapeLink(shape) !== url);
+
+    for (const shape of changed) {
+      const node: Node = shape;
+
+      // attribute removed without link
+      node.setAttr('link', url ?? undefined);
+    }
+    if (changed.length) this.stage.fire('change');
+
+    return changed.length > 0;
+  }
+
+  /**
+   * Link of a shape (see `setShapeLink`)
+   * @param shape drawing shape, group or frame
+   * @returns url of its link, null without one
+   */
+  getShapeLink(shape: DrawingShape): string | null {
+    return parseLink(shape.attrs.link);
+  }
+
+  /**
+   * Open the link of a shape: web page in a new tab, email address in the mail app
+   * @param shape Shape with a link, first selected shape with one by default
+   * @returns true if a link was opened
+   */
+  openShapeLink(shape = this.getSelectedShapes().find((s) => this.getShapeLink(s))): boolean {
+    const link = shape && this.getShapeLink(shape);
+
+    if (!link) return false;
+    window.open(link, '_blank', 'noopener,noreferrer');
+
+    return true;
   }
 
   /**

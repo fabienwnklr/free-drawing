@@ -1,0 +1,54 @@
+@use '@/scss/variables' as *;
+@use '@/scss/mixins' as *;
+
+// Link of the selection, above it
+.drawer-container .drawer-link-editor {
+  position: absolute;
+  // under context menu and dialogs
+  z-index: 1;
+  display: none;
+  align-items: center;
+  gap: $space-1;
+  padding: $space-1;
+  pointer-events: var(--drawer-pointer-events);
+
+  &.show {
+    display: flex;
+  }
+
+  .drawer-link-editor__icon {
+    display: flex;
+    padding: 0 $space-1;
+    color: $text-muted;
+
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  .drawer-link-editor__input {
+    width: 16rem;
+    min-width: 0;
+    height: $btn-size-default;
+    padding: 0 $space-2;
+    border: 1px solid $border;
+    border-radius: $radius;
+    background-color: $surface;
+    color: $text;
+    font: inherit;
+    font-size: $font-size;
+
+    @include focus-ring;
+  }
+
+  .drawer-button {
+    width: $btn-size-default;
+    height: $btn-size-default;
+
+    // open and remove for a link only
+    &[hidden] {
+      display: none;
+    }
+  }
+}

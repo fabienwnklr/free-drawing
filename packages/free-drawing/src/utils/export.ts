@@ -13,6 +13,7 @@ import { Path } from 'konva/lib/shapes/Path';
 import { normalizeColor } from '@/utils/color';
 import { getShapes } from '@/utils/hit';
 import { frameParts } from '@/utils/frame';
+import { parseLink } from '@/utils/link';
 import type { DrawingShape } from '@/@types/drawer';
 import type { ImageOptions } from '@/@types/file';
 import type { IRect } from 'konva/lib/types';
@@ -189,14 +190,28 @@ function linePath(line: Line): string {
 }
 
 /**
- * Svg element of a drawing shape or group, in its parent coordinates (`matrix`: transform in another one)
+ * Svg element of a drawing shape or group, in a link (`a` element, new tab) for a shape with a link (`setShapeLink`)
  * @param shape drawing shape, group or frame (children exported, titles of frames left out)
  * @param dark true for dark mode colors (see `toDarkColor`)
  * @param matrix transform of the shape, its own transform by default (layer transform for shapes of groups exported
  * alone)
- * @returns svg `g` element, empty for unknown shape classes
+ * @returns svg `g` element (or `a` element holding it), empty for unknown shape classes
  */
 function shapeToSvg(shape: Node, dark?: boolean, matrix = shape.getTransform().getMatrix()): string {
+  const svg = shapeElement(shape, dark, matrix);
+  const link = parseLink(shape.getAttr('link'));
+
+  return link && svg ? `<a${attrs({ href: link, target: '_blank' })}>${svg}</a>` : svg;
+}
+
+/**
+ * Svg element of a drawing shape or group, in its parent coordinates (`matrix`: transform in another one)
+ * @param shape drawing shape, group or frame (children exported, titles of frames left out)
+ * @param dark true for dark mode colors (see `toDarkColor`)
+ * @param matrix transform of the shape (see `shapeToSvg`)
+ * @returns svg `g` element, empty for unknown shape classes
+ */
+function shapeElement(shape: Node, dark: boolean | undefined, matrix: number[]): string {
   const [a, b, c, d, e, f] = matrix;
   const group = attrs({
     transform: `matrix(${[a, b, c, d, e, f].map(num).join(' ')})`,

@@ -19,6 +19,7 @@ export const en = {
   'toast.linkCopied': 'Link copied',
   'toast.linkNotCopied': "Link can't be copied: {error}",
   'toast.invalidLink': 'Invalid drawing link: {error}',
+  'toast.invalidShapeLink': 'Invalid link: web page (https://…) or email address',
   'toast.clipboardUnavailable': 'Clipboard unavailable: {error}',
   'toast.exportFailed': 'Export failed: {error}',
   'toast.imageCopied': 'Image copied',
@@ -183,6 +184,7 @@ export const en = {
   'action.fitTextWidth': 'Fit width to text',
   'action.copyPng': 'Copy as PNG',
   'action.copySvg': 'Copy as SVG',
+  'action.link': 'Link',
 
   // options of tools and selection
   'overlay.tool': 'Tool options',
@@ -199,6 +201,11 @@ export const en = {
   'overlay.edges': 'Edges',
   'overlay.opacity': 'Opacity',
   'overlay.layers': 'Layers',
+  'overlay.actions': 'Actions',
+  'link.address': 'Link address',
+  'link.placeholder': 'https://…',
+  'link.open': 'Open link',
+  'link.remove': 'Remove link',
   'width.thin': 'Thin',
   'width.medium': 'Medium',
   'width.thick': 'Thick',

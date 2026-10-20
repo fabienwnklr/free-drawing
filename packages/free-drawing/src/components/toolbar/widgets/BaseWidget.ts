@@ -166,6 +166,14 @@ export abstract class BaseWidget {
   protected onDesactive(): void {}
 
   /**
+   * Overlay shown again (selection cleared), only for a tool showing it while active (not the frame tool, sharing the
+   * overlay of shape tools: it would stay shown once the tool is changed)
+   */
+  showToolOverlay() {
+    if (this.showOverlayOnActive) this.overlay?.show();
+  }
+
+  /**
    * Shift pressed or released during a pointer action (square, circle, straight line...), without pointer move
    * @param constrain Shift pressed
    */
