@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.19.8](https://github.com/fabienwnklr/free-drawing/compare/v7.19.7...v7.19.8) (2026-10-21)
+
+
+### Bug Fixes
+
+* **groups:** a group created in a frame, and the shapes of a group ungrouped in a frame, can be dragged at once (they could not until the tool was changed)
+
 ## [7.19.7](https://github.com/fabienwnklr/free-drawing/compare/v7.19.6...v7.19.7) (2026-10-21)
 
 

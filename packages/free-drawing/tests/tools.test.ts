@@ -104,6 +104,29 @@ describe('Frame', () => {
   };
   const absolute = (shape: DrawingShape) => shape.getAbsolutePosition();
 
+  it('Shapes grouped or ungrouped in a frame stay draggable, not shapes of a group', () => {
+    const { drawer, frame, inside, selectWidget } = createFrame();
+    const rect = (x: number) =>
+      drawer.addShape(new Rect({ name: shapeName.rect, x, y: 180, width: 20, height: 20, stroke: '#000' }));
+    const [second, third] = [rect(200), rect(240)];
+
+    drawer.placeInFrames([second, third]);
+    selectWidget.setActive(true);
+    const group = drawer.groupShapes([inside, second])!;
+
+    expect(getFrameShapes(frame)).toEqual([group, third]);
+    expect([group.draggable(), inside.draggable()]).toEqual([true, false]);
+
+    // group of groups: only the top one dragged
+    const parent = drawer.groupShapes([group, third])!;
+    expect([parent.draggable(), group.draggable(), third.draggable()]).toEqual([true, false, false]);
+
+    drawer.ungroupShapes([parent]);
+    expect([group.draggable(), third.draggable()]).toEqual([true, true]);
+    drawer.ungroupShapes([group]);
+    expect(getFrameShapes(frame).map((shape) => shape.draggable())).toEqual([true, true, true]);
+  });
+
   it('Title renamed in place, on one line: field at the title wherever the drawer is in the page', () => {
     const { drawer, frame } = createFrame();
     const title = getFrameTitle(frame);

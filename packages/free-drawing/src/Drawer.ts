@@ -1498,12 +1498,25 @@ export class Drawer extends MicroEvent {
     } else {
       this._setupShape(group);
       parent.add(group);
+      // in a frame: dragged as other shapes of frames (in a group: moved with it)
+      group.draggable(this._isMovedAlone(group));
     }
     group.zIndex(index);
     this.getWidget<SelectWidget>('selection')?.select([group]);
     this.stage.fire('change');
 
     return group;
+  }
+
+  /**
+   * Shape dragged alone with the selection tool: shape of the drawing or of a frame, not of a group (moved with it)
+   * @param shape Shape or group in the drawing
+   * @returns True when it is draggable now (selection tool active)
+   */
+  private _isMovedAlone(shape: DrawingShape): boolean {
+    const parent = shape.getParent();
+
+    return this.activeTool === 'selection' && (parent === this.drawLayer || isFrame(parent?.getParent()));
   }
 
   /**
@@ -1543,7 +1556,7 @@ export class Drawer extends MicroEvent {
         if (group.opacity() !== 1) child.opacity(child.opacity() * group.opacity());
         child.moveTo(parent);
         child.zIndex(index + i);
-        child.draggable(parent === this.drawLayer && this.activeTool === 'selection');
+        child.draggable(this._isMovedAlone(child));
       });
       group.destroy();
 
