@@ -143,10 +143,23 @@ export class App {
         // drawings of browser
       }
     }
-    // a room link fills a new drawing: last one kept
-    this.drawing = window.location.hash.startsWith('#room=')
-      ? await this.store.createDrawing({})
-      : await this._lastDrawing();
+    const room = window.location.hash.match(/^#room=([\w-]+)/)?.[1];
+
+    // a room link fills its own drawing (last one kept), the same one each time it is opened
+    this.drawing = room ? await this._roomDrawing(room) : await this._lastDrawing();
+  }
+
+  /**
+   * Drawing of a collaboration room: the one of a previous visit (or of the session started in it), else a new one
+   */
+  private async _roomDrawing(room: string) {
+    const { store } = this;
+    const id = local.roomDrawingId(room, !!this.user);
+    const drawing =
+      (id && (await store.listDrawings()).find((summary) => summary.id === id)) || (await store.createDrawing({}));
+
+    local.setRoomDrawingId(room, drawing.id, !!this.user);
+    return drawing;
   }
 
   /**
@@ -214,6 +227,12 @@ export class App {
     });
     this.drawer.on('drawer.language.change', () => this.render());
     this.drawer.on('drawer.theme.change', () => this.render());
+    // session started in this drawing: opened again by the room link (page reloaded)
+    this.drawer.on('drawer.collaboration.change', () => {
+      const room = this.drawer.collaboration?.room;
+
+      if (room && this.drawing) local.setRoomDrawingId(room, this.drawing.id, !!this.user);
+    });
     window.addEventListener('resize', () => this.drawer.setSize(this.$main.clientWidth, this.$main.clientHeight));
 
     this.$name.addEventListener('change', () => this.rename(this.$name.value));

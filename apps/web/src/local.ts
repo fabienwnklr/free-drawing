@@ -9,6 +9,10 @@ const keys = {
   lastLocalDrawing: 'free-drawing-web-last-local-drawing',
   /** Last drawing open by logged in user, opened again on next visit */
   lastDrawing: 'free-drawing-web-last-drawing',
+  /** Drawing of browser of each collaboration room (room id: drawing id), opened again by its link */
+  localRoomDrawings: 'free-drawing-web-local-room-drawings',
+  /** Drawing of logged in user of each collaboration room, opened again by its link */
+  roomDrawings: 'free-drawing-web-room-drawings',
   /** Drawing of anonymous user before drawings of browser (drawing file) */
   drawing: 'free-drawing-web-drawing',
   /** Stage saved by the drawer without storage option (demo before this app) */
@@ -80,7 +84,32 @@ export const local = {
   setLastLocalDrawingId: (id: string) => write(keys.lastLocalDrawing, id),
   lastDrawingId: () => read(keys.lastDrawing),
   setLastDrawingId: (id: string) => write(keys.lastDrawing, id),
+  /** Drawing of a collaboration room (of logged in user, else of browser), null if none */
+  roomDrawingId: (room: string, account: boolean): string | null => roomDrawings(account)[room] ?? null,
+  /** Drawing of a collaboration room, opened again by its link (last rooms only) */
+  setRoomDrawingId(room: string, id: string, account: boolean) {
+    const rooms = roomDrawings(account);
+
+    if (rooms[room] === id) return;
+    delete rooms[room];
+    rooms[room] = id;
+    write(
+      account ? keys.roomDrawings : keys.localRoomDrawings,
+      JSON.stringify(Object.fromEntries(Object.entries(rooms).slice(-20)))
+    );
+  },
 };
+
+/** Drawings of collaboration rooms (room id: drawing id), oldest first */
+function roomDrawings(account: boolean): Record<string, string> {
+  try {
+    const rooms = JSON.parse(read(account ? keys.roomDrawings : keys.localRoomDrawings) ?? '{}');
+
+    return rooms && typeof rooms === 'object' && !Array.isArray(rooms) ? rooms : {};
+  } catch {
+    return {};
+  }
+}
 
 /** Drawings of browser, last updated first */
 const summaries = (): DrawingSummary[] => {
