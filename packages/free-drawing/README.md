@@ -467,7 +467,7 @@ await drawer.copyLink();
 
 No server is needed for links: the drawing is in the url hash. A drawer whose `id` is in the hash of the page loads its drawing (undo restores the saved one) and removes it from the url.
 
-Files and links can come from anyone: only drawing shapes are created (lines, arrows, rectangles, ellipses, texts, paths, groups and frames of them), other nodes are ignored. Shapes received from other users of a collaboration session are checked the same way.
+Files and links can come from anyone: only drawing shapes are created (lines, arrows, rectangles, ellipses, texts, paths, groups and frames of them), other nodes and frames without their parts are ignored. Attributes of the drawing shapes must have their type (number, text, true / false, list of numbers), other attributes read by Konva (patterns, functions...) are ignored, attributes of data (e.g. of plugins) are kept. All shapes are created before the drawing is replaced: a file that can't be loaded leaves it as it is. Shapes received from other users of a collaboration session are checked the same way.
 
 ## Export
 

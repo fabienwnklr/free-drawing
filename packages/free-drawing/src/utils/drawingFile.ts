@@ -1,6 +1,9 @@
-import type { ShapeState, DrawingFile, FilePickerWindow } from '@/@types/file';
+import type { AttrCheck, ShapeState, DrawingFile, FilePickerWindow } from '@/@types/file';
 import { groupClasses, shapeClasses } from '@free-drawing/protocol';
+import { Konva } from 'konva/lib/Global';
+import type { Node } from 'konva/lib/Node';
 import { parseLink } from '@/utils/link';
+import { frameParts } from '@/utils/frame';
 
 /**
  * Extension of drawing files (JSON)
@@ -8,43 +11,212 @@ import { parseLink } from '@/utils/link';
 export const drawingFileExtension = '.freedrawing';
 
 // files, links and shapes of other users of a collaboration can come from anyone: only drawing shapes and groups of
-// them are created (`shapeClasses`, `groupClasses` of the protocol, also checked by the server)
+// them are created (`shapeClasses`, `groupClasses` of the protocol, also checked by the server), with attributes of
+// the expected types (a wrong one would throw while creating or drawing the shape)
 
 /**
- * Attributes of a node state, without `__proto__` (konva would set it as prototype of the node attributes) nor a link
- * other than a web page or an email address (`parseLink`)
- * @param attrs Attributes read from a file or a change (not trusted)
- * @returns Own attributes, in a new object
+ * Number attribute
+ * @param value Value read
+ * @returns True for a finite number
  */
-const parseAttrs = (attrs: object): Record<string, unknown> =>
+const isNumber: AttrCheck = (value) => typeof value === 'number' && Number.isFinite(value);
+
+/**
+ * Text attribute
+ * @param value Value read
+ * @returns True for a string
+ */
+const isString: AttrCheck = (value) => typeof value === 'string';
+
+/**
+ * On / off attribute
+ * @param value Value read
+ * @returns True for a boolean
+ */
+const isBoolean: AttrCheck = (value) => typeof value === 'boolean';
+
+/**
+ * Attribute of numbers (points, dash)
+ * @param value Value read
+ * @returns True for an array of finite numbers
+ */
+const isNumbers: AttrCheck = (value) => Array.isArray(value) && value.every(isNumber);
+
+/** Attributes of drawing shapes read by konva or the library, with the check of their value */
+const attrChecks: Record<string, AttrCheck> = {
+  ...Object.fromEntries(
+    [
+      'x',
+      'y',
+      'width',
+      'height',
+      'radius',
+      'radiusX',
+      'radiusY',
+      'innerRadius',
+      'outerRadius',
+      'rotation',
+      'scaleX',
+      'scaleY',
+      'skewX',
+      'skewY',
+      'offsetX',
+      'offsetY',
+      'opacity',
+      'strokeWidth',
+      'fontSize',
+      'lineHeight',
+      'padding',
+      'letterSpacing',
+      'tension',
+      'pointerLength',
+      'pointerWidth',
+      'clipX',
+      'clipY',
+      'clipWidth',
+      'clipHeight',
+      'dashOffset',
+      'miterLimit',
+      'shadowBlur',
+      'shadowOpacity',
+      'shadowOffsetX',
+      'shadowOffsetY',
+    ].map((key) => [key, isNumber])
+  ),
+  ...Object.fromEntries(
+    [
+      'id',
+      'name',
+      'label',
+      'fill',
+      'stroke',
+      'data',
+      'text',
+      'fontFamily',
+      'fontStyle',
+      'fontVariant',
+      'textDecoration',
+      'align',
+      'verticalAlign',
+      'wrap',
+      'direction',
+      'lineCap',
+      'lineJoin',
+      'globalCompositeOperation',
+      'shadowColor',
+      'startBinding',
+      'endBinding',
+      'startAnchor',
+      'endAnchor',
+    ].map((key) => [key, isString])
+  ),
+  ...Object.fromEntries(
+    [
+      'visible',
+      'listening',
+      'draggable',
+      'closed',
+      'bezier',
+      'pointerAtBeginning',
+      'pointerAtEnding',
+      'fillEnabled',
+      'strokeEnabled',
+      'strokeScaleEnabled',
+      'perfectDrawEnabled',
+      'shadowEnabled',
+      'shadowForStrokeEnabled',
+      'dashEnabled',
+      'fillAfterStrokeEnabled',
+      'ellipsis',
+    ].map((key) => [key, isBoolean])
+  ),
+  points: isNumbers,
+  dash: isNumbers,
+  // radius of every corner, or of each one
+  cornerRadius: (value) => isNumber(value) || isNumbers(value),
+  hitStrokeWidth: (value) => isNumber(value) || value === 'auto',
+};
+
+/**
+ * Konva sets this attribute with a method of the class (`setAttrs`): a property of konva (patterns, functions,
+ * filters, z-index...) or a method (`attrs`...), not an attribute of data
+ * @param className Konva class of the node
+ * @param key Name of the attribute
+ * @returns True when the class has a `set<Key>` method
+ */
+const isKonvaProperty = (className: string, key: string) => {
+  const NodeClass = (Konva as unknown as Record<string, typeof Node | undefined>)[className];
+  const prototype = NodeClass?.prototype as unknown as Record<string, unknown> | undefined;
+
+  return typeof prototype?.[`set${key.charAt(0).toUpperCase()}${key.slice(1)}`] === 'function';
+};
+
+/**
+ * Attributes of a node state: attributes of drawing shapes of the expected type (`attrChecks`), other attributes
+ * kept as data (plugins...) unless konva reads them, without `__proto__` (konva would set it as prototype of the node
+ * attributes) nor a link other than a web page or an email address (`parseLink`)
+ * @param attrs Attributes read from a file or a change (not trusted)
+ * @param className Konva class of the node
+ * @returns Valid attributes, in a new object
+ */
+const parseAttrs = (attrs: object, className: string): Record<string, unknown> =>
   Object.fromEntries(
     Object.entries(attrs)
-      .filter(([key, value]) => key !== '__proto__' && (key !== 'link' || parseLink(value)))
+      .filter(([key, value]) => {
+        if (key === '__proto__') return false;
+        if (key === 'link') return !!parseLink(value);
+
+        const check = attrChecks[key];
+
+        return check ? check(value) : !isKonvaProperty(className, key);
+      })
       .map(([key, value]) => [key, key === 'link' ? parseLink(value) : value])
   );
 
 /**
+ * Frame with only its parts, as created by `createFrame`: box, title, group of its shapes
+ * @param frame Frame state, its attributes and children parsed
+ * @returns Frame state with its parts in this order, null when one is missing
+ */
+function parseFrame(frame: ShapeState): ShapeState | null {
+  const part = (name: string, className: string) =>
+    frame.children?.find(
+      (child) =>
+        child.className === className &&
+        String(child.attrs.name ?? '')
+          .split(' ')
+          .includes(name)
+    );
+  const parts = [part(frameParts.box, 'Rect'), part(frameParts.title, 'Text'), part(frameParts.content, 'Group')];
+
+  return parts.every((child) => !!child) ? { ...frame, children: parts as ShapeState[] } : null;
+}
+
+/**
  * Drawing shape or group of a file, null for other nodes
  * @param shape node state read from the file (not trusted)
- * @returns state with only `attrs`, `className` and valid children (groups and frames), null for other classes or
- * without attributes
+ * @returns state with only `attrs`, `className` and valid children (groups and frames), null for other classes,
+ * without attributes or frames without their parts
  */
 function parseShape(shape: ShapeState): ShapeState | null {
   if (typeof shape?.attrs !== 'object' || shape.attrs === null) return null;
 
-  // groups, frames
-  if (groupClasses.includes(shape.className)) {
-    const children = Array.isArray(shape.children) ? shape.children.map(parseShape) : [];
+  const { className } = shape;
 
-    return {
-      attrs: parseAttrs(shape.attrs),
-      className: shape.className,
+  // groups, frames
+  if (groupClasses.includes(className)) {
+    const children = Array.isArray(shape.children) ? shape.children.map(parseShape) : [];
+    const state = {
+      attrs: parseAttrs(shape.attrs, className),
+      className,
       children: children.filter((child): child is ShapeState => !!child),
     };
+
+    return className === 'Frame' ? parseFrame(state) : state;
   }
 
   // no children (konva would add them)
-  return shapeClasses.includes(shape.className) ? { attrs: parseAttrs(shape.attrs), className: shape.className } : null;
+  return shapeClasses.includes(className) ? { attrs: parseAttrs(shape.attrs, className), className } : null;
 }
 
 /**

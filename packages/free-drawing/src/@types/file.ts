@@ -12,6 +12,9 @@ export type ShapeState = {
   children?: ShapeState[];
 };
 
+/** Check of the value of an attribute read from a file, a link or a change of another user (not trusted) */
+export type AttrCheck = (value: unknown) => boolean;
+
 /**
  * Drawing shape (top node) added, changed or removed by a history entry: JSON of its state before and after it
  */

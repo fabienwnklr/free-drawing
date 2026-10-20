@@ -1,7 +1,10 @@
 import { describe, expect, it, beforeAll, vi } from 'vitest';
 import { Rect } from 'konva/lib/shapes/Rect';
 import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
-import { createDrawer, keydown } from './helpers';
+import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
+import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
+import { parseDrawingFile } from '@/utils/drawingFile';
+import { createDrawer, drag, keydown } from './helpers';
 
 beforeAll(() => {
   function noOp() {}
@@ -59,6 +62,95 @@ describe('Drawing files and links', () => {
       })
     );
     expect(drawer.getDrawingShapes().map((s) => s.getClassName())).toEqual(['Rect']);
+  });
+
+  it('Crafted file: attributes of wrong types and incomplete frames ignored, drawing never emptied by an error', () => {
+    const drawer = createDrawer();
+    const rect = drawer.addShape(new Rect({ name: 'drawer-rect', width: 10, height: 10 }));
+    drawer.stage.fire('change');
+    const path = (attrs: object) => ({ className: 'Path', attrs: { name: 'drawer-path', ...attrs } });
+
+    drawer.loadDrawing(
+      JSON.stringify({
+        type: 'free-drawing',
+        version: 1,
+        background: '#fff',
+        shapes: [
+          // frames without their parts
+          { className: 'Frame', attrs: { id: 'frame', width: 100, height: 100 }, children: [] },
+          { className: 'Frame', attrs: { id: 'frame-2', width: 100, height: 100 } },
+          // threw while created
+          path({ id: 'path', data: 5 }),
+          { className: 'Group', attrs: { id: 'group' }, children: [path({ id: 'child', data: {} })] },
+          { className: 'Rect', attrs: { id: 'named', name: 5, width: 10, height: 10 } },
+          // threw while drawn
+          { className: 'Rect', attrs: { id: 'dashed', dash: 'x', stroke: '#000', width: 10, height: 10 } },
+          { className: 'Rect', attrs: { id: 'pattern', fillPatternImage: 'x', width: 10, height: 10 } },
+          // properties of konva set by methods, data of plugins kept
+          { className: 'Rect', attrs: { id: 'data', zIndex: 3, attrs: { x: 1 }, stamp: { kind: 'star' } } },
+        ],
+      })
+    );
+
+    const shapes = new Map(drawer.getDrawingShapes().map((shape) => [shape.id(), shape.attrs]));
+    expect([...shapes.keys()]).toEqual(['path', 'group', 'named', 'dashed', 'pattern', 'data']);
+    expect(shapes.get('path')!.data).toBeUndefined();
+    expect(shapes.get('named')!.name).toBeUndefined();
+    expect(shapes.get('dashed')!.dash).toBeUndefined();
+    expect(shapes.get('pattern')!.fillPatternImage).toBeUndefined();
+    expect(shapes.get('data')!.stamp).toEqual({ kind: 'star' });
+    // `attrs` would have set x
+    expect(shapes.get('data')!.x).toBeUndefined();
+    expect(shapes.get('data')!.zIndex).toBeUndefined();
+    expect(() => drawer.drawLayer.draw()).not.toThrow();
+
+    // error while creating a shape: drawing kept
+    const create = vi.spyOn(Rect.prototype, 'setAttrs').mockImplementationOnce(() => {
+      throw new Error('broken');
+    });
+    expect(() =>
+      drawer.loadDrawing(JSON.stringify({ ...drawer.getDrawingFile(), shapes: [rect.toObject()] }))
+    ).toThrow();
+    create.mockRestore();
+    expect(drawer.getDrawingShapes()).toHaveLength(6);
+  });
+
+  it('File of every kind of shape is read back unchanged', () => {
+    const drawer = createDrawer({ keepTool: true });
+    const tools = [
+      'brush',
+      'highlighter',
+      'line',
+      'square',
+      'circle',
+      'arrow',
+      'triangle',
+      'diamond',
+      'heart',
+      'cloud',
+    ];
+
+    drawer.setStrokeStyle('dashed');
+    drawer.setFillColor('#ffec99');
+    drawer.setEdges('round');
+    drawer.setOpacity(0.5);
+    for (const [index, tool] of [...tools, 'frame'].entries()) {
+      drawer.getWidget<BaseWidget>(tool as BaseWidget['id'])!.setActive(true);
+      drag(drawer, [10, 10 + index * 60], [80, 50 + index * 60]);
+    }
+    const text = drawer.getWidget<TextWidget>('text')!.addTextNode('hello');
+    drawer.getWidget<SelectWidget>('selection')!.select([text]);
+    drawer.setTextStyle({ fontStyle: 'italic bold', textDecoration: 'underline', align: 'center' });
+    const shapes = drawer.getDrawingShapes();
+    drawer.setShapeLink('example.com', [shapes[0]]);
+    drawer.setShapeLabel(shapes[1], 'named');
+    drawer.setShapesHidden(true, [shapes[4]]);
+    drawer.setShapesLocked(true, [shapes[5]]);
+    drawer.groupShapes([shapes[2], shapes[3]]);
+    const file = drawer.getDrawingFile();
+
+    expect(file.shapes.length).toBe(tools.length + 1);
+    expect(parseDrawingFile(JSON.stringify(file))).toEqual(file);
   });
 
   it('Save as downloads a .freedrawing file (no save dialog)', async () => {

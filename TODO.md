@@ -33,7 +33,7 @@
 - [x] undo / redo during collaboration restore whole snapshots: changes of other users are reverted for everyone (`History.ts`)
 - [x] save state says saved when nothing was saved: `save()` clears unsaved before saving (storage not loaded, storage or quota error), no leave warning during a save or after a failed one, `#saveFailed` only reset with storage (`Drawer.ts`)
 - [ ] view changes (pan, grid, snapping, preferences with theme only) fire `change`: drawing marked unsaved, or same drawing sent again to storage (`Pan.ts`, `Settings.ts`, `Drawer.setPreferences`)
-- [ ] a crafted file or link (frame without content, path `data` not a string) throws after current shapes were destroyed: empty or partial drawing saved at next change; build all nodes before replacing, check attribute types (`drawingFile.ts`, `Drawer.loadDrawing`)
+- [x] a crafted file or link (frame without content, path `data` not a string) throws after current shapes were destroyed: empty or partial drawing saved at next change; build all nodes before replacing, check attribute types (`drawingFile.ts`, `Drawer.loadDrawing`)
 - [ ] reloading a page with a room link creates a new empty drawing each time for a logged in user (web `App.ts`)
 - [ ] pointer released out of the canvas (or `touchcancel`): tool stays in action, UI ignores pointer, stroke follows the pointer; next brush stroke contains the previous one (`#allPoints` not reset) (`BaseWidget`, `FreehandWidget`, `ShapeWidget`)
 - [x] eraser stroke starting on a shape erases nothing (`Eraser.ts`: press must be on stage)

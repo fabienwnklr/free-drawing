@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.19.3](https://github.com/fabienwnklr/free-drawing/compare/v7.19.2...v7.19.3) (2026-10-21)
+
+
+### Bug Fixes
+
+* **files:** a crafted file or link no longer empties the drawing: all its shapes are created before the drawing is replaced, so a file that can't be loaded leaves it as it is (it was destroyed first, then saved empty or partial at the next change)
+* **files:** attributes of shapes of files, links and collaboration changes are checked: values of the wrong type (path `data`, `name`, `dash`, `points`...) and other attributes read by Konva (patterns, functions, `zIndex`...) are ignored, so a shape can't throw while created or drawn (a drawing saved with it broke rendering on each load); frames without their box, title or content are ignored; attributes of data (e.g. of plugins) are kept
+
 ## [7.19.2](https://github.com/fabienwnklr/free-drawing/compare/v7.19.1...v7.19.2) (2026-10-20)
 
 

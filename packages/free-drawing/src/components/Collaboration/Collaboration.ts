@@ -541,9 +541,11 @@ export class Collaboration {
       if (shape && (shape instanceof Group || className === 'Group')) {
         const index = shape.zIndex();
         const selected = this.drawer.getSelectedShapes();
+        // created before the group is removed
+        const node = Node.create(state) as DrawingShape;
 
         shape.destroy();
-        shape = this.drawer.addShape(Node.create(state) as DrawingShape);
+        shape = this.drawer.addShape(node);
         shape.zIndex(index);
         if (selected.some((node) => !node.getLayer())) {
           this.drawer

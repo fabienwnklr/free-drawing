@@ -1942,10 +1942,12 @@ export class Drawer extends MicroEvent {
   loadDrawing(file: DrawingFile | string) {
     // validated: files and links can come from anyone
     const { background, shapes } = parseDrawingFile(typeof file === 'string' ? file : JSON.stringify(file));
+    // all created before the drawing is replaced: kept as it is if one can't be
+    const nodes = shapes.map((shape) => Node.create(shape) as DrawingShape);
 
     this.getWidget<SelectWidget>('selection')?.clearSelection();
     for (const shape of this.getDrawingShapes()) shape.destroy();
-    for (const shape of shapes) this.addShape(Node.create(shape) as Shape<ShapeConfig>);
+    for (const node of nodes) this.addShape(node);
     // fires change: history, saved, sent to collaborators
     this.setBgColor(background);
   }
