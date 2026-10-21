@@ -60,13 +60,31 @@ export class DrawerLayout {
    */
   setStage(stage: Stage) {
     this.$container.replaceChildren(stage.content, this.$header, this.$footer);
+    stage.on('widthChange.layout', () => this.updateCompact());
   }
 
   /**
-   * Drawer created: floating elements added from now on are after the footer
+   * Drawer created: floating elements added from now on are after the footer, interface fitted to the drawer width
    */
   ready() {
     this.#ready = true;
+    this.updateCompact();
+    // header wraps in a narrow drawer: options panel below it (no layout observer in tests)
+    if (typeof ResizeObserver === 'undefined') return;
+    new ResizeObserver(() =>
+      this.$container.style.setProperty('--drawer-header-height', `${this.$header.offsetHeight}px`)
+    ).observe(this.$header);
+  }
+
+  /**
+   * Compact interface (`is-compact` class) when the footer does not fit on one line (narrow drawer, phone): toolbar on
+   * its own line (scrolls in it), header on several lines, options panel below the header. Checked when the drawer is
+   * created or resized, in zen mode and when an element is added to the footer; to call after another change of it.
+   */
+  updateCompact() {
+    this.$container.classList.remove('is-compact');
+    // its parts wider than the drawer (no layout, tests: nothing measured)
+    this.$container.classList.toggle('is-compact', this.$footer.scrollWidth > this.$footer.clientWidth);
   }
 
   /**
@@ -91,6 +109,8 @@ export class DrawerLayout {
     } else {
       this.$footer.before($element);
     }
+    // footer may no longer fit on one line
+    if (this.#ready && this.$footer.contains($element)) this.updateCompact();
   }
 
   /**
@@ -100,6 +120,8 @@ export class DrawerLayout {
   setZen(zen: boolean) {
     this.zen = zen;
     this.$container.classList.toggle('is-zen', zen);
+    // footer start hidden: toolbar may fit on one line
+    this.updateCompact();
   }
 
   /**

@@ -9,6 +9,14 @@ import logoUrl from '../logo.svg';
 
 type SaveState = '' | 'saving' | 'saved' | 'error' | 'unsaved';
 
+/** Icons of buttons of the bar, alone on narrow screens (labels read by screen readers) */
+const icons = {
+  drawings:
+    '<svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 32 32"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M28 11v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6c3 0 3 3 5 3h9.003C27.108 9 28 9.895 28 11Z" /></svg>',
+  account:
+    '<svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><circle cx="12" cy="8" r="4" /><path d="M5 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2" /></svg>',
+};
+
 /**
  * App of free-drawing: drawings kept in browser, or with an account when served by the server of free-drawing
  * (drawings and preferences saved on server, collaboration). Static site: drawings of browser only.
@@ -44,7 +52,7 @@ export class App {
     $root.classList.add('app');
     $root.innerHTML = /*html*/ `
       <header class="app-bar">
-        <span class="app-logo"><img src="${logoUrl}" alt="" width="22" height="22" />free-drawing</span>
+        <span class="app-logo"><img src="${logoUrl}" alt="" width="22" height="22" /><span class="app-logo-text">free-drawing</span></span>
         <input class="app-name" maxlength="100" hidden />
         <span class="app-save-state text-muted" aria-live="polite"></span>
         <button type="button" class="app-toggle" role="switch" data-autosave>
@@ -52,8 +60,8 @@ export class App {
         </button>
         <button type="button" class="app-button" data-save hidden></button>
         <span class="app-spacer"></span>
-        <button type="button" class="app-button" data-drawings></button>
-        <button type="button" class="app-button" data-account hidden></button>
+        <button type="button" class="app-button" data-drawings>${icons.drawings}<span data-label></span></button>
+        <button type="button" class="app-button" data-account hidden>${icons.account}<span data-label></span></button>
       </header>
       <main class="app-main"></main>
     `;
@@ -387,10 +395,10 @@ export class App {
     this.$autoSaveButton.title = t('autoSaveHint');
     this.$saveButton.hidden = this.drawer.options.autoSave;
     this.$saveButton.textContent = t('save');
-    this.$drawingsButton.textContent = t('myDrawings');
+    this.$drawingsButton.querySelector('[data-label]')!.textContent = t('myDrawings');
     // static site: no accounts
     this.$accountButton.hidden = !this.server;
-    this.$accountButton.textContent = t(this.user ? 'account' : 'signIn');
+    this.$accountButton.querySelector('[data-label]')!.textContent = t(this.user ? 'account' : 'signIn');
     this.accountDialog?.render();
     this.profileDialog?.render();
     this.drawingsDialog?.render();

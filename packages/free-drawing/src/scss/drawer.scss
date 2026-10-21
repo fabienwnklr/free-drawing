@@ -242,4 +242,28 @@
       justify-self: end;
     }
   }
+
+  // footer not fitting on one line (narrow drawer, phone), see DrawerLayout.updateCompact
+  &.is-compact {
+    .drawer-header-container {
+      flex-wrap: wrap;
+    }
+
+    // toolbar on its own line, below zoom, undo / redo and help
+    .drawer-footer-container {
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-areas:
+        'start help'
+        'toolbar toolbar';
+
+      .drawer-footer-left {
+        grid-area: start;
+        flex-wrap: wrap;
+      }
+
+      .drawer-help-container {
+        grid-area: help;
+      }
+    }
+  }
 }

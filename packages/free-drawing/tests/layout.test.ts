@@ -92,6 +92,44 @@ describe('Layout', () => {
     expect(pointerEvents()).toBe('all');
   });
 
+  it('Compact interface while the footer does not fit on one line', () => {
+    const drawer = createDrawer();
+    const { layout } = drawer;
+    const compact = () => layout.$container.classList.contains('is-compact');
+    let needed = 0;
+
+    // footer parts as wide as needed (no layout in tests), drawer as wide as its stage
+    Object.defineProperty(layout.$footer, 'clientWidth', { get: () => drawer.stage.width(), configurable: true });
+    Object.defineProperty(layout.$footer, 'scrollWidth', {
+      get: () => Math.max(needed - (layout.zen ? 300 : 0), drawer.stage.width()),
+      configurable: true,
+    });
+    needed = 1000;
+    drawer.setSize(1200, 800);
+    expect(compact()).toBe(false);
+
+    // narrow drawer (phone)
+    drawer.setSize(390, 800);
+    expect(compact()).toBe(true);
+    drawer.setSize(1200, 800);
+    expect(compact()).toBe(false);
+
+    // zen mode: footer start hidden
+    drawer.setSize(900, 800);
+    expect(compact()).toBe(true);
+    drawer.setting.toggleZenMode();
+    expect(compact()).toBe(false);
+    drawer.setting.toggleZenMode();
+    expect(compact()).toBe(true);
+
+    // element of an app added to the footer
+    drawer.setSize(1100, 800);
+    expect(compact()).toBe(false);
+    needed = 1150;
+    layout.add('footerStart', document.createElement('button'));
+    expect(compact()).toBe(true);
+  });
+
   it('Settings menu and context menu taller than the drawer scroll in it', () => {
     const drawer = createDrawer();
     const { setting, contextMenu } = drawer;

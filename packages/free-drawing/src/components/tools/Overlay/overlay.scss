@@ -76,3 +76,10 @@
     @include focus-ring;
   }
 }
+
+// narrow drawer (DrawerLayout.updateCompact): below the header, whose widgets it would cover, above the footer of
+// two lines
+.drawer-container.is-compact .drawer-overlay-container {
+  top: var(--drawer-header-height, 4rem);
+  max-height: calc(100% - var(--drawer-header-height, 4rem) - 8.5rem);
+}

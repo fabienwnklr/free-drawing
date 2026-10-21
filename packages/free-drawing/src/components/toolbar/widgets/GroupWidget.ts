@@ -258,8 +258,8 @@ export class GroupWidget {
       },
       true
     );
-    // no longer above group button
-    this.drawer.layout.$footer.addEventListener('scroll', () => this.hide());
+    // no longer above group button: footer or toolbar of a narrow drawer scrolled (scroll does not bubble: capture)
+    this.drawer.layout.$footer.addEventListener('scroll', () => this.hide(), true);
     window.addEventListener('resize', () => this.hide());
   }
 }

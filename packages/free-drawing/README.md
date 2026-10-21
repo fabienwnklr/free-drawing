@@ -214,7 +214,7 @@ new Drawer($el, {
 });
 ```
 
-`layout` adds elements of your app to the interface of the drawer (types `LayoutRegion`, `LayoutItemOptions`): `header` (top left, after settings menu, layers button and position), `footerStart` (bottom left, after zoom and undo / redo), `footer` (bottom, after toolbar and help), `floating` (over the drawing, placed by your styles). Elements can be hidden in zen mode, or placed after another element. `drawer.$drawerContainer` is the container of the drawer (`layout.$container`).
+`layout` adds elements of your app to the interface of the drawer (types `LayoutRegion`, `LayoutItemOptions`): `header` (top left, after settings menu, layers button and position), `footerStart` (bottom left, after zoom and undo / redo), `footer` (bottom, after toolbar and help), `floating` (over the drawing, placed by your styles). Elements can be hidden in zen mode, or placed after another element. `drawer.$drawerContainer` is the container of the drawer (`layout.$container`). When the footer does not fit on one line (narrow drawer, phone), the interface is compact (`is-compact` class of the container): toolbar on its own line, scrolled in it, options panel below the header; call `layout.updateCompact()` after changing the footer other than with `layout.add`.
 
 ```js
 const $button = document.createElement('button');

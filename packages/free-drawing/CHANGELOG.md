@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.21.0](https://github.com/fabienwnklr/free-drawing/compare/v7.20.7...v7.21.0) (2026-10-22)
+
+
+### Features
+
+* **layout:** compact interface when the footer does not fit on one line (phone, tablet, narrow drawer): toolbar on its own line, scrolled in it, below zoom, undo / redo and help, header on several lines, options panel of the tool below the header instead of covering its widgets; `is-compact` class of the container, `layout.updateCompact()` (also run when an element is added to the footer)
+
+
+### Bug Fixes
+
+* **toolbar:** on narrow screens, the toolbar no longer goes out of view, pushed by zoom and undo / redo; the menu of a group of tools closes when the toolbar is scrolled
+
 ## [7.20.7](https://github.com/fabienwnklr/free-drawing/compare/v7.20.6...v7.20.7) (2026-10-21)
 
 

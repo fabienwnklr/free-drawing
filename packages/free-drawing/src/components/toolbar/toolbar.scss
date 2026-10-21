@@ -7,6 +7,19 @@
     justify-content: center;
   }
 
+  // own line of the footer of a narrow drawer: scrolls in it
+  &.is-compact {
+    .drawer-toolbar-container {
+      grid-area: toolbar;
+      min-width: 0;
+    }
+
+    .drawer-toolbar-root {
+      max-width: 100%;
+      overflow-x: auto;
+    }
+  }
+
   .drawer-toolbar-root {
     display: flex;
     gap: $space-1;
