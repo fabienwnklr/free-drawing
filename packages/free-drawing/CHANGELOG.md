@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.20.4](https://github.com/fabienwnklr/free-drawing/compare/v7.20.3...v7.20.4) (2026-10-21)
+
+
+### Bug Fixes
+
+* **a11y:** Tab and Shift + Tab stay in dialogs: hidden buttons and options (collaboration dialog without session, export with nothing selected) and the other radios of a group (export scale, theme) were counted as stops of the focus trap, Tab left the dialog
+
 ## [7.20.3](https://github.com/fabienwnklr/free-drawing/compare/v7.20.2...v7.20.3) (2026-10-21)
 
 

@@ -10,6 +10,27 @@ const focusableSelector =
   'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 /**
+ * Element reached by Tab: tab index not negative, shown (not in a hidden or inert element, not hidden by styles where
+ * the browser tells it)
+ * @param $el Focusable element of a dialog
+ * @returns True when Tab can stop on it
+ */
+function isTabStop($el: HTMLElement) {
+  if ($el.tabIndex < 0 || $el.closest('[hidden], [inert]')) return false;
+
+  return typeof $el.checkVisibility !== 'function' || $el.checkVisibility({ visibilityProperty: true });
+}
+
+/**
+ * Name of the group of a radio
+ * @param $el Element of a dialog
+ * @returns Name of its radio group, empty for other elements
+ */
+function radioGroup($el: Element | null) {
+  return $el instanceof HTMLInputElement && $el.type === 'radio' ? $el.name : '';
+}
+
+/**
  * Dialog of the drawer (header with title and close button, body, footer), base of every dialog of the library.
  * Added to the `floating` region of the layout, hidden until {@link Modal.show}: while shown, focus stays in it,
  * Escape and a click outside close it (see options) and keys typed in it do not run drawer shortcuts.
@@ -148,22 +169,39 @@ export class Modal {
     const $focusables = this._getFocusables();
     const $first = $focusables[0];
     const $last = $focusables[$focusables.length - 1];
+    const $edge = event.shiftKey ? $first : $last;
     const $active = document.activeElement;
 
     if (!$first) {
       event.preventDefault();
-    } else if (!this.$modal.contains($active) || $active === (event.shiftKey ? $first : $last)) {
+    } else if (
+      !this.$modal.contains($active) ||
+      $active === $edge ||
+      // any radio of the group: Tab leaves the group
+      (!!radioGroup($active) && radioGroup($active) === radioGroup($edge))
+    ) {
       event.preventDefault();
       (event.shiftKey ? $last : $first).focus();
     }
   }
 
   /**
-   * Enabled elements of the dialog taking keyboard focus, in document order
+   * Elements of the dialog reached by Tab, in document order, as the browser does: enabled, shown, tab index not
+   * negative, one stop per radio group (its checked radio, else its first one)
    * @returns Buttons, links, fields and elements with a tab index of the dialog
    */
   private _getFocusables() {
-    return Array.from(this.$modal.querySelectorAll<HTMLElement>(focusableSelector));
+    const $stops = Array.from(this.$modal.querySelectorAll<HTMLElement>(focusableSelector)).filter(isTabStop);
+
+    return $stops.filter(($el) => {
+      const group = radioGroup($el);
+
+      if (!group) return true;
+
+      const $radios = $stops.filter(($other) => radioGroup($other) === group) as HTMLInputElement[];
+
+      return $el === ($radios.find(($radio) => $radio.checked) ?? $radios[0]);
+    });
   }
 
   /**

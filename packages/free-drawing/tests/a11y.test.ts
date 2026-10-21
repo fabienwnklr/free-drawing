@@ -261,6 +261,41 @@ describe('Accessibility', () => {
     expect(document.activeElement).toBe(help.$button);
   });
 
+  it('Tab stays in dialogs: hidden buttons and options skipped, one stop per radio group', () => {
+    const drawer = createDrawer({ collaboration: true });
+
+    // no session: link, users and stop button hidden, start button last
+    drawer.showCollaboration();
+    const collaboration = drawer.collaborationModal!;
+    const $close = collaboration.$modal.querySelector<HTMLElement>('[data-modal=close]')!;
+
+    expect(collaboration.$stopButton.hidden).toBe(true);
+    collaboration.$startButton.focus();
+    key(document.activeElement!, 'Tab');
+    expect(document.activeElement).toBe($close);
+    key(document.activeElement!, 'Tab', { shiftKey: true });
+    expect(document.activeElement).toBe(collaboration.$startButton);
+    collaboration.hide();
+
+    // nothing to export: buttons disabled, "selection only" hidden, checked scale is the last stop
+    drawer.showExport();
+    const exportModal = drawer.exportModal!;
+    const [, $scale2, $scale3] = exportModal.$scales;
+    const $exportClose = exportModal.$modal.querySelector<HTMLElement>('[data-modal=close]')!;
+
+    expect(exportModal.$buttons.every(($btn) => $btn.disabled)).toBe(true);
+    $scale2.focus();
+    key(document.activeElement!, 'Tab');
+    expect(document.activeElement).toBe($exportClose);
+    key(document.activeElement!, 'Tab', { shiftKey: true });
+    expect(document.activeElement).toBe($scale2);
+    // other radio of the group (clicked): Tab leaves the group too
+    $scale3.focus();
+    key(document.activeElement!, 'Tab');
+    expect(document.activeElement).toBe($exportClose);
+    exportModal.hide();
+  });
+
   it('Confirm modal is an alert dialog with real buttons, cancel focused', () => {
     const drawer = createDrawer();
 
