@@ -49,14 +49,17 @@
       background-color: $toast-info;
     }
 
+    // text of the same color in both themes ($text is light in dark mode)
     &.warning {
       background-color: $toast-warning;
-      color: $text;
+      color: $toast-on-warning;
     }
 
+    // light red in dark mode: dark text
     &.error,
     &.danger {
       background-color: $danger;
+      color: $on-danger;
     }
   }
 }

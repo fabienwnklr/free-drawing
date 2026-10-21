@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.20.6](https://github.com/fabienwnklr/free-drawing/compare/v7.20.5...v7.20.6) (2026-10-21)
+
+
+### Bug Fixes
+
+* **theme:** error and warning toasts readable in dark mode: dark text on the light red of errors and on the orange of warnings (contrast 2.3:1 and 1.7:1 before, over 7:1 now)
+
 ## [7.20.5](https://github.com/fabienwnklr/free-drawing/compare/v7.20.4...v7.20.5) (2026-10-21)
 
 

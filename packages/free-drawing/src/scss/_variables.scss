@@ -67,10 +67,11 @@ $danger-hover: var(--drawer-danger-hover);
 $danger-hover-bg: var(--drawer-danger-hover-bg);
 $on-danger: var(--drawer-on-danger);
 
-// same in both themes (white text)
+// same in both themes (white text, dark on warning)
 $toast-neutral: #343a40;
 $toast-info: #1971c2;
 $toast-warning: #f59f00;
+$toast-on-warning: #1e1e1e;
 
 // Shapes
 $radius: 6px;
