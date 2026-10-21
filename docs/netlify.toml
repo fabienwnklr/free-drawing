@@ -7,7 +7,7 @@
   command = "yarn doc:changelog && yarn doc:get-started && yarn doc:typedoc && yarn docs:build"
   publish = "docs/.vitepress/dist"
   # no build when nothing shown by the docs changed
-  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- docs packages/free-drawing/src packages/free-drawing/README.md packages/free-drawing/CHANGELOG.md packages/free-drawing/typedoc.json CONTRIBUTING.md package.json yarn.lock"
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- docs packages/free-drawing/src packages/free-drawing/README.md packages/free-drawing/CHANGELOG.md packages/free-drawing/typedoc.json packages/free-drawing/typedoc-modules.mjs CONTRIBUTING.md package.json yarn.lock"
 
 [build.environment]
   NODE_VERSION = "22"

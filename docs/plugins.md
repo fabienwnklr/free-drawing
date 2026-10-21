@@ -344,4 +344,4 @@ The [plugin template](https://github.com/fabienwnklr/free-drawing/tree/master/pa
 
 ## Reference
 
-[Plugin](/api/plugins/Plugin/classes/Plugin), [PluginCollection](/api/plugins/PluginCollection/classes/PluginCollection), [BaseWidget](/api/components/toolbar/widgets/BaseWidget/classes/BaseWidget) and [ShapeWidget](/api/components/toolbar/widgets/ShapeWidget/classes/ShapeWidget) in the API.
+[Plugin](/api/plugins/Plugin#abstract-plugin), [PluginCollection](/api/plugins/PluginCollection#plugincollection), [BaseWidget](/api/components/toolbar/widgets/BaseWidget#abstract-basewidget) and [ShapeWidget](/api/components/toolbar/widgets/ShapeWidget#abstract-shapewidget) in the API.
