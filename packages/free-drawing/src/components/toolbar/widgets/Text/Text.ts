@@ -113,7 +113,8 @@ export class TextWidget extends BaseWidget {
 
   /**
    * Edit a text in a textarea at its place (same font, size, rotation), text and transformer hidden meanwhile.
-   * Enter or a click elsewhere validates, Shift + Enter adds a line, Escape cancels; an empty text is removed.
+   * Enter or a press elsewhere (mouse, touch, pen, click) validates, Shift + Enter adds a line, Escape cancels; an
+   * empty text is removed.
    * @param textNode Text of drawing, or title of a frame
    */
   editTextNode(textNode: Text) {
@@ -223,6 +224,7 @@ export class TextWidget extends BaseWidget {
       // keep focus on clicked element (e.g. font select of text overlay)
       const hasFocus = document.activeElement === textarea;
       textarea.parentNode?.removeChild(textarea);
+      window.removeEventListener('pointerdown', handleOutsideClick, true);
       window.removeEventListener('click', handleOutsideClick, true);
       this.isEditing = false;
       if (hasFocus) this.drawer.focus();
@@ -275,14 +277,17 @@ export class TextWidget extends BaseWidget {
       }
     });
 
-    const handleOutsideClick = (e: MouseEvent) => {
+    const handleOutsideClick = (e: Event) => {
       if (e.target !== textarea) {
         textNode.text(value());
         removeTextarea();
       }
     };
     setTimeout(() => {
-      // capture phase, so text is committed before the click is handled (e.g. text overlay buttons)
+      // capture phase, so text is committed before the press is handled (e.g. text overlay buttons); pointer down
+      // for touch too (a tap on the canvas gives no click: konva prevents the default of touch start), click for
+      // buttons activated with the keyboard
+      window.addEventListener('pointerdown', handleOutsideClick, true);
       window.addEventListener('click', handleOutsideClick, true);
     });
   }

@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.19.12](https://github.com/fabienwnklr/free-drawing/compare/v7.19.11...v7.19.12) (2026-10-21)
+
+
+### Bug Fixes
+
+* **text:** on touch devices, a tap out of the edited text (on the canvas) validates it: the editor stayed open, a tap gives no click there
+
 ## [7.19.11](https://github.com/fabienwnklr/free-drawing/compare/v7.19.10...v7.19.11) (2026-10-21)
 
 

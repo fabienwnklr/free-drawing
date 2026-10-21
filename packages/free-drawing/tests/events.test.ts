@@ -191,6 +191,32 @@ describe('Test drawer event', () => {
     expect(text.text()).toBe('hello');
   });
 
+  it('Press elsewhere validates the edited text: touch (no click) or click', async () => {
+    const drawer = createDrawer();
+    const textWidget = drawer.getWidget<TextWidget>('text')!;
+    const text = textWidget.addTextNode('hello');
+    const editor = () => drawer.$drawerContainer.querySelector('textarea');
+    const tick = () => new Promise((resolve) => setTimeout(resolve));
+
+    textWidget.editTextNode(text);
+    await tick();
+    editor()!.value = 'tapped';
+    // in the field: still edited
+    editor()!.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true }));
+    expect(editor()).not.toBeNull();
+    // tap on the canvas
+    drawer.stage.content.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true }));
+    expect(editor()).toBeNull();
+    expect(text.text()).toBe('tapped');
+
+    textWidget.editTextNode(text);
+    await tick();
+    editor()!.value = 'clicked';
+    document.body.click();
+    expect(editor()).toBeNull();
+    expect(text.text()).toBe('clicked');
+  });
+
   it('Enter or Escape ending a composition (Chinese, Japanese, Korean) keeps fields open', () => {
     const drawer = createDrawer();
     const textWidget = drawer.getWidget<TextWidget>('text')!;

@@ -45,7 +45,7 @@
 - [x] group created or ungrouped in a frame can't be dragged until tool change (`Drawer.groupShapes` / `ungroupShapes`)
 - [x] arrow drawn in a frame links to the frame instead of shapes of the frame (`findBindingTarget` in `binding.ts`)
 - [x] text editing: Enter validating an IME composition (Chinese, Japanese, Korean) closes the editor (`Text.ts`: check `isComposing`)
-- [ ] text editing on touch devices: a tap on canvas does not close the editor (window `click` suppressed) (`Text.ts`)
+- [x] text editing on touch devices: a tap on canvas does not close the editor (window `click` suppressed) (`Text.ts`)
 - [ ] frame tool leaves the shape options panel shown after drawing (`Frame.ts`, `BaseWidget` overlay with `showOverlayOnActive` false)
 - [ ] shape drawn then released at its start (simple click) stays at collaborators: its live preview was sent, no removal (`ShapeWidget.ts`)
 - [ ] snapping of several selected shapes snaps each one on its own: gaps between them change (`Select.ts` snap)
