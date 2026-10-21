@@ -343,7 +343,7 @@ export class ContextMenu {
   }
 
   /**
-   * Menu at a position of drawer, kept in it
+   * Menu at a position of drawer, kept in it (taller than the drawer: its height is limited, the rest scrolls)
    * @param left Wanted left of the menu from the drawer container left (px)
    * @param top Wanted top of the menu from the drawer container top (px)
    */
@@ -351,6 +351,8 @@ export class ContextMenu {
     const { clientWidth, clientHeight } = this.drawer.$drawerContainer;
     const margin = 4;
 
+    // no layout (tests): no limit
+    this.$menu.style.maxHeight = clientHeight > 2 * margin ? `${clientHeight - 2 * margin}px` : '';
     this.$menu.style.left = `${Math.max(margin, Math.min(left, clientWidth - this.$menu.offsetWidth - margin))}px`;
     this.$menu.style.top = `${Math.max(margin, Math.min(top, clientHeight - this.$menu.offsetHeight - margin))}px`;
   }

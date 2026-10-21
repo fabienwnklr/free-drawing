@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.20.7](https://github.com/fabienwnklr/free-drawing/compare/v7.20.6...v7.20.7) (2026-10-21)
+
+
+### Bug Fixes
+
+* **ui:** settings menu and context menu taller than the drawer (small screens, short windows) scroll in it: their last items were out of the drawer, out of reach
+
 ## [7.20.6](https://github.com/fabienwnklr/free-drawing/compare/v7.20.5...v7.20.6) (2026-10-21)
 
 

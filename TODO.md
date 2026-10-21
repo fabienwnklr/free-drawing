@@ -54,7 +54,7 @@
 - [x] Tab leaves dialogs: hidden buttons counted in focus trap (collaboration dialog, export dialog with nothing to export) (`Modal._getFocusables`)
 - [x] owner loses focus when toggling the right to draw of a user (users list rebuilt, live region reads it again) (`CollaborationModal.ts`)
 - [x] error and warning toasts unreadable in dark mode (contrast 2.3:1 and 1.7:1) (`toast.scss`)
-- [ ] small screens: settings menu, context menu and options panels overflow the drawer, items out of reach (no max height / scroll)
+- [x] small screens: settings menu, context menu and options panels overflow the drawer, items out of reach (no max height / scroll)
 - [ ] phone (390 px wide): app bar overflows (name on two lines, "My drawings" cut), options panel of the tool covers the header widgets, toolbar pushed out of view by zoom and undo / redo (web `style.css`, `DrawerLayout` footer)
 - [ ] export: italic texts drawn with a serif font in png / pdf (preview of the export dialog), Ubuntu italic on canvas (`export.ts` `renderCanvas`, fonts of `TextWidget`)
 - [ ] font select of text options: an arrow key gives focus back to the drawer, fonts can't be browsed with keyboard (`TextOverlay.ts`)

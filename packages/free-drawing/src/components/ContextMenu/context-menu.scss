@@ -11,6 +11,8 @@
   visibility: hidden;
   min-width: 220px;
   padding: $space-1;
+  // height limited to the drawer (small screens)
+  overflow-y: auto;
 
   &.show {
     visibility: visible;

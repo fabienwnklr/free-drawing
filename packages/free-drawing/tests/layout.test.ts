@@ -91,4 +91,29 @@ describe('Layout', () => {
     drawer.UIPointerEvents('all');
     expect(pointerEvents()).toBe('all');
   });
+
+  it('Settings menu and context menu taller than the drawer scroll in it', () => {
+    const drawer = createDrawer();
+    const { setting, contextMenu } = drawer;
+    const $container = drawer.$drawerContainer;
+    const rect = (top: number, bottom: number) => ({ top, bottom }) as DOMRect;
+
+    // drawer of 300 px, menu 100 px below its top: 12 px kept below the menu
+    $container.getBoundingClientRect = () => rect(0, 300);
+    setting.$menu.getBoundingClientRect = () => rect(100, 700);
+    setting.$button.click();
+    expect(setting.$menu.style.maxHeight).toBe('188px');
+    // drawer resized while shown
+    $container.getBoundingClientRect = () => rect(0, 250);
+    window.dispatchEvent(new Event('resize'));
+    expect(setting.$menu.style.maxHeight).toBe('138px');
+    setting.hide();
+
+    // context menu: height of the drawer, 4 px from its edges
+    Object.defineProperty($container, 'clientHeight', { value: 300, configurable: true });
+    $container.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }));
+    expect(contextMenu.isVisible()).toBe(true);
+    expect(contextMenu.$menu.style.maxHeight).toBe('292px');
+    contextMenu.hide();
+  });
 });
