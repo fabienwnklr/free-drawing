@@ -73,6 +73,8 @@ export class Collaboration {
   #rejoinDrawing: DrawingChange | null = null;
   /** Shapes being drawn or moved, sent at next live message */
   #live = new Set<DrawingShape>();
+  /** Ids of shapes sent as live previews since the last final change: removed for everyone if they are discarded */
+  #sentLive = new Set<string>();
   /** Last pointer position of this user in drawing (null out of drawer), sent at next pointer message */
   #pointer: PointerPosition | null = null;
   /** Laser used by this user, see `setLaser` */
@@ -237,13 +239,30 @@ export class Collaboration {
       if (drawingShape) this.#live.add(drawingShape);
     });
     this._schedule('live', () => {
-      const upsert = [...this.#live].filter((shape) => shape.getLayer()).map(serializeShape);
+      const shapes = [...this.#live].filter((shape) => shape.getLayer());
 
       this.#live.clear();
-      if (upsert.length) {
-        this.socket.volatile.emit(socketEvents.CHANGE, { upsert, remove: [], live: true } satisfies DrawingChange);
+      if (shapes.length) {
+        for (const shape of shapes) this.#sentLive.add(shape.id());
+        this.socket.volatile.emit(socketEvents.CHANGE, {
+          upsert: shapes.map(serializeShape),
+          remove: [],
+          live: true,
+        } satisfies DrawingChange);
       }
     });
+  }
+
+  /**
+   * Shape being drawn discarded (simple click: nothing drawn): its live preview, if sent, is removed for everyone (the
+   * server keeps previews in the drawing of the room)
+   * @param shape Shape removed from the drawing without change
+   */
+  discardLive(shape: DrawingShape) {
+    this.#live.delete(shape);
+    if (this.#sentLive.delete(shape.id()) && this.#connected) {
+      this.socket.emit(socketEvents.CHANGE, { upsert: [], remove: [shape.id()] } satisfies DrawingChange);
+    }
   }
 
   /**
@@ -403,7 +422,8 @@ export class Collaboration {
 
     const current = new Map(this.drawer.getDrawingShapes().map((shape) => [shape.id(), serializeShape(shape)]));
     const upsert = [...current].filter(([id, json]) => this.#synced.get(id) !== json).map(([, json]) => json);
-    const remove = [...this.#synced.keys()].filter((id) => !current.has(id));
+    // also previews of shapes removed before their final change
+    const remove = [...new Set([...this.#synced.keys(), ...this.#sentLive])].filter((id) => !current.has(id));
     const ids = [...current.keys()];
     const added = ids.filter((id) => !this.#synced.has(id));
     // stacking order of known shapes changed (reorder, undo...), or new shapes not on top (group, ungroup...):
@@ -417,6 +437,7 @@ export class Collaboration {
     this.#synced = current;
     // final state sent, previews useless
     this.#live.clear();
+    this.#sentLive.clear();
     if (upsert.length || remove.length || reordered) this.socket.emit(socketEvents.CHANGE, change);
   }
 

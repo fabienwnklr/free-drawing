@@ -196,8 +196,9 @@ export abstract class ShapeWidget<T extends DrawingShape> extends BaseWidget {
       this.pointerEvent = e.evt;
       this.endAction();
 
-      // simple click, nothing drawn
+      // simple click, nothing drawn (also for collaborators who got its preview)
       if (Math.hypot(end.x - this.#start.x, end.y - this.#start.y) < 2) {
+        this.drawer.collaboration?.discardLive(shape);
         shape.destroy();
         this.onDrawEnd?.(null);
         return;

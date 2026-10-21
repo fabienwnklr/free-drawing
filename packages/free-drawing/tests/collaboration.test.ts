@@ -558,6 +558,35 @@ describe('Collaboration', () => {
     expect(drawer.collaboration).toBeNull();
     expect(socket.disconnect).toHaveBeenCalled();
   });
+  it('Shape drawn then released at its start (simple click): its live preview removed for everyone', async () => {
+    const connect = createServer();
+    const a = createDrawer({ keepTool: true });
+    const b = createDrawer();
+    connect(a);
+    connect(b);
+    a.getWidget<BaseWidget>('square')!.setActive(true);
+
+    fireMouse(a, 'mousedown', 100, 100);
+    fireMouse(a, 'mousemove', 101, 101);
+    await wait();
+    expect(b.getDrawingShapes()).toHaveLength(1);
+
+    fireMouse(a, 'mouseup', 100.5, 100.5);
+    expect(a.getDrawingShapes()).toHaveLength(0);
+    expect(b.getDrawingShapes()).toHaveLength(0);
+    // not in the drawing of the room for users joining later
+    const c = createDrawer();
+    connect(c);
+    expect(c.getDrawingShapes()).toHaveLength(0);
+
+    // drawn shape: kept, no removal sent
+    fireMouse(a, 'mousedown', 100, 100);
+    fireMouse(a, 'mousemove', 160, 140);
+    await wait();
+    fireMouse(a, 'mouseup', 160, 140);
+    expect(b.getDrawingShapes()).toHaveLength(1);
+  });
+
   it('Shapes being drawn are shown live to other users, saved with final change', async () => {
     const connect = createServer();
     const a = createDrawer();

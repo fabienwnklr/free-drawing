@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.19.13](https://github.com/fabienwnklr/free-drawing/compare/v7.19.12...v7.19.13) (2026-10-21)
+
+
+### Bug Fixes
+
+* **collaboration:** a shape tool pressed then released at its start (nothing drawn) removes its preview for the other users of the session and from the drawing of the room: it stayed with them, and was sent to users joining later
+
 ## [7.19.12](https://github.com/fabienwnklr/free-drawing/compare/v7.19.11...v7.19.12) (2026-10-21)
 
 
