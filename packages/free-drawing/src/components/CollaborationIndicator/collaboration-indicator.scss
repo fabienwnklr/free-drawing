@@ -1,0 +1,61 @@
+@use '@/scss/variables' as *;
+@use '@/scss/mixins' as *;
+
+// reminder of a live session, next to the layers button (also in zen mode)
+.drawer-container .drawer-collaboration-indicator {
+  @include button-group;
+
+  &[hidden] {
+    display: none;
+  }
+
+  .drawer-collaboration-live {
+    gap: $space-2;
+    width: auto;
+    padding: 0 $space-3;
+    font-size: $font-size-sm;
+    font-weight: 600;
+  }
+
+  // pulsing while the session lasts
+  .drawer-live-dot {
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: $danger;
+    animation: drawer-live 2s ease-in-out infinite;
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+    }
+  }
+
+  // red stop icon
+  .drawer-collaboration-stop {
+    color: $danger;
+
+    &:hover:not(.disabled) {
+      background-color: $danger-hover-bg;
+      color: $danger-hover;
+    }
+  }
+
+  .drawer-live-count {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-1;
+    font-weight: 400;
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+}
+
+@keyframes drawer-live {
+  50% {
+    opacity: 0.35;
+  }
+}

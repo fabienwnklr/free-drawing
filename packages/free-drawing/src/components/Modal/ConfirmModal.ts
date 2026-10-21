@@ -73,6 +73,15 @@ export class ConfirmModal extends Modal {
   }
 
   /**
+   * Label of the confirm button, naming the action (e.g. "Stop session")
+   * @param label Text of the button, kept when the language changes
+   */
+  setConfirmLabel(label: string) {
+    this._options.confirmLabel = label;
+    this.$confirmBtn.textContent = label;
+  }
+
+  /**
    * Buttons run their action with the dialog (actions read at click: they can be replaced after creation)
    */
   private _initEvents() {

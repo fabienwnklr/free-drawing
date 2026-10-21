@@ -145,6 +145,7 @@ import { LinkEditor } from '@/components/LinkEditor/LinkEditor';
 import { PluginCollection } from '@/plugins/PluginCollection';
 import { LayersPanel } from '@/components/LayersPanel/LayersPanel';
 import { SaveButton } from '@/components/tools/SaveButton/SaveButton';
+import { CollaborationIndicator } from '@/components/CollaborationIndicator/CollaborationIndicator';
 import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import { Line } from 'konva/lib/shapes/Line';
 import { Toast } from '@/components/Toast/Toast';
@@ -181,6 +182,8 @@ export class Drawer extends MicroEvent {
   collaboration: Collaboration | null = null;
   /** Created on first use, see `showCollaboration` */
   collaborationModal: CollaborationModal | null = null;
+  /** Reminder of a live session in header, with the `collaboration` option */
+  collaborationIndicator: CollaborationIndicator | undefined;
   /** Element given to the constructor, holding the container of the drawer */
   $el: HTMLDivElement;
   /** Container of the drawer and regions of its interface, see `layout.add` */
@@ -424,6 +427,10 @@ export class Drawer extends MicroEvent {
     }
     if (this.options.saveButton) {
       this.saveButton = new SaveButton(this);
+    }
+    // server given by collaboration option: reminder of a session
+    if (this.options.collaboration) {
+      this.collaborationIndicator = new CollaborationIndicator(this);
     }
     this._initTheme(preferences.theme);
 

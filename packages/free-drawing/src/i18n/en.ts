@@ -31,6 +31,8 @@ export const en = {
   'confirm.message': 'Confirm this action?',
   'confirm.clearCanvas': 'Remove the whole drawing?',
   'confirm.clearStorage': 'Remove all stored data?',
+  'confirm.stopCollaboration': 'Stop the live collaboration session?',
+  'confirm.leaveCollaboration': 'Leave the live collaboration session?',
   'confirm.cancel': 'Cancel',
   'confirm.confirm': 'Confirm',
 
@@ -290,6 +292,9 @@ export const en = {
   'collab.start': 'Start session',
   'collab.join': 'Join session',
   'collab.stop': 'Stop session',
+  'collab.leave': 'Leave session',
+  'collab.live': 'Live',
+  'collab.liveState': 'Live collaboration: {state}',
   'collab.connected': 'Connected ({count})',
   'collab.connecting': 'Connecting...',
   'collab.you': '{name} (you)',

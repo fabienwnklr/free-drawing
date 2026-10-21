@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.20.0](https://github.com/fabienwnklr/free-drawing/compare/v7.19.14...v7.20.0) (2026-10-21)
+
+
+### Features
+
+* **collaboration:** reminder of a live session in the header, also in zen mode: live dot and number of people connected (opens the collaboration dialog), red stop button stopping the session (owner) or leaving it (other users, who had no way to leave it) once confirmed, so a click by mistake keeps it; "Stop session" / "Leave session" in the command palette
+
 ## [7.19.14](https://github.com/fabienwnklr/free-drawing/compare/v7.19.13...v7.19.14) (2026-10-21)
 
 

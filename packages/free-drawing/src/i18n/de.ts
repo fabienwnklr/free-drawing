@@ -31,6 +31,8 @@ export const de: Translations = {
   'confirm.message': 'Diese Aktion bestätigen?',
   'confirm.clearCanvas': 'Die ganze Zeichnung löschen?',
   'confirm.clearStorage': 'Alle gespeicherten Daten löschen?',
+  'confirm.stopCollaboration': 'Live-Zusammenarbeit beenden?',
+  'confirm.leaveCollaboration': 'Live-Zusammenarbeit verlassen?',
   'confirm.cancel': 'Abbrechen',
   'confirm.confirm': 'Bestätigen',
 
@@ -277,6 +279,9 @@ export const de: Translations = {
   'collab.start': 'Sitzung starten',
   'collab.join': 'Sitzung beitreten',
   'collab.stop': 'Sitzung beenden',
+  'collab.leave': 'Sitzung verlassen',
+  'collab.live': 'Live',
+  'collab.liveState': 'Live-Zusammenarbeit: {state}',
   'collab.connected': 'Verbunden ({count})',
   'collab.connecting': 'Verbindung wird hergestellt...',
   'collab.you': '{name} (Sie)',

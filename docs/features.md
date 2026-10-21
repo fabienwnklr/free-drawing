@@ -66,6 +66,7 @@ More in [Layers](/get-started/#layers), [Linked arrows](/get-started/#linked-arr
 - **Sessions**: start one from the menu and share its link or QR code, everyone draws on the same drawing in real time.
 - **Presence**: cursors of the other users with their names, shapes they are drawing, their laser.
 - **Rights**: the owner gives or removes the right to draw, and chooses whether new participants can draw.
+- **Never forgotten**: during a session, a live reminder in the header (also in zen mode) shows the people connected, opens the session and stops or leaves it in one click.
 - **Reliable**: changes made while the connection is lost are merged with the ones of the others when it comes back.
 - **Server included**: the repository has a Node server (socket.io, accounts, SQLite), or use your own following the [protocol](/get-started/#collaboration).
 

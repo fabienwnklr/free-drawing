@@ -493,6 +493,8 @@ drawer.showCollaboration(); // dialog
 
 Users see the cursor of each other user with their name, and shapes while they are drawn or moved (sent every 50 ms at most, final state sent at the end).
 
+During a session, a reminder in the header (also in zen mode: the drawing is shared) shows a live dot and the number of people connected: it opens the dialog, and its red stop button stops the session (owner) or leaves it once confirmed, as "Stop session" / "Leave session" of the command palette.
+
 A user opening a room link enters a name before joining. The user who created the room is its owner (secret kept in browser, so reloading the page joins the room again): in the dialog, the owner shares the link, gives or removes the right to draw of each user, chooses whether new participants can draw (else they view only until given the right, also when coming back with a new id) and stops the session. Other users only change their name in the dialog. Users without the right are in read only mode (`drawer.setReadOnly`), their changes are ignored by the server.
 
 Links contain the id of the user sharing them (`by`), the page URL of each user too: the owner sees who invited each user, even with a link copied from the address bar.

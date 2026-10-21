@@ -558,6 +558,12 @@ export class CommandPalette extends Modal {
             icon: UsersIcon,
             run: () => drawer.showCollaboration(),
           },
+          !!drawer.collaboration && {
+            id: 'live collaboration stop leave session',
+            label: t(drawer.collaboration.isOwner ? 'collab.stop' : 'collab.leave'),
+            icon: UsersIcon,
+            run: () => drawer.stopCollaboration(),
+          },
           {
             id: 'clear storage',
             label: t('menu.clearStorage'),

@@ -31,6 +31,8 @@ export const fr: Translations = {
   'confirm.message': 'Confirmer cette action ?',
   'confirm.clearCanvas': 'Effacer tout le dessin ?',
   'confirm.clearStorage': 'Supprimer toutes les données enregistrées ?',
+  'confirm.stopCollaboration': 'Arrêter la session de collaboration en direct ?',
+  'confirm.leaveCollaboration': 'Quitter la session de collaboration en direct ?',
   'confirm.cancel': 'Annuler',
   'confirm.confirm': 'Confirmer',
 
@@ -277,6 +279,9 @@ export const fr: Translations = {
   'collab.start': 'Démarrer la session',
   'collab.join': 'Rejoindre la session',
   'collab.stop': 'Arrêter la session',
+  'collab.leave': 'Quitter la session',
+  'collab.live': 'En direct',
+  'collab.liveState': 'Collaboration en direct : {state}',
   'collab.connected': 'Connectés ({count})',
   'collab.connecting': 'Connexion...',
   'collab.you': '{name} (vous)',

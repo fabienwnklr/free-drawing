@@ -558,6 +558,58 @@ describe('Collaboration', () => {
     expect(drawer.collaboration).toBeNull();
     expect(socket.disconnect).toHaveBeenCalled();
   });
+  it('Live session reminded in header, also in zen mode: people connected, dialog, stopped or left', () => {
+    const connect = createServer();
+    const owner = createDrawer({ collaboration: true, language: 'en' });
+    const guest = createDrawer({ collaboration: true, language: 'en' });
+    const indicator = owner.collaborationIndicator!;
+
+    expect(indicator.$container.hidden).toBe(true);
+    connect(owner, 'room', 'Ada', { ownerKey: 'secret' });
+    expect(indicator.$container.hidden).toBe(false);
+    expect(indicator.$label.textContent).toBe('Live');
+    expect(indicator.$button.getAttribute('aria-label')).toBe('Live collaboration: Connected (1)');
+    expect(indicator.$stopButton.getAttribute('aria-label')).toBe('Stop session');
+    // not hidden by zen mode
+    expect(indicator.$container.classList.contains('drawer-zen-hidden')).toBe(false);
+
+    connect(guest, 'room', 'Bob');
+    expect(indicator.$count.textContent).toBe('2');
+    expect(guest.collaborationIndicator!.$stopButton.getAttribute('aria-label')).toBe('Leave session');
+
+    indicator.$button.click();
+    expect(owner.collaborationModal!.isVisible()).toBe(true);
+    owner.collaborationModal!.hide();
+
+    // click by mistake: confirmation, Cancel keeps the session
+    indicator.$stopButton.click();
+    const confirm = indicator.confirmModal!;
+    expect(confirm.isVisible()).toBe(true);
+    expect(confirm.$message.textContent).toBe('Stop the live collaboration session?');
+    expect(confirm.$confirmBtn.textContent).toBe('Stop session');
+    confirm.$cancelBtn.click();
+    expect(confirm.isVisible()).toBe(false);
+    expect(owner.collaboration).not.toBeNull();
+
+    guest.collaborationIndicator!.$stopButton.click();
+    const leave = guest.collaborationIndicator!.confirmModal!;
+    expect(leave.$message.textContent).toBe('Leave the live collaboration session?');
+    expect(leave.$confirmBtn.textContent).toBe('Leave session');
+    leave.$confirmBtn.click();
+    expect(leave.isVisible()).toBe(false);
+    expect(guest.collaboration).toBeNull();
+    expect(guest.collaborationIndicator!.$container.hidden).toBe(true);
+    expect(indicator.$count.textContent).toBe('1');
+
+    // command of the palette too
+    owner.showCommandPalette();
+    const labels = [...owner.commandPalette!.$list.querySelectorAll('[role="option"]')].map(($o) => $o.textContent);
+    owner.commandPalette!.hide();
+    expect(labels.some((label) => label?.includes('Stop session'))).toBe(true);
+    owner.stopCollaboration();
+    expect(indicator.$container.hidden).toBe(true);
+  });
+
   it('Shape drawn then released at its start (simple click): its live preview removed for everyone', async () => {
     const connect = createServer();
     const a = createDrawer({ keepTool: true });
