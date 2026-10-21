@@ -90,6 +90,16 @@ export function setPressed($el: HTMLElement, pressed: boolean) {
 }
 
 /**
+ * Key pressed while a text is composed with an input method (Chinese, Japanese, Korean...): its Enter or Escape ends
+ * the composition, it does not validate nor close the field (Safari ends it with a key of code 229, not composing)
+ * @param e Key pressed in a field
+ * @returns True when the key belongs to a composition
+ */
+export function isComposing(e: KeyboardEvent): boolean {
+  return e.isComposing || e.keyCode === 229;
+}
+
+/**
  * Arrow keys move focus between items (last to first and back), Home / End to first / last item.
  * Handled keys and arrows of the other orientation are not propagated, so drawer shortcuts (e.g. arrows moving
  * selection) are not triggered from an item.

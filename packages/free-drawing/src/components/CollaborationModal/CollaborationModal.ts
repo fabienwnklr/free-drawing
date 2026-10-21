@@ -1,7 +1,7 @@
 import '@/components/CollaborationModal/collaboration-modal.scss';
 import type { Drawer } from '@/Drawer';
 import { Modal } from '@/components/Modal/Modal';
-import { createButton, createSwitch, uniqueId } from '@/utils/dom';
+import { createButton, createSwitch, isComposing, uniqueId } from '@/utils/dom';
 import { drawerEvents } from '@/constants';
 import type { TranslationKey } from '@/@types/i18n';
 
@@ -57,7 +57,7 @@ export class CollaborationModal extends Modal {
     this.$name.addEventListener('input', () => (this.$joinButton.disabled = !this.$name.value.trim()));
     // Enter starts or joins
     this.$name.addEventListener('keydown', (e) => {
-      if (e.key !== 'Enter') return;
+      if (e.key !== 'Enter' || isComposing(e)) return;
       if (this.joinRoom) this.$joinButton.click();
       else if (!this.drawer.collaboration) this.$startButton.click();
     });

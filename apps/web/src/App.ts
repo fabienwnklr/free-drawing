@@ -236,8 +236,10 @@ export class App {
     window.addEventListener('resize', () => this.drawer.setSize(this.$main.clientWidth, this.$main.clientHeight));
 
     this.$name.addEventListener('change', () => this.rename(this.$name.value));
-    // Enter validates name, Escape restores it
+    // Enter validates name, Escape restores it (not when they end a composition: Chinese, Japanese, Korean...; Safari
+    // ends it with a key of code 229)
     this.$name.addEventListener('keydown', (e) => {
+      if (e.isComposing || e.keyCode === 229) return;
       if (e.key === 'Enter') this.$name.blur();
       if (e.key === 'Escape') {
         this.$name.value = this.drawing?.name ?? '';

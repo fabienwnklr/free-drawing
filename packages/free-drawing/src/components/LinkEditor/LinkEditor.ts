@@ -7,7 +7,7 @@ import type { Drawer } from '@/Drawer';
 import CloseIcon from '@/icons/close.svg?raw';
 import ExternalLinkIcon from '@/icons/external-link.svg?raw';
 import LinkIcon from '@/icons/link.svg?raw';
-import { createButton, placeInView, setLabel } from '@/utils/dom';
+import { createButton, isComposing, placeInView, setLabel } from '@/utils/dom';
 import { parseLink } from '@/utils/link';
 import { getPlacementArea, getSelectionBox, getSelectionSurroundings, unionRect } from '@/utils/selection';
 
@@ -68,7 +68,7 @@ export class LinkEditor {
     this.$input.addEventListener('keydown', (e) => {
       // typed keys are not drawer shortcuts (tools, delete selection...)
       e.stopPropagation();
-      if (e.key !== 'Enter' && e.key !== 'Escape') return;
+      if ((e.key !== 'Enter' && e.key !== 'Escape') || isComposing(e)) return;
       // not a click of the element focused once done (link button of the panel)
       e.preventDefault();
       if (e.key === 'Escape') this._fill();

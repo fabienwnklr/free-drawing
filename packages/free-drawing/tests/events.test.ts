@@ -170,7 +170,7 @@ describe('Test drawer event', () => {
 
     const textarea = drawer.$drawerContainer.querySelector('textarea')!;
     textarea.value = 'abc';
-    textarea.dispatchEvent(new KeyboardEvent('keydown', { code: 'Escape' }));
+    textarea.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape' }));
 
     expect(drawer.getDrawingShapeByName('text').length).toBe(0);
     expect(selectWidget.transformer.nodes().length).toBe(0);
@@ -185,10 +185,52 @@ describe('Test drawer event', () => {
 
     const textarea = drawer.$drawerContainer.querySelector('textarea')!;
     textarea.value = '';
-    textarea.dispatchEvent(new KeyboardEvent('keydown', { code: 'Escape' }));
+    textarea.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape' }));
 
     expect(text.isVisible()).toBe(true);
     expect(text.text()).toBe('hello');
+  });
+
+  it('Enter or Escape ending a composition (Chinese, Japanese, Korean) keeps fields open', () => {
+    const drawer = createDrawer();
+    const textWidget = drawer.getWidget<TextWidget>('text')!;
+    const text = textWidget.addTextNode('hello');
+    const key = ($field: Element, init: KeyboardEventInit) =>
+      $field.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...init }));
+    const editor = () => drawer.$drawerContainer.querySelector('textarea');
+
+    textWidget.editTextNode(text);
+    editor()!.value = '你好';
+    key(editor()!, { key: 'Enter', code: 'Enter', isComposing: true });
+    // Safari: key of code 229 ends the composition, not composing
+    key(editor()!, { key: 'Enter', code: 'Enter', keyCode: 229 });
+    key(editor()!, { key: 'Escape', code: 'Escape', isComposing: true });
+    expect(editor()).not.toBeNull();
+
+    // Enter of the numeric keypad validates too
+    key(editor()!, { key: 'Enter', code: 'NumpadEnter' });
+    expect(editor()).toBeNull();
+    expect(text.text()).toBe('你好');
+
+    // name in the layers panel, link
+    drawer.layersPanel!.toggle(true);
+    drawer
+      .layersPanel!.$list.querySelector<HTMLElement>('.drawer-layers-name')!
+      .dispatchEvent(new KeyboardEvent('keydown', { key: 'F2', bubbles: true }));
+    const $name = drawer.layersPanel!.$list.querySelector('input')!;
+    key($name, { key: 'Enter', isComposing: true });
+    expect($name.isConnected).toBe(true);
+    key($name, { key: 'Enter' });
+    expect($name.isConnected).toBe(false);
+    drawer.layersPanel!.toggle(false);
+
+    drawer.getWidget<SelectWidget>('selection')!.select([text]);
+    drawer.linkEditor!.edit();
+    drawer.linkEditor!.$input.value = 'example.com';
+    key(drawer.linkEditor!.$input, { key: 'Enter', isComposing: true });
+    expect(drawer.getShapeLink(text)).toBeNull();
+    key(drawer.linkEditor!.$input, { key: 'Enter' });
+    expect(drawer.getShapeLink(text)).toBe('https://example.com/');
   });
 
   it('Text editing area is on text, with room around glyphs', () => {

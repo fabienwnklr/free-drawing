@@ -190,7 +190,9 @@ describe('Selection menu', () => {
     menu.update();
     expect(menu.isVisible()).toBe(false);
     // validated
-    drawer.$drawerContainer.querySelector('textarea')!.dispatchEvent(new KeyboardEvent('keydown', { code: 'Enter' }));
+    drawer.$drawerContainer
+      .querySelector('textarea')!
+      .dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter' }));
     menu.update();
     expect(menu.isVisible()).toBe(true);
     drawer.setReadOnly(true);

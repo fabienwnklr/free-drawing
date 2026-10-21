@@ -5,7 +5,7 @@ import { Modal } from '@/components/Modal/Modal';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import type { TranslationKey, Language } from '@/@types/i18n';
 import { languages } from '@/i18n/I18n';
-import { uniqueId } from '@/utils/dom';
+import { isComposing, uniqueId } from '@/utils/dom';
 import SearchIcon from '@/icons/search.svg?raw';
 import CheckIcon from '@/icons/check.svg?raw';
 import UndoIcon from '@/icons/undo.svg?raw';
@@ -254,7 +254,7 @@ export class CommandPalette extends Modal {
   private _onKeydown(e: KeyboardEvent) {
     const count = this.#shown.length;
 
-    if (e.isComposing) return;
+    if (isComposing(e)) return;
     if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && count) {
       e.preventDefault();
       // last to first and back

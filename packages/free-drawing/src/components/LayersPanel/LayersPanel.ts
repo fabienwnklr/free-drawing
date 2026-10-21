@@ -10,6 +10,7 @@ import {
   createButton,
   disableElement,
   enableElement,
+  isComposing,
   setLabel,
   setPressed,
   uniqueId,
@@ -620,7 +621,7 @@ export class LayersPanel {
     $input.addEventListener('keydown', (e) => {
       // typed letters are not shortcuts
       e.stopPropagation();
-      if (e.key === 'Enter' || e.key === 'Escape') {
+      if ((e.key === 'Enter' || e.key === 'Escape') && !isComposing(e)) {
         e.preventDefault();
         end(e.key === 'Enter');
       }

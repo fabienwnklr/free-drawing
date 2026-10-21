@@ -5,7 +5,7 @@ import { Modal } from '@/components/Modal/Modal';
 import { languages } from '@/i18n/I18n';
 import type { Language, TranslationKey } from '@/@types/i18n';
 import { drawerEvents } from '@/constants';
-import { createButton, createSwitch, uniqueId } from '@/utils/dom';
+import { createButton, createSwitch, isComposing, uniqueId } from '@/utils/dom';
 import type { Choice } from '@/@types/ui';
 
 const themes: Choice<Theme>[] = [
@@ -102,7 +102,7 @@ export class PreferencesModal extends Modal {
       this.$name.setAttribute('autocomplete', 'nickname');
       // Enter saves, as a form
       this.$name.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') this.save();
+        if (e.key === 'Enter' && !isComposing(e)) this.save();
       });
       $collaboration.append(this._createField('collab.name', this.$name));
       this.$modalBody.append($collaboration);

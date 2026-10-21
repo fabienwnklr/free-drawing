@@ -88,7 +88,9 @@ describe('Widgets option', () => {
 
     const text = textWidget.addTextNode('hello');
     textWidget.editTextNode(text);
-    drawer.$drawerContainer.querySelector('textarea')!.dispatchEvent(new KeyboardEvent('keydown', { code: 'Escape' }));
+    drawer.$drawerContainer
+      .querySelector('textarea')!
+      .dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape' }));
     expect(drawer.getDrawingShapeByName('text').length).toBe(1);
 
     expect(() => {

@@ -7,7 +7,7 @@ import type { Vector2d } from 'konva/lib/types';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { shapeName } from '@/constants';
 import { TextOverlay } from '@/components/tools/Overlay/TextOverlay/TextOverlay';
-import { placeInView } from '@/utils/dom';
+import { isComposing, placeInView } from '@/utils/dom';
 
 /**
  * Text tool: a click adds a text and edits it in a textarea placed over it. A double click on any text (or title of
@@ -259,16 +259,18 @@ export class TextWidget extends BaseWidget {
     textarea.addEventListener('keydown', (e) => {
       textarea.style.height = 'auto';
       textarea.style.height = `${textarea.scrollHeight + textNode.fontSize()}px`;
-      // hide on enter
+      // Enter or Escape ending a composition (Chinese, Japanese, Korean...): text still edited
+      if (isComposing(e)) return;
+      // hide on enter (also of the numeric keypad)
       // but don't hide on shift + enter (new line, not in titles of frames)
-      if (e.code === 'Enter' && !e.shiftKey) {
+      if (e.key === 'Enter' && !e.shiftKey) {
         textNode.text(value());
         removeTextarea();
-      } else if (e.code === 'Enter' && title) {
+      } else if (e.key === 'Enter' && title) {
         e.preventDefault();
       }
       // on esc do not set value back to node
-      if (e.code === 'Escape') {
+      if (e.key === 'Escape') {
         removeTextarea();
       }
     });

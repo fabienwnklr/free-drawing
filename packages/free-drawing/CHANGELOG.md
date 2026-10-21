@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.19.11](https://github.com/fabienwnklr/free-drawing/compare/v7.19.10...v7.19.11) (2026-10-21)
+
+
+### Bug Fixes
+
+* **text:** Enter or Escape ending a composition of an input method (Chinese, Japanese, Korean...) no longer validates or closes the field: text editor, name in the layers panel, link, name in preferences and collaboration, search of the command palette (also in Safari); Enter of the numeric keypad validates a text
+
 ## [7.19.10](https://github.com/fabienwnklr/free-drawing/compare/v7.19.9...v7.19.10) (2026-10-21)
 
 

@@ -146,12 +146,12 @@ describe('Frame', () => {
     expect([textarea.wrap, textarea.style.whiteSpace]).toEqual(['off', 'pre']);
 
     // no line break: Shift + Enter does nothing, pasted ones become spaces
-    const shiftEnter = new KeyboardEvent('keydown', { code: 'Enter', shiftKey: true, cancelable: true });
+    const shiftEnter = new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', shiftKey: true, cancelable: true });
 
     textarea.dispatchEvent(shiftEnter);
     expect(shiftEnter.defaultPrevented).toBe(true);
     textarea.value = 'Roadmap\n2027 ';
-    textarea.dispatchEvent(new KeyboardEvent('keydown', { code: 'Enter' }));
+    textarea.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter' }));
     expect([title.text(), frame.getAttr('label'), title.y()]).toEqual(['Roadmap 2027', 'Roadmap 2027', -20]);
     expect(document.querySelector('.drawer-text-editor')).toBe(null);
     drawerRect.mockRestore();
