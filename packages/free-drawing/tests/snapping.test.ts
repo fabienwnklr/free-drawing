@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Rect } from 'konva/lib/shapes/Rect';
 import type { Vector2d } from 'konva/lib/types';
+import type { Drawer } from '@/Drawer';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { shapeName } from '@/constants';
 import { createDrawer } from './helpers';
@@ -72,5 +73,43 @@ describe('Snapping while resizing', () => {
     selectWidget.select([b]);
     expect(bound('middle-right', { x: 402, y: 461 })).toEqual({ x: 400, y: 461 });
     expect(drawer.getSelectedShapes()).toEqual([b]);
+  });
+});
+
+describe('Snapping while moving', () => {
+  document.body.innerHTML = `<div id="test"></div>`;
+
+  /** Konva drag of a shape from a point (selected shapes dragged with it), in two moves, released on the window */
+  const dragBy = (drawer: Drawer, shape: Rect, from: Vector2d, dx: number) => {
+    drawer.stage.setPointersPositions(new MouseEvent('mousedown', { clientX: from.x, clientY: from.y }));
+    shape.startDrag();
+    for (const step of [dx / 2, dx]) {
+      window.dispatchEvent(new MouseEvent('mousemove', { clientX: from.x + step, clientY: from.y }));
+    }
+    window.dispatchEvent(new MouseEvent('mouseup', { clientX: from.x + dx, clientY: from.y }));
+  };
+
+  it('Shapes moved together snap by the box of the selection: gaps between them kept', () => {
+    const { drawer, selectWidget, a, b } = createRects();
+    // its left side is a guide (600)
+    drawer.addShape(new Rect({ name: shapeName.rect, x: 600, y: 700, width: 100, height: 100 }));
+
+    selectWidget.setActive(true);
+    selectWidget.toggleSnapping(true);
+    selectWidget.select([a, b]);
+    // box of A and B: 298..598, right side snapped to 600
+    dragBy(drawer, a, { x: 200, y: 100 }, 198);
+    expect([a.x(), b.x()]).toEqual([300, 350]);
+  });
+
+  it('Shapes moved together on the grid: the one dragged by the pointer snapped, the others follow it', () => {
+    const { drawer, selectWidget, a, b } = createRects();
+
+    drawer.setPreferences({ grid: true });
+    selectWidget.setActive(true);
+    selectWidget.select([a, b]);
+    // A at 107 snapped to 120 (grid of 40), B follows: gap of 50 kept
+    dragBy(drawer, a, { x: 200, y: 100 }, 7);
+    expect([a.x(), b.x()]).toEqual([120, 170]);
   });
 });

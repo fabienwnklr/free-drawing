@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.19.14](https://github.com/fabienwnklr/free-drawing/compare/v7.19.13...v7.19.14) (2026-10-21)
+
+
+### Bug Fixes
+
+* **selection:** several selected shapes moved together keep their gaps while snapping: they snap to other shapes by the box of the selection, and to the grid by the shape dragged by the pointer (each one snapped on its own before)
+
 ## [7.19.13](https://github.com/fabienwnklr/free-drawing/compare/v7.19.12...v7.19.13) (2026-10-21)
 
 

@@ -2431,14 +2431,37 @@ export class Drawer extends MicroEvent {
   private _initSnapGridEvents() {
     const selectWidget = this.getWidget<SelectWidget>('selection');
 
+    // shape dragged by the pointer (first one of a drag, konva drags the other selected shapes after it): snapped,
+    // the other moved shapes follow it, so the gaps between them are kept
+    let lead: Node | null = null;
+
     // namespaced, object snapping and change saving also listen drag events of draw layer
+    this.drawLayer.on('dragstart.grid', (e) => {
+      if (!lead?.isDragging()) lead = e.target;
+    });
+    this.drawLayer.on('dragend.grid', (e) => {
+      if (e.target === lead) lead = null;
+    });
     this.drawLayer.on('dragmove.grid', (e) => {
-      if (e.target instanceof Shape) {
-        if (e.target instanceof Line) return;
-        e.target.position({
-          x: Math.round(e.target.x() / gridSize) * gridSize,
-          y: Math.round(e.target.y() / gridSize) * gridSize,
-        });
+      if (e.target !== lead || !(e.target instanceof Shape) || e.target instanceof Line) return;
+
+      const before = e.target.absolutePosition();
+
+      e.target.position({
+        x: Math.round(e.target.x() / gridSize) * gridSize,
+        y: Math.round(e.target.y() / gridSize) * gridSize,
+      });
+
+      const after = e.target.absolutePosition();
+      const selected = this.getSelectedShapes();
+
+      if (!selected.includes(e.target as DrawingShape)) return;
+      for (const shape of selected) {
+        if (shape === e.target) continue;
+
+        const pos = shape.absolutePosition();
+
+        shape.absolutePosition({ x: pos.x + after.x - before.x, y: pos.y + after.y - before.y });
       }
     });
     // applied by selection when anchor is not snapped to objects

@@ -5,7 +5,6 @@ import { Transformer } from 'konva/lib/shapes/Transformer';
 import { Rect } from 'konva/lib/shapes/Rect';
 import { Line } from 'konva/lib/shapes/Line';
 import type { Shape, ShapeConfig } from 'konva/lib/Shape';
-import type { Stage } from 'konva/lib/Stage';
 import { drawerEvents, edgesShapes, fillShapes, shapeName, strokeStyleShapes } from '@/constants';
 import { toFill } from '@/utils/color';
 import { getCornerRadius, getDash, getStrokeStyle } from '@/utils/stroke';
@@ -651,10 +650,11 @@ export class SelectWidget extends BaseWidget {
 
       // find possible snapping lines (not of shapes moved with it)
       const selected = this._getSelected();
-      const moved = selected.includes(e.target as DrawingShape) ? selected : [e.target];
+      const moved: Node[] = selected.includes(e.target as DrawingShape) ? selected : [e.target];
       const lineGuideStops = this._getLineGuideStops(moved);
-      // find snapping points of current object
-      const itemBounds = this._getObjectSnappingEdges(e.target);
+      // edges and centers of the moved shapes together: the gaps between them are kept (each one is dragged by
+      // konva and fires this event, the box is already snapped for the next ones)
+      const itemBounds = this._getObjectSnappingEdges(moved, e.target);
 
       // now find where can we snap current object
       const guides = this._getGuides(lineGuideStops, itemBounds);
@@ -667,27 +667,18 @@ export class SelectWidget extends BaseWidget {
       this._drawGuides(guides);
 
       const absPos = e.target.absolutePosition();
-      // now force object position
-      guides.forEach((lg) => {
-        switch (lg.snap) {
-          case 'start':
-          case 'center':
-          case 'end': {
-            switch (lg.orientation) {
-              case 'V': {
-                absPos.x = lg.lineGuide + lg.offset;
-                break;
-              }
-              case 'H': {
-                absPos.y = lg.lineGuide + lg.offset;
-                break;
-              }
-            }
-            break;
-          }
-        }
-      });
-      e.target.absolutePosition(absPos);
+      const snapped = { ...absPos };
+
+      for (const lg of guides) {
+        if (lg.orientation === 'V') snapped.x = lg.lineGuide + lg.offset;
+        else snapped.y = lg.lineGuide + lg.offset;
+      }
+      // every moved shape by the same distance
+      for (const node of moved) {
+        const pos = node.absolutePosition();
+
+        node.absolutePosition({ x: pos.x + snapped.x - absPos.x, y: pos.y + snapped.y - absPos.y });
+      }
     });
 
     this.drawer.drawLayer.on('dragend.snap', () => this._clearGuides());
@@ -779,12 +770,21 @@ export class SelectWidget extends BaseWidget {
   }
 
   /**
-   * Points of a dragged node which snap to guides: its edges and center on each axis (absolute)
-   * @param node Node being dragged
-   * @returns Points of its box on each axis, with the offset to its position
+   * Points of dragged nodes which snap to guides: edges and center of their box on each axis (absolute)
+   * @param nodes Nodes moved together (selection), or the node dragged alone
+   * @param node Node being dragged, whose position gives the offsets
+   * @returns Points of the box on each axis, with the offset to the position of the node
    */
-  private _getObjectSnappingEdges(node: Shape<ShapeConfig> | Stage) {
-    const box = node.getClientRect();
+  private _getObjectSnappingEdges(nodes: Node[], node: Node) {
+    const boxes = nodes.map((moved) => moved.getClientRect());
+    const left = Math.min(...boxes.map(({ x }) => x));
+    const top = Math.min(...boxes.map(({ y }) => y));
+    const box = {
+      x: left,
+      y: top,
+      width: Math.max(...boxes.map(({ x, width }) => x + width)) - left,
+      height: Math.max(...boxes.map(({ y, height }) => y + height)) - top,
+    };
     const absPos = node.absolutePosition();
 
     return {
