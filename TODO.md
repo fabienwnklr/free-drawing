@@ -52,7 +52,7 @@
 - [x] a second finger starts another shape or stroke, first one left half drawn (no pointer id tracking)
 - [x] click outside the settings menu or a dialog gives focus back to the drawer even when clicking a field of the page or another drawer (`Dropdown.ts`, `Modal.ts`)
 - [x] Tab leaves dialogs: hidden buttons counted in focus trap (collaboration dialog, export dialog with nothing to export) (`Modal._getFocusables`)
-- [ ] owner loses focus when toggling the right to draw of a user (users list rebuilt, live region reads it again) (`CollaborationModal.ts`)
+- [x] owner loses focus when toggling the right to draw of a user (users list rebuilt, live region reads it again) (`CollaborationModal.ts`)
 - [ ] error and warning toasts unreadable in dark mode (contrast 2.3:1 and 1.7:1) (`toast.scss`)
 - [ ] small screens: settings menu, context menu and options panels overflow the drawer, items out of reach (no max height / scroll)
 - [ ] phone (390 px wide): app bar overflows (name on two lines, "My drawings" cut), options panel of the tool covers the header widgets, toolbar pushed out of view by zoom and undo / redo (web `style.css`, `DrawerLayout` footer)
@@ -63,6 +63,7 @@
 - [ ] drawer of window size does not follow height changes of the window, nor any change with a page scrollbar (`DrawerLayout.ts`)
 - [ ] drawings over 1 MB can't join a collaboration session (socket.io `maxHttpBufferSize` 1 MB, API accepts 5 MB): reconnection loop
 - [ ] focus of drawer on creation scrolls the host page to it (`Drawer.focus` without `preventScroll`)
+- [ ] right to draw given or removed by the owner takes the focus of the user (tool changed: `BaseWidget.setActive` focuses the drawer), even typing in a field of the page or a dialog
 
 ## Improvements
 

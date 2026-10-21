@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.20.5](https://github.com/fabienwnklr/free-drawing/compare/v7.20.4...v7.20.5) (2026-10-21)
+
+
+### Bug Fixes
+
+* **collaboration:** the owner toggling the right to draw of a user keeps the focus on its switch, the list of users is no longer rebuilt on each change: rows of users not changed are kept, so screen readers read only users joining or changed
+
 ## [7.20.4](https://github.com/fabienwnklr/free-drawing/compare/v7.20.3...v7.20.4) (2026-10-21)
 
 

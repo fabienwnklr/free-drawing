@@ -736,8 +736,10 @@ describe('Collaboration', () => {
 
   it('Owner of the room gives or removes the right to draw', async () => {
     const connect = createServer();
-    const alice = createDrawer();
     const bob = createDrawer();
+    const carol = createDrawer();
+    // created last: drawer of the page (focus)
+    const alice = createDrawer();
     connect(alice, 'room', 'Alice', { userId: 'alice', ownerKey: 'secret' });
     connect(bob, 'room', 'Bob', { userId: 'bob' });
 
@@ -751,11 +753,19 @@ describe('Collaboration', () => {
     expect($canEdit.getAttribute('aria-label')).toBe('Bob can draw');
     expect($canEdit.checked).toBe(true);
 
+    const modal = alice.collaborationModal!;
+    const $rows = Array.from(modal.$members.children);
+
+    $canEdit.focus();
     $canEdit.checked = false;
     $canEdit.dispatchEvent(new Event('change'));
     expect(bob.collaboration!.canEdit).toBe(false);
     expect(bob.readOnly).toBe(true);
     expect(bob.activeTool).toBe('pan');
+    // rows kept: focus stays on the switch, the live region does not read the users again
+    expect(Array.from(modal.$members.children)).toEqual($rows);
+    expect(document.activeElement).toBe($canEdit);
+    expect($canEdit.checked).toBe(false);
 
     // changes of user without right are ignored
     const text = addText(bob, 'not allowed');
@@ -768,6 +778,20 @@ describe('Collaboration', () => {
     alice.collaboration!.setRight('bob', true);
     expect(bob.readOnly).toBe(false);
     expect(bob.activeTool).toBe('brush');
+    expect($canEdit.checked).toBe(true);
+
+    // user joining: row added, others kept
+    connect(carol, 'room', 'Carol', { userId: 'carol' });
+    expect(modal.$members.textContent).toContain('Carol');
+    expect(modal.$members.children).toHaveLength(3);
+    expect($rows.every(($row) => $row.isConnected)).toBe(true);
+    expect(document.activeElement).toBe($canEdit);
+
+    // user leaving: row removed
+    bob.stopCollaboration();
+    expect($canEdit.isConnected).toBe(false);
+    expect(modal.$members.textContent).not.toContain('Bob');
+    carol.stopCollaboration();
     alice.collaboration!.setRight('alice', false);
     expect(alice.collaboration!.canEdit).toBe(true);
     alice.collaborationModal!.hide();
