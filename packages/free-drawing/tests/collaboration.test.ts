@@ -501,11 +501,17 @@ describe('Collaboration', () => {
 
     modal.$name.value = 'Bob';
     modal.$name.dispatchEvent(new Event('input'));
+    const toast = vi.spyOn(drawer, 'toast');
+
     modal.$joinButton.click();
     await tick();
     await tick();
     expect(drawer.collaboration?.room).toBe('abc123');
     expect(drawer.collaboration?.name).toBe('Bob');
+    // name given: dialog closed, session shown by the header
+    expect(modal.isVisible()).toBe(false);
+    expect(toast).toHaveBeenCalledWith('You joined the live collaboration session.', 'info');
+    expect(drawer.collaborationIndicator!.$container.hidden).toBe(false);
     // link of the room shared by this user
     expect(drawer.getCollaborationLink()).toBe(
       `${window.location.origin}${window.location.pathname}#room=abc123&by=${drawer.getUserId()}`

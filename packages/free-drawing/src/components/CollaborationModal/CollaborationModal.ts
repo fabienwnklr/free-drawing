@@ -182,7 +182,8 @@ export class CollaborationModal extends Modal {
   }
 
   /**
-   * Joins the room of the link with the given name (nothing without name), error shown in a toast
+   * Joins the room of the link with the given name (nothing without name), then the dialog is closed (the reminder of
+   * the header shows the session) and the join told in a toast; error shown in a toast
    */
   async join() {
     const room = this.joinRoom;
@@ -192,6 +193,9 @@ export class CollaborationModal extends Modal {
     this.joinRoom = null;
     try {
       await this.drawer.startCollaboration(room, this.$name.value, this.invitedBy);
+      // its name was just given: nothing more to see in the dialog
+      if (this.isVisible()) this.hide();
+      this.drawer.toast(this.drawer.t('collab.introJoined'), 'info');
     } catch (error) {
       this.drawer.toast(this.drawer.t('toast.collaborationUnavailable', { error: (error as Error).message }), 'error');
     }

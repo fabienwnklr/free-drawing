@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.20.2](https://github.com/fabienwnklr/free-drawing/compare/v7.20.1...v7.20.2) (2026-10-21)
+
+
+### Bug Fixes
+
+* **collaboration:** joining a room from a link closes the dialog once the name is given (it showed this name again), a toast tells the room is joined and the reminder of the header shows the session
+
 ## [7.20.1](https://github.com/fabienwnklr/free-drawing/compare/v7.20.0...v7.20.1) (2026-10-21)
 
 
