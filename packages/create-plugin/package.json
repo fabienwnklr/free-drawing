@@ -22,7 +22,6 @@
     "url": "git+https://github.com/fabienwnklr/free-drawing.git",
     "directory": "packages/create-plugin"
   },
-  "homepage": "https://free-drawing-docs.netlify.app/plugins",
   "publishConfig": {
     "access": "public"
   },
