@@ -43,7 +43,7 @@
 - [x] shortcuts with some keyboards: Alt + S / Z / G / L read `e.key` (macOS Option gives other characters), Shift + W is on Z key of AZERTY (`e.code`), Ctrl shortcuts ignored with Caps Lock (`HotKey.ts`)
 - [x] "Save now" item of settings menu always shown: `display: flex` of `menu-item` overrides `hidden` (`dropdown.scss`)
 - [x] group created or ungrouped in a frame can't be dragged until tool change (`Drawer.groupShapes` / `ungroupShapes`)
-- [ ] arrow drawn in a frame links to the frame instead of shapes of the frame (`findBindingTarget` in `binding.ts`)
+- [x] arrow drawn in a frame links to the frame instead of shapes of the frame (`findBindingTarget` in `binding.ts`)
 - [ ] text editing: Enter validating an IME composition (Chinese, Japanese, Korean) closes the editor (`Text.ts`: check `isComposing`)
 - [ ] text editing on touch devices: a tap on canvas does not close the editor (window `click` suppressed) (`Text.ts`)
 - [ ] frame tool leaves the shape options panel shown after drawing (`Frame.ts`, `BaseWidget` overlay with `showOverlayOnActive` false)

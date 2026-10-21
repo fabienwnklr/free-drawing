@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.19.9](https://github.com/fabienwnklr/free-drawing/compare/v7.19.8...v7.19.9) (2026-10-21)
+
+
+### Bug Fixes
+
+* **arrows:** an arrow drawn in a frame links its ends to the shapes of the frame, or to nothing in an empty place: it was linked to the frame, its end put on the border of the frame; a frame is linked only near its border (arrows between frames)
+
 ## [7.19.8](https://github.com/fabienwnklr/free-drawing/compare/v7.19.7...v7.19.8) (2026-10-21)
 
 

@@ -6,6 +6,7 @@ import type { IRect, Vector2d } from 'konva/lib/types';
 import type { DrawingShape } from '@/@types/drawer';
 import { shapeName } from '@/constants';
 import type { Anchor, BoundEnd } from '@/@types/shapes';
+import { isFrame } from '@/utils/frame';
 
 /**
  * Arrows linked to shapes: their start and end stay on outline of shapes (`startBinding` / `endBinding` attributes:
@@ -164,8 +165,9 @@ function getAnchoredPoint(shape: Node, layer: Container, anchor: Anchor): Vector
 
 /**
  * Shape an arrow end can be linked to at a point: smallest visible shape around it (rectangles, ellipses, texts,
- * freehand drawings, groups), not arrows nor lines
- * @param shapes Drawing shapes
+ * freehand drawings, groups, shapes of frames), not arrows nor lines; a frame only near its border (an arrow drawn
+ * in a frame links to its shapes, or to nothing)
+ * @param shapes Drawing shapes (with shapes of frames, see `withFrameShapes`)
  * @param point arrow end, in coordinates of the layer of shapes
  * @param exclude Arrow being drawn
  * @returns smallest shape whose box (with `bindingMargin`) contains the point, null when none
@@ -177,13 +179,10 @@ export function findBindingTarget(shapes: DrawingShape[], point: Vector2d, exclu
     if (shape.hasName(shapeName.straightLine)) return false;
 
     const { x, y, width, height } = shape.getClientRect({ relativeTo: layer ?? undefined });
+    // distance from the point inside the box to its nearest side (negative out of it)
+    const inside = Math.min(point.x - x, x + width - point.x, point.y - y, y + height - point.y);
 
-    return (
-      point.x >= x - bindingMargin &&
-      point.x <= x + width + bindingMargin &&
-      point.y >= y - bindingMargin &&
-      point.y <= y + height + bindingMargin
-    );
+    return inside >= -bindingMargin && (!isFrame(shape) || inside <= bindingMargin);
   });
   const area = (shape: DrawingShape) => {
     const { width, height } = shape.getClientRect();

@@ -15,6 +15,7 @@ import {
   unbindMoved,
   updateBindings,
 } from '@/utils/binding';
+import { getFrameShapes, isFrame, withFrameShapes } from '@/utils/frame';
 import { createDrawer, drag, fireMouse, keydown } from './helpers';
 
 const round = ({ x, y }: { x: number; y: number }) => ({ x: Math.round(x), y: Math.round(y) });
@@ -72,6 +73,28 @@ describe('Arrows linked to shapes', () => {
 
     small.hide();
     expect(findBindingTarget(shapes(), { x: 30, y: 30 })).toBe(rect);
+  });
+
+  it('Arrow drawn in a frame links to its shapes or to nothing, a frame only near its border', () => {
+    const { drawer, rect } = createShapes();
+    // frame 0..400 x 0..300 around the rectangle
+    drawer.getWidget<BaseWidget>('frame')!.setActive(true);
+    drag(drawer, [-20, -20], [400, 300]);
+    const frame = drawer.getDrawingShapes().find(isFrame)!;
+    const shapes = withFrameShapes(drawer.getDrawingShapes());
+
+    expect(getFrameShapes(frame)).toContain(rect);
+    // empty place of the frame: no link
+    expect(findBindingTarget(shapes, { x: 300, y: 200 })).toBeNull();
+    // shape of the frame
+    expect(findBindingTarget(shapes, { x: 100, y: 50 })).toBe(rect);
+    // border of the frame, inside or outside
+    expect(findBindingTarget(shapes, { x: 395, y: 200 })).toBe(frame);
+    expect(findBindingTarget(shapes, { x: 405, y: 200 })).toBe(frame);
+
+    drawer.getWidget<BaseWidget>('arrow')!.setActive(true);
+    drag(drawer, [300, 200], [100, 50]);
+    expect(links(arrows(drawer)[0])).toEqual([undefined, rect.id()]);
   });
 
   it('Arrow drawn from a shape to another one is linked to them, highlighted while drawing, not with Ctrl', () => {
