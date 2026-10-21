@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.19.10](https://github.com/fabienwnklr/free-drawing/compare/v7.19.9...v7.19.10) (2026-10-21)
+
+
+### Bug Fixes
+
+* **tools:** a mouse event fired on the window (not on an element) during a pointer action ends it there instead of throwing an error
+
 ## [7.19.9](https://github.com/fabienwnklr/free-drawing/compare/v7.19.8...v7.19.9) (2026-10-21)
 
 

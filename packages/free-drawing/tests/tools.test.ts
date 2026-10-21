@@ -513,6 +513,16 @@ describe('Pointer actions', () => {
     expect(drawer.undoRedo.entries).toHaveLength(2);
   });
 
+  it('Pointer released with an event of the window (not a node): action ended there', () => {
+    const drawer = createDrawer({ keepTool: true });
+    drawer.getWidget<BaseWidget>('square')!.setActive(true);
+
+    fireMouse(drawer, 'mousedown', 10, 10);
+    window.dispatchEvent(new MouseEvent('mouseup', { clientX: 60, clientY: 40 }));
+    expect(drawer._duringAction()).toBe(false);
+    expect(drawer.getDrawingShapes()[0].size()).toEqual({ width: 50, height: 30 });
+  });
+
   it('Released unseen (window left) or touch cancelled: action ended, next stroke without the previous one', () => {
     const drawer = createDrawer({ keepTool: true });
     const brush = drawer.getWidget<BaseWidget>('brush')!;

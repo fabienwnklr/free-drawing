@@ -226,7 +226,9 @@ export abstract class BaseWidget {
     const onMouse = (evt: MouseEvent) => {
       if (!this.inAction) return;
 
-      const outside = !stage.content.contains(evt.target as globalThis.Node);
+      const { target } = evt;
+      // also fired on the window (not a node)
+      const outside = !(target instanceof globalThis.Node && stage.content.contains(target));
 
       if (evt.type === 'mousemove' && evt.buttons === 0) send('mouseup', evt);
       else if (outside) send(evt.type, evt);
