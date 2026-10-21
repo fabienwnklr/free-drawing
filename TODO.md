@@ -49,7 +49,7 @@
 - [x] frame tool leaves the shape options panel shown after drawing (`Frame.ts`, `BaseWidget` overlay with `showOverlayOnActive` false)
 - [x] shape drawn then released at its start (simple click) stays at collaborators: its live preview was sent, no removal (`ShapeWidget.ts`)
 - [x] snapping of several selected shapes snaps each one on its own: gaps between them change (`Select.ts` snap)
-- [ ] a second finger starts another shape or stroke, first one left half drawn (no pointer id tracking)
+- [x] a second finger starts another shape or stroke, first one left half drawn (no pointer id tracking)
 - [ ] click outside the settings menu or a dialog gives focus back to the drawer even when clicking a field of the page or another drawer (`Dropdown.ts`, `Modal.ts`)
 - [ ] Tab leaves dialogs: hidden buttons counted in focus trap (collaboration dialog, export dialog with nothing to export) (`Modal._getFocusables`)
 - [ ] owner loses focus when toggling the right to draw of a user (users list rebuilt, live region reads it again) (`CollaborationModal.ts`)

@@ -37,6 +37,8 @@ export abstract class BaseWidget {
   inAction: boolean = false;
   /** Window listeners of the pointer action in progress (pointer out of the canvas), removed when it ends */
   #actionListeners: AbortController | null = null;
+  /** Finger of the touch action in progress (`Touch.identifier`), null for a mouse or an unknown finger */
+  #touchId: number | null = null;
   /** Show `overlay` while widget is active (false when overlay depends on something else, e.g. selection) */
   protected showOverlayOnActive: boolean = true;
   /** Stage cursor while widget is active */
@@ -134,6 +136,8 @@ export abstract class BaseWidget {
   /**
    * Listen stage events while widget is active.
    * Events are namespaced with widget id, so they are removed on deactivation without removing other listeners.
+   * One pointer at a time: during a pointer action, another press (second finger, other button) is ignored, and a
+   * touch action ends when its finger is lifted, where it is lifted.
    * @param events Space separated event names
    * @param handler Konva listener called with the stage event
    */
@@ -143,7 +147,26 @@ export abstract class BaseWidget {
       .map((event) => `${event}.${this.id}`)
       .join(' ');
 
-    this.drawer.stage.on(namespaced, handler);
+    this.drawer.stage.on(namespaced, (e) => {
+      const evt = e.evt as TouchEvent;
+
+      if (this.inAction && (e.type === 'mousedown' || e.type === 'touchstart')) return;
+      if (this.inAction && e.type === 'touchend') {
+        const touch = [...(evt.changedTouches ?? [])].find(({ identifier }) => identifier === this.#touchId);
+
+        // another finger lifted (finger unknown: one still on the screen)
+        if (this.#touchId !== null ? !touch : evt.touches?.length) return;
+        // konva points the first finger still on the screen
+        if (touch)
+          this.drawer.stage.setPointersPositions({ touches: [], changedTouches: [touch] } as unknown as TouchEvent);
+      }
+
+      const started = !this.inAction;
+
+      handler.call(this.drawer.stage, e);
+      // finger of the action started
+      if (started && this.inAction) this.#touchId = evt.changedTouches?.[0]?.identifier ?? null;
+    });
   }
 
   /**
@@ -204,6 +227,7 @@ export abstract class BaseWidget {
    */
   protected endAction() {
     this.inAction = false;
+    this.#touchId = null;
     this.#actionListeners?.abort();
     this.#actionListeners = null;
     this.drawer.layout.setPointerEvents('all');

@@ -513,6 +513,42 @@ describe('Pointer actions', () => {
     expect(drawer.undoRedo.entries).toHaveLength(2);
   });
 
+  it('Second finger during a drawing: ignored, the drawing ends where its own finger is lifted', () => {
+    const drawer = createDrawer({ keepTool: true });
+    type Finger = { identifier: number; clientX: number; clientY: number };
+    const finger = (identifier: number, clientX: number, clientY: number): Finger => ({ identifier, clientX, clientY });
+    /** Touch event: konva points the first finger on the screen, changed fingers give the lifted one */
+    const touch = (type: string, touches: Finger[], changed: Finger[]) => {
+      const { clientX, clientY } = touches[0] ?? changed[0];
+
+      fireMouse(drawer, type, clientX, clientY, { touches, changedTouches: changed } as unknown as Partial<MouseEvent>);
+    };
+
+    // second finger lifted first
+    drawer.getWidget<BaseWidget>('square')!.setActive(true);
+    touch('touchstart', [finger(0, 10, 10)], [finger(0, 10, 10)]);
+    touch('touchmove', [finger(0, 60, 40)], [finger(0, 60, 40)]);
+    touch('touchstart', [finger(0, 60, 40), finger(1, 300, 300)], [finger(1, 300, 300)]);
+    touch('touchend', [finger(0, 60, 40)], [finger(1, 300, 300)]);
+    expect(drawer._duringAction()).toBe(true);
+    touch('touchmove', [finger(0, 110, 70)], [finger(0, 110, 70)]);
+    touch('touchend', [], [finger(0, 110, 70)]);
+    expect(drawer._duringAction()).toBe(false);
+    expect(drawer.getDrawingShapes().map((shape) => shape.size())).toEqual([{ width: 100, height: 60 }]);
+
+    // finger of the drawing lifted first: ended where it is lifted, not where the other one is
+    drawer.getWidget<BaseWidget>('brush')!.setActive(true);
+    touch('touchstart', [finger(2, 200, 200)], [finger(2, 200, 200)]);
+    touch('touchstart', [finger(2, 200, 200), finger(3, 600, 600)], [finger(3, 600, 600)]);
+    touch('touchmove', [finger(2, 250, 220), finger(3, 600, 600)], [finger(2, 250, 220)]);
+    touch('touchend', [finger(3, 600, 600)], [finger(2, 260, 230)]);
+    expect(drawer._duringAction()).toBe(false);
+    touch('touchend', [], [finger(3, 600, 600)]);
+    const stroke = drawer.getDrawingShapes()[1].getClientRect();
+    expect(drawer.getDrawingShapes()).toHaveLength(2);
+    expect(stroke.x + stroke.width).toBeLessThan(300);
+  });
+
   it('Pointer released with an event of the window (not a node): action ended there', () => {
     const drawer = createDrawer({ keepTool: true });
     drawer.getWidget<BaseWidget>('square')!.setActive(true);

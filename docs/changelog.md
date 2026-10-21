@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.20.1](https://github.com/fabienwnklr/free-drawing/compare/v7.20.0...v7.20.1) (2026-10-21)
+
+
+### Bug Fixes
+
+* **tools:** a second finger put on the screen during a drawing (shape, stroke, eraser, selection...) is ignored: it started another one and left the first half drawn; the drawing ends when its own finger is lifted, where it is lifted (not where another finger is)
+
 ## [7.20.0](https://github.com/fabienwnklr/free-drawing/compare/v7.19.14...v7.20.0) (2026-10-21)
 
 
