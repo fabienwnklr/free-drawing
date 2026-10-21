@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.20.3](https://github.com/fabienwnklr/free-drawing/compare/v7.20.2...v7.20.3) (2026-10-21)
+
+
+### Bug Fixes
+
+* **a11y:** a click out of a dialog or the settings menu on a field of the page or another drawer keeps the focus there: closing them gave it back to the drawer, keys typed went to the drawer
+
 ## [7.20.2](https://github.com/fabienwnklr/free-drawing/compare/v7.20.1...v7.20.2) (2026-10-21)
 
 

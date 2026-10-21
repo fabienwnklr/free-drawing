@@ -19,7 +19,15 @@ import CommandIcon from '@/icons/command.svg?raw';
 import SlidersIcon from '@/icons/sliders.svg?raw';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import type { ColorLike } from '@/@types/drawer';
-import { createButton, disableElement, enableElement, setLabel, setPressed, uniqueId } from '@/utils/dom';
+import {
+  createButton,
+  disableElement,
+  enableElement,
+  hasFocusOutside,
+  setLabel,
+  setPressed,
+  uniqueId,
+} from '@/utils/dom';
 import { ColorPicker } from '@/components/ColorPicker/ColorPicker';
 import { drawerEvents } from '@/constants';
 import { languages } from '@/i18n/I18n';
@@ -360,8 +368,10 @@ export class Settings extends Dropdown {
     });
 
     // focus drawer on hide dropdown (no on toggle by click again on it), unless focus is in a dialog opened from menu
+    // or taken out of the drawer by the click hiding it (field of the page, another drawer)
     this.on(drawerEvents.dropdownHide, () => {
-      if (!document.activeElement?.closest('[aria-modal="true"]')) this.drawer.focus();
+      if (document.activeElement?.closest('[aria-modal="true"]')) return;
+      if (!hasFocusOutside(this.drawer.$drawerContainer)) this.drawer.focus();
     });
   }
 

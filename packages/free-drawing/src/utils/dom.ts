@@ -100,6 +100,18 @@ export function isComposing(e: KeyboardEvent): boolean {
 }
 
 /**
+ * Focus taken by an element out of the container (field of the page, another drawer), e.g. by the click hiding a
+ * menu or a dialog: a component hidden then gives focus back to the drawer only without it
+ * @param $container Container of the component (drawer)
+ * @returns True when an element out of the container has focus (not the body: focus lost)
+ */
+export function hasFocusOutside($container: HTMLElement): boolean {
+  const $active = document.activeElement;
+
+  return !!$active && $active !== document.body && !$container.contains($active);
+}
+
+/**
  * Arrow keys move focus between items (last to first and back), Home / End to first / last item.
  * Handled keys and arrows of the other orientation are not propagated, so drawer shortcuts (e.g. arrows moving
  * selection) are not triggered from an item.

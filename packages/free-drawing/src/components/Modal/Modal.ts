@@ -4,7 +4,7 @@ import { stringToNode } from '@/utils/functions';
 import type { Drawer } from '@/Drawer';
 import type { ModalOptions } from '@/@types/ui';
 import CloseIcon from '@/icons/close.svg?raw';
-import { uniqueId } from '@/utils/dom';
+import { hasFocusOutside, uniqueId } from '@/utils/dom';
 
 const focusableSelector =
   'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -256,7 +256,8 @@ export class Modal {
   }
 
   /**
-   * Hides the dialog and gives focus back to the element which opened it, else to the drawer
+   * Hides the dialog and gives focus back to the element which opened it, else to the drawer, unless an element out
+   * of the drawer took it (field of the page or another drawer clicked)
    */
   hide() {
     this.#removeDocumentListeners();
@@ -270,6 +271,7 @@ export class Modal {
     const $opener = this.#opener;
 
     this.#opener = null;
+    if (hasFocusOutside(this.drawer.$drawerContainer)) return;
     $opener?.focus();
     if (!$opener || document.activeElement !== $opener) this.drawer.focus();
   }

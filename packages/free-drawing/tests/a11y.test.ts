@@ -278,6 +278,48 @@ describe('Accessibility', () => {
     expect(document.activeElement).toBe(drawer.$drawerContainer);
   });
 
+  it('Click out of a dialog or the settings menu keeps focus given to the page, else gives it back to the drawer', async () => {
+    const drawer = createDrawer();
+    const { help, setting } = drawer;
+    const $field = document.createElement('input');
+
+    document.body.append($field);
+    // focus moved by the press of the click, then click hiding them
+    const clickOn = ($el: HTMLElement) => {
+      $el.focus();
+      $el.click();
+    };
+
+    // field of the page, out of the drawer: focus kept there
+    help.$button.focus();
+    help.$button.click();
+    await tick();
+    clickOn($field);
+    expect(help.isVisible()).toBe(false);
+    expect(document.activeElement).toBe($field);
+
+    setting.$button.click();
+    setting.$clearCanvasButton.focus();
+    clickOn($field);
+    expect(setting.isShown()).toBe(false);
+    expect(document.activeElement).toBe($field);
+
+    // drawer clicked: focus back to the opener of the dialog, to the drawer for the menu
+    help.$button.focus();
+    help.$button.click();
+    await tick();
+    clickOn(drawer.$drawerContainer);
+    expect(help.isVisible()).toBe(false);
+    expect(document.activeElement).toBe(help.$button);
+
+    setting.$button.click();
+    setting.$clearCanvasButton.focus();
+    drawer.$drawerContainer.click();
+    expect(setting.isShown()).toBe(false);
+    expect(document.activeElement).toBe(drawer.$drawerContainer);
+    $field.remove();
+  });
+
   it('Options of dialogs are switches, named by their label', () => {
     const drawer = createDrawer({ language: 'en' });
 
