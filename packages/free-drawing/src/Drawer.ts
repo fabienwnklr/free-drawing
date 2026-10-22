@@ -28,7 +28,7 @@ import { rectContains, setupHit } from '@/utils/hit';
 import { I18n, getLanguage, languages } from '@/i18n/I18n';
 import type { Language, TranslationParams, TranslationKey } from '@/@types/i18n';
 import { bindingAttrs, unbindMoved, updateBindings } from '@/utils/binding';
-import { fitTextWidth, getTexts } from '@/utils/text';
+import { fitTextWidth, getFontsToLoad, getTexts, loadFonts } from '@/utils/text';
 import {
   decodeLinkData,
   drawingFileExtension,
@@ -1860,7 +1860,7 @@ export class Drawer extends MicroEvent {
   }
 
   /**
-   * Drawing (or selected shapes) as png, svg or pdf image
+   * Drawing (or selected shapes) as png, svg or pdf image, fonts of texts loaded first
    * @param format Image format
    * @param options Export options (selection only, background, dark mode, scale)
    * @returns Image file of the format
@@ -1875,6 +1875,9 @@ export class Drawer extends MicroEvent {
     const { scale } = imageOptions;
 
     if (format === 'svg') return new Blob([renderSvg(shapes, box, imageOptions)], { type: 'image/svg+xml' });
+
+    // texts drawn with their fonts (export right after loading a drawing, slow network): not a fallback font
+    await loadFonts(getFontsToLoad(shapes));
 
     const canvas = renderCanvas(shapes, box, imageOptions);
 

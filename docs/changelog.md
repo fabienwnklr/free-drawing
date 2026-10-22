@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.21.1](https://github.com/fabienwnklr/free-drawing/compare/v7.21.0...v7.21.1) (2026-10-22)
+
+
+### Bug Fixes
+
+* **export:** png, pdf and copy as image wait for the fonts of their texts, the preview of the export dialog is drawn again once they are loaded: exported right after opening a drawing (slow network), texts were drawn with a serif fallback font, and the preview kept it
+
 ## [7.21.0](https://github.com/fabienwnklr/free-drawing/compare/v7.20.7...v7.21.0) (2026-10-22)
 
 

@@ -139,6 +139,55 @@ describe('Export', () => {
     click.mockRestore();
   });
 
+  it('Texts exported with their fonts: loaded first, preview drawn again once loaded', async () => {
+    const { drawer, text } = drawerWithShapes();
+    const loaded = new Set<string>();
+    let release = () => {};
+    // fonts of the browser (none in jsdom): loaded when released
+    const fonts = {
+      check: (font: string) => loaded.has(font),
+      load: vi.fn(
+        (font: string) =>
+          new Promise<FontFace[]>((resolve) => {
+            release = () => {
+              loaded.add(font);
+              resolve([]);
+            };
+          })
+      ),
+    };
+
+    Object.defineProperty(document, 'fonts', { value: fonts, configurable: true });
+    text.fontStyle('italic');
+    const font = text._getContextFont();
+    let exported = false;
+    const image = drawer.exportImage('png').then((blob) => {
+      exported = true;
+      return blob;
+    });
+
+    await tick();
+    expect(fonts.load).toHaveBeenCalledWith(font);
+    // not drawn with a fallback font
+    expect(exported).toBe(false);
+    release();
+    expect(await image).toBeInstanceOf(Blob);
+
+    // preview: at once, again once the font is loaded, then no more
+    loaded.clear();
+    const exportCanvas = vi.spyOn(drawer, 'exportCanvas');
+
+    drawer.showExport();
+    expect(exportCanvas).toHaveBeenCalledTimes(1);
+    release();
+    await tick();
+    expect(exportCanvas).toHaveBeenCalledTimes(2);
+    await tick();
+    expect(exportCanvas).toHaveBeenCalledTimes(2);
+    drawer.exportModal!.hide();
+    Reflect.deleteProperty(document, 'fonts');
+  });
+
   it('Export dialog without selection nor drawing', async () => {
     const drawer = createDrawer();
 

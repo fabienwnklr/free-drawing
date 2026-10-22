@@ -1,3 +1,4 @@
+import { Container } from 'konva/lib/Container';
 import { Text } from 'konva/lib/shapes/Text';
 import type { DrawingShape } from '@/@types/drawer';
 import { getShapes } from '@/utils/hit';
@@ -49,4 +50,29 @@ export function fitTextWidth(text: Text): boolean {
   text.setAttrs({ width, x: text.x() + moved.x - origin.x, y: text.y() + moved.y - origin.y });
 
   return true;
+}
+
+/**
+ * Fonts of texts not loaded yet by the browser (a text drawn before its font is loaded uses a fallback font: exports,
+ * preview of the export dialog)
+ * @param shapes drawing shapes (texts of groups and frames included)
+ * @returns fonts of the canvas (style, size, family) to load, each once
+ */
+export function getFontsToLoad(shapes: DrawingShape[]): string[] {
+  if (!document.fonts) return [];
+
+  const texts = shapes.flatMap((shape) =>
+    shape instanceof Text ? [shape] : shape instanceof Container ? shape.find<Text>('Text') : []
+  );
+  const fonts = new Set(texts.map((text) => text._getContextFont()));
+
+  return [...fonts].filter((font) => !document.fonts.check(font));
+}
+
+/**
+ * Loads fonts (see `getFontsToLoad`), an unavailable one keeps the fallback font
+ * @param fonts fonts of the canvas (style, size, family)
+ */
+export async function loadFonts(fonts: string[]) {
+  await Promise.all(fonts.map((font) => document.fonts.load(font).catch(() => [])));
 }

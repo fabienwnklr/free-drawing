@@ -4,6 +4,7 @@ import type { ExportImageOptions, ImageFormat } from '@/@types/file';
 import { Modal } from '@/components/Modal/Modal';
 import { drawingFileExtension, saveFile } from '@/utils/drawingFile';
 import { createButton, createSwitch, setLabel, uniqueId } from '@/utils/dom';
+import { getFontsToLoad, loadFonts } from '@/utils/text';
 import type { TranslationKey } from '@/@types/i18n';
 
 /**
@@ -155,9 +156,11 @@ export class ExportModal extends Modal {
   }
 
   /**
-   * Preview rendered at once (canvas shown as is: no image encoding), at screen resolution
+   * Preview rendered at once (canvas shown as is: no image encoding), at screen resolution, again once fonts of its texts
+   * are loaded (drawn with a fallback font before)
+   * @param fontsLoaded Fonts of texts loaded since the last preview: not loaded again
    */
-  updatePreview() {
+  updatePreview(fontsLoaded = false) {
     const scale = window.devicePixelRatio || 1;
     const $canvas = this.drawer.exportCanvas({ ...this.exportOptions, scale });
 
@@ -175,6 +178,14 @@ export class ExportModal extends Modal {
     $canvas.setAttribute('aria-label', this.drawer.t('export.preview'));
     this.$preview.replaceWith($canvas);
     this.$preview = $canvas;
+
+    const fonts = fontsLoaded ? [] : getFontsToLoad(this.drawer.getExportShapes(this.exportOptions.selected));
+
+    if (fonts.length) {
+      loadFonts(fonts).then(() => {
+        if (this.isVisible()) this.updatePreview(true);
+      });
+    }
   }
 
   /**
