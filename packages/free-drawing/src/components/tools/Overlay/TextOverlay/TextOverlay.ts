@@ -46,6 +46,8 @@ export class TextOverlay extends BaseOverlay {
   $fontFamilyContainer!: HTMLDivElement;
   /** Font family list, each option previewed in its font */
   $fontFamilySelect!: HTMLSelectElement;
+  /** Font family chosen with the pointer (focus back to the drawer), else with the keyboard (focus kept in the list) */
+  #fontChosenWithPointer = false;
 
   /** Font size section */
   $fontSizeContainer!: HTMLDivElement;
@@ -86,7 +88,8 @@ export class TextOverlay extends BaseOverlay {
   }
 
   /**
-   * Font family section: list of fonts, focus back to drawer once chosen
+   * Font family section: list of fonts, focus back to drawer once chosen with the pointer; with the keyboard, arrows
+   * choose at once and focus stays in the list to browse the fonts
    */
   private _createFontFamilyField() {
     const { $container, $btnContainer } = this._createSection('text.fontFamily');
@@ -105,13 +108,18 @@ export class TextOverlay extends BaseOverlay {
       this.$fontFamilySelect.append($option);
     });
 
+    this.$fontFamilySelect.addEventListener('pointerdown', () => (this.#fontChosenWithPointer = true));
     this.$fontFamilySelect.addEventListener('change', () => {
       this.drawer.setTextStyle({ fontFamily: this.$fontFamilySelect.value });
-      this.drawer.focus();
+      // drawer shortcuts again after a choice with the pointer
+      if (this.#fontChosenWithPointer) this.drawer.focus();
     });
 
     // keyboard navigation in list must not trigger drawer shortcuts (tools, move selection...)
-    this.$fontFamilySelect.addEventListener('keydown', (e) => e.stopPropagation());
+    this.$fontFamilySelect.addEventListener('keydown', (e) => {
+      this.#fontChosenWithPointer = false;
+      e.stopPropagation();
+    });
 
     $btnContainer.append(this.$fontFamilySelect);
   }

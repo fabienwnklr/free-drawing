@@ -172,6 +172,30 @@ describe('Accessibility', () => {
     expect(labelledBy(textOverlay.$fontFamilySelect)).toBe('Font family');
   });
 
+  it('Font list browsed with the keyboard, drawer focused again after a choice with the pointer', () => {
+    const drawer = createDrawer();
+    const textWidget = drawer.getWidget<TextWidget>('text')!;
+    const $select = textWidget.overlay.$fontFamilySelect;
+    const choose = (font: string) => {
+      $select.value = font;
+      $select.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+
+    textWidget.setActive(true);
+    $select.focus();
+    // arrow: font chosen at once by the browser, focus kept to browse the fonts
+    key($select, 'ArrowDown');
+    choose('Arial');
+    expect(drawer.options.textStyle.fontFamily).toBe('Arial');
+    expect(document.activeElement).toBe($select);
+
+    // pointer: list closed by the choice, drawer focused (its shortcuts)
+    $select.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+    choose('Georgia');
+    expect(drawer.options.textStyle.fontFamily).toBe('Georgia');
+    expect(document.activeElement).toBe(drawer.$drawerContainer);
+  });
+
   it('Icon buttons of zoom, history, help and menu are labelled', () => {
     const drawer = createDrawer();
 

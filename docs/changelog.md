@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.22.1](https://github.com/fabienwnklr/free-drawing/compare/v7.22.0...v7.22.1) (2026-10-22)
+
+
+### Bug Fixes
+
+* **text:** fonts of the text options browsed with the arrow keys: each arrow gave focus back to the drawer; it goes back to the drawer only after a choice with the pointer
+
 ## [7.22.0](https://github.com/fabienwnklr/free-drawing/compare/v7.21.1...v7.22.0) (2026-10-22)
 
 
