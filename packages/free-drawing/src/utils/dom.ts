@@ -99,6 +99,23 @@ export function isComposing(e: KeyboardEvent): boolean {
   return e.isComposing || e.keyCode === 229;
 }
 
+/** Space kept below an element fitted in the drawer (px), see `fitHeight` */
+const bottomMargin = 12;
+
+/**
+ * Menu or panel shown below its button kept in the drawer and the window (small screens): its height is limited to the
+ * space below it, the rest scrolls
+ * @param $el Element shown (its top is read)
+ */
+export function fitHeight($el: HTMLElement) {
+  const $drawer = $el.closest('.drawer-container');
+  const bottom = Math.min($drawer?.getBoundingClientRect().bottom ?? Infinity, window.innerHeight);
+  const space = bottom - $el.getBoundingClientRect().top - bottomMargin;
+
+  // no layout (tests): no limit
+  $el.style.maxHeight = space > 0 ? `${space}px` : '';
+}
+
 /**
  * Focus taken by an element out of the container (field of the page, another drawer), e.g. by the click hiding a
  * menu or a dialog: a component hidden then gives focus back to the drawer only without it

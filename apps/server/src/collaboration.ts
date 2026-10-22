@@ -36,9 +36,16 @@ type RoomData = {
   accounts: Set<string>;
   /** Users coming for the first time can draw (owner setting), else they view only */
   newUsersCanEdit: boolean;
+  /** Area shown by the owner presenting the drawing (sent to users joining meanwhile), not saved */
+  view: ViewArea | null;
+  /** Viewers who asked for the right to draw, waiting for the answer of the owner (sent to it when it joins), not saved */
+  requests: Set<string>;
   /** Last use (ms): user joining or leaving, rights or settings changed */
   usedAt: number;
 };
+
+/** Area of the drawing shown by a presenting owner, in drawing coordinates */
+type ViewArea = { x: number; y: number; width: number; height: number };
 
 /** State of a room kept in database while it is empty and after a restart: everything but its drawing */
 type SavedRoom = {
@@ -57,6 +64,7 @@ type JoinMessage = { room?: unknown; name?: unknown; userId?: unknown; ownerKey?
 type RightsMessage = { userId?: unknown; canEdit?: unknown };
 type RoomMessage = { newUsersCanEdit?: unknown };
 type PointerMessage = { x?: unknown; y?: unknown; laser?: unknown } | null;
+type RequestMessage = { userId?: unknown; accepted?: unknown };
 
 /** Node state of a shape in a change (konva `toObject`), not trusted */
 type ShapeJson = { attrs?: { id?: unknown } | null; className?: unknown; children?: unknown };
@@ -89,6 +97,9 @@ const rates: Record<string, [perSecond: number, burst: number]> = {
   // live previews every 50 ms, final changes, undo repeated
   [socketEvents.CHANGE]: [40, 100],
   [socketEvents.POINTER]: [30, 60],
+  // view of a presenting owner every 50 ms at most
+  [socketEvents.VIEW]: [30, 60],
+  [socketEvents.REQUEST]: [1, 5],
 };
 
 const userName = (name: unknown) =>
@@ -149,6 +160,21 @@ const checkChange = (change: unknown): CheckedChange | null => {
 };
 
 /**
+ * Area shown by a presenting owner, checked
+ * @param view Message of the owner (not trusted): area, or null when the presentation stops
+ * @returns Area with finite coordinates and a positive size, null, or undefined when invalid (ignored)
+ */
+const checkView = (view: unknown): ViewArea | null | undefined => {
+  if (view === null) return null;
+
+  const { x, y, width, height } = (typeof view === 'object' ? view : {}) as Record<string, unknown>;
+
+  if (![x, y, width, height].every(Number.isFinite) || (width as number) <= 0 || (height as number) <= 0) return;
+
+  return { x, y, width, height } as ViewArea;
+};
+
+/**
  * Rate of messages of a client, by event (token bucket of `rates`)
  * @param socket Socket of the client
  * @param event Event of the message
@@ -187,7 +213,7 @@ const hashKey = (key: string) => createHash('sha256').update(key).digest('base64
 
 /**
  * Room without users nor drawing yet
- * @returns Data of a new room: new users can draw
+ * @returns Data of a new room: new users view only, the owner gives them the right to draw
  */
 const newRoom = (): RoomData => ({
   shapes: new Map(),
@@ -195,7 +221,9 @@ const newRoom = (): RoomData => ({
   viewers: new Set(),
   names: new Map(),
   accounts: new Set(),
-  newUsersCanEdit: true,
+  newUsersCanEdit: false,
+  view: null,
+  requests: new Set(),
   usedAt: Date.now(),
 });
 
@@ -274,6 +302,8 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
         names: new Map(saved.names),
         accounts: new Set(saved.accounts),
         newUsersCanEdit: saved.newUsersCanEdit !== false,
+        view: null,
+        requests: new Set(),
         usedAt: Date.parse(updatedAt),
       });
     } catch {
@@ -304,20 +334,43 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
     io.to(room).emit(socketEvents.USERS, users);
   };
 
+  // ids of the sockets of a room whose data match (owner, a user)
+  const socketsOf = (room: string, match: (data: SocketData) => boolean) =>
+    [...(io.sockets.adapter.rooms.get(room) ?? [])].filter((id) => {
+      const data = (io.sockets.sockets.get(id) as CollaborationSocket | undefined)?.data;
+
+      return !!data && match(data);
+    });
+
+  // message to some sockets (none: nobody, `io.to([])` would send it to every socket of the server)
+  const emitTo = (ids: string[], event: string, message: unknown) => {
+    if (ids.length) io.to(ids).emit(event, message);
+  };
+
   const leaveRoom = (socket: CollaborationSocket) => {
-    const { room } = socket.data;
+    const { room, owner, userId } = socket.data;
 
     if (!room) return;
     socket.leave(room);
     socket.data.room = undefined;
     // cursor removed
     io.to(room).emit(socketEvents.LEAVE, socket.id);
+
+    const data = rooms.get(room);
+
+    if (data) {
+      // owner gone (no other connection of theirs): presentation stopped for everyone
+      if (owner && data.view && !socketsOf(room, (other) => !!other.owner).length) {
+        data.view = null;
+        io.to(room).emit(socketEvents.VIEW, null);
+      }
+      // user gone: their request forgotten
+      if (!socketsOf(room, (other) => other.userId === userId).length) data.requests.delete(userId);
+    }
     if (io.sockets.adapter.rooms.get(room)?.size) {
       sendUsers(room);
       return;
     }
-
-    const data = rooms.get(room);
 
     // last user gone: drawing removed (users send theirs when they join again), owner, rights and settings kept
     if (data) {
@@ -403,6 +456,12 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
         full: true,
       });
       sendUsers(room);
+      // presentation going on: view of the owner followed at once
+      if (data.view) socket.emit(socketEvents.VIEW, data.view);
+      // owner: requests waiting for an answer
+      if (owner) {
+        for (const id of data.requests) socket.emit(socketEvents.REQUEST, { userId: id, name: data.names.get(id) });
+      }
     });
 
     socket.on(socketEvents.NAME, (name: unknown) => {
@@ -426,10 +485,60 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
       if (!room || !data || !socket.data.owner || !isId(userId) || userId === data.ownerId) return;
       if (!data.names.has(userId)) return;
 
-      if (canEdit) data.viewers.delete(userId);
-      else data.viewers.add(userId);
+      if (canEdit) {
+        data.viewers.delete(userId);
+        // request answered by the right
+        data.requests.delete(userId);
+      } else {
+        data.viewers.add(userId);
+      }
       saveRoom(room, data);
       sendUsers(room);
+    });
+
+    // viewer asks for the right to draw (told to the owner, also when it joins later), the owner answers it
+    socket.on(socketEvents.REQUEST, ({ userId, accepted }: RequestMessage = {}) => {
+      const { room } = socket.data;
+      const data = room ? rooms.get(room) : undefined;
+
+      if (!room || !data) return;
+      if (!socket.data.owner) {
+        const id = socket.data.userId;
+
+        // viewers only, once until answered
+        if (!data.viewers.has(id) || data.requests.has(id)) return;
+        data.requests.add(id);
+        emitTo(
+          socketsOf(room, (other) => !!other.owner),
+          socketEvents.REQUEST,
+          { userId: id, name: socket.data.name }
+        );
+        return;
+      }
+      if (!isId(userId) || !data.requests.delete(userId)) return;
+      if (accepted === true) {
+        data.viewers.delete(userId);
+        saveRoom(room, data);
+        sendUsers(room);
+      } else {
+        emitTo(
+          socketsOf(room, (other) => other.userId === userId),
+          socketEvents.REQUEST,
+          { accepted: false }
+        );
+      }
+    });
+
+    // owner presenting: area of the drawing it shows (null: presentation stopped), followed by the other users
+    socket.on(socketEvents.VIEW, (message: unknown) => {
+      const { room } = socket.data;
+      const data = room ? rooms.get(room) : undefined;
+      const view = checkView(message);
+
+      if (!room || !data || !socket.data.owner || view === undefined) return;
+
+      data.view = view;
+      socket.to(room).emit(socketEvents.VIEW, view);
     });
 
     // owner changes the settings of the room: right to draw of users coming for the first time

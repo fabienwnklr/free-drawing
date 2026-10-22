@@ -1,0 +1,75 @@
+@use '@/scss/variables' as *;
+@use '@/scss/mixins' as *;
+
+// panel of a live session, below the reminder of the header
+.drawer-container .drawer-collaboration-panel {
+  @include surface($shadow-lg);
+
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  width: max-content;
+  min-width: 16rem;
+  max-width: 22rem;
+  margin-top: $space-2;
+  padding: $space-3;
+  overflow: auto;
+  pointer-events: var(--drawer-pointer-events);
+  outline: none;
+
+  &[hidden] {
+    display: none;
+  }
+
+  .drawer-collaboration-status {
+    color: $text-muted;
+  }
+
+  .drawer-collaboration-title {
+    margin-top: $space-1;
+    color: $text-muted;
+    font-size: $font-size-sm;
+    font-weight: 500;
+  }
+
+  .drawer-button {
+    justify-content: center;
+    width: auto;
+    padding: $space-2 $space-3;
+
+    &[aria-disabled='true'] {
+      opacity: 0.6;
+      cursor: default;
+    }
+  }
+
+  .drawer-button-neutral {
+    border: 1px solid $border;
+  }
+
+  .drawer-collaboration-switch {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    cursor: pointer;
+  }
+
+  .drawer-collaboration-actions {
+    display: flex;
+    gap: $space-1;
+
+    .drawer-button {
+      padding: $space-1 $space-2;
+      font-size: $font-size-sm;
+    }
+  }
+
+  // after display rules of same specificity (buttons, switch)
+  [hidden] {
+    display: none;
+  }
+}

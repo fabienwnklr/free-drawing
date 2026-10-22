@@ -103,3 +103,36 @@ export type RejectedMessage = {
   /** `full`: room full, `too-big`: drawing too big */
   reason?: unknown;
 };
+
+/** Area of the drawing, in drawing coordinates: view presented by the owner (`VIEW`), see `Drawer.getViewArea` */
+export type ViewArea = {
+  /** Left of the area */
+  x: number;
+  /** Top of the area */
+  y: number;
+  /** Width of the area */
+  width: number;
+  /** Height of the area */
+  height: number;
+};
+
+/** Viewer asking the owner for the right to draw, waiting for its answer */
+export type AccessRequest = {
+  /** Id of the user */
+  userId: string;
+  /** Name of the user */
+  name: string;
+};
+
+/**
+ * Request of the right to draw (`REQUEST`): sent by the server to the owner (user asking), to the user when it is
+ * refused; checked on reception
+ */
+export type RequestMessage = {
+  /** Id of the user asking */
+  userId?: unknown;
+  /** Name of the user asking */
+  name?: unknown;
+  /** Answer of the owner: false when refused */
+  accepted?: unknown;
+};

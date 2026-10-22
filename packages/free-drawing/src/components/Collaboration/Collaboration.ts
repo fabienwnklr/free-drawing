@@ -25,12 +25,30 @@ import type {
   JoinedMessage,
   RoomMessage,
   RejectedMessage,
+  RequestMessage,
+  AccessRequest,
+  ViewArea,
 } from '@/@types/collaboration';
 
 /** Minimum interval of pointer and live drawing messages (ms) */
 const liveInterval = 50;
 
 const cursorColors = ['#e03131', '#2f9e44', '#1971c2', '#f08c00', '#9c36b5', '#0c8599', '#c2255c'];
+
+/**
+ * Area presented by the owner, checked on reception
+ * @param view Message of the server: area, or null when the presentation stops
+ * @returns Area with finite coordinates and a positive size, null, or undefined when invalid (ignored)
+ */
+const checkView = (view: unknown): ViewArea | null | undefined => {
+  if (view === null) return null;
+
+  const { x, y, width, height } = (typeof view === 'object' ? view : {}) as Record<string, unknown>;
+
+  if (![x, y, width, height].every(Number.isFinite) || (width as number) <= 0 || (height as number) <= 0) return;
+
+  return { x, y, width, height } as ViewArea;
+};
 
 /**
  * Real time collaboration in a room: changes of drawing (any tool, undo...) are sent shape by shape to other users
@@ -47,8 +65,18 @@ export class Collaboration {
   users: string[] = [];
   /** Users of the room with their rights, this one included */
   members: CollaborationMember[] = [];
-  /** Users coming for the first time can draw (setting of the owner), else they view only */
-  newUsersCanEdit = true;
+  /** Users coming for the first time can draw (setting of the owner), else they view only (by default) */
+  newUsersCanEdit = false;
+  /** This user (owner) presents their view: other users follow it, see `present` */
+  presenting = false;
+  /** Area shown by the owner presenting it, null without presentation */
+  presentedView: ViewArea | null = null;
+  /** This user follows the presented view: stops when they move or zoom theirs, see `follow` */
+  following = true;
+  /** This user (viewer) asked for the right to draw, waiting for the answer of the owner */
+  requested = false;
+  /** Viewers asking the owner (this user) for the right to draw, waiting for its answer */
+  requests: AccessRequest[] = [];
   /** Id of this user: given by drawer, then by server when it joins (e.g. id of logged in account) */
   userId: string;
   /** Secret of the owner of the room, sent on join: the server makes this user its owner */
@@ -87,6 +115,8 @@ export class Collaboration {
   #lastSent: Record<string, number> = {};
   /** Cursors of other users, by user id */
   #cursors = new Map<string, Group>();
+  /** View moved to the presented one: not a move of this user */
+  #showingView = false;
 
   /**
    * Listen to the socket (join on connect, changes, users, pointers) and to the pointer on the stage
@@ -118,6 +148,8 @@ export class Collaboration {
       this.#joined = true;
       this.#rejoining = rejoin;
       this.socket.emit(socketEvents.JOIN, { room, name, userId, ownerKey, invitedBy });
+      // presentation going on after a reconnection
+      if (this.presenting) this._sendView();
       if (rejoin) return;
       // first join: whole drawing sent, merged with other ones of the room
       this.#synced.clear();
@@ -154,6 +186,8 @@ export class Collaboration {
     // names only from servers without rights
     this.socket.on(socketEvents.USERS, (users: (CollaborationMember | string)[]) => {
       const canEdit = this.canEdit;
+      // first users of the room: right of this user known now (view only by default)
+      const joined = !this.members.length;
 
       // joined again a server without drawing of the room (`full`, sent before users): whole drawing sent as before
       if (this.#rejoining) {
@@ -166,10 +200,17 @@ export class Collaboration {
         typeof user === 'string' ? { id: '', name: user, owner: false, canEdit: true } : user
       );
       this.users = this.members.map((member) => member.name);
-      if (this.canEdit !== canEdit) this.drawer._onCollaborationRight(this.canEdit);
+      // requests answered: users gone or allowed to draw since
+      this.requests = this.requests.filter(({ userId }) =>
+        this.members.some((member) => member.id === userId && !member.canEdit)
+      );
+      if (this.canEdit) this.requested = false;
+      if (this.canEdit !== canEdit) this.drawer._onCollaborationRight(this.canEdit, joined);
       this.drawer.trigger(drawerEvents.collaborationChange);
     });
     this.socket.on(socketEvents.POINTER, (pointer: RemotePointer) => this._showCursor(pointer));
+    this.socket.on(socketEvents.VIEW, (view: unknown) => this._receiveView(view));
+    this.socket.on(socketEvents.REQUEST, (message: RequestMessage = {}) => this._receiveRequest(message));
     this.socket.on(socketEvents.LEAVE, (id: string) => {
       this.#cursors.get(id)?.destroy();
       this.#cursors.delete(id);
@@ -182,6 +223,11 @@ export class Collaboration {
       this._sendPointer(this.drawer.stage.getRelativePointerPosition())
     );
     this.drawer.stage.on('mouseleave.collaboration', () => this._sendPointer(null));
+    // drawer resized: presented view sent again, or followed in the new size
+    this.drawer.stage.on('widthChange.collaboration heightChange.collaboration', () => {
+      if (this.presenting) this._sendView();
+      else if (this.presentedView && this.following) this._showView();
+    });
   }
 
   /**
@@ -389,6 +435,135 @@ export class Collaboration {
    */
   setNewUsersCanEdit(canEdit: boolean) {
     this.socket.emit(socketEvents.ROOM, { newUsersCanEdit: canEdit });
+  }
+
+  /**
+   * Present the view of this user (owner): other users follow its zoom and moves, until they move theirs
+   * @param on True to present, false to stop
+   */
+  present(on: boolean) {
+    if (this.presenting === on || (on && !this.isOwner)) return;
+
+    this.presenting = on;
+    if (on) this._sendView();
+    else this.socket.emit(socketEvents.VIEW, null);
+    this.drawer.trigger(drawerEvents.collaborationChange);
+  }
+
+  /**
+   * View of the presenting owner sent to other users, at live interval at most (latest view when sent)
+   */
+  private _sendView() {
+    this._schedule('view', () => {
+      if (this.presenting) this.socket.emit(socketEvents.VIEW, this.drawer.getViewArea());
+    });
+  }
+
+  /**
+   * View moved or zoomed (`Drawer._update`): sent while presenting it, moved by this user while following a
+   * presentation: no longer followed (`follow` again)
+   */
+  onViewChange() {
+    if (this.presenting) {
+      this._sendView();
+    } else if (this.presentedView && this.following && !this.#showingView) {
+      this.following = false;
+      this.drawer.trigger(drawerEvents.collaborationChange);
+    }
+  }
+
+  /**
+   * Follow the presented view again, after moving or zooming theirs
+   */
+  follow() {
+    if (!this.presentedView) return;
+
+    this.following = true;
+    this._showView();
+    this.drawer.trigger(drawerEvents.collaborationChange);
+  }
+
+  /**
+   * Presented area shown in the view of this user (not a move of theirs)
+   */
+  private _showView() {
+    if (!this.presentedView) return;
+
+    this.#showingView = true;
+    this.drawer.showArea(this.presentedView);
+    this.#showingView = false;
+  }
+
+  /**
+   * View of the owner presenting it: followed (unless this user moved theirs), told when a presentation starts or stops
+   * @param message Area shown by the owner, null when the presentation stops (other values ignored)
+   */
+  private _receiveView(message: unknown) {
+    const view = checkView(message);
+
+    // the owner does not follow itself (other connection of theirs)
+    if (view === undefined || this.isOwner) return;
+
+    const { drawer } = this;
+    const presented = !!this.presentedView;
+
+    this.presentedView = view;
+    // presentation started or stopped: followed by default
+    if (presented !== !!view) {
+      const owner = this.members.find((member) => member.owner)?.name || drawer.t('collab.anonymous');
+
+      this.following = true;
+      drawer.toast(drawer.t(view ? 'toast.presentationStarted' : 'toast.presentationEnded', { name: owner }), 'info');
+      drawer.trigger(drawerEvents.collaborationChange);
+    }
+    if (this.following) this._showView();
+  }
+
+  /**
+   * Ask the owner for the right to draw (viewer), once until it answers
+   */
+  requestEdit() {
+    if (this.canEdit || this.requested) return;
+
+    this.requested = true;
+    this.socket.emit(socketEvents.REQUEST);
+    this.drawer.toast(this.drawer.t('toast.requestSent'), 'info');
+    this.drawer.trigger(drawerEvents.collaborationChange);
+  }
+
+  /**
+   * Answer the request of a viewer (owner): accepted gives them the right to draw, a refusal is told to them
+   * @param userId Id of the user asking
+   * @param accepted True to let them draw
+   */
+  answerRequest(userId: string, accepted: boolean) {
+    this.requests = this.requests.filter((request) => request.userId !== userId);
+    this.socket.emit(socketEvents.REQUEST, { userId, accepted });
+    this.drawer.trigger(drawerEvents.collaborationChange);
+  }
+
+  /**
+   * Request of a viewer (owner: told in a toast, answered from the panel of the session), or refusal of the request of
+   * this user
+   * @param message Request (`userId`, `name`) or answer (`accepted`), checked
+   */
+  private _receiveRequest({ userId, name, accepted }: RequestMessage) {
+    const { drawer } = this;
+
+    if (this.isOwner) {
+      if (typeof userId !== 'string' || !userId || this.requests.some((request) => request.userId === userId)) return;
+
+      const userName = typeof name === 'string' && name ? name : drawer.t('collab.anonymous');
+
+      this.requests.push({ userId, name: userName });
+      drawer.toast(drawer.t('toast.requestReceived', { name: userName }), 'info');
+    } else if (accepted === false && this.requested) {
+      this.requested = false;
+      drawer.toast(drawer.t('toast.requestRefused'), 'warning');
+    } else {
+      return;
+    }
+    drawer.trigger(drawerEvents.collaborationChange);
   }
 
   /**

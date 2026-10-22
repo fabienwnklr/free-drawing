@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.22.0](https://github.com/fabienwnklr/free-drawing/compare/v7.21.1...v7.22.0) (2026-10-22)
+
+
+### Features
+
+* **collaboration:** the owner presents its view (panel of the session, command palette, `collaboration.present`): the other users follow its zoom and moves, the area it shows fitted to their screen (`drawer.getViewArea`, `drawer.showArea`), until they move theirs; "Follow" in the header follows it again, users joining meanwhile follow it at once
+* **collaboration:** participants view only until the owner lets them draw (default of rooms created by the server of this version): a viewer asks to draw in one click (`collaboration.requestEdit`), the owner is told (toast, number on the reminder of the header) and accepts or refuses from the panel of the session (`answerRequest`)
+* **collaboration:** the reminder of the header opens a panel of the session: right of the user, requests to answer, participants with their rights (switches for the owner), presentation, link and settings in the dialog; types `AccessRequest`, `CollaborationMember` and `ViewArea` exported
+
 ## [7.21.1](https://github.com/fabienwnklr/free-drawing/compare/v7.21.0...v7.21.1) (2026-10-22)
 
 

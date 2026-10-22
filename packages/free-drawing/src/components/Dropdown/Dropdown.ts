@@ -1,10 +1,7 @@
 import MicroEvent from '@/utils/MicroEvent';
-import { createButton, uniqueId } from '@/utils/dom';
+import { createButton, fitHeight, uniqueId } from '@/utils/dom';
 import '@/components/Dropdown/dropdown.scss';
 import { drawerEvents } from '@/constants';
-
-/** Space kept below the menu, in the drawer (px) */
-const bottomMargin = 12;
 
 /**
  * Disclosure menu: a button showing / hiding a menu below it, base of the settings menu.
@@ -92,20 +89,8 @@ export class Dropdown extends MicroEvent {
   private _setShown(shown: boolean) {
     this.$menu.classList.toggle('show', shown);
     this.$button.setAttribute('aria-expanded', String(shown));
-    if (shown) this._fitHeight();
-  }
-
-  /**
-   * Menu kept in the drawer and the window (small screens): its height is limited to the space below it, the rest
-   * scrolls
-   */
-  private _fitHeight() {
-    const $drawer = this.$menu.closest('.drawer-container');
-    const bottom = Math.min($drawer?.getBoundingClientRect().bottom ?? Infinity, window.innerHeight);
-    const space = bottom - this.$menu.getBoundingClientRect().top - bottomMargin;
-
-    // no layout (tests): no limit
-    this.$menu.style.maxHeight = space > 0 ? `${space}px` : '';
+    // kept in the drawer and the window (small screens)
+    if (shown) fitHeight(this.$menu);
   }
 
   /**
@@ -141,7 +126,7 @@ export class Dropdown extends MicroEvent {
     );
     // drawer or window resized while shown
     window.addEventListener('resize', () => {
-      if (this.isShown()) this._fitHeight();
+      if (this.isShown()) fitHeight(this.$menu);
     });
   }
 }

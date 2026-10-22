@@ -31,6 +31,7 @@ import PinIcon from '@/icons/pin.svg?raw';
 import LinkIcon from '@/icons/link.svg?raw';
 import ExportIcon from '@/icons/export.svg?raw';
 import UsersIcon from '@/icons/users.svg?raw';
+import EyeIcon from '@/icons/eye.svg?raw';
 import StoreIcon from '@/icons/store.svg?raw';
 import LanguageIcon from '@/icons/language.svg?raw';
 import SlidersIcon from '@/icons/sliders.svg?raw';
@@ -280,6 +281,7 @@ export class CommandPalette extends Modal {
     const selected = selectWidget && !locked ? drawer.getSelectedShapes() : [];
     const editSelection = edit && selected.length > 0;
     const hasShapes = drawer.getDrawingShapes().length > 0;
+    const { collaboration } = drawer;
     const { zoom, position, layersPanel } = drawer;
     const groups: CommandGroup[] = [
       [
@@ -564,6 +566,30 @@ export class CommandPalette extends Modal {
             icon: UsersIcon,
             run: () => drawer.stopCollaboration(),
           },
+          !!collaboration?.isOwner && {
+            id: 'present view presentation show screen collaboration',
+            label: t('collab.present'),
+            icon: EyeIcon,
+            checked: collaboration.presenting,
+            run: () => collaboration.present(!collaboration.presenting),
+          },
+          !!collaboration?.presentedView &&
+            !collaboration.following && {
+              id: 'follow presentation view owner collaboration',
+              label: t('collab.followPresentation', {
+                name: collaboration.members.find((member) => member.owner)?.name || t('collab.anonymous'),
+              }),
+              icon: EyeIcon,
+              run: () => collaboration.follow(),
+            },
+          !!collaboration &&
+            !collaboration.canEdit &&
+            !collaboration.requested && {
+              id: 'ask request draw right permission collaboration',
+              label: t('collab.requestEdit'),
+              icon: UsersIcon,
+              run: () => collaboration.requestEdit(),
+            },
           {
             id: 'clear storage',
             label: t('menu.clearStorage'),

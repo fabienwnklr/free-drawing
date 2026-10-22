@@ -51,6 +51,8 @@ const createServer = () => {
     viewers: Set<string>;
     names: Map<string, string>;
     newUsersCanEdit: boolean;
+    view?: unknown;
+    requests: Set<string>;
   };
   const rooms = new Map<string, Room>();
   let lastId = 0;
@@ -99,6 +101,7 @@ const createServer = () => {
             viewers: new Set<string>(),
             names: new Map<string, string>(),
             newUsersCanEdit: true,
+            requests: new Set<string>(),
           };
 
           if (ownerKey) roomData.ownerKey ??= ownerKey;
@@ -127,6 +130,7 @@ const createServer = () => {
             full: true,
           });
           sendUsers(room);
+          if (roomData.view) socket.receive('VIEW', roomData.view);
         } else if (event === 'RIGHTS') {
           const { userId, canEdit } = data as { userId: string; canEdit: boolean };
           const roomData = rooms.get(socket.room!)!;
@@ -141,6 +145,35 @@ const createServer = () => {
           if (!socket.owner) return;
           rooms.get(socket.room!)!.newUsersCanEdit = newUsersCanEdit;
           for (const s of inRoom(socket.room)) s.receive(event, { newUsersCanEdit });
+        } else if (event === 'VIEW') {
+          // owner presenting its view
+          if (!socket.owner) return;
+          rooms.get(socket.room!)!.view = data;
+          for (const s of inRoom(socket.room).filter((s) => s !== socket)) s.receive(event, data);
+        } else if (event === 'REQUEST') {
+          const roomData = rooms.get(socket.room!)!;
+          const { requests } = roomData;
+
+          if (!socket.owner) {
+            // viewer asking to draw, once until answered
+            if (!roomData.viewers.has(socket.userId!) || requests.has(socket.userId!)) return;
+            requests.add(socket.userId!);
+            for (const s of inRoom(socket.room).filter((s) => s.owner)) {
+              s.receive(event, { userId: socket.userId, name: socket.name });
+            }
+            return;
+          }
+
+          const { userId, accepted } = data as { userId: string; accepted: boolean };
+
+          if (!requests.delete(userId)) return;
+          if (accepted) {
+            roomData.viewers.delete(userId);
+            sendUsers(socket.room);
+          } else {
+            for (const s of inRoom(socket.room).filter((s) => s.userId === userId))
+              s.receive(event, { accepted: false });
+          }
         } else if (event === 'NAME') {
           socket.name = data as string;
           rooms.get(socket.room!)!.names.set(socket.userId!, socket.name);
@@ -583,7 +616,12 @@ describe('Collaboration', () => {
     expect(indicator.$count.textContent).toBe('2');
     expect(guest.collaborationIndicator!.$stopButton.getAttribute('aria-label')).toBe('Leave session');
 
+    // panel of the session, link and settings in the dialog
     indicator.$button.click();
+    expect(indicator.panel.isShown()).toBe(true);
+    expect(indicator.$button.getAttribute('aria-expanded')).toBe('true');
+    indicator.panel.$settingsButton.click();
+    expect(indicator.panel.isShown()).toBe(false);
     expect(owner.collaborationModal!.isVisible()).toBe(true);
     owner.collaborationModal!.hide();
 
@@ -732,6 +770,138 @@ describe('Collaboration', () => {
 
     alice.stopCollaboration();
     expect(trails()).toHaveLength(0);
+  });
+
+  it('Owner presents its view: other users follow it until they move theirs, then follow it again', async () => {
+    const connect = createServer();
+    const bob = createDrawer({ collaboration: true, language: 'en' });
+    const alice = createDrawer({ collaboration: true, language: 'en' });
+    const view = (drawer: Drawer) => Object.values(drawer.getViewArea()).map((value) => Math.round(value));
+    const commands = (drawer: Drawer) => {
+      drawer.showCommandPalette();
+      const labels = [...drawer.commandPalette!.$list.querySelectorAll('[role="option"]')].map(($o) => $o.textContent);
+
+      drawer.commandPalette!.hide();
+      return labels.join('|');
+    };
+
+    connect(alice, 'room', 'Alice', { userId: 'alice', ownerKey: 'secret' });
+    connect(bob, 'room', 'Bob', { userId: 'bob' });
+    const toast = vi.spyOn(bob, 'toast');
+    const indicator = bob.collaborationIndicator!;
+
+    // only the owner presents
+    bob.collaboration!.present(true);
+    expect(bob.collaboration!.presenting).toBe(false);
+    expect(commands(alice)).toContain('Present my view');
+    expect(commands(bob)).not.toContain('Present my view');
+
+    alice.setZoomLevel(2);
+    alice.collaboration!.present(true);
+    await wait();
+    expect(alice.collaborationIndicator!.$label.textContent).toBe('Presenting');
+    expect(toast).toHaveBeenCalledWith('Alice presents: you follow their view', 'info');
+    expect(view(bob)).toEqual(view(alice));
+    expect(indicator.$followButton.hidden).toBe(true);
+
+    // view of the owner followed
+    alice.stage.position({ x: -300, y: -100 });
+    alice._update();
+    await wait();
+    expect(view(bob)).toEqual(view(alice));
+
+    // moved by bob: no longer followed
+    bob.setZoomLevel(0.5);
+    expect(bob.collaboration!.following).toBe(false);
+    expect(indicator.$followButton.hidden).toBe(false);
+    expect(commands(bob)).toContain('Follow the view of Alice');
+    const own = view(bob);
+
+    alice.setZoomLevel(3);
+    await wait();
+    expect(view(bob)).toEqual(own);
+
+    // followed again in one click
+    indicator.$followButton.click();
+    expect(bob.collaboration!.following).toBe(true);
+    expect(view(bob)).toEqual(view(alice));
+    expect(indicator.$followButton.hidden).toBe(true);
+
+    // presentation stopped
+    alice.collaboration!.present(false);
+    expect(bob.collaboration!.presentedView).toBeNull();
+    expect(toast).toHaveBeenLastCalledWith('Presentation ended', 'info');
+    alice.stopCollaboration();
+    bob.stopCollaboration();
+  });
+
+  it('Viewers ask the owner to draw from the panel of the session: refused, then accepted', () => {
+    const connect = createServer();
+    const bob = createDrawer({ collaboration: true, language: 'en' });
+    const alice = createDrawer({ collaboration: true, language: 'en' });
+
+    connect(alice, 'room', 'Alice', { userId: 'alice', ownerKey: 'secret' });
+    alice.collaboration!.setNewUsersCanEdit(false);
+    const bobToast = vi.spyOn(bob, 'toast');
+
+    connect(bob, 'room', 'Bob', { userId: 'bob' });
+    // joined as viewer: told how to ask, no right removed
+    expect(bobToast).toHaveBeenCalledWith('You view only: ask the owner of the session to draw (Live button)', 'info');
+    const aliceToast = vi.spyOn(alice, 'toast');
+    const bobPanel = bob.collaborationIndicator!.panel;
+    const aliceIndicator = alice.collaborationIndicator!;
+    const alicePanel = aliceIndicator.panel;
+    const answer = (button: number) => alicePanel.$requestList.querySelectorAll('button')[button].click();
+
+    expect(bob.readOnly).toBe(true);
+    bob.collaborationIndicator!.$button.click();
+    expect(bobPanel.$status.textContent).toBe('You view only');
+    expect(bobPanel.$requestButton.hidden).toBe(false);
+    // presenting: owner only
+    expect(bobPanel.$present.closest('label')!.hidden).toBe(true);
+
+    // asked once until answered
+    bobPanel.$requestButton.click();
+    bobPanel.$requestButton.click();
+    expect(bobPanel.$requestButton.textContent).toBe('Request sent');
+    expect(bobPanel.$requestButton.getAttribute('aria-disabled')).toBe('true');
+    expect(aliceToast).toHaveBeenCalledTimes(1);
+    expect(aliceToast).toHaveBeenCalledWith('Bob asks to draw', 'info');
+    expect(aliceIndicator.$requests.textContent).toBe('1');
+    expect(aliceIndicator.$button.getAttribute('aria-label')).toContain('1 asking to draw');
+
+    // owner: request in its panel, refused
+    aliceIndicator.$button.click();
+    expect(alicePanel.$requests.hidden).toBe(false);
+    expect(alicePanel.$requestList.textContent).toBe('BobAcceptRefuse');
+    answer(1);
+    expect(bobToast).toHaveBeenLastCalledWith('The owner of the session refused your request to draw', 'warning');
+    expect(bob.collaboration!.requested).toBe(false);
+    expect(alicePanel.$requests.hidden).toBe(true);
+    expect(aliceIndicator.$requests.hidden).toBe(true);
+
+    // asked again, accepted (a click in the page of bob closed the panel of alice: same page in tests)
+    bobPanel.$requestButton.click();
+    aliceIndicator.$button.click();
+    answer(0);
+    expect(bob.readOnly).toBe(false);
+    expect(bobToast).toHaveBeenLastCalledWith('You can draw: the owner of the session allowed you', 'info');
+    // panel of bob closed by the click in the page of alice: up to date when opened
+    bob.collaborationIndicator!.$button.click();
+    expect(bobPanel.$status.textContent).toBe('You can draw');
+    expect(bobPanel.$requestButton.hidden).toBe(true);
+    expect(alice.collaboration!.requests).toEqual([]);
+
+    // owner: presents from its panel, closed by Escape (focus back on its button)
+    alicePanel.$present.checked = true;
+    alicePanel.$present.dispatchEvent(new Event('change'));
+    expect(alice.collaboration!.presenting).toBe(true);
+    alicePanel.$present.focus();
+    alicePanel.$present.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(alicePanel.isShown()).toBe(false);
+    expect(document.activeElement).toBe(aliceIndicator.$button);
+    alice.stopCollaboration();
+    bob.stopCollaboration();
   });
 
   it('Owner of the room gives or removes the right to draw', async () => {

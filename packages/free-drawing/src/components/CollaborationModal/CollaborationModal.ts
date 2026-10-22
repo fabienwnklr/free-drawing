@@ -4,7 +4,7 @@ import { Modal } from '@/components/Modal/Modal';
 import { createButton, createSwitch, isComposing, uniqueId } from '@/utils/dom';
 import { drawerEvents } from '@/constants';
 import type { TranslationKey } from '@/@types/i18n';
-import type { CollaborationMember } from '@/@types/collaboration';
+import { CollaborationMembers } from '@/components/CollaborationMembers/CollaborationMembers';
 
 /**
  * Live collaboration dialog: start a session, join one from a link (name required), session link with copy button
@@ -27,6 +27,8 @@ export class CollaborationModal extends Modal {
   $newUsersCanEdit: HTMLInputElement;
   /** Users of the session (live region): name, who invited them, right to draw (switch for the owner) */
   $members: HTMLUListElement;
+  /** Rows of the users of the session, see `$members` */
+  membersList: CollaborationMembers;
   /** Starts a session, shown without session nor link to join */
   $startButton: HTMLButtonElement;
   /** Joins the room of the link, shown with a link, enabled once a name is given */
@@ -82,11 +84,9 @@ export class CollaborationModal extends Modal {
     this.$users = document.createElement('p');
     this.$users.classList.add('drawer-collaboration-users');
     this.$users.id = uniqueId('collaboration-users');
-    this.$members = document.createElement('ul');
-    this.$members.classList.add('drawer-collaboration-members');
+    this.membersList = new CollaborationMembers(drawer);
+    this.$members = this.membersList.$list;
     this.$members.setAttribute('aria-labelledby', this.$users.id);
-    // updated when users join, leave or get rights
-    this.$members.setAttribute('aria-live', 'polite');
 
     // owner: right to draw of users coming for the first time (new ids of viewers too)
     const $newUsers = document.createElement('label');
@@ -227,92 +227,17 @@ export class CollaborationModal extends Modal {
   }
 
   /**
-   * Row of a user of the session: name, who invited them, switch of the right to draw for the owner, else role
-   * @param member User of the session
-   * @returns List item of the user (`data-member`: id of the user)
-   */
-  private _createMember(member: CollaborationMember) {
-    const { isOwner, userId } = this.drawer.collaboration!;
-    const t = this.drawer.t.bind(this.drawer);
-    const $member = document.createElement('li');
-    const $name = document.createElement('span');
-
-    $member.dataset.member = member.id;
-    $name.textContent = member.id === userId ? t('collab.you', { name: member.name }) : member.name;
-    $member.append($name);
-
-    // who shared the link (also page url of a user)
-    if (member.invitedBy) {
-      const $invitedBy = document.createElement('small');
-
-      $invitedBy.classList.add('text-muted');
-      $invitedBy.textContent = t('collab.invitedBy', { name: member.invitedBy });
-      $name.append(document.createElement('br'), $invitedBy);
-    }
-
-    if (isOwner && !member.owner) {
-      const $label = document.createElement('label');
-      const $canEdit = createSwitch(member.canEdit);
-
-      $canEdit.setAttribute('aria-label', t('collab.canDrawLabel', { name: member.name }));
-      $canEdit.addEventListener('change', () => this.drawer.collaboration?.setRight(member.id, $canEdit.checked));
-      $label.append($canEdit, t('collab.canDraw'));
-      $member.append($label);
-    } else {
-      const $role = document.createElement('span');
-
-      $role.classList.add('text-muted');
-      $role.textContent = t(member.owner ? 'collab.owner' : member.canEdit ? 'collab.canDraw' : 'collab.viewOnly');
-      $member.append($role);
-    }
-
-    return $member;
-  }
-
-  /**
-   * Users of session, with rights: owner gives or removes the right to draw. Rows of users not changed are kept (focus
-   * stays on the switch just toggled, the live region reads only users joining or changed)
+   * Users of session, with rights: owner gives or removes the right to draw
    */
   private _updateMembers() {
     const collaboration = this.drawer.collaboration!;
     const { members } = collaboration;
-    const t = this.drawer.t.bind(this.drawer);
-    const $previous = Array.from(this.$members.children) as HTMLLIElement[];
-    const $focused = $previous.find(($row) => $row.contains(document.activeElement));
 
     this.$newUsersCanEdit.checked = collaboration.newUsersCanEdit;
-
     this.$users.textContent = members.length
-      ? t('collab.connected', { count: members.length })
-      : t('collab.connecting');
-
-    const $rows = members.map((member) => {
-      const $row = this._createMember(member);
-      const $current = $previous.find(($el) => $el.dataset.member === member.id);
-
-      if (!$current?.isEqualNode($row)) return $row;
-
-      // right given by the server (the switch may have been toggled since)
-      const $canEdit = $current.querySelector('input');
-
-      if ($canEdit) $canEdit.checked = member.canEdit;
-      return $current;
-    });
-
-    for (const $row of $previous) if (!$rows.includes($row)) $row.remove();
-    // rows put in order, a row in place is not moved (moving it would take the focus)
-    for (const [index, $row] of $rows.entries()) {
-      const $place = this.$members.children[index] ?? null;
-
-      if ($place !== $row) this.$members.insertBefore($row, $place);
-    }
-
-    // row of the focused switch changed (name, language...): focus on its new switch
-    if ($focused && !$focused.isConnected) {
-      const $row = $rows.find(($el) => $el.dataset.member === $focused.dataset.member);
-
-      $row?.querySelector('input')?.focus();
-    }
+      ? this.drawer.t('collab.connected', { count: members.length })
+      : this.drawer.t('collab.connecting');
+    this.membersList.update();
   }
 
   /**

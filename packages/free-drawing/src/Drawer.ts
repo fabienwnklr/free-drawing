@@ -18,7 +18,7 @@ import type {
   TextStyle,
   Theme,
 } from '@/@types/drawer';
-import type { CollaborationOptions, CollaborationSocket } from '@/@types/collaboration';
+import type { CollaborationOptions, CollaborationSocket, ViewArea } from '@/@types/collaboration';
 import { createId, deepMerge } from '@/utils/functions';
 import { defaultOptions, drawerEvents, gridSize, shapeLabels, shapeName, zoomLimits } from '@/constants';
 import { setPressed } from '@/utils/dom';
@@ -76,7 +76,7 @@ export type {
   TextStyle,
   Theme,
 } from '@/@types/drawer';
-export type { CollaborationOptions } from '@/@types/collaboration';
+export type { AccessRequest, CollaborationMember, CollaborationOptions, ViewArea } from '@/@types/collaboration';
 export type {
   DrawingFile,
   ExportImageOptions,
@@ -533,10 +533,11 @@ export class Drawer extends MicroEvent {
   /**
    * Right to draw of this user given or removed by owner of collaboration room
    * @param canEdit True when this user may draw (still read only with `readOnly` option), told in a toast
+   * @param joined Room just joined as viewer: told how to ask the owner to draw (no right removed)
    */
-  _onCollaborationRight(canEdit: boolean) {
+  _onCollaborationRight(canEdit: boolean, joined = false) {
     this.setReadOnly(!canEdit || this.options.readOnly);
-    this.toast(this.t(canEdit ? 'toast.canDraw' : 'toast.viewOnly'), 'info');
+    this.toast(this.t(canEdit ? 'toast.canDraw' : joined ? 'toast.joinedViewOnly' : 'toast.viewOnly'), 'info');
   }
 
   /**
@@ -796,6 +797,43 @@ export class Drawer extends MicroEvent {
   }
 
   /**
+   * Area of the drawing shown in the view (presented to other users of a collaboration session)
+   * @returns Visible area, in drawing coordinates
+   */
+  getViewArea(): ViewArea {
+    const scale = this.getZoomLevel();
+
+    return {
+      x: -this.stage.x() / scale,
+      y: -this.stage.y() / scale,
+      width: this.stage.width() / scale,
+      height: this.stage.height() / scale,
+    };
+  }
+
+  /**
+   * Show an area of the drawing (view presented by another user): zoomed to fit in the view (zoom limits kept),
+   * centered in it
+   * @param area Area of the drawing, in drawing coordinates
+   */
+  showArea({ x, y, width, height }: ViewArea) {
+    const fit = Math.min(this.stage.width() / width, this.stage.height() / height);
+    const scale = Math.min(Math.max(fit, zoomLimits.min), zoomLimits.max);
+
+    this.stage.scale({ x: scale, y: scale });
+    this.stage.position({
+      x: this.stage.width() / 2 - (x + width / 2) * scale,
+      y: this.stage.height() / 2 - (y + height / 2) * scale,
+    });
+
+    if (this.zoom) {
+      this.zoom.update();
+    } else {
+      this._update();
+    }
+  }
+
+  /**
    * Get all shape drawing
    * @returns Copy of the top nodes of draw layer (shapes and groups), bottom first
    */
@@ -891,12 +929,14 @@ export class Drawer extends MicroEvent {
   }
 
   /**
-   * Update bg position (grid is redrawn with stage) and position widget, after view move or zoom
+   * Update bg position (grid is redrawn with stage) and position widget, after view move or zoom: view sent while
+   * presenting it in a collaboration session, moved by a user following a presentation: no longer followed
    */
   _update() {
     this.bgLayer.position({ x: -this._unScale(this.stage.position().x), y: -this._unScale(this.stage.position().y) });
     this.position?.update();
     this.collaboration?.updateCursors();
+    this.collaboration?.onViewChange();
   }
 
   /**

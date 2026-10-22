@@ -446,11 +446,11 @@ describe('Collaboration', () => {
     expect(impostor.userId).not.toBe('owner-1');
     expect(impostor.users.filter((user) => user.owner).map((user) => user.id)).toEqual(['owner-1']);
 
-    // rights from the impostor ignored, from the owner applied
-    impostor.socket.emit(socketEvents.RIGHTS, { userId: 'guest-2', canEdit: false });
+    // new users view only; rights from the impostor ignored, from the owner applied
+    impostor.socket.emit(socketEvents.RIGHTS, { userId: impostor.userId, canEdit: true });
     const updated = owner.next<User[]>(socketEvents.USERS);
 
-    owner.socket.emit(socketEvents.RIGHTS, { userId: impostor.userId, canEdit: false });
+    owner.socket.emit(socketEvents.RIGHTS, { userId: 'guest-2', canEdit: true });
     expect((await updated).map(({ id, canEdit }) => [id, canEdit])).toEqual([
       ['owner-1', true],
       ['guest-2', true],
@@ -459,32 +459,42 @@ describe('Collaboration', () => {
     expect(guest.userId).toBe('guest-2');
   });
 
-  it('Owner makes new users view only, also users coming back with a new id', async () => {
+  it('New users view only by default, the owner lets them draw: users coming back keep their right', async () => {
     const owner = await joinRoom({ room: 'room-3', name: 'Owner', userId: 'owner-3', ownerKey: 'secret 3' });
-    const known = await joinRoom({ room: 'room-3', name: 'Known', userId: 'known-3' });
-    const setting = known.next<{ newUsersCanEdit: boolean }>(socketEvents.ROOM);
-
-    // not the owner: ignored
-    known.socket.emit(socketEvents.ROOM, { newUsersCanEdit: false });
-    owner.socket.emit(socketEvents.ROOM, { newUsersCanEdit: false });
-    expect(await setting).toEqual({ newUsersCanEdit: false });
-
-    const newcomer = await joinRoom({ room: 'room-3', name: 'New', userId: 'new-3' });
+    const viewer = await joinRoom({ room: 'room-3', name: 'Viewer', userId: 'viewer-3' });
     const canEdit = (users: User[], id: string) => users.find((user) => user.id === id)?.canEdit;
 
-    expect(canEdit(newcomer.users, 'new-3')).toBe(false);
-    // users who came before keep their right
-    known.socket.close();
-    const back = await joinRoom({ room: 'room-3', name: 'Known', userId: 'known-3' });
+    expect(canEdit(viewer.users, 'viewer-3')).toBe(false);
 
-    expect(canEdit(back.users, 'known-3')).toBe(true);
+    // not the owner: ignored
+    const settingOn = viewer.next<{ newUsersCanEdit: boolean }>(socketEvents.ROOM);
 
-    // turned on again: new users draw
-    const settingOn = back.next<{ newUsersCanEdit: boolean }>(socketEvents.ROOM);
-
+    viewer.socket.emit(socketEvents.ROOM, { newUsersCanEdit: true });
     owner.socket.emit(socketEvents.ROOM, { newUsersCanEdit: true });
     expect(await settingOn).toEqual({ newUsersCanEdit: true });
-    expect(canEdit((await joinRoom({ room: 'room-3', name: 'Other', userId: 'other-3' })).users, 'other-3')).toBe(true);
+
+    const editor = await joinRoom({ room: 'room-3', name: 'Editor', userId: 'editor-3' });
+
+    expect(canEdit(editor.users, 'editor-3')).toBe(true);
+
+    // off again: new users view only, also users coming back with a new id
+    const settingOff = editor.next<{ newUsersCanEdit: boolean }>(socketEvents.ROOM);
+
+    owner.socket.emit(socketEvents.ROOM, { newUsersCanEdit: false });
+    expect(await settingOff).toEqual({ newUsersCanEdit: false });
+    expect(canEdit((await joinRoom({ room: 'room-3', name: 'Other', userId: 'other-3' })).users, 'other-3')).toBe(
+      false
+    );
+
+    // users who came before keep their right
+    editor.socket.close();
+    viewer.socket.close();
+    expect(canEdit((await joinRoom({ room: 'room-3', name: 'Editor', userId: 'editor-3' })).users, 'editor-3')).toBe(
+      true
+    );
+    expect(canEdit((await joinRoom({ room: 'room-3', name: 'Viewer', userId: 'viewer-3' })).users, 'viewer-3')).toBe(
+      false
+    );
   });
 
   it('Owner, rights and settings of an empty room are kept: nobody takes it over', async () => {
@@ -522,6 +532,72 @@ describe('Collaboration', () => {
     const saved = await server.db.selectFrom('room').where('id', '=', 'room-4').selectAll().executeTakeFirstOrThrow();
 
     expect(saved.content).not.toContain('secret 4');
+  });
+
+  it('Owner presents its view: relayed, sent to users joining meanwhile, stopped when the owner leaves', async () => {
+    const owner = await joinRoom({ room: 'room-view', name: 'Owner', userId: 'owner-v', ownerKey: 'secret v' });
+    const viewer = await joinRoom({ room: 'room-view', name: 'Viewer', userId: 'viewer-v' });
+    const view = { x: 10, y: -20, width: 800, height: 600 };
+    const received = viewer.next(socketEvents.VIEW);
+
+    // not the owner, invalid area: ignored; other fields dropped
+    viewer.socket.emit(socketEvents.VIEW, { x: 0, y: 0, width: 100, height: 100 });
+    owner.socket.emit(socketEvents.VIEW, { x: 0, y: 0, width: -1, height: 100 });
+    owner.socket.emit(socketEvents.VIEW, { ...view, extra: 'dropped' });
+    expect(await received).toEqual(view);
+
+    // user joining meanwhile: view at once
+    const late = client();
+    const lateView = late.next(socketEvents.VIEW);
+
+    late.socket.emit(socketEvents.JOIN, { room: 'room-view', name: 'Late', userId: 'late-v' });
+    expect(await lateView).toEqual(view);
+
+    // owner gone: presentation stopped
+    const stopped = viewer.next(socketEvents.VIEW);
+
+    owner.socket.close();
+    expect(await stopped).toBeNull();
+  });
+
+  it('Viewers ask the owner for the right to draw: once until answered, told to an owner joining later', async () => {
+    const room = 'room-request';
+    const owner = await joinRoom({ room, name: 'Owner', userId: 'owner-r', ownerKey: 'secret r' });
+    const viewer = await joinRoom({ room, name: 'Viewer', userId: 'viewer-r' });
+    const requests: unknown[] = [];
+    const wait = () => new Promise((resolve) => setTimeout(resolve, 100));
+
+    owner.socket.on(socketEvents.REQUEST, (request: unknown) => requests.push(request));
+    viewer.socket.emit(socketEvents.REQUEST);
+    viewer.socket.emit(socketEvents.REQUEST);
+    await wait();
+    expect(requests).toEqual([{ userId: 'viewer-r', name: 'Viewer' }]);
+
+    // refused: told to the viewer
+    const refused = viewer.next(socketEvents.REQUEST);
+
+    owner.socket.emit(socketEvents.REQUEST, { userId: 'viewer-r', accepted: false });
+    expect(await refused).toEqual({ accepted: false });
+
+    // asked again while the owner is away: told when it joins again
+    const left = viewer.next(socketEvents.USERS);
+
+    owner.socket.close();
+    await left;
+    viewer.socket.emit(socketEvents.REQUEST);
+    await wait();
+
+    const back = client();
+    const pending = back.next(socketEvents.REQUEST);
+
+    back.socket.emit(socketEvents.JOIN, { room, name: 'Owner', userId: 'owner-r', ownerKey: 'secret r' });
+    expect(await pending).toEqual({ userId: 'viewer-r', name: 'Viewer' });
+
+    // accepted: right given
+    const updated = viewer.next<User[]>(socketEvents.USERS);
+
+    back.socket.emit(socketEvents.REQUEST, { userId: 'viewer-r', accepted: true });
+    expect((await updated).find((user) => user.id === 'viewer-r')?.canEdit).toBe(true);
   });
 
   /** JSON of a rectangle of a change */

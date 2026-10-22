@@ -25,6 +25,16 @@ export declare const socketEvents: {
   readonly ROOM: 'ROOM';
   /** Message of the user refused by server: `{ event, reason }`, reason `full` (room) or `too-big` (drawing) */
   readonly REJECTED: 'REJECTED';
+  /**
+   * Area of the drawing shown by the owner presenting it: `{ x, y, width, height }` (drawing coordinates), null when
+   * the presentation stops; sent by the owner, relayed by server to the room and to users joining meanwhile
+   */
+  readonly VIEW: 'VIEW';
+  /**
+   * Right to draw asked by a viewer (nothing sent), relayed by server to the owner as `{ userId, name }`; the owner
+   * answers `{ userId, accepted }` (accepted: right given), a refusal is sent back to the user as `{ accepted: false }`
+   */
+  readonly REQUEST: 'REQUEST';
 };
 
 /**
