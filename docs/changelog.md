@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.22.2](https://github.com/fabienwnklr/free-drawing/compare/v7.22.1...v7.22.2) (2026-10-22)
+
+
+### Bug Fixes
+
+* **events:** a listener removing itself (`drawer.off`) while its event is triggered no longer makes the next listener skipped; listeners added meanwhile are called from the next trigger, listeners removed before their turn are not called
+
 ## [7.22.1](https://github.com/fabienwnklr/free-drawing/compare/v7.22.0...v7.22.1) (2026-10-22)
 
 

@@ -87,7 +87,8 @@ export default class MicroEvent {
   }
 
   /**
-   * Call listeners of events, in order of registration
+   * Call listeners of events, in order of registration. A listener may add or remove listeners: the ones added are
+   * called from the next trigger, the ones removed (not called yet) are not called, the others are all called.
    * @param events event name, or several separated by spaces
    * @param args arguments given to listeners
    */
@@ -95,9 +96,11 @@ export default class MicroEvent {
     forEvents(events, (event) => {
       const event_array = this._events[event];
       if (event_array === undefined) return;
-      event_array.forEach((fct) => {
-        fct.apply(this, args);
-      });
+
+      // copy: the list may change during the loop (a removed listener would make the next one skipped)
+      for (const fct of [...event_array]) {
+        if (this._events[event]?.includes(fct)) fct.apply(this, args);
+      }
     });
   }
 }

@@ -58,7 +58,7 @@
 - [x] phone (390 px wide): app bar overflows (name on two lines, "My drawings" cut), options panel of the tool covers the header widgets, toolbar pushed out of view by zoom and undo / redo (web `style.css`, `DrawerLayout` footer)
 - [x] export: italic texts drawn with a serif font in png / pdf (preview of the export dialog), Ubuntu italic on canvas (`export.ts` `renderCanvas`, fonts of `TextWidget`)
 - [x] font select of text options: an arrow key gives focus back to the drawer, fonts can't be browsed with keyboard (`TextOverlay.ts`)
-- [ ] `drawer.off` called in a handler skips the next handler of the same event (`MicroEvent.trigger` loops on the live array)
+- [x] `drawer.off` called in a handler skips the next handler of the same event (`MicroEvent.trigger` loops on the live array)
 - [ ] background color not in history (undo after opening a file keeps its background) nor sent to collaborators
 - [ ] drawer of window size does not follow height changes of the window, nor any change with a page scrollbar (`DrawerLayout.ts`)
 - [ ] drawings over 1 MB can't join a collaboration session (socket.io `maxHttpBufferSize` 1 MB, API accepts 5 MB): reconnection loop

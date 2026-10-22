@@ -45,4 +45,32 @@ describe('utilities', () => {
 
     expect(calls).toEqual(['a']);
   });
+
+  test('MicroEvent listeners added or removed by a listener: the others are all called', () => {
+    const emitter = new MicroEvent();
+    const calls: string[] = [];
+    const once = () => {
+      calls.push('once');
+      emitter.off('foo', once);
+    };
+    const removed = () => calls.push('removed');
+    const added = () => calls.push('added');
+
+    emitter.on('foo', once);
+    emitter.on('foo', () => calls.push('next'));
+    emitter.on('foo', () => {
+      calls.push('remover');
+      emitter.off('foo', removed);
+      emitter.on('foo', added);
+    });
+    emitter.on('foo', removed);
+
+    // listener removing itself: the next one still called; removed before its turn: not called; added: next trigger
+    emitter.trigger('foo');
+    expect(calls).toEqual(['once', 'next', 'remover']);
+
+    calls.length = 0;
+    emitter.trigger('foo');
+    expect(calls).toEqual(['next', 'remover', 'added']);
+  });
 });
