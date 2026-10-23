@@ -24,6 +24,7 @@ import type { CollaborationOptions, CollaborationSocket, ViewArea } from '@/@typ
 import { createId, deepMerge } from '@/utils/functions';
 import { defaultOptions, drawerEvents, gridSize, shapeLabels, shapeName, zoomLimits } from '@/constants';
 import { hasFocusOutside, setPressed } from '@/utils/dom';
+import { announce, createLiveRegion } from '@/utils/liveRegion';
 import { getStrokeStyle } from '@/utils/stroke';
 import { reorderShapes } from '@/utils/order';
 import { rectContains, setupHit } from '@/utils/hit';
@@ -204,6 +205,8 @@ export class Drawer extends MicroEvent {
   $el: HTMLDivElement;
   /** Container of the drawer and regions of its interface, see `layout.add` */
   layout: DrawerLayout;
+  /** Live region of messages read by screen readers (toasts), see `_announce` */
+  $liveRegion: HTMLDivElement;
   /** Konva content of the stage (its canvases): cursor of active tool is set on it */
   $stageContainer: HTMLDivElement;
   /** Konva stage: background, grid, drawing and selection layers */
@@ -419,6 +422,9 @@ export class Drawer extends MicroEvent {
 
     this.$stageContainer = this.stage.content;
     this.layout.setStage(this.stage);
+    // in the page before its first message (konva empties the container when it creates the stage)
+    this.$liveRegion = createLiveRegion();
+    this.layout.add('floating', this.$liveRegion);
     // before the toolbar and help: widgets and texts of plugins
     this.plugins = new PluginCollection(this);
     this.plugins._create(this.options.plugins);
@@ -2461,6 +2467,20 @@ export class Drawer extends MicroEvent {
     this.options.textStyle = { ...this.options.textStyle, ...style };
     this.getWidget<SelectWidget>('selection')?.setTextStyle(style);
     this._triggerOptionsChange({ textStyle: style });
+  }
+
+  /**
+   * Message read by screen readers (toasts): in the live region of the dialog shown (nothing out of an `aria-modal`
+   * dialog is read), else of the drawer
+   * @param message Text read
+   * @param urgent Read at once (problems), else when the user is idle
+   */
+  _announce(message: string, urgent: boolean = false) {
+    const $modal = [...this.$drawerContainer.querySelectorAll<HTMLElement>('.drawer-modal.show')].pop();
+    // none yet while the stage is created
+    const $region = $modal?.querySelector<HTMLElement>(':scope > .drawer-live-region') ?? this.$liveRegion;
+
+    if ($region) announce($region, message, urgent);
   }
 
   /**

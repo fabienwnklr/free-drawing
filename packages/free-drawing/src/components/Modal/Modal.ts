@@ -5,6 +5,7 @@ import type { Drawer } from '@/Drawer';
 import type { ModalOptions } from '@/@types/ui';
 import CloseIcon from '@/icons/close.svg?raw';
 import { hasFocusOutside, uniqueId } from '@/utils/dom';
+import { createLiveRegion } from '@/utils/liveRegion';
 
 const focusableSelector =
   'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -217,7 +218,8 @@ export class Modal {
     this.$modalFooter = stringToNode<HTMLDivElement>(/*html*/ `
       <div class="drawer-modal-footer"></div>`);
 
-    this.$modal.append(...[this.$modalHeader, this.$modalBody, this.$modalFooter]);
+    // messages read while it is shown (toasts): out of it, nothing is read
+    this.$modal.append(...[this.$modalHeader, this.$modalBody, this.$modalFooter], createLiveRegion());
 
     if (this.options.backdrop) {
       this.$backdrop = stringToNode<HTMLDivElement>(/*html*/ `

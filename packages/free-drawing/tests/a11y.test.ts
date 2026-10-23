@@ -441,11 +441,37 @@ describe('Accessibility', () => {
     exportModal.hide();
   });
 
-  it('Toasts are announced', () => {
+  it('Toasts are read in live regions kept in the page: of the drawer, of the dialog shown', () => {
     const drawer = createDrawer();
+    /** Messages of a part of a live region */
+    const read = ($region: Element, role: string) =>
+      [...$region.querySelector(`[role="${role}"]`)!.children].map(($message) => $message.textContent);
 
-    expect(drawer.toast('Saved', 'info', 0).$toastContainer.getAttribute('role')).toBe('status');
-    expect(drawer.toast('Failed', 'error', 0).$toastContainer.getAttribute('role')).toBe('alert');
+    // in the page before the first message (a region added with its text is not always read)
+    expect(drawer.$liveRegion.isConnected).toBe(true);
+    vi.useFakeTimers();
+    try {
+      const saved = drawer.toast('Saved', 'info', 0);
+
+      drawer.toast('Failed', 'error', 0);
+      // the visible toast is not a live region: read once
+      expect(saved.$toastContainer.getAttribute('role')).toBeNull();
+      expect(read(drawer.$liveRegion, 'status')).toEqual(['Saved']);
+      expect(read(drawer.$liveRegion, 'alert')).toEqual(['Failed']);
+
+      // dialog shown: its own region (out of an aria-modal dialog, nothing is read)
+      drawer.showPreferences();
+      drawer.toast('Copied', 'info', 0);
+      expect(read(drawer.preferencesModal!.$modal.querySelector('.drawer-live-region')!, 'status')).toEqual(['Copied']);
+      expect(read(drawer.$liveRegion, 'status')).toEqual(['Saved']);
+      drawer.preferencesModal!.hide();
+
+      // messages removed after a while: the same message is read again
+      vi.advanceTimersByTime(7000);
+      expect(read(drawer.$liveRegion, 'status')).toEqual([]);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('Context menu is a menu navigable with arrows, Escape closes it', () => {

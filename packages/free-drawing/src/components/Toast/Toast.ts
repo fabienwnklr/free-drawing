@@ -9,13 +9,20 @@ import { drawerEvents } from '@/constants';
 
 /**
  * Short message shown at the top of the drawer (stacked with other toasts), with an icon of its type.
- * Announced by screen readers (`alert` for problems, else `status`), created for one message by `drawer.toast`.
+ * Announced by screen readers once shown (live region kept in the page, urgent for problems: `drawer._announce`),
+ * created for one message by `drawer.toast`.
  */
 export class Toast extends MicroEvent {
   /** Element of the toast: icon and message */
   $toastContainer: HTMLDivElement;
   /** Time in ms before hiding the toast once shown (0: stays until hidden) */
   timeout: number = 5000;
+  /** Drawer showing the toast, reading its message */
+  readonly #drawer: Drawer;
+  /** Text of the toast */
+  readonly #message: string;
+  /** Problem (warning, error, danger): read at once */
+  readonly #urgent: boolean;
 
   /**
    * Create the toast (hidden until `show`) in the stack of toasts of the drawer, created on first toast
@@ -35,13 +42,11 @@ export class Toast extends MicroEvent {
     super();
 
     this.timeout = timeout;
+    this.#drawer = drawer;
+    this.#message = message;
+    this.#urgent = type === 'error' || type === 'danger' || type === 'warning';
     this.$toastContainer = document.createElement('div');
     this.$toastContainer.classList.add('drawer-toast', type);
-    // announced by screen readers, immediately for problems
-    this.$toastContainer.setAttribute(
-      'role',
-      type === 'error' || type === 'danger' || type === 'warning' ? 'alert' : 'status'
-    );
 
     // default is neutral, so no icon set
     let icon = '';
@@ -70,10 +75,11 @@ export class Toast extends MicroEvent {
   }
 
   /**
-   * Shows the toast, hidden after `timeout` (then `drawer.toast.hide` is triggered)
+   * Shows the toast and reads its message, hidden after `timeout` (then `drawer.toast.hide` is triggered)
    */
   show() {
     this.$toastContainer.classList.add('show');
+    this.#drawer._announce(this.#message, this.#urgent);
 
     if (this.timeout) {
       setTimeout(() => {

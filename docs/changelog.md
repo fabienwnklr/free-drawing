@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.28.1](https://github.com/fabienwnklr/free-drawing/compare/v7.28.0...v7.28.1) (2026-10-23)
+
+
+### Bug Fixes
+
+* **a11y:** messages of toasts are read by screen readers from live regions kept in the page (polite, urgent for problems): a toast added with its `status` or `alert` role was not always announced; while a dialog is shown, from a region of the dialog (nothing out of an `aria-modal` dialog was read)
+
 ## [7.28.0](https://github.com/fabienwnklr/free-drawing/compare/v7.27.5...v7.28.0) (2026-10-23)
 
 
