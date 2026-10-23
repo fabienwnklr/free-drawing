@@ -32,7 +32,7 @@ export class UndoRedo extends History {
 
     this.$btnRedo = createButton('drawer-button', 'drawer-button-neutral');
     this.$btnRedo.innerHTML = RedoIcon;
-    this.$btnRedo.setAttribute('aria-keyshortcuts', 'Control+Y');
+    this.$btnRedo.setAttribute('aria-keyshortcuts', 'Control+Y Control+Shift+Z');
     drawer.i18n.translate((t) => {
       this.$undoRedoContainer.setAttribute('aria-label', t('history.label'));
       setLabel(this.$btnUndo, t('history.undo'));

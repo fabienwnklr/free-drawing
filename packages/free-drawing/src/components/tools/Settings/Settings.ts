@@ -96,14 +96,15 @@ export class Settings extends Dropdown {
     this.$commandsButton.setAttribute('aria-keyshortcuts', 'Control+K');
     this.$openButton = this._createItem(OpenIcon, 'menu.open', 'Ctrl+O');
     this.$openButton.setAttribute('aria-keyshortcuts', 'Control+O');
-    this.$saveButton = this._createItem(SaveNowIcon, 'menu.save');
-    // changes not saved yet
+    this.$saveButton = this._createItem(SaveNowIcon, 'menu.save', 'Ctrl+S');
+    this.$saveButton.setAttribute('aria-keyshortcuts', 'Control+S');
+    // changes not saved yet, before the shortcut
     const $saveState = document.createElement('span');
 
     $saveState.className = 'text-muted';
-    this.$saveButton.append($saveState);
-    this.$saveAsButton = this._createItem(SaveIcon, 'menu.saveAs', 'Ctrl+S');
-    this.$saveAsButton.setAttribute('aria-keyshortcuts', 'Control+S');
+    this.$saveButton.lastElementChild!.before($saveState);
+    this.$saveAsButton = this._createItem(SaveIcon, 'menu.saveAs', 'Ctrl+Shift+S');
+    this.$saveAsButton.setAttribute('aria-keyshortcuts', 'Control+Shift+S');
     this.$copyLinkButton = this._createItem(LinkIcon, 'menu.copyLink');
     this.$collaborationButton = this._createItem(UsersIcon, 'menu.collaboration');
     // session state

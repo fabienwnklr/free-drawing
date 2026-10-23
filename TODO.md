@@ -72,7 +72,7 @@
 - [x] history memory: 100 full JSON snapshots, cumulative ones built on reload; store shapes once or diffs (`History.ts`)
 - [x] touch: track one pointer, pinch zoom and two finger pan, window `pointerup` / `pointercancel` or pointer capture
 - [x] text tool follows `keepTool` and selects the validated text like other tools (`Text.ts`)
-- [ ] Ctrl / Cmd + S saves (`saveNow`) with `storage` or auto save off, download with another shortcut; Ctrl / Cmd + Shift + Z redo (macOS standard)
+- [x] Ctrl / Cmd + S saves (`saveNow`) with `storage` or auto save off, download with another shortcut; Ctrl / Cmd + Shift + Z redo (macOS standard)
 - [ ] macOS shortcut names (⌘, ⌥) in menus, command palette, help, tooltips and `aria-keyshortcuts`
 - [ ] linked arrows: link near outlines, not anywhere in bounding box; binding margin and click threshold independent of zoom (`binding.ts`, `ShapeWidget.ts`)
 - [ ] snapping stops: shapes of frames and own frame of the dragged shape, not view edges and center (`Select.ts`)

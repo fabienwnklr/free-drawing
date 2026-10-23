@@ -63,7 +63,7 @@ export class Help extends Modal {
     const editor: Shortcut[] = [
       ...(this.drawer.options.commandPalette ? [{ label: t('menu.commands'), keys: ['Ctrl+K'] }] : []),
       { label: t('history.undo'), keys: ['Ctrl+Z'] },
-      { label: t('history.redo'), keys: ['Ctrl+Y'] },
+      { label: t('history.redo'), keys: ['Ctrl+Y', 'Ctrl+Shift+Z'], or: true },
       { label: t('menu.clearCanvas'), keys: [`Ctrl+${t('key.delete')}`, 'Ctrl+Backspace'], or: true },
       { label: t('help.selectAll'), keys: ['Ctrl+A'] },
       { label: t('help.deleteSelection'), keys: [t('key.delete')] },
@@ -84,7 +84,8 @@ export class Help extends Modal {
       { label: t('help.lock'), keys: ['Ctrl+Shift+L'] },
       { label: t('help.paste'), keys: ['Ctrl+V'] },
       { label: t('help.open'), keys: ['Ctrl+O'] },
-      { label: t('help.save'), keys: ['Ctrl+S'] },
+      { label: t('menu.save'), keys: ['Ctrl+S'] },
+      { label: t('help.save'), keys: ['Ctrl+Shift+S'] },
       { label: t('help.export'), keys: ['Ctrl+Shift+E'] },
       { label: t('action.copyPng'), keys: ['Shift+Alt+C'] },
       { label: t('action.copySvg'), keys: ['Shift+Alt+S'] },

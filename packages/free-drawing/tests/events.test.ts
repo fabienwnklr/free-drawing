@@ -136,9 +136,9 @@ describe('Test drawer event', () => {
     expect(undo).toHaveBeenCalledTimes(1);
 
     // AltGr (Ctrl + Alt) types characters: ś of a Polish keyboard does not save
-    const saveAs = vi.spyOn(drawer, 'saveAs').mockResolvedValue();
+    const saveNow = vi.spyOn(drawer, 'saveNow').mockResolvedValue();
     keydown(drawer, { key: 'ś', code: 'KeyS', ctrlKey: true, altKey: true });
-    expect(saveAs).not.toHaveBeenCalled();
+    expect(saveNow).not.toHaveBeenCalled();
 
     // commands of plugins
     expect(matchesShortcut(new KeyboardEvent('keydown', { key: 'z', code: 'KeyW', altKey: true }), 'Alt+Z')).toBe(true);

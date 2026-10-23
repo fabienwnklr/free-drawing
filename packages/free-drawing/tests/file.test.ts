@@ -200,16 +200,22 @@ describe('Drawing files and links', () => {
   it('Menu items and keyboard shortcuts', () => {
     const drawer = createDrawer();
     const saveAs = vi.spyOn(drawer, 'saveAs').mockResolvedValue();
+    const saveNow = vi.spyOn(drawer, 'saveNow').mockResolvedValue();
     const open = vi.spyOn(drawer, 'open').mockResolvedValue();
-    const { $openButton, $saveAsButton, $copyLinkButton } = drawer.setting;
+    const { $openButton, $saveButton, $saveAsButton, $copyLinkButton } = drawer.setting;
 
     expect($openButton.getAttribute('aria-keyshortcuts')).toBe('Control+O');
-    expect($saveAsButton.getAttribute('aria-keyshortcuts')).toBe('Control+S');
+    expect($saveButton.getAttribute('aria-keyshortcuts')).toBe('Control+S');
+    expect($saveAsButton.getAttribute('aria-keyshortcuts')).toBe('Control+Shift+S');
     expect($copyLinkButton.isConnected).toBe(true);
 
-    // browser shortcuts (save page, open file) replaced
+    // browser shortcuts (save page, open file) replaced: drawing saved, Shift: file downloaded
     expect(keydown(drawer, { key: 's', ctrlKey: true })).toBe(false);
-    expect(saveAs).toHaveBeenCalled();
+    expect(saveNow).toHaveBeenCalledTimes(1);
+    expect(saveAs).not.toHaveBeenCalled();
+    expect(keydown(drawer, { key: 'S', metaKey: true, shiftKey: true })).toBe(false);
+    expect(saveAs).toHaveBeenCalledTimes(1);
+    expect(saveNow).toHaveBeenCalledTimes(1);
     expect(keydown(drawer, { key: 'o', ctrlKey: true })).toBe(false);
     expect(open).toHaveBeenCalled();
   });

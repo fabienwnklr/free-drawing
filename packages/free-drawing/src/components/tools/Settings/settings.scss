@@ -7,6 +7,15 @@
     margin-left: auto;
     padding-left: $space-4;
     font-size: $font-size-sm;
+
+    // state and shortcut together at the end (save item), shortcut alone without state
+    &:not(:empty) + .text-muted {
+      margin-left: 0;
+    }
+
+    &:empty {
+      display: none;
+    }
   }
 
   // label and select in one item

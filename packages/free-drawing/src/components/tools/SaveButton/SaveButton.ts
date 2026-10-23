@@ -26,6 +26,7 @@ export class SaveButton {
     this.$container.classList.add('drawer-save-button-container', 'tool');
     this.$button = createButton('drawer-button', 'drawer-button-neutral');
     this.$button.innerHTML = SaveNowIcon;
+    this.$button.setAttribute('aria-keyshortcuts', 'Control+S');
     this.$button.addEventListener('click', () => this.drawer.saveNow());
     this.$container.append(this.$button);
     this.drawer.layout.add('header', this.$container, { hideInZen: true });

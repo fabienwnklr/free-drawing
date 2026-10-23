@@ -228,10 +228,11 @@ export class HotKey {
         this.drawer.undoRedo.undo();
       }
 
-      // instead of browser save page and open file
-      if (mod && !e.shiftKey && letter === 's') {
+      // instead of browser save page and open file: drawing saved (storage, auto save off), Shift: file downloaded
+      if (mod && !e.altKey && letter === 's') {
         e.preventDefault();
-        this.drawer.saveAs();
+        if (e.shiftKey) this.drawer.saveAs();
+        else this.drawer.saveNow();
       }
 
       if (mod && !e.shiftKey && letter === 'o') {
@@ -255,7 +256,9 @@ export class HotKey {
         this.drawer.showExport();
       }
 
-      if (edit && mod && !e.shiftKey && letter === 'y') {
+      // Ctrl + Shift + Z: redo of macOS
+      if (edit && mod && ((!e.shiftKey && letter === 'y') || (e.shiftKey && letter === 'z'))) {
+        e.preventDefault();
         this.drawer.undoRedo.redo();
       }
 

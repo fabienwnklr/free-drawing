@@ -32,7 +32,7 @@ The toolbar, its groups and the shortcuts are set with the [`widgets` and `widge
 - **Options of mixed selections**: the panel shows the options of every kind of selected shape, and applies each one to the shapes it fits, with actions to duplicate, delete or link the selection.
 - **Selection menu** next to the shapes: duplicate, group, rotate, stacking order, lock and delete.
 - **Links**: attach a web page or an email address to a shape, edited above it, opened from its link icon.
-- **Edit faster**: duplicate (Ctrl + D), group (Ctrl + G), flip (Shift + H / V), rotate by 90° (Shift + R / L), move with the arrow keys, undo and redo up to 100 steps.
+- **Edit faster**: duplicate (Ctrl + D), group (Ctrl + G), flip (Shift + H / V), rotate by 90° (Shift + R / L), move with the arrow keys, undo and redo up to 100 steps (Ctrl + Z, Ctrl + Y or Ctrl + Shift + Z).
 
 More in [Selection](/get-started/#selection).
 
@@ -77,7 +77,7 @@ More in [Layers](/get-started/#layers), [Linked arrows](/get-started/#linked-arr
 
 ![Export dialog with its preview](/features/export.webp){.screenshot width=680 height=470}
 
-- **Files**: save and open `.freedrawing` files (Ctrl + S, Ctrl + O). Only drawing shapes are read: files can come from anyone.
+- **Files**: save and open `.freedrawing` files (Ctrl + Shift + S, Ctrl + O). Only drawing shapes are read: files can come from anyone.
 - **Links** hold the whole drawing, compressed, so no server is needed to share it.
 - **Export** the drawing or the selection as PNG (1×, 2× or 3×), SVG or PDF, with or without background, in dark mode or not, or copy it to the clipboard.
 

@@ -228,6 +228,15 @@ export class App {
       this.render();
     });
     this.$saveButton.addEventListener('click', () => this.drawer.saveNow());
+    this.$saveButton.setAttribute('aria-keyshortcuts', 'Control+S');
+    // Ctrl / Cmd + S out of the drawer (app bar, dialogs) saves the drawing, not the page (Shift: file downloaded);
+    // in the drawer, its shortcut already handled it
+    document.addEventListener('keydown', (e) => {
+      if (e.defaultPrevented || !(e.ctrlKey || e.metaKey) || e.altKey || e.key.toLowerCase() !== 's') return;
+      e.preventDefault();
+      if (e.shiftKey) this.drawer.saveAs();
+      else this.drawer.saveNow();
+    });
     // without auto save: changes not saved yet
     this.drawer.on('drawer.unsaved.change', (unsaved: boolean) => {
       if (unsaved && !this.drawer.options.autoSave) this._setSaveState('unsaved');

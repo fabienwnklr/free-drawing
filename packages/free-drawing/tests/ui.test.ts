@@ -34,6 +34,13 @@ describe('User interface', () => {
     expect(drawer.getDrawingShapes().length).toBe(1);
     expect(drawer.undoRedo.$btnUndo.disabled).toBe(false);
     expect(drawer.undoRedo.$btnRedo.disabled).toBe(true);
+
+    // redo of macOS: Cmd + Shift + Z
+    keydown(drawer, { key: 'z', metaKey: true });
+    expect(drawer.getDrawingShapes().length).toBe(0);
+    expect(keydown(drawer, { key: 'Z', metaKey: true, shiftKey: true })).toBe(false);
+    expect(drawer.getDrawingShapes().length).toBe(1);
+    expect(drawer.undoRedo.$btnRedo.getAttribute('aria-keyshortcuts')).toBe('Control+Y Control+Shift+Z');
   });
 
   it('Undo clears selection overlay', () => {

@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.26.0](https://github.com/fabienwnklr/free-drawing/compare/v7.25.0...v7.26.0) (2026-10-23)
+
+
+### Features
+
+* **shortcuts:** Ctrl / Cmd + S saves the drawing (`saveNow`: storage of the app, auto save off, "Drawing saved" message), Ctrl / Cmd + Shift + S saves it as a `.freedrawing` file (was Ctrl / Cmd + S); Ctrl / Cmd + Shift + Z redoes (macOS), like Ctrl / Cmd + Y. Shown in the settings menu, command palette, help, `aria-keyshortcuts` of the save and redo buttons
+
 ## [7.25.0](https://github.com/fabienwnklr/free-drawing/compare/v7.24.0...v7.25.0) (2026-10-23)
 
 

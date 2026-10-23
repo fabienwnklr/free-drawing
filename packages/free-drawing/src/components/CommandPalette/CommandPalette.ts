@@ -444,6 +444,7 @@ export class CommandPalette extends Modal {
             id: 'save now store',
             label: t('menu.save'),
             icon: SaveNowIcon,
+            shortcut: 'Ctrl+S',
             run: () => drawer.saveNow(),
           },
           edit && {
@@ -531,7 +532,13 @@ export class CommandPalette extends Modal {
             shortcut: 'Ctrl+O',
             run: () => drawer.open(),
           },
-          { id: 'save file', label: t('menu.saveAs'), icon: SaveIcon, shortcut: 'Ctrl+S', run: () => drawer.saveAs() },
+          {
+            id: 'save file download',
+            label: t('menu.saveAs'),
+            icon: SaveIcon,
+            shortcut: 'Ctrl+Shift+S',
+            run: () => drawer.saveAs(),
+          },
           { id: 'copy link share', label: t('menu.copyLink'), icon: LinkIcon, run: () => drawer.copyLink() },
           {
             id: 'export image png svg pdf',

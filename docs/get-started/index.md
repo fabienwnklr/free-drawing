@@ -121,15 +121,15 @@ Components trigger `drawer.dropdown.hide` (dropdown menu) and `drawer.toast.hide
 drawer.showPreferences();
 ```
 
-Without auto save (preference or `autoSave` option), changes are saved with the save button of the header (`saveButton` option, a dot shows changes not saved yet) or "Save now" (settings menu, command palette), the menu shows "Not saved" until then, and leaving the page asks a confirmation. Turning auto save on again saves pending changes. With auto save too, changes are not saved until the save succeeds: leaving the page asks a confirmation during a save of `storage` or after a failed save (browser storage full, server unreachable).
+Without auto save (preference or `autoSave` option), changes are saved with the save button of the header (`saveButton` option, a dot shows changes not saved yet) or "Save now" (settings menu, command palette, Ctrl / Cmd + S, also with auto save), the menu shows "Not saved" until then, and leaving the page asks a confirmation. Turning auto save on again saves pending changes. With auto save too, changes are not saved until the save succeeds: leaving the page asks a confirmation during a save of `storage` or after a failed save (browser storage full, server unreachable).
 
 ```js
 drawer.setAutoSave(false);
 drawer.hasUnsavedChanges(); // true after a change, until saved (also during a save of storage, after a failed save)
-await drawer.saveNow(); // save, "Drawing saved" message
+await drawer.saveNow(); // save, "Drawing saved" message (Ctrl / Cmd + S)
 ```
 
-"Keep tool active" (pin button at the start of the toolbar, Q, also in the command palette) keeps the drawing tool after drawing a shape. Turned off, the selection tool is activated after drawing (shapes, frames, brush, highlighter), nothing selected. The button is shown with the selection tool only.
+"Keep tool active" (pin button at the start of the toolbar, Q, also in the command palette) keeps the drawing tool after drawing a shape. Turned off, the selection tool is activated after drawing (shapes, frames, brush, highlighter), nothing selected, or after a text, the text selected. The button is shown with the selection tool only.
 
 ```js
 drawer.setKeepTool(false);
@@ -473,7 +473,7 @@ drawer.reorderShapes('back', [shape]);
 The settings menu opens and saves drawings as `.freedrawing` files (JSON: background color and shapes), and copies a link to the drawing:
 
 ```js
-await drawer.saveAs('my-drawing'); // save dialog when the browser has one (Chromium), else download (Ctrl+S)
+await drawer.saveAs('my-drawing'); // save dialog when the browser has one (Chromium), else download (Ctrl / Cmd + Shift + S)
 await drawer.open(); // file chosen by user replaces drawing, undo restores it (Ctrl+O)
 const file = drawer.getDrawingFile(); // file content, `drawer.loadDrawing(file)` loads it
 const link = await drawer.getLink(); // current page url with compressed drawing: #<drawer id>=<data>
