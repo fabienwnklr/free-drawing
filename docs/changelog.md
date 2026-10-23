@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.28.3](https://github.com/fabienwnklr/free-drawing/compare/v7.28.2...v7.28.3) (2026-10-23)
+
+
+### Bug Fixes
+
+* **i18n:** Spanish "Empezar la sesión" to start a collaboration session ("Iniciar sesión" reads as signing in), German "Eckig" for sharp corners ("Spitz" is pointed)
+* **settings:** "Github" opens a new tab without access to the page of the drawer (`noopener`), it opened a window named "blank", reused by the next clicks
+
 ## [7.28.2](https://github.com/fabienwnklr/free-drawing/compare/v7.28.1...v7.28.2) (2026-10-23)
 
 

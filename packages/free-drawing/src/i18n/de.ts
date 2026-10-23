@@ -221,7 +221,7 @@ export const de: Translations = {
   'style.solid': 'Durchgezogen',
   'style.dashed': 'Gestrichelt',
   'style.dotted': 'Gepunktet',
-  'edges.sharp': 'Spitz',
+  'edges.sharp': 'Eckig',
   'edges.round': 'Abgerundet',
   'edges.radius': 'Eckenradius',
   'edges.auto': 'Auto',

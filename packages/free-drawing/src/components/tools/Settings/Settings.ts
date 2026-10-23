@@ -361,8 +361,9 @@ export class Settings extends Dropdown {
     this.$darkModeButton.addEventListener('click', () => this.drawer.toggleDarkMode());
     this.drawer.on(drawerEvents.themeChange, (dark: boolean) => setPressed(this.$darkModeButton, dark));
 
+    // new tab, the page of the drawer out of its reach (as links of shapes)
     this.$githubButton.addEventListener('click', () => {
-      window.open('https://github.com/fabienwnklr/free-drawing', 'blank');
+      window.open('https://github.com/fabienwnklr/free-drawing', '_blank', 'noopener,noreferrer');
     });
 
     this.$clearStorageButton.addEventListener('click', () => {

@@ -290,7 +290,7 @@ export const es: Translations = {
   'collab.link': 'Enlace',
   'collab.copy': 'Copiar',
   'collab.qrCode': 'Código QR del enlace, para escanear con un teléfono',
-  'collab.start': 'Iniciar sesión',
+  'collab.start': 'Empezar la sesión',
   'collab.join': 'Unirse a la sesión',
   'collab.stop': 'Detener la sesión',
   'collab.leave': 'Salir de la sesión',

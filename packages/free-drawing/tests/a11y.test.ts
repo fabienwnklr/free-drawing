@@ -270,6 +270,13 @@ describe('Accessibility', () => {
     expect(setting.$toggleGridButton.getAttribute('aria-keyshortcuts')).toBe('Alt+G');
     expect(setting.$zenModeButton.getAttribute('aria-keyshortcuts')).toBe('Alt+Z');
     expect(label(setting.$githubButton)).toBe('Github (opens in a new tab)');
+
+    // new tab, not a window named blank, without access to the page
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+
+    setting.$githubButton.click();
+    expect(open).toHaveBeenCalledWith('https://github.com/fabienwnklr/free-drawing', '_blank', 'noopener,noreferrer');
+    open.mockRestore();
   });
 
   it('Toggles of settings and context menu expose their state', () => {
