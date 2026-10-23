@@ -5,7 +5,7 @@ import { Transformer } from 'konva/lib/shapes/Transformer';
 import { Rect } from 'konva/lib/shapes/Rect';
 import { Line } from 'konva/lib/shapes/Line';
 import type { Shape, ShapeConfig } from 'konva/lib/Shape';
-import { drawerEvents, edgesShapes, fillShapes, shapeName, strokeStyleShapes } from '@/constants';
+import { clickTolerance, drawerEvents, edgesShapes, fillShapes, shapeName, strokeStyleShapes } from '@/constants';
 import { toFill } from '@/utils/color';
 import { getCornerRadius, getDash, getStrokeStyle } from '@/utils/stroke';
 import { setPressed } from '@/utils/dom';
@@ -38,9 +38,6 @@ import {
 } from '@/utils/frame';
 import type { DrawingShape } from '@/@types/drawer';
 import type { Node } from 'konva/lib/Node';
-
-/** Pointer move under which a press is a click (px) */
-const clickTolerance = 3;
 
 /**
  * Selection tool: selects shapes (click, Shift toggles, Alt selects the one behind, rectangle selects shapes entirely

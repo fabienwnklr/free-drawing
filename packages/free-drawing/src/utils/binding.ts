@@ -4,8 +4,8 @@ import { Arrow } from 'konva/lib/shapes/Arrow';
 import { Shape } from 'konva/lib/Shape';
 import type { IRect, Vector2d } from 'konva/lib/types';
 import type { DrawingShape } from '@/@types/drawer';
-import { shapeName } from '@/constants';
-import type { Anchor, BoundEnd } from '@/@types/shapes';
+import { fillShapes, shapeName } from '@/constants';
+import type { Anchor, BoundEnd, OutlineCrossing } from '@/@types/shapes';
 import { isFrame } from '@/utils/frame';
 
 /**
@@ -23,7 +23,7 @@ export const anchors: Anchor[] = ['top', 'right', 'bottom', 'left'];
 /** Space between arrow end and shape outline */
 const gap = 6;
 
-/** Distance from a shape (layer units) under which an arrow end is linked to it */
+/** Distance from a shape on screen (px, divided by the zoom) under which an arrow end is linked to it */
 export const bindingMargin = 12;
 
 /**
@@ -123,19 +123,17 @@ export function getAnchorAt(shape: Node, layer: Container, point: Vector2d, tole
 }
 
 /**
- * Point of shape outline on the way from its center to a point (layer coordinates), `gap` outside of it.
- * Null when the point is the center
+ * Point of the outline of a shape on the way from its center to a point
  * @param shape shape or group
  * @param layer layer of the shape
  * @param towards point the outline point aims at, in layer coordinates
- * @returns point in layer coordinates, null when `towards` is the center
+ * @returns outline point and center in layer coordinates, `stroke` width; null when `towards` is the center
  */
-export function getOutlinePoint(shape: Node, layer: Container, towards: Vector2d): Vector2d | null {
+function getOutlineCrossing(shape: Node, layer: Container, towards: Vector2d): OutlineCrossing | null {
   const { transform, box, ellipse, stroke } = getGeometry(shape, layer);
-  const toLocal = (point: Vector2d) => (transform ? transform.copy().invert().point(point) : point);
   const toLayer = (point: Vector2d) => (transform ? transform.point(point) : point);
   const c = center(box);
-  const local = toLocal(towards);
+  const local = transform ? transform.copy().invert().point(towards) : towards;
   const [dx, dy] = [local.x - c.x, local.y - c.y];
   const [rx, ry] = [Math.abs(box.width) / 2, Math.abs(box.height) / 2];
 
@@ -147,7 +145,56 @@ export function getOutlinePoint(shape: Node, layer: Container, towards: Vector2d
       ? 1 / Math.sqrt((dx / rx) ** 2 + (dy / ry) ** 2)
       : Math.min(dx ? rx / Math.abs(dx) : Infinity, dy ? ry / Math.abs(dy) : Infinity);
 
-  return moveTowards(toLayer({ x: c.x + dx * ratio, y: c.y + dy * ratio }), toLayer(c), towards, gap + stroke / 2);
+  return { point: toLayer({ x: c.x + dx * ratio, y: c.y + dy * ratio }), center: toLayer(c), stroke };
+}
+
+/**
+ * Point of shape outline on the way from its center to a point (layer coordinates), `gap` outside of it.
+ * Null when the point is the center
+ * @param shape shape or group
+ * @param layer layer of the shape
+ * @param towards point the outline point aims at, in layer coordinates
+ * @returns point in layer coordinates, null when `towards` is the center
+ */
+export function getOutlinePoint(shape: Node, layer: Container, towards: Vector2d): Vector2d | null {
+  const crossing = getOutlineCrossing(shape, layer, towards);
+
+  return crossing && moveTowards(crossing.point, crossing.center, towards, gap + crossing.stroke / 2);
+}
+
+/**
+ * Distance from the outline of a shape to a point: rectangles to their nearest side as drawn (rotation, scale),
+ * ellipses on the way from their center, other shapes to their box
+ * @param shape shape or group
+ * @param layer layer of the shape
+ * @param point point in layer coordinates (arrow end)
+ * @returns distance in layer units, negative inside (-Infinity at the center of an ellipse)
+ */
+export function getOutlineDistance(shape: Node, layer: Container, point: Vector2d): number {
+  const { transform, box, ellipse, stroke } = getGeometry(shape, layer);
+
+  if (!ellipse) {
+    const local = transform ? transform.copy().invert().point(point) : point;
+    // layer units of each axis of the shape
+    const { scaleX, scaleY } = transform ? transform.decompose() : { scaleX: 1, scaleY: 1 };
+    // negative size when drawn up or left
+    const [left, right] = [box.x, box.x + box.width].sort((a, b) => a - b);
+    const [top, bottom] = [box.y, box.y + box.height].sort((a, b) => a - b);
+    // distance out of each pair of sides, negative inside
+    const outX = Math.max(left - local.x, local.x - right) * (Math.abs(scaleX) || 1);
+    const outY = Math.max(top - local.y, local.y - bottom) * (Math.abs(scaleY) || 1);
+    const distance = outX > 0 || outY > 0 ? Math.hypot(Math.max(outX, 0), Math.max(outY, 0)) : Math.max(outX, outY);
+
+    return distance - stroke / 2;
+  }
+
+  const crossing = getOutlineCrossing(shape, layer, point);
+
+  if (!crossing) return -Infinity;
+
+  const { point: outline, center: c } = crossing;
+
+  return Math.hypot(point.x - c.x, point.y - c.y) - Math.hypot(outline.x - c.x, outline.y - c.y) - stroke / 2;
 }
 
 /**
@@ -165,14 +212,22 @@ function getAnchoredPoint(shape: Node, layer: Container, anchor: Anchor): Vector
 
 /**
  * Shape an arrow end can be linked to at a point: smallest visible shape around it (rectangles, ellipses, texts,
- * freehand drawings, groups, shapes of frames), not arrows nor lines; a frame only near its border (an arrow drawn
- * in a frame links to its shapes, or to nothing)
+ * freehand drawings, groups, shapes of frames), not arrows nor lines. Rectangles and ellipses as drawn (not their box)
+ * and path shapes (their box) near their outline, inside with a background (as their hit region: an empty inside is a
+ * free place, far from the outline of a big shape); a frame only near its border (an arrow drawn in a frame links to
+ * its shapes, or to nothing); other shapes in their box
  * @param shapes Drawing shapes (with shapes of frames, see `withFrameShapes`)
  * @param point arrow end, in coordinates of the layer of shapes
  * @param exclude Arrow being drawn
- * @returns smallest shape whose box (with `bindingMargin`) contains the point, null when none
+ * @param margin Distance from shapes (layer units) under which the end is linked: `bindingMargin` divided by the zoom
+ * @returns smallest shape near the point, null when none
  */
-export function findBindingTarget(shapes: DrawingShape[], point: Vector2d, exclude?: Node): DrawingShape | null {
+export function findBindingTarget(
+  shapes: DrawingShape[],
+  point: Vector2d,
+  exclude?: Node,
+  margin: number = bindingMargin
+): DrawingShape | null {
   const layer = shapes[0]?.getLayer();
   const around = shapes.filter((shape) => {
     if (shape === exclude || !shape.isVisible() || shape.hasName(shapeName.arrow)) return false;
@@ -182,7 +237,14 @@ export function findBindingTarget(shapes: DrawingShape[], point: Vector2d, exclu
     // distance from the point inside the box to its nearest side (negative out of it)
     const inside = Math.min(point.x - x, x + width - point.x, point.y - y, y + height - point.y);
 
-    return inside >= -bindingMargin && (!isFrame(shape) || inside <= bindingMargin);
+    if (inside < -margin) return false;
+    if (isFrame(shape)) return inside <= margin;
+    if (!layer || !(shape instanceof Shape) || !fillShapes.some((name) => shape.hasName(name))) return true;
+
+    const distance = getOutlineDistance(shape, layer, point);
+
+    // inside without background: near the outline (twice the margin: small shapes from their middle)
+    return distance <= margin && (distance >= -2 * margin || shape.hasFill());
   });
   const area = (shape: DrawingShape) => {
     const { width, height } = shape.getClientRect();

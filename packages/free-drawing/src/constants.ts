@@ -76,6 +76,9 @@ export const defaultOptions: DrawerOptions = {
   },
 };
 
+/** Pointer move on screen (px, whatever the zoom) under which a press is a click: selection, nothing drawn by shape tools */
+export const clickTolerance = 3;
+
 /**
  * Crosshair cursor of drawing tools (brush, line, eraser)
  */

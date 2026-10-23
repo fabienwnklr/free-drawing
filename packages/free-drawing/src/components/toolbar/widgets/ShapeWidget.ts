@@ -4,7 +4,7 @@ import type { DrawingShape } from '@/@types/drawer';
 import type { Vector2d } from 'konva/lib/types';
 import { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import { ShapeOverlay } from '@/components/tools/Overlay/ShapeOverlay/ShapeOverlay';
-import { crosshairCursor } from '@/constants';
+import { clickTolerance, crosshairCursor } from '@/constants';
 import { toFill } from '@/utils/color';
 import { getDash } from '@/utils/stroke';
 
@@ -209,8 +209,9 @@ export abstract class ShapeWidget<T extends DrawingShape> extends BaseWidget {
       this.pointerEvent = e.evt;
       this.endAction();
 
-      // simple click, nothing drawn (also for collaborators who got its preview)
-      if (Math.hypot(end.x - this.#start.x, end.y - this.#start.y) < 2) {
+      // simple click, nothing drawn (also for collaborators who got its preview): pointer moved less than
+      // `clickTolerance` on screen, whatever the zoom
+      if (Math.hypot(end.x - this.#start.x, end.y - this.#start.y) * this.drawer.getZoomLevel() < clickTolerance) {
         this.drawer.collaboration?.discardLive(shape);
         shape.destroy();
         this.onDrawEnd?.(null);

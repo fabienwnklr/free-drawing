@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.27.1](https://github.com/fabienwnklr/free-drawing/compare/v7.27.0...v7.27.1) (2026-10-23)
+
+
+### Bug Fixes
+
+* **arrows:** ends linked near the outline of rectangles and ellipses as drawn, not anywhere in their box: an arrow pointing at the empty inside of a big shape without background (a container) is no longer pulled to its outline, corners of the box of an ellipse or of a rotated rectangle are free; inside linked with a background, small shapes from their middle
+* **arrows:** distance of links (12 px) and of the sides of shapes on screen whatever the zoom: it was 3 px at 25 %, 48 px at 400 %
+* **shapes:** a press moved less than 3 px on screen is a click whatever the zoom (nothing drawn): at 400 %, drags of 7 px drew nothing, at 25 % a move of 1 px drew a shape
+
 ## [7.27.0](https://github.com/fabienwnklr/free-drawing/compare/v7.26.0...v7.27.0) (2026-10-23)
 
 

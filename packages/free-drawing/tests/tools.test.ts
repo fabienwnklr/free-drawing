@@ -214,9 +214,9 @@ describe('Frame', () => {
     const [copy] = drawer.duplicateShapes();
     expect(copy.getParent()).toBe(outside.getParent());
 
-    // arrows linked to shapes of frames, not to frames
+    // arrows linked to shapes of frames, not to frames (near the outline: no background)
     drawer.getWidget<BaseWidget>('arrow')!.setActive(true);
-    drag(drawer, [600, 300], [175, 175]);
+    drag(drawer, [600, 300], [155, 160]);
     const arrow = drawer.getDrawingShapes().find((shape) => shape.hasName(shapeName.arrow))!;
     expect(arrow.attrs.endBinding).toBe(outside.id());
   });

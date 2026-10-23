@@ -20,11 +20,14 @@ import { createDrawer, drag, fireMouse, keydown } from './helpers';
 
 const round = ({ x, y }: { x: number; y: number }) => ({ x: Math.round(x), y: Math.round(y) });
 
-/** Rectangle 0..200 x 0..100 (no stroke), ellipse centered at 500, 50, radius 50 */
+/** Rectangle 0..200 x 0..100 (no stroke), ellipse centered at 500, 50, radius 50, with a background (linked inside) */
 const createShapes = () => {
   const drawer = createDrawer();
-  const rect = drawer.addShape(new Rect({ name: shapeName.rect, x: 0, y: 0, width: 200, height: 100 }));
-  const ellipse = drawer.addShape(new Ellipse({ name: shapeName.ellipse, x: 500, y: 50, radiusX: 50, radiusY: 50 }));
+  const fill = '#ffffff';
+  const rect = drawer.addShape(new Rect({ name: shapeName.rect, x: 0, y: 0, width: 200, height: 100, fill }));
+  const ellipse = drawer.addShape(
+    new Ellipse({ name: shapeName.ellipse, x: 500, y: 50, radiusX: 50, radiusY: 50, fill })
+  );
 
   return { drawer, rect, ellipse };
 };
@@ -73,6 +76,70 @@ describe('Arrows linked to shapes', () => {
 
     small.hide();
     expect(findBindingTarget(shapes(), { x: 30, y: 30 })).toBe(rect);
+  });
+
+  it('Rectangles and ellipses as drawn: near their outline, inside only with a background, not corners of a box', () => {
+    const { drawer, rect, ellipse } = createShapes();
+    const shapes = () => drawer.getDrawingShapes();
+
+    // background: inside linked
+    expect(findBindingTarget(shapes(), { x: 100, y: 50 })).toBe(rect);
+    expect(findBindingTarget(shapes(), { x: 500, y: 50 })).toBe(ellipse);
+    // corner of the box of the ellipse, out of the ellipse
+    expect(findBindingTarget(shapes(), { x: 453, y: 3 })).toBeNull();
+    expect(findBindingTarget(shapes(), { x: 540, y: 85 })).toBe(ellipse);
+
+    // without background: an empty inside is a free place far from the outline (2 margins), linked from both sides
+    rect.fill(undefined);
+    ellipse.fill(undefined);
+    expect(findBindingTarget(shapes(), { x: 100, y: 50 })).toBeNull();
+    expect(findBindingTarget(shapes(), { x: 500, y: 50 })).toBeNull();
+    expect(findBindingTarget(shapes(), { x: 190, y: 50 })).toBe(rect);
+    expect(findBindingTarget(shapes(), { x: 177, y: 50 })).toBe(rect);
+    expect(findBindingTarget(shapes(), { x: 175, y: 50 })).toBeNull();
+    expect(findBindingTarget(shapes(), { x: 100, y: 108 })).toBe(rect);
+    expect(findBindingTarget(shapes(), { x: 455, y: 50 })).toBe(ellipse);
+    // rotated rectangle: its outline, not its box
+    rect.setAttrs({ x: 100, y: -50, rotation: 45 });
+    expect(findBindingTarget(shapes(), { x: 100, y: -48 })).toBe(rect);
+    expect(findBindingTarget(shapes(), { x: 250, y: -40 })).toBeNull();
+  });
+
+  it('Margin of links and simple click of the arrow tool on screen, whatever the zoom', () => {
+    const { drawer, rect } = createShapes();
+    const highlighted = () => drawer.selectionLayer.find('.binding-highlight').length;
+    /** Pointer at a point of the drawing */
+    const pointer = (type: string, x: number, y: number) => {
+      const scale = drawer.getZoomLevel();
+
+      fireMouse(drawer, type, x * scale, y * scale);
+    };
+
+    drawer.getWidget<BaseWidget>('arrow')!.setActive(true);
+    // 20 units right of the rectangle: 20 px at zoom 1, 10 px at zoom 0.5
+    pointer('mousemove', 220, 50);
+    expect(highlighted()).toBe(0);
+    drawer.setZoomLevel(0.5, { x: 0, y: 0 });
+    pointer('mousemove', 220, 50);
+    expect(highlighted()).toBe(1);
+    // 8 units: 16 px at zoom 2
+    drawer.setZoomLevel(2, { x: 0, y: 0 });
+    pointer('mousemove', 208, 50);
+    expect(highlighted()).toBe(0);
+    expect(findBindingTarget(drawer.getDrawingShapes(), { x: 208, y: 50 })).toBe(rect);
+
+    // move of 2 px on screen at zoom 2 (1 unit): a click, no arrow; 4 units at zoom 0.5 (2 px) neither
+    pointer('mousedown', 300, 300);
+    pointer('mouseup', 301, 300);
+    drawer.setZoomLevel(0.5, { x: 0, y: 0 });
+    pointer('mousedown', 300, 300);
+    pointer('mouseup', 304, 300);
+    expect(arrows(drawer)).toHaveLength(0);
+    // 8 units at zoom 0.5 (4 px): drawn
+    pointer('mousedown', 300, 300);
+    pointer('mousemove', 308, 300);
+    pointer('mouseup', 308, 300);
+    expect(arrows(drawer)).toHaveLength(1);
   });
 
   it('Arrow drawn in a frame links to its shapes or to nothing, a frame only near its border', () => {

@@ -8,7 +8,7 @@ import { Group } from 'konva/lib/Group';
 import type { Vector2d } from 'konva/lib/types';
 import { ShapeWidget, snapAngle } from '@/components/toolbar/widgets/ShapeWidget';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
-import { anchors, findBindingTarget, getAnchorAt, getAnchorPoints, getBoundEnds } from '@/utils/binding';
+import { anchors, bindingMargin, findBindingTarget, getAnchorAt, getAnchorPoints, getBoundEnds } from '@/utils/binding';
 import type { BoundEnd } from '@/@types/shapes';
 import { withFrameShapes } from '@/utils/frame';
 
@@ -129,7 +129,8 @@ export class ArrowWidget extends ShapeWidget<Arrow> {
   }
 
   /**
-   * Arrow end at a point: linked to the shape there, at the side whose middle is near
+   * Arrow end at a point: linked to the shape there, at the side whose middle is near (distances on screen, whatever
+   * the zoom)
    * @param point End of the arrow, in drawing coordinates
    * @param exclude Arrow being drawn, never its own target
    * @returns Smallest shape at point and its side (anchor, undefined far from middles), null without shape or link
@@ -137,8 +138,9 @@ export class ArrowWidget extends ShapeWidget<Arrow> {
   private _findEnd(point: Vector2d, exclude?: Arrow): BoundEnd | null {
     // shapes of frames too (smallest one: not their frame)
     const shapes = withFrameShapes(this.drawer.getDrawingShapes());
-    const shape = this._unlinked() ? null : findBindingTarget(shapes, point, exclude);
-    const tolerance = anchorTolerance / this.drawer.getZoomLevel();
+    const zoom = this.drawer.getZoomLevel();
+    const shape = this._unlinked() ? null : findBindingTarget(shapes, point, exclude, bindingMargin / zoom);
+    const tolerance = anchorTolerance / zoom;
 
     return shape && { shape, anchor: getAnchorAt(shape, this.drawer.drawLayer, point, tolerance) };
   }
