@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.23.1](https://github.com/fabienwnklr/free-drawing/compare/v7.23.0...v7.23.1) (2026-10-23)
+
+
+### Bug Fixes
+
+* **selection:** one change per drag: N selected shapes moved together fired N + 1 changes (drawing saved, `drawer.change` events, changes sent to collaborators and layers panel rebuilt each time)
+
 ## [7.23.0](https://github.com/fabienwnklr/free-drawing/compare/v7.22.6...v7.23.0) (2026-10-23)
 
 

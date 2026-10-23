@@ -102,6 +102,32 @@ describe('Snapping while moving', () => {
     expect([a.x(), b.x()]).toEqual([300, 350]);
   });
 
+  it('One change per drag: saved, in history and shared once, whatever the number of shapes moved', () => {
+    const { drawer, selectWidget, a, b } = createRects();
+    const c = drawer.addShape(new Rect({ name: shapeName.rect, x: 600, y: 100, width: 50, height: 50 }));
+    const changes = vi.fn();
+
+    drawer.stage.fire('change');
+    drawer.on('drawer.change', changes);
+    selectWidget.setActive(true);
+    selectWidget.select([a, b, c]);
+    const entries = drawer.undoRedo.entries.length;
+
+    dragBy(drawer, a, { x: 200, y: 100 }, 50);
+    expect([a.x(), b.x(), c.x()]).toEqual([150, 200, 650]);
+    expect(changes).toHaveBeenCalledTimes(1);
+    expect(drawer.undoRedo.entries).toHaveLength(entries + 1);
+
+    // shape moved alone
+    selectWidget.select([c]);
+    dragBy(drawer, c, { x: 620, y: 120 }, 20);
+    expect(changes).toHaveBeenCalledTimes(2);
+    // one undo by drag: the three shapes put back (replaced by new nodes)
+    drawer.undoRedo.undo();
+    drawer.undoRedo.undo();
+    expect([a, b, c].map((shape) => drawer.stage.findOne(`#${shape.id()}`)!.x())).toEqual([100, 150, 600]);
+  });
+
   it('Shapes moved together on the grid: the one dragged by the pointer snapped, the others follow it', () => {
     const { drawer, selectWidget, a, b } = createRects();
 

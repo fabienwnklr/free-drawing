@@ -1,6 +1,7 @@
 import '@/scss/drawer.scss';
 import { Stage } from 'konva/lib/Stage';
 import { Layer } from 'konva/lib/Layer';
+import { DD } from 'konva/lib/DragAndDrop';
 import { Toolbar } from '@/components/toolbar/Toolbar';
 import { Rect } from 'konva/lib/shapes/Rect';
 import type { AvailableTools } from '@/@types/toolbar';
@@ -618,6 +619,23 @@ export class Drawer extends MicroEvent {
   }
 
   /**
+   * Shapes dragged and released: placed in the frame containing them, one change for the whole drag. Konva ends the drag
+   * of each node moved (every selected shape, transformer of the selection): the last one fires the change (saved, in
+   * history, sent to collaborators once)
+   * @param shapes Shapes moved by the drag
+   */
+  _endDrag(shapes: DrawingShape[]) {
+    // other nodes of this drag still to end (konva removes each one once its dragend is fired)
+    const ending = [...DD._dragElements.values()].filter(
+      (elem) => elem.dragStatus === 'stopped' && elem.node.getStage() === this.stage
+    );
+
+    if (ending.length > 1) return;
+    this.placeInFrames(shapes);
+    this.stage.fire('change');
+  }
+
+  /**
    * Stop live collaboration session (drawing is kept)
    */
   stopCollaboration() {
@@ -997,9 +1015,7 @@ export class Drawer extends MicroEvent {
     this.drawLayer.on('dragend.change', (e) => {
       const selected = this.getSelectedShapes();
 
-      // moved shapes in frame containing them
-      this.placeInFrames(selected.includes(e.target as DrawingShape) ? selected : [e.target as DrawingShape]);
-      this.stage.fire('change');
+      this._endDrag(selected.includes(e.target as DrawingShape) ? selected : [e.target as DrawingShape]);
     });
 
     // moved or transformed shapes shown to collaborators while moving (selected ones move together)

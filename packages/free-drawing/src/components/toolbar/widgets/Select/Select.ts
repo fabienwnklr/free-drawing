@@ -140,10 +140,13 @@ export class SelectWidget extends BaseWidget {
     this.transformer.on('transformend dragend', (e) => {
       const nodes = this._getSelected();
 
-      // resized frames take shapes entirely in them, other shapes in frame containing them
-      if (e.type === 'transformend') {
-        for (const frame of nodes.filter(isFrame)) this.drawer.fitFrame(frame);
+      // dragged with its shapes: one change once each of them is released
+      if (e.type === 'dragend') {
+        this.drawer._endDrag(nodes);
+        return;
       }
+      // resized frames take shapes entirely in them, other shapes in frame containing them
+      for (const frame of nodes.filter(isFrame)) this.drawer.fitFrame(frame);
       this.drawer.placeInFrames(nodes);
       this.drawer.stage.fire('change');
     });
