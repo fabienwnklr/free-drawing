@@ -161,6 +161,19 @@ export abstract class ShapeWidget<T extends DrawingShape> extends BaseWidget {
   }
 
   /**
+   * Shape being drawn removed (two finger gesture), also for collaborators who got its preview
+   */
+  protected onCancel(): void {
+    const shape = this.#shape;
+
+    this.#shape = null;
+    if (!shape) return;
+    this.drawer.collaboration?.discardLive(shape);
+    shape.destroy();
+    this.onDrawEnd?.(null);
+  }
+
+  /**
    * Draw by drag: shape created on pointer down, updated on move (shared live), finished on pointer up (removed after
    * a simple click)
    */

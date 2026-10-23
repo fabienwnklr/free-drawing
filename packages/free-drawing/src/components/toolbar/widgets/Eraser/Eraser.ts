@@ -128,6 +128,16 @@ export class EraserWidget extends BaseWidget {
   }
 
   /**
+   * Erasing cancelled (two finger gesture): shapes kept with their opacity, trail stopped
+   */
+  protected onCancel(): void {
+    for (const [shape, opacity] of this.#toErase) shape.opacity(opacity);
+    this.#toErase.clear();
+    this.#last = null;
+    this.#trail.stop();
+  }
+
+  /**
    * Erasing stopped before pointer up (tool changed): shapes kept with their opacity, trail removed
    */
   protected onDesactive(): void {

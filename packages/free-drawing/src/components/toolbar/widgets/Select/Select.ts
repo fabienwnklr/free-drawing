@@ -620,6 +620,14 @@ export class SelectWidget extends BaseWidget {
   }
 
   /**
+   * Press cancelled (two finger gesture): no selection rectangle, nothing selected by its release
+   */
+  protected onCancel(): void {
+    this.#press = null;
+    this.selectionRectangle.visible(false);
+  }
+
+  /**
    * Select every shape of the drawing (nothing if drawing is empty), focus back on drawer
    */
   selectAll() {

@@ -12,7 +12,7 @@ import type { StampsPlugin } from '../StampsPlugin';
  * - constructor: id, title, icon and shortcut;
  * - `cursor`, `initEvents` with `onStage` (events of the stage while the tool is active);
  * - pointer action (`startAction`, `endAction`), `shareLive`, `afterDraw`;
- * - `onActive`, `onDesactive`, `onConstrainChange`.
+ * - `onActive`, `onDesactive`, `onCancel`, `onConstrainChange`.
  */
 export class StampWidget extends BaseWidget {
   /** Cursor of the stage while the tool is active */
@@ -81,6 +81,19 @@ export class StampWidget extends BaseWidget {
    */
   protected onDesactive() {
     if (this.#stamp) this._finish();
+  }
+
+  /**
+   * Action cancelled (`cancelAction`: second finger on the canvas of a touch screen, pinch zoom): stamp being placed
+   * removed, also for the other users of a collaboration session who saw it move
+   */
+  protected onCancel() {
+    const stamp = this.#stamp;
+
+    this.#stamp = null;
+    if (!stamp) return;
+    this.drawer.collaboration?.discardLive(stamp);
+    stamp.destroy();
   }
 
   /**

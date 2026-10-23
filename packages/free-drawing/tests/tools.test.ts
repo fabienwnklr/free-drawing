@@ -14,7 +14,7 @@ import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import { scalePath } from '@/components/toolbar/widgets/PathShapeWidget';
 import { shapeName } from '@/constants';
 import { parseDrawingFile } from '@/utils/drawingFile';
-import { createDrawer, drag, fireMouse, keydown } from './helpers';
+import { createDrawer, drag, finger, fireMouse, fireTouch, keydown } from './helpers';
 
 /** Text of a blob (jsdom has no `blob.text()`) */
 const readText = (blob: Blob) =>
@@ -547,6 +547,92 @@ describe('Pointer actions', () => {
     const stroke = drawer.getDrawingShapes()[1].getClientRect();
     expect(drawer.getDrawingShapes()).toHaveLength(2);
     expect(stroke.x + stroke.width).toBeLessThan(300);
+  });
+
+  it('Two fingers on the canvas: drawing of the first one cancelled, pinch zooms and moves the view', () => {
+    const drawer = createDrawer({ keepTool: true });
+    const touch = (type: string, fingers: ReturnType<typeof finger>[], changed = fingers) =>
+      fireTouch(drawer, type, fingers, changed);
+    const live = vi.fn();
+
+    drawer.getWidget<BaseWidget>('square')!.setActive(true);
+    touch('touchstart', [finger(0, 100, 100)]);
+    touch('touchmove', [finger(0, 140, 120)]);
+    expect(drawer.getDrawingShapes()).toHaveLength(1);
+    drawer.on('drawer.change', live);
+
+    // second finger: square being drawn removed, no change
+    touch('touchstart', [finger(0, 140, 120), finger(1, 240, 120)], [finger(1, 240, 120)]);
+    expect(drawer.getDrawingShapes()).toHaveLength(0);
+    expect(drawer._duringAction()).toBe(false);
+    expect(drawer.gestures.active).toBe(true);
+
+    // fingers twice as far apart: zoom 2, drawing point under their middle (190, 120) kept under it
+    touch('touchmove', [finger(0, 90, 120), finger(1, 290, 120)]);
+    expect(drawer.getZoomLevel()).toBe(2);
+    expect(drawer.stage.position()).toEqual({ x: -190, y: -120 });
+    // moved together: view moved
+    touch('touchmove', [finger(0, 100, 150), finger(1, 300, 150)]);
+    expect(drawer.stage.position()).toEqual({ x: -180, y: -90 });
+
+    // fingers lifted: the last one draws nothing
+    touch('touchend', [finger(1, 300, 150)], [finger(0, 100, 150)]);
+    touch('touchmove', [finger(1, 320, 200)]);
+    touch('touchend', [], [finger(1, 320, 200)]);
+    expect(drawer.gestures.active).toBe(false);
+    expect(drawer.getDrawingShapes()).toHaveLength(0);
+    expect(live).not.toHaveBeenCalled();
+
+    // one finger again: drawing
+    touch('touchstart', [finger(2, 100, 100)]);
+    touch('touchmove', [finger(2, 160, 140)]);
+    touch('touchend', [], [finger(2, 160, 140)]);
+    expect(drawer.getDrawingShapes()).toHaveLength(1);
+  });
+
+  it('Two fingers on the canvas: stroke of the brush removed, shapes faded by the eraser kept', () => {
+    const drawer = createDrawer({ keepTool: true });
+    const touch = (type: string, fingers: ReturnType<typeof finger>[], changed = fingers) =>
+      fireTouch(drawer, type, fingers, changed);
+    const live = vi.fn();
+
+    drawer.getWidget<BaseWidget>('brush')!.setActive(true);
+    touch('touchstart', [finger(0, 100, 100)]);
+    touch('touchmove', [finger(0, 150, 120)]);
+    expect(drawer.getDrawingShapes()).toHaveLength(1);
+    drawer.on('drawer.change', live);
+    touch('touchstart', [finger(0, 150, 120), finger(1, 300, 300)], [finger(1, 300, 300)]);
+    expect(drawer.getDrawingShapes()).toHaveLength(0);
+    touch('touchend', [], [finger(0, 150, 120), finger(1, 300, 300)]);
+    expect(drawer.getDrawingShapes()).toHaveLength(0);
+    expect(live).not.toHaveBeenCalled();
+
+    // shape faded while erased: opacity back, kept
+    const square = drawer.addShape(new Rect({ x: 0, y: 0, width: 50, height: 50, opacity: 0.8 }));
+
+    drawer.getWidget<BaseWidget>('eraser')!.setActive(true);
+    // no hit canvas in jsdom
+    vi.spyOn(drawer.drawLayer, 'getIntersection').mockReturnValue(square as Shape);
+    touch('touchstart', [finger(2, 20, 20)]);
+    expect(square.opacity()).toBeLessThan(0.8);
+    touch('touchstart', [finger(2, 20, 20), finger(3, 300, 300)], [finger(3, 300, 300)]);
+    expect(square.opacity()).toBe(0.8);
+    touch('touchend', [], [finger(2, 20, 20), finger(3, 300, 300)]);
+    expect(square.opacity()).toBe(0.8);
+    expect(drawer.getDrawingShapes()).toEqual([square]);
+    expect(live).not.toHaveBeenCalled();
+  });
+
+  it('Two fingers on the canvas with zoom option off: view moved, zoom kept', () => {
+    const drawer = createDrawer({ zoom: false });
+    const touch = (type: string, fingers: ReturnType<typeof finger>[], changed = fingers) =>
+      fireTouch(drawer, type, fingers, changed);
+
+    touch('touchstart', [finger(0, 100, 100), finger(1, 200, 100)]);
+    touch('touchmove', [finger(0, 50, 130), finger(1, 250, 130)]);
+    expect(drawer.getZoomLevel()).toBe(1);
+    expect(drawer.stage.position()).toEqual({ x: 0, y: 30 });
+    touch('touchend', [], [finger(0, 50, 130), finger(1, 250, 130)]);
   });
 
   it('Pointer released with an event of the window (not a node): action ended there', () => {

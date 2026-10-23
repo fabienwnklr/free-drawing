@@ -137,7 +137,7 @@ export abstract class BaseWidget {
    * Listen stage events while widget is active.
    * Events are namespaced with widget id, so they are removed on deactivation without removing other listeners.
    * One pointer at a time: during a pointer action, another press (second finger, other button) is ignored, and a
-   * touch action ends when its finger is lifted, where it is lifted.
+   * touch action ends when its finger is lifted, where it is lifted. Touches of a two finger gesture are ignored.
    * @param events Space separated event names
    * @param handler Konva listener called with the stage event
    */
@@ -150,6 +150,8 @@ export abstract class BaseWidget {
     this.drawer.stage.on(namespaced, (e) => {
       const evt = e.evt as TouchEvent;
 
+      // two finger gesture (zoom, move of the view): touches ignored until every finger is lifted
+      if (this.drawer.gestures?.active && e.type.startsWith('touch')) return;
       if (this.inAction && (e.type === 'mousedown' || e.type === 'touchstart')) return;
       if (this.inAction && e.type === 'touchend') {
         const touch = [...(evt.changedTouches ?? [])].find(({ identifier }) => identifier === this.#touchId);
@@ -221,6 +223,20 @@ export abstract class BaseWidget {
     this.drawer.layout.setPointerEvents('none');
     this._followPointer();
   }
+
+  /**
+   * Pointer action cancelled (two finger gesture of the drawer: zoom and move of the view): its result is discarded
+   * (`onCancel`: shape being drawn removed...), then it ends without change
+   */
+  cancelAction() {
+    this.onCancel?.();
+    if (this.inAction) this.endAction();
+  }
+
+  /**
+   * Result of the pointer action discarded before it is cancelled (see `cancelAction`), also called without action
+   */
+  protected onCancel?(): void;
 
   /**
    * Pointer action ends (pointer up)

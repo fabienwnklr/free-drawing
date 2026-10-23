@@ -2,6 +2,12 @@
 
 Changes of `@fabwcie/create-free-drawing-plugin` (`npm create @fabwcie/free-drawing-plugin`). Each version is published by the release workflow of the library once it is not on npm yet.
 
+## 1.0.1 (2026-10-23)
+
+### Bug Fixes
+
+- template: the stamp being placed is removed when a second finger pinches on a touch screen (`onCancel`, library 7.24.0), it stayed in the drawing without being saved
+
 ## 1.0.0 (2026-10-20)
 
 ### Features

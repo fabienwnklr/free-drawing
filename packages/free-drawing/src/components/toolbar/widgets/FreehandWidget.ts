@@ -58,6 +58,16 @@ export abstract class FreehandWidget extends BaseWidget {
   }
 
   /**
+   * Stroke being drawn removed (two finger gesture), also for collaborators who got its preview
+   */
+  protected onCancel(): void {
+    if (!this.inAction) return;
+    this.#allPoints = [];
+    this.drawer.collaboration?.discardLive(this.#lastLine);
+    this.#lastLine.destroy();
+  }
+
+  /**
    * Draw by drag: closed line added on pointer down, its outline follows the pointer (shared live), finished on
    * pointer up
    */

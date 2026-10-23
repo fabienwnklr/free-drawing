@@ -43,14 +43,26 @@ export class PanWidget extends BaseWidget {
       this.drawer.$stageContainer.style.cursor = grabbingCursor;
     });
 
-    this.onStage('mouseup touchend', () => {
-      if (this.hasMoved) {
-        this.drawer.stage.fire('change');
-      }
-      this.endAction();
-      this.hasMoved = false;
-      this.updateCursor();
-    });
+    this.onStage('mouseup touchend', () => this._release());
+  }
+
+  /**
+   * Second finger on the canvas (pinch zoom): view drag ended as on pointer up
+   */
+  protected onCancel(): void {
+    this._release();
+  }
+
+  /**
+   * End of the view drag: change fired when the view moved (view saved), cursor back
+   */
+  private _release() {
+    if (this.hasMoved) {
+      this.drawer.stage.fire('change');
+    }
+    this.endAction();
+    this.hasMoved = false;
+    this.updateCursor();
   }
 
   /**

@@ -93,6 +93,22 @@ describe('Stamps plugin (template)', () => {
     expect(drawer.activeTool).toBe('selection');
   });
 
+  it('Stamp tool: stamp being placed removed when the action is cancelled (second finger: pinch zoom)', async () => {
+    const drawer = createDrawer({ plugins: [StampsPlugin] });
+    const stamp = drawer.getWidget<BaseWidget>('stamp')!;
+
+    await drawer.ready;
+    stamp.setActive(true);
+    pointer(drawer, 'mousedown', 100, 100);
+    pointer(drawer, 'mousemove', 160, 120);
+    stamp.cancelAction();
+    expect(drawer.getDrawingShapes()).toHaveLength(0);
+    expect(drawer._duringAction()).toBe(false);
+    pointer(drawer, 'mouseup', 160, 120);
+    expect(drawer.getDrawingShapes()).toHaveLength(0);
+    expect(drawer.undoRedo.canUndo()).toBe(false);
+  });
+
   it('Zone tool: shape drawn in the dragged box, named in the layers panel', async () => {
     const drawer = createDrawer({ plugins: [StampsPlugin] });
 

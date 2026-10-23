@@ -197,6 +197,11 @@
     overflow: hidden;
   }
 
+  // fingers on the canvas draw, pinch and move the view of the drawer, never scroll nor zoom the page
+  .konvajs-content {
+    touch-action: none;
+  }
+
   &:not(.is-full) .konvajs-content {
     width: fit-content;
     border-radius: $radius-lg;

@@ -44,3 +44,28 @@ export const drag = (drawer: Drawer, from: [number, number], to: [number, number
   fireMouse(drawer, 'mousemove', ...to, evt);
   fireMouse(drawer, 'mouseup', ...to, evt);
 };
+
+/**
+ * Finger of a touch event (jsdom has no `Touch`)
+ */
+export const finger = (identifier: number, clientX: number, clientY: number) => ({ identifier, clientX, clientY });
+
+/**
+ * Dispatch a touch event of the page on the canvas: konva and tools first, then touch gestures
+ * (`fingers`: fingers on the canvas after it, `changed`: fingers pressed, moved or lifted)
+ */
+export const fireTouch = (
+  drawer: Drawer,
+  type: string,
+  fingers: ReturnType<typeof finger>[],
+  changed: ReturnType<typeof finger>[]
+) => {
+  const event = new Event(type, { bubbles: true, cancelable: true });
+
+  Object.defineProperties(event, {
+    touches: { value: fingers },
+    targetTouches: { value: fingers },
+    changedTouches: { value: changed },
+  });
+  drawer.stage.content.dispatchEvent(event);
+};

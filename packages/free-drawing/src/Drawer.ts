@@ -2,6 +2,7 @@ import '@/scss/drawer.scss';
 import { Stage } from 'konva/lib/Stage';
 import { Layer } from 'konva/lib/Layer';
 import { DD } from 'konva/lib/DragAndDrop';
+import { TouchGestures } from '@/utils/TouchGestures';
 import { Toolbar } from '@/components/toolbar/Toolbar';
 import { Rect } from 'konva/lib/shapes/Rect';
 import type { AvailableTools } from '@/@types/toolbar';
@@ -213,6 +214,8 @@ export class Drawer extends MicroEvent {
   frameHighlight!: FrameHighlight;
   /** Icons of shapes having a link, in the selection layer (see `setShapeLink`) */
   shapeLinks!: ShapeLinks;
+  /** Two finger gestures on the canvas: pinch zoom and move of the view (tools ignore touches while `active`) */
+  gestures!: TouchGestures;
   /** Shapes being dragged or transformed: frames they come from, end of drawing above the drawing (`drawAbove`) */
   #moving: { shapes: DrawingShape[]; from: Map<DrawingShape, Frame | null>; drawInFrames: () => void } | null = null;
   /** Toolbar of the footer: widgets (tools) and their groups */
@@ -1000,6 +1003,7 @@ export class Drawer extends MicroEvent {
     this._initKeyboardFocus();
     this._initFrameMoves();
     this.shapeLinks = new ShapeLinks(this);
+    this.gestures = new TouchGestures(this);
 
     this.stage.on('dragmove', (e) => {
       // shapes drag events bubble to stage, only stage drag (pan) moves the view

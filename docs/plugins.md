@@ -167,6 +167,7 @@ class StampWidget extends BaseWidget {
 | `afterDraw()`                                       | Shape drawn: the selection tool comes back, unless the user keeps the tool (pin of the toolbar)                                                                                    |
 | `onActive()` / `onDesactive()`                      | Tool chosen, another tool chosen                                                                                                                                                   |
 | `onConstrainChange(constrain)`                      | Shift pressed or released during a pointer action, pointer not moved                                                                                                               |
+| `onCancel()`                                        | Pointer action cancelled by `cancelAction()` (a second finger on a touch screen pinches): remove what the action was drawing, then the action ends                                 |
 | `clearSelection()`                                  | Nothing selected                                                                                                                                                                   |
 
 `ShapeWidget` draws in the dragged box: it creates the shape on press, updates it while the pointer moves (shared live), removes it after a simple click, places it in frames, saves the change and gives back the selection tool. The tool implements `createShape(start)` and `updateShape(shape, start, end, constrain)`, may implement `onDrawEnd(shape)`, and gets the options panel of shape tools (stroke, background with `hasFill`, width, opacity) with `shapeStyle`.
@@ -328,7 +329,7 @@ The [plugin template](https://github.com/fabienwnklr/free-drawing/tree/master/pa
 | File                                   | Shows                                                                                            |
 | -------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | `src/StampsPlugin.ts`                  | Static members, options, every step, commands with every field, listeners, enabled state, shapes |
-| `src/widgets/StampWidget.ts`           | Tool based on `BaseWidget`: pointer action, live sharing, Shift, activation                      |
+| `src/widgets/StampWidget.ts`           | Tool based on `BaseWidget`: pointer action (cancelled too), live sharing, Shift, activation      |
 | `src/widgets/ZoneWidget.ts`            | Tool based on `ShapeWidget`: shape drawn in the dragged box                                      |
 | `src/StampCounterPlugin.ts`            | Plugin requiring another one, element of the header, `destroy`                                   |
 | `src/translations.ts`, `src/style.css` | Texts in four languages, scoped styles                                                           |

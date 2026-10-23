@@ -76,6 +76,13 @@ export class LaserWidget extends BaseWidget {
   }
 
   /**
+   * Second finger on the canvas (pinch zoom): laser stopped
+   */
+  protected onCancel(): void {
+    this._stop();
+  }
+
+  /**
    * Stop laser (pointer up or tool changed): trail fades out, pointer action ended, collaborators notified
    */
   private _stop() {

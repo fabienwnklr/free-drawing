@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.24.0](https://github.com/fabienwnklr/free-drawing/compare/v7.23.1...v7.24.0) (2026-10-23)
+
+
+### Features
+
+* **touch:** two fingers on the drawing zoom it by pinching (`zoom` option) and move the view, with any tool and in read only. The second finger cancels the action of the first one (shape or stroke being drawn removed, also for collaborators, faded shapes of the eraser kept, selection rectangle, laser and drags stopped), nothing is drawn until every finger is lifted; fingers on the drawing no longer scroll nor zoom the page
+* **plugins:** `BaseWidget.cancelAction()` cancels the pointer action of a tool, `onCancel()` removes what it was drawing (done by `ShapeWidget`)
+
 ## [7.23.1](https://github.com/fabienwnklr/free-drawing/compare/v7.23.0...v7.23.1) (2026-10-23)
 
 
