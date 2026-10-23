@@ -50,6 +50,9 @@ export default defineConfig({
     },
     environment: 'jsdom',
     threads: false,
+    // every test file in one process (one jsdom document): its memory grows with the drawers of the tests, which are
+    // never destroyed, over the 4 GB of the heap of node (crash with code 134)
+    env: { NODE_OPTIONS: [process.env.NODE_OPTIONS, '--max-old-space-size=8192'].filter(Boolean).join(' ') },
     setupFiles: ['./vitest.setup.ts'],
     // For this config, check https://github.com/vitest-dev/vitest/issues/740
     environmentOptions: {

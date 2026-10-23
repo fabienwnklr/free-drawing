@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeAll } from 'vitest';
+import { describe, expect, it, beforeAll, vi } from 'vitest';
 import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import type { BrushWidget } from '@/components/toolbar/widgets/Brush/Brush';
 import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
@@ -170,6 +170,39 @@ describe('Accessibility', () => {
     drawer.setTextStyle({ fontStyle: 'bold' });
     expect(bold?.getAttribute('aria-pressed')).toBe('true');
     expect(labelledBy(textOverlay.$fontFamilySelect)).toBe('Font family');
+  });
+
+  it('Drawer created or tool changed: focus of a field or a dialog kept, page never scrolled to the drawer', () => {
+    const $field = document.createElement('input');
+    const focus = vi.spyOn(HTMLElement.prototype, 'focus');
+
+    document.body.append($field);
+    $field.focus();
+    const drawer = createDrawer();
+
+    // created while the user types in the page
+    expect(document.activeElement).toBe($field);
+    // tool changed by code (e.g. right to draw removed by the owner of a collaboration session)
+    drawer.setReadOnly(true);
+    expect(drawer.activeTool).toBe('pan');
+    expect(document.activeElement).toBe($field);
+    drawer.setReadOnly(false);
+
+    // in a dialog of the drawer
+    drawer.showPreferences();
+    const $inDialog = document.activeElement;
+
+    expect(drawer.preferencesModal!.$modal.contains($inDialog)).toBe(true);
+    drawer.getWidget<BaseWidget>('pan')!.setActive(true);
+    expect(document.activeElement).toBe($inDialog);
+    drawer.preferencesModal!.hide();
+
+    // nothing focused: drawer focused (its shortcuts), page not scrolled
+    $field.remove();
+    drawer.getWidget<BaseWidget>('selection')!.setActive(true);
+    expect(document.activeElement).toBe(drawer.$drawerContainer);
+    expect(focus).toHaveBeenLastCalledWith({ preventScroll: true });
+    focus.mockRestore();
   });
 
   it('Font list browsed with the keyboard, drawer focused again after a choice with the pointer', () => {

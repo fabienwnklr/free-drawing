@@ -21,7 +21,7 @@ import type {
 import type { CollaborationOptions, CollaborationSocket, ViewArea } from '@/@types/collaboration';
 import { createId, deepMerge } from '@/utils/functions';
 import { defaultOptions, drawerEvents, gridSize, shapeLabels, shapeName, zoomLimits } from '@/constants';
-import { setPressed } from '@/utils/dom';
+import { hasFocusOutside, setPressed } from '@/utils/dom';
 import { getStrokeStyle } from '@/utils/stroke';
 import { reorderShapes } from '@/utils/order';
 import { rectContains, setupHit } from '@/utils/hit';
@@ -446,7 +446,7 @@ export class Drawer extends MicroEvent {
 
     // dialogs, toasts... after footer
     this.layout.ready();
-    this.focus();
+    this._takeFocus();
     this.undoRedo.manageButtons();
     this._initEvents();
     // drawer created: commands, listeners of plugins (read only after: plugins may listen to it)
@@ -2667,6 +2667,23 @@ export class Drawer extends MicroEvent {
    */
   focus(options?: FocusOptions) {
     this.$drawerContainer.focus(options);
+  }
+
+  /**
+   * Focus the drawer (its shortcuts) when it is created or its tool changes, unless the user is elsewhere: on another
+   * element of the page, in a field or a dialog of the drawer (e.g. tool changed by the right to draw given by the owner
+   * of a collaboration session); the page is not scrolled to the drawer
+   */
+  _takeFocus() {
+    const $active = document.activeElement;
+
+    if (hasFocusOutside(this.$drawerContainer)) return;
+    if ($active instanceof HTMLElement && $active !== this.$drawerContainer) {
+      const field = $active.matches('input, textarea, select, [contenteditable="true"]');
+
+      if (field || $active.closest('[role="dialog"], [role="alertdialog"]')) return;
+    }
+    this.focus({ preventScroll: true });
   }
 
   /**

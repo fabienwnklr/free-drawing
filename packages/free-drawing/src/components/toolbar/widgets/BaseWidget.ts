@@ -337,7 +337,8 @@ export abstract class BaseWidget {
       this.updateCursor();
       if (this.showOverlayOnActive) this.overlay?.show();
       this.onActive();
-      this.drawer.focus();
+      // shortcuts of the drawer, unless the user is in a field or a dialog, or out of the drawer
+      this.drawer._takeFocus();
     } else {
       // pointer action stopped by tool change: shortcuts and UI usable again
       if (this.inAction) this.endAction();

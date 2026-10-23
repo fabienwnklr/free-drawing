@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.22.6](https://github.com/fabienwnklr/free-drawing/compare/v7.22.5...v7.22.6) (2026-10-23)
+
+
+### Bug Fixes
+
+* **focus:** a drawer created below the fold no longer scrolls the page to it; created or changing its tool by code (e.g. right to draw given or removed by the owner of a collaboration session), it no longer takes the focus of a field of the page or of a dialog
+
 ## [7.22.5](https://github.com/fabienwnklr/free-drawing/compare/v7.22.4...v7.22.5) (2026-10-23)
 
 
