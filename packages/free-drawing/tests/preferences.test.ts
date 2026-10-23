@@ -85,6 +85,12 @@ describe('Preferences', () => {
     expect(modal.$modal.querySelector('.drawer-modal-title')!.textContent).toBe('Preferences');
     expect(modal.$themes.find(($radio) => $radio.checked)!.value).toBe('light');
     expect([modal.$cancelButton.textContent, modal.$saveButton.textContent]).toEqual(['Cancel', 'Save']);
+    // shortcut of the same setting out of the dialog: shown, not a shortcut of the switch nor in its name
+    const $zenShortcut = modal.$zen.closest('label')!.querySelector('kbd')!;
+
+    expect($zenShortcut.textContent).toBe('Alt+Z');
+    expect($zenShortcut.getAttribute('aria-hidden')).toBe('true');
+    expect(modal.$zen.hasAttribute('aria-keyshortcuts')).toBe(false);
 
     // fields changed: nothing applied yet
     modal.$themes[1].click();

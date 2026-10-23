@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.28.4](https://github.com/fabienwnklr/free-drawing/compare/v7.28.3...v7.28.4) (2026-10-23)
+
+
+### Bug Fixes
+
+* **a11y:** switches of the preferences dialog are named by their label only (the shortcut shown next to them was in their name) and no longer announce a shortcut that does nothing in the dialog (`aria-keyshortcuts`)
+* **a11y:** the collaboration dialog opened by an invitation link focuses the name to give before joining (it focused its first button)
+
 ## [7.28.3](https://github.com/fabienwnklr/free-drawing/compare/v7.28.2...v7.28.3) (2026-10-23)
 
 

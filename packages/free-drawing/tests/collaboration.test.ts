@@ -559,6 +559,8 @@ describe('Collaboration', () => {
     window.location.hash = '#room=xyz&by=alice';
     const invited = createDrawer({ collaboration: true });
     await tick();
+    // name to give first: focused
+    expect(document.activeElement).toBe(invited.collaborationModal!.$name);
     invited.collaborationModal!.$name.value = 'Carol';
     invited.collaborationModal!.$name.dispatchEvent(new Event('input'));
     invited.collaborationModal!.$joinButton.click();

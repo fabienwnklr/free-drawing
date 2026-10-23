@@ -6,7 +6,7 @@ import { languages } from '@/i18n/I18n';
 import type { Language, TranslationKey } from '@/@types/i18n';
 import { drawerEvents } from '@/constants';
 import { createButton, createSwitch, isComposing, uniqueId } from '@/utils/dom';
-import { ariaShortcut, formatShortcut } from '@/utils/shortcut';
+import { formatShortcut } from '@/utils/shortcut';
 import type { Choice } from '@/@types/ui';
 
 const themes: Choice<Theme>[] = [
@@ -230,10 +230,11 @@ export class PreferencesModal extends Modal {
   }
 
   /**
-   * Switch at the end of its row: label, shortcut doing the same (if any)
+   * Switch at the end of its row: label, shortcut doing the same out of the dialog (if any)
    * @param $container Section receiving the row
-   * @param label Key of the label text (translated again when language changes)
-   * @param shortcut Keys doing the same out of the dialog, shown and set as `aria-keyshortcuts`
+   * @param label Key of the label text (translated again when language changes), name of the switch
+   * @param shortcut Keys doing the same out of the dialog, shown only: not a shortcut of the switch (the dialog applies
+   * its fields with Save), not in its name
    * @returns Switch input, unchecked until `update`
    */
   private _createSwitch($container: HTMLElement, label: TranslationKey, shortcut?: string) {
@@ -245,7 +246,8 @@ export class PreferencesModal extends Modal {
     $label.className = 'drawer-preferences-switch';
     $shortcut.className = 'drawer-preferences-shortcut';
     $shortcut.hidden = !shortcut;
-    if (shortcut) $switch.setAttribute('aria-keyshortcuts', ariaShortcut(shortcut));
+    // hint for the eyes: the name of the switch is its label
+    $shortcut.setAttribute('aria-hidden', 'true');
     $label.append($text, $shortcut, $switch);
     $container.append($label);
     this.drawer.i18n.translate((t) => {

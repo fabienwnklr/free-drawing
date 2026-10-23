@@ -160,7 +160,7 @@ export class CollaborationModal extends Modal {
   }
 
   /**
-   * Show dialog
+   * Show dialog, its name field focused for a link (the name to give before joining)
    * @param joinRoom Room of a link: user gives a name before joining it
    * @param invitedBy Id of user who shared the link
    */
@@ -170,6 +170,11 @@ export class CollaborationModal extends Modal {
     this.$name.value = this.drawer.getUserName();
     this.update();
     super.show();
+    if (joinRoom) {
+      this.$name.focus();
+      // name kept or typed again
+      this.$name.select();
+    }
   }
 
   /**

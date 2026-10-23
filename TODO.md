@@ -85,9 +85,9 @@
 - [x] error details in English inside translated toasts ("clipboard unavailable", "not a drawing file", "server unreachable", "nothing to export")
 - [x] translations: es `collab.start` reads as "sign in", de `edges.sharp` should be "Eckig"
 - [x] GitHub menu item: `window.open(url, 'blank')` opens a window named blank without `noopener`, use a link with `target="_blank" rel="noopener"` (`Settings.ts`): button kept (public `$githubButton` type), `window.open(url, '_blank', 'noopener,noreferrer')` as links of shapes
-- [ ] preferences switches: `aria-keyshortcuts` of shortcuts not working in the dialog, `<kbd>` in the accessible name (`PreferencesModal.ts`)
+- [x] preferences switches: `aria-keyshortcuts` of shortcuts not working in the dialog, `<kbd>` in the accessible name (`PreferencesModal.ts`)
 - [ ] theming: `color-scheme: light` on light theme (dark host pages), custom color swatch converted in dark mode, help grid scrolls under 380 px wide
-- [ ] collaboration dialog opened from an invitation link: focus the name field
+- [x] collaboration dialog opened from an invitation link: focus the name field
 - [ ] tests of the collaboration server: impersonation, rights, empty rooms, ownership
 
 ## Tooling
