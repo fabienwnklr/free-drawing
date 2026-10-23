@@ -11,8 +11,9 @@ export const socketEvents = {
   /** Users of the room `{ id, name, owner, canEdit, invitedBy }` (sent by server) */
   USERS: 'USERS',
   /**
-   * Drawing change `{ upsert, remove, order, live, full }`: shapes added or updated, ids of removed shapes, stacking
-   * order, preview of shapes being drawn, whole drawing of the room (sent by server to a joining user)
+   * Drawing change `{ upsert, remove, order, live, full, background }`: shapes added or updated, ids of removed shapes,
+   * stacking order, preview of shapes being drawn, whole drawing of the room (sent by server to a joining user, with
+   * its background once a user sent one), background color when changed
    */
   CHANGE: 'CHANGE',
   /** Pointer of a user: canvas position (null out of drawer), with user id and name from server */

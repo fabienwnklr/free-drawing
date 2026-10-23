@@ -332,11 +332,16 @@ export class Settings extends Dropdown {
     this.$copyLinkButton.addEventListener('click', () => this.drawer.copyLink());
     this.$exportButton.addEventListener('click', () => this.drawer.showExport());
     this.$collaborationButton.addEventListener('click', () => this.drawer.showCollaboration());
-    // read only: no item modifying drawing
+    // read only: no item modifying drawing, background color included (part of the drawing, shared in collaboration)
     this.drawer.on(drawerEvents.readOnlyChange, (readOnly: boolean) => {
       for (const $item of [this.$openButton, this.$clearCanvasButton]) {
         if (readOnly) disableElement($item);
         else enableElement($item);
+      }
+      for (const $choice of this.$bgColorBtnContainer.querySelectorAll<HTMLButtonElement | HTMLInputElement>(
+        'button, input'
+      )) {
+        $choice.disabled = readOnly;
       }
     });
     // session state shown in menu

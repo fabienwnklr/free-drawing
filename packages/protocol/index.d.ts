@@ -11,8 +11,9 @@ export declare const socketEvents: {
   /** Users of the room `{ id, name, owner, canEdit, invitedBy }` (sent by server) */
   readonly USERS: 'USERS';
   /**
-   * Drawing change `{ upsert, remove, order, live, full }`: shapes added or updated, ids of removed shapes, stacking
-   * order, preview of shapes being drawn, whole drawing of the room (sent by server to a joining user)
+   * Drawing change `{ upsert, remove, order, live, full, background }`: shapes added or updated, ids of removed shapes,
+   * stacking order, preview of shapes being drawn, whole drawing of the room (sent by server to a joining user, with
+   * its background once a user sent one), background color when changed
    */
   readonly CHANGE: 'CHANGE';
   /** Pointer of a user: canvas position `{ x, y, laser }` (null out of drawer, `laser` while laser pointer is used), with user id and name from server */

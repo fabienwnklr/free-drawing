@@ -34,13 +34,30 @@ describe('Drawing files and links', () => {
     const drawer = createDrawer();
     const rect = drawer.addShape(new Rect({ name: 'drawer-rect', width: 10, height: 10 }));
     drawer.stage.fire('change');
+    const background = drawer.background.fill();
 
     drawer.loadDrawing(JSON.stringify(file));
     expect(drawer.getDrawingShapes().map((s) => s.attrs.text)).toEqual(['hello']);
     expect(drawer.background.fill()).toBe('#f8f9fa');
 
+    // background of the drawing too
     drawer.undoRedo.undo();
     expect(drawer.getDrawingShapes().map((s) => s.id())).toEqual([rect.id()]);
+    expect(drawer.background.fill()).toBe(background);
+    // shown in the settings menu
+    const pressed = drawer.setting.$bgColorBtnContainer.querySelector('[aria-pressed="true"]');
+
+    expect(pressed?.getAttribute('data-bg-color')).toBe(background);
+    drawer.undoRedo.redo();
+    expect(drawer.background.fill()).toBe('#f8f9fa');
+
+    // background changed alone
+    drawer.setBgColor('#fffce8');
+    drawer.undoRedo.undo();
+    expect(drawer.background.fill()).toBe('#f8f9fa');
+    expect(drawer.getDrawingShapes().map((s) => s.attrs.text)).toEqual(['hello']);
+    drawer.undoRedo.redo();
+    expect(drawer.background.fill()).toBe('#fffce8');
   });
 
   it('Invalid files are rejected, other shapes than drawing ones are ignored', () => {

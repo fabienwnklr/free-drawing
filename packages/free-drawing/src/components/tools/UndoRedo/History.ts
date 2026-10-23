@@ -1,7 +1,7 @@
 import type { Drawer } from '@/Drawer';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { Node } from 'konva/lib/Node';
-import type { DrawingShape } from '@/@types/drawer';
+import type { ColorLike, DrawingShape } from '@/@types/drawer';
 import { historyLimit } from '@/constants';
 import type { HistoryChange, HistoryEntry, ShapeState } from '@/@types/file';
 import { applyOrder } from '@/utils/order';
@@ -36,8 +36,8 @@ export function serializeShape(shape: DrawingShape): string {
 }
 
 /**
- * Undo / redo history of the changes of this user: shapes added, changed or removed by each change, at most
- * `historyLimit` states. Changes of other users (collaboration) are not recorded, undo and redo keep them
+ * Undo / redo history of the changes of this user: shapes added, changed or removed by each change, and background
+ * color, at most `historyLimit` states. Changes of other users (collaboration) are not recorded, undo and redo keep them
  */
 export class History {
   /** Changes of the drawing made by this user, oldest first */
@@ -48,6 +48,8 @@ export class History {
   drawer: Drawer;
   /** Drawing as last recorded (JSON of each shape by id, bottom first): next change of this user compared with it */
   #known = new Map<string, string>();
+  /** Background color as last recorded */
+  #knownBackground: ColorLike;
 
   /**
    * Create a history without change, the drawing being empty
@@ -55,6 +57,7 @@ export class History {
    */
   constructor(drawer: Drawer) {
     this.drawer = drawer;
+    this.#knownBackground = this._readBackground();
   }
 
   /**
@@ -95,12 +98,20 @@ export class History {
         });
       }
       this.#known = current;
+      this.#knownBackground = this._readBackground();
       return;
     }
 
-    const entry = this._diff(this.#known, current);
+    const background = this._readBackground();
+    let entry = this._diff(this.#known, current);
 
+    // background changed (alone or with shapes, e.g. file opened)
+    if (background !== this.#knownBackground) {
+      entry ??= { changes: [] };
+      entry.background = { before: this.#knownBackground, after: background };
+    }
     this.#known = current;
+    this.#knownBackground = background;
     // change without drawing modification (pan, grid...): also keeps redo available
     if (entry) this._push(entry);
   }
@@ -135,6 +146,21 @@ export class History {
         return [id, changed.has(id) && shape ? serializeShape(shape) : known.get(id)!];
       })
     );
+  }
+
+  /**
+   * Background color changed by another user (collaboration): known as it is now, undo does not revert it
+   */
+  ignoreBackground() {
+    this.#knownBackground = this._readBackground();
+  }
+
+  /**
+   * Background color of the drawing
+   * @returns Fill of the background rectangle
+   */
+  private _readBackground() {
+    return this.drawer.background.fill() as ColorLike;
   }
 
   /**
@@ -202,6 +228,7 @@ export class History {
     this.entries = [];
     this.step = 0;
     this.#known = this._read();
+    this.#knownBackground = this._readBackground();
   }
 
   /**
@@ -260,6 +287,11 @@ export class History {
     let applied = !!entry.reordered;
 
     this.drawer.getWidget<SelectWidget>('selection')?.clearSelection();
+    // background of the change
+    if (entry.background && entry.background[side] !== this._readBackground()) {
+      this.drawer._setBackground(entry.background[side]);
+      applied = true;
+    }
     for (const change of entry.changes) {
       const state = change[side];
       const shape = shapes.get(change.id);
@@ -301,6 +333,7 @@ export class History {
     // arrows of other users linked to these shapes follow them, as part of this change
     updateBindings(this.drawer.drawLayer);
     this.#known = this._read();
+    this.#knownBackground = this._readBackground();
     return true;
   }
 

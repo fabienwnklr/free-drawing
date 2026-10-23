@@ -2093,11 +2093,19 @@ export class Drawer extends MicroEvent {
    * @param color Color of the canvas background (change saved)
    */
   setBgColor(color: ColorLike) {
+    this._setBackground(color);
+    // saved, in history, sent to collaborators
+    this.stage.fire('change');
+  }
+
+  /**
+   * Background color shown, without change (undo / redo, background of other users of a collaboration session)
+   * @param color Color of the canvas background
+   */
+  _setBackground(color: ColorLike) {
     // canvas background only, selected shapes fill is not changed
     this.background.fill(color);
     this.setting.updateBgColor(color);
-
-    this.stage.fire('change');
   }
 
   /**

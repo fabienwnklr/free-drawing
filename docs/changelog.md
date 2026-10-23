@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.22.3](https://github.com/fabienwnklr/free-drawing/compare/v7.22.2...v7.22.3) (2026-10-23)
+
+
+### Bug Fixes
+
+* **history:** background color in undo / redo: undo after opening a file or changing the background puts the previous background back
+* **collaboration:** background color shared with the other users of the session: changes sent, users joining take the background of the room (the first one gives theirs), kept after a reconnection; viewers can no longer change it (choices of the settings menu disabled in read only)
+
 ## [7.22.2](https://github.com/fabienwnklr/free-drawing/compare/v7.22.1...v7.22.2) (2026-10-22)
 
 

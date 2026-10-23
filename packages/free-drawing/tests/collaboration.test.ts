@@ -53,6 +53,7 @@ const createServer = () => {
     newUsersCanEdit: boolean;
     view?: unknown;
     requests: Set<string>;
+    background?: string;
   };
   const rooms = new Map<string, Room>();
   let lastId = 0;
@@ -128,6 +129,7 @@ const createServer = () => {
             remove: [],
             order: [...roomData.shapes.keys()],
             full: true,
+            ...(roomData.background && { background: roomData.background }),
           });
           sendUsers(room);
           if (roomData.view) socket.receive('VIEW', roomData.view);
@@ -190,6 +192,7 @@ const createServer = () => {
           // without right to draw: ignored
           if (viewers.has(socket.userId!)) return;
 
+          if (change.background && !change.live) roomData.background = change.background;
           for (const id of change.remove) shapes.delete(id);
           for (const json of change.upsert) shapes.set(JSON.parse(json).attrs.id, json);
           if (change.order) {
@@ -967,6 +970,51 @@ describe('Collaboration', () => {
     alice.collaborationModal!.hide();
   });
 
+  it('Background color shared: the one of the room for users joining, changes sent, kept by undo of others', () => {
+    const connect = createServer();
+    const alice = createDrawer();
+    const bob = createDrawer();
+    const carol = createDrawer();
+
+    // room without background: the one of its first user
+    alice.setBgColor('#f5faff');
+    connect(alice, 'room', 'Alice', { userId: 'alice', ownerKey: 'secret' });
+    // user joining: background of the room, not theirs
+    bob.setBgColor('#fffce8');
+    const bobSocket = connect(bob, 'room', 'Bob', { userId: 'bob' });
+
+    expect(bob.background.fill()).toBe('#f5faff');
+    expect(alice.background.fill()).toBe('#f5faff');
+
+    // change sent, not a change of alice in her history
+    const entries = alice.undoRedo.entries.length;
+
+    bob.setBgColor('#fdf8f6');
+    expect(alice.background.fill()).toBe('#fdf8f6');
+    expect(alice.undoRedo.entries).toHaveLength(entries);
+    // undone by bob: sent too
+    bob.undoRedo.undo();
+    expect(alice.background.fill()).toBe('#f5faff');
+    bob.undoRedo.redo();
+    expect(alice.background.fill()).toBe('#fdf8f6');
+
+    // users joining later
+    connect(carol, 'room', 'Carol', { userId: 'carol' });
+    expect(carol.background.fill()).toBe('#fdf8f6');
+
+    // reconnection: changed meanwhile by bob kept and sent, else the one of the room
+    bobSocket.room = undefined;
+    bobSocket.receive('disconnect');
+    bob.setBgColor('#f8f9fa');
+    bobSocket.receive('connect');
+    expect(alice.background.fill()).toBe('#f8f9fa');
+    bobSocket.room = undefined;
+    bobSocket.receive('disconnect');
+    alice.setBgColor('#fff');
+    bobSocket.receive('connect');
+    expect(bob.background.fill()).toBe('#fff');
+  });
+
   it('Reconnection merges the drawing of the room with changes made meanwhile, not a stale copy', () => {
     const connect = createServer();
     const alice = createDrawer();
@@ -1156,6 +1204,11 @@ describe('Collaboration', () => {
     expect(drawer.undoRedo.$btnUndo.disabled).toBe(true);
     expect(drawer.setting.$clearCanvasButton.disabled).toBe(true);
     expect(drawer.setting.$openButton.disabled).toBe(true);
+    // background color: part of the drawing
+    const bgChoices = [...drawer.setting.$bgColorBtnContainer.querySelectorAll<HTMLButtonElement>('button, input')];
+
+    expect(bgChoices.length).toBeGreaterThan(1);
+    expect(bgChoices.every(($choice) => $choice.disabled)).toBe(true);
     // no paste in menu
     drawer.contextMenu.show();
     expect(drawer.contextMenu.$pasteBtn.hidden).toBe(true);
@@ -1172,6 +1225,7 @@ describe('Collaboration', () => {
     drawer.setReadOnly(false);
     expect(widgets.every((w) => !w.isDisabled)).toBe(true);
     expect(drawer.undoRedo.$btnUndo.disabled).toBe(false);
+    expect(bgChoices.every(($choice) => !$choice.disabled)).toBe(true);
   });
   it('Users who joined only give their name, owner knows who shared the link they used', () => {
     const connect = createServer();

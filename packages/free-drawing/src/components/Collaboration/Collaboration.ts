@@ -14,7 +14,7 @@ import { drawerEvents } from '@/constants';
 import { socketEvents } from '@free-drawing/protocol';
 import { applyOrder } from '@/utils/order';
 import { parseShapeState } from '@/utils/drawingFile';
-import type { DrawingShape } from '@/@types/drawer';
+import type { ColorLike, DrawingShape } from '@/@types/drawer';
 import type {
   DrawingChange,
   RemotePointer,
@@ -34,6 +34,16 @@ import type {
 const liveInterval = 50;
 
 const cursorColors = ['#e03131', '#2f9e44', '#1971c2', '#f08c00', '#9c36b5', '#0c8599', '#c2255c'];
+
+/**
+ * Background color of another user or of the room, checked on reception (any color, as in files)
+ * @param background Color received
+ * @returns The color, null when missing or invalid
+ */
+const checkBackground = (background: unknown): ColorLike | null =>
+  typeof background === 'string' && background.length > 0 && background.length <= 100
+    ? (background as ColorLike)
+    : null;
 
 /**
  * Area presented by the owner, checked on reception
@@ -87,6 +97,11 @@ export class Collaboration {
   private readonly drawer: Drawer;
   /** Shapes as other clients know them, by id, in stacking order */
   #synced = new Map<string, string>();
+  /**
+   * Background color as other clients know it: null until the one of the room is received (a joining user does not
+   * impose theirs), empty when the room has none (this one sent)
+   */
+  #syncedBackground: string | null = null;
   /** Time of the last warning of a change refused by the server (drawing too big), shown again after a while */
   #tooBigAt = 0;
   /** Changes received during a pointer action of this client, applied when it ends */
@@ -147,6 +162,8 @@ export class Collaboration {
       this.#connected = true;
       this.#joined = true;
       this.#rejoining = rejoin;
+      // first join: background of the room received first (a joining user does not impose theirs)
+      if (!rejoin) this.#syncedBackground = null;
       this.socket.emit(socketEvents.JOIN, { room, name, userId, ownerKey, invitedBy });
       // presentation going on after a reconnection
       if (this.presenting) this._sendView();
@@ -607,13 +624,22 @@ export class Collaboration {
       ids.filter((id) => this.#synced.has(id)).join() !==
         [...this.#synced.keys()].filter((id) => current.has(id)).join() ||
       added.join() !== ids.slice(ids.length - added.length).join();
-    const change: DrawingChange = { upsert, remove, ...(reordered && { order: [...current.keys()] }) };
+    const background = this.drawer.background.fill() as string;
+    // changed here, once the background of the room is known
+    const recolored = this.#syncedBackground !== null && background !== this.#syncedBackground;
+    const change: DrawingChange = {
+      upsert,
+      remove,
+      ...(reordered && { order: [...current.keys()] }),
+      ...(recolored && { background }),
+    };
 
     this.#synced = current;
+    if (recolored) this.#syncedBackground = background;
     // final state sent, previews useless
     this.#live.clear();
     this.#sentLive.clear();
-    if (upsert.length || remove.length || reordered) this.socket.emit(socketEvents.CHANGE, change);
+    if (upsert.length || remove.length || reordered || recolored) this.socket.emit(socketEvents.CHANGE, change);
   }
 
   /**
@@ -676,8 +702,12 @@ export class Collaboration {
    * changed here). A room without drawing (emptied, server restarted) gets the whole drawing again
    * @param change Whole drawing of the room (`full`)
    */
-  private _merge({ upsert, order }: DrawingChange) {
+  private _merge({ upsert, order, background }: DrawingChange) {
     const room = new Map<string, string>();
+    const color = this.drawer.background.fill() as string;
+
+    // background changed here meanwhile kept (sent next), else the one of the room (none: this one sent)
+    if (this.#syncedBackground === null || color === this.#syncedBackground) this._applyBackground(background, true);
 
     for (const json of Array.isArray(upsert) ? upsert : []) {
       const state = parseShapeState(json);
@@ -710,7 +740,7 @@ export class Collaboration {
    * order applied. Shapes are recorded as synced, so the change is not sent back. Only drawing shapes are created, as
    * from files: other nodes (stage, layers...) and invalid shapes are ignored
    */
-  private _apply({ upsert, remove, order }: DrawingChange) {
+  private _apply({ upsert, remove, order, background, full }: DrawingChange) {
     const shapes = new Map(this.drawer.getDrawingShapes().map((shape) => [shape.id(), shape]));
     // shapes of other users: not changes of this user in history
     const changed: string[] = [];
@@ -783,5 +813,25 @@ export class Collaboration {
       transformer.nodes(transformer.nodes().filter((node) => node.getLayer()));
     // undo and redo of this user keep them, stacking order of others too
     this.drawer.undoRedo.ignoreChanges(changed);
+    this._applyBackground(background, full);
+  }
+
+  /**
+   * Background color of another user, or of the room (whole drawing): shown and known as synced, not sent back. A room
+   * without background gets the one of this user (sent next)
+   * @param background Color received (checked)
+   * @param room Background of the room (whole drawing): none means the room has none
+   */
+  private _applyBackground(background: unknown, room = false) {
+    const color = checkBackground(background);
+
+    if (!color) {
+      if (room) this.#syncedBackground = '';
+      return;
+    }
+    this.drawer._setBackground(color);
+    this.#syncedBackground = color;
+    // not a change of this user: undo keeps it
+    this.drawer.undoRedo.ignoreBackground();
   }
 }

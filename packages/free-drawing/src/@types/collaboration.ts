@@ -64,6 +64,8 @@ export type DrawingChange = {
   live?: boolean;
   /** Whole drawing of the room, sent by the server to a joining user (also empty) */
   full?: boolean;
+  /** Background color of the drawing, when changed (whole drawing: background of the room, none before a user sends it) */
+  background?: string;
 };
 
 /**

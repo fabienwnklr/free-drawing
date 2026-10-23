@@ -25,6 +25,8 @@ type RoomData = {
   shapes: Map<string, string>;
   /** Size of the drawing: length of its shapes JSON */
   size: number;
+  /** Background color of the drawing, none until a user sends it (dropped with the drawing) */
+  background?: string;
   /** Users without right to draw */
   viewers: Set<string>;
   /** Names of users who came, for who invited who */
@@ -70,7 +72,13 @@ type RequestMessage = { userId?: unknown; accepted?: unknown };
 type ShapeJson = { attrs?: { id?: unknown } | null; className?: unknown; children?: unknown };
 
 /** Change of drawing checked as a whole: only its checked fields, shapes JSON by id */
-type CheckedChange = { upsert: Map<string, string>; remove: string[]; order?: string[]; live: boolean };
+type CheckedChange = {
+  upsert: Map<string, string>;
+  remove: string[];
+  order?: string[];
+  live: boolean;
+  background?: string;
+};
 
 /** Limits of rooms, protecting the memory of the server and other users from a client (tests lower them) */
 export const limits = {
@@ -137,10 +145,14 @@ const isShape = (state: ShapeJson, depth = 0): boolean => {
 const checkChange = (change: unknown): CheckedChange | null => {
   if (typeof change !== 'object' || change === null) return null;
 
-  const { upsert, remove, order, live } = change as Record<string, unknown>;
+  const { upsert, remove, order, live, background } = change as Record<string, unknown>;
 
   if (!Array.isArray(upsert) || !Array.isArray(remove) || !remove.every(isShapeId)) return null;
   if (order !== undefined && (!Array.isArray(order) || !order.every(isShapeId))) return null;
+  // color of the background, as in drawing files
+  if (background !== undefined && (typeof background !== 'string' || !background || background.length > 100)) {
+    return null;
+  }
 
   const shapes = new Map<string, string>();
 
@@ -156,7 +168,13 @@ const checkChange = (change: unknown): CheckedChange | null => {
     shapes.set(state.attrs.id, json);
   }
 
-  return { upsert: shapes, remove, order: order as string[] | undefined, live: live === true };
+  return {
+    upsert: shapes,
+    remove,
+    order: order as string[] | undefined,
+    live: live === true,
+    background: background as string | undefined,
+  };
 };
 
 /**
@@ -377,6 +395,7 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
       totalSize -= data.size;
       data.shapes = new Map();
       data.size = 0;
+      data.background = undefined;
       saveRoom(room, data);
     }
   };
@@ -454,6 +473,7 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
         remove: [],
         order: [...data.shapes.keys()],
         full: true,
+        ...(data.background && { background: data.background }),
       });
       sendUsers(room);
       // presentation going on: view of the owner followed at once
@@ -593,6 +613,7 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
       for (const [id, json] of change.upsert) shapes.set(id, json);
       totalSize += size - data.size;
       data.size = size;
+      if (change.background && !change.live) data.background = change.background;
       // drawing kept in stacking order (sent so to joining users), unknown shapes after
       if (change.order) {
         const ordered = new Map(change.order.filter((id) => shapes.has(id)).map((id) => [id, shapes.get(id)!]));
@@ -608,6 +629,7 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
         remove: change.remove,
         ...(change.order && { order: change.order }),
         ...(change.live && { live: true }),
+        ...(change.background && !change.live && { background: change.background }),
       };
 
       (change.live ? socket.to(room).volatile : socket.to(room)).emit(socketEvents.CHANGE, relayed);

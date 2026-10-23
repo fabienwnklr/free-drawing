@@ -652,6 +652,31 @@ describe('Collaboration', () => {
     expect((await invalid).position).toBeNull();
   });
 
+  it('Background of the drawing kept by the room for users joining, invalid ones refused, viewers ignored', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const room = 'room-background';
+    const owner = await joinRoom({ room, name: 'Owner', userId: 'owner-bg', ownerKey: 'secret bg' });
+    const guest = await joinRoom({ room, name: 'Guest', userId: 'guest-bg' });
+    const relayed = guest.next(socketEvents.CHANGE);
+
+    // not a color: whole change ignored
+    owner.socket.emit(socketEvents.CHANGE, { upsert: [], remove: [], background: 42 });
+    owner.socket.emit(socketEvents.CHANGE, { upsert: [], remove: [], background: 'x'.repeat(101) });
+    owner.socket.emit(socketEvents.CHANGE, { upsert: [], remove: [], background: '#f5faff' });
+    expect(await relayed).toEqual({ upsert: [], remove: [], background: '#f5faff' });
+    expect(warn).toHaveBeenCalledTimes(2);
+
+    // viewer (new users by default): ignored
+    guest.socket.emit(socketEvents.CHANGE, { upsert: [], remove: [], background: '#000' });
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    const later = client();
+    const drawing = later.next(socketEvents.CHANGE);
+
+    later.socket.emit(socketEvents.JOIN, { room, name: 'Later', userId: 'later-bg' });
+    expect(await drawing).toEqual({ upsert: [], remove: [], order: [], full: true, background: '#f5faff' });
+  });
+
   it('Rooms and messages are limited: drawing, users, rate', async () => {
     const saved = { ...limits };
 

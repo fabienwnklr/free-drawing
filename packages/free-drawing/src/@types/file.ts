@@ -40,6 +40,16 @@ export type HistoryEntry = {
   after?: string[];
   /** Stacking order of shapes changed (reorder): restored from `before` / `after` */
   reordered?: boolean;
+  /** Background color changed (e.g. file opened): color before and after the change */
+  background?: HistoryBackground;
+};
+
+/** Background color of the drawing before and after a change of history */
+export type HistoryBackground = {
+  /** Color before the change, put back by undo */
+  before: ColorLike;
+  /** Color after the change, put back by redo */
+  after: ColorLike;
 };
 
 /**
