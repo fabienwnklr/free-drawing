@@ -1015,6 +1015,36 @@ describe('Collaboration', () => {
     expect(bob.background.fill()).toBe('#fff');
   });
 
+  it('Change bigger than a message of the server not sent (no reconnection loop), kept until it fits', () => {
+    const connect = createServer();
+    const alice = createDrawer();
+    const bob = createDrawer();
+    const aliceSocket = connect(alice, 'room', 'Alice', { userId: 'alice', ownerKey: 'secret' });
+
+    connect(bob, 'room', 'Bob', { userId: 'bob' });
+    const toast = vi.spyOn(alice, 'toast');
+    const max = Collaboration.maxMessageSize;
+    let big: Text;
+
+    Collaboration.maxMessageSize = 2000;
+    try {
+      big = addText(alice, 'x'.repeat(3000));
+      expect(byId(bob, big.id())).toBeUndefined();
+      expect(toast).toHaveBeenCalledWith(
+        'Drawing too big for the collaboration session: your changes are not shared',
+        'warning'
+      );
+      // connection kept: the server would close it
+      expect(aliceSocket.disconnect).not.toHaveBeenCalled();
+    } finally {
+      Collaboration.maxMessageSize = max;
+    }
+
+    // not marked synced: sent with the next change
+    addText(alice, 'small');
+    expect(byId(bob, big.id())).toBeDefined();
+  });
+
   it('Reconnection merges the drawing of the room with changes made meanwhile, not a stale copy', () => {
     const connect = createServer();
     const alice = createDrawer();

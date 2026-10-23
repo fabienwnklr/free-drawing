@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.22.5](https://github.com/fabienwnklr/free-drawing/compare/v7.22.4...v7.22.5) (2026-10-23)
+
+
+### Bug Fixes
+
+* **collaboration:** a change bigger than a message of the server (10 MB, e.g. a big file opened) is no longer sent: the server closed the connection and the session reconnected and sent it again without end; the drawing is told too big for the session, its shapes are sent once it fits
+
 ## [7.22.4](https://github.com/fabienwnklr/free-drawing/compare/v7.22.3...v7.22.4) (2026-10-23)
 
 

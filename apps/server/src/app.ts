@@ -3,12 +3,13 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import express, { type Express, type RequestHandler } from 'express';
 import { Server } from 'socket.io';
+import { maxMessageSize } from '@free-drawing/protocol';
 import { toNodeHandler } from 'better-auth/node';
 import type { ServerConfig } from './config';
 import { createDatabase, migrateApp } from './db';
 import { clientIpHeader, createAuth } from './auth';
 import { createApi } from './api';
-import { attachCollaboration, limits } from './collaboration';
+import { attachCollaboration } from './collaboration';
 
 // web app (apps/web): its vite config in development, its build in production
 const webRoot = fileURLToPath(new URL('../../web/', import.meta.url));
@@ -105,8 +106,8 @@ export async function createServer(config: ServerConfig) {
     // pages of other origins (cookies of the same site sent with WebSocket, no CORS) can't use the session of the user;
     // clients without origin are not browsers: no cookie of a user
     allowRequest: (req, callback) => callback(null, !req.headers.origin || origins.includes(req.headers.origin)),
-    // a change can hold a whole drawing (shapes JSON escaped in the message)
-    maxHttpBufferSize: limits.drawingSize * 2,
+    // a change can hold a whole drawing (shapes JSON escaped in the message): bigger ones not sent by the library
+    maxHttpBufferSize: maxMessageSize,
   });
 
   // rooms of previous runs read before connections

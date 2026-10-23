@@ -39,6 +39,12 @@ export const socketEvents = {
 };
 
 /**
+ * Largest message a client sends (bytes of its JSON): the server closes the connection of a bigger one (`maxHttpBufferSize`
+ * of socket.io), so the library does not send it (a change can hold a whole drawing, shapes JSON escaped in the message)
+ */
+export const maxMessageSize = 10_000_000;
+
+/**
  * Konva classes of drawing shapes: only these nodes are created from files, links and changes of other users
  */
 export const shapeClasses = ['Line', 'Arrow', 'Rect', 'Ellipse', 'Text', 'Path'];

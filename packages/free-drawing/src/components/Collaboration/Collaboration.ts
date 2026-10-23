@@ -11,7 +11,7 @@ import { Text } from 'konva/lib/shapes/Text';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { serializeShape } from '@/components/tools/UndoRedo/History';
 import { drawerEvents } from '@/constants';
-import { socketEvents } from '@free-drawing/protocol';
+import { maxMessageSize, socketEvents } from '@free-drawing/protocol';
 import { applyOrder } from '@/utils/order';
 import { parseShapeState } from '@/utils/drawingFile';
 import type { ColorLike, DrawingShape } from '@/@types/drawer';
@@ -65,6 +65,8 @@ const checkView = (view: unknown): ViewArea | null | undefined => {
  * of the room, through a socket.io server (see apps/server), so concurrent drawings are merged
  */
 export class Collaboration {
+  /** Largest message sent to the server (bytes), a bigger one would close the connection: `maxMessageSize` of the protocol */
+  static maxMessageSize = maxMessageSize;
   /** Socket connected to the collaboration server, disconnected by `stop` */
   readonly socket: CollaborationSocket;
   /** Id of the room */
@@ -195,9 +197,8 @@ export class Collaboration {
       if (reason === 'full') {
         this.drawer.toast(this.drawer.t('toast.collaborationFull'), 'error');
         this.drawer.stopCollaboration();
-      } else if (reason === 'too-big' && Date.now() - this.#tooBigAt > 10_000) {
-        this.#tooBigAt = Date.now();
-        this.drawer.toast(this.drawer.t('toast.collaborationTooBig'), 'warning');
+      } else if (reason === 'too-big') {
+        this._tellTooBig();
       }
     });
     // names only from servers without rights
@@ -305,13 +306,11 @@ export class Collaboration {
       const shapes = [...this.#live].filter((shape) => shape.getLayer());
 
       this.#live.clear();
-      if (shapes.length) {
+      const change: DrawingChange = { upsert: shapes.map(serializeShape), remove: [], live: true };
+
+      if (shapes.length && this._fits(change)) {
         for (const shape of shapes) this.#sentLive.add(shape.id());
-        this.socket.volatile.emit(socketEvents.CHANGE, {
-          upsert: shapes.map(serializeShape),
-          remove: [],
-          live: true,
-        } satisfies DrawingChange);
+        this.socket.volatile.emit(socketEvents.CHANGE, change);
       }
     });
   }
@@ -634,12 +633,42 @@ export class Collaboration {
       ...(recolored && { background }),
     };
 
+    const changed = upsert.length > 0 || remove.length > 0 || reordered || recolored;
+
+    // too big for the server: not marked synced (kept by a merge after a reconnection), sent with a next change
+    if (changed && !this._fits(change)) return;
     this.#synced = current;
     if (recolored) this.#syncedBackground = background;
     // final state sent, previews useless
     this.#live.clear();
     this.#sentLive.clear();
-    if (upsert.length || remove.length || reordered || recolored) this.socket.emit(socketEvents.CHANGE, change);
+    if (changed) this.socket.emit(socketEvents.CHANGE, change);
+  }
+
+  /**
+   * Change small enough for the server: a bigger message would close the connection, and the reconnection would send it
+   * again (loop). Told as a drawing too big
+   * @param change Change to send
+   * @returns True when it can be sent
+   */
+  private _fits(change: DrawingChange) {
+    const max = Collaboration.maxMessageSize;
+    const json = JSON.stringify(change);
+
+    // bytes of UTF-8: 3 at most by UTF-16 unit, counted only near the limit
+    if (json.length * 3 <= max || new TextEncoder().encode(json).length <= max) return true;
+    this._tellTooBig();
+    return false;
+  }
+
+  /**
+   * Drawing too big for the session (changes not shared) told, again after a while
+   */
+  private _tellTooBig() {
+    if (Date.now() - this.#tooBigAt <= 10_000) return;
+
+    this.#tooBigAt = Date.now();
+    this.drawer.toast(this.drawer.t('toast.collaborationTooBig'), 'warning');
   }
 
   /**
