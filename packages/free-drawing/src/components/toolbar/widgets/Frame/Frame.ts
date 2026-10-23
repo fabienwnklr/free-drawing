@@ -26,14 +26,32 @@ export class FrameWidget extends ShapeWidget<Frame> {
    * @returns Frame named "Frame n" in the language of the drawer
    */
   protected createShape(start: Vector2d) {
-    const number = this.drawer.getDrawingShapes().filter(isFrame).length + 1;
-
     return createFrame({
       ...start,
       width: 0,
       height: 0,
-      label: this.drawer.t('shapes.frameName', { number: String(number) }),
+      label: this.drawer.t('shapes.frameName', { number: String(this._nextNumber()) }),
     });
+  }
+
+  /**
+   * Number of the next frame, after the number of frames and the numbers of their names ("Frame 3" in the language of
+   * the drawer): a deleted frame does not give its number to two frames
+   * @returns Number of the frame drawn
+   */
+  private _nextNumber() {
+    const frames = this.drawer.getDrawingShapes().filter(isFrame);
+    // text around the number of a name
+    const [before, after = ''] = this.drawer.t('shapes.frameName', { number: '\n' }).split('\n');
+    const numbers = frames.map((frame) => {
+      const label = this.drawer.getShapeLabel(frame);
+      const named = label.startsWith(before) && label.endsWith(after);
+      const number = named ? label.slice(before.length, label.length - after.length) : '';
+
+      return /^\d+$/.test(number) ? Number(number) : 0;
+    });
+
+    return Math.max(frames.length, ...numbers) + 1;
   }
 
   /**

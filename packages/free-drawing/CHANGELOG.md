@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.27.3](https://github.com/fabienwnklr/free-drawing/compare/v7.27.2...v7.27.3) (2026-10-23)
+
+
+### Bug Fixes
+
+* **frames:** a new frame is numbered after the highest number of the names of frames: after a deleted frame, the next one took the name of an existing one ("Frame 3" twice)
+
 ## [7.27.2](https://github.com/fabienwnklr/free-drawing/compare/v7.27.1...v7.27.2) (2026-10-23)
 
 

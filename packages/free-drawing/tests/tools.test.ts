@@ -104,6 +104,33 @@ describe('Frame', () => {
   };
   const absolute = (shape: DrawingShape) => shape.getAbsolutePosition();
 
+  it('New frames named after the numbers of frames: no name given twice after a frame is deleted', () => {
+    const drawer = createDrawer({ language: 'en' });
+    const frames = () => drawer.getDrawingShapes().filter(isFrame);
+    const names = () =>
+      frames()
+        .map((frame) => drawer.getShapeLabel(frame))
+        .sort();
+    const named = (name: string) => frames().find((frame) => drawer.getShapeLabel(frame) === name)!;
+    const draw = (x: number) => drag(drawer, [x, 0], [x + 100, 100]);
+
+    drawer.getWidget<BaseWidget>('frame')!.setActive(true);
+    for (const x of [0, 200, 400]) draw(x);
+    expect(names()).toEqual(['Frame 1', 'Frame 2', 'Frame 3']);
+
+    // second one deleted: next one after the highest number
+    drawer.deleteShapes([named('Frame 2')]);
+    draw(600);
+    expect(names()).toEqual(['Frame 1', 'Frame 3', 'Frame 4']);
+
+    // renamed frames counted, numbers of names in another language not read
+    drawer.setShapeLabel(named('Frame 4'), 'Roadmap');
+    drawer.setLanguage('fr');
+    draw(800);
+    draw(1000);
+    expect(names()).toEqual(['Cadre 4', 'Cadre 5', 'Frame 1', 'Frame 3', 'Roadmap']);
+  });
+
   it('Shapes grouped or ungrouped in a frame stay draggable, not shapes of a group', () => {
     const { drawer, frame, inside, selectWidget } = createFrame();
     const rect = (x: number) =>
