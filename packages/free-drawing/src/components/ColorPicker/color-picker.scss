@@ -34,6 +34,7 @@
       padding: 0;
     }
 
+    // native swatch hidden: the current color is the background, as the drawing shows it (dark mode)
     &::-webkit-color-swatch {
       border: 0;
       border-radius: 3px;
@@ -46,12 +47,12 @@
       opacity: 0;
     }
 
-    &.active::-webkit-color-swatch {
-      opacity: 1;
+    &.active {
+      background: var(--swatch-color);
     }
+  }
 
-    &.active::-moz-color-swatch {
-      opacity: 1;
-    }
+  &.drawer-dark .drawer-color-input.active {
+    background: var(--swatch-dark-color);
   }
 }

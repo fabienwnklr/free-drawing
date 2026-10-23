@@ -190,9 +190,9 @@ describe('Drawing files and links', () => {
 
     window.location.hash = new URL(link).hash;
     const drawer = createDrawer({ id: 'drawer-link' });
-    await wait();
 
-    expect(drawer.getDrawingShapes().map((s) => s.attrs.text)).toEqual(['from link']);
+    // link decoded asynchronously (slower while every test file runs)
+    await vi.waitFor(() => expect(drawer.getDrawingShapes().map((s) => s.attrs.text)).toEqual(['from link']));
     // link drawing loaded once, not on next page load
     expect(window.location.hash).toBe('');
   });
@@ -210,16 +210,14 @@ describe('Drawing files and links', () => {
     window.location.hash = hash;
     const drawer = createDrawer();
     const second = createDrawer();
-    await wait();
-    expect(texts(drawer)).toEqual(['no id']);
+    await vi.waitFor(() => expect(texts(drawer)).toEqual(['no id']));
     expect(texts(second)).toEqual([]);
     expect(window.location.hash).toBe('');
 
     // link of a previous version (`#drawer-<n>=`)
     window.location.hash = hash.replace('#drawing=', '#drawer-7=');
     const old = createDrawer();
-    await wait();
-    expect(texts(old)).toEqual(['no id']);
+    await vi.waitFor(() => expect(texts(old)).toEqual(['no id']));
 
     // link of a drawer of an app given id: not opened by drawers without it
     window.location.hash = hash.replace('#drawing=', '#notes=');
@@ -227,8 +225,7 @@ describe('Drawing files and links', () => {
     await wait();
     expect(texts(other)).toEqual([]);
     const notes = createDrawer({ id: 'notes' });
-    await wait();
-    expect(texts(notes)).toEqual(['no id']);
+    await vi.waitFor(() => expect(texts(notes)).toEqual(['no id']));
     expect(window.location.hash).toBe('');
   });
 
@@ -251,8 +248,7 @@ describe('Drawing files and links', () => {
 
     const drawer = createDrawer();
 
-    await wait();
-    expect(drawer.getDrawingShapes()).toHaveLength(1);
+    await vi.waitFor(() => expect(drawer.getDrawingShapes()).toHaveLength(1));
     expect(drawer.getZoomLevel()).toBe(1);
     expect(shown(drawer)).toBe(true);
 

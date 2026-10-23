@@ -2,6 +2,7 @@ import { describe, expect, it, vi, afterEach } from 'vitest';
 import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import type { BaseOverlay } from '@/components/tools/Overlay/BaseOverlay';
 import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
+import { toDarkColor } from '@/utils/export';
 import { createDrawer, keydown } from './helpers';
 
 const isDark = (drawer: ReturnType<typeof createDrawer>) => drawer.$drawerContainer.classList.contains('drawer-dark');
@@ -69,6 +70,14 @@ describe('Dark mode', () => {
 
     expect($black.style.getPropertyValue('--swatch-color')).toBe('#000');
     expect($black.style.getPropertyValue('--swatch-dark-color')).toBe('#ededed');
+    // custom color (not in palette): its swatch too
+    const $custom = overlay.$strokeColorBtnContainer.querySelector<HTMLInputElement>('.drawer-color-input')!;
+
+    drawer.setStrokeColor('#000000');
+    drawer.setStrokeColor('#123456');
+    expect($custom.classList.contains('active')).toBe(true);
+    expect($custom.style.getPropertyValue('--swatch-color')).toBe('#123456');
+    expect($custom.style.getPropertyValue('--swatch-dark-color')).toBe(toDarkColor('#123456'));
 
     const textWidget = drawer.getWidget<TextWidget>('text')!;
     textWidget.editTextNode(textWidget.addTextNode('hello'));

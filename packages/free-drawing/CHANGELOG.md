@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.28.5](https://github.com/fabienwnklr/free-drawing/compare/v7.28.4...v7.28.5) (2026-10-23)
+
+
+### Bug Fixes
+
+* **theme:** light theme in a dark page: native fields and scrollbars of the drawer light (`color-scheme: light`), they took the dark scheme of the page
+* **theme:** custom color of the options panel shown as the drawing shows it in dark mode, like the colors of the palette
+* **help:** shortcuts on one column in a narrow drawer, they overflowed the dialog under about 380 px wide
+
 ## [7.28.4](https://github.com/fabienwnklr/free-drawing/compare/v7.28.3...v7.28.4) (2026-10-23)
 
 

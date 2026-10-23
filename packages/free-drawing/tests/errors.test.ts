@@ -3,8 +3,6 @@ import type { Drawer } from '@/Drawer';
 import { DrawerError, getErrorText } from '@/utils/errors';
 import { createDrawer } from './helpers';
 
-const wait = (ms = 50) => new Promise((resolve) => setTimeout(resolve, ms));
-
 /** Texts of the toasts shown */
 const toasts = (drawer: Drawer) =>
   [...drawer.$drawerContainer.querySelectorAll('.drawer-toast')].map(($toast) => $toast.textContent?.trim());
@@ -31,8 +29,7 @@ describe('Errors shown in the language of the drawer', () => {
     window.location.hash = '#drawing=z%%%';
     const drawer = createDrawer({ language: 'fr' });
 
-    await wait();
-    expect(toasts(drawer)).toContain('Lien de dessin invalide : lien incomplet ou abîmé');
+    await vi.waitFor(() => expect(toasts(drawer)).toContain('Lien de dessin invalide : lien incomplet ou abîmé'));
 
     // file: invalid JSON or not a drawing, message in English for developers
     expect(() => drawer.loadDrawing('not json')).toThrow(DrawerError);

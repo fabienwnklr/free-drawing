@@ -22,6 +22,9 @@
     --drawer-#{$name}: #{$value};
   }
 
+  // native fields and scrollbars of the light theme, also in a dark page
+  color-scheme: light;
+
   &.drawer-dark {
     @each $name, $value in map.get($themes, dark) {
       --drawer-#{$name}: #{$value};

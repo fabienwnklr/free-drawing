@@ -30,7 +30,8 @@
 
   .drawer-modal-help-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    // one column in a narrow drawer, never wider than the dialog
+    grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
     gap: $space-4;
   }
 

@@ -76,8 +76,12 @@ export class ColorPicker {
 
     const hex = toHexColor(color);
 
-    // picker opens on current color
-    if (hex) this.$customInput.value = hex;
+    // picker opens on current color, shown as the drawing shows it (dark mode)
+    if (hex) {
+      this.$customInput.value = hex;
+      this.$customInput.style.setProperty('--swatch-color', hex);
+      this.$customInput.style.setProperty('--swatch-dark-color', toDarkColor(hex));
+    }
     this.$customInput.classList.toggle('active', !inPalette && !!hex);
   }
 }
