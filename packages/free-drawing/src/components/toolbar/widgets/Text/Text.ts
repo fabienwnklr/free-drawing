@@ -1,7 +1,8 @@
 import type { Drawer } from '@/Drawer';
-import { getFrameOfTitle } from '@/utils/frame';
+import { getDrawingShape, getFrameOfTitle } from '@/utils/frame';
 import { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import TextIcon from '@/icons/text.svg?raw';
+import type { Node } from 'konva/lib/Node';
 import { Text } from 'konva/lib/shapes/Text';
 import type { Vector2d } from 'konva/lib/types';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
@@ -10,13 +11,19 @@ import { TextOverlay } from '@/components/tools/Overlay/TextOverlay/TextOverlay'
 import { isComposing, placeInView } from '@/utils/dom';
 
 /**
- * Text tool: a click adds a text and edits it in a textarea placed over it. A double click on any text (or title of
+ * Text tool: a click adds a text (or edits the text clicked) in a textarea placed over it; once validated, the tool is
+ * kept (`keepTool`) or the selection tool comes back with the text selected. A double click on any text (or title of
  * a frame) edits it, whatever the active tool.
  */
 export class TextWidget extends BaseWidget {
-  #lastText!: Text;
   /** A text is edited in the textarea */
   isEditing: boolean = false;
+  /** Next edit started by a click of this tool (see `_initEventsTextarea`) */
+  #byTool = false;
+  /** A press on the canvas ended the edit of a text, the tool kept: its click adds no text */
+  #pressEndedEdit = false;
+  /** Current press ended the edit of a text: its click adds no text */
+  #skipClick = false;
   overlay: TextOverlay;
   protected cursor = 'text';
 
@@ -31,10 +38,7 @@ export class TextWidget extends BaseWidget {
 
     // listen on layer, so any text is editable (created, loaded, restored from history...)
     this.drawer.drawLayer.on('dblclick.edit dbltap.edit', (e) => {
-      // texts and titles of frames
-      const editable = e.target.hasName(shapeName.text) || !!getFrameOfTitle(e.target);
-
-      if (e.target instanceof Text && editable && !this.drawer.readOnly) {
+      if (this._isEditable(e.target) && !this.drawer.readOnly) {
         this.editTextNode(e.target);
       }
     });
@@ -64,13 +68,36 @@ export class TextWidget extends BaseWidget {
   }
 
   /**
+   * Text of the drawing or title of a frame, edited by a double click or a click of this tool
+   * @param node Node under the pointer
+   * @returns true for a text that can be edited
+   */
+  private _isEditable(node: Node): node is Text {
+    return node instanceof Text && (node.hasName(shapeName.text) || !!getFrameOfTitle(node));
+  }
+
+  /**
    * New text at a position of drawing (pointer by default, center of view when it is out of canvas), in the frame
-   * containing it, then selection tool active
+   * containing it, then selection tool active (paste)
    * @param text Content, its width fits its longest line when given
    * @param position Top left corner of the text, in drawing coordinates
    * @returns The added text node
    */
-  addTextNode(text: string = '', { x, y }: Vector2d = this.drawer._getRelativePointerPos()) {
+  addTextNode(text: string = '', position: Vector2d = this.drawer._getRelativePointerPos()) {
+    const textNode = this._createText(text, position);
+
+    this.drawer.getWidget<SelectWidget>('selection')?.setActive(true);
+
+    return textNode;
+  }
+
+  /**
+   * New text added to the drawing (style of the options), in the frame containing it
+   * @param text Content, its width fits its longest line when given
+   * @param position Top left corner of the text, in drawing coordinates
+   * @returns The added text node
+   */
+  private _createText(text: string, { x, y }: Vector2d) {
     const { textStyle } = this.drawer.options;
 
     const textNode = new Text({
@@ -94,21 +121,53 @@ export class TextWidget extends BaseWidget {
     this.drawer.addShape(textNode);
     this.drawer.placeInFrames([textNode]);
 
-    const selectWidget = this.drawer.getWidget<SelectWidget>('selection');
-    selectWidget?.setActive(true);
-
     return textNode;
   }
 
   /**
-   * Click adds an empty text at pointer and edits it (not right or middle button)
+   * Click edits the text under the pointer, else adds an empty text there and edits it (not right or middle button,
+   * nor the click whose press validated a text). Options panel hidden meanwhile: a press on it would validate the text.
    */
   protected initEvents(): void {
-    this.onStage('click tap', (e) => {
-      if (e.evt.button > 0) return;
-      this.#lastText = this.addTextNode();
-      this.editTextNode(this.#lastText);
+    this.onStage('mousedown touchstart', (e) => {
+      // no mouse events of the browser after a tap: their click would add another text
+      if (e.type === 'touchstart') e.evt.preventDefault();
+      this.#skipClick = this.#pressEndedEdit;
+      this.#pressEndedEdit = false;
     });
+    this.onStage('click tap', (e) => {
+      if (e.evt.button > 0 || this.#skipClick) return;
+
+      const textNode = this._isEditable(e.target)
+        ? e.target
+        : this._createText('', this.drawer._getRelativePointerPos());
+
+      this.overlay.hide();
+      this.#byTool = true;
+      this.editTextNode(textNode);
+    });
+  }
+
+  /**
+   * Tool changed: no click to skip
+   */
+  protected onDesactive(): void {
+    this.#pressEndedEdit = false;
+    this.#skipClick = false;
+  }
+
+  /**
+   * Text validated after a click of this tool: tool kept (`keepTool`) with its options panel, else selection tool back
+   * with the text (or frame of the title) selected
+   * @param textNode Text edited
+   */
+  private _afterEdit(textNode: Text) {
+    this.afterDraw();
+    if (this.drawer.activeWidget === this) {
+      this.showToolOverlay();
+      return;
+    }
+    this.drawer.getWidget<SelectWidget>('selection')?.select([getDrawingShape(textNode, this.drawer.drawLayer)]);
   }
 
   /**
@@ -211,11 +270,15 @@ export class TextWidget extends BaseWidget {
   /**
    * Textarea grows with its content; Enter or a click out of it sets the text, Escape keeps the previous one.
    * Then textarea removed, text shown again (removed if empty, except frame titles which rename their frame) and
-   * change fired.
+   * change fired; edited after a click of this tool: see `_afterEdit`.
    * @param textNode Text edited, hidden until the textarea is removed
    * @param textarea Textarea over the text, created by `_createTextarea`
    */
   private _initEventsTextarea(textNode: Text, textarea: HTMLTextAreaElement) {
+    const byTool = this.#byTool;
+
+    this.#byTool = false;
+
     const title = !!getFrameOfTitle(textNode);
     // titles of frames on one line: pasted line breaks become spaces
     const value = () => (title ? textarea.value.replace(/\s*\n\s*/g, ' ') : textarea.value);
@@ -243,6 +306,8 @@ export class TextWidget extends BaseWidget {
         textNode.destroy();
         selectWidget?.transformer.nodes([]);
         selectWidget?.hideOverlay();
+        // tool kept, as after a simple click of a shape tool
+        if (byTool && this.drawer.activeWidget === this) this.showToolOverlay();
         return;
       }
 
@@ -250,6 +315,7 @@ export class TextWidget extends BaseWidget {
       selectWidget?.transformer.forceUpdate();
 
       this.drawer.stage.fire('change');
+      if (byTool && this.drawer.activeWidget === this) this._afterEdit(textNode);
     };
 
     // title wider than the field: field widened, not wrapped into the frame
@@ -281,6 +347,12 @@ export class TextWidget extends BaseWidget {
       if (e.target !== textarea) {
         textNode.text(value());
         removeTextarea();
+        // press on the canvas, tool kept: its click adds no text (pointer down comes before konva mouse down and
+        // touch start, see `initEvents`)
+        this.#pressEndedEdit =
+          e.type === 'pointerdown' &&
+          this.drawer.activeWidget === this &&
+          this.drawer.stage.content.contains(e.target as globalThis.Node);
       }
     };
     setTimeout(() => {

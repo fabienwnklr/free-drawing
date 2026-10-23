@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.25.0](https://github.com/fabienwnklr/free-drawing/compare/v7.24.0...v7.25.0) (2026-10-23)
+
+
+### Features
+
+* **text:** the text tool follows `keepTool` like the other tools: kept after a text (the press validating a text adds no other one, also on touch screens), else the selection tool comes back with the text selected (frame of a renamed title). A click of the tool on a text or a name of frame edits it instead of adding a text over it; its options panel is hidden while a text is edited
+
 ## [7.24.0](https://github.com/fabienwnklr/free-drawing/compare/v7.23.1...v7.24.0) (2026-10-23)
 
 

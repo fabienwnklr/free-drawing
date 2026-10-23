@@ -6,6 +6,7 @@ import type { LineWidget } from '@/components/toolbar/widgets/Line/Line';
 import type { EraserWidget } from '@/components/toolbar/widgets/Eraser/Eraser';
 import type { BrushWidget } from '@/components/toolbar/widgets/Brush/Brush';
 import type { Line } from 'konva/lib/shapes/Line';
+import type { Text } from 'konva/lib/shapes/Text';
 import { matchesShortcut } from '@/utils/HotKey';
 import { createDrawer, fireMouse, keydown, setPointer } from './helpers';
 
@@ -409,6 +410,91 @@ describe('Test drawer event', () => {
     const $textarea = document.querySelector<HTMLTextAreaElement>('.drawer-container textarea')!;
     $textarea.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', bubbles: true }));
     expect(texts().length).toBe(0);
+  });
+
+  it('Text tool kept after a text (keepTool): the press validating it adds none, a click on a text edits it', async () => {
+    const drawer = createDrawer({ keepTool: true });
+    const textWidget = drawer.getWidget<TextWidget>('text')!;
+    const texts = () => drawer.drawLayer.find<Text>('Text');
+    const editor = () => drawer.$drawerContainer.querySelector('textarea');
+    const panelShown = () => textWidget.overlay.$overlayContainer.classList.contains('show');
+    const tick = () => new Promise((resolve) => setTimeout(resolve));
+    /** Press and click of the mouse on the canvas: the window sees the pointer down first */
+    const click = (x: number, y: number) => {
+      drawer.stage.content.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true }));
+      fireMouse(drawer, 'mousedown', x, y);
+      fireMouse(drawer, 'mouseup', x, y);
+      fireMouse(drawer, 'click', x, y);
+    };
+
+    textWidget.setActive(true);
+    expect(panelShown()).toBe(true);
+    click(100, 100);
+    // options panel hidden while the text is edited: a press on it would validate the text
+    expect(panelShown()).toBe(false);
+    await tick();
+    editor()!.value = 'first';
+    // press elsewhere: text validated, no other text, tool and its panel kept
+    click(300, 300);
+    expect(texts().map((text) => text.text())).toEqual(['first']);
+    expect(editor()).toBeNull();
+    expect(drawer.activeTool).toBe('text');
+    expect(panelShown()).toBe(true);
+    expect(drawer.getSelectedShapes()).toEqual([]);
+
+    // next click: new text, validated by Enter
+    click(300, 300);
+    await tick();
+    editor()!.value = 'second';
+    editor()!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter' }));
+    expect(texts().map((text) => text.text())).toEqual(['first', 'second']);
+    expect(drawer.activeTool).toBe('text');
+
+    // click on a text: edited, no new text
+    const [first] = texts();
+
+    drawer.stage.content.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true }));
+    first.fire('mousedown', { evt: { button: 0 } }, true);
+    first.fire('click', { evt: { button: 0 } }, true);
+    expect(editor()!.value).toBe('first');
+    await tick();
+    editor()!.value = 'first edited';
+    editor()!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter' }));
+    expect(texts().map((text) => text.text())).toEqual(['first edited', 'second']);
+
+    // empty text removed, tool kept
+    click(500, 100);
+    editor()!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape' }));
+    expect(texts()).toHaveLength(2);
+    expect(drawer.activeTool).toBe('text');
+    expect(panelShown()).toBe(true);
+  });
+
+  it('Text tool not kept: selection tool back with the validated text selected', async () => {
+    const drawer = createDrawer({ keepTool: false });
+    const textWidget = drawer.getWidget<TextWidget>('text')!;
+    const editor = () => drawer.$drawerContainer.querySelector('textarea');
+
+    textWidget.setActive(true);
+    fireMouse(drawer, 'mousedown', 100, 100);
+    fireMouse(drawer, 'click', 100, 100);
+    // tool kept while the text is edited
+    expect(drawer.activeTool).toBe('text');
+    editor()!.value = 'hello';
+    editor()!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter' }));
+
+    const [text] = drawer.drawLayer.find<Text>('Text');
+
+    expect(drawer.activeTool).toBe('selection');
+    expect(drawer.getSelectedShapes()).toEqual([text]);
+
+    // cancelled: nothing drawn, tool kept
+    textWidget.setActive(true);
+    fireMouse(drawer, 'mousedown', 300, 300);
+    fireMouse(drawer, 'click', 300, 300);
+    editor()!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape' }));
+    expect(drawer.activeTool).toBe('text');
+    expect(drawer.drawLayer.find('Text')).toHaveLength(1);
   });
 
   it('Ctrl + wheel zoom keeps the point under cursor', () => {

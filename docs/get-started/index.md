@@ -263,6 +263,8 @@ Brush options (freehand stroke, see [perfect-freehand](https://github.com/stever
 
 Eraser (E): a click erases the shape under pointer, a drag erases every shape it crosses, faded until the pointer is released (changing tool meanwhile keeps them). A shape of a group erases its group, a shape of a frame is erased alone, locked shapes are kept. Right and middle buttons do not erase.
 
+Text (T): a click adds a text, or edits the text (or name of a frame) clicked. Enter or a press elsewhere validates it (Shift + Enter adds a line, Escape cancels, an empty text is removed), then the tool is kept (`keepTool`, pin of the toolbar) or the selection tool comes back with the text selected. A double click edits any text, whatever the tool.
+
 If `tool` option (or the tool saved in localStorage) is not in `widgets`, the first widget is activated.
 
 ### Groups of widgets
