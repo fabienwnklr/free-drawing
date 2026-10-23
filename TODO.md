@@ -80,7 +80,7 @@
 - [x] names of new frames repeat after a frame is deleted (`count + 1` in `Frame.ts`)
 - [x] links of drawings depend on the `drawer-<n>` id: a link copied from a remounted drawer does not open (`Drawer._loadFromLink`)
 - [x] export: limit `pixelRatio` to canvas size limits of browsers (big drawing at scale 2 gives no image)
-- [ ] loading a file or link: fit view to its content (may be out of view)
+- [x] loading a file or link: fit view to its content (may be out of view)
 - [ ] toasts: one live region kept in the page (inserted `role=status` not always announced, not read outside an `aria-modal` dialog) (`Toast.ts`)
 - [ ] error details in English inside translated toasts ("clipboard unavailable", "not a drawing file", "server unreachable", "nothing to export")
 - [ ] translations: es `collab.start` reads as "sign in", de `edges.sharp` should be "Eckig"

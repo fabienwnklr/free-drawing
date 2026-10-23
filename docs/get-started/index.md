@@ -476,13 +476,14 @@ The settings menu opens and saves drawings as `.freedrawing` files (JSON: backgr
 
 ```js
 await drawer.saveAs('my-drawing'); // save dialog when the browser has one (Chromium), else download (Ctrl / Cmd + Shift + S)
-await drawer.open(); // file chosen by user replaces drawing, undo restores it (Ctrl+O)
+await drawer.open(); // file chosen by user replaces drawing, undo restores it (Ctrl+O), shown in the view
 const file = drawer.getDrawingFile(); // file content, `drawer.loadDrawing(file)` loads it
 const link = await drawer.getLink(); // current page url with compressed drawing: #drawing=<data> (#<id>=<data> with the id option)
 await drawer.copyLink();
+drawer.zoomToFit(); // view on the whole drawing (or `zoomToFit(shapes)`): centered, zoomed out when big, not beyond 100 %
 ```
 
-No server is needed for links: the drawing is in the url hash. A drawer whose `id` is in the hash of the page loads its drawing (undo restores the saved one) and removes it from the url.
+No server is needed for links: the drawing is in the url hash. The first drawer of the page without `id` option opens a `#drawing=` link (a drawer with an `id`, a `#<id>=` link): its drawing replaces the saved one (undo restores it), is shown in the view, and the hash is removed from the url.
 
 Files and links can come from anyone: only drawing shapes are created (lines, arrows, rectangles, ellipses, texts, paths, groups and frames of them), other nodes and frames without their parts are ignored. Attributes of the drawing shapes must have their type (number, text, true / false, list of numbers), other attributes read by Konva (patterns, functions...) are ignored, attributes of data (e.g. of plugins) are kept. All shapes are created before the drawing is replaced: a file that can't be loaded leaves it as it is. Shapes received from other users of a collaboration session are checked the same way.
 

@@ -163,6 +163,9 @@ import { HotKey } from '@/utils/HotKey';
 // default id of each drawer of the page
 let drawerCount = 0;
 
+/** Space kept around shapes shown by `zoomToFit` (px): header and toolbar over the drawing */
+const fitMargin = 64;
+
 /**
  * Infinite canvas drawing board created in an element: Konva stage of the drawing, toolbar and interface, public API.
  * Events of the drawer are listened with `on` (see `drawerEvents`).
@@ -876,9 +879,15 @@ export class Drawer extends MicroEvent {
    * Show an area of the drawing (view presented by another user): zoomed to fit in the view (zoom limits kept),
    * centered in it
    * @param area Area of the drawing, in drawing coordinates
+   * @param maxScale Highest zoom (a small area is not enlarged beyond it)
+   * @param margin Space kept around the area in the view (px)
    */
-  showArea({ x, y, width, height }: ViewArea) {
-    const fit = Math.min(this.stage.width() / width, this.stage.height() / height);
+  showArea({ x, y, width, height }: ViewArea, maxScale: number = zoomLimits.max, margin: number = 0) {
+    const fit = Math.min(
+      (this.stage.width() - margin * 2) / width,
+      (this.stage.height() - margin * 2) / height,
+      maxScale
+    );
     const scale = Math.min(Math.max(fit, zoomLimits.min), zoomLimits.max);
 
     this.stage.scale({ x: scale, y: scale });
@@ -892,6 +901,17 @@ export class Drawer extends MicroEvent {
     } else {
       this._update();
     }
+  }
+
+  /**
+   * Show shapes in the view (whole drawing by default): centered, zoomed out when they do not fit (never zoomed in
+   * beyond 100 %), space around them for the interface. Done after a file or a link is opened
+   * @param shapes Shapes to show, visible drawing shapes by default (nothing done without shapes)
+   */
+  zoomToFit(shapes: DrawingShape[] = this.getDrawingShapes().filter((shape) => shape.visible())) {
+    const box = getExportBox(shapes, this.drawLayer);
+
+    if (box) this.showArea(box, 1, fitMargin);
   }
 
   /**
@@ -2103,6 +2123,8 @@ export class Drawer extends MicroEvent {
 
     try {
       this.loadDrawing(content);
+      // its shapes may be anywhere
+      this.zoomToFit();
     } catch (error) {
       this.toast(this.t('toast.invalidFile', { error: (error as Error).message }), 'error');
     }
@@ -2151,6 +2173,7 @@ export class Drawer extends MicroEvent {
     window.history.replaceState(null, '', window.location.pathname + window.location.search);
     try {
       this.loadDrawing(await decodeLinkData(hash.slice(prefix.length)));
+      this.zoomToFit();
     } catch (error) {
       this.toast(this.t('toast.invalidLink', { error: (error as Error).message }), 'error');
     }

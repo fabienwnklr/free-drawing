@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.28.0](https://github.com/fabienwnklr/free-drawing/compare/v7.27.5...v7.28.0) (2026-10-23)
+
+
+### Features
+
+* **view:** a file or a link opened is shown in the view, centered, zoomed out when it is bigger than the view (never zoomed in beyond 100 %): its shapes could be far from the view, the drawing looked empty
+* **api:** `drawer.zoomToFit(shapes?)` shows the whole drawing (or shapes) the same way
+
 ## [7.27.5](https://github.com/fabienwnklr/free-drawing/compare/v7.27.4...v7.27.5) (2026-10-23)
 
 

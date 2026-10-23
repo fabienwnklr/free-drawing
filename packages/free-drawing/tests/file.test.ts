@@ -232,6 +232,44 @@ describe('Drawing files and links', () => {
     expect(window.location.hash).toBe('');
   });
 
+  it('Opened link shown in the view: centered, zoomed out when big, not zoomed in', async () => {
+    /** View area contains the box of the shapes */
+    const shown = (drawer: ReturnType<typeof createDrawer>) => {
+      const view = drawer.getViewArea();
+
+      return drawer.getDrawingShapes().every((shape) => {
+        const { x, y, width, height } = shape.getClientRect({ relativeTo: drawer.drawLayer });
+
+        return x >= view.x && y >= view.y && x + width <= view.x + view.width && y + height <= view.y + view.height;
+      });
+    };
+    const source = createDrawer();
+
+    // far from the origin
+    source.addShape(new Rect({ x: 5000, y: 4000, width: 200, height: 100, fill: '#000' }));
+    window.location.hash = new URL(await source.getLink()).hash;
+
+    const drawer = createDrawer();
+
+    await wait();
+    expect(drawer.getDrawingShapes()).toHaveLength(1);
+    expect(drawer.getZoomLevel()).toBe(1);
+    expect(shown(drawer)).toBe(true);
+
+    // bigger than the view: zoomed out
+    drawer.addShape(new Rect({ x: -3000, y: 0, width: 200, height: 100, fill: '#000' }));
+    drawer.zoomToFit();
+    expect(drawer.getZoomLevel()).toBeLessThan(1);
+    expect(shown(drawer)).toBe(true);
+
+    // nothing to show: view kept
+    const empty = createDrawer();
+    const position = empty.stage.position();
+
+    empty.zoomToFit();
+    expect(empty.stage.position()).toEqual(position);
+  });
+
   it('Menu items and keyboard shortcuts', () => {
     const drawer = createDrawer();
     const saveAs = vi.spyOn(drawer, 'saveAs').mockResolvedValue();
