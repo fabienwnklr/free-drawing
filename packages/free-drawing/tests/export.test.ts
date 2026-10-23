@@ -5,7 +5,7 @@ import { Line } from 'konva/lib/shapes/Line';
 import { Arrow } from 'konva/lib/shapes/Arrow';
 import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
-import { createPdf, getExportBox, renderSvg, toDarkColor } from '@/utils/export';
+import { createPdf, getCanvasScale, getExportBox, renderSvg, toDarkColor } from '@/utils/export';
 import { createDrawer, keydown } from './helpers';
 
 beforeAll(() => {
@@ -88,6 +88,74 @@ describe('Export', () => {
     drawer.getWidget<SelectWidget>('selection')!.transformer.nodes([rect, ellipse]);
     expect(drawer.getExportShapes()).toEqual([rect, ellipse]);
     expect(drawer.getExportShapes(false)).toHaveLength(5);
+  });
+
+  it('Pixel ratio lowered so the canvas fits the limits of browsers (side, area, smaller on iOS)', () => {
+    expect(getCanvasScale({ x: 0, y: 0, width: 1000, height: 500 }, 2)).toBe(2);
+    // side of 32767 px at most
+    expect(getCanvasScale({ x: 0, y: 0, width: 40000, height: 100 }, 2)).toBeCloseTo(32767 / 40000);
+    // area of 16384 x 16384 px at most
+    expect(getCanvasScale({ x: 0, y: 0, width: 10000, height: 10000 }, 3)).toBeCloseTo(1.6384);
+
+    // iPhone, iPad (platform of macOS with touch): 4096 x 4096 px at most
+    const platform = vi.spyOn(navigator, 'platform', 'get').mockReturnValue('iPhone');
+    // not in jsdom
+    const touch = (points: number) =>
+      Object.defineProperty(navigator, 'maxTouchPoints', { value: points, configurable: true });
+
+    try {
+      expect(getCanvasScale({ x: 0, y: 0, width: 4000, height: 2000 }, 2)).toBeCloseTo(Math.sqrt(4096 ** 2 / 8e6));
+      platform.mockReturnValue('MacIntel');
+      touch(5);
+      expect(getCanvasScale({ x: 0, y: 0, width: 4000, height: 2000 }, 2)).toBeLessThan(2);
+      touch(0);
+      expect(getCanvasScale({ x: 0, y: 0, width: 4000, height: 2000 }, 2)).toBe(2);
+    } finally {
+      platform.mockRestore();
+      delete (navigator as { maxTouchPoints?: number }).maxTouchPoints;
+    }
+  });
+
+  it('Big drawing: canvas within the limits, pdf page of the drawing size', async () => {
+    const drawer = createDrawer();
+
+    drawer.addShape(new Rect({ x: 0, y: 0, width: 30000, height: 1000, fill: '#000' }));
+
+    const canvas = drawer.exportCanvas({ scale: 2 })!;
+    // 30000 + 2 x 16 of padding
+    const width = 30032;
+
+    expect(canvas.width).toBeLessThanOrEqual(32767);
+    expect(canvas.width).toBeGreaterThan(32760);
+    expect(canvas.height / canvas.width).toBeCloseTo(1032 / width, 3);
+
+    // not in jsdom
+    Object.defineProperty(Blob.prototype, 'arrayBuffer', {
+      configurable: true,
+      value(this: Blob) {
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+
+          reader.onload = () => resolve(reader.result);
+          reader.readAsArrayBuffer(this);
+        });
+      },
+    });
+
+    const text = await readBinary(
+      await drawer.exportImage('pdf', { scale: 2 }).finally(() => {
+        delete (Blob.prototype as { arrayBuffer?: unknown }).arrayBuffer;
+      })
+    );
+
+    // page of the drawing size (sides of the canvas rounded to pixels: less than a point)
+    const [pageWidth, pageHeight] = text
+      .match(/MediaBox \[0 0 ([\d.]+) ([\d.]+)\]/)!
+      .slice(1)
+      .map(Number);
+
+    expect(pageWidth).toBe(width * 0.75);
+    expect(Math.abs(pageHeight - 1032 * 0.75)).toBeLessThan(1);
   });
 
   it('Pdf has one page of drawing size with jpeg image', async () => {

@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.27.5](https://github.com/fabienwnklr/free-drawing/compare/v7.27.4...v7.27.5) (2026-10-23)
+
+
+### Bug Fixes
+
+* **export:** png and pdf of a very big drawing: the scale is lowered so the image fits the canvas limits of browsers (32767 px of side, 268 Mpx of area, 16.7 Mpx on iPhone and iPad), there was no image (Firefox: a drawing 15000 px wide at scale 3); the pdf page keeps the size of the drawing
+
 ## [7.27.4](https://github.com/fabienwnklr/free-drawing/compare/v7.27.3...v7.27.4) (2026-10-23)
 
 

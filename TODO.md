@@ -79,7 +79,7 @@
 - [x] eraser: hit test along the segment between pointer positions (fast strokes skip thin lines) (`Eraser.ts`): done by `_findAlong` (every 4 px), outlines of 3 units found at 10 % zoom in Chromium
 - [x] names of new frames repeat after a frame is deleted (`count + 1` in `Frame.ts`)
 - [x] links of drawings depend on the `drawer-<n>` id: a link copied from a remounted drawer does not open (`Drawer._loadFromLink`)
-- [ ] export: limit `pixelRatio` to canvas size limits of browsers (big drawing at scale 2 gives no image)
+- [x] export: limit `pixelRatio` to canvas size limits of browsers (big drawing at scale 2 gives no image)
 - [ ] loading a file or link: fit view to its content (may be out of view)
 - [ ] toasts: one live region kept in the page (inserted `role=status` not always announced, not read outside an `aria-modal` dialog) (`Toast.ts`)
 - [ ] error details in English inside translated toasts ("clipboard unavailable", "not a drawing file", "server unreachable", "nothing to export")

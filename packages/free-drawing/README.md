@@ -495,7 +495,7 @@ drawer.showExport(); // export dialog
 const blob = await drawer.exportImage('png', { selected: true, background: true, dark: false, scale: 2 }); // 'png' | 'svg' | 'pdf'
 ```
 
-Svg is vector (shapes, texts), pdf contains a png quality image of the drawing (jpeg, always with a background).
+Svg is vector (shapes, texts), pdf contains a png quality image of the drawing (jpeg, always with a background). The scale of png and pdf images is lowered for a very big drawing, so the image fits the canvas limits of browsers (32767 px of side, 268 Mpx, 16.7 Mpx on iPhone and iPad).
 
 ## Collaboration
 

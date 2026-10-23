@@ -84,13 +84,46 @@ function layerTransform(node: Node) {
   return node.getAbsoluteTransform(node.getLayer() ?? undefined);
 }
 
+/** Largest side of a canvas in browsers (px, Firefox): a bigger one gives no image */
+const maxCanvasSide = 32767;
+
+/**
+ * Largest area of a canvas (px): 16.7 Mpx in Safari of iOS and iPadOS, 268 Mpx in other browsers (Chromium, Safari)
+ * @returns number of pixels
+ */
+function getMaxCanvasArea() {
+  const { platform, maxTouchPoints } = navigator;
+  // iPadOS tells a platform of macOS
+  const ios = /iPhone|iPad|iPod/.test(platform) || (platform === 'MacIntel' && maxTouchPoints > 1);
+
+  return ios ? 4096 * 4096 : 16384 * 16384;
+}
+
+/**
+ * Pixel ratio of an image: the one asked, lowered for a big exported area so the canvas fits in the limits of browsers
+ * @param box Exported area
+ * @param scale Pixel ratio asked
+ * @returns Pixel ratio of the canvas
+ */
+export function getCanvasScale(box: IRect, scale: number): number {
+  const width = Math.max(box.width, 1);
+  const height = Math.max(box.height, 1);
+
+  return Math.min(
+    scale,
+    maxCanvasSide / width,
+    maxCanvasSide / height,
+    Math.sqrt(getMaxCanvasArea() / (width * height))
+  );
+}
+
 /**
  * Shapes rendered on a canvas (png, pdf, clipboard), same rendering as drawer: clones of shapes in a stage out of
  * page, titles of frames hidden
  * @param shapes exported shapes, bottom first (shapes of groups placed as drawn)
  * @param box Exported area (see `getExportBox`)
  * @param options background, dark mode colors and pixel ratio
- * @returns canvas of `box` size multiplied by `scale`
+ * @returns canvas of `box` size multiplied by `scale`, lowered to fit the canvas limits of browsers (`getCanvasScale`)
  */
 export function renderCanvas(shapes: DrawingShape[], box: IRect, options: ImageOptions = {}): HTMLCanvasElement {
   const { background, dark, scale = 2 } = options;
@@ -121,7 +154,7 @@ export function renderCanvas(shapes: DrawingShape[], box: IRect, options: ImageO
     layer.add(clone);
   });
 
-  const canvas = stage.toCanvas({ pixelRatio: scale });
+  const canvas = stage.toCanvas({ pixelRatio: getCanvasScale(box, scale) });
 
   stage.destroy();
   return canvas;

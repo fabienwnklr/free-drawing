@@ -1975,7 +1975,6 @@ export class Drawer extends MicroEvent {
     if (!image) throw new Error('nothing to export');
 
     const { shapes, box, imageOptions } = image;
-    const { scale } = imageOptions;
 
     if (format === 'svg') return new Blob([renderSvg(shapes, box, imageOptions)], { type: 'image/svg+xml' });
 
@@ -1988,7 +1987,8 @@ export class Drawer extends MicroEvent {
 
     const jpeg = new Uint8Array(await (await canvasToBlob(canvas, 'image/jpeg', 0.92)).arrayBuffer());
 
-    return createPdf(jpeg, canvas.width, canvas.height, scale);
+    // page of the drawing size, also when the canvas scale was lowered (big drawing)
+    return createPdf(jpeg, canvas.width, canvas.height, canvas.width / box.width);
   }
 
   /**
