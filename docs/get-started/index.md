@@ -42,7 +42,7 @@ const drawer = new Drawer($el, {
 
 ```js
 {
-  id: 'drawer-1', // id for drawer (unique for each drawer of the page)
+  id: 'notes', // id for drawer (unique for each drawer of the page), key of its links to drawings (#notes=...)
   tool: 'brush', // activate tool on init
   width: window.innerWidth, // width of drawer
   height: window.innerHeight, // height of drawer
@@ -478,7 +478,7 @@ The settings menu opens and saves drawings as `.freedrawing` files (JSON: backgr
 await drawer.saveAs('my-drawing'); // save dialog when the browser has one (Chromium), else download (Ctrl / Cmd + Shift + S)
 await drawer.open(); // file chosen by user replaces drawing, undo restores it (Ctrl+O)
 const file = drawer.getDrawingFile(); // file content, `drawer.loadDrawing(file)` loads it
-const link = await drawer.getLink(); // current page url with compressed drawing: #<drawer id>=<data>
+const link = await drawer.getLink(); // current page url with compressed drawing: #drawing=<data> (#<id>=<data> with the id option)
 await drawer.copyLink();
 ```
 

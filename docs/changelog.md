@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.27.4](https://github.com/fabienwnklr/free-drawing/compare/v7.27.3...v7.27.4) (2026-10-23)
+
+
+### Bug Fixes
+
+* **links:** links to drawings of a drawer without `id` option are `#drawing=...`, opened by the first drawer without id of the page: the key was `drawer-<n>`, numbered by the drawers created before, so a link copied from a drawer mounted again by an app did not open (links of previous versions still open); with the `id` option, `#<id>=...` as before. A link is opened by one drawer of the page only
+
 ## [7.27.3](https://github.com/fabienwnklr/free-drawing/compare/v7.27.2...v7.27.3) (2026-10-23)
 
 

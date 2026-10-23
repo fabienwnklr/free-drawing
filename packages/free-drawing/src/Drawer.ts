@@ -288,6 +288,8 @@ export class Drawer extends MicroEvent {
   #preferences = '';
   /** Changes not saved yet, see `hasUnsavedChanges` */
   #unsaved = false;
+  /** Key of links to drawings (`#<key>=...`): `id` option given by the app, else `drawing` */
+  #linkKey = 'drawing';
   /** Preferences check planned in a microtask (see `_preferencesChanged`) */
   #preferencesCheck = false;
   /** Options given on init, restored by `resetDrawer` */
@@ -313,6 +315,9 @@ export class Drawer extends MicroEvent {
     this.$el = $el;
 
     const { widgets, ...otherOptions } = options;
+
+    // links of a drawer without id opened by any drawer without id (its id depends on the drawers created before)
+    if (options.id) this.#linkKey = options.id;
 
     this.options = deepMerge<DrawerOptions>(
       {
@@ -2104,13 +2109,14 @@ export class Drawer extends MicroEvent {
   }
 
   /**
-   * Link to current page with drawing in its hash (`#<drawer id>=<data>`), no server needed
+   * Link to current page with drawing in its hash, no server needed: `#drawing=<data>`, `#<id>=<data>` with the `id`
+   * option (several drawers in a page)
    * @returns Url of current page with compressed drawing file in its hash
    */
   async getLink(): Promise<string> {
     const url = new URL(window.location.href);
 
-    url.hash = `${this.options.id}=${await encodeLinkData(JSON.stringify(this.getDrawingFile()))}`;
+    url.hash = `${this.#linkKey}=${await encodeLinkData(JSON.stringify(this.getDrawingFile()))}`;
 
     return url.toString();
   }
@@ -2131,16 +2137,20 @@ export class Drawer extends MicroEvent {
   }
 
   /**
-   * Drawing of a link (see `getLink`) replaces saved one (undo restores it), removed from page url once loaded
+   * Drawing of a link (see `getLink`) replaces saved one (undo restores it), removed from page url at once: opened by
+   * one drawer only. Without `id` option, links of drawers without id, also `#drawer-<n>=` of previous versions
    */
   private async _loadFromLink() {
-    const prefix = `#${this.options.id}=`;
+    const { hash } = window.location;
+    const [prefix] =
+      this.#linkKey === 'drawing' ? /^#(?:drawing|drawer-\d+)=/.exec(hash) ?? [] : [`#${this.#linkKey}=`];
 
-    if (!window.location.hash.startsWith(prefix)) return;
+    if (!prefix || !hash.startsWith(prefix)) return;
 
+    // taken before decoding (asynchronous): not opened by another drawer of the page
+    window.history.replaceState(null, '', window.location.pathname + window.location.search);
     try {
-      this.loadDrawing(await decodeLinkData(window.location.hash.slice(prefix.length)));
-      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      this.loadDrawing(await decodeLinkData(hash.slice(prefix.length)));
     } catch (error) {
       this.toast(this.t('toast.invalidLink', { error: (error as Error).message }), 'error');
     }

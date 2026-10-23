@@ -15,7 +15,7 @@ export type DrawingShape = Shape<ShapeConfig> | Group;
  * Options of `new Drawer($el, options)`, all optional (merged with defaults), see `defaultOptions`
  */
 export type DrawerOptions = {
-  /** Id of drawer, unique for each drawer of a page: prefix of links to drawings (`#<id>=...`) */
+  /** Id of drawer, unique for each drawer of a page; given, prefix of its links to drawings (`#<id>=...`, else `#drawing=`) */
   id: string;
   /** Tool activated on init (default 'brush'), the last one used is restored with a drawing saved in localStorage */
   tool: AvailableTools;

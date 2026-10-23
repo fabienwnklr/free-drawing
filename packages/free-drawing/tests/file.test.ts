@@ -197,6 +197,41 @@ describe('Drawing files and links', () => {
     expect(window.location.hash).toBe('');
   });
 
+  it('Link of a drawer without id opened by any drawer without id (remounted by an app), also links of previous versions', async () => {
+    const texts = (drawer: ReturnType<typeof createDrawer>) => drawer.getDrawingShapes().map((s) => s.attrs.text);
+    const source = createDrawer();
+    source.getWidget<TextWidget>('text')!.addTextNode('no id');
+    const link = await source.getLink();
+    const hash = new URL(link).hash;
+
+    expect(hash).toMatch(/^#drawing=/);
+
+    // drawer of another id (drawer-<n> of the page), only the first one of the page
+    window.location.hash = hash;
+    const drawer = createDrawer();
+    const second = createDrawer();
+    await wait();
+    expect(texts(drawer)).toEqual(['no id']);
+    expect(texts(second)).toEqual([]);
+    expect(window.location.hash).toBe('');
+
+    // link of a previous version (`#drawer-<n>=`)
+    window.location.hash = hash.replace('#drawing=', '#drawer-7=');
+    const old = createDrawer();
+    await wait();
+    expect(texts(old)).toEqual(['no id']);
+
+    // link of a drawer of an app given id: not opened by drawers without it
+    window.location.hash = hash.replace('#drawing=', '#notes=');
+    const other = createDrawer();
+    await wait();
+    expect(texts(other)).toEqual([]);
+    const notes = createDrawer({ id: 'notes' });
+    await wait();
+    expect(texts(notes)).toEqual(['no id']);
+    expect(window.location.hash).toBe('');
+  });
+
   it('Menu items and keyboard shortcuts', () => {
     const drawer = createDrawer();
     const saveAs = vi.spyOn(drawer, 'saveAs').mockResolvedValue();
