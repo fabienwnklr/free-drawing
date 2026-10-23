@@ -46,6 +46,7 @@ import FlipVerticalIcon from '@/icons/flip-vertical.svg?raw';
 import FitWidthIcon from '@/icons/fit-width.svg?raw';
 import type { Command, CommandGroup } from '@/@types/ui';
 import { shapeOrders } from '@/constants';
+import { formatShortcut } from '@/utils/shortcut';
 
 /** Accents of decomposed letters (U+0300 to U+036F) */
 const accents = new RegExp(`[${String.fromCharCode(0x300)}-${String.fromCharCode(0x36f)}]`, 'g');
@@ -217,7 +218,7 @@ export class CommandPalette extends Modal {
       const $shortcut = document.createElement('kbd');
 
       $shortcut.classList.add('drawer-commands-shortcut');
-      $shortcut.textContent = command.shortcut;
+      $shortcut.textContent = formatShortcut(command.shortcut, this.drawer.i18n.t);
       $option.append($shortcut);
     }
 
@@ -430,7 +431,7 @@ export class CommandPalette extends Modal {
             id: 'delete remove',
             label: t('action.delete'),
             icon: TrashIcon,
-            shortcut: t('key.delete'),
+            shortcut: 'Delete',
             run: () => drawer.deleteShapes(),
           },
           {
@@ -451,7 +452,7 @@ export class CommandPalette extends Modal {
             id: 'clear canvas',
             label: t('menu.clearCanvas'),
             icon: TrashIcon,
-            shortcut: `Ctrl+${t('key.delete')}`,
+            shortcut: 'Ctrl+Delete',
             run: () => drawer.clearCanvas(),
           },
         ],

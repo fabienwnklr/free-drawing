@@ -197,7 +197,7 @@ this.addCommand({
 });
 ```
 
-Shortcuts are written `Ctrl+Shift+M`, `Alt+P`, `Delete`: Ctrl is also Cmd on Mac, letters with Alt and digits are read by their place on the keyboard (Alt and Shift change characters). Shortcuts of plugins run before the ones of the library: avoid the ones listed in help. Add commands in `init`: the context menu and help get the commands of plugins once every plugin is initialized.
+Shortcuts are written `Ctrl+Shift+M`, `Alt+P`, `Delete`: Ctrl is also Cmd on Mac, letters with Alt and digits are read by their place on the keyboard (Alt and Shift change characters). They are shown with the symbols of Apple keyboards on its devices (⇧⌘M, ⌥P, ⌫); `formatShortcut(shortcut, drawer.i18n.t)` and `ariaShortcut(shortcut)` show the shortcuts of your own interface the same way. Shortcuts of plugins run before the ones of the library: avoid the ones listed in help. Add commands in `init`: the context menu and help get the commands of plugins once every plugin is initialized.
 
 ## Texts
 

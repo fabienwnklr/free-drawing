@@ -45,7 +45,7 @@ export type DrawerOptions = {
   widgets: WidgetsOptions;
   /** Groups of toolbar widgets, e.g. `[{ widgets: ['line', 'square', 'circle', 'arrow'], title: 'Shapes' }]` */
   widgetGroups: WidgetGroupOptions[];
-  /** Zoom with Ctrl + mouse wheel (or trackpad pinch) around pointer and two finger pinch on touch screens (default true) */
+  /** Zoom with Ctrl / Cmd + mouse wheel (or trackpad pinch) around pointer and two finger pinch on touch screens (default true) */
   zoom: boolean;
   /** Zoom buttons and level in footer (default true) */
   zoomWidget: boolean;

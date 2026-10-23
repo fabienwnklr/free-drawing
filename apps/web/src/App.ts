@@ -1,4 +1,4 @@
-import { Drawer, type DrawerStorage, type Preferences } from '@fabwcie/free-drawing';
+import { Drawer, ariaShortcut, type DrawerStorage, type Preferences } from '@fabwcie/free-drawing';
 import { type DrawingSummary, type DrawingsStore, type User, api } from './api';
 import { local, localDrawings } from './local';
 import { Texts } from './texts';
@@ -228,7 +228,7 @@ export class App {
       this.render();
     });
     this.$saveButton.addEventListener('click', () => this.drawer.saveNow());
-    this.$saveButton.setAttribute('aria-keyshortcuts', 'Control+S');
+    this.$saveButton.setAttribute('aria-keyshortcuts', ariaShortcut('Ctrl+S'));
     // Ctrl / Cmd + S out of the drawer (app bar, dialogs) saves the drawing, not the page (Shift: file downloaded);
     // in the drawer, its shortcut already handled it
     document.addEventListener('keydown', (e) => {

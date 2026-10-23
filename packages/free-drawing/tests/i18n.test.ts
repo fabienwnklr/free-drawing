@@ -58,7 +58,8 @@ describe('Languages', () => {
     expect(drawer.setting.$openButton.textContent).toContain('Ouvrir');
     expect(drawer.setting.$button.getAttribute('aria-label')).toBe('Menu');
     expect(drawer.getWidget<BaseWidget>('brush')!.$button.getAttribute('aria-label')).toBe('Pinceau');
-    expect(drawer.undoRedo.$btnUndo.title).toBe('Annuler');
+    expect(drawer.undoRedo.$btnUndo.getAttribute('aria-label')).toBe('Annuler');
+    expect(drawer.undoRedo.$btnUndo.title).toBe('Annuler (Ctrl+Z)');
     expect(drawer.help.$modalBody.textContent).toContain('Raccourcis clavier');
     expect(drawer.t('shapes.rect')).toBe('Rectangle');
   });

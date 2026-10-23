@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.27.0](https://github.com/fabienwnklr/free-drawing/compare/v7.26.0...v7.27.0) (2026-10-23)
+
+
+### Features
+
+* **shortcuts:** shown with the symbols of Apple keyboards on its devices (⇧⌘Z, ⌥⇧D, ⌘⌫, ⌘+Click), in the order of macOS menus, in menus, context menu, command palette, help (one key of macOS for Ctrl + Delete and Ctrl + Backspace), tooltips and `aria-keyshortcuts` (Meta), also the shortcuts of plugins; arrows shown as arrows (Ctrl+↑), names of keys translated in every menu. Shortcuts in the tooltips of undo, redo and save buttons
+* **zoom:** Cmd + wheel zooms like Ctrl + wheel on macOS
+* **plugins:** `formatShortcut(shortcut, t)` and `ariaShortcut(shortcut)` exported, to show shortcuts like the library
+
 ## [7.26.0](https://github.com/fabienwnklr/free-drawing/compare/v7.25.0...v7.26.0) (2026-10-23)
 
 

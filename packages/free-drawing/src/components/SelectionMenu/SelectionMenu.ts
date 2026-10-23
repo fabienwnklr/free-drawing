@@ -14,6 +14,7 @@ import RotateRightIcon from '@/icons/rotate-right.svg?raw';
 import FitWidthIcon from '@/icons/fit-width.svg?raw';
 import { Group } from 'konva/lib/Group';
 import { arrowNavigation, createButton, placeInView, setLabel } from '@/utils/dom';
+import { ariaShortcut, formatShortcut } from '@/utils/shortcut';
 import type { TranslationKey } from '@/@types/i18n';
 import { drawerEvents } from '@/constants';
 import { isFrame } from '@/utils/frame';
@@ -157,10 +158,10 @@ export class SelectionMenu {
     $btn.innerHTML = icon;
     this.drawer.i18n.translate((t) => {
       setLabel($btn, t(label));
-      // name of Delete key in language
-      $btn.title = `${t(label)} (${shortcut === 'Delete' ? t('key.delete') : shortcut})`;
+      // name of Delete key in language, symbols of Apple keyboards
+      $btn.title = `${t(label)} (${formatShortcut(shortcut, t)})`;
     });
-    $btn.setAttribute('aria-keyshortcuts', shortcut.replace('Ctrl', 'Control').replace(/Up|Down/, 'Arrow$&'));
+    $btn.setAttribute('aria-keyshortcuts', ariaShortcut(shortcut));
     $btn.addEventListener('click', action);
 
     return $btn;

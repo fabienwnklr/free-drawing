@@ -5,6 +5,7 @@ import HelpIcon from '@/icons/help.svg?raw';
 import ExternalLink from '@/icons/external-link.svg?raw';
 import { ShapeWidget } from '@/components/toolbar/widgets/ShapeWidget';
 import { createButton, setLabel } from '@/utils/dom';
+import { formatShortcut } from '@/utils/shortcut';
 import type { Translate, TranslationKey } from '@/@types/i18n';
 import type { Shortcut } from '@/@types/ui';
 
@@ -64,16 +65,16 @@ export class Help extends Modal {
       ...(this.drawer.options.commandPalette ? [{ label: t('menu.commands'), keys: ['Ctrl+K'] }] : []),
       { label: t('history.undo'), keys: ['Ctrl+Z'] },
       { label: t('history.redo'), keys: ['Ctrl+Y', 'Ctrl+Shift+Z'], or: true },
-      { label: t('menu.clearCanvas'), keys: [`Ctrl+${t('key.delete')}`, 'Ctrl+Backspace'], or: true },
+      { label: t('menu.clearCanvas'), keys: ['Ctrl+Delete', 'Ctrl+Backspace'], or: true },
       { label: t('help.selectAll'), keys: ['Ctrl+A'] },
-      { label: t('help.deleteSelection'), keys: [t('key.delete')] },
+      { label: t('help.deleteSelection'), keys: ['Delete'] },
       { label: t('help.duplicate'), keys: ['Ctrl+D'] },
       { label: t('help.group'), keys: ['Ctrl+G', 'Ctrl+Shift+G'] },
-      { label: t('help.selectInGroup'), keys: [`Ctrl+${t('key.click')}`] },
+      { label: t('help.selectInGroup'), keys: ['Ctrl+Click'] },
       { label: t('help.constrainDrawing'), keys: ['Shift'], after: t('help.whileDrawing') },
       { label: t('help.arrowUnlinked'), keys: ['Ctrl'], after: t('help.whileDrawing') },
       { label: t('help.constrainSelection'), keys: ['Shift'], after: t('help.whileTransforming') },
-      { label: t('help.move'), keys: [t('key.arrows')] },
+      { label: t('help.move'), keys: ['Arrows'] },
       { label: t('help.forwardBackward'), keys: ['Ctrl+Up', 'Ctrl+Down'] },
       { label: t('help.frontBack'), keys: ['Ctrl+Shift+Up', 'Ctrl+Shift+Down'] },
       { label: t('action.rotateRight'), keys: ['Shift+R'] },
@@ -96,16 +97,11 @@ export class Help extends Modal {
       { label: t('help.layers'), keys: ['Alt+L'] },
       {
         label: t('help.layersSelect'),
-        keys: [
-          `Ctrl+${t('key.click')}`,
-          `Shift+${t('key.click')}`,
-          `Shift+${t('key.arrows')}`,
-          `Ctrl+${t('key.space')}`,
-        ],
+        keys: ['Ctrl+Click', 'Shift+Click', 'Shift+Arrows', 'Ctrl+Space'],
       },
       { label: t('menu.darkMode'), keys: ['Alt+Shift+D'] },
       { label: t('help.snap'), keys: ['Alt+S'] },
-      { label: t('help.zoom'), keys: [`Ctrl+${t('key.wheel')}`] },
+      { label: t('help.zoom'), keys: ['Ctrl+Wheel'] },
       { label: t('preferences.title'), keys: ['Ctrl+,'] },
     ];
 
@@ -180,8 +176,8 @@ export class Help extends Modal {
   }
 
   /**
-   * Item of shortcut list: action then keys
-   * @param t Translation function of the current language (text between alternative keys)
+   * Item of shortcut list: action then keys (symbols of Apple keyboards on its devices, alternatives shown once)
+   * @param t Translation function of the current language (names of keys, text between alternative keys)
    * @returns List item: label, keys in `kbd` elements, then text after them
    */
   private _createShortcut(t: Translate, { label, keys, or, after }: Shortcut) {
@@ -189,7 +185,8 @@ export class Help extends Modal {
     const $keys = document.createElement('span');
 
     $item.classList.add('drawer-modal-help-shortcut');
-    keys.forEach((key, index) => {
+    // Ctrl + Delete or Ctrl + Backspace: one key of macOS
+    [...new Set(keys.map((key) => formatShortcut(key, t)))].forEach((key, index) => {
       const $key = document.createElement('kbd');
 
       $key.classList.add('drawer-modal-help-kdb');

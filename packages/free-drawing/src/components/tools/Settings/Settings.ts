@@ -33,6 +33,7 @@ import { drawerEvents } from '@/constants';
 import { languages } from '@/i18n/I18n';
 import type { Language, TranslationKey } from '@/@types/i18n';
 import type { Choice } from '@/@types/ui';
+import { ariaShortcut, formatShortcut } from '@/utils/shortcut';
 
 /**
  * Settings menu of header (dropdown): file actions, collaboration, view toggles, language, preferences and
@@ -93,18 +94,14 @@ export class Settings extends Dropdown {
 
     this.$commandsButton = this._createItem(CommandIcon, 'menu.commands', 'Ctrl+K');
     this.$commandsButton.setAttribute('aria-haspopup', 'dialog');
-    this.$commandsButton.setAttribute('aria-keyshortcuts', 'Control+K');
     this.$openButton = this._createItem(OpenIcon, 'menu.open', 'Ctrl+O');
-    this.$openButton.setAttribute('aria-keyshortcuts', 'Control+O');
     this.$saveButton = this._createItem(SaveNowIcon, 'menu.save', 'Ctrl+S');
-    this.$saveButton.setAttribute('aria-keyshortcuts', 'Control+S');
     // changes not saved yet, before the shortcut
     const $saveState = document.createElement('span');
 
     $saveState.className = 'text-muted';
     this.$saveButton.lastElementChild!.before($saveState);
     this.$saveAsButton = this._createItem(SaveIcon, 'menu.saveAs', 'Ctrl+Shift+S');
-    this.$saveAsButton.setAttribute('aria-keyshortcuts', 'Control+Shift+S');
     this.$copyLinkButton = this._createItem(LinkIcon, 'menu.copyLink');
     this.$collaborationButton = this._createItem(UsersIcon, 'menu.collaboration');
     // session state
@@ -115,23 +112,20 @@ export class Settings extends Dropdown {
     this.$collaborationButton.setAttribute('aria-haspopup', 'dialog');
     this.$exportButton = this._createItem(ExportIcon, 'menu.export', 'Ctrl+Shift+E');
     this.$exportButton.setAttribute('aria-haspopup', 'dialog');
-    this.$exportButton.setAttribute('aria-keyshortcuts', 'Control+Shift+E');
 
     // asks confirmation
     this.$clearCanvasButton = this._createItem(TrashIcon, 'menu.clearCanvas');
     this.$clearCanvasButton.setAttribute('aria-haspopup', 'dialog');
-    this.$clearCanvasButton.setAttribute('aria-keyshortcuts', 'Control+Delete');
+    this.$clearCanvasButton.setAttribute('aria-keyshortcuts', ariaShortcut('Ctrl+Delete'));
 
     this.$toggleGridButton = this._createItem(GridIcon, 'menu.showGrid');
-    this.$toggleGridButton.setAttribute('aria-keyshortcuts', 'Alt+G');
+    this.$toggleGridButton.setAttribute('aria-keyshortcuts', ariaShortcut('Alt+G'));
     setPressed(this.$toggleGridButton, false);
 
     this.$zenModeButton = this._createItem(ZenIcon, 'menu.zenMode', 'Alt+Z');
-    this.$zenModeButton.setAttribute('aria-keyshortcuts', 'Alt+Z');
     setPressed(this.$zenModeButton, false);
 
     this.$darkModeButton = this._createItem(MoonIcon, 'menu.darkMode', 'Alt+Shift+D');
-    this.$darkModeButton.setAttribute('aria-keyshortcuts', 'Alt+Shift+D');
     setPressed(this.$darkModeButton, false);
 
     const $language = this._createLanguageItem();
@@ -140,7 +134,6 @@ export class Settings extends Dropdown {
 
     this.$preferencesButton = this._createItem(SlidersIcon, 'menu.preferences', 'Ctrl+,');
     this.$preferencesButton.setAttribute('aria-haspopup', 'dialog');
-    this.$preferencesButton.setAttribute('aria-keyshortcuts', 'Control+,');
 
     this.$githubButton = this._createItem(GithubIcon, 'menu.github');
 
@@ -240,7 +233,8 @@ export class Settings extends Dropdown {
    * Menu item: icon, translated label and shortcut
    * @param icon Svg icon shown first
    * @param label Key of the item text, translated again on language change
-   * @param shortcut Keys shown after the text (hidden from screen readers), none when missing
+   * @param shortcut Keys of the item (`Ctrl+O`), shown after the text (`formatShortcut`, hidden from screen readers) and set
+   * as `aria-keyshortcuts`, none when missing
    * @returns Item button, not appended yet
    */
   private _createItem(icon: string, label: TranslationKey, shortcut?: string) {
@@ -255,8 +249,10 @@ export class Settings extends Dropdown {
 
       $shortcut.className = 'text-muted';
       $shortcut.setAttribute('aria-hidden', 'true');
-      $shortcut.textContent = shortcut;
+      // names of keys in language, symbols of Apple keyboards
+      this.drawer.i18n.translate((t) => ($shortcut.textContent = formatShortcut(shortcut, t)));
       $item.append($shortcut);
+      $item.setAttribute('aria-keyshortcuts', ariaShortcut(shortcut));
     }
 
     return $item;

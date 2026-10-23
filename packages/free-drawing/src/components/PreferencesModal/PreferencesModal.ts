@@ -6,6 +6,7 @@ import { languages } from '@/i18n/I18n';
 import type { Language, TranslationKey } from '@/@types/i18n';
 import { drawerEvents } from '@/constants';
 import { createButton, createSwitch, isComposing, uniqueId } from '@/utils/dom';
+import { ariaShortcut, formatShortcut } from '@/utils/shortcut';
 import type { Choice } from '@/@types/ui';
 
 const themes: Choice<Theme>[] = [
@@ -243,12 +244,14 @@ export class PreferencesModal extends Modal {
 
     $label.className = 'drawer-preferences-switch';
     $shortcut.className = 'drawer-preferences-shortcut';
-    $shortcut.textContent = shortcut ?? '';
     $shortcut.hidden = !shortcut;
-    if (shortcut) $switch.setAttribute('aria-keyshortcuts', shortcut);
+    if (shortcut) $switch.setAttribute('aria-keyshortcuts', ariaShortcut(shortcut));
     $label.append($text, $shortcut, $switch);
     $container.append($label);
-    this.drawer.i18n.translate((t) => ($text.textContent = t(label)));
+    this.drawer.i18n.translate((t) => {
+      $text.textContent = t(label);
+      $shortcut.textContent = formatShortcut(shortcut ?? '', t);
+    });
 
     return $switch;
   }

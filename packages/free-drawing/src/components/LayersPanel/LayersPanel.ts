@@ -15,6 +15,7 @@ import {
   setPressed,
   uniqueId,
 } from '@/utils/dom';
+import { ariaShortcut, formatShortcut } from '@/utils/shortcut';
 import LayersIcon from '@/icons/layers.svg?raw';
 import CloseIcon from '@/icons/close.svg?raw';
 import GripIcon from '@/icons/grip.svg?raw';
@@ -106,7 +107,7 @@ export class LayersPanel {
     this.$buttonContainer.classList.add('drawer-layers-button-container', 'tool');
     this.$button = createButton('drawer-button', 'drawer-button-neutral');
     this.$button.innerHTML = LayersIcon;
-    this.$button.setAttribute('aria-keyshortcuts', 'Alt+L');
+    this.$button.setAttribute('aria-keyshortcuts', ariaShortcut('Alt+L'));
     this.$button.setAttribute('aria-expanded', 'false');
     setPressed(this.$button, false);
     this.$button.addEventListener('click', () => this.toggle());
@@ -150,7 +151,8 @@ export class LayersPanel {
     this.$hint.id = uniqueId('layers-hint');
     this.$hint.classList.add('drawer-layers-hint', 'text-muted');
     this.drawer.i18n.translate((t) => {
-      const kbd = (text: string) => Object.assign(document.createElement('kbd'), { textContent: text });
+      const kbd = (keys: string) =>
+        Object.assign(document.createElement('kbd'), { textContent: formatShortcut(keys, t) });
       // action, then its keys (wrapped at the end when too long)
       const line = (text: string, ...keys: string[]) => {
         const $line = document.createElement('span');
@@ -164,12 +166,12 @@ export class LayersPanel {
       };
 
       setLabel(this.$button, t('layers.title'));
-      this.$button.title = `${t('layers.title')} (Alt+L)`;
+      this.$button.title = `${t('layers.title')} (${formatShortcut('Alt+L', t)})`;
       $title.textContent = t('layers.title');
       this.$empty.textContent = t('layers.empty');
       this.$hint.replaceChildren(
-        line(t('layers.toggle'), `Ctrl+${t('key.click')}`, `Ctrl+${t('key.space')}`),
-        line(t('layers.range'), `Shift+${t('key.click')}`, `Shift+${t('key.arrows')}`)
+        line(t('layers.toggle'), 'Ctrl+Click', 'Ctrl+Space'),
+        line(t('layers.range'), 'Shift+Click', 'Shift+Arrows')
       );
     });
 
@@ -234,9 +236,9 @@ export class LayersPanel {
     $btn.innerHTML = icon;
     this.drawer.i18n.translate((t) => {
       setLabel($btn, t(label));
-      if (shortcut) $btn.title = `${t(label)} (${shortcut})`;
+      if (shortcut) $btn.title = `${t(label)} (${formatShortcut(shortcut, t)})`;
     });
-    if (shortcut) $btn.setAttribute('aria-keyshortcuts', shortcut.replace('Ctrl', 'Control'));
+    if (shortcut) $btn.setAttribute('aria-keyshortcuts', ariaShortcut(shortcut));
     $btn.addEventListener('click', action);
 
     return $btn;

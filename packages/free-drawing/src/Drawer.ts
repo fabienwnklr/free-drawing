@@ -126,6 +126,8 @@ export { ShapeWidget } from '@/components/toolbar/widgets/ShapeWidget';
 export type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 export { drawerEvents, shapeName } from '@/constants';
 export { createButton, setLabel, setPressed } from '@/utils/dom';
+// shortcuts shown as by the library (`Ctrl+Shift+Z`: ⇧⌘Z on Apple devices) and their `aria-keyshortcuts`
+export { ariaShortcut, formatShortcut } from '@/utils/shortcut';
 
 import { Zoom } from '@/components/tools/Zoom/Zoom';
 import { Position } from '@/components/tools/Position/Position';
@@ -1118,7 +1120,8 @@ export class Drawer extends MicroEvent {
   private _initZoomWheel() {
     if (this.options.zoom) {
       this.stage.on('wheel', (e) => {
-        if (!e.evt.ctrlKey) return;
+        // Cmd of macOS too (trackpad pinch: ctrlKey)
+        if (!e.evt.ctrlKey && !e.evt.metaKey) return;
         // stop default scrolling
         e.evt.preventDefault();
 

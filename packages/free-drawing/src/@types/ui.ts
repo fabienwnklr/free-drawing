@@ -37,7 +37,7 @@ export type TextChoice<T> = Choice<T> & {
  * @template T Value given by the button
  */
 export type ShortcutChoice<T> = IconChoice<T> & {
-  /** Keys doing the same, shown in its tooltip */
+  /** Keys doing the same (`Ctrl+Up`), shown in its tooltip (`formatShortcut`) */
   shortcut: string;
 };
 
@@ -134,7 +134,7 @@ export type Command = {
   group: TranslationKey;
   /** SVG markup of its icon, shown before the label */
   icon?: string;
-  /** Keys doing the same, shown at the end of the option */
+  /** Keys doing the same (`Ctrl+Shift+Z`), shown at the end of the option (`formatShortcut`: ⇧⌘Z on Apple devices) */
   shortcut?: string;
   /** State of a toggle (grid, zen mode...) or current choice (tool, language) */
   checked?: boolean;
@@ -173,7 +173,7 @@ export type ContextMenuSection = {
 export type ContextMenuItemOptions = {
   /** Key of its text, or text */
   label: string;
-  /** Keys doing the same, shown at its end */
+  /** Keys doing the same (`Alt+P`), shown at its end (`formatShortcut`: ⌥P on Apple devices) */
   shortcut?: string;
   /** Item shown for the current selection or drawing */
   visible: () => boolean;
@@ -185,7 +185,10 @@ export type ContextMenuItemOptions = {
 export type Shortcut = {
   /** Translated action */
   label: string;
-  /** Keys shown, each in a `kbd` element (alternatives with `or`, else a second action such as ungroup) */
+  /**
+   * Keys shown, each in a `kbd` element (alternatives with `or`, else a second action such as ungroup), written in
+   * English (`Ctrl+Click`, `Delete`): see `formatShortcut`
+   */
   keys: string[];
   /** Keys are alternatives, separated by translated "or" */
   or?: boolean;

@@ -34,7 +34,7 @@ export type PluginCommand = {
   label: string;
   /** SVG markup of its icon, shown in the command palette */
   icon?: string;
-  /** Keys running it (`Ctrl+Shift+M`, `Alt+P`: Ctrl is also Cmd), shown in palette, context menu and help */
+  /** Keys running it (`Ctrl+Shift+M`, `Alt+P`: Ctrl is also Cmd), shown in palette, context menu and help (⇧⌘M, ⌥P on Apple devices) */
   shortcut?: string;
   /** Item of the context menu for selected shapes, or for the drawing (nothing selected) */
   contextMenu?: PluginCommandMenu;

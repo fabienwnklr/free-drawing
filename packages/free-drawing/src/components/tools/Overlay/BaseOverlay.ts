@@ -23,6 +23,7 @@ import {
 } from '@/constants';
 import { ColorPicker } from '@/components/ColorPicker/ColorPicker';
 import { createButton, setLabel, setPressed, uniqueId } from '@/utils/dom';
+import { ariaShortcut, formatShortcut } from '@/utils/shortcut';
 import { getEdges, getStrokeStyle } from '@/utils/stroke';
 import type { TranslationKey } from '@/@types/i18n';
 import type { OverlayOptions } from '@/@types/toolbar';
@@ -420,14 +421,11 @@ export class BaseOverlay {
 
     $btn.innerHTML = icon;
     this.drawer.i18n.translate((t) => {
-      const keys = shortcut === 'Delete' ? t('key.delete') : shortcut;
-
       setLabel($btn, t(label));
-      $btn.title = keys ? `${t(label)} (${keys})` : t(label);
+      // name of Delete key in language, symbols of Apple keyboards
+      $btn.title = shortcut ? `${t(label)} (${formatShortcut(shortcut, t)})` : t(label);
     });
-    if (shortcut) {
-      $btn.setAttribute('aria-keyshortcuts', shortcut.replace('Ctrl', 'Control').replace(/Up|Down/, 'Arrow$&'));
-    }
+    if (shortcut) $btn.setAttribute('aria-keyshortcuts', ariaShortcut(shortcut));
     $btn.addEventListener('click', run);
 
     return $btn;

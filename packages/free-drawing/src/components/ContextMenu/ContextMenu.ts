@@ -10,6 +10,7 @@ import { arrowNavigation, createButton, setPressed } from '@/utils/dom';
 import { getDrawingShape } from '@/utils/frame';
 import { getTexts } from '@/utils/text';
 import type { TranslationKey } from '@/@types/i18n';
+import { ariaShortcut, formatShortcut } from '@/utils/shortcut';
 import type { ContextMenuItem, ContextMenuItemOptions, ContextMenuSection } from '@/@types/ui';
 
 /**
@@ -85,7 +86,7 @@ export class ContextMenu {
       run: () => drawer.setting.toggleGrid(),
     };
     const remove: ContextMenuItem = {
-      $item: this._createItem('action.delete', drawer.t('key.delete'), 'menuitem', 'Delete'),
+      $item: this._createItem('action.delete', 'Delete'),
       visible: selection,
       run: () => drawer.deleteShapes(),
     };
@@ -130,10 +131,10 @@ export class ContextMenu {
         remove,
       ],
       [
-        order('action.bringToFront', 'front', 'Ctrl+Shift+↑'),
-        order('action.bringForward', 'forward', 'Ctrl+↑'),
-        order('action.sendBackward', 'backward', 'Ctrl+↓'),
-        order('action.sendToBack', 'back', 'Ctrl+Shift+↓'),
+        order('action.bringToFront', 'front', 'Ctrl+Shift+Up'),
+        order('action.bringForward', 'forward', 'Ctrl+Up'),
+        order('action.sendBackward', 'backward', 'Ctrl+Down'),
+        order('action.sendToBack', 'back', 'Ctrl+Shift+Down'),
       ],
       [
         {
@@ -185,10 +186,6 @@ export class ContextMenu {
     ];
 
     for (const items of sections) this._addSection(items);
-    // Delete key name in language
-    drawer.i18n.translate((t) => {
-      remove.$item.querySelector('kbd')!.textContent = t('key.delete');
-    });
 
     this.drawer.layout.add('floating', this.$menu);
   }
@@ -230,17 +227,12 @@ export class ContextMenu {
   /**
    * Menu item, focused with arrow keys, shortcut shown at its end
    * @param label Key of the item text (translated again when language changes)
-   * @param shortcut Keys shown at the end of the item (hidden to assistive technologies), empty without one
+   * @param shortcut Keys of the item (`Ctrl+Shift+Up`, `Delete`), shown at its end (`formatShortcut`, hidden to assistive
+   * technologies) and set as `aria-keyshortcuts`, empty without one
    * @param role `menuitemcheckbox` for a toggle (snapping, grid), else `menuitem`
-   * @param keyshortcuts `aria-keyshortcuts` when shown shortcut is not one
    * @returns Item button (not in tab order), its click listener is added by `_init`
    */
-  private _createItem(
-    label: TranslationKey,
-    shortcut: string,
-    role: 'menuitem' | 'menuitemcheckbox' = 'menuitem',
-    keyshortcuts = shortcut.replace('Ctrl', 'Control').replace('↑', 'ArrowUp').replace('↓', 'ArrowDown')
-  ) {
+  private _createItem(label: TranslationKey, shortcut: string, role: 'menuitem' | 'menuitemcheckbox' = 'menuitem') {
     const $item = createButton('drawer-button', 'drawer-button-neutral', 'drawer-context-menu-list-item');
     const $label = document.createElement('span');
     const $shortcut = document.createElement('kbd');
@@ -248,11 +240,13 @@ export class ContextMenu {
     $label.className = 'drawer-context-menu-item__label';
     $shortcut.className = 'drawer-context-menu-item__shortcut';
     $shortcut.setAttribute('aria-hidden', 'true');
-    $shortcut.textContent = shortcut;
     $item.append($label, $shortcut);
-    this.drawer.i18n.translate((t) => ($label.textContent = t(label)));
+    this.drawer.i18n.translate((t) => {
+      $label.textContent = t(label);
+      $shortcut.textContent = formatShortcut(shortcut, t);
+    });
     $item.setAttribute('role', role);
-    if (keyshortcuts) $item.setAttribute('aria-keyshortcuts', keyshortcuts);
+    if (shortcut) $item.setAttribute('aria-keyshortcuts', ariaShortcut(shortcut));
     $item.tabIndex = -1;
 
     return $item;

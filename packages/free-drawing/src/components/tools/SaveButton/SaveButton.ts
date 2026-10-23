@@ -2,6 +2,7 @@ import '@/components/tools/SaveButton/save-button.scss';
 import type { Drawer } from '@/Drawer';
 import SaveNowIcon from '@/icons/save-now.svg?raw';
 import { createButton, setLabel } from '@/utils/dom';
+import { ariaShortcut, formatShortcut } from '@/utils/shortcut';
 import { drawerEvents } from '@/constants';
 
 /**
@@ -26,7 +27,7 @@ export class SaveButton {
     this.$container.classList.add('drawer-save-button-container', 'tool');
     this.$button = createButton('drawer-button', 'drawer-button-neutral');
     this.$button.innerHTML = SaveNowIcon;
-    this.$button.setAttribute('aria-keyshortcuts', 'Control+S');
+    this.$button.setAttribute('aria-keyshortcuts', ariaShortcut('Ctrl+S'));
     this.$button.addEventListener('click', () => this.drawer.saveNow());
     this.$container.append(this.$button);
     this.drawer.layout.add('header', this.$container, { hideInZen: true });
@@ -48,5 +49,7 @@ export class SaveButton {
     this.$container.hidden = this.drawer.options.autoSave;
     this.$button.classList.toggle('is-unsaved', unsaved);
     setLabel(this.$button, unsaved ? `${label} (${this.drawer.t('menu.unsaved')})` : label);
+    // shortcut in tooltip
+    this.$button.title = `${this.$button.title} (${formatShortcut('Ctrl+S', this.drawer.i18n.t)})`;
   }
 }

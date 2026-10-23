@@ -4,6 +4,7 @@ import UndoIcon from '@/icons/undo.svg?raw';
 import RedoIcon from '@/icons/redo.svg?raw';
 import '@/components/tools/UndoRedo/undo-redo.scss';
 import { createButton, disableElement, enableElement, setLabel } from '@/utils/dom';
+import { ariaShortcut, formatShortcut } from '@/utils/shortcut';
 
 /**
  * History with its undo and redo buttons (footer, hidden in zen mode), restored states fire drawer change
@@ -28,15 +29,18 @@ export class UndoRedo extends History {
 
     this.$btnUndo = createButton('drawer-button', 'drawer-button-neutral');
     this.$btnUndo.innerHTML = UndoIcon;
-    this.$btnUndo.setAttribute('aria-keyshortcuts', 'Control+Z');
+    this.$btnUndo.setAttribute('aria-keyshortcuts', ariaShortcut('Ctrl+Z'));
 
     this.$btnRedo = createButton('drawer-button', 'drawer-button-neutral');
     this.$btnRedo.innerHTML = RedoIcon;
-    this.$btnRedo.setAttribute('aria-keyshortcuts', 'Control+Y Control+Shift+Z');
+    this.$btnRedo.setAttribute('aria-keyshortcuts', ariaShortcut('Ctrl+Y', 'Ctrl+Shift+Z'));
     drawer.i18n.translate((t) => {
       this.$undoRedoContainer.setAttribute('aria-label', t('history.label'));
       setLabel(this.$btnUndo, t('history.undo'));
       setLabel(this.$btnRedo, t('history.redo'));
+      // shortcuts in tooltips
+      this.$btnUndo.title = `${t('history.undo')} (${formatShortcut('Ctrl+Z', t)})`;
+      this.$btnRedo.title = `${t('history.redo')} (${formatShortcut('Ctrl+Y', t)})`;
     });
 
     this.$undoRedoContainer.append(...[this.$btnUndo, this.$btnRedo]);
