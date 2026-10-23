@@ -276,21 +276,25 @@ export class HotKey {
 
     // Ctrl / Cmd + V, clipboard data is available without permission (unlike navigator.clipboard). Listened on the
     // document: out of editable elements, Chromium fires it on the body, not on the focused element
-    document.addEventListener('paste', (e) => {
-      const target = e.target as HTMLElement;
+    document.addEventListener(
+      'paste',
+      (e) => {
+        const target = e.target as HTMLElement;
 
-      if (!this.drawer.$drawerContainer.contains(document.activeElement)) return;
-      if (this.drawer._duringAction() || this.drawer.readOnly) return;
-      // pasted in a field of the drawer (search, name, link, radius...): text of the field
-      if (target.matches('input, textarea, select') || target.isContentEditable) return;
+        if (!this.drawer.$drawerContainer.contains(document.activeElement)) return;
+        if (this.drawer._duringAction() || this.drawer.readOnly) return;
+        // pasted in a field of the drawer (search, name, link, radius...): text of the field
+        if (target.matches('input, textarea, select') || target.isContentEditable) return;
 
-      const text = e.clipboardData?.getData('text');
+        const text = e.clipboardData?.getData('text');
 
-      if (text) {
-        e.preventDefault();
-        this.drawer.getWidget<TextWidget>('text')?.addTextNode(text);
-        this.drawer.stage.fire('change');
-      }
-    });
+        if (text) {
+          e.preventDefault();
+          this.drawer.getWidget<TextWidget>('text')?.addTextNode(text);
+          this.drawer.stage.fire('change');
+        }
+      },
+      { signal: this.drawer.signal }
+    );
   }
 }

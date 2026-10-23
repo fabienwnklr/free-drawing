@@ -83,7 +83,7 @@ export class Settings extends Dropdown {
    * @param drawer Drawer the menu acts on, whose options give the items shown
    */
   constructor(drawer: Drawer) {
-    super();
+    super(drawer.signal);
 
     this.drawer = drawer;
     this.$dropdownContainer.classList.add('drawer-dropdown-setting');

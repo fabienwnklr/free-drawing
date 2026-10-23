@@ -270,7 +270,7 @@ export class ContextMenu {
    * Right click on stage or context menu key on drawer shows the menu, a click anywhere, Escape or Tab hide it
    */
   private _initEvents() {
-    window.addEventListener('click', () => this.hide());
+    window.addEventListener('click', () => this.hide(), { signal: this.drawer.signal });
     // no native menu on this one
     this.$menu.addEventListener('contextmenu', (e) => e.preventDefault());
     arrowNavigation(this.$menu, () => this._getItems(), 'vertical');

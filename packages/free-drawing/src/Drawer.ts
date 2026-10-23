@@ -182,6 +182,15 @@ export class Drawer extends MicroEvent {
   collaboration: Collaboration | null = null;
   /** Created on first use, see `showCollaboration` */
   collaborationModal: CollaborationModal | null = null;
+  /** Controller of `signal`, aborted by `destroy` */
+  readonly #abort = new AbortController();
+  /**
+   * Aborted by `destroy`: listeners of the page (window, document, media queries) added with it are removed with the
+   * drawer, e.g. `window.addEventListener('resize', handler, { signal: drawer.signal })` (components, plugins, apps)
+   */
+  readonly signal = this.#abort.signal;
+  /** `destroy` called: not destroyed twice */
+  #destroyed = false;
   /** Reminder of a live session in header, with the `collaboration` option */
   collaborationIndicator: CollaborationIndicator | undefined;
   /** Element given to the constructor, holding the container of the drawer */
@@ -471,9 +480,13 @@ export class Drawer extends MicroEvent {
     // drawing as loaded (grid of preferences...)
     this.#unsaved = false;
     // changes not saved (without auto save, save in progress or failed): page not left without warning
-    window.addEventListener('beforeunload', (e) => {
-      if (this.#unsaved && this.$drawerContainer.isConnected) e.preventDefault();
-    });
+    window.addEventListener(
+      'beforeunload',
+      (e) => {
+        if (this.#unsaved && this.$drawerContainer.isConnected) e.preventDefault();
+      },
+      { signal: this.signal }
+    );
   }
 
   /**
@@ -582,6 +595,26 @@ export class Drawer extends MicroEvent {
     this.trigger(drawerEvents.collaborationChange);
 
     return link;
+  }
+
+  /**
+   * Remove the drawer for good (apps mounting and unmounting it): plugins destroyed, tool deactivated (pointer action
+   * ended), collaboration session left, listeners of the page (window, document, media queries, resize observers: see
+   * `signal`) and of the drawer removed, stage destroyed and element of the drawer emptied. Changes not saved yet are
+   * not saved: call `save()` first. The drawer can't be used afterwards
+   * @returns Resolved once the drawer is removed (after the `destroy` of plugins)
+   */
+  async destroy() {
+    if (this.#destroyed) return;
+
+    this.#destroyed = true;
+    await this.plugins.destroy();
+    this.activeWidget?.setActive(false);
+    this.stopCollaboration();
+    this.#abort.abort();
+    this.off();
+    this.stage.destroy();
+    this.$el.replaceChildren();
   }
 
   /**
@@ -1020,8 +1053,10 @@ export class Drawer extends MicroEvent {
     // last key was a navigation key, not a shortcut or Enter validating a text
     let navigationKey = false;
 
-    document.addEventListener('keydown', (e) => (navigationKey = e.key === 'Tab' || e.key === 'Escape'), true);
-    document.addEventListener('pointerdown', () => (navigationKey = false), true);
+    const options = { capture: true, signal: this.signal };
+
+    document.addEventListener('keydown', (e) => (navigationKey = e.key === 'Tab' || e.key === 'Escape'), options);
+    document.addEventListener('pointerdown', () => (navigationKey = false), options);
     $container.addEventListener('focus', () => $container.classList.toggle(className, navigationKey));
     $container.addEventListener('blur', () => $container.classList.remove(className));
     $container.addEventListener('pointerdown', () => $container.classList.remove(className));
@@ -2294,9 +2329,13 @@ export class Drawer extends MicroEvent {
    */
   private _initTheme(saved?: Theme) {
     this.#systemDark = window.matchMedia?.('(prefers-color-scheme: dark)');
-    this.#systemDark?.addEventListener?.('change', () => {
-      if (this.theme === 'system') this._applyTheme();
-    });
+    this.#systemDark?.addEventListener?.(
+      'change',
+      () => {
+        if (this.theme === 'system') this._applyTheme();
+      },
+      { signal: this.signal }
+    );
     this.theme = saved ?? this.options.theme;
     this._applyTheme();
   }

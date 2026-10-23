@@ -67,7 +67,7 @@
 
 ## Improvements
 
-- [ ] `drawer.destroy()`: remove document, window, `matchMedia` and ResizeObserver listeners, for apps mounting and unmounting drawers
+- [x] `drawer.destroy()`: remove document, window, `matchMedia` and ResizeObserver listeners, for apps mounting and unmounting drawers
 - [ ] one `change` per drag: N selected shapes fire N + 1 changes (save, history, collaboration, layers panel each time)
 - [x] history memory: 100 full JSON snapshots, cumulative ones built on reload; store shapes once or diffs (`History.ts`)
 - [ ] touch: track one pointer, pinch zoom and two finger pan, window `pointerup` / `pointercancel` or pointer capture

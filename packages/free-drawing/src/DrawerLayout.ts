@@ -71,9 +71,13 @@ export class DrawerLayout {
     this.updateCompact();
     // header wraps in a narrow drawer: options panel below it (no layout observer in tests)
     if (typeof ResizeObserver === 'undefined') return;
-    new ResizeObserver(() =>
+
+    const observer = new ResizeObserver(() =>
       this.$container.style.setProperty('--drawer-header-height', `${this.$header.offsetHeight}px`)
-    ).observe(this.$header);
+    );
+
+    observer.observe(this.$header);
+    this.drawer.signal.addEventListener('abort', () => observer.disconnect());
   }
 
   /**
@@ -141,11 +145,14 @@ export class DrawerLayout {
 
     const resizeObserver = new ResizeObserver(
       debounce(() => {
+        // not once destroyed
+        if (this.drawer.signal.aborted) return;
         this.drawer.setSize(document.documentElement.clientWidth, document.documentElement.clientHeight);
       }, 250)
     );
 
     // to attach to the whole document
     resizeObserver.observe(document.documentElement);
+    this.drawer.signal.addEventListener('abort', () => resizeObserver.disconnect());
   }
 }

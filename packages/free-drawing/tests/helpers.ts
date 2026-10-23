@@ -1,15 +1,23 @@
 import { Drawer } from '@/Drawer';
 import type { DrawerOptions } from '@/@types/drawer';
 
+/** Drawers of `createDrawer` in the current test file: destroyed after it (memory, listeners of the page) */
+export const drawers = new Set<Drawer>();
+
 /**
- * Drawer isolated from other tests: no saved state loaded, nothing saved (unless options say so)
+ * Drawer isolated from other tests: no saved state loaded, nothing saved (unless options say so), destroyed after the
+ * test file (see `vitest.setup.ts`)
  */
-export const createDrawer = (options: Partial<DrawerOptions> = {}) =>
-  new Drawer(document.getElementById('test') as HTMLDivElement, {
+export const createDrawer = (options: Partial<DrawerOptions> = {}) => {
+  const drawer = new Drawer(document.getElementById('test') as HTMLDivElement, {
     autoSave: false,
     localStorageKey: `test-${Math.random()}`,
     ...options,
   });
+
+  drawers.add(drawer);
+  return drawer;
+};
 
 /**
  * Dispatch keydown on drawer, returns false if default was prevented

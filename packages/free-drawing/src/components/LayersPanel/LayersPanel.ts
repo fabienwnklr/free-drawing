@@ -701,8 +701,10 @@ export class LayersPanel {
 
     this.#busy = true;
     $item.classList.add('is-dragged');
-    window.addEventListener('pointermove', move);
-    window.addEventListener('pointerup', end);
-    window.addEventListener('pointercancel', end);
+    const { signal } = this.drawer;
+
+    window.addEventListener('pointermove', move, { signal });
+    window.addEventListener('pointerup', end, { signal });
+    window.addEventListener('pointercancel', end, { signal });
   }
 }

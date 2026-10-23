@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.23.0](https://github.com/fabienwnklr/free-drawing/compare/v7.22.6...v7.23.0) (2026-10-23)
+
+
+### Features
+
+* **drawer:** `destroy()` removes a drawer for apps mounting and unmounting it: plugins destroyed, tool deactivated, collaboration session left, listeners of the page (window, document, media queries, resize observers) removed, stage destroyed, element emptied; `drawer.signal` is aborted then, for listeners of apps and plugins to go with the drawer
+
 ## [7.22.6](https://github.com/fabienwnklr/free-drawing/compare/v7.22.5...v7.22.6) (2026-10-23)
 
 

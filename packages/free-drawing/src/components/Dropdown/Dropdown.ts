@@ -19,11 +19,16 @@ export class Dropdown extends MicroEvent {
   /** List item element with the item class, created for subclasses (not added to the list) */
   $dropdownItem: HTMLLIElement;
 
+  /** Removes the listeners of the page (document, window) when aborted (`drawer.signal`) */
+  readonly #signal?: AbortSignal;
+
   /**
    * Create the button and the hidden menu holding an empty list, listen to clicks and Escape
+   * @param signal Aborted when the listeners of the page are removed (`signal` of the drawer)
    */
-  constructor() {
+  constructor(signal?: AbortSignal) {
     super();
+    this.#signal = signal;
 
     this.$button = createButton('drawer-button', 'drawer-button-neutral', 'tool', 'drawer-button-dropdown');
     this.$menu = document.createElement('div');
@@ -122,11 +127,15 @@ export class Dropdown extends MicroEvent {
           }
         }
       },
-      false
+      { signal: this.#signal }
     );
     // drawer or window resized while shown
-    window.addEventListener('resize', () => {
-      if (this.isShown()) fitHeight(this.$menu);
-    });
+    window.addEventListener(
+      'resize',
+      () => {
+        if (this.isShown()) fitHeight(this.$menu);
+      },
+      { signal: this.#signal }
+    );
   }
 }

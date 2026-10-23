@@ -125,14 +125,22 @@ export class CollaborationPanel {
     });
     // a click out of the panel and of its button closes it (path of the click: its button may be removed, e.g. request
     // answered)
-    document.addEventListener('click', (e) => {
-      const path = e.composedPath();
+    document.addEventListener(
+      'click',
+      (e) => {
+        const path = e.composedPath();
 
-      if (this.isShown() && !path.includes(this.$panel) && !path.includes(this.$opener)) this.hide();
-    });
-    window.addEventListener('resize', () => {
-      if (this.isShown()) this._place();
-    });
+        if (this.isShown() && !path.includes(this.$panel) && !path.includes(this.$opener)) this.hide();
+      },
+      { signal: drawer.signal }
+    );
+    window.addEventListener(
+      'resize',
+      () => {
+        if (this.isShown()) this._place();
+      },
+      { signal: drawer.signal }
+    );
 
     this.drawer.on(drawerEvents.collaborationChange, () => this.update());
     this.drawer.on(drawerEvents.languageChange, () => this.update());

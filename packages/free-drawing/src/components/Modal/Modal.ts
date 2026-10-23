@@ -283,13 +283,15 @@ export class Modal {
     // keyboard focus in modal (first button, link or field)
     this._getFocusables()[0]?.focus();
     // capture: before drawer shortcuts and focused element
-    document.addEventListener('keydown', this.#onDocumentKeydown, true);
+    document.addEventListener('keydown', this.#onDocumentKeydown, { capture: true, signal: this.drawer.signal });
 
     // after current event, so the click opening the modal (any button) does not close it
     setTimeout(() => {
       if (!this.isVisible()) return;
 
-      if (this.options.closeOnClickOutside) document.addEventListener('click', this.#onDocumentClick);
+      if (this.options.closeOnClickOutside) {
+        document.addEventListener('click', this.#onDocumentClick, { signal: this.drawer.signal });
+      }
     });
   }
 

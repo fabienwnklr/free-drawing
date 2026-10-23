@@ -287,8 +287,10 @@ export class TextWidget extends BaseWidget {
       // capture phase, so text is committed before the press is handled (e.g. text overlay buttons); pointer down
       // for touch too (a tap on the canvas gives no click: konva prevents the default of touch start), click for
       // buttons activated with the keyboard
-      window.addEventListener('pointerdown', handleOutsideClick, true);
-      window.addEventListener('click', handleOutsideClick, true);
+      const options = { capture: true, signal: this.drawer.signal };
+
+      window.addEventListener('pointerdown', handleOutsideClick, options);
+      window.addEventListener('click', handleOutsideClick, options);
     });
   }
 }

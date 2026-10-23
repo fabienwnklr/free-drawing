@@ -223,6 +223,15 @@ drawer.layout.add('header', $button, { hideInZen: true });
 drawer.layout.add('header', $other, { after: drawer.setting.$dropdownContainer }); // right after settings menu
 ```
 
+Apps mounting and unmounting drawers (views, components of a framework) remove them with `destroy()`: plugins destroyed, collaboration session left, listeners of the page (window, document, media queries, resize observers) removed, element emptied. Changes not saved yet are not saved: call `save()` first. `drawer.signal` is aborted then: listeners added with it go with the drawer.
+
+```js
+window.addEventListener('resize', fitView, { signal: drawer.signal }); // removed with the drawer
+
+await drawer.save();
+await drawer.destroy();
+```
+
 ## Widgets
 
 `widgets` option chooses the toolbar widgets, in the given order. Without it, every widget is available.

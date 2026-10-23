@@ -256,10 +256,10 @@ export class GroupWidget {
       (e) => {
         if (this.isShown() && !this.$container.contains(e.target as Node)) this.hide();
       },
-      true
+      { capture: true, signal: this.drawer.signal }
     );
     // no longer above group button: footer or toolbar of a narrow drawer scrolled (scroll does not bubble: capture)
     this.drawer.layout.$footer.addEventListener('scroll', () => this.hide(), true);
-    window.addEventListener('resize', () => this.hide());
+    window.addEventListener('resize', () => this.hide(), { signal: this.drawer.signal });
   }
 }
