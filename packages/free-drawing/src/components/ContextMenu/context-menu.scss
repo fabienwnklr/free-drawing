@@ -8,14 +8,15 @@
   top: 0;
   left: 0;
   z-index: 2;
-  visibility: hidden;
+  // hidden: out of the layout (a hidden menu taller than the drawer would make the page scroll)
+  display: none;
   min-width: 220px;
   padding: $space-1;
   // height limited to the drawer (small screens)
   overflow-y: auto;
 
   &.show {
-    visibility: visible;
+    display: block;
   }
 
   .drawer-context-menu-list,

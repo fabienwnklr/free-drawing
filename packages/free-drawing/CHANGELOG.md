@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.22.4](https://github.com/fabienwnklr/free-drawing/compare/v7.22.3...v7.22.4) (2026-10-23)
+
+
+### Bug Fixes
+
+* **layout:** the hidden context menu no longer makes the page scroll: taller than a short drawer (or window), it kept its place below it, and a drawer of window size lost the width of the scrollbar; a drawer of window size clips what goes out of it
+
 ## [7.22.3](https://github.com/fabienwnklr/free-drawing/compare/v7.22.2...v7.22.3) (2026-10-23)
 
 

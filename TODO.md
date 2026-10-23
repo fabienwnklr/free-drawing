@@ -60,7 +60,7 @@
 - [x] font select of text options: an arrow key gives focus back to the drawer, fonts can't be browsed with keyboard (`TextOverlay.ts`)
 - [x] `drawer.off` called in a handler skips the next handler of the same event (`MicroEvent.trigger` loops on the live array)
 - [x] background color not in history (undo after opening a file keeps its background) nor sent to collaborators
-- [ ] drawer of window size does not follow height changes of the window, nor any change with a page scrollbar (`DrawerLayout.ts`)
+- [x] drawer of window size does not follow height changes of the window, nor any change with a page scrollbar (`DrawerLayout.ts`)
 - [ ] drawings over 1 MB can't join a collaboration session (socket.io `maxHttpBufferSize` 1 MB, API accepts 5 MB): reconnection loop
 - [ ] focus of drawer on creation scrolls the host page to it (`Drawer.focus` without `preventScroll`)
 - [ ] right to draw given or removed by the owner takes the focus of the user (tool changed: `BaseWidget.setActive` focuses the drawer), even typing in a field of the page or a dialog

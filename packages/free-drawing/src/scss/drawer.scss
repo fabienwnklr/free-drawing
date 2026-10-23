@@ -192,6 +192,11 @@
     @include focus-ring;
   }
 
+  // drawer of window size: nothing out of it makes the page scroll (its width would lose the scrollbar)
+  &.is-full {
+    overflow: hidden;
+  }
+
   &:not(.is-full) .konvajs-content {
     width: fit-content;
     border-radius: $radius-lg;
