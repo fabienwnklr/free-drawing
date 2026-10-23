@@ -652,6 +652,47 @@ describe('Collaboration', () => {
     expect((await invalid).position).toBeNull();
   });
 
+  it('Shapes of viewers ignored: drawn once the owner gives the right, ignored again once removed', async () => {
+    const room = 'room-rights';
+    const owner = await joinRoom({ room, name: 'Owner', userId: 'owner-r', ownerKey: 'secret r' });
+    const guest = await joinRoom({ room, name: 'Guest', userId: 'guest-r' });
+    /** Drawing of the room, as a user joining gets it */
+    const drawing = async () => {
+      const later = client();
+      const full = later.next<{ upsert: string[]; remove: string[] }>(socketEvents.CHANGE);
+
+      later.socket.emit(socketEvents.JOIN, { room, name: 'Later', userId: 'later-r' });
+      const { upsert } = await full;
+
+      later.socket.close();
+      return upsert;
+    };
+    /** Rights of the guest changed by the owner, users sent again */
+    const setRight = async (canEdit: boolean) => {
+      const updated = owner.next(socketEvents.USERS);
+
+      owner.socket.emit(socketEvents.RIGHTS, { userId: 'guest-r', canEdit });
+      await updated;
+    };
+
+    // viewer (new users by default): shapes neither relayed nor kept
+    guest.socket.emit(socketEvents.CHANGE, { upsert: [rect('v1')], remove: [] });
+    expect(await drawing()).toEqual([]);
+
+    // right given: relayed to the owner and kept
+    await setRight(true);
+    const relayed = owner.next(socketEvents.CHANGE);
+
+    guest.socket.emit(socketEvents.CHANGE, { upsert: [rect('e1')], remove: [] });
+    expect(await relayed).toEqual({ upsert: [rect('e1')], remove: [] });
+    expect(await drawing()).toEqual([rect('e1')]);
+
+    // right removed: its changes ignored again, also removals
+    await setRight(false);
+    guest.socket.emit(socketEvents.CHANGE, { upsert: [rect('v2')], remove: ['e1'] });
+    expect(await drawing()).toEqual([rect('e1')]);
+  });
+
   it('Background of the drawing kept by the room for users joining, invalid ones refused, viewers ignored', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const room = 'room-background';

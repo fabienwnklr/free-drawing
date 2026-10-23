@@ -88,7 +88,7 @@
 - [x] preferences switches: `aria-keyshortcuts` of shortcuts not working in the dialog, `<kbd>` in the accessible name (`PreferencesModal.ts`)
 - [x] theming: `color-scheme: light` on light theme (dark host pages), custom color swatch converted in dark mode, help grid scrolls under 380 px wide
 - [x] collaboration dialog opened from an invitation link: focus the name field
-- [ ] tests of the collaboration server: impersonation, rights, empty rooms, ownership
+- [x] tests of the collaboration server: impersonation, rights, empty rooms, ownership
 
 ## Tooling
 
