@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.27.2](https://github.com/fabienwnklr/free-drawing/compare/v7.27.1...v7.27.2) (2026-10-23)
+
+
+### Bug Fixes
+
+* **snapping:** moved and resized shapes snap to the shapes of frames and to the frame of a shape moved in it (they were ignored), not to the sides and center of the view (shapes jumped to the edge of the screen on an infinite drawing), nor to hidden shapes
+
 ## [7.27.1](https://github.com/fabienwnklr/free-drawing/compare/v7.27.0...v7.27.1) (2026-10-23)
 
 

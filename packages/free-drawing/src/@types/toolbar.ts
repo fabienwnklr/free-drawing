@@ -189,3 +189,11 @@ export type FontStyleChoice = TextChoice<string> & {
   /** Data attribute of the button: style or decoration */
   attr: string;
 };
+
+/** Positions moved or resized shapes snap to (absolute), see `SelectWidget` snapping */
+export type SnapStops = {
+  /** X of vertical guides */
+  vertical: number[];
+  /** Y of horizontal guides */
+  horizontal: number[];
+};

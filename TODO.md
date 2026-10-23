@@ -75,7 +75,7 @@
 - [x] Ctrl / Cmd + S saves (`saveNow`) with `storage` or auto save off, download with another shortcut; Ctrl / Cmd + Shift + Z redo (macOS standard)
 - [x] macOS shortcut names (⌘, ⌥) in menus, command palette, help, tooltips and `aria-keyshortcuts`
 - [x] linked arrows: link near outlines, not anywhere in bounding box; binding margin and click threshold independent of zoom (`binding.ts`, `ShapeWidget.ts`)
-- [ ] snapping stops: shapes of frames and own frame of the dragged shape, not view edges and center (`Select.ts`)
+- [x] snapping stops: shapes of frames and own frame of the dragged shape, not view edges and center (`Select.ts`)
 - [ ] eraser: hit test along the segment between pointer positions (fast strokes skip thin lines) (`Eraser.ts`)
 - [ ] names of new frames repeat after a frame is deleted (`count + 1` in `Frame.ts`)
 - [ ] links of drawings depend on the `drawer-<n>` id: a link copied from a remounted drawer does not open (`Drawer._loadFromLink`)

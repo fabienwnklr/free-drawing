@@ -2,9 +2,11 @@ import { describe, expect, it, vi } from 'vitest';
 import { Rect } from 'konva/lib/shapes/Rect';
 import type { Vector2d } from 'konva/lib/types';
 import type { Drawer } from '@/Drawer';
+import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { shapeName } from '@/constants';
-import { createDrawer } from './helpers';
+import { getFrameShapes, isFrame } from '@/utils/frame';
+import { createDrawer, drag } from './helpers';
 
 /** Rectangle A 100..400 x 100..250 and B 150..300 x 400..520 (no stroke), B selected */
 const createRects = () => {
@@ -73,6 +75,35 @@ describe('Snapping while resizing', () => {
     selectWidget.select([b]);
     expect(bound('middle-right', { x: 402, y: 461 })).toEqual({ x: 400, y: 461 });
     expect(drawer.getSelectedShapes()).toEqual([b]);
+  });
+
+  it('Guides: shapes of frames and the frame of the shape, not the view nor hidden shapes', () => {
+    const { drawer, selectWidget, a, b, bound, guides } = createRects();
+    // C and B in a frame 120..700 x 380..600
+    const c = drawer.addShape(new Rect({ name: shapeName.rect, x: 500, y: 420, width: 60, height: 60 }));
+
+    drawer.getWidget<BaseWidget>('frame')!.setActive(true);
+    drag(drawer, [120, 380], [700, 600]);
+    expect(getFrameShapes(drawer.getDrawingShapes().find(isFrame)!)).toEqual(expect.arrayContaining([b, c]));
+
+    selectWidget.toggleSnapping(true);
+    selectWidget.select([b]);
+    // frame of the shape: its right side
+    expect(bound('middle-right', { x: 697, y: 461 })).toEqual({ x: 700, y: 461 });
+    // shape of a frame, for a shape out of it: left side of C
+    selectWidget.select([a]);
+    expect(bound('middle-right', { x: 498, y: 175 })).toEqual({ x: 500, y: 175 });
+
+    // view: no guide at its left side nor at its center
+    const center = drawer.stage.width() / 2;
+
+    expect(bound('middle-left', { x: 2, y: 175 })).toEqual({ x: 2, y: 175 });
+    expect(bound('middle-right', { x: center + 2, y: 175 })).toEqual({ x: center + 2, y: 175 });
+    expect(guides()).toBe(0);
+
+    // hidden shape
+    c.hide();
+    expect(bound('middle-right', { x: 498, y: 175 })).toEqual({ x: 498, y: 175 });
   });
 });
 

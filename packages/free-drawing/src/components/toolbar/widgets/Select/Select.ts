@@ -37,6 +37,7 @@ import {
   withFrameShapes,
 } from '@/utils/frame';
 import type { DrawingShape } from '@/@types/drawer';
+import type { SnapStops } from '@/@types/toolbar';
 import type { Node } from 'konva/lib/Node';
 
 /**
@@ -646,8 +647,8 @@ export class SelectWidget extends BaseWidget {
   }
 
   /**
-   * Turn snapping on: a dragged shape is moved to the nearest guide (edges and centers of other shapes and of stage)
-   * closer than 5 px on each axis, guides shown until drag end
+   * Turn snapping on: a dragged shape is moved to the nearest guide (edges and centers of other shapes, see
+   * `_getLineGuideStops`) closer than 5 px on each axis, guides shown until drag end
    */
   private _initSnapEvents() {
     this.snapping = true;
@@ -747,34 +748,32 @@ export class SelectWidget extends BaseWidget {
   }
 
   /**
-   * Positions a shape can snap to (absolute): borders and center of stage, edges and centers of drawing shapes
-   * @param skipShapes Moved shapes, not guides themselves (nor their groups)
+   * Positions a shape can snap to (absolute): edges and centers of visible drawing shapes, shapes of frames too, and
+   * the frame of a moved shape; not the view (infinite drawing), nor moved shapes, their shapes and their groups (moved
+   * with them)
+   * @param skipShapes Moved shapes, not guides themselves
    * @returns Positions of vertical and horizontal guides
    */
-  private _getLineGuideStops(skipShapes: Node[]): {
-    /** X of vertical guides */
-    vertical: number[];
-    /** Y of horizontal guides */
-    horizontal: number[];
-  } {
-    // we can snap to stage borders and the center of the stage
-    const vertical = [0, this.drawer.stage.width() / 2, this.drawer.stage.width()];
-    const horizontal = [0, this.drawer.stage.height() / 2, this.drawer.stage.height()];
+  private _getLineGuideStops(skipShapes: Node[]): SnapStops {
+    const vertical: number[] = [];
+    const horizontal: number[] = [];
 
-    // and we snap over edges and center of each object on the canvas, not of moved ones (or their groups)
-    this.drawer.getDrawingShapes().forEach((guideItem) => {
-      if (skipShapes.some((shape) => shape === guideItem || guideItem.isAncestorOf(shape))) {
-        return;
-      }
+    for (const guideItem of withFrameShapes(this.drawer.getDrawingShapes())) {
+      // a frame keeps its box while its shapes move, a group follows them
+      const moved = skipShapes.some(
+        (shape) =>
+          shape === guideItem || shape.isAncestorOf(guideItem) || (!isFrame(guideItem) && guideItem.isAncestorOf(shape))
+      );
+
+      if (moved || !guideItem.isVisible()) continue;
+
       const box = guideItem.getClientRect();
-      // and we can snap to all edges of shapes
+
       vertical.push(box.x, box.x + box.width, box.x + box.width / 2);
       horizontal.push(box.y, box.y + box.height, box.y + box.height / 2);
-    });
-    return {
-      vertical,
-      horizontal,
-    };
+    }
+
+    return { vertical, horizontal };
   }
 
   /**
