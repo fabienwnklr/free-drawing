@@ -30,6 +30,15 @@ export const en = {
   'toast.exportFailed': 'Export failed: {error}',
   'toast.imageCopied': 'Image copied',
   'toast.imageNotCopied': "Image can't be copied: {error}",
+  // details of errors, after the text of a toast
+  'error.clipboardUnavailable': 'clipboard not available in this browser or page',
+  'error.nothingToExport': 'nothing to export',
+  'error.notDrawingFile': 'not a drawing file',
+  'error.damagedLink': 'incomplete or damaged link',
+  'error.imageNotCreated': 'image not created by the browser',
+  'error.serverUnreachable': 'server unreachable',
+  'error.notAllowed': 'permission denied by the browser',
+  'error.storageFull': 'browser storage full',
   'toast.selectionTool': 'Use the selection tool to move or transform shapes.',
 
   // dialogs

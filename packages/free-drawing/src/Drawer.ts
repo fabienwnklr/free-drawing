@@ -25,6 +25,7 @@ import { createId, deepMerge } from '@/utils/functions';
 import { defaultOptions, drawerEvents, gridSize, shapeLabels, shapeName, zoomLimits } from '@/constants';
 import { hasFocusOutside, setPressed } from '@/utils/dom';
 import { announce, createLiveRegion } from '@/utils/liveRegion';
+import { DrawerError, getErrorText } from '@/utils/errors';
 import { getStrokeStyle } from '@/utils/stroke';
 import { reorderShapes } from '@/utils/order';
 import { rectContains, setupHit } from '@/utils/hit';
@@ -522,7 +523,7 @@ export class Drawer extends MicroEvent {
       if (this._getOwnerKey(room)) {
         // owner back in the room
         this.startCollaboration(room).catch((error) => {
-          this.toast(this.t('toast.collaborationUnavailable', { error: error.message }), 'error');
+          this.toast(this.t('toast.collaborationUnavailable', { error: getErrorText(error, this.i18n.t) }), 'error');
         });
       } else {
         // invited user gives a name before joining
@@ -801,7 +802,9 @@ export class Drawer extends MicroEvent {
   private _connected(socket: CollaborationSocket): Promise<void> {
     return new Promise((resolve, reject) => {
       socket.once('connect', () => resolve());
-      socket.once('connect_error', (error) => reject(new Error(`server unreachable (${error.message})`)));
+      socket.once('connect_error', (error) =>
+        reject(new DrawerError('error.serverUnreachable', `server unreachable (${error.message})`, { cause: error }))
+      );
     });
   }
 
@@ -1299,7 +1302,7 @@ export class Drawer extends MicroEvent {
     if (this.#saveFailed) return;
 
     this.#saveFailed = true;
-    this.toast(this.t('toast.saveFailed', { error: error.message }), type);
+    this.toast(this.t('toast.saveFailed', { error: getErrorText(error, this.i18n.t) }), type);
   }
 
   /**
@@ -1331,7 +1334,7 @@ export class Drawer extends MicroEvent {
         this.save();
       }
     } catch (error) {
-      this.toast(this.t('toast.loadFailed', { error: (error as Error).message }), 'error');
+      this.toast(this.t('toast.loadFailed', { error: getErrorText(error, this.i18n.t) }), 'error');
       throw error;
     } finally {
       this.$drawerContainer.removeAttribute('aria-busy');
@@ -1510,7 +1513,9 @@ export class Drawer extends MicroEvent {
   async copyImage(format: 'png' | 'svg' = 'png', options: ExportImageOptions = {}) {
     try {
       // secure context (https) only
-      if (!navigator.clipboard?.write || typeof ClipboardItem === 'undefined') throw new Error('clipboard unavailable');
+      if (!navigator.clipboard?.write || typeof ClipboardItem === 'undefined') {
+        throw new DrawerError('error.clipboardUnavailable', 'clipboard unavailable');
+      }
 
       // image promise: Safari needs clipboard write during the user action
       const image = this.exportImage(format, options);
@@ -1524,7 +1529,7 @@ export class Drawer extends MicroEvent {
       await navigator.clipboard.write([new ClipboardItem(items)]);
       this.toast(this.t('toast.imageCopied'), 'info');
     } catch (error) {
-      this.toast(this.t('toast.imageNotCopied', { error: (error as Error).message }), 'warning');
+      this.toast(this.t('toast.imageNotCopied', { error: getErrorText(error, this.i18n.t) }), 'warning');
     }
   }
 
@@ -1998,7 +2003,7 @@ export class Drawer extends MicroEvent {
   async exportImage(format: ImageFormat, options: ExportImageOptions = {}): Promise<Blob> {
     const image = this._prepareExport(format, options);
 
-    if (!image) throw new Error('nothing to export');
+    if (!image) throw new DrawerError('error.nothingToExport', 'nothing to export');
 
     const { shapes, box, imageOptions } = image;
 
@@ -2114,7 +2119,7 @@ export class Drawer extends MicroEvent {
     } catch (error) {
       // dialog canceled
       if ((error as Error).name !== 'AbortError') {
-        this.toast(this.t('toast.saveFailed', { error: (error as Error).message }), 'error');
+        this.toast(this.t('toast.saveFailed', { error: getErrorText(error, this.i18n.t) }), 'error');
       }
     }
   }
@@ -2132,7 +2137,7 @@ export class Drawer extends MicroEvent {
       // its shapes may be anywhere
       this.zoomToFit();
     } catch (error) {
-      this.toast(this.t('toast.invalidFile', { error: (error as Error).message }), 'error');
+      this.toast(this.t('toast.invalidFile', { error: getErrorText(error, this.i18n.t) }), 'error');
     }
   }
 
@@ -2155,12 +2160,12 @@ export class Drawer extends MicroEvent {
   async copyLink() {
     try {
       // secure context (https) only
-      if (!navigator.clipboard) throw new Error('clipboard unavailable');
+      if (!navigator.clipboard) throw new DrawerError('error.clipboardUnavailable', 'clipboard unavailable');
 
       await navigator.clipboard.writeText(await this.getLink());
       this.toast(this.t('toast.linkCopied'), 'info');
     } catch (error) {
-      this.toast(this.t('toast.linkNotCopied', { error: (error as Error).message }), 'warning');
+      this.toast(this.t('toast.linkNotCopied', { error: getErrorText(error, this.i18n.t) }), 'warning');
     }
   }
 
@@ -2181,7 +2186,7 @@ export class Drawer extends MicroEvent {
       this.loadDrawing(await decodeLinkData(hash.slice(prefix.length)));
       this.zoomToFit();
     } catch (error) {
-      this.toast(this.t('toast.invalidLink', { error: (error as Error).message }), 'error');
+      this.toast(this.t('toast.invalidLink', { error: getErrorText(error, this.i18n.t) }), 'error');
     }
   }
 

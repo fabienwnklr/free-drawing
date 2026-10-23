@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.28.2](https://github.com/fabienwnklr/free-drawing/compare/v7.28.1...v7.28.2) (2026-10-23)
+
+
+### Bug Fixes
+
+* **i18n:** details of errors in toasts in the language of the drawer, they were in English ("clipboard unavailable", "not a drawing file", "server unreachable", "nothing to export", invalid JSON or damaged link data, full storage and permissions of the browser): errors of the library carry a text key, messages of servers and apps are kept
+
 ## [7.28.1](https://github.com/fabienwnklr/free-drawing/compare/v7.28.0...v7.28.1) (2026-10-23)
 
 

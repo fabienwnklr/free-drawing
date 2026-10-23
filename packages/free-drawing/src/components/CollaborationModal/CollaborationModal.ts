@@ -4,6 +4,7 @@ import { Modal } from '@/components/Modal/Modal';
 import { createButton, createSwitch, isComposing, uniqueId } from '@/utils/dom';
 import { drawerEvents } from '@/constants';
 import type { TranslationKey } from '@/@types/i18n';
+import { DrawerError, getErrorText } from '@/utils/errors';
 import { CollaborationMembers } from '@/components/CollaborationMembers/CollaborationMembers';
 
 /**
@@ -178,7 +179,10 @@ export class CollaborationModal extends Modal {
     try {
       await this.drawer.startCollaboration(undefined, this.$name.value);
     } catch (error) {
-      this.drawer.toast(this.drawer.t('toast.collaborationUnavailable', { error: (error as Error).message }), 'error');
+      this.drawer.toast(
+        this.drawer.t('toast.collaborationUnavailable', { error: getErrorText(error, this.drawer.i18n.t) }),
+        'error'
+      );
     }
   }
 
@@ -198,7 +202,10 @@ export class CollaborationModal extends Modal {
       if (this.isVisible()) this.hide();
       this.drawer.toast(this.drawer.t('collab.introJoined'), 'info');
     } catch (error) {
-      this.drawer.toast(this.drawer.t('toast.collaborationUnavailable', { error: (error as Error).message }), 'error');
+      this.drawer.toast(
+        this.drawer.t('toast.collaborationUnavailable', { error: getErrorText(error, this.drawer.i18n.t) }),
+        'error'
+      );
     }
   }
 
@@ -217,12 +224,15 @@ export class CollaborationModal extends Modal {
   async copyLink() {
     try {
       // secure context (https) only
-      if (!navigator.clipboard) throw new Error('clipboard unavailable');
+      if (!navigator.clipboard) throw new DrawerError('error.clipboardUnavailable', 'clipboard unavailable');
 
       await navigator.clipboard.writeText(this.$link.value);
       this.drawer.toast(this.drawer.t('toast.linkCopied'), 'info');
     } catch (error) {
-      this.drawer.toast(this.drawer.t('toast.linkNotCopied', { error: (error as Error).message }), 'warning');
+      this.drawer.toast(
+        this.drawer.t('toast.linkNotCopied', { error: getErrorText(error, this.drawer.i18n.t) }),
+        'warning'
+      );
     }
   }
 

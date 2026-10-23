@@ -1,4 +1,5 @@
 import type { AttrCheck, ShapeState, DrawingFile, FilePickerWindow } from '@/@types/file';
+import { DrawerError } from '@/utils/errors';
 import { groupClasses, shapeClasses } from '@free-drawing/protocol';
 import { Konva } from 'konva/lib/Global';
 import type { Node } from 'konva/lib/Node';
@@ -241,9 +242,17 @@ export function parseShapeState(json: unknown): ShapeState | null {
  * @throws {Error} not a drawing file
  */
 export function parseDrawingFile(json: string): DrawingFile {
-  const data = JSON.parse(json);
+  // content checked below
+  let data: ReturnType<typeof JSON.parse>;
 
-  if (data?.type !== 'free-drawing' || !Array.isArray(data.shapes)) throw new Error('not a drawing file');
+  try {
+    data = JSON.parse(json);
+  } catch (error) {
+    throw new DrawerError('error.notDrawingFile', 'not a drawing file (invalid JSON)', { cause: error });
+  }
+  if (data?.type !== 'free-drawing' || !Array.isArray(data.shapes)) {
+    throw new DrawerError('error.notDrawingFile', 'not a drawing file');
+  }
 
   return {
     type: 'free-drawing',
@@ -310,11 +319,16 @@ export async function encodeLinkData(text: string): Promise<string> {
  * @returns decoded text (JSON of a drawing file)
  */
 export async function decodeLinkData(data: string): Promise<string> {
-  const bytes = fromBase64Url(data.slice(1));
+  try {
+    const bytes = fromBase64Url(data.slice(1));
 
-  return new TextDecoder().decode(
-    data[0] === 'z' ? await transform(bytes, new DecompressionStream('deflate-raw')) : bytes
-  );
+    return new TextDecoder().decode(
+      data[0] === 'z' ? await transform(bytes, new DecompressionStream('deflate-raw')) : bytes
+    );
+  } catch (error) {
+    // cut or changed link
+    throw new DrawerError('error.damagedLink', 'damaged link data', { cause: error });
+  }
 }
 
 /**

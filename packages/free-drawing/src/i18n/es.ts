@@ -30,6 +30,15 @@ export const es: Translations = {
   'toast.exportFailed': 'La exportación falló: {error}',
   'toast.imageCopied': 'Imagen copiada',
   'toast.imageNotCopied': 'No se pudo copiar la imagen: {error}',
+  // detalles de los errores, después del texto de un aviso
+  'error.clipboardUnavailable': 'portapapeles no disponible en este navegador o página',
+  'error.nothingToExport': 'nada que exportar',
+  'error.notDrawingFile': 'no es un archivo de dibujo',
+  'error.damagedLink': 'enlace incompleto o dañado',
+  'error.imageNotCreated': 'el navegador no creó la imagen',
+  'error.serverUnreachable': 'servidor inaccesible',
+  'error.notAllowed': 'permiso denegado por el navegador',
+  'error.storageFull': 'almacenamiento del navegador lleno',
   'toast.selectionTool': 'Usa la herramienta de selección para mover o transformar las formas.',
 
   'modal.close': 'Cerrar',

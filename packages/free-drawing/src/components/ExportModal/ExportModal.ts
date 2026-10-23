@@ -6,6 +6,7 @@ import { drawingFileExtension, saveFile } from '@/utils/drawingFile';
 import { createButton, createSwitch, setLabel, uniqueId } from '@/utils/dom';
 import { getFontsToLoad, loadFonts } from '@/utils/text';
 import type { TranslationKey } from '@/@types/i18n';
+import { getErrorText } from '@/utils/errors';
 
 /**
  * Export dialog: preview, options (selected shapes or whole drawing, background, dark mode, scale),
@@ -206,7 +207,10 @@ export class ExportModal extends Modal {
     } catch (error) {
       // save dialog canceled
       if ((error as Error).name !== 'AbortError') {
-        this.drawer.toast(this.drawer.t('toast.exportFailed', { error: (error as Error).message }), 'error');
+        this.drawer.toast(
+          this.drawer.t('toast.exportFailed', { error: getErrorText(error, this.drawer.i18n.t) }),
+          'error'
+        );
       }
     }
   }

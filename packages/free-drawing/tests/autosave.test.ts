@@ -127,7 +127,8 @@ describe('Auto save', () => {
 
     addRect(drawer);
     expect(drawer.hasUnsavedChanges()).toBe(true);
-    expect(toast).toHaveBeenCalledWith("Drawing can't be saved: full", 'warning');
+    // translated detail of the error of the browser
+    expect(toast).toHaveBeenCalledWith("Drawing can't be saved: browser storage full", 'warning');
     expect(leave()).toBe(false);
     // warned once, not told saved
     addRect(drawer);

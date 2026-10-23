@@ -14,6 +14,7 @@ import { normalizeColor } from '@/utils/color';
 import { getShapes } from '@/utils/hit';
 import { frameParts } from '@/utils/frame';
 import { parseLink } from '@/utils/link';
+import { DrawerError } from '@/utils/errors';
 import type { DrawingShape } from '@/@types/drawer';
 import type { ImageOptions } from '@/@types/file';
 import type { IRect } from 'konva/lib/types';
@@ -399,7 +400,11 @@ export function renderSvg(shapes: DrawingShape[], box: IRect, options: ImageOpti
  */
 export function canvasToBlob(canvas: HTMLCanvasElement, type = 'image/png', quality?: number): Promise<Blob> {
   return new Promise((resolve, reject) =>
-    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('image not created'))), type, quality)
+    canvas.toBlob(
+      (blob) => (blob ? resolve(blob) : reject(new DrawerError('error.imageNotCreated', 'image not created'))),
+      type,
+      quality
+    )
   );
 }
 

@@ -10,6 +10,7 @@ import { arrowNavigation, createButton, setPressed } from '@/utils/dom';
 import { getDrawingShape } from '@/utils/frame';
 import { getTexts } from '@/utils/text';
 import type { TranslationKey } from '@/@types/i18n';
+import { getErrorText } from '@/utils/errors';
 import { ariaShortcut, formatShortcut } from '@/utils/shortcut';
 import type { ContextMenuItem, ContextMenuItemOptions, ContextMenuSection } from '@/@types/ui';
 
@@ -365,7 +366,10 @@ export class ContextMenu {
       this.drawer.getWidget<TextWidget>('text')?.addTextNode(text, this.#position ?? undefined);
       this.drawer.stage.fire('change');
     } catch (error) {
-      this.drawer.toast(this.drawer.t('toast.clipboardUnavailable', { error: (error as Error).message }), 'warning');
+      this.drawer.toast(
+        this.drawer.t('toast.clipboardUnavailable', { error: getErrorText(error, this.drawer.i18n.t) }),
+        'warning'
+      );
     }
   }
 

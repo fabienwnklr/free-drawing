@@ -31,6 +31,15 @@ export const de: Translations = {
   'toast.exportFailed': 'Export fehlgeschlagen: {error}',
   'toast.imageCopied': 'Bild kopiert',
   'toast.imageNotCopied': 'Das Bild konnte nicht kopiert werden: {error}',
+  // Details von Fehlern, nach dem Text einer Meldung
+  'error.clipboardUnavailable': 'Zwischenablage in diesem Browser oder auf dieser Seite nicht verfügbar',
+  'error.nothingToExport': 'nichts zu exportieren',
+  'error.notDrawingFile': 'keine Zeichnungsdatei',
+  'error.damagedLink': 'unvollständiger oder beschädigter Link',
+  'error.imageNotCreated': 'Bild vom Browser nicht erstellt',
+  'error.serverUnreachable': 'Server nicht erreichbar',
+  'error.notAllowed': 'Berechtigung vom Browser verweigert',
+  'error.storageFull': 'Browserspeicher voll',
   'toast.selectionTool': 'Verwenden Sie das Auswahlwerkzeug, um Formen zu verschieben oder zu transformieren.',
 
   'modal.close': 'Schließen',
