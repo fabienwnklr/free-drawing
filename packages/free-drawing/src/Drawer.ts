@@ -1264,7 +1264,8 @@ export class Drawer extends MicroEvent {
     }
 
     this.#saving = (async () => {
-      let saved = false;
+      // result of the last save
+      let saved: boolean;
 
       do {
         this.#saveAgain = false;

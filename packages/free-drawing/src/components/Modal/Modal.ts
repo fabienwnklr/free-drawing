@@ -66,7 +66,7 @@ export class Modal {
       this._init();
       this._setupDefaultEvents();
     } catch (error: any) {
-      throw new Error(error.message);
+      throw new Error(error.message, { cause: error });
     }
   }
 
