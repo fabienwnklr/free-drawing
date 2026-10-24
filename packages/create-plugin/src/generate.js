@@ -95,7 +95,7 @@ export function packageFiles(answers) {
       ...(tests ? { 'jest-canvas-mock': versions.jestCanvasMock, jsdom: versions.jsdom } : {}),
       konva: versions.konva,
       typescript: versions.typescript,
-      ...(tests ? { vitest: versions.vitest } : {}),
+      ...(tests ? { vite: versions.vite, vitest: versions.vitest } : {}),
     },
   };
   const tsconfig = {

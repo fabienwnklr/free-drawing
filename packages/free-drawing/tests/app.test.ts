@@ -90,7 +90,7 @@ describe('Integration in an app', () => {
 
   it('Storage errors: load failure stops saving until loaded again, save failure shown once', async () => {
     const storage = {
-      load: vi.fn<[], Promise<DrawingFile | null>>(() => Promise.reject(new Error('offline'))),
+      load: vi.fn<() => Promise<DrawingFile | null>>(() => Promise.reject(new Error('offline'))),
       save: vi.fn(() => Promise.reject(new Error('server down'))),
     };
     const drawer = createDrawer({ autoSave: true, storage, language: 'en' });

@@ -475,7 +475,8 @@ describe('Collaboration', () => {
     expect(modal.$users.textContent).toBe('Connected (1)');
     // creator of the room is its owner
     expect(modal.$members.textContent).toBe('Alice (you)Owner');
-    expect(modal.$qrCode.querySelector('svg')).not.toBeNull();
+    // QR code generator loaded with a dynamic import
+    await vi.waitFor(() => expect(modal.$qrCode.querySelector('svg')).not.toBeNull());
     expect(drawer.setting.$collaborationButton.textContent).toContain('On (1)');
 
     modal.$stopButton.click();

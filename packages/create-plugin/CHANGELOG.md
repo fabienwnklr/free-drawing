@@ -2,6 +2,12 @@
 
 Changes of `@fabwcie/create-free-drawing-plugin` (`npm create @fabwcie/free-drawing-plugin`). Each version is published by the release workflow of the library once it is not on npm yet.
 
+## 1.1.0 (2026-10-24)
+
+### Features
+
+- packages tested with Vitest 5 (`vite` 8 added to their dev dependencies, required by Vitest) and jsdom 29, the versions the library is tested with: Node 22.12 or later to run their tests
+
 ## 1.0.1 (2026-10-23)
 
 ### Bug Fixes

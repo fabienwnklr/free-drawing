@@ -12,9 +12,11 @@ export const versions = {
   /** TypeScript */
   typescript: '^5.9.3',
   /** Vitest */
-  vitest: '^0.34.6',
+  vitest: '^5.0.5',
+  /** Vite, required by Vitest */
+  vite: '^8.3.5',
   /** DOM of tests */
-  jsdom: '^22.1.0',
+  jsdom: '^29.1.1',
   /** Canvas of tests (jsdom has none) */
   jestCanvasMock: '^2.5.2',
 };

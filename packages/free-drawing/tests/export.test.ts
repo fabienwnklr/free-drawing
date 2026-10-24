@@ -129,24 +129,11 @@ describe('Export', () => {
     expect(canvas.width).toBeGreaterThan(32760);
     expect(canvas.height / canvas.width).toBeCloseTo(1032 / width, 3);
 
-    // not in jsdom
-    Object.defineProperty(Blob.prototype, 'arrayBuffer', {
-      configurable: true,
-      value(this: Blob) {
-        return new Promise((resolve) => {
-          const reader = new FileReader();
-
-          reader.onload = () => resolve(reader.result);
-          reader.readAsArrayBuffer(this);
-        });
-      },
-    });
-
-    const text = await readBinary(
-      await drawer.exportImage('pdf', { scale: 2 }).finally(() => {
-        delete (Blob.prototype as { arrayBuffer?: unknown }).arrayBuffer;
-      })
-    );
+    // small image: the one of jest-canvas-mock has 4 bytes per pixel (147 MB here)
+    const toBlob = vi
+      .spyOn(HTMLCanvasElement.prototype, 'toBlob')
+      .mockImplementation((callback: BlobCallback) => callback(new Blob(['jpeg'])));
+    const text = await readBinary(await drawer.exportImage('pdf', { scale: 2 }).finally(() => toBlob.mockRestore()));
 
     // page of the drawing size (sides of the canvas rounded to pixels: less than a point)
     const [pageWidth, pageHeight] = text

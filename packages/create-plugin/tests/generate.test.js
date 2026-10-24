@@ -136,10 +136,18 @@ describe('Generated plugin', () => {
     const [, minMajor, minMinor] = versions.library.match(/^\^(\d+)\.(\d+)/).map(Number);
 
     expect(major === minMajor && minor >= minMinor).toBe(true);
-    expect([versions.konva, versions.typescript, versions.vitest, versions.jsdom, versions.jestCanvasMock]).toEqual([
+    expect([
+      versions.konva,
+      versions.typescript,
+      versions.vitest,
+      versions.vite,
+      versions.jsdom,
+      versions.jestCanvasMock,
+    ]).toEqual([
       library.devDependencies.konva,
       library.devDependencies.typescript,
       library.devDependencies.vitest,
+      library.devDependencies.vite,
       library.devDependencies.jsdom,
       library.devDependencies['jest-canvas-mock'],
     ]);

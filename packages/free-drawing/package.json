@@ -47,22 +47,23 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@free-drawing/protocol": "*",
+    "@microsoft/api-extractor": "^7.59.4",
     "@types/node": "^20.8.7",
     "eslint": "^10.13.0",
     "eslint-plugin-jsdoc": "^63.3.3",
     "globals": "^17.13.0",
     "jest-canvas-mock": "^2.5.2",
-    "jsdom": "^22.1.0",
+    "jsdom": "^29.1.1",
     "konva": "^10.9.0",
-    "sass": "^1.69.1",
+    "sass": "^1.106.1",
     "typedoc": "^0.28.20",
     "typedoc-plugin-markdown": "^4.14.0",
     "typedoc-vitepress-theme": "^1.1.4",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.72.0",
-    "vite": "^4.4.5",
-    "vite-plugin-dts": "^3.6.0",
-    "vitest": "^0.34.6"
+    "unplugin-dts": "^1.1.2",
+    "vite": "^8.3.5",
+    "vitest": "^5.0.5"
   },
   "peerDependencies": {
     "konva": "^10.9.0"
