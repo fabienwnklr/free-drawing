@@ -1,4 +1,4 @@
-name: Units test
+name: CI
 
 on:
   push:
@@ -12,15 +12,15 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [22.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+        # as the release workflow (node:sqlite of the server without flag)
+        node-version: [24.x]
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'yarn'
@@ -29,5 +29,17 @@ jobs:
       - name: Install
         run: yarn install --frozen-lockfile
 
+      # library, plugin template, plugin generator, server and web app
+      - name: Type check
+        run: yarn typecheck
+
+      # ESLint and Prettier
+      - name: Lint
+        run: yarn lint
+
       - name: Test
         run: yarn test
+
+      # library (npm package) and web app (static site)
+      - name: Build
+        run: yarn build && yarn build:static

@@ -93,7 +93,7 @@
 ## Tooling
 
 - [x] Prettier: `format` script glob not quoted (`src/**/*.ts` not recursive), 22 files not formatted; add a format check to lint, pre-push and CI (done: `yarn lint` checks format, so pre-push too; CI with the item below)
-- [ ] CI only runs tests: add typecheck, lint and build; update `actions/checkout@v3` and `actions/setup-node@v3` (`vitest.yaml`)
+- [x] CI only runs tests: add typecheck, lint and build; update `actions/checkout@v3` and `actions/setup-node@v3` (`vitest.yaml`)
 - [ ] old toolchain: vite 4, vitest 0.34, eslint 8 (end of life), husky 8 (`husky install` deprecated), `@playwright/test` 1.39 (can no longer launch Edge 155 for browser checks)
 - [ ] export classes used by the public API: `DrawerLayout` (`drawer.layout`), `Frame`... (types are exported from `src/@types`)
 - [x] deploy the static demo like the docs (Netlify from this repository, `yarn build:static`) instead of `deploy:static` pushing to free-drawing-demo (demo not updated since 2024)

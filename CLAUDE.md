@@ -32,7 +32,7 @@ Run at the root (scripts delegate with `yarn workspace <name> <script>`):
 | `yarn docs` / `yarn docs:build` | VitePress docs (`docs/`): dev server / build in `docs/.vitepress/dist` (run `yarn doc:typedoc` first for the API pages) |
 | `yarn doc:typedoc` / `doc:changelog` / `doc:get-started` | API pages from JSDoc (TypeDoc), copies of CHANGELOG, README and CONTRIBUTING into `docs/` |
 
-Git hooks (husky, at root): `commit-msg` runs commitlint (conventional commits), `pre-push` runs `lint` and `test`. CI runs `yarn test` on push / PR to `master`.
+Git hooks (husky, at root): `commit-msg` runs commitlint (conventional commits), `pre-push` runs `lint` and `test`. CI ([vitest.yaml](.github/workflows/vitest.yaml), Node 24 as the release workflow) runs `typecheck`, `lint`, `test`, `build` and `build:static` on push / PR to `master`.
 
 ## Architecture
 
