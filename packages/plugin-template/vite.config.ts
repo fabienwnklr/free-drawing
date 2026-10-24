@@ -8,7 +8,7 @@ const lib = fileURLToPath(new URL('../free-drawing/src', import.meta.url));
 export default defineConfig({
   resolve: {
     alias: {
-      '@fabwcie/free-drawing': `${lib}/Drawer.ts`,
+      '@fabwcie/free-drawing': `${lib}/index.ts`,
       '@': lib,
     },
   },

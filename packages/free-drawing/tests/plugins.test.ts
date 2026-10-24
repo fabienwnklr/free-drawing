@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Rect } from 'konva/lib/shapes/Rect';
-import { BaseWidget, Plugin, drawerEvents, shapeName, type Drawer, type PluginClass } from '@/Drawer';
+import { BaseWidget, Plugin, drawerEvents, shapeName, type Drawer, type PluginClass } from '@/index';
 import { resolvePlugins } from '@/plugins/PluginCollection';
 import { createDrawer, keydown } from './helpers';
 

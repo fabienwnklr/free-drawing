@@ -13,7 +13,7 @@
     "types": ["vite/client"],
     /* in this repository: sources of the library (out of it, the installed package is used, remove these paths) */
     "paths": {
-      "@fabwcie/free-drawing": ["../free-drawing/src/Drawer.ts"],
+      "@fabwcie/free-drawing": ["../free-drawing/src/index.ts"],
       "@/*": ["../free-drawing/src/*"]
     }
   },

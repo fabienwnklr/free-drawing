@@ -16,7 +16,7 @@ export default defineConfig({
     minify: true,
     lib: {
       // Could also be a dictionary or array of multiple entry points
-      entry: root('./src/Drawer.ts'),
+      entry: root('./src/index.ts'),
       name: 'Drawer', // for iife and umd
       // the proper extensions will be added
       fileName: 'drawer',

@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.29.0](https://github.com/fabienwnklr/free-drawing/compare/v7.28.5...v7.29.0) (2026-10-24)
+
+
+### Features
+
+* **types:** classes of the public API exported as types: members of the drawer (`DrawerLayout` of `drawer.layout`, `Toolbar`, `I18n`, `UndoRedo`, `Collaboration`, its dialogs and panels...), results of its methods (`Toast`), shapes (`Frame`), and the types they use (`Command`, `ModalOptions`, `DrawingChange`...): `index.d.ts` declared them without exporting them, apps could not name them
+
 ## [7.28.5](https://github.com/fabienwnklr/free-drawing/compare/v7.28.4...v7.28.5) (2026-10-23)
 
 

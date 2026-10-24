@@ -177,7 +177,7 @@ drawer.showCommandPalette();
 
 ## Use in an app
 
-Options and methods to connect the drawer to the server of your app (drawings saved per user, login, preferences). Their types are exported (`import type { DrawerStorage, DrawingFile, Preferences } from '@fabwcie/free-drawing'`). The web app of this repository ([apps/web](https://github.com/fabienwnklr/free-drawing/tree/master/apps/web)) uses them with its server ([apps/server](https://github.com/fabienwnklr/free-drawing/tree/master/apps/server)).
+Options and methods to connect the drawer to the server of your app (drawings saved per user, login, preferences). Their types are exported (`import type { DrawerStorage, DrawingFile, Preferences } from '@fabwcie/free-drawing'`), also the classes of the members of the drawer and of the results of its methods (`DrawerLayout` of `drawer.layout`, `Toast` of `drawer.toast()`, `Frame`...). The web app of this repository ([apps/web](https://github.com/fabienwnklr/free-drawing/tree/master/apps/web)) uses them with its server ([apps/server](https://github.com/fabienwnklr/free-drawing/tree/master/apps/server)).
 
 `storage` option saves the drawing elsewhere than localStorage. Its drawing is loaded on init (`drawer.ready` is resolved then), it replaces the drawing and history starts from it. Then `save` is called on each change (with `autoSave`), one call at a time: changes made during a save are saved once it ends, with the last drawing. Nothing is saved before the drawing is loaded, nor if it can't be (error shown, `ready` rejected), so a stored drawing is never replaced by mistake. Changes stay unsaved (`hasUnsavedChanges`) until a promise of `save` is resolved: a rejected one shows its error message and keeps them unsaved. When nothing is stored (`load` gives `null`), the drawing is kept and saved with auto save.
 
@@ -363,7 +363,7 @@ drawer.plugins.get(Stamps); // also by name: drawer.plugins.get('Stamps'), drawe
 - Options: the app gives them by plugin name, the plugin reads them with its defaults: `options = this.getOptions({ max: 0 })` with `pluginOptions: { Stamps: { max: 20 } }`.
 - Drawer API useful to plugins: `addShape`, `stage.fire('change')`, `placeInFrames`, `getPointerPosition()` (pointer in drawing coordinates), `getSelectedShapes()`, `getWidget<SelectWidget>('selection')?.select(shapes)`, `layout.add(region, element)`, `toast(message)`.
 - Shapes: draw with the shapes of the library (`Line`, `Arrow`, `Rect`, `Ellipse`, `Text`, `Path` and groups of them), marked with a name or attributes. Files, links and collaboration accept only these classes.
-- Exported for plugins: `Plugin`, `BaseWidget`, `ShapeWidget`, `drawerEvents`, `shapeName`, `createButton`, `setLabel`, `setPressed`, `formatShortcut`, `ariaShortcut`, and types (`PluginClass`, `PluginCommand`, `PluginOptions`, `PluginTranslations`, `SelectWidget`, `WidgetClass`...).
+- Exported for plugins: `Plugin`, `BaseWidget`, `ShapeWidget`, `drawerEvents`, `shapeName`, `createButton`, `setLabel`, `setPressed`, `formatShortcut`, `ariaShortcut`, and types (`PluginClass`, `PluginCommand`, `PluginOptions`, `PluginTranslations`, `SelectWidget`, `WidgetClass`, classes of the members of the drawer...).
 
 ## Touch screens
 
