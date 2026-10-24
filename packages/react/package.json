@@ -1,0 +1,54 @@
+{
+  "name": "@fabwcie/free-drawing-react",
+  "description": "React component of free-drawing, infinite canvas drawing board",
+  "version": "1.0.0",
+  "type": "module",
+  "license": "Apache-2.0",
+  "author": "Winkler Fabien <fabienwinkler@outlook.fr>",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "CHANGELOG.md"
+  ],
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fabienwnklr/free-drawing.git",
+    "directory": "packages/react"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "free-drawing",
+    "react",
+    "drawing",
+    "whiteboard",
+    "canvas"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepack": "tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "typecheck": "tsc -p .",
+    "lint": "prettier --check \"*.{json,md}\" \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "format": "prettier --write \"*.{json,md}\" \"src/**/*.ts\" \"tests/**/*.ts\""
+  },
+  "peerDependencies": {
+    "@fabwcie/free-drawing": "^7.29.0",
+    "react": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  }
+}

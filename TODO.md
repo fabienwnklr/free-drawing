@@ -97,10 +97,16 @@
 - [x] old toolchain: vite 4, vitest 0.34, eslint 8 (end of life), husky 8 (`husky install` deprecated), `@playwright/test` 1.39 (can no longer launch Edge 155 for browser checks)
 - [x] export classes used by the public API: `DrawerLayout` (`drawer.layout`), `Frame`... (types are exported from `src/@types`)
 - [x] deploy the static demo like the docs (Netlify from this repository, `yarn build:static`) instead of `deploy:static` pushing to free-drawing-demo (demo not updated since 2024)
-- [ ] npm package stuck at 2.0.1: publish the current version (`yarn release`)
+- [x] npm package stuck at 2.0.1: publish the current version (`yarn release`) (7.29.0 published by the release workflow; releases of 7.21.2 to 7.28.5 created by its `all` run)
 
 # Other
 
 - [ ] Generate 3 differents logo for drawer and propose to me one to chose
-- [ ] Create package to use drawer with react/vuejs
+- [x] Create package to use drawer with react/vuejs (`@fabwcie/free-drawing-react`, `@fabwcie/free-drawing-vue`: `FreeDrawing` components, first versions to publish by hand)
 - [ ] dans la docs mettre en valeur que c'est pour du vanilla comme du react/vue
+- [ ] quels features pertinente on a pas qu'on pourrait intégré en s'inspirant de tldraw/escalidraw, et quels features eux n'ont pas qu'on pourrait pertinemment intégrer?
+- [ ] le lien via une fleche n'ai pas assez précis, si j'ai un triagle ça s'attache au cadre qui entoure l'objet pas vraiment a la surface du dessin par exemple
+
+
+
+

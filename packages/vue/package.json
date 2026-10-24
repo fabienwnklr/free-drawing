@@ -1,0 +1,51 @@
+{
+  "name": "@fabwcie/free-drawing-vue",
+  "description": "Vue component of free-drawing, infinite canvas drawing board",
+  "version": "1.0.0",
+  "type": "module",
+  "license": "Apache-2.0",
+  "author": "Winkler Fabien <fabienwinkler@outlook.fr>",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "CHANGELOG.md"
+  ],
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fabienwnklr/free-drawing.git",
+    "directory": "packages/vue"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "free-drawing",
+    "vue",
+    "drawing",
+    "whiteboard",
+    "canvas"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepack": "tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "typecheck": "tsc -p .",
+    "lint": "prettier --check \"*.{json,md}\" \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "format": "prettier --write \"*.{json,md}\" \"src/**/*.ts\" \"tests/**/*.ts\""
+  },
+  "peerDependencies": {
+    "@fabwcie/free-drawing": "^7.29.0",
+    "vue": "^3.3.0"
+  },
+  "devDependencies": {
+    "vue": "^3.5.44"
+  }
+}

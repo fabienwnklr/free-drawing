@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "outDir": "dist",
+    "rootDir": "src",
+    "types": [],
+    /* types of the built library (yarn build), as installed by apps */
+    "paths": {}
+  },
+  "include": ["src"]
+}
