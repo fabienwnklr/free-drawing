@@ -105,7 +105,7 @@
 - [x] Create package to use drawer with react/vuejs (`@fabwcie/free-drawing-react`, `@fabwcie/free-drawing-vue`: `FreeDrawing` components, first versions to publish by hand)
 - [x] dans la docs mettre en valeur que c'est pour du vanilla comme du react/vue (hero, card and quick start in tabs of the homepage, React and Vue pages of the guide, features, READMEs)
 - [x] quels features pertinente on a pas qu'on pourrait intégré en s'inspirant de tldraw/escalidraw, et quels features eux n'ont pas qu'on pourrait pertinemment intégrer? (answered 2026-10-25: features to choose, added once chosen)
-- [ ] le lien via une fleche n'ai pas assez précis, si j'ai un triagle ça s'attache au cadre qui entoure l'objet pas vraiment a la surface du dessin par exemple
+- [x] le lien via une fleche n'ai pas assez précis, si j'ai un triagle ça s'attache au cadre qui entoure l'objet pas vraiment a la surface du dessin par exemple (7.29.2: outline of path shapes as drawn)
 
 # Features of tldraw / Excalidraw we don't have (strong and medium interest, by priority)
 

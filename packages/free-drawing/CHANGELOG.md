@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.29.2](https://github.com/fabienwnklr/free-drawing/compare/v7.29.1...v7.29.2) (2026-10-25)
+
+
+### Bug Fixes
+
+* **arrows:** arrows linked to triangles, diamonds, hearts and clouds end on their outline as drawn, and the sides they are fixed to are on it: they stopped on the box around these shapes (an arrow aiming at a triangle ended in the empty corner of its box), also when rotated. An end is linked near their outline, no longer in the empty corners of their box
+
 ## [7.29.1](https://github.com/fabienwnklr/free-drawing/compare/v7.29.0...v7.29.1) (2026-10-25)
 
 

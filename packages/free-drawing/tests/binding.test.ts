@@ -3,6 +3,7 @@ import { Rect } from 'konva/lib/shapes/Rect';
 import { Ellipse } from 'konva/lib/shapes/Ellipse';
 import { Arrow } from 'konva/lib/shapes/Arrow';
 import { Line } from 'konva/lib/shapes/Line';
+import { Path } from 'konva/lib/shapes/Path';
 import type { Drawer } from '@/Drawer';
 import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
@@ -16,9 +17,15 @@ import {
   updateBindings,
 } from '@/utils/binding';
 import { getFrameShapes, isFrame, withFrameShapes } from '@/utils/frame';
+import { scalePath } from '@/components/toolbar/widgets/PathShapeWidget';
 import { createDrawer, drag, fireMouse, keydown } from './helpers';
 
 const round = ({ x, y }: { x: number; y: number }) => ({ x: Math.round(x), y: Math.round(y) });
+
+/** Path of the heart tool (box of size 1): dip at 0.5, 0.16 */
+const heartPath =
+  'M0.5 1C0.18 0.78 0 0.56 0 0.3C0 0.11 0.14 0 0.29 0C0.4 0 0.47 0.06 0.5 0.16C0.53 0.06 0.6 0 0.71 0' +
+  'C0.86 0 1 0.11 1 0.3C1 0.56 0.82 0.78 0.5 1Z';
 
 /** Rectangle 0..200 x 0..100 (no stroke), ellipse centered at 500, 50, radius 50, with a background (linked inside) */
 const createShapes = () => {
@@ -256,6 +263,60 @@ describe('Arrows linked to shapes', () => {
 
     rect.setAttrs({ x: 100, rotation: 90 });
     expect(round(getAnchorPoints(rect, layer).bottom)).toEqual({ x: 0, y: 100 });
+  });
+
+  it('Path shapes as drawn: outline point, sides and links on their outline, not on their box', () => {
+    const { drawer } = createShapes();
+    const layer = drawer.drawLayer;
+    // apex at 100, 0, base from 0, 100 to 200, 100
+    const triangle = drawer.addShape(
+      new Path({ name: shapeName.triangle, x: 0, y: 200, data: scalePath('M0.5 0L1 1L0 1Z', 200, 100), fill: '#fff' })
+    );
+    const shapes = () => drawer.getDrawingShapes();
+
+    // side of the triangle, not the left of its box (-6)
+    expect(round(getOutlinePoint(triangle, layer, { x: -300, y: 250 })!)).toEqual({ x: 44, y: 250 });
+    expect(round(getOutlinePoint(triangle, layer, { x: 100, y: -100 })!)).toEqual({ x: 100, y: 194 });
+    expect(Object.fromEntries(Object.entries(getAnchorPoints(triangle, layer)).map(([k, p]) => [k, round(p)]))).toEqual(
+      {
+        top: { x: 100, y: 200 },
+        right: { x: 150, y: 250 },
+        bottom: { x: 100, y: 300 },
+        left: { x: 50, y: 250 },
+      }
+    );
+
+    // empty corner of its box: not linked, near its side (7 from it) or inside (background): linked
+    expect(findBindingTarget(shapes(), { x: 10, y: 210 })).toBeNull();
+    expect(findBindingTarget(shapes(), { x: 40, y: 240 })).toBeNull();
+    expect(findBindingTarget(shapes(), { x: 45, y: 245 })).toBe(triangle);
+    expect(findBindingTarget(shapes(), { x: 100, y: 280 })).toBe(triangle);
+
+    // turned upside down: its sides follow
+    triangle.setAttrs({ x: 200, y: 300, rotation: 180 });
+    expect(round(getAnchorPoints(triangle, layer).top)).toEqual({ x: 100, y: 300 });
+    expect(round(getAnchorPoints(triangle, layer).left)).toEqual({ x: 150, y: 250 });
+
+    // heart: top on its dip, not above it
+    const heart = drawer.addShape(
+      new Path({ name: shapeName.heart, x: 0, y: 400, data: scalePath(heartPath, 200, 100), fill: '#fff' })
+    );
+    expect(round(getAnchorPoints(heart, layer).top)).toEqual({ x: 100, y: 416 });
+  });
+
+  it('Arrow drawn to a triangle ends on its side', () => {
+    const { drawer } = createShapes();
+    const triangle = drawer.addShape(
+      new Path({ name: shapeName.triangle, x: 0, y: 200, data: scalePath('M0.5 0L1 1L0 1Z', 200, 100), fill: '#fff' })
+    );
+
+    drawer.getWidget<BaseWidget>('arrow')!.setActive(true);
+    drag(drawer, [-200, 250], [100, 260]);
+    const [arrow] = arrows(drawer);
+    const points = arrow.points();
+
+    expect(links(arrow)).toEqual([undefined, triangle.id()]);
+    expect(round({ x: points[2], y: points[3] })).toEqual({ x: 44, y: 250 });
   });
 
   it('Arrow ends near middle of a side are fixed to it, the other end aims at it', () => {

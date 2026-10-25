@@ -1,11 +1,12 @@
 import type { Node } from 'konva/lib/Node';
 import type { Container } from 'konva/lib/Container';
 import { Arrow } from 'konva/lib/shapes/Arrow';
+import { Path } from 'konva/lib/shapes/Path';
 import { Shape } from 'konva/lib/Shape';
 import type { IRect, Vector2d } from 'konva/lib/types';
 import type { DrawingShape } from '@/@types/drawer';
-import { fillShapes, shapeName } from '@/constants';
-import type { Anchor, BoundEnd, OutlineCrossing } from '@/@types/shapes';
+import { fillShapes, pathShapes, shapeName } from '@/constants';
+import type { Anchor, BoundEnd, OutlineCrossing, PathOutline } from '@/@types/shapes';
 import { isFrame } from '@/utils/frame';
 
 /**
@@ -26,30 +27,132 @@ const gap = 6;
 /** Distance from a shape on screen (px, divided by the zoom) under which an arrow end is linked to it */
 export const bindingMargin = 12;
 
+/** Points sampled on each curve of the outline of a path shape (a line gives its end) */
+const curveSteps = 12;
+
+/** Outlines of path shapes, sampled once for each data */
+const pathOutlines = new WeakMap<Path, PathOutline>();
+
 /**
- * Geometry of a shape in its layer: rectangles and ellipses as drawn (rotation...), other shapes by their box
+ * Outline of a path shape (triangle, diamond, heart, cloud) in its own coordinates: points of its lines, curves
+ * sampled
+ * @param path path shape
+ * @returns one ring of points per subpath (its last edge goes back to its first point)
+ */
+function getPathRings(path: Path): Vector2d[][] {
+  const data = path.data();
+  const cached = pathOutlines.get(path);
+
+  if (cached?.data === data) return cached.rings;
+
+  const rings: Vector2d[][] = [];
+  let ring: Vector2d[] = [];
+
+  for (const segment of path.dataArray) {
+    if (segment.command === 'M') {
+      if (ring.length > 2) rings.push(ring);
+      ring = [{ x: segment.points[0], y: segment.points[1] }];
+      continue;
+    }
+
+    const steps = segment.command === 'L' || segment.command === 'z' ? 1 : curveSteps;
+
+    for (let i = 1; i <= steps; i++) {
+      const point = Path.getPointAtLengthOfDataArray((segment.pathLength * i) / steps, [segment]);
+
+      if (point) ring.push(point);
+    }
+  }
+  if (ring.length > 2) rings.push(ring);
+  pathOutlines.set(path, { data, rings });
+  return rings;
+}
+
+/**
+ * Geometry of a shape in its layer: rectangles, ellipses and path shapes as drawn (rotation...), other shapes by their
+ * box
  * @param shape shape or group linked by an arrow
  * @param layer layer of the shape, coordinates are relative to it
- * @returns `transform` from shape to layer and `box` (own rect) of rectangles and ellipses, else null transform and
- * box in layer; `ellipse` when the outline is an ellipse, `stroke` width (0 for boxes)
+ * @returns `transform` from shape to layer and `box` (own rect) of rectangles, ellipses and path shapes, else null
+ * transform and box in layer; `ellipse` when the outline is an ellipse, `rings` of the outline of a path shape in layer
+ * coordinates (else null), `stroke` width (0 for boxes)
  */
 function getGeometry(shape: Node, layer: Container) {
   const isRect = shape.hasName(shapeName.rect);
   const isEllipse = shape.hasName(shapeName.ellipse);
+  const isPath = shape instanceof Path && pathShapes.some((name) => shape.hasName(name));
 
-  if ((isRect || isEllipse) && shape instanceof Shape) {
+  if ((isRect || isEllipse || isPath) && shape instanceof Shape) {
     const { x, y, width, height } = shape.getSelfRect();
+    const transform = shape.getAbsoluteTransform(layer);
 
     return {
-      transform: shape.getAbsoluteTransform(layer),
+      transform,
       box: { x, y, width, height },
       ellipse: isEllipse,
+      rings: isPath ? getPathRings(shape).map((ring) => ring.map((point) => transform.point(point))) : null,
       stroke: shape.hasStroke() ? shape.strokeWidth() : 0,
     };
   }
 
   // box of shape in layer (stroke included), no transform
-  return { transform: null, box: shape.getClientRect({ relativeTo: layer }), ellipse: false, stroke: 0 };
+  return { transform: null, box: shape.getClientRect({ relativeTo: layer }), ellipse: false, rings: null, stroke: 0 };
+}
+
+/**
+ * Farthest point of an outline on a ray: the outer outline seen from the point the ray aims at (a heart crossed at
+ * its dip, not behind it)
+ * @param rings outline of a path shape, in layer coordinates
+ * @param from start of the ray (center of the shape)
+ * @param towards point giving the direction of the ray
+ * @returns farthest crossing, null when the ray crosses no edge (or `towards` is `from`)
+ */
+function getRingsCrossing(rings: Vector2d[][], from: Vector2d, towards: Vector2d): Vector2d | null {
+  const [dx, dy] = [towards.x - from.x, towards.y - from.y];
+  // length of the ray to the farthest crossing, in lengths of the direction
+  let farthest = 0;
+
+  for (const ring of rings) {
+    for (const [i, p] of ring.entries()) {
+      const q = ring[(i + 1) % ring.length];
+      const [ex, ey] = [q.x - p.x, q.y - p.y];
+      // from + t * direction = p + u * edge
+      const denominator = dx * ey - dy * ex;
+
+      if (!denominator) continue;
+
+      const t = ((p.x - from.x) * ey - (p.y - from.y) * ex) / denominator;
+      const u = ((p.x - from.x) * dy - (p.y - from.y) * dx) / denominator;
+
+      if (t > farthest && u >= 0 && u <= 1) farthest = t;
+    }
+  }
+  return farthest ? { x: from.x + dx * farthest, y: from.y + dy * farthest } : null;
+}
+
+/**
+ * Distance from a point to an outline, negative inside it (even-odd rule)
+ * @param rings outline of a path shape, in layer coordinates
+ * @param point point in layer coordinates
+ * @returns distance in layer units
+ */
+function getRingsDistance(rings: Vector2d[][], point: Vector2d): number {
+  let nearest = Infinity;
+  let inside = false;
+
+  for (const ring of rings) {
+    for (const [i, p] of ring.entries()) {
+      const q = ring[(i + 1) % ring.length];
+      const [ex, ey] = [q.x - p.x, q.y - p.y];
+      // projection of the point on the edge, within its ends
+      const u = Math.max(0, Math.min(1, ((point.x - p.x) * ex + (point.y - p.y) * ey) / (ex * ex + ey * ey || 1)));
+
+      nearest = Math.min(nearest, Math.hypot(point.x - p.x - u * ex, point.y - p.y - u * ey));
+      // edge crossed by the horizontal line of the point, on its right
+      if (p.y > point.y !== q.y > point.y && point.x < p.x + ((point.y - p.y) / (q.y - p.y)) * ex) inside = !inside;
+    }
+  }
+  return inside ? -nearest : nearest;
 }
 
 /**
@@ -85,13 +188,14 @@ export function getShapeCenter(shape: Node, layer: Container): Vector2d {
 }
 
 /**
- * Middle of each side of a shape in its layer (rotated with it)
+ * Middle of each side of a shape in its layer (rotated with it), on the outline of path shapes: where the way from
+ * their center to the middle of a side of their box crosses it (side of a triangle, dip of a heart)
  * @param shape shape or group
  * @param layer layer of the shape
  * @returns points by side, in layer coordinates
  */
 export function getAnchorPoints(shape: Node, layer: Container): Record<Anchor, Vector2d> {
-  const { transform, box } = getGeometry(shape, layer);
+  const { transform, box, rings } = getGeometry(shape, layer);
   const c = center(box);
   const points: Record<Anchor, Vector2d> = {
     top: { x: c.x, y: box.y },
@@ -100,9 +204,11 @@ export function getAnchorPoints(shape: Node, layer: Container): Record<Anchor, V
     left: { x: box.x, y: c.y },
   };
 
-  anchors.forEach((anchor) => {
+  for (const anchor of anchors) {
     if (transform) points[anchor] = transform.point(points[anchor]);
-  });
+    if (transform && rings)
+      points[anchor] = getRingsCrossing(rings, transform.point(c), points[anchor]) ?? points[anchor];
+  }
   return points;
 }
 
@@ -130,9 +236,14 @@ export function getAnchorAt(shape: Node, layer: Container, point: Vector2d, tole
  * @returns outline point and center in layer coordinates, `stroke` width; null when `towards` is the center
  */
 function getOutlineCrossing(shape: Node, layer: Container, towards: Vector2d): OutlineCrossing | null {
-  const { transform, box, ellipse, stroke } = getGeometry(shape, layer);
+  const { transform, box, ellipse, rings, stroke } = getGeometry(shape, layer);
   const toLayer = (point: Vector2d) => (transform ? transform.point(point) : point);
   const c = center(box);
+  // path shapes: their outline (box of an empty path, being drawn)
+  const crossing = rings && getRingsCrossing(rings, toLayer(c), towards);
+
+  if (crossing) return { point: crossing, center: toLayer(c), stroke };
+
   const local = transform ? transform.copy().invert().point(towards) : towards;
   const [dx, dy] = [local.x - c.x, local.y - c.y];
   const [rx, ry] = [Math.abs(box.width) / 2, Math.abs(box.height) / 2];
@@ -164,15 +275,16 @@ export function getOutlinePoint(shape: Node, layer: Container, towards: Vector2d
 
 /**
  * Distance from the outline of a shape to a point: rectangles to their nearest side as drawn (rotation, scale),
- * ellipses on the way from their center, other shapes to their box
+ * ellipses on the way from their center, path shapes to their outline, other shapes to their box
  * @param shape shape or group
  * @param layer layer of the shape
  * @param point point in layer coordinates (arrow end)
  * @returns distance in layer units, negative inside (-Infinity at the center of an ellipse)
  */
 export function getOutlineDistance(shape: Node, layer: Container, point: Vector2d): number {
-  const { transform, box, ellipse, stroke } = getGeometry(shape, layer);
+  const { transform, box, ellipse, rings, stroke } = getGeometry(shape, layer);
 
+  if (rings?.length) return getRingsDistance(rings, point) - stroke / 2;
   if (!ellipse) {
     const local = transform ? transform.copy().invert().point(point) : point;
     // layer units of each axis of the shape
@@ -212,10 +324,10 @@ function getAnchoredPoint(shape: Node, layer: Container, anchor: Anchor): Vector
 
 /**
  * Shape an arrow end can be linked to at a point: smallest visible shape around it (rectangles, ellipses, texts,
- * freehand drawings, groups, shapes of frames), not arrows nor lines. Rectangles and ellipses as drawn (not their box)
- * and path shapes (their box) near their outline, inside with a background (as their hit region: an empty inside is a
- * free place, far from the outline of a big shape); a frame only near its border (an arrow drawn in a frame links to
- * its shapes, or to nothing); other shapes in their box
+ * freehand drawings, groups, shapes of frames), not arrows nor lines. Rectangles, ellipses and path shapes as drawn
+ * (not their box: an empty corner of the box of a triangle is out of it) near their outline, inside with a background
+ * (as their hit region: an empty inside is a free place, far from the outline of a big shape); a frame only near its
+ * border (an arrow drawn in a frame links to its shapes, or to nothing); other shapes in their box
  * @param shapes Drawing shapes (with shapes of frames, see `withFrameShapes`)
  * @param point arrow end, in coordinates of the layer of shapes
  * @param exclude Arrow being drawn

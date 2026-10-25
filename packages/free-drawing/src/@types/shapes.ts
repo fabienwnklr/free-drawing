@@ -13,8 +13,16 @@ export type OutlineCrossing = {
   point: Vector2d;
   /** Center of the shape, in layer coordinates */
   center: Vector2d;
-  /** Stroke width of rectangles and ellipses (0 for shapes checked by their box) */
+  /** Stroke width of rectangles, ellipses and path shapes (0 for shapes checked by their box) */
   stroke: number;
+};
+
+/** Outline of a path shape in its own coordinates, for the data it was sampled from (see `getPathRings` of utils/binding) */
+export type PathOutline = {
+  /** Path data sampled */
+  data: string;
+  /** One ring of points per subpath, curves sampled, in coordinates of the shape */
+  rings: Vector2d[][];
 };
 
 /**
