@@ -147,6 +147,15 @@ export type Edges = 'sharp' | 'round' | number;
 export type ShapeOrder = 'forward' | 'backward' | 'front' | 'back';
 
 /**
+ * Side or center of the box of selected shapes they are aligned on: left, center, right (horizontally), top, middle,
+ * bottom (vertically)
+ */
+export type ShapeAlignment = 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom';
+
+/** Axis of a flip, a distribution or a stack of shapes */
+export type Direction = 'horizontal' | 'vertical';
+
+/**
  * Text node style, keys match konva Text attributes
  */
 export type TextStyle = {

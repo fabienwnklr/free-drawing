@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.31.0](https://github.com/fabienwnklr/free-drawing/compare/v7.30.0...v7.31.0) (2026-10-25)
+
+
+### Features
+
+* **selection:** align selected shapes on a side or the center of their box (left, center, right, top, middle, bottom), stack them in a row or a column, distribute them with even spaces (3 shapes or more), from the options panel (sections "Align" and "Distribute", 2 shapes or more) and the command palette; `drawer.alignShapes(alignment)`, `distributeShapes(direction)`, `stackShapes(direction)`, types `ShapeAlignment` and `Direction`
+
 ## [7.30.0](https://github.com/fabienwnklr/free-drawing/compare/v7.29.2...v7.30.0) (2026-10-25)
 
 

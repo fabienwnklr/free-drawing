@@ -47,7 +47,7 @@ import RotateLeftIcon from '@/icons/rotate-left.svg?raw';
 import FlipVerticalIcon from '@/icons/flip-vertical.svg?raw';
 import FitWidthIcon from '@/icons/fit-width.svg?raw';
 import type { Command, CommandGroup } from '@/@types/ui';
-import { shapeOrders } from '@/constants';
+import { shapeAlignments, shapeDistributions, shapeOrders, shapeStacks } from '@/constants';
 import { formatShortcut } from '@/utils/shortcut';
 
 /** Accents of decomposed letters (U+0300 to U+036F) */
@@ -377,6 +377,37 @@ export class CommandPalette extends Modal {
                 icon,
                 shortcut,
                 run: () => drawer.reorderShapes(order),
+              }
+          ),
+          // 2 shapes at least (distribute: 3)
+          ...shapeAlignments.map(
+            ({ value, label, icon }) =>
+              editSelection &&
+              selected.length > 1 && {
+                id: `align shapes ${value}`,
+                label: t(label),
+                icon,
+                run: () => drawer.alignShapes(value),
+              }
+          ),
+          ...shapeDistributions.map(
+            ({ value, label, icon }) =>
+              editSelection &&
+              selected.length > 2 && {
+                id: `distribute shapes spacing ${value}`,
+                label: t(label),
+                icon,
+                run: () => drawer.distributeShapes(value),
+              }
+          ),
+          ...shapeStacks.map(
+            ({ value, label, icon }) =>
+              editSelection &&
+              selected.length > 1 && {
+                id: `stack shapes ${value}`,
+                label: t(label),
+                icon,
+                run: () => drawer.stackShapes(value),
               }
           ),
           editSelection && {

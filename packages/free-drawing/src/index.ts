@@ -9,6 +9,7 @@ export { Drawer } from '@/Drawer';
 export type {
   ColorLike,
   CssColorNames,
+  Direction,
   DrawerOptions,
   DrawerStorage,
   DrawerUser,
@@ -19,6 +20,7 @@ export type {
   Preferences,
   RGB,
   RGBA,
+  ShapeAlignment,
   ShapeOrder,
   StrokeStyle,
   TextStyle,

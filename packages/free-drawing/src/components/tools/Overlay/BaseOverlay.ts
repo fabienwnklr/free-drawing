@@ -19,7 +19,10 @@ import {
   fillShapes,
   shapeName,
   strokeStyleShapes,
+  shapeAlignments,
+  shapeDistributions,
   shapeOrders,
+  shapeStacks,
 } from '@/constants';
 import { ColorPicker } from '@/components/ColorPicker/ColorPicker';
 import { createButton, setLabel, setPressed, uniqueId } from '@/utils/dom';
@@ -81,6 +84,14 @@ export class BaseOverlay {
   /** Stacking order section (back, backward, forward, front), shown only for selected shapes */
   $orderContainer!: HTMLDivElement;
 
+  /** Align section (sides and centers of the box of the selection), shown for 2 selected shapes at least */
+  $alignContainer!: HTMLDivElement;
+
+  /** Distribute section (same spaces, stacks), shown for 2 selected shapes at least */
+  $distributeContainer!: HTMLDivElement;
+  /** Buttons distributing the selection, disabled with less than 3 shapes */
+  $distributeBtns: HTMLButtonElement[] = [];
+
   /** Actions section (duplicate, delete, link), shown only for selected shapes */
   $actionsContainer!: HTMLDivElement;
   /** Link button of actions section, shows the link editor above the selection (`drawer.linkEditor`) */
@@ -140,6 +151,8 @@ export class BaseOverlay {
     this._createOpacityField();
     // stacking order of selected shapes
     this._createOrderFields();
+    // align, distribute and stack selected shapes
+    this._createAlignFields();
     // duplicate, delete, link of selected shapes
     this._createActionsFields();
 
@@ -152,6 +165,8 @@ export class BaseOverlay {
       this.$edgesContainer,
       this.$opacityContainer,
       this.$orderContainer,
+      this.$alignContainer,
+      this.$distributeContainer,
       this.$actionsContainer,
     ]);
   }
@@ -347,6 +362,29 @@ export class BaseOverlay {
   }
 
   /**
+   * Align section (`drawer.alignShapes`) and distribute section (`drawer.distributeShapes`, `drawer.stackShapes`)
+   */
+  private _createAlignFields() {
+    const align = this._createSection('overlay.align');
+    const distribute = this._createSection('overlay.distribute');
+
+    this.$alignContainer = align.$container;
+    this.$distributeContainer = distribute.$container;
+    for (const { value, label, icon } of shapeAlignments) {
+      align.$btnContainer.append(this._createAction(icon, label, '', () => this.drawer.alignShapes(value)));
+    }
+    this.$distributeBtns = shapeDistributions.map(({ value, label, icon }) =>
+      this._createAction(icon, label, '', () => this.drawer.distributeShapes(value))
+    );
+    distribute.$btnContainer.append(
+      ...this.$distributeBtns,
+      ...shapeStacks.map(({ value, label, icon }) =>
+        this._createAction(icon, label, '', () => this.drawer.stackShapes(value))
+      )
+    );
+  }
+
+  /**
    * Actions section: duplicate, delete and link of selected shapes (link editor above the selection)
    */
   private _createActionsFields() {
@@ -469,6 +507,10 @@ export class BaseOverlay {
     // stacking order and actions only for selected shapes, not for tool options
     this.$orderContainer.style.display = selected ? '' : 'none';
     this.$actionsContainer.style.display = selected ? '' : 'none';
+    // align and stack 2 shapes, distribute 3
+    this.$alignContainer.style.display = (shape?.length ?? 0) > 1 ? '' : 'none';
+    this.$distributeContainer.style.display = (shape?.length ?? 0) > 1 ? '' : 'none';
+    for (const $btn of this.$distributeBtns) $btn.disabled = (shape?.length ?? 0) < 3;
 
     const { strokeColor, fillColor, strokeWidth, strokeStyle, edges, opacity } = this.drawer.options;
     const shapes = (shape ?? []).filter((s): s is Shape<ShapeConfig> => s instanceof Shape);

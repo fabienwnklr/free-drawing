@@ -110,7 +110,7 @@
 # Features of tldraw / Excalidraw we don't have (strong and medium interest, by priority)
 
 - [x] zoom to fit the drawing, to the selection and to 100 % (Shift+1, Shift+2, Shift+0): menu, command palette, help (`showArea` exists)
-- [ ] align, distribute and stack the selection (left, center, right, top, middle, bottom; even horizontal / vertical spacing)
+- [x] align, distribute and stack the selection (left, center, right, top, middle, bottom; even horizontal / vertical spacing)
 - [ ] images: paste and pick image files, resize, kept in files, links and collaboration (`Image` in `shapeClasses` of the protocol, size of collaboration messages)
 - [ ] text in shapes: double click a rectangle, ellipse or path shape to write in it (centered, follows the shape), labels on arrows
 - [ ] arrows: curved and elbow arrows, styles of arrowheads (none, arrow, triangle, dot, bar) at each end

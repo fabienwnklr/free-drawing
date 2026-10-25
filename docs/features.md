@@ -32,6 +32,7 @@ The toolbar, its groups and the shortcuts are set with the [`widgets` and `widge
 - **Options of mixed selections**: the panel shows the options of every kind of selected shape, and applies each one to the shapes it fits, with actions to duplicate, delete or link the selection.
 - **Selection menu** next to the shapes: duplicate, group, rotate, stacking order, lock and delete.
 - **Links**: attach a web page or an email address to a shape, edited above it, opened from its link icon.
+- **Align and distribute** the selection on a side or a center, with even spaces, or stacked in a row or a column.
 - **Edit faster**: duplicate (Ctrl + D), group (Ctrl + G), flip (Shift + H / V), rotate by 90° (Shift + R / L), move with the arrow keys, undo and redo up to 100 steps (Ctrl + Z, Ctrl + Y or Ctrl + Shift + Z).
 
 More in [Selection](/get-started/#selection).

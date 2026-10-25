@@ -8,6 +8,7 @@ import { Rect } from 'konva/lib/shapes/Rect';
 import type { AvailableTools } from '@/@types/toolbar';
 import type {
   ColorLike,
+  Direction,
   DrawerOptions,
   DrawerStorage,
   DrawerUser,
@@ -15,6 +16,7 @@ import type {
   Edges,
   OptionsChange,
   Preferences,
+  ShapeAlignment,
   ShapeOrder,
   StrokeStyle,
   TextStyle,
@@ -28,6 +30,7 @@ import { announce, createLiveRegion } from '@/utils/liveRegion';
 import { DrawerError, getErrorText } from '@/utils/errors';
 import { getStrokeStyle } from '@/utils/stroke';
 import { reorderShapes } from '@/utils/order';
+import { alignShapes, distributeShapes, stackShapes } from '@/utils/align';
 import { rectContains, setupHit } from '@/utils/hit';
 import { I18n, getLanguage, languages } from '@/i18n/I18n';
 import type { Language, TranslationParams, TranslationKey } from '@/@types/i18n';
@@ -1358,7 +1361,7 @@ export class Drawer extends MicroEvent {
    * @param direction Horizontal mirrors left and right, vertical mirrors top and bottom
    * @param shapes Shapes to flip (frames ignored), selected shapes by default
    */
-  flipShapes(direction: 'horizontal' | 'vertical', shapes: DrawingShape[] = this.getSelectedShapes()) {
+  flipShapes(direction: Direction, shapes: DrawingShape[] = this.getSelectedShapes()) {
     // frames are not flipped
     shapes = shapes.filter((shape) => !isFrame(shape));
     if (!shapes.length) return;
@@ -1929,6 +1932,50 @@ export class Drawer extends MicroEvent {
     if (moved) this.stage.fire('change');
 
     return moved;
+  }
+
+  /**
+   * Align shapes on a side or the center of their whole box (bounding boxes of rotated shapes)
+   * @param alignment `left`, `center`, `right` (horizontally), `top`, `middle`, `bottom` (vertically)
+   * @param shapes Shapes to align (2 at least), selected shapes by default
+   */
+  alignShapes(alignment: ShapeAlignment, shapes: DrawingShape[] = this.getSelectedShapes()) {
+    this._arrangeShapes(shapes, 2, () => alignShapes(shapes, this.drawLayer, alignment));
+  }
+
+  /**
+   * Same space between shapes along an axis: the first and last ones stay, the others are placed between them
+   * @param direction `horizontal` (spaces between left and right sides) or `vertical`
+   * @param shapes Shapes to distribute (3 at least), selected shapes by default
+   */
+  distributeShapes(direction: Direction, shapes: DrawingShape[] = this.getSelectedShapes()) {
+    this._arrangeShapes(shapes, 3, () => distributeShapes(shapes, this.drawLayer, direction));
+  }
+
+  /**
+   * Shapes one after the other along an axis, 16 units between them: the first one stays, their place on the other
+   * axis is kept
+   * @param direction `horizontal` (a row from left to right) or `vertical` (a column from top to bottom)
+   * @param shapes Shapes to stack (2 at least), selected shapes by default
+   */
+  stackShapes(direction: Direction, shapes: DrawingShape[] = this.getSelectedShapes()) {
+    this._arrangeShapes(shapes, 2, () => stackShapes(shapes, this.drawLayer, direction));
+  }
+
+  /**
+   * Shapes moved by an alignment, a distribution or a stack: arrows moved without their shapes unlinked, shapes placed
+   * in the frames they are moved into or out of (highlighted), change saved
+   * @param shapes Shapes moved
+   * @param min Fewest shapes for this move (nothing done with less)
+   * @param move Move of the shapes
+   */
+  private _arrangeShapes(shapes: DrawingShape[], min: number, move: () => void) {
+    if (shapes.length < min) return;
+
+    unbindMoved(shapes);
+    move();
+    this.frameHighlight.flash(this.placeInFrames(shapes));
+    this.stage.fire('change');
   }
 
   /**

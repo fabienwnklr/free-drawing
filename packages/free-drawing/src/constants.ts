@@ -1,12 +1,22 @@
 import type { DrawerOptions } from '@/@types/drawer';
 import type { WidgetName } from '@/@types/toolbar';
 import type { TranslationKey } from '@/@types/i18n';
-import type { ShapeOrder } from '@/@types/drawer';
-import type { ShortcutChoice } from '@/@types/ui';
+import type { Direction, ShapeAlignment, ShapeOrder } from '@/@types/drawer';
+import type { IconChoice, ShortcutChoice } from '@/@types/ui';
 import SendToBackIcon from '@/icons/send-to-back.svg?raw';
 import SendBackwardIcon from '@/icons/send-backward.svg?raw';
 import BringForwardIcon from '@/icons/bring-forward.svg?raw';
 import BringToFrontIcon from '@/icons/bring-to-front.svg?raw';
+import AlignLeftIcon from '@/icons/align-shapes-left.svg?raw';
+import AlignCenterIcon from '@/icons/align-shapes-center.svg?raw';
+import AlignRightIcon from '@/icons/align-shapes-right.svg?raw';
+import AlignTopIcon from '@/icons/align-shapes-top.svg?raw';
+import AlignMiddleIcon from '@/icons/align-shapes-middle.svg?raw';
+import AlignBottomIcon from '@/icons/align-shapes-bottom.svg?raw';
+import DistributeHorizontalIcon from '@/icons/distribute-horizontal.svg?raw';
+import DistributeVerticalIcon from '@/icons/distribute-vertical.svg?raw';
+import StackHorizontalIcon from '@/icons/stack-horizontal.svg?raw';
+import StackVerticalIcon from '@/icons/stack-vertical.svg?raw';
 
 /**
  * Widgets of toolbar, default order
@@ -276,4 +286,28 @@ export const shapeOrders: ShortcutChoice<ShapeOrder>[] = [
   { value: 'backward', label: 'action.sendBackward', icon: SendBackwardIcon, shortcut: 'Ctrl+Down' },
   { value: 'forward', label: 'action.bringForward', icon: BringForwardIcon, shortcut: 'Ctrl+Up' },
   { value: 'front', label: 'action.bringToFront', icon: BringToFrontIcon, shortcut: 'Ctrl+Shift+Up' },
+];
+
+/**
+ * Alignments of the selection on a side or the center of its box: buttons of options panels, commands of the palette
+ */
+export const shapeAlignments: IconChoice<ShapeAlignment>[] = [
+  { value: 'left', label: 'action.alignLeft', icon: AlignLeftIcon },
+  { value: 'center', label: 'action.alignCenter', icon: AlignCenterIcon },
+  { value: 'right', label: 'action.alignRight', icon: AlignRightIcon },
+  { value: 'top', label: 'action.alignTop', icon: AlignTopIcon },
+  { value: 'middle', label: 'action.alignMiddle', icon: AlignMiddleIcon },
+  { value: 'bottom', label: 'action.alignBottom', icon: AlignBottomIcon },
+];
+
+/** Same space between selected shapes along an axis (3 at least): buttons of options panels, commands of the palette */
+export const shapeDistributions: IconChoice<Direction>[] = [
+  { value: 'horizontal', label: 'action.distributeHorizontal', icon: DistributeHorizontalIcon },
+  { value: 'vertical', label: 'action.distributeVertical', icon: DistributeVerticalIcon },
+];
+
+/** Selected shapes one after the other along an axis: buttons of options panels, commands of the palette */
+export const shapeStacks: IconChoice<Direction>[] = [
+  { value: 'horizontal', label: 'action.stackHorizontal', icon: StackHorizontalIcon },
+  { value: 'vertical', label: 'action.stackVertical', icon: StackVerticalIcon },
 ];

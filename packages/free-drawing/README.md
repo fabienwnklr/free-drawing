@@ -396,6 +396,14 @@ With the selection tool:
 
 The options panel of a selection shows the options of every kind of selected shape: stroke and its style, background, corners, text font, size, style and alignment... Each option changes the selected shapes it applies to (e.g. the background of rectangles and ellipses, the font of texts). A selection of texts only shows the text panel. Frames have no style: a selected frame shows its opacity (of the whole frame: border, title and shapes), its stacking order and the actions. The actions of the panel duplicate (Ctrl+D), delete (Delete) or link the selection.
 
+Align and distribute: with 2 selected shapes or more, the options panel (and the command palette) aligns them on a side or the center of their whole box (left, center, right, top, middle, bottom), stacks them one after the other (a row or a column, 16 units between them, the first one stays) and, with 3 shapes or more, distributes them (same spaces between them, the first and last ones stay). Rotated shapes count by their bounding box, shapes moved into or out of a frame enter or leave it.
+
+```js
+drawer.alignShapes('left'); // selected shapes by default: 'left', 'center', 'right', 'top', 'middle', 'bottom'
+drawer.distributeShapes('horizontal'); // or 'vertical', 3 shapes at least
+drawer.stackShapes('vertical', shapes); // or 'horizontal'
+```
+
 Links: the link action (panel, context menu, command palette) shows the link of the selection above it, a web page or an email address (`https://` added without protocol, other protocols refused). Enter applies it, Escape cancels, its buttons open or remove it. A shape with a link shows it above itself when selected, and a link icon at its top right corner (at the end of the title of a frame): a click opens the link in a new tab, its address is shown on hover. Links are saved with shapes, shared with collaborators and kept around shapes in svg exports.
 
 ```js
