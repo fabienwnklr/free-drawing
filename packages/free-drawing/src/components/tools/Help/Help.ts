@@ -102,6 +102,13 @@ export class Help extends Modal {
       { label: t('menu.darkMode'), keys: ['Alt+Shift+D'] },
       { label: t('help.snap'), keys: ['Alt+S'] },
       { label: t('help.zoom'), keys: ['Ctrl+Wheel'] },
+      ...(this.drawer.options.zoom
+        ? [
+            { label: t('zoom.fit'), keys: ['Shift+1'] },
+            { label: t('zoom.selection'), keys: ['Shift+2'] },
+            { label: t('zoom.to100'), keys: ['Shift+0'] },
+          ]
+        : []),
       { label: t('preferences.title'), keys: ['Ctrl+,'] },
     ];
 

@@ -307,7 +307,7 @@ describe('User interface', () => {
     expect(drawer.getZoomLevel()).toBe(0.5);
     expect(text()).toBe('x 0 y 0');
 
-    // reset zoom of zoom widget is also at origin
+    // 100 % of zoom widget keeps the center of the view (here the origin)
     drawer.zoom!.resetZoom();
     expect(text()).toBe('x 0 y 0');
 

@@ -91,10 +91,11 @@ describe('Context menu', () => {
       'Copy as PNG Shift+Alt+C',
       'Copy as SVG Shift+Alt+S',
       'Select all Ctrl+A',
+      'Zoom to selection Shift+2',
     ]);
     expect(item(drawer, 'Bring forward').getAttribute('aria-keyshortcuts')).toBe('Control+ArrowUp');
-    // 5 groups, separated
-    expect(drawer.contextMenu.$list.querySelectorAll('.is-separated').length).toBe(4);
+    // 6 groups, separated
+    expect(drawer.contextMenu.$list.querySelectorAll('.is-separated').length).toBe(5);
     expect(document.activeElement).toBe(item(drawer, 'Duplicate'));
 
     // action run, menu hidden
@@ -115,6 +116,7 @@ describe('Context menu', () => {
       'Copy as PNG Shift+Alt+C',
       'Copy as SVG Shift+Alt+S',
       'Select all Ctrl+A',
+      'Zoom to fit Shift+1',
       'Snap to object Alt+S',
       'Show grid Alt+G',
     ]);
@@ -128,6 +130,7 @@ describe('Context menu', () => {
     expect(items(drawer)).toEqual([
       'Copy as PNG Shift+Alt+C',
       'Copy as SVG Shift+Alt+S',
+      'Zoom to fit Shift+1',
       'Snap to object Alt+S',
       'Show grid Alt+G',
     ]);

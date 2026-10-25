@@ -216,6 +216,14 @@ export class HotKey {
         }
       }
 
+      // view on the whole drawing, on the selection, at 100 %: keys of digits whatever the layout (Shift types them on
+      // AZERTY), not in fields
+      if (e.shiftKey && !mod && !e.altKey && !inField && this.drawer.options.zoom) {
+        if (e.code === 'Digit1') this.drawer.zoomToFit();
+        if (e.code === 'Digit2') this.drawer.zoomToSelection();
+        if (e.code === 'Digit0') this.drawer.setZoomLevel(1);
+      }
+
       // view options, not in fields (Option of macOS types other characters there)
       if (e.altKey && !e.shiftKey && !mod && !inField) {
         if (letter === 's') this.drawer.setting.toggleSnapping();

@@ -67,7 +67,7 @@ The library needs no framework. React and Vue apps can use its `FreeDrawing` com
   strokeColor: '#000', // color for drawing stroke
   fillColor: 'transparent', // background color of rectangles and ellipses, 'transparent' for none
   edges: 'sharp', // corners of rectangles: 'sharp', 'round' (radius following their size) or radius (px), drawer.setEdges(12) for new and selected ones
-  zoom: true, // enable/disable zoom on draw
+  zoom: true, // enable/disable zoom (Ctrl + wheel, pinch, Shift + 1 / 2 / 0)
   zoomWidget: true, // enable/disable zoom ui widget
   positionWidget: true, // enable/disable position ui widget (x / y of view, button back to origin)
   selectionMenu: true, // enable/disable menu next to selected shapes (duplicate, rotate, bring forward, send backward, lock, delete)
@@ -439,8 +439,9 @@ A right click on a shape selects it (with the selection tool) and shows actions 
 | Fit width to text (texts of selection) | Shift + W |
 | Copy as PNG, as SVG (selection, else whole drawing) | Shift + Alt + C, Shift + Alt + S |
 | Select all | Ctrl / Cmd + A |
+| Zoom to selection (filling the view, 200 % at most) | Shift + 2 |
 
-Elsewhere, it shows actions on the drawing: paste, copy as PNG or SVG, select all, snapping to objects, grid. The context menu key (or Shift + F10) opens it with the keyboard.
+Elsewhere, it shows actions on the drawing: paste, copy as PNG or SVG, select all, zoom to fit (whole drawing in the view, not beyond 100 %: Shift + 1), snapping to objects, grid. Shift + 0 zooms back to 100 % (as the zoom level button), keeping the center of the view. The context menu key (or Shift + F10) opens it with the keyboard.
 
 ```js
 drawer.rotateShapes(90); // selected shapes by default, degrees clockwise (-90: left)
@@ -496,7 +497,8 @@ await drawer.open(); // file chosen by user replaces drawing, undo restores it (
 const file = drawer.getDrawingFile(); // file content, `drawer.loadDrawing(file)` loads it
 const link = await drawer.getLink(); // current page url with compressed drawing: #drawing=<data> (#<id>=<data> with the id option)
 await drawer.copyLink();
-drawer.zoomToFit(); // view on the whole drawing (or `zoomToFit(shapes)`): centered, zoomed out when big, not beyond 100 %
+drawer.zoomToFit(); // view on the whole drawing (or `zoomToFit(shapes)`): centered, zoomed out when big, not beyond 100 % (Shift + 1)
+drawer.zoomToSelection(); // view on the selected shapes, filling it up to 200 % (Shift + 2)
 ```
 
 No server is needed for links: the drawing is in the url hash. The first drawer of the page without `id` option opens a `#drawing=` link (a drawer with an `id`, a `#<id>=` link): its drawing replaces the saved one (undo restores it), is shown in the view, and the hash is removed from the url.

@@ -67,12 +67,10 @@ export class Zoom {
   }
 
   /**
-   * Back to 100% and to initial view position
+   * Back to 100 %, center of the view kept (Shift + 0; back to origin: position widget)
    */
   resetZoom() {
-    this.drawer.stage.scale({ x: 1, y: 1 });
-    this.drawer.stage.position({ x: 0, y: 0 });
-    this.update();
+    this.drawer.setZoomLevel(1);
   }
 
   /**

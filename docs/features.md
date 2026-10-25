@@ -54,6 +54,7 @@ More in [Layers](/get-started/#layers), [Linked arrows](/get-started/#linked-arr
 
 - **Context menu**: a right click shows the actions of the selection or of the drawing, each with its shortcut.
 - **Command palette** (Ctrl / Cmd + K): search any tool or command by its name, in the current language.
+- **View**: zoom to fit the whole drawing (Shift + 1), to the selection (Shift + 2) or back to 100 % (Shift + 0), from the context menu and the command palette too.
 - **Help** lists every shortcut, **preferences** (Ctrl + ,) keep the theme, language, grid, snapping, zen mode and auto save.
 - **Clipboard**: paste a text (Ctrl + V), copy the selection as a PNG or SVG image.
 

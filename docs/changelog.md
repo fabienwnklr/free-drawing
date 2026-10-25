@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.30.0](https://github.com/fabienwnklr/free-drawing/compare/v7.29.2...v7.30.0) (2026-10-25)
+
+
+### Features
+
+* **zoom:** zoom to fit the whole drawing (Shift + 1, not beyond 100 %), to the selection (Shift + 2, filling the view up to 200 %) and back to 100 % (Shift + 0), from the context menu, the command palette and help too (keys found by their place: digits typed with Shift on AZERTY); `drawer.zoomToSelection()`
+* **zoom:** the zoom level button goes back to 100 % keeping the center of the view (it also moved the view back to the origin: "Back to origin" of the position does it)
+
 ## [7.29.2](https://github.com/fabienwnklr/free-drawing/compare/v7.29.1...v7.29.2) (2026-10-25)
 
 

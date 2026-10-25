@@ -22,6 +22,8 @@ import LayersIcon from '@/icons/layers.svg?raw';
 import PlusIcon from '@/icons/plus.svg?raw';
 import MinusIcon from '@/icons/minus.svg?raw';
 import ZoomResetIcon from '@/icons/zoom-reset.svg?raw';
+import ZoomFitIcon from '@/icons/zoom-fit.svg?raw';
+import ZoomSelectionIcon from '@/icons/zoom-selection.svg?raw';
 import RecenterIcon from '@/icons/recenter.svg?raw';
 import HelpIcon from '@/icons/help.svg?raw';
 import OpenIcon from '@/icons/open.svg?raw';
@@ -502,11 +504,29 @@ export class CommandPalette extends Modal {
           zoom && { id: 'zoom in', label: t('zoom.in'), icon: PlusIcon, run: () => zoom.zoomPlus() },
           zoom && { id: 'zoom out', label: t('zoom.out'), icon: MinusIcon, run: () => zoom.zoomMinus() },
           zoom && {
-            id: 'zoom reset',
+            id: 'zoom reset 100',
             label: zoom.$btnReset.title,
             icon: ZoomResetIcon,
+            shortcut: 'Shift+0',
             run: () => zoom.resetZoom(),
           },
+          drawer.options.zoom &&
+            hasShapes && {
+              id: 'zoom fit whole drawing all',
+              label: t('zoom.fit'),
+              icon: ZoomFitIcon,
+              shortcut: 'Shift+1',
+              run: () => drawer.zoomToFit(),
+            },
+          // view only: also a locked selection
+          drawer.options.zoom &&
+            drawer.getSelectedShapes().length > 0 && {
+              id: 'zoom selection',
+              label: t('zoom.selection'),
+              icon: ZoomSelectionIcon,
+              shortcut: 'Shift+2',
+              run: () => drawer.zoomToSelection(),
+            },
           position && {
             id: 'position origin recenter',
             label: t('position.recenter'),

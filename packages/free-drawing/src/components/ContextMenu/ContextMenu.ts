@@ -183,6 +183,19 @@ export class ContextMenu {
           run: () => this._selectAll(),
         },
       ],
+      // view (also in read only): whole drawing, or selection
+      [
+        {
+          $item: this._createItem('zoom.fit', 'Shift+1'),
+          visible: () => drawer.options.zoom && canvas() && hasShapes(),
+          run: () => drawer.zoomToFit(),
+        },
+        {
+          $item: this._createItem('zoom.selection', 'Shift+2'),
+          visible: () => drawer.options.zoom && !canvas(),
+          run: () => drawer.zoomToSelection(),
+        },
+      ],
       [snapping, grid],
     ];
 

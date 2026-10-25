@@ -100,8 +100,11 @@ import { HotKey } from '@/utils/HotKey';
 // default id of each drawer of the page
 let drawerCount = 0;
 
-/** Space kept around shapes shown by `zoomToFit` (px): header and toolbar over the drawing */
+/** Space kept around shapes shown by `zoomToFit` and `zoomToSelection` (px): header and toolbar over the drawing */
 const fitMargin = 64;
+
+/** Highest zoom of `zoomToSelection`: a small shape fills the view without being enlarged too much (200 %) */
+const selectionZoomMax = 2;
 
 /**
  * Infinite canvas drawing board created in an element: Konva stage of the drawing, toolbar and interface, public API.
@@ -856,6 +859,16 @@ export class Drawer extends MicroEvent {
     const box = getExportBox(shapes, this.drawLayer);
 
     if (box) this.showArea(box, 1, fitMargin);
+  }
+
+  /**
+   * Show the selected shapes in the view: centered, zoomed to fill it (200 % at most), space around them for the
+   * interface (Shift + 2). Nothing done without selection
+   */
+  zoomToSelection() {
+    const box = getExportBox(this.getSelectedShapes(), this.drawLayer);
+
+    if (box) this.showArea(box, selectionZoomMax, fitMargin);
   }
 
   /**

@@ -182,7 +182,8 @@ describe('Locked shapes', () => {
     setPointer(drawer, 200, 150);
     drawer.stage.fire('contextmenu', { evt: { clientX: 200, clientY: 150, preventDefault() {} } });
     expect(drawer.getSelectedShapes()).toEqual([locked]);
-    expect(contextItems()).toEqual(['Unlock', 'Copy as PNG', 'Copy as SVG', 'Select all']);
+    // zoom: view only
+    expect(contextItems()).toEqual(['Unlock', 'Copy as PNG', 'Copy as SVG', 'Select all', 'Zoom to selection']);
     // its shortcut (not the one of Delete)
     expect(drawer.contextMenu.$menu.querySelector('[role^="menuitem"]:not([hidden]) kbd')!.textContent).toBe(
       'Ctrl+Shift+L'
@@ -200,6 +201,7 @@ describe('Locked shapes', () => {
       ($option) => $option.querySelector('.drawer-commands-label')!.textContent
     );
     expect(commands).toContain('Unlock');
+    expect(commands).toContain('Zoom to selection');
     expect(commands).not.toContain('Lock');
     expect(commands).not.toContain('Delete');
     expect(commands).not.toContain('Duplicate');
