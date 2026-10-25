@@ -489,7 +489,8 @@ describe('Accessibility', () => {
     const items = Array.from(menu.$menu.querySelectorAll<HTMLElement>('[role^="menuitem"]:not([hidden])'));
 
     expect(menu.$menu.getAttribute('role')).toBe('menu');
-    expect(items.length).toBe(3);
+    // paste, insert image, snapping, grid
+    expect(items.length).toBe(4);
     expect(document.activeElement).toBe(items[0]);
 
     key(items[0], 'ArrowDown');

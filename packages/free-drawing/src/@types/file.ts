@@ -64,6 +64,25 @@ export type DrawingFile = {
   background: ColorLike;
   /** Drawing shapes (top nodes, with children of groups and frames), bottom first */
   shapes: ShapeState[];
+  /** Files of its images by id (`fileId` of images), only with images */
+  files?: DrawingFiles;
+};
+
+/**
+ * Image files of a drawing by id: data URLs of PNG, JPEG, WebP or GIF images (`data:image/webp;base64,...`)
+ */
+export type DrawingFiles = Record<string, string>;
+
+/**
+ * Image ready to be added to a drawing (`drawer.addImage`): its file and size in pixels
+ */
+export type DrawingImage = {
+  /** Data URL of a PNG, JPEG, WebP or GIF image */
+  data: string;
+  /** Width of the image, in pixels */
+  width: number;
+  /** Height of the image, in pixels */
+  height: number;
 };
 
 /**

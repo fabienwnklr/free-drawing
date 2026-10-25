@@ -153,7 +153,7 @@ describe('Groups', () => {
 
     // other nodes of files are ignored
     const unsafe = parseDrawingFile(
-      JSON.stringify({ ...file, shapes: [{ ...file.shapes[0], children: [{ className: 'Image', attrs: {} }] }] })
+      JSON.stringify({ ...file, shapes: [{ ...file.shapes[0], children: [{ className: 'Star', attrs: {} }] }] })
     );
     expect(unsafe.shapes[0].children).toEqual([]);
 

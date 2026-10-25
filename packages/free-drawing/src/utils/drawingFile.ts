@@ -5,6 +5,7 @@ import { Konva } from 'konva/lib/Global';
 import type { Node } from 'konva/lib/Node';
 import { parseLink } from '@/utils/link';
 import { frameParts } from '@/utils/frame';
+import { parseFiles } from '@/utils/image';
 
 /**
  * Extension of drawing files (JSON)
@@ -109,6 +110,8 @@ const attrChecks: Record<string, AttrCheck> = {
       'endBinding',
       'startAnchor',
       'endAnchor',
+      // file of an image (`files` of the drawing)
+      'fileId',
     ].map((key) => [key, isString])
   ),
   ...Object.fromEntries(
@@ -254,11 +257,15 @@ export function parseDrawingFile(json: string): DrawingFile {
     throw new DrawerError('error.notDrawingFile', 'not a drawing file');
   }
 
+  // valid image files only
+  const files = parseFiles(data.files);
+
   return {
     type: 'free-drawing',
     version: 1,
     background: typeof data.background === 'string' ? data.background : '#fff',
     shapes: data.shapes.map(parseShape).filter((shape: ShapeState | null): shape is ShapeState => !!shape),
+    ...(Object.keys(files).length > 0 && { files }),
   };
 }
 
@@ -369,22 +376,29 @@ export async function saveFile(name: string, content: Blob | string, type: strin
 }
 
 /**
- * Text of a file chosen by user, null if canceled
+ * File chosen by user, null if canceled
  * @param accept File types (input `accept` attribute)
- * @returns promise of the file text, of null when canceled or no file chosen
+ * @returns promise of the file, of null when canceled or no file chosen
  */
-export function pickFile(accept: string): Promise<string | null> {
+export function pickBlob(accept: string): Promise<File | null> {
   return new Promise((resolve) => {
     const $input = document.createElement('input');
 
     $input.type = 'file';
     $input.accept = accept;
-    $input.addEventListener('change', () => {
-      const file = $input.files?.[0];
-
-      resolve(file ? file.text() : null);
-    });
+    $input.addEventListener('change', () => resolve($input.files?.[0] ?? null));
     $input.addEventListener('cancel', () => resolve(null));
     $input.click();
   });
+}
+
+/**
+ * Text of a file chosen by user, null if canceled
+ * @param accept File types (input `accept` attribute)
+ * @returns promise of the file text, of null when canceled or no file chosen
+ */
+export async function pickFile(accept: string): Promise<string | null> {
+  const file = await pickBlob(accept);
+
+  return file ? file.text() : null;
 }

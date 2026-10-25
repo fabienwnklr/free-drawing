@@ -31,6 +31,7 @@ export const widgetNames: WidgetName[] = [
   'square',
   'circle',
   'arrow',
+  'image',
   'triangle',
   'diamond',
   'heart',
@@ -154,6 +155,8 @@ export const shapeName = {
   text: 'drawer-text',
   /** Group of shapes */
   group: 'drawer-group',
+  /** Image, its file in the files of the drawing (`fileId` attribute, see `drawer.files`) */
+  image: 'drawer-image',
   /** Selection rectangle of selection tool (selection layer) */
   selection: 'drawer-selection',
   /** Snapping guide (selection layer) */
@@ -207,6 +210,7 @@ export const shapeLabels: Record<string, TranslationKey> = {
   [shapeName.frame]: 'shapes.frame',
   [shapeName.text]: 'shapes.text',
   [shapeName.group]: 'shapes.group',
+  [shapeName.image]: 'shapes.image',
 };
 
 /**

@@ -2,6 +2,12 @@
 
 Changes of `@fabwcie/create-free-drawing-plugin` (`npm create @fabwcie/free-drawing-plugin`). Each version is published by the release workflow of the library once it is not on npm yet.
 
+## 1.1.2 (2026-10-26)
+
+### Bug Fixes
+
+- a plugin named "Image" is refused: its tool would have the id of the image tool of the library (7.32.0)
+
 ## 1.1.1 (2026-10-25)
 
 ### Bug Fixes

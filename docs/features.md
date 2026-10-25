@@ -15,6 +15,7 @@ free-drawing gives any web page an infinite canvas to draw, organize and share i
 
 - **Freehand**: a brush with smooth strokes following the speed of the pointer ([perfect-freehand](https://github.com/steveruizok/perfect-freehand)), and a highlighter whose fluorescent colors are multiplied with the drawing below, so texts stay readable.
 - **Shapes**: rectangles with sharp or round corners, ellipses, lines, arrows, triangles, diamonds, hearts and clouds, drawn in the dragged box. Shift draws squares, circles and lines at 45°.
+- **Images**: insert (image tool of the toolbar) or paste images (screenshots, photos, SVG), resized with their proportions, kept small in files and links, shared in live sessions, with their colors in dark mode.
 - **Texts**: font, size, bold, italic, underline, alignment, and a width fitted to their content.
 - **Styles**: stroke color and width, solid, dashed or dotted strokes, background color, corners, opacity, from the panel of the tool or of the selection.
 - **Laser pointer** to show something without drawing it, also seen by the other users of a session.

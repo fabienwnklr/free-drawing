@@ -19,6 +19,7 @@ export const libraryTools = [
   'square',
   'circle',
   'arrow',
+  'image',
   'triangle',
   'diamond',
   'heart',

@@ -23,7 +23,9 @@ type SocketData = {
 type RoomData = {
   /** Drawing: shapes JSON by id, in stacking order */
   shapes: Map<string, string>;
-  /** Size of the drawing: length of its shapes JSON */
+  /** Image files of the drawing by id (data URLs), kept with it */
+  files: Map<string, string>;
+  /** Size of the drawing: length of its shapes JSON and of its image files */
   size: number;
   /** Background color of the drawing, none until a user sends it (dropped with the drawing) */
   background?: string;
@@ -74,6 +76,8 @@ type ShapeJson = { attrs?: { id?: unknown } | null; className?: unknown; childre
 /** Change of drawing checked as a whole: only its checked fields, shapes JSON by id */
 type CheckedChange = {
   upsert: Map<string, string>;
+  /** Image files sent with the shapes using them */
+  files: Map<string, string>;
   remove: string[];
   order?: string[];
   live: boolean;
@@ -84,8 +88,8 @@ type CheckedChange = {
 export const limits = {
   /** Shapes of the drawing of a room */
   shapes: 10_000,
-  /** Size of the drawing of a room: length of its shapes JSON (as drawing files, 5 MB) */
-  drawingSize: 5_000_000,
+  /** Size of the drawing of a room: length of its shapes JSON and image files (as drawing files, 20 MB) */
+  drawingSize: 20_000_000,
   /** Size of the drawings of all rooms */
   totalSize: 500_000_000,
   /** Users connected to a room at once */
@@ -118,6 +122,15 @@ const isId = (id: unknown): id is string => typeof id === 'string' && /^[\w-]{1,
 // ids of shapes: also of files made by other apps
 const isShapeId = (id: unknown): id is string => typeof id === 'string' && id.length > 0 && id.length <= 200;
 
+/** Id of an image file */
+const isFileId = (id: unknown): id is string => typeof id === 'string' && /^[\w-]{1,64}$/.test(id);
+
+/** Data URL of an image file: PNG, JPEG, WebP or GIF, 8 MB at most (as `isImageData` of the library) */
+const isImageData = (data: unknown): data is string =>
+  typeof data === 'string' &&
+  data.length <= 8_000_000 &&
+  /^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/]+=*$/.test(data);
+
 /**
  * Drawing shape, or group of them (nested up to 50 levels), as the library creates them from files
  * @param state Parsed JSON of a shape (not trusted)
@@ -145,13 +158,23 @@ const isShape = (state: ShapeJson, depth = 0): boolean => {
 const checkChange = (change: unknown): CheckedChange | null => {
   if (typeof change !== 'object' || change === null) return null;
 
-  const { upsert, remove, order, live, background } = change as Record<string, unknown>;
+  const { upsert, remove, order, live, background, files } = change as Record<string, unknown>;
 
   if (!Array.isArray(upsert) || !Array.isArray(remove) || !remove.every(isShapeId)) return null;
   if (order !== undefined && (!Array.isArray(order) || !order.every(isShapeId))) return null;
   // color of the background, as in drawing files
   if (background !== undefined && (typeof background !== 'string' || !background || background.length > 100)) {
     return null;
+  }
+
+  // image files by id
+  if (files !== undefined && (typeof files !== 'object' || files === null || Array.isArray(files))) return null;
+
+  const checkedFiles = new Map<string, string>();
+
+  for (const [id, data] of Object.entries(files ?? {})) {
+    if (!isFileId(id) || !isImageData(data)) return null;
+    checkedFiles.set(id, data);
   }
 
   const shapes = new Map<string, string>();
@@ -170,6 +193,7 @@ const checkChange = (change: unknown): CheckedChange | null => {
 
   return {
     upsert: shapes,
+    files: checkedFiles,
     remove,
     order: order as string[] | undefined,
     live: live === true,
@@ -235,6 +259,7 @@ const hashKey = (key: string) => createHash('sha256').update(key).digest('base64
  */
 const newRoom = (): RoomData => ({
   shapes: new Map(),
+  files: new Map(),
   size: 0,
   viewers: new Set(),
   names: new Map(),
@@ -313,6 +338,7 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
 
       rooms.set(id, {
         shapes: new Map(),
+        files: new Map(),
         size: 0,
         ownerKey: typeof saved.ownerKey === 'string' ? saved.ownerKey : undefined,
         ownerId: isId(saved.ownerId) ? saved.ownerId : undefined,
@@ -394,6 +420,7 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
     if (data) {
       totalSize -= data.size;
       data.shapes = new Map();
+      data.files = new Map();
       data.size = 0;
       data.background = undefined;
       saveRoom(room, data);
@@ -474,6 +501,7 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
         order: [...data.shapes.keys()],
         full: true,
         ...(data.background && { background: data.background }),
+        ...(data.files.size > 0 && { files: Object.fromEntries(data.files) }),
       });
       sendUsers(room);
       // presentation going on: view of the owner followed at once
@@ -600,6 +628,10 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
         size += json.length - (old?.length ?? 0);
         if (old === undefined) count++;
       }
+      // files the room does not have yet
+      const newFiles = [...change.files].filter(([id]) => !data.files.has(id));
+
+      for (const [, file] of newFiles) size += file.length;
       // a bigger drawing over the limits refused (smaller changes still allowed)
       if (
         (count > limits.shapes && count > shapes.size) ||
@@ -611,6 +643,7 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
 
       for (const id of change.remove) shapes.delete(id);
       for (const [id, json] of change.upsert) shapes.set(id, json);
+      for (const [id, file] of newFiles) data.files.set(id, file);
       totalSize += size - data.size;
       data.size = size;
       if (change.background && !change.live) data.background = change.background;
@@ -630,6 +663,7 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
         ...(change.order && { order: change.order }),
         ...(change.live && { live: true }),
         ...(change.background && !change.live && { background: change.background }),
+        ...(change.files.size > 0 && { files: Object.fromEntries(change.files) }),
       };
 
       (change.live ? socket.to(room).volatile : socket.to(room)).emit(socketEvents.CHANGE, relayed);

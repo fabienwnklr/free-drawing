@@ -23,6 +23,8 @@ export abstract class BaseWidget {
   private $icon: SVGElement;
   /** Widget can not be activated, see `setDisabled` */
   private disabled: boolean = false;
+  /** Button runs an action (`setActive(true)`), the widget never becomes the active tool (e.g. image tool) */
+  readonly actionOnly: boolean = false;
   /** Button activating the widget, pressed while it is active, named by the title of the tool */
   $button: HTMLButtonElement;
   /** Id of the tool, key of the widget in toolbar (`drawer.getWidget(id)`) and namespace of its stage events */

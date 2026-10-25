@@ -41,10 +41,20 @@ import {
   drawingFileExtension,
   encodeLinkData,
   parseDrawingFile,
+  pickBlob,
   pickFile,
   saveFile,
 } from '@/utils/drawingFile';
-import type { DrawingFile, ShapeState, ImageFormat, ExportImageOptions } from '@/@types/file';
+import type {
+  DrawingFile,
+  DrawingFiles,
+  DrawingImage,
+  ShapeState,
+  ImageFormat,
+  ExportImageOptions,
+} from '@/@types/file';
+import { Image } from 'konva/lib/shapes/Image';
+import { getFileId, getFileIds, isImageData, parseFiles, readImage, setupImages } from '@/utils/image';
 import { getShapeState } from '@/components/tools/UndoRedo/History';
 import { canvasToBlob, createPdf, getExportBox, renderCanvas, renderSvg } from '@/utils/export';
 import { toHexColor } from '@/utils/color';
@@ -222,6 +232,13 @@ export class Drawer extends MicroEvent {
   #saveFailed = false;
   /** Drawing of `storage` option loaded (on init, see `ready`, or with `loadFromStorage`), else not saved */
   #storageLoaded = false;
+  /**
+   * Image files of the drawing by id: data URLs of PNG, JPEG, WebP or GIF images, shown by images (`fileId`
+   * attribute), saved, exported in files and links and shared with the drawing. Add files with `addFiles`
+   */
+  files = new Map<string, string>();
+  /** Elements of the image files, decoded once, by id */
+  #imageElements = new Map<string, HTMLImageElement>();
   /** Save in storage in progress, another one after it */
   #saving: Promise<void> | null = null;
   /** Drawing changed during a save in storage: saved again once it ends */
@@ -412,7 +429,9 @@ export class Drawer extends MicroEvent {
     if (preferences.zen) this.setting.toggleZenMode();
 
     // initial (or saved) tool may not be in widgets option: first widget of toolbar
-    const activeWidget = this.getWidget<BaseWidget>(activeTool) ?? this.toolbar.widgets.values().next().value;
+    // a tool, not an action (image picker opened without a click)
+    const tools = [...this.toolbar.widgets.values()].filter((widget) => !widget.actionOnly);
+    const activeWidget = tools.find((widget) => widget.id === activeTool) ?? tools[0];
     activeWidget?.setActive(true);
 
     // dialogs, toasts... after footer
@@ -923,6 +942,8 @@ export class Drawer extends MicroEvent {
         });
     }
     setupHit(shape);
+    // element of an image is not saved: from its file
+    setupImages(shape, this.files, this.#imageElements);
   }
 
   /**
@@ -1141,7 +1162,12 @@ export class Drawer extends MicroEvent {
     }
 
     try {
+      const files = this._getFiles(this.getDrawingShapes());
+
       localStorage.setItem(localStorageKey, this.stage.toJSON());
+      // image files of the drawing, apart (not attributes of the stage)
+      if (Object.keys(files).length) localStorage.setItem(`${localStorageKey}-files`, JSON.stringify(files));
+      else localStorage.removeItem(`${localStorageKey}-files`);
       this._onSaved();
     } catch (error) {
       this._setUnsaved(true);
@@ -1320,6 +1346,12 @@ export class Drawer extends MicroEvent {
       const required = ['.background', '.grid', '.draw', '.selection', `.${shapeName.background}`];
 
       if (stage instanceof Stage && required.every((selector) => stage.findOne(selector))) {
+        // image files saved with it, before its shapes are set up
+        try {
+          this._storeFiles(JSON.parse(this._getStorageItem(`${this.options.localStorageKey}-files`) ?? '{}'));
+        } catch {
+          // invalid JSON: images without their files
+        }
         return stage;
       }
 
@@ -1338,12 +1370,112 @@ export class Drawer extends MicroEvent {
    * @returns Drawing file with background color and states of shapes
    */
   getDrawingFile(shapes: DrawingShape[] = this.getDrawingShapes()): DrawingFile {
+    const files = this._getFiles(shapes);
+
     return {
       type: 'free-drawing',
       version: 1,
       background: this.background.fill() as ColorLike,
       shapes: shapes.map(getShapeState),
+      // only with images
+      ...(Object.keys(files).length > 0 && { files }),
     };
+  }
+
+  /**
+   * Image files of shapes
+   * @param shapes Drawing shapes (images of groups and frames too)
+   * @returns Files of their images (known ones), by id
+   */
+  private _getFiles(shapes: DrawingShape[]): DrawingFiles {
+    return Object.fromEntries(
+      getFileIds(shapes)
+        .filter((id) => this.files.has(id))
+        .map((id) => [id, this.files.get(id)!])
+    );
+  }
+
+  /**
+   * Add image files to the drawing (files of a drawing, of another user): images using them are shown
+   * @param files Data URLs by id, invalid ones (not a PNG, JPEG, WebP or GIF image) are ignored
+   */
+  addFiles(files: DrawingFiles) {
+    if (!this._storeFiles(files).length) return;
+
+    for (const shape of this.getDrawingShapes()) setupImages(shape, this.files, this.#imageElements);
+    this.drawLayer.batchDraw();
+  }
+
+  /**
+   * Keep image files (not known ones)
+   * @param files Files read (not trusted)
+   * @returns Ids of the files added
+   */
+  private _storeFiles(files: unknown): string[] {
+    const added = Object.entries(parseFiles(files)).filter(([id]) => !this.files.has(id));
+
+    for (const [id, data] of added) this.files.set(id, data);
+    return added.map(([id]) => id);
+  }
+
+  /**
+   * Add an image to the drawing: file reduced and encoded to stay small (see `readImage`), shown whole in the view
+   * (60 % of it at most, never enlarged), selected with the selection tool. Its file is kept in `files`
+   * @param source Image file (PNG, JPEG, WebP, GIF, SVG...) or image already read (data URL and size)
+   * @param position Center of the image, in drawing coordinates (center of the view by default)
+   * @returns Image added, null when the file is not an image (error shown)
+   */
+  async addImage(source: Blob | DrawingImage, position?: Vector2d): Promise<Image | null> {
+    let image: DrawingImage;
+
+    try {
+      image = source instanceof Blob ? await readImage(source) : source;
+      if (!isImageData(image.data) || !(image.width > 0) || !(image.height > 0)) {
+        throw new DrawerError('error.notImage', 'not an image of a drawing');
+      }
+    } catch (error) {
+      this.toast(this.t('toast.imageFailed', { error: getErrorText(error, this.i18n.t) }), 'error');
+      return null;
+    }
+
+    const fileId = await getFileId(image.data);
+    const view = this.getViewArea();
+    const center = position ?? { x: view.x + view.width / 2, y: view.y + view.height / 2 };
+    const scale = Math.min(1, (0.6 * Math.min(view.width, view.height)) / Math.max(image.width, image.height));
+    const [width, height] = [image.width * scale, image.height * scale];
+    const node = new Image({
+      name: shapeName.image,
+      fileId,
+      image: undefined,
+      x: Math.round(center.x - width / 2),
+      y: Math.round(center.y - height / 2),
+      width: Math.round(width),
+      height: Math.round(height),
+    });
+
+    this._storeFiles({ [fileId]: image.data });
+    this.addShape(node);
+    this.placeInFrames([node]);
+    // selected, as a pasted text
+    const selectWidget = this.getWidget<SelectWidget>('selection');
+
+    if (selectWidget) {
+      selectWidget.setActive(true);
+      selectWidget.select([node]);
+    }
+    this.stage.fire('change');
+    return node;
+  }
+
+  /**
+   * Add an image file chosen by the user (`addImage`)
+   * @param position Center of the image, in drawing coordinates (center of the view by default)
+   * @returns Image added, null when canceled or not an image
+   */
+  async insertImage(position?: Vector2d): Promise<Image | null> {
+    const file = await pickBlob('image/*');
+
+    return file && this.addImage(file, position);
   }
 
   /**
@@ -2094,7 +2226,10 @@ export class Drawer extends MicroEvent {
    */
   loadDrawing(file: DrawingFile | string) {
     // validated: files and links can come from anyone
-    const { background, shapes } = parseDrawingFile(typeof file === 'string' ? file : JSON.stringify(file));
+    const { background, shapes, files } = parseDrawingFile(typeof file === 'string' ? file : JSON.stringify(file));
+
+    // before its images are set up
+    if (files) this._storeFiles(files);
     // all created before the drawing is replaced: kept as it is if one can't be
     const nodes = shapes.map((shape) => Node.create(shape) as DrawingShape);
 
@@ -2410,6 +2545,8 @@ export class Drawer extends MicroEvent {
     const dark = this.isDarkMode();
 
     this.$drawerContainer.classList.toggle('drawer-dark', dark);
+    // images drawn again: filtered as the drawing in dark mode (see `setupImages`)
+    if (this.drawLayer?.findOne('Image')) this.drawLayer.batchDraw();
     this.trigger(drawerEvents.themeChange, dark);
   }
 

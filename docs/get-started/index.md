@@ -97,7 +97,7 @@ The library needs no framework. React and Vue apps can use its `FreeDrawing` com
   },
   collaboration: false, // live collaboration menu: false, true (socket.io server on same origin), server url or { url, auth }
   // toolbar widgets, see below
-  widgets: ['pan', 'selection', 'brush', 'eraser', 'text', 'line', 'square', 'circle', 'arrow', 'triangle', 'diamond', 'heart', 'cloud', 'highlighter', 'laser', 'frame'],
+  widgets: ['pan', 'selection', 'brush', 'eraser', 'text', 'line', 'square', 'circle', 'arrow', 'image', 'triangle', 'diamond', 'heart', 'cloud', 'highlighter', 'laser', 'frame'],
   // groups of toolbar widgets, see below
   widgetGroups: [{ widgets: ['triangle', 'diamond', 'heart', 'cloud', 'highlighter', 'laser', 'frame'], icon: 'more' }],
 };
@@ -494,6 +494,18 @@ drawer.reorderShapes('back', [shape]);
 ```
 
 `forward` / `backward` move shapes above / below the next shape they overlap, `front` / `back` above / below all shapes. Moved shapes keep their relative order.
+
+## Images
+
+"Insert image" (image tool of the toolbar, settings menu, context menu, command palette) adds an image file chosen by the user, Ctrl / Cmd + V pastes a copied image (screenshot, image of a page, file) at the pointer. PNG, JPEG, WebP, GIF and SVG files are reduced to 2048 px on their longest side and encoded as WebP (PNG or JPEG in browsers without WebP encoder), so drawings stay small. An image is shown whole in the view (60 % of it at most, never enlarged), keeps its proportions when resized (Shift frees them), and has the options of opacity, stacking order and actions. In dark mode, images keep their colors.
+
+The file of an image is in the files of the drawing (`drawer.files`: data URLs by id, `fileId` attribute of the image), not in the image itself: it is saved with the drawing (`<localStorageKey>-files` in the browser, `files` of drawing files, links and of the `storage` option) and sent once to the users of a collaboration session. Links holding images are long: share a file or a session for big ones. The image tool runs this action and never becomes the active tool; it has no shortcut by default (`widgets: { image: { shortcut: 'i' } }` gives one).
+
+```js
+const image = await drawer.addImage(file, { x: 100, y: 100 }); // image file (Blob) or { data, width, height }, null when not an image
+await drawer.insertImage(); // file chosen by the user, in the center of the view
+drawer.addFiles({ [id]: dataUrl }); // files of images (PNG, JPEG, WebP or GIF data URLs, invalid ones ignored)
+```
 
 ## Files and links
 

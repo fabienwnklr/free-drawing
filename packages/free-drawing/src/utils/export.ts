@@ -10,6 +10,7 @@ import { Arrow } from 'konva/lib/shapes/Arrow';
 import { Ellipse } from 'konva/lib/shapes/Ellipse';
 import { Text } from 'konva/lib/shapes/Text';
 import { Path } from 'konva/lib/shapes/Path';
+import { Image } from 'konva/lib/shapes/Image';
 import { normalizeColor } from '@/utils/color';
 import { getShapes } from '@/utils/hit';
 import { frameParts } from '@/utils/frame';
@@ -297,6 +298,21 @@ function shapeElement(shape: Node, dark: boolean | undefined, matrix: number[]):
 
   if (shape instanceof Path) {
     return `<g${group}><path${attrs({ d: shape.data(), fill })}${strokeAttrs()}/></g>`;
+  }
+
+  if (shape instanceof Image) {
+    // data URL of its file (as drawn: not filtered in dark mode)
+    const element = shape.image();
+    const href = element instanceof HTMLImageElement ? element.src : '';
+
+    return href
+      ? `<g${group}><image${attrs({
+          href,
+          width: shape.width(),
+          height: shape.height(),
+          preserveAspectRatio: 'none',
+        })}/></g>`
+      : '';
   }
 
   if (shape instanceof Arrow) {

@@ -3,6 +3,7 @@ import '@/components/tools/Settings/settings.scss';
 import type { Drawer } from '@/Drawer';
 import SettingIcon from '@/icons/setting.svg?raw';
 import OpenIcon from '@/icons/open.svg?raw';
+import ImageIcon from '@/icons/image.svg?raw';
 import ExportIcon from '@/icons/export.svg?raw';
 import TrashIcon from '@/icons/trash.svg?raw';
 import GridIcon from '@/icons/grid.svg?raw';
@@ -50,6 +51,8 @@ export class Settings extends Dropdown {
   $preferencesButton: HTMLButtonElement;
   /** Item opening a `.freedrawing` file (Ctrl+O), disabled in read only */
   $openButton: HTMLButtonElement;
+  /** Item adding an image file chosen by the user (`drawer.insertImage`), disabled in read only */
+  $insertImageButton: HTMLButtonElement;
   /** Item saving drawing in a `.freedrawing` file (Ctrl+S) */
   $saveAsButton: HTMLButtonElement;
   /** Save now, shown without auto save */
@@ -95,6 +98,7 @@ export class Settings extends Dropdown {
     this.$commandsButton = this._createItem(CommandIcon, 'menu.commands', 'Ctrl+K');
     this.$commandsButton.setAttribute('aria-haspopup', 'dialog');
     this.$openButton = this._createItem(OpenIcon, 'menu.open', 'Ctrl+O');
+    this.$insertImageButton = this._createItem(ImageIcon, 'action.insertImage');
     this.$saveButton = this._createItem(SaveNowIcon, 'menu.save', 'Ctrl+S');
     // changes not saved yet, before the shortcut
     const $saveState = document.createElement('span');
@@ -196,6 +200,7 @@ export class Settings extends Dropdown {
       ...[
         ...(this.drawer.options.commandPalette ? [this.$commandsButton] : []),
         this.$openButton,
+        this.$insertImageButton,
         this.$saveButton,
         this.$saveAsButton,
         this.$copyLinkButton,
@@ -324,6 +329,7 @@ export class Settings extends Dropdown {
     this.$commandsButton.addEventListener('click', () => this.drawer.showCommandPalette());
     this.$preferencesButton.addEventListener('click', () => this.drawer.showPreferences());
     this.$openButton.addEventListener('click', () => this.drawer.open());
+    this.$insertImageButton.addEventListener('click', () => this.drawer.insertImage());
     this.$saveAsButton.addEventListener('click', () => this.drawer.saveAs());
     this.$saveButton.addEventListener('click', () => this.drawer.saveNow());
     this.$copyLinkButton.addEventListener('click', () => this.drawer.copyLink());
@@ -331,7 +337,7 @@ export class Settings extends Dropdown {
     this.$collaborationButton.addEventListener('click', () => this.drawer.showCollaboration());
     // read only: no item modifying drawing, background color included (part of the drawing, shared in collaboration)
     this.drawer.on(drawerEvents.readOnlyChange, (readOnly: boolean) => {
-      for (const $item of [this.$openButton, this.$clearCanvasButton]) {
+      for (const $item of [this.$openButton, this.$insertImageButton, this.$clearCanvasButton]) {
         if (readOnly) disableElement($item);
         else enableElement($item);
       }

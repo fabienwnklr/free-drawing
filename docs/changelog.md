@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.32.0](https://github.com/fabienwnklr/free-drawing/compare/v7.31.0...v7.32.0) (2026-10-26)
+
+
+### Features
+
+* **images:** images in drawings: "Insert image" (image tool of the toolbar, after the arrow: an action, never the active tool; settings menu, context menu at the right click, command palette) and paste of a copied image (Ctrl / Cmd + V) at the pointer; files reduced to 2048 px and encoded as WebP (else PNG or JPEG), shown whole in the view, proportions kept when resized, opacity, order and actions as options, colors kept in dark mode, svg export; `drawer.addImage(file, position)`, `insertImage()`, `addFiles(files)`, `drawer.files`, types `DrawingFiles` and `DrawingImage`
+* **images:** files of images kept apart from the shapes, by id (`fileId`): in the browser (`<localStorageKey>-files`), in drawing files, links and the `storage` option (`files` of `DrawingFile`, only PNG, JPEG, WebP or GIF data URLs read), sent once to the users of a collaboration session (`files` of `DrawingChange`, the server keeps them with the drawing of the room); a moved image does not send its file again
+
 ## [7.31.0](https://github.com/fabienwnklr/free-drawing/compare/v7.30.0...v7.31.0) (2026-10-25)
 
 

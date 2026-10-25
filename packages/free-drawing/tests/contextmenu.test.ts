@@ -113,6 +113,7 @@ describe('Context menu', () => {
     expect(drawer.getSelectedShapes()).toEqual([]);
     expect(items(drawer)).toEqual([
       'Paste Ctrl+V',
+      'Insert image ',
       'Copy as PNG Shift+Alt+C',
       'Copy as SVG Shift+Alt+S',
       'Select all Ctrl+A',

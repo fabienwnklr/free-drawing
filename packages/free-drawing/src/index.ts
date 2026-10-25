@@ -37,6 +37,8 @@ export type {
 } from '@/@types/collaboration';
 export type {
   DrawingFile,
+  DrawingFiles,
+  DrawingImage,
   ExportImageOptions,
   HistoryBackground,
   HistoryChange,

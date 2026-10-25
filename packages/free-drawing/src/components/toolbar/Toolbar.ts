@@ -12,6 +12,7 @@ import { LineWidget } from '@/components/toolbar/widgets/Line/Line';
 import { SquareWidget } from '@/components/toolbar/widgets/Square/Square';
 import { CircleWidget } from '@/components/toolbar/widgets/Circle/Circle';
 import { ArrowWidget } from '@/components/toolbar/widgets/Arrow/Arrow';
+import { ImageWidget } from '@/components/toolbar/widgets/Image/Image';
 import { TriangleWidget } from '@/components/toolbar/widgets/Triangle/Triangle';
 import { DiamondWidget } from '@/components/toolbar/widgets/Diamond/Diamond';
 import { HeartWidget } from '@/components/toolbar/widgets/Heart/Heart';
@@ -36,6 +37,7 @@ const widgetClasses: Record<WidgetName, new (drawer: Drawer) => BaseWidget> = {
   square: SquareWidget,
   circle: CircleWidget,
   arrow: ArrowWidget,
+  image: ImageWidget,
   triangle: TriangleWidget,
   diamond: DiamondWidget,
   heart: HeartWidget,

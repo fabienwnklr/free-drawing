@@ -13,6 +13,10 @@ import type { Text } from 'konva/lib/shapes/Text';
 import type { Line } from 'konva/lib/shapes/Line';
 
 const tick = () => new Promise((resolve) => setTimeout(resolve));
+
+/** Image file of 1 x 1 pixel */
+const pngData =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
 // after live messages interval
 const wait = () => new Promise((resolve) => setTimeout(resolve, 80));
 
@@ -54,6 +58,7 @@ const createServer = () => {
     view?: unknown;
     requests: Set<string>;
     background?: string;
+    files?: Map<string, string>;
   };
   const rooms = new Map<string, Room>();
   let lastId = 0;
@@ -130,6 +135,7 @@ const createServer = () => {
             order: [...roomData.shapes.keys()],
             full: true,
             ...(roomData.background && { background: roomData.background }),
+            ...(roomData.files?.size && { files: Object.fromEntries(roomData.files) }),
           });
           sendUsers(room);
           if (roomData.view) socket.receive('VIEW', roomData.view);
@@ -193,6 +199,8 @@ const createServer = () => {
           if (viewers.has(socket.userId!)) return;
 
           if (change.background && !change.live) roomData.background = change.background;
+          roomData.files ??= new Map();
+          for (const [id, file] of Object.entries(change.files ?? {})) roomData.files.set(id, file);
           for (const id of change.remove) shapes.delete(id);
           for (const json of change.upsert) shapes.set(JSON.parse(json).attrs.id, json);
           if (change.order) {
@@ -259,6 +267,41 @@ describe('Collaboration', () => {
     drawer.save();
     const loaded = createDrawer({ localStorageKey: drawer.options.localStorageKey });
     expect(loaded.getDrawingShapes().every((s) => s.id())).toBe(true);
+  });
+
+  it('Image files sent once, with the first shape using them, also to users joining later', async () => {
+    const connect = createServer();
+    const a = createDrawer();
+    const b = createDrawer();
+    const socketA = connect(a);
+
+    connect(b);
+    socketA.emit.mockClear();
+
+    const image = (await a.addImage({ data: pngData, width: 40, height: 20 }))!;
+    const files = (change: unknown) => (change as DrawingChange).files;
+    const sent = () => socketA.emit.mock.calls.filter(([event]) => event === 'CHANGE').map(([, change]) => change);
+    const copy = byId(b, image.id())!;
+
+    expect(Object.keys(files(sent()[0]) ?? {})).toEqual([image.getAttr('fileId')]);
+    expect(b.files.get(image.getAttr('fileId'))).toBe(pngData);
+    expect((copy as unknown as { image: () => HTMLImageElement }).image().src).toBe(pngData);
+
+    // moved: file not sent again, element of the copy kept
+    socketA.emit.mockClear();
+    image.x(300);
+    a.stage.fire('change');
+    expect(sent()).toHaveLength(1);
+    expect(files(sent()[0])).toBeUndefined();
+    expect(copy.x()).toBe(300);
+    expect((copy as unknown as { image: () => HTMLImageElement }).image().src).toBe(pngData);
+
+    // joining later: files of the room
+    const c = createDrawer();
+
+    connect(c);
+    expect(c.files.get(image.getAttr('fileId'))).toBe(pngData);
+    expect((byId(c, image.id()) as unknown as { image: () => HTMLImageElement }).image().src).toBe(pngData);
   });
 
   it('Drawing changes are sent to other drawers, shape by shape', () => {

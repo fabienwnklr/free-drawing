@@ -14,6 +14,7 @@ import { drawerEvents } from '@/constants';
 import { maxMessageSize, socketEvents } from '@free-drawing/protocol';
 import { applyOrder } from '@/utils/order';
 import { parseShapeState } from '@/utils/drawingFile';
+import { getFileIds, parseFiles } from '@/utils/image';
 import type { ColorLike, DrawingShape } from '@/@types/drawer';
 import type {
   DrawingChange,
@@ -99,6 +100,8 @@ export class Collaboration {
   private readonly drawer: Drawer;
   /** Shapes as other clients know them, by id, in stacking order */
   #synced = new Map<string, string>();
+  /** Image files the room has (sent or received): a file is sent once, with the first shape using it */
+  #sentFiles = new Set<string>();
   /**
    * Background color as other clients know it: null until the one of the room is received (a joining user does not
    * impose theirs), empty when the room has none (this one sent)
@@ -172,6 +175,7 @@ export class Collaboration {
       if (rejoin) return;
       // first join: whole drawing sent, merged with other ones of the room
       this.#synced.clear();
+      this.#sentFiles.clear();
       this.send();
     });
     this.socket.on('disconnect', () => {
@@ -211,6 +215,7 @@ export class Collaboration {
       if (this.#rejoining) {
         this.#rejoining = false;
         this.#synced.clear();
+        this.#sentFiles.clear();
         this.send();
       }
 
@@ -626,11 +631,17 @@ export class Collaboration {
     const background = this.drawer.background.fill() as string;
     // changed here, once the background of the room is known
     const recolored = this.#syncedBackground !== null && background !== this.#syncedBackground;
+    // image files of the changed shapes the room does not have yet
+    const upserted = this.drawer
+      .getDrawingShapes()
+      .filter((shape) => this.#synced.get(shape.id()) !== current.get(shape.id()));
+    const fileIds = getFileIds(upserted).filter((id) => !this.#sentFiles.has(id) && this.drawer.files.has(id));
     const change: DrawingChange = {
       upsert,
       remove,
       ...(reordered && { order: [...current.keys()] }),
       ...(recolored && { background }),
+      ...(fileIds.length > 0 && { files: Object.fromEntries(fileIds.map((id) => [id, this.drawer.files.get(id)!])) }),
     };
 
     const changed = upsert.length > 0 || remove.length > 0 || reordered || recolored;
@@ -638,6 +649,7 @@ export class Collaboration {
     // too big for the server: not marked synced (kept by a merge after a reconnection), sent with a next change
     if (changed && !this._fits(change)) return;
     this.#synced = current;
+    for (const id of fileIds) this.#sentFiles.add(id);
     if (recolored) this.#syncedBackground = background;
     // final state sent, previews useless
     this.#live.clear();
@@ -731,8 +743,11 @@ export class Collaboration {
    * changed here). A room without drawing (emptied, server restarted) gets the whole drawing again
    * @param change Whole drawing of the room (`full`)
    */
-  private _merge({ upsert, order, background }: DrawingChange) {
+  private _merge({ upsert, order, background, files }: DrawingChange) {
     const room = new Map<string, string>();
+
+    // files of the room, before its shapes
+    this._receiveFiles(files);
     const color = this.drawer.background.fill() as string;
 
     // background changed here meanwhile kept (sent next), else the one of the room (none: this one sent)
@@ -765,11 +780,25 @@ export class Collaboration {
   }
 
   /**
+   * Image files received from the room: added to the drawing (valid ones), known by the room
+   * @param files Files of a change (not trusted)
+   */
+  private _receiveFiles(files: unknown) {
+    const valid = parseFiles(files);
+
+    this.drawer.addFiles(valid);
+    for (const id of Object.keys(valid)) this.#sentFiles.add(id);
+  }
+
+  /**
    * Apply a change of another client: shapes removed, updated (groups replaced, selection kept) or added, stacking
    * order applied. Shapes are recorded as synced, so the change is not sent back. Only drawing shapes are created, as
    * from files: other nodes (stage, layers...) and invalid shapes are ignored
    */
-  private _apply({ upsert, remove, order, background, full }: DrawingChange) {
+  private _apply({ upsert, remove, order, background, full, files }: DrawingChange) {
+    // files of images, before the images using them
+    this._receiveFiles(files);
+
     const shapes = new Map(this.drawer.getDrawingShapes().map((shape) => [shape.id(), shape]));
     // shapes of other users: not changes of this user in history
     const changed: string[] = [];
@@ -809,10 +838,14 @@ export class Collaboration {
         }
       } else if (shape) {
         // same node (kept in selection): attributes removed by other client are removed, not local ones (draggable,
-        // hit function)
+        // hit and scene functions, element of an image)
         const node: Node = shape;
         const removed = Object.keys(node.attrs).filter(
-          (key) => !(key in attrs) && key !== 'draggable' && typeof node.getAttr(key) !== 'function'
+          (key) =>
+            !(key in attrs) &&
+            key !== 'draggable' &&
+            typeof node.getAttr(key) !== 'function' &&
+            !(node.getAttr(key) instanceof HTMLImageElement)
         );
 
         for (const key of removed) node.setAttr(key, undefined);

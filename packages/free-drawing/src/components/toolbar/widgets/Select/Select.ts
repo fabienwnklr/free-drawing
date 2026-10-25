@@ -531,11 +531,14 @@ export class SelectWidget extends BaseWidget {
       textOverlay?.hide();
       // sections of every kind of selected shape, each one changes the shapes it applies to: dash of outline shapes
       // (not brush lines), background of rectangles and ellipses, corners of rectangles, width of outlines and strokes
-      this.overlay.toggleColorBtns(shapes.length > 0);
+      // images: opacity only (no stroke nor color)
+      const styled = shapes.filter((s) => !s.hasName(shapeName.image));
+
+      this.overlay.toggleColorBtns(styled.length > 0);
       this.overlay.toggleStyleBtns(has(strokeStyleShapes));
       this.overlay.toggleFillBtns(has(fillShapes));
       this.overlay.toggleEdgesBtns(has(edgesShapes));
-      this.overlay.toggleWidthBtns(shapes.some((s) => !isText(s) && !s.hasName(shapeName.highlighter)));
+      this.overlay.toggleWidthBtns(styled.some((s) => !isText(s) && !s.hasName(shapeName.highlighter)));
       // with texts: their fields, color is also the one of texts
       this.overlay.toggleTextFields(shapes.some(isText));
       this.overlay.setColorTitle(shapes.some(isText) ? 'overlay.color' : 'overlay.stroke');
@@ -605,8 +608,10 @@ export class SelectWidget extends BaseWidget {
     this.transformer.rotateEnabled(!locked && !shapes.some(isFrame));
     this.transformer.borderDash(locked ? [4, 4] : []);
     this.transformer.padding(locked ? 4 : 0);
-    // texts scaled by corners keep their proportions
-    this.transformer.keepRatio(onlyText);
+    // texts scaled by corners and images keep their proportions (Shift frees them)
+    this.transformer.keepRatio(
+      shapes.length > 0 && shapes.every((s) => s.hasName(shapeName.text) || s.hasName(shapeName.image))
+    );
   }
 
   /**
@@ -1021,6 +1026,8 @@ export class SelectWidget extends BaseWidget {
    */
   setColor(color: ColorLike) {
     this._updateSelected((s) => {
+      // images keep their colors
+      if (s.hasName(shapeName.image)) return;
       // line need to be filled, highlights have no stroke (darker, multiplied)
       if (s instanceof Line) {
         s.fill(color);
@@ -1039,8 +1046,8 @@ export class SelectWidget extends BaseWidget {
    */
   setStrokeWidth(width: number) {
     this._updateSelected((s) => {
-      // width of highlights is their outline, texts have no stroke
-      if (s.hasName(shapeName.highlighter) || s instanceof Text) return;
+      // width of highlights is their outline, texts and images have no stroke
+      if (s.hasName(shapeName.highlighter) || s instanceof Text || s.hasName(shapeName.image)) return;
 
       s.strokeWidth(width);
 

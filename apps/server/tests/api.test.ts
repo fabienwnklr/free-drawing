@@ -302,7 +302,7 @@ describe('Drawings', () => {
       400
     );
 
-    const huge = { ...drawing, shapes: [{ className: 'Text', attrs: { text: 'x'.repeat(6 * 1024 * 1024) } }] };
+    const huge = { ...drawing, shapes: [{ className: 'Text', attrs: { text: 'x'.repeat(21 * 1024 * 1024) } }] };
 
     expect((await agent.put(`/api/drawings/${id}`).send({ content: huge })).status).toBe(413);
   });
@@ -650,6 +650,60 @@ describe('Collaboration', () => {
 
     owner.socket.emit(socketEvents.POINTER, { x: 'big', y: 20 });
     expect((await invalid).position).toBeNull();
+  });
+
+  it('Image files: checked, relayed once, given to users joining later, counted in the size of the drawing', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const png =
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+    const image = (id: string, fileId: string) =>
+      JSON.stringify({ attrs: { id, fileId, width: 10, height: 10 }, className: 'Image' });
+    const owner = await joinRoom({ room: 'room-img', name: 'Owner', userId: 'owner-img', ownerKey: 'secret img' });
+    const guest = await joinRoom({ room: 'room-img', name: 'Guest', userId: 'guest-img' });
+    const relayed = guest.next(socketEvents.CHANGE);
+
+    // invalid files: whole change ignored
+    owner.socket.emit(socketEvents.CHANGE, {
+      upsert: [image('i1', 'f1')],
+      remove: [],
+      files: { f1: 'https://example.com/a.png' },
+    });
+    owner.socket.emit(socketEvents.CHANGE, { upsert: [image('i1', 'f1')], remove: [], files: { 'bad id': png } });
+    owner.socket.emit(socketEvents.CHANGE, { upsert: [image('i1', 'f1')], remove: [], files: [png] });
+    owner.socket.emit(socketEvents.CHANGE, { upsert: [image('i1', 'f1')], remove: [], files: { f1: png } });
+
+    expect(await relayed).toEqual({ upsert: [image('i1', 'f1')], remove: [], files: { f1: png } });
+    expect(warn).toHaveBeenCalledTimes(3);
+
+    // whole drawing of joining users: its files too
+    const later = client();
+    const drawing = later.next(socketEvents.CHANGE);
+
+    later.socket.emit(socketEvents.JOIN, { room: 'room-img', name: 'Later', userId: 'later-img' });
+    expect(await drawing).toEqual({
+      upsert: [image('i1', 'f1')],
+      remove: [],
+      order: ['i1'],
+      full: true,
+      files: { f1: png },
+    });
+
+    // a file making the drawing too big: refused
+    const saved = { ...limits };
+
+    Object.assign(limits, { drawingSize: 1_000 });
+    try {
+      const tooBig = owner.next(socketEvents.REJECTED);
+
+      owner.socket.emit(socketEvents.CHANGE, {
+        upsert: [image('i2', 'f2')],
+        remove: [],
+        files: { f2: `data:image/png;base64,${'A'.repeat(2_000)}` },
+      });
+      expect(await tooBig).toEqual({ event: socketEvents.CHANGE, reason: 'too-big' });
+    } finally {
+      Object.assign(limits, saved);
+    }
   });
 
   it('Shapes of viewers ignored: drawn once the owner gives the right, ignored again once removed', async () => {

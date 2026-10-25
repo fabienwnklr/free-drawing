@@ -76,6 +76,12 @@ export class ContextMenu {
       visible: () => edit() && canvas() && !!drawer.getWidget('text'),
       run: () => this._paste(),
     };
+    const insertImage: ContextMenuItem = {
+      $item: this._createItem('action.insertImage', ''),
+      visible: () => edit() && canvas(),
+      // at the place of the right click
+      run: () => drawer.insertImage(this.#position ?? undefined),
+    };
     const snapping: ContextMenuItem = {
       $item: this._createItem('context.snap', 'Alt+S', 'menuitemcheckbox'),
       visible: () => canvas() && !!this.selectWidget,
@@ -106,7 +112,7 @@ export class ContextMenu {
     this.$menu.append(this.$list);
 
     const sections: ContextMenuItem[][] = [
-      [paste],
+      [paste, insertImage],
       [
         {
           $item: this._createItem('action.duplicate', 'Ctrl+D'),

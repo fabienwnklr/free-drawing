@@ -47,7 +47,7 @@ export const maxMessageSize = 10_000_000;
 /**
  * Konva classes of drawing shapes: only these nodes are created from files, links and changes of other users
  */
-export const shapeClasses = ['Line', 'Arrow', 'Rect', 'Ellipse', 'Text', 'Path'];
+export const shapeClasses = ['Line', 'Arrow', 'Rect', 'Ellipse', 'Text', 'Path', 'Image'];
 
 /**
  * Konva classes of groups of drawing shapes (frames: box, title and content group)

@@ -34,6 +34,7 @@ export const en = {
   'error.clipboardUnavailable': 'clipboard not available in this browser or page',
   'error.nothingToExport': 'nothing to export',
   'error.notDrawingFile': 'not a drawing file',
+  'error.notImage': 'not an image of a supported format (PNG, JPEG, WebP, GIF, SVG)',
   'error.damagedLink': 'incomplete or damaged link',
   'error.imageNotCreated': 'image not created by the browser',
   'error.serverUnreachable': 'server unreachable',
@@ -159,6 +160,7 @@ export const en = {
   'tools.square': 'Rectangle',
   'tools.circle': 'Ellipse',
   'tools.arrow': 'Arrow',
+  'tools.image': 'Insert image',
   'tools.triangle': 'Triangle',
   'tools.diamond': 'Diamond',
   'tools.heart': 'Heart',
@@ -201,6 +203,8 @@ export const en = {
   'action.rotateLeft': 'Rotate 90° left',
   'action.flipHorizontal': 'Flip horizontal',
   'action.flipVertical': 'Flip vertical',
+  'action.insertImage': 'Insert image',
+  'toast.imageFailed': 'Image not added: {error}',
   'action.alignLeft': 'Align left',
   'action.alignCenter': 'Center horizontally',
   'action.alignRight': 'Align right',
@@ -294,6 +298,7 @@ export const en = {
   'shapes.frameName': 'Frame {number}',
   'shapes.text': 'Text',
   'shapes.group': 'Group',
+  'shapes.image': 'Image',
 
   // export dialog
   'export.title': 'Export image',

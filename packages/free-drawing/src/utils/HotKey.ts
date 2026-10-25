@@ -297,6 +297,15 @@ export class HotKey {
         // pasted in a field of the drawer (search, name, link, radius...): text of the field
         if (target.matches('input, textarea, select') || target.isContentEditable) return;
 
+        // image copied (screenshot, file, image of a page): added at the pointer
+        const image = [...(e.clipboardData?.files ?? [])].find((file) => file.type.startsWith('image/'));
+
+        if (image) {
+          e.preventDefault();
+          void this.drawer.addImage(image, this.drawer._getRelativePointerPos());
+          return;
+        }
+
         const text = e.clipboardData?.getData('text');
 
         if (text) {

@@ -21,6 +21,7 @@ export type WidgetName =
   | 'square'
   | 'circle'
   | 'arrow'
+  | 'image'
   | 'triangle'
   | 'diamond'
   | 'heart'

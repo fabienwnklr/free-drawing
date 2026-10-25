@@ -4,8 +4,8 @@ import { type Kysely, sql } from 'kysely';
 import { type Auth, type User, getUser } from './auth';
 import type { Database } from './db';
 
-/** Size of a drawing at most (JSON) */
-export const maxDrawingSize = '5mb';
+/** Size of a drawing at most (JSON, image files included) */
+export const maxDrawingSize = '20mb';
 
 /** Drawings of an account at most: count, and size of their JSON (disk of the server), tests lower them */
 export const drawingsLimits = { count: 500, size: 100_000_000 };

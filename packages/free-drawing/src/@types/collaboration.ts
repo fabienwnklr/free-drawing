@@ -1,5 +1,6 @@
 import type { Socket } from 'socket.io-client';
 import type { Vector2d } from 'konva/lib/types';
+import type { DrawingFiles } from '@/@types/file';
 
 /**
  * Collaboration server and data sent on connection (`collaboration` option of the drawer)
@@ -66,6 +67,8 @@ export type DrawingChange = {
   full?: boolean;
   /** Background color of the drawing, when changed (whole drawing: background of the room, none before a user sends it) */
   background?: string;
+  /** Image files not sent yet, used by the shapes (whole drawing: files of the room) */
+  files?: DrawingFiles;
 };
 
 /**

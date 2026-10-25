@@ -73,7 +73,7 @@ describe('Drawing files and links', () => {
         background: '#fff',
         shapes: [
           { className: 'Layer', attrs: {} },
-          { className: 'Image', attrs: {} },
+          { className: 'Star', attrs: {} },
           { className: 'Rect', attrs: { width: 10, height: 10 }, children: [{ className: 'Rect', attrs: {} }] },
         ],
       })

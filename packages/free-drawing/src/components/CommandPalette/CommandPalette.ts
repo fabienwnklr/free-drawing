@@ -27,6 +27,7 @@ import ZoomSelectionIcon from '@/icons/zoom-selection.svg?raw';
 import RecenterIcon from '@/icons/recenter.svg?raw';
 import HelpIcon from '@/icons/help.svg?raw';
 import OpenIcon from '@/icons/open.svg?raw';
+import ImageIcon from '@/icons/image.svg?raw';
 import SaveIcon from '@/icons/save.svg?raw';
 import SaveNowIcon from '@/icons/save-now.svg?raw';
 import PinIcon from '@/icons/pin.svg?raw';
@@ -583,6 +584,12 @@ export class CommandPalette extends Modal {
             icon: OpenIcon,
             shortcut: 'Ctrl+O',
             run: () => drawer.open(),
+          },
+          edit && {
+            id: 'insert image picture photo file',
+            label: t('action.insertImage'),
+            icon: ImageIcon,
+            run: () => drawer.insertImage(),
           },
           {
             id: 'save file download',
