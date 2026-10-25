@@ -113,6 +113,9 @@ export default defineConfig({
           text: 'Guide',
           items: [
             { text: 'Get started', link: '/get-started/' },
+            // components (READMEs of their packages)
+            { text: 'React', link: '/get-started/react' },
+            { text: 'Vue', link: '/get-started/vue' },
             { text: 'Contribute', link: '/get-started/contribute' },
           ],
         },

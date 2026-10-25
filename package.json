@@ -25,7 +25,7 @@
     "release": "yarn workspace @fabwcie/free-drawing release",
     "doc:typedoc": "yarn workspace @fabwcie/free-drawing doc:typedoc",
     "doc:changelog": "cp packages/free-drawing/CHANGELOG.md docs/changelog.md",
-    "doc:get-started": "cp packages/free-drawing/README.md docs/get-started/index.md && cp CONTRIBUTING.md docs/get-started/contribute.md",
+    "doc:get-started": "cp packages/free-drawing/README.md docs/get-started/index.md && cp packages/react/README.md docs/get-started/react.md && cp packages/vue/README.md docs/get-started/vue.md && cp CONTRIBUTING.md docs/get-started/contribute.md",
     "docs": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs"

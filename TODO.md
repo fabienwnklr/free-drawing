@@ -103,7 +103,7 @@
 
 - [ ] Generate 3 differents logo for drawer and propose to me one to chose
 - [x] Create package to use drawer with react/vuejs (`@fabwcie/free-drawing-react`, `@fabwcie/free-drawing-vue`: `FreeDrawing` components, first versions to publish by hand)
-- [ ] dans la docs mettre en valeur que c'est pour du vanilla comme du react/vue
+- [x] dans la docs mettre en valeur que c'est pour du vanilla comme du react/vue (hero, card and quick start in tabs of the homepage, React and Vue pages of the guide, features, READMEs)
 - [ ] quels features pertinente on a pas qu'on pourrait intégré en s'inspirant de tldraw/escalidraw, et quels features eux n'ont pas qu'on pourrait pertinemment intégrer?
 - [ ] le lien via une fleche n'ai pas assez précis, si j'ai un triagle ça s'attache au cadre qui entoure l'objet pas vraiment a la surface du dessin par exemple
 

@@ -4,8 +4,8 @@ layout: home
 
 hero:
   name: free-drawing
-  text: Infinite canvas drawing for any web page
-  tagline: A whiteboard in one element. Draw, organize and share ideas with tools, layers, frames, live collaboration and exports, in TypeScript and without framework.
+  text: Infinite canvas drawing for vanilla JS, React and Vue
+  tagline: A whiteboard in one element or one component. Draw, organize and share ideas with tools, layers, frames, live collaboration and exports.
   image:
     src: /logo.svg
     alt: free-drawing logo
@@ -63,8 +63,8 @@ features:
     link: /plugins
     linkText: Extend it
   - icon: 🧩
-    title: Made for apps
-    details: One element and one line, your own storage, events, preferences and typed API. Konva as only peer dependency.
+    title: Vanilla, React or Vue
+    details: One element and one line in any page, or the FreeDrawing component of React and Vue. Your own storage, events, preferences and typed API, Konva as only peer dependency.
     link: /features#made-for-apps
     linkText: Integrate
 ---
@@ -77,27 +77,29 @@ features:
 
 ## Quick start
 
-Install the library with [Konva](https://konvajs.org/), its only peer dependency:
+The library works in any page, without framework. React and Vue apps can use its component, which creates the drawer when it is mounted and destroys it when it is unmounted. Install it with [Konva](https://konvajs.org/), its only peer dependency (also with yarn or pnpm):
 
 ::: code-group
 
-```bash [yarn]
-yarn add @fabwcie/free-drawing konva
-```
-
-```bash [npm]
+```bash [Vanilla]
 npm install @fabwcie/free-drawing konva
 ```
 
-```bash [pnpm]
-pnpm add @fabwcie/free-drawing konva
+```bash [React]
+npm install @fabwcie/free-drawing-react @fabwcie/free-drawing konva
+```
+
+```bash [Vue]
+npm install @fabwcie/free-drawing-vue @fabwcie/free-drawing konva
 ```
 
 :::
 
-Then give it an element of your page:
+Then give it an element of your page, or render its component:
 
-```js
+::: code-group
+
+```js [Vanilla]
 import { Drawer } from '@fabwcie/free-drawing';
 import '@fabwcie/free-drawing/style.css';
 
@@ -110,7 +112,41 @@ const drawer = new Drawer(document.getElementById('drawer'), {
 drawer.on('drawer.change', () => console.log(drawer.getDrawingFile()));
 ```
 
-The [guide](/get-started/) describes every option, the [features](/features) page shows what the drawer can do, the [plugins](/plugins) guide shows how to add your own features and the [API](/api/) documents each class and method.
+```tsx [React]
+import { FreeDrawing } from '@fabwcie/free-drawing-react';
+import '@fabwcie/free-drawing/style.css';
+
+export function Board() {
+  return (
+    <FreeDrawing
+      style={{ height: 600 }}
+      theme="system" // light, dark or the one of the device
+      language="auto" // language of the browser
+      // drawing changed: keep it anywhere as JSON
+      onChange={(drawer) => console.log(drawer.getDrawingFile())}
+    />
+  );
+}
+```
+
+```vue [Vue]
+<script setup lang="ts">
+import { FreeDrawing } from '@fabwcie/free-drawing-vue';
+import type { Drawer } from '@fabwcie/free-drawing';
+import '@fabwcie/free-drawing/style.css';
+
+// drawing changed: keep it anywhere as JSON
+const onChange = (drawer: Drawer) => console.log(drawer.getDrawingFile());
+</script>
+
+<template>
+  <FreeDrawing style="height: 600px" theme="system" language="auto" @change="onChange" />
+</template>
+```
+
+:::
+
+The [guide](/get-started/) describes every option, the [React](/get-started/react) and [Vue](/get-started/vue) pages the props of the components, the [features](/features) page shows what the drawer can do, the [plugins](/plugins) guide shows how to add your own features and the [API](/api/) documents each class and method.
 
 ## Open source
 

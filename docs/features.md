@@ -96,7 +96,7 @@ More in [Dark mode](/get-started/#dark-mode) and [Languages](/get-started/#langu
 
 ## Made for apps
 
-- **One element**: `new Drawer($el, options)` and its `style.css`, no framework, TypeScript types included, [Konva](https://konvajs.org/) as only peer dependency.
+- **Any page, React or Vue**: `new Drawer($el, options)` and its `style.css` in plain JavaScript, or the `FreeDrawing` component of [React](/get-started/react) and [Vue](/get-started/vue) (drawer created and destroyed with it, of its size, settings following its props, never loaded on a server), TypeScript types included, [Konva](https://konvajs.org/) as only peer dependency.
 - **Your storage**: the `storage` option loads and saves drawings in your app or server, the drawing is also a JSON file to keep anywhere.
 - **Events** follow the drawing, the selection, the preferences and the collaboration, preferences can follow user accounts.
 - **Control**: read only mode, user of the collaboration, every widget optional.
