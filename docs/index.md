@@ -75,6 +75,16 @@ features:
 
 </div>
 
+## Why free-drawing?
+
+- **Any framework, or none**: a class for any page, a component for [React](/get-started/react) and [Vue](/get-started/vue), with the same options and API.
+- **Truly open source**: [MIT licence](https://github.com/fabienwnklr/free-drawing/blob/master/LICENCE), no licence key, no watermark, no paid features. Use it in any app, commercial ones included.
+- **Rights in live sessions**: participants view the drawing until its owner lets them draw, they ask in one click, and follow the view the owner presents. See [live collaboration](/features#live-collaboration).
+- **A real layers panel**: name, hide, lock and reorder every shape, select ranges of them. See [layers](/features#layers-groups-and-frames).
+- **Share without a server**: a link holds the whole drawing, compressed, and files open anywhere. See [files and links](/features#files-links-and-export).
+- **Your own features**: tools, commands, shortcuts and menu items with a typed [plugin API](/plugins), a new plugin created by `npm create @fabwcie/free-drawing-plugin`.
+- **Your server, or the one included**: Node server with accounts, saved drawings and live collaboration, or your own following the [protocol](/get-started/#collaboration).
+
 ## Quick start
 
 The library works in any page, without framework. React and Vue apps can use its component, which creates the drawer when it is mounted and destroys it when it is unmounted. Install it with [Konva](https://konvajs.org/), its only peer dependency (also with yarn or pnpm):

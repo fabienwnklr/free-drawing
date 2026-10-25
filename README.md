@@ -8,6 +8,16 @@ Infinite canvas drawing library ([TypeScript](https://www.typescriptlang.org/) +
 
 <img src="./docs/public/logo.svg" width="17" /> Check demo [here](https://free-drawing-demo.netlify.app/)
 
+## Why free-drawing?
+
+- **Any framework, or none**: a class for any page, a component for React and Vue, with the same options and API.
+- **Truly open source**: [MIT licence](LICENCE), no licence key, no watermark, no paid features.
+- **Rights in live sessions**: participants view the drawing until its owner lets them draw, they ask in one click, and follow the view the owner presents.
+- **A real layers panel**: name, hide, lock and reorder every shape, select ranges of them.
+- **Share without a server**: a link holds the whole drawing, compressed, and files open anywhere.
+- **Your own features**: tools, commands, shortcuts and menu items with a typed plugin API, a new plugin created by `npm create @fabwcie/free-drawing-plugin`.
+- **Your server, or the one included**: Node server with accounts, saved drawings and live collaboration ([apps/server](apps/server)).
+
 ## Repository
 
 | Folder | Content |

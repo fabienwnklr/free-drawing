@@ -107,6 +107,27 @@
 - [x] quels features pertinente on a pas qu'on pourrait intégré en s'inspirant de tldraw/escalidraw, et quels features eux n'ont pas qu'on pourrait pertinemment intégrer? (answered 2026-10-25: features to choose, added once chosen)
 - [ ] le lien via une fleche n'ai pas assez précis, si j'ai un triagle ça s'attache au cadre qui entoure l'objet pas vraiment a la surface du dessin par exemple
 
+# Features of tldraw / Excalidraw we don't have (strong and medium interest, by priority)
 
+- [ ] zoom to fit the drawing, to the selection and to 100 % (Shift+1, Shift+2, Shift+0): menu, command palette, help (`showArea` exists)
+- [ ] align, distribute and stack the selection (left, center, right, top, middle, bottom; even horizontal / vertical spacing)
+- [ ] images: paste and pick image files, resize, kept in files, links and collaboration (`Image` in `shapeClasses` of the protocol, size of collaboration messages)
+- [ ] text in shapes: double click a rectangle, ellipse or path shape to write in it (centered, follows the shape), labels on arrows
+- [ ] arrows: curved and elbow arrows, styles of arrowheads (none, arrow, triangle, dot, bar) at each end
+- [ ] sticky notes (after text in shapes)
+- [ ] more shapes: star, hexagon, block arrow, check box... (`PathShapeWidget`)
+- [ ] eyedropper (EyeDropper API) and copy / paste of styles (Ctrl+Alt+C / Ctrl+Alt+V)
+- [ ] libraries: save a selection as a reusable item, insert it again in any drawing
+- [ ] search the texts of the drawing (Ctrl+F), going from one result to the next
+- [ ] drawing kept in exported PNG / SVG (metadata), opened again for editing
+- [ ] end-to-end encrypted collaboration: key in the `#` of the link, the server never reads drawings
 
+# Ideas neither tldraw nor Excalidraw have
 
+- [ ] Web Component `<free-drawing>`: Angular, Svelte, plain HTML
+- [ ] presentation by frames: each frame a slide, participants of a session follow
+- [ ] keyboard navigation between shapes, with a description read by screen readers
+- [ ] shape recognition: a freehand stroke turned into a rectangle, an ellipse or an arrow
+- [ ] page backgrounds: lined, dotted, isometric paper
+- [ ] import of `.excalidraw` and `.tldr` files
+- [ ] replay how a drawing was made, from its history
