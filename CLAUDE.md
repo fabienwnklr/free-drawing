@@ -4,6 +4,8 @@ Guide for working on this repository: `@fabwcie/free-drawing`, an infinite canva
 
 ## Repository
 
+Yarn 1 workspaces (root `package.json` is private, `yarn.lock` at root). MIT licence of Fabien Winkler: `LICENCE` at the root, copied in each public package (included by npm), `"license": "MIT"` in their `package.json`.
+
 Yarn 1 workspaces (root `package.json` is private, `yarn.lock` at root):
 
 - [packages/free-drawing](packages/free-drawing): the library published on npm (`src/`, `tests/`, its vite / vitest / tsconfig / eslint configs, README, CHANGELOG, LICENCE copy). Paths below without a folder are in it (`src/...`, `tests/...`).

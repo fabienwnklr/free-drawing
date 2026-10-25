@@ -3,7 +3,7 @@
   "description": "React component of free-drawing, infinite canvas drawing board",
   "version": "1.0.0",
   "type": "module",
-  "license": "Apache-2.0",
+  "license": "MIT",
   "author": "Winkler Fabien <fabienwinkler@outlook.fr>",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

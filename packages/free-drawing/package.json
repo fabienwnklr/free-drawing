@@ -4,12 +4,12 @@
   "description": "Infinite canvas",
   "contributors": [],
   "private": false,
-  "version": "7.29.0",
+  "version": "7.29.1",
   "type": "module",
   "main": "./dist/drawer.umd.cjs",
   "module": "./dist/drawer.js",
   "types": "./dist/index.d.ts",
-  "license": "Apache-2.0",
+  "license": "MIT",
   "engines": {
     "node": ">=16.0.0",
     "npm": ">=5.7.1"

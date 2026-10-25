@@ -3,7 +3,7 @@
   "description": "free-drawing library, its demo and collaboration server",
   "author": "Winkler Fabien <fabienwinkler@outlook.fr>",
   "private": true,
-  "license": "Apache-2.0",
+  "license": "MIT",
   "type": "module",
   "workspaces": [
     "packages/*",

@@ -2,6 +2,12 @@
 
 Changes of `@fabwcie/create-free-drawing-plugin` (`npm create @fabwcie/free-drawing-plugin`). Each version is published by the release workflow of the library once it is not on npm yet.
 
+## 1.1.1 (2026-10-25)
+
+### Bug Fixes
+
+- MIT licence of Fabien Winkler: `package.json` declared Apache-2.0 while the `LICENCE` file held the MIT licence of another project
+
 ## 1.1.0 (2026-10-24)
 
 ### Features

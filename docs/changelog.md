@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.29.1](https://github.com/fabienwnklr/free-drawing/compare/v7.29.0...v7.29.1) (2026-10-25)
+
+
+### Bug Fixes
+
+* **licence:** MIT licence of Fabien Winkler: `package.json` declared Apache-2.0 while the `LICENCE` file held the MIT licence of another project
+
 ## [7.29.0](https://github.com/fabienwnklr/free-drawing/compare/v7.28.5...v7.29.0) (2026-10-24)
 
 
