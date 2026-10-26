@@ -101,7 +101,7 @@
 
 # Other
 
-- [ ] Generate 3 differents logo for drawer and propose to me one to chose
+- [x] Generate 3 differents logo for drawer and propose to me one to chose (infinite loop chosen)
 - [x] Create package to use drawer with react/vuejs (`@fabwcie/free-drawing-react`, `@fabwcie/free-drawing-vue`: `FreeDrawing` components, first versions to publish by hand)
 - [x] dans la docs mettre en valeur que c'est pour du vanilla comme du react/vue (hero, card and quick start in tabs of the homepage, React and Vue pages of the guide, features, READMEs)
 - [x] quels features pertinente on a pas qu'on pourrait intégré en s'inspirant de tldraw/escalidraw, et quels features eux n'ont pas qu'on pourrait pertinemment intégrer? (answered 2026-10-25: features to choose, added once chosen)
