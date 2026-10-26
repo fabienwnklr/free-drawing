@@ -115,7 +115,7 @@
 - [x] text in shapes: double click a rectangle, ellipse or path shape to write in it (centered, follows the shape), labels on arrows
 - [x] arrows: curved and elbow arrows, styles of arrowheads (none, arrow, triangle, dot, bar) at each end
 - [x] sticky notes (after text in shapes)
-- [ ] more shapes: star, hexagon, block arrow, check box... (`PathShapeWidget`)
+- [x] more shapes: star, hexagon, block arrow, check box... (`PathShapeWidget`: also speech bubble)
 - [ ] eyedropper (EyeDropper API) and copy / paste of styles (Ctrl+Alt+C / Ctrl+Alt+V)
 - [ ] libraries: save a selection as a reusable item, insert it again in any drawing
 - [ ] search the texts of the drawing (Ctrl+F), going from one result to the next

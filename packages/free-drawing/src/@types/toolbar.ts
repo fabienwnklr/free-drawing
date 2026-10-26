@@ -27,16 +27,21 @@ export type WidgetName =
   | 'diamond'
   | 'heart'
   | 'cloud'
+  | 'star'
+  | 'hexagon'
+  | 'blockArrow'
+  | 'bubble'
+  | 'checkbox'
   | 'highlighter'
   | 'laser'
   | 'frame';
 
 /**
  * Name of a tool (`tool` option, `getWidget`): widgets of toolbar and names kept for other tools, `undo` and `redo`
- * (buttons of footer), `rect` (`square` draws rectangles), `ellipse` (`circle` draws ellipses), `star` and `polygon`
- * (no widget)
+ * (buttons of footer), `rect` (`square` draws rectangles), `ellipse` (`circle` draws ellipses), `polygon` (no
+ * widget)
  */
-export type AvailableTools = WidgetName | 'undo' | 'redo' | 'rect' | 'ellipse' | 'star' | 'polygon' | PluginToolName;
+export type AvailableTools = WidgetName | 'undo' | 'redo' | 'rect' | 'ellipse' | 'polygon' | PluginToolName;
 
 /** Name of a widget added by a plugin (`Plugin.addWidget`): any name, names of the library still suggested */
 export type PluginToolName = string & Record<never, never>;

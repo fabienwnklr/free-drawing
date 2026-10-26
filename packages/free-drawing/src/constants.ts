@@ -45,6 +45,11 @@ export const widgetNames: WidgetName[] = [
   'diamond',
   'heart',
   'cloud',
+  'star',
+  'hexagon',
+  'blockArrow',
+  'bubble',
+  'checkbox',
   'highlighter',
   'laser',
   'frame',
@@ -88,7 +93,25 @@ export const defaultOptions: DrawerOptions = {
   pluginOptions: {},
   widgets: widgetNames,
   // more tools in one button
-  widgetGroups: [{ widgets: ['triangle', 'diamond', 'heart', 'cloud', 'highlighter', 'laser', 'frame'], icon: 'more' }],
+  widgetGroups: [
+    {
+      widgets: [
+        'triangle',
+        'diamond',
+        'heart',
+        'cloud',
+        'star',
+        'hexagon',
+        'blockArrow',
+        'bubble',
+        'checkbox',
+        'highlighter',
+        'laser',
+        'frame',
+      ],
+      icon: 'more',
+    },
+  ],
   textStyle: {
     fontFamily: 'Ubuntu',
     fontSize: 16,
@@ -158,6 +181,16 @@ export const shapeName = {
   heart: 'drawer-heart',
   /** Cloud path */
   cloud: 'drawer-cloud',
+  /** Star of 5 points path */
+  star: 'drawer-star',
+  /** Hexagon path */
+  hexagon: 'drawer-hexagon',
+  /** Block arrow path (pointing right) */
+  blockArrow: 'drawer-block-arrow',
+  /** Speech bubble path */
+  bubble: 'drawer-bubble',
+  /** Check box path (square and check mark) */
+  checkbox: 'drawer-checkbox',
   /** Freehand stroke of highlighter */
   highlighter: 'drawer-highlighter',
   /** Frame holding shapes (see `Frame`) */
@@ -183,7 +216,17 @@ export const shapeName = {
 /**
  * Closed shapes drawn by path (see `PathShapeWidget`)
  */
-export const pathShapes = [shapeName.triangle, shapeName.diamond, shapeName.heart, shapeName.cloud];
+export const pathShapes = [
+  shapeName.triangle,
+  shapeName.diamond,
+  shapeName.heart,
+  shapeName.cloud,
+  shapeName.star,
+  shapeName.hexagon,
+  shapeName.blockArrow,
+  shapeName.bubble,
+  shapeName.checkbox,
+];
 
 /**
  * Shapes drawn with an outline, which can be dashed (brush line is a filled outline)
@@ -221,6 +264,11 @@ export const shapeLabels: Record<string, TranslationKey> = {
   [shapeName.diamond]: 'shapes.diamond',
   [shapeName.heart]: 'shapes.heart',
   [shapeName.cloud]: 'shapes.cloud',
+  [shapeName.star]: 'shapes.star',
+  [shapeName.hexagon]: 'shapes.hexagon',
+  [shapeName.blockArrow]: 'shapes.blockArrow',
+  [shapeName.bubble]: 'shapes.bubble',
+  [shapeName.checkbox]: 'shapes.checkbox',
   [shapeName.highlighter]: 'shapes.highlighter',
   [shapeName.frame]: 'shapes.frame',
   [shapeName.text]: 'shapes.text',

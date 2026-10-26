@@ -14,6 +14,7 @@ import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import { scalePath } from '@/components/toolbar/widgets/PathShapeWidget';
 import { shapeName } from '@/constants';
 import { parseDrawingFile } from '@/utils/drawingFile';
+import { getAnchorPoints } from '@/utils/binding';
 import { createDrawer, drag, finger, fireMouse, fireTouch, keydown } from './helpers';
 
 /** Text of a blob (jsdom has no `blob.text()`) */
@@ -56,6 +57,40 @@ describe('Tools of shapes', () => {
     // a click draws nothing
     draw('cloud', [500, 500], [500, 500]);
     expect(drawer.getDrawingShapes()).toHaveLength(4);
+  });
+
+  it('Star, hexagon, block arrow, speech bubble and check box: in the dragged box, in "More tools", outline as drawn', () => {
+    const drawer = createDrawer();
+    const layer = drawer.drawLayer;
+    const draw = (tool: string, to: [number, number]) => {
+      drawer.getWidget<BaseWidget>(tool as BaseWidget['id'])!.setActive(true);
+      drag(drawer, [0, 0], to);
+      return drawer.getDrawingShapes().at(-1) as Path;
+    };
+    const tools = ['star', 'hexagon', 'blockArrow', 'bubble', 'checkbox'];
+
+    expect(draw('hexagon', [100, 50]).data()).toBe('M25 0L75 0L100 25L75 50L25 50L0 25Z');
+    expect(draw('blockArrow', [100, 100]).data()).toBe('M0 30L60 30L60 0L100 50L60 100L60 70L0 70Z');
+
+    const star = draw('star', [200, 200]);
+    const bubble = draw('bubble', [200, 100]);
+    const checkbox = draw('checkbox', [200, 200]);
+
+    expect([star, bubble, checkbox].map((shape) => shape.name())).toEqual([
+      shapeName.star,
+      shapeName.bubble,
+      shapeName.checkbox,
+    ]);
+    // in the group of the toolbar, without shortcut, named in the layers panel
+    expect(tools.every((tool) => drawer.options.widgetGroups[0].widgets.includes(tool))).toBe(true);
+    expect(tools.map((tool) => drawer.getWidget<BaseWidget>(tool as BaseWidget['id'])!.shortcut)).toEqual(
+      tools.map(() => undefined)
+    );
+    expect(drawer.getShapeLabel(star)).toBe('Star');
+    // sides on the outline: top point of the star, side of the check box (its check mark is not an outline)
+    expect(getAnchorPoints(star, layer).top).toEqual({ x: 100, y: 0 });
+    const right = getAnchorPoints(checkbox, layer).right;
+    expect([Math.round(right.x), Math.round(right.y)]).toEqual([200, 100]);
   });
 
   it('Background color, stroke style, svg export and files', async () => {

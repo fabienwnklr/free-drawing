@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.36.0](https://github.com/fabienwnklr/free-drawing/compare/v7.35.0...v7.36.0) (2026-10-26)
+
+
+### Features
+
+* **shapes:** star, hexagon, block arrow, speech bubble and check box tools in "More tools": drawn in the dragged box, background color, stroke style, texts and linked arrows on their outline as the other shapes of the group
+* **toolbar:** the menu of a group of tools shows 4 tools per line (fewer columns for a smaller group), Up and Down arrows move to the line above or below: on one line, the 12 tools of "More tools" went out of a narrow drawer
+
 ## [7.35.0](https://github.com/fabienwnklr/free-drawing/compare/v7.34.0...v7.35.0) (2026-10-26)
 
 

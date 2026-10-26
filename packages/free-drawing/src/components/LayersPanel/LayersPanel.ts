@@ -37,6 +37,11 @@ import TriangleIcon from '@/icons/triangle.svg?raw';
 import DiamondIcon from '@/icons/diamond.svg?raw';
 import HeartIcon from '@/icons/heart.svg?raw';
 import CloudIcon from '@/icons/cloud.svg?raw';
+import StarIcon from '@/icons/star.svg?raw';
+import HexagonIcon from '@/icons/hexagon.svg?raw';
+import BlockArrowIcon from '@/icons/block-arrow.svg?raw';
+import BubbleIcon from '@/icons/bubble.svg?raw';
+import CheckboxIcon from '@/icons/checkbox.svg?raw';
 import FrameIcon from '@/icons/frame.svg?raw';
 import { getFrameShapes, isFrame } from '@/utils/frame';
 import HighlighterIcon from '@/icons/highlighter.svg?raw';
@@ -55,6 +60,11 @@ const typeIcons: Record<string, string> = {
   [shapeName.diamond]: DiamondIcon,
   [shapeName.heart]: HeartIcon,
   [shapeName.cloud]: CloudIcon,
+  [shapeName.star]: StarIcon,
+  [shapeName.hexagon]: HexagonIcon,
+  [shapeName.blockArrow]: BlockArrowIcon,
+  [shapeName.bubble]: BubbleIcon,
+  [shapeName.checkbox]: CheckboxIcon,
   [shapeName.frame]: FrameIcon,
   [shapeName.highlighter]: HighlighterIcon,
   [shapeName.text]: TextIcon,

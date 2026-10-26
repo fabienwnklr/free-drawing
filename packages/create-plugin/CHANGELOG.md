@@ -2,6 +2,12 @@
 
 Changes of `@fabwcie/create-free-drawing-plugin` (`npm create @fabwcie/free-drawing-plugin`). Each version is published by the release workflow of the library once it is not on npm yet.
 
+## 1.1.4 (2026-10-26)
+
+### Bug Fixes
+
+- the ids of the new tools of the library (`star`, `hexagon`, `blockArrow`, `bubble`, `checkbox`, 7.36.0) are refused for the tool of a plugin
+
 ## 1.1.3 (2026-10-26)
 
 ### Bug Fixes

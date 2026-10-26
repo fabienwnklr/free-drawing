@@ -28,6 +28,9 @@ import type { GroupWidgetOptions } from '@/@types/toolbar';
 /** Space between group button and its widgets, between widgets and drawer edges (px) */
 const gap = 8;
 
+/** Widgets per line of the menu of a group, at most */
+export const groupColumns = 4;
+
 /**
  * Icons of groups by name: generic ones, then icons of widgets
  */
@@ -146,6 +149,8 @@ export class GroupWidget {
       this.$menu.setAttribute('aria-label', label);
     });
 
+    // lines of `groupColumns` widgets, fewer columns for a smaller group
+    this.$menu.style.setProperty('--drawer-group-columns', String(Math.min(groupColumns, widgets.length)));
     for (const widget of widgets) widget.addTo(this.$menu);
     this.$container.append(this.$button, this.$menu);
     this._initEvents();
@@ -225,8 +230,9 @@ export class GroupWidget {
   }
 
   /**
-   * Button toggles widgets, arrow keys move between them, Escape closes them (focus back on button), closed when
-   * a widget is chosen, focus or pointer goes elsewhere, footer scrolls or window is resized
+   * Button toggles widgets, arrow keys move between them (Up / Down: to the line above or below), Escape closes them
+   * (focus back on button), closed when a widget is chosen, focus or pointer goes elsewhere, footer scrolls or window
+   * is resized
    */
   private _initEvents() {
     this.$button.addEventListener('click', () => (this.isShown() ? this.hide() : this.show()));
@@ -239,6 +245,16 @@ export class GroupWidget {
       () => this.widgets.filter((widget) => !widget.isDisabled).map((widget) => widget.$button),
       'horizontal'
     );
+    // widget of the line above or below (same column), if there is one and it is enabled
+    this.$menu.addEventListener('keydown', (e) => {
+      const buttons = this.widgets.map((widget) => widget.$button);
+      const index = buttons.indexOf(e.target as HTMLButtonElement);
+      const next = buttons[index + (e.key === 'ArrowDown' ? groupColumns : -groupColumns)];
+
+      if (index < 0 || !['ArrowUp', 'ArrowDown'].includes(e.key)) return;
+      e.preventDefault();
+      if (next && !next.disabled) next.focus();
+    });
     // Escape closes widgets, focus back on group button (not a drawer shortcut)
     this.$container.addEventListener('keydown', (e) => {
       if (e.key !== 'Escape' || !this.isShown()) return;

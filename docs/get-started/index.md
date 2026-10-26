@@ -99,9 +99,9 @@ The library needs no framework. React and Vue apps can use its `FreeDrawing` com
   },
   collaboration: false, // live collaboration menu: false, true (socket.io server on same origin), server url or { url, auth }
   // toolbar widgets, see below
-  widgets: ['pan', 'selection', 'brush', 'eraser', 'text', 'note', 'line', 'square', 'circle', 'arrow', 'image', 'triangle', 'diamond', 'heart', 'cloud', 'highlighter', 'laser', 'frame'],
+  widgets: ['pan', 'selection', 'brush', 'eraser', 'text', 'note', 'line', 'square', 'circle', 'arrow', 'image', 'triangle', 'diamond', 'heart', 'cloud', 'star', 'hexagon', 'blockArrow', 'bubble', 'checkbox', 'highlighter', 'laser', 'frame'],
   // groups of toolbar widgets, see below
-  widgetGroups: [{ widgets: ['triangle', 'diamond', 'heart', 'cloud', 'highlighter', 'laser', 'frame'], icon: 'more' }],
+  widgetGroups: [{ widgets: ['triangle', 'diamond', 'heart', 'cloud', 'star', 'hexagon', 'blockArrow', 'bubble', 'checkbox', 'highlighter', 'laser', 'frame'], icon: 'more' }],
 };
 ```
 
@@ -291,7 +291,7 @@ If `tool` option (or the tool saved in localStorage) is not in `widgets`, the fi
 
 ### Groups of widgets
 
-`widgetGroups` option puts widgets of the toolbar in groups: one button, at the place of the first widget of the group, shows its widgets above it (arrow keys move between them, Escape closes them). It is highlighted while one of its widgets is active, shortcuts of its widgets still work.
+`widgetGroups` option puts widgets of the toolbar in groups: one button, at the place of the first widget of the group, shows its widgets above it, 4 per line (arrow keys move between them, Up and Down to the line above or below, Escape closes them). It is highlighted while one of its widgets is active, shortcuts of its widgets still work.
 
 ```js
 new Drawer($el, {
@@ -312,7 +312,7 @@ The default toolbar groups the tools below in "More tools" (`widgetGroups` repla
 
 ### More tools
 
-- Triangle, diamond (D), heart and cloud: drawn in the dragged box (Shift: in a square), background color and stroke style as rectangles.
+- Triangle, diamond (D), heart, cloud, star, hexagon, block arrow (pointing right: rotate or flip it for another direction), speech bubble and check box (rounded square with a check mark, for to-do lists): drawn in the dragged box (Shift: in a square), background color and stroke style as rectangles.
 - Highlighter (M): wide strokes of its own fluorescent colors (yellow by default, green, blue, pink, orange or custom) and widths, multiplied with the drawing under them so texts stay readable.
 - Laser pointer (K): trail following pointer while pressed, fading after a second, never saved. Users of a collaboration session see it with the color of the user's cursor. Usable in read only.
 - Frame (F): area with a name above it ("Frame 1"...: double click or layers panel renames it). Shapes entirely in a new frame belong to it, so do shapes drawn, moved or duplicated in it (their center), shapes moved out of it are back in the drawing. While shapes are dragged or resized, they are drawn whole above the drawing (not cut) and the frames they would enter (solid, tinted) or leave (dashed) are highlighted, briefly after a move with arrow keys. Its shapes are moved with it and cut at its edges, selected alone (click), or with it (its name or border). Resizing it does not scale its shapes, frames are not rotated, flipped, grouped nor styled. Exports cut its shapes, without its name.
@@ -486,7 +486,7 @@ Drawing shapes are konva shapes or groups (`DrawingShape` type): `getDrawingShap
 
 ## Texts of shapes
 
-A double click on a rectangle, an ellipse, a triangle, a diamond, a heart or a cloud (with the selection tool, also in its empty inside), or a click of the text tool on it, writes in it: its text is centered in it, as wide as its inside (inner rectangle of ellipses), and follows it when it is moved, resized (its letters keep their size) or turned. On an arrow, the text is a label on its middle, with a halo of the background color cutting the line. A shape and its text are selected, styled (color, font, size...), copied and removed together; a text whose shape is removed alone stays as a free text.
+A double click on a rectangle, an ellipse or a shape of "More tools" (triangle, star, speech bubble...) (with the selection tool, also in its empty inside), or a click of the text tool on it, writes in it: its text is centered in it, as wide as its inside (inner rectangle of ellipses), and follows it when it is moved, resized (its letters keep their size) or turned. On an arrow, the text is a label on its middle, with a halo of the background color cutting the line. A shape and its text are selected, styled (color, font, size...), copied and removed together; a text whose shape is removed alone stays as a free text.
 
 The text of a shape is a text of the drawing with a `containerId` attribute, the id of its shape: placed in it on each change.
 
@@ -505,7 +505,7 @@ A selected curved or elbow arrow (alone, with the selection tool) has a handle i
 
 ## Linked arrows
 
-An arrow drawn from a shape to another one (end near them, 12 px on screen whatever the zoom) is linked to them: its ends follow them when they move, are resized or rotated. Rectangles, ellipses, triangles, diamonds, hearts and clouds are linked near their outline as drawn (not the corners of their box), their ends stay on it (the side of a triangle, the dip of a heart), inside only with a background: the empty inside of a big shape is a free place, a small one is linked from its middle. In a frame, ends are linked to its shapes, to the frame only near its border. With the arrow tool, shapes under pointer show the middle of their sides (on the outline of triangles, diamonds, hearts and clouds): an end released near one is fixed to this side (e.g. bottom of a shape to left side of another one), else it stays on the outline aiming at the other end. An elbow arrow leaves the sides of its shapes facing each other across the space between them (or the sides it is fixed to) and is drawn again around them when they move. Ctrl (Cmd) draws an arrow without links. Arrows moved without their shapes (or with removed shapes) are unlinked, copies of arrows and shapes are linked together. Links are `startBinding` / `endBinding` (ids of shapes) and `startAnchor` / `endAnchor` (`top`, `right`, `bottom`, `left`) attributes of arrows.
+An arrow drawn from a shape to another one (end near them, 12 px on screen whatever the zoom) is linked to them: its ends follow them when they move, are resized or rotated. Rectangles, ellipses and the shapes of "More tools" (triangles, stars, speech bubbles...) are linked near their outline as drawn (not the corners of their box), their ends stay on it (the side of a triangle, the dip of a heart), inside only with a background: the empty inside of a big shape is a free place, a small one is linked from its middle. In a frame, ends are linked to its shapes, to the frame only near its border. With the arrow tool, shapes under pointer show the middle of their sides (on the outline of the shapes of "More tools"): an end released near one is fixed to this side (e.g. bottom of a shape to left side of another one), else it stays on the outline aiming at the other end. An elbow arrow leaves the sides of its shapes facing each other across the space between them (or the sides it is fixed to) and is drawn again around them when they move. Ctrl (Cmd) draws an arrow without links. Arrows moved without their shapes (or with removed shapes) are unlinked, copies of arrows and shapes are linked together. Links are `startBinding` / `endBinding` (ids of shapes) and `startAnchor` / `endAnchor` (`top`, `right`, `bottom`, `left`) attributes of arrows.
 
 ## Stacking order
 

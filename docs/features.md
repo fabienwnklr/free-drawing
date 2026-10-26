@@ -14,7 +14,7 @@ free-drawing gives any web page an infinite canvas to draw, organize and share i
 ![Toolbar with the "More tools" group open and the options of the brush](/features/tools.webp){.screenshot width=1280 height=800}
 
 - **Freehand**: a brush with smooth strokes following the speed of the pointer ([perfect-freehand](https://github.com/steveruizok/perfect-freehand)), and a highlighter whose fluorescent colors are multiplied with the drawing below, so texts stay readable.
-- **Shapes**: rectangles with sharp or round corners, ellipses, lines, arrows (straight, curved or elbow, a head of your choice at each end: arrow, triangle, dot, bar or none), triangles, diamonds, hearts and clouds, drawn in the dragged box. Shift draws squares, circles and lines at 45°.
+- **Shapes**: rectangles with sharp or round corners, ellipses, lines, arrows (straight, curved or elbow, a head of your choice at each end: arrow, triangle, dot, bar or none), triangles, diamonds, hearts, clouds, stars, hexagons, block arrows, speech bubbles and check boxes, drawn in the dragged box. Shift draws squares, circles and lines at 45°.
 - **Images**: insert (image tool of the toolbar) or paste images (screenshots, photos, SVG), resized with their proportions, kept small in files and links, shared in live sessions, with their colors in dark mode.
 - **Texts**: font, size, bold, italic, underline, alignment, and a width fitted to their content. Write in a shape with a double click: the text stays centered in it when it is moved, resized or turned; on an arrow, it is a label.
 - **Sticky notes** (N): a click adds a note of a light color and writes in it, the note grows with its text.

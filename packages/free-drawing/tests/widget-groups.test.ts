@@ -96,6 +96,35 @@ describe('Groups of widgets', () => {
     expect(group.isShown()).toBe(false);
   });
 
+  it('Menu of a group: 4 widgets per line at most, Up and Down move to the line above or below', () => {
+    // fewer columns for a smaller group (a drawer created empties the element of the previous one)
+    const small = createDrawer({ widgets, widgetGroups: [{ widgets: ['line', 'square'] }] }).toolbar.groups[0];
+
+    expect(small.$menu.style.getPropertyValue('--drawer-group-columns')).toBe('2');
+
+    const drawer = createDrawer();
+    const [group] = drawer.toolbar.groups;
+    const buttons = group.widgets.map((widget) => widget.$button);
+
+    expect(group.$menu.style.getPropertyValue('--drawer-group-columns')).toBe('4');
+
+    group.$button.click();
+    expect(document.activeElement).toBe(buttons[0]);
+    key(buttons[0], { key: 'ArrowDown' });
+    expect(document.activeElement).toBe(buttons[4]);
+    key(buttons[4], { key: 'ArrowDown' });
+    expect(document.activeElement).toBe(buttons[8]);
+    // no line below: stays
+    key(buttons[8], { key: 'ArrowDown' });
+    expect(document.activeElement).toBe(buttons[8]);
+    key(buttons[8], { key: 'ArrowUp' });
+    expect(document.activeElement).toBe(buttons[4]);
+    key(buttons[4], { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(buttons[5]);
+    key(buttons[5], { key: 'Escape' });
+    expect(group.isShown()).toBe(false);
+  });
+
   it('Tab stop and arrow keys on buttons of toolbar, widgets of groups reached from their group', () => {
     const drawer = createDrawer({ widgets, widgetGroups: [shapes] });
     const [group] = drawer.toolbar.groups;

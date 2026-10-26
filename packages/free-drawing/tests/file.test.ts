@@ -146,6 +146,11 @@ describe('Drawing files and links', () => {
       'diamond',
       'heart',
       'cloud',
+      'star',
+      'hexagon',
+      'blockArrow',
+      'bubble',
+      'checkbox',
     ];
 
     drawer.setStrokeStyle('dashed');

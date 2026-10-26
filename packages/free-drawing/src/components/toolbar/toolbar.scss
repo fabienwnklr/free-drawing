@@ -69,7 +69,9 @@
       position: fixed;
       // under context menu and dialogs
       z-index: 2;
-      display: flex;
+      // lines of 4 widgets at most (fewer columns for a smaller group, see GroupWidget)
+      display: grid;
+      grid-template-columns: repeat(var(--drawer-group-columns, 4), auto);
       gap: $space-1;
       padding: $space-1;
 
