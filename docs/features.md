@@ -86,9 +86,10 @@ More in [Layers](/get-started/#layers), [Search](/get-started/#search), [Library
 
 - **Files**: save and open `.freedrawing` files (Ctrl + Shift + S, Ctrl + O). Only drawing shapes are read: files can come from anyone.
 - **Links** hold the whole drawing, compressed, so no server is needed to share it.
-- **Export** the drawing or the selection as PNG (1×, 2× or 3×), SVG or PDF, with or without background, in dark mode or not, or copy it to the clipboard. PNG and SVG images can keep the drawing: opened again, they are edited as drawing files.
+- **Export** the drawing or the selection as PNG (1×, 2× or 3×), SVG or PDF, with or without background, in dark mode or not, or copy it to the clipboard.
+- **Editable images**: a PNG or SVG image can keep its drawing. It is shared and shown as any image, and opened again (Ctrl + O) its shapes come back, ready to be changed: no `.freedrawing` file to keep next to it.
 
-More in [Files and links](/get-started/#files-and-links) and [Export](/get-started/#export).
+More in [Files and links](/get-started/#files-and-links), [Export](/get-started/#export) and [Editable images](/get-started/#editable-images).
 
 ## Themes, languages and accessibility
 

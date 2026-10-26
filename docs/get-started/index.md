@@ -594,9 +594,34 @@ const blob = await drawer.exportImage('png', { selected: true, background: true,
 const editable = await drawer.exportImage('svg', { withDrawing: true }); // drawing kept in the image
 ```
 
-With "Keep the drawing" of the dialog (`withDrawing`), png and svg images keep the drawing of their shapes (compressed as in links: a `tEXt` chunk `free-drawing` of png images, a `<metadata id="free-drawing">` element of svg images): they are opened again for editing like `.freedrawing` files (Ctrl+O), an image without it is refused. Images copied to the clipboard do not keep it (browsers encode them again).
-
 Svg is vector (shapes, texts), pdf contains a png quality image of the drawing (jpeg, always with a background). The scale of png and pdf images is lowered for a very big drawing, so the image fits the canvas limits of browsers (32767 px of side, 268 Mpx, 16.7 Mpx on iPhone and iPad).
+
+### Editable images
+
+An exported image is usually only pixels (png) or lines (svg): opened again, its shapes can't be changed, so the `.freedrawing` file has to be kept next to it. With "Keep the drawing in PNG and SVG images" of the export dialog (`withDrawing` option), the image also holds an editable copy of its drawing: one file is both the image and its source.
+
+1. Export the drawing (or the selection) as png or svg with the option: the image looks and is shown as any other one (mail, documents, chats, wikis, pull requests).
+2. Later, "Open" of the menu (Ctrl+O) accepts this image as a `.freedrawing` file: its shapes come back as drawn (texts, notes, linked arrows, frames, images...), ready to be changed and exported again. As any opened file, it replaces the drawing (Ctrl+Z gives it back) and is shown in the view.
+
+What is kept:
+
+- the shapes of the image: the selection when only the selection is exported, else the visible drawing, with the files of their images (a photo in the drawing makes the image bigger: it is kept twice, as pixels and as its file);
+- the background color of the drawing, not the export options (dark mode, scale, image without background): the drawing opened again is the drawing as drawn.
+
+Limits:
+
+- png and svg only, not pdf; images copied to the clipboard do not keep it (browsers encode them again);
+- an image changed by another program or service (cropped, resized, compressed, sent through some chats) often loses it: opened, it is refused as an "image without a drawing";
+- the drawing of the image can be read by anyone who has the image, as a `.freedrawing` file (names of shapes, links, texts hidden behind others...): share such images as the drawing itself;
+- pasting such an image in a drawing adds the image, not its shapes.
+
+For developers: the drawing file (JSON) is compressed as in links (`z` + deflate-raw in base64url, `j` + base64url without `CompressionStream`), in a `tEXt` chunk of keyword `free-drawing` before the end of png images, in a `<metadata id="free-drawing">` element at the start of svg images.
+
+```js
+const image = await drawer.exportImage('png', { withDrawing: true, selected: false });
+// another drawer, another app: open() reads .freedrawing files and images keeping their drawing
+await drawer.open();
+```
 
 ## Collaboration
 
