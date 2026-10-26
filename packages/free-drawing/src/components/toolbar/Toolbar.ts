@@ -20,6 +20,7 @@ import { CloudWidget } from '@/components/toolbar/widgets/Cloud/Cloud';
 import { HighlighterWidget } from '@/components/toolbar/widgets/Highlighter/Highlighter';
 import { LaserWidget } from '@/components/toolbar/widgets/Laser/Laser';
 import { FrameWidget } from '@/components/toolbar/widgets/Frame/Frame';
+import { NoteWidget } from '@/components/toolbar/widgets/Note/Note';
 import { GroupWidget } from '@/components/toolbar/widgets/GroupWidget';
 import { getWidgetGroups, getWidgetNames } from '@/utils/widgets';
 import { arrowNavigation, createButton, setLabel, setPressed } from '@/utils/dom';
@@ -33,6 +34,7 @@ const widgetClasses: Record<WidgetName, new (drawer: Drawer) => BaseWidget> = {
   brush: BrushWidget,
   eraser: EraserWidget,
   text: TextWidget,
+  note: NoteWidget,
   line: LineWidget,
   square: SquareWidget,
   circle: CircleWidget,

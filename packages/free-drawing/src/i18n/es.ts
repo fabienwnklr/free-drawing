@@ -150,6 +150,7 @@ export const es: Translations = {
   'tools.brush': 'Pincel',
   'tools.eraser': 'Borrador',
   'tools.text': 'Texto',
+  'tools.note': 'Nota',
   'tools.line': 'Línea',
   'tools.square': 'Rectángulo',
   'tools.circle': 'Elipse',
@@ -216,6 +217,7 @@ export const es: Translations = {
   'overlay.shape': 'Opciones de la forma',
   'overlay.brush': 'Opciones del pincel',
   'overlay.highlighter': 'Opciones del resaltador',
+  'overlay.note': 'Opciones de la nota',
   'overlay.text': 'Opciones del texto',
   'overlay.stroke': 'Trazo',
   'overlay.color': 'Color',
@@ -296,6 +298,7 @@ export const es: Translations = {
   'shapes.frame': 'Marco',
   'shapes.frameName': 'Marco {number}',
   'shapes.text': 'Texto',
+  'shapes.note': 'Nota',
   'shapes.group': 'Grupo',
   'shapes.image': 'Imagen',
 

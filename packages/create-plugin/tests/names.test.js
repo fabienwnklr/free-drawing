@@ -1,3 +1,4 @@
+import { readFileSync, readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   checkCommandShortcut,
@@ -7,6 +8,8 @@ import {
   checkToolShortcut,
   formatShortcut,
   getNames,
+  libraryToolLetters,
+  libraryTools,
   suggestCommandShortcut,
   suggestToolShortcut,
   words,
@@ -70,5 +73,26 @@ describe('Names of a plugin', () => {
       'Alt+T',
       'Alt+I',
     ]);
+  });
+
+  it('Tools and their letters follow the sources of the library', () => {
+    const src = new URL('../../free-drawing/src/', import.meta.url);
+    const constants = readFileSync(new URL('constants.ts', src), 'utf8');
+    const list = constants.match(/export const widgetNames[^=]*= \[([^\]]*)\]/)?.[1] ?? '';
+    const widgets = new URL('components/toolbar/widgets/', src);
+    // shortcut of each widget: super(drawer, id, title, icon, letter)
+    const letters = readdirSync(widgets, { recursive: true })
+      .map(String)
+      .filter((file) => file.endsWith('.ts'))
+      .flatMap((file) => [
+        ...readFileSync(new URL(file.replaceAll('\\', '/'), widgets), 'utf8').matchAll(
+          /super\(drawer, '\w+', '[^']*', \w+, '(\w)'\)/g
+        ),
+      ])
+      .map(([, letter]) => letter);
+
+    expect([...libraryTools].sort()).toEqual([...list.matchAll(/'(\w+)'/g)].map(([, name]) => name).sort());
+    // Q: tool kept
+    expect([...libraryToolLetters].sort()).toEqual([...letters, 'q'].sort());
   });
 });

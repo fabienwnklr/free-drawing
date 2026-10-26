@@ -17,6 +17,7 @@ export type WidgetName =
   | 'brush'
   | 'eraser'
   | 'text'
+  | 'note'
   | 'line'
   | 'square'
   | 'circle'

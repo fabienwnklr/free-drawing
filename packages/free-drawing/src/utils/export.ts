@@ -12,6 +12,7 @@ import { Text } from 'konva/lib/shapes/Text';
 import { Path } from 'konva/lib/shapes/Path';
 import { Image } from 'konva/lib/shapes/Image';
 import { arrowheadSvg } from '@/utils/arrow';
+import { isNote, noteShadowFilter } from '@/utils/note';
 import { normalizeColor } from '@/utils/color';
 import { getShapes } from '@/utils/hit';
 import { frameParts } from '@/utils/frame';
@@ -290,6 +291,8 @@ function shapeElement(shape: Node, dark: boolean | undefined, matrix: number[]):
       height: shape.height(),
       rx: typeof radius === 'number' && radius ? radius : undefined,
       fill,
+      // shadow of notes, as drawn
+      filter: isNote(shape) ? noteShadowFilter : undefined,
     })}${strokeAttrs()}/></g>`;
   }
 

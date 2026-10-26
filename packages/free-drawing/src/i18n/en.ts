@@ -156,6 +156,7 @@ export const en = {
   'tools.brush': 'Brush',
   'tools.eraser': 'Eraser',
   'tools.text': 'Text',
+  'tools.note': 'Note',
   'tools.line': 'Line',
   'tools.square': 'Rectangle',
   'tools.circle': 'Ellipse',
@@ -226,6 +227,7 @@ export const en = {
   'overlay.shape': 'Shape options',
   'overlay.brush': 'Brush options',
   'overlay.highlighter': 'Highlighter options',
+  'overlay.note': 'Note options',
   'overlay.text': 'Text options',
   'overlay.stroke': 'Stroke',
   'overlay.color': 'Color',
@@ -308,6 +310,7 @@ export const en = {
   'shapes.frame': 'Frame',
   'shapes.frameName': 'Frame {number}',
   'shapes.text': 'Text',
+  'shapes.note': 'Note',
   'shapes.group': 'Group',
   'shapes.image': 'Image',
 

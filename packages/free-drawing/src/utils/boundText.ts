@@ -6,6 +6,7 @@ import { Text } from 'konva/lib/shapes/Text';
 import type { Vector2d } from 'konva/lib/types';
 import { pathShapes, shapeName } from '@/constants';
 import { getOutlineDistance } from '@/utils/binding';
+import { isNote, notePadding } from '@/utils/note';
 
 /**
  * Texts of shapes: a text with a `containerId` attribute (id of a rectangle, an ellipse, a path shape or an arrow) is
@@ -122,9 +123,10 @@ export function placeBoundText(text: Text, container: Shape, background: string)
   if (!parent) return false;
 
   const before = JSON.stringify(text.attrs);
+  const height = container.height();
   // coordinates of the shape to coordinates of the parent of the text (group, content of a frame...)
   const toParent = parent.getAbsoluteTransform().copy().invert().multiply(container.getAbsoluteTransform());
-  const { rotation, scaleX } = toParent.decompose();
+  const { rotation, scaleX, scaleY } = toParent.decompose();
   const arrow = container instanceof Arrow;
   let center: Vector2d;
 
@@ -139,12 +141,20 @@ export function placeBoundText(text: Text, container: Shape, background: string)
       lineJoin: 'round',
     });
   } else {
-    const box = container.getSelfRect();
     const inside = container.hasName(shapeName.rect) ? 1 : container.hasName(shapeName.ellipse) ? Math.SQRT1_2 : 0.7;
+    const note = isNote(container);
+    const padding = note ? notePadding : textPadding;
+
+    // shape drawn to the left: negative size
+    text.width(Math.max(1, round(Math.abs(container.getSelfRect().width * scaleX) * inside - 2 * padding)));
+    // note taller for its text (never shorter)
+    if (note && height >= 0) {
+      container.height(Math.max(height, Math.ceil((text.height() + 2 * padding) / Math.abs(scaleY || 1))));
+    }
+
+    const box = container.getSelfRect();
 
     center = toParent.point({ x: box.x + box.width / 2, y: box.y + box.height / 2 });
-    // shape drawn to the left: negative size
-    text.width(Math.max(1, round(Math.abs(box.width * scaleX) * inside - 2 * textPadding)));
   }
 
   const angle = arrow ? 0 : rotation;
@@ -163,7 +173,7 @@ export function placeBoundText(text: Text, container: Shape, background: string)
     visible: container.visible(),
   });
 
-  return JSON.stringify(text.attrs) !== before;
+  return JSON.stringify(text.attrs) !== before || container.height() !== height;
 }
 
 /**

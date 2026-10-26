@@ -2,6 +2,12 @@
 
 Changes of `@fabwcie/create-free-drawing-plugin` (`npm create @fabwcie/free-drawing-plugin`). Each version is published by the release workflow of the library once it is not on npm yet.
 
+## 1.1.3 (2026-10-26)
+
+### Bug Fixes
+
+- a plugin named "Note" and the shortcut N of a tool are refused: the note tool of the library has them (7.35.0); the tools and letters of the library are checked against its sources by the tests
+
 ## 1.1.2 (2026-10-26)
 
 ### Bug Fixes

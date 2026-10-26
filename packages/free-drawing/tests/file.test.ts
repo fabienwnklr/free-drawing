@@ -1,6 +1,7 @@
 import { describe, expect, it, beforeAll, vi } from 'vitest';
 import { Rect } from 'konva/lib/shapes/Rect';
 import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
+import type { NoteWidget } from '@/components/toolbar/widgets/Note/Note';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import { parseDrawingFile } from '@/utils/drawingFile';
@@ -157,6 +158,7 @@ describe('Drawing files and links', () => {
       drawer.getWidget<BaseWidget>(tool as BaseWidget['id'])!.setActive(true);
       drag(drawer, [10, 10 + index * 60], [80, 50 + index * 60]);
     }
+    drawer.getWidget<NoteWidget>('note')!.addNote({ x: 600, y: 600 });
     const text = drawer.getWidget<TextWidget>('text')!.addTextNode('hello');
     drawer.getWidget<SelectWidget>('selection')!.select([text]);
     drawer.setTextStyle({ fontStyle: 'italic bold', textDecoration: 'underline', align: 'center' });
@@ -168,7 +170,7 @@ describe('Drawing files and links', () => {
     drawer.groupShapes([shapes[2], shapes[3]]);
     const file = drawer.getDrawingFile();
 
-    expect(file.shapes.length).toBe(tools.length + 1);
+    expect(file.shapes.length).toBe(tools.length + 2);
     expect(parseDrawingFile(JSON.stringify(file))).toEqual(file);
   });
 

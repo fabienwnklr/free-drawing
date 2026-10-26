@@ -1,10 +1,10 @@
 import type { Drawer } from '@/Drawer';
 import type { ColorLike } from '@/@types/drawer';
-import type { TranslationKey } from '@/@types/i18n';
 import LineIcon from '@/icons/line.svg?raw';
 import '@/components/tools/Overlay/overlay.scss';
 import { ColorPicker } from '@/components/ColorPicker/ColorPicker';
-import { createButton, setLabel, setPressed, uniqueId } from '@/utils/dom';
+import { createButton, setLabel, setPressed } from '@/utils/dom';
+import { createOverlaySection } from '@/components/tools/Overlay/section';
 import type { HighlighterOverlayOptions, HighlighterChange } from '@/@types/toolbar';
 import type { Choice } from '@/@types/ui';
 
@@ -41,8 +41,7 @@ export class HighlighterOverlay {
    * @param options Choices of the widget, shown by the fields and changed in place by `setChange`
    */
   constructor(
-    /** Drawer of the highlighter widget */
-    private readonly drawer: Drawer,
+    drawer: Drawer,
     /** Choices of the widget, changed in place by `setChange` */
     private readonly options: HighlighterOverlayOptions
   ) {
@@ -51,8 +50,8 @@ export class HighlighterOverlay {
     this.$overlayContainer.setAttribute('role', 'region');
     drawer.i18n.translate((t) => this.$overlayContainer.setAttribute('aria-label', t('overlay.highlighter')));
 
-    const colors = this._createSection('overlay.color');
-    const sizes = this._createSection('overlay.strokeWidth');
+    const colors = createOverlaySection(drawer, 'overlay.color');
+    const sizes = createOverlaySection(drawer, 'overlay.strokeWidth');
 
     this.colorPicker = new ColorPicker(colors.$buttons, {
       i18n: drawer.i18n,
@@ -108,29 +107,5 @@ export class HighlighterOverlay {
     for (const $btn of this.$sizeButtons) {
       setPressed($btn, Number($btn.dataset.size) === this.options.size);
     }
-  }
-
-  /**
-   * Group of fields named by its title (as other overlays)
-   * @param title Key of the section title, translated again on language change
-   * @returns Section element (title then buttons element) and its buttons element, not appended yet
-   */
-  private _createSection(title: TranslationKey) {
-    /** Section element: group named by its title */
-    const $container = document.createElement('div');
-    const $title = document.createElement('h6');
-    /** Element of the section buttons, after its title */
-    const $buttons = document.createElement('div');
-
-    $title.classList.add('title');
-    $title.id = uniqueId('overlay-title');
-    this.drawer.i18n.translate((t) => ($title.textContent = t(title)));
-    $container.classList.add('overlay-picker-container');
-    $container.setAttribute('role', 'group');
-    $container.setAttribute('aria-labelledby', $title.id);
-    $buttons.classList.add('overlay-picker-btn-container');
-    $container.append($title, $buttons);
-
-    return { $container, $buttons };
   }
 }

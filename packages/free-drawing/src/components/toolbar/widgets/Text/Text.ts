@@ -23,8 +23,11 @@ export class TextWidget extends BaseWidget {
   isEditing: boolean = false;
   /** Next edit started by a click of this tool (see `_initEventsTextarea`) */
   #byTool = false;
-  /** A press on the canvas ended the edit of a text, the tool kept: its click adds no text */
-  #pressEndedEdit = false;
+  /**
+   * A press on the canvas ended the edit of a text: the click of a tool writing on click (text, note) adds nothing,
+   * read and reset on its press
+   */
+  pressEndedEdit = false;
   /** Current press ended the edit of a text: its click adds no text */
   #skipClick = false;
   overlay: TextOverlay;
@@ -187,8 +190,8 @@ export class TextWidget extends BaseWidget {
     this.onStage('mousedown touchstart', (e) => {
       // no mouse events of the browser after a tap: their click would add another text
       if (e.type === 'touchstart') e.evt.preventDefault();
-      this.#skipClick = this.#pressEndedEdit;
-      this.#pressEndedEdit = false;
+      this.#skipClick = this.pressEndedEdit;
+      this.pressEndedEdit = false;
     });
     this.onStage('click tap', (e) => {
       if (e.evt.button > 0 || this.#skipClick) return;
@@ -203,11 +206,26 @@ export class TextWidget extends BaseWidget {
   }
 
   /**
+   * Tool activated: no press ended an edit with it yet
+   */
+  protected onActive(): void {
+    this.pressEndedEdit = false;
+  }
+
+  /**
    * Tool changed: no click to skip
    */
   protected onDesactive(): void {
-    this.#pressEndedEdit = false;
     this.#skipClick = false;
+  }
+
+  /**
+   * Edit the text of a shape (rectangle, ellipse, path shape, arrow, note), created when it has none
+   * @param container Shape holding the text
+   * @param onEnd Called once the edit ended, with the text (null when left empty: removed)
+   */
+  editTextOf(container: Shape, onEnd?: (textNode: Text | null) => void) {
+    this.editTextNode(getBoundText(container, this.drawer.drawLayer) ?? this._createBoundText(container), onEnd);
   }
 
   /**
@@ -229,8 +247,9 @@ export class TextWidget extends BaseWidget {
    * Enter or a press elsewhere (mouse, touch, pen, click) validates, Shift + Enter adds a line, Escape cancels; an
    * empty text is removed.
    * @param textNode Text of drawing, or title of a frame
+   * @param onEnd Called once the edit ended, with the text (null when left empty: removed)
    */
-  editTextNode(textNode: Text) {
+  editTextNode(textNode: Text, onEnd?: (textNode: Text | null) => void) {
     textNode.hide();
     const selectWidget = this.drawer.toolbar.getWidget<SelectWidget>('selection');
     selectWidget?.transformer.hide();
@@ -261,7 +280,7 @@ export class TextWidget extends BaseWidget {
     textarea.focus();
 
     this.isEditing = true;
-    this._initEventsTextarea(textNode, textarea);
+    this._initEventsTextarea(textNode, textarea, onEnd);
   }
 
   /**
@@ -327,8 +346,9 @@ export class TextWidget extends BaseWidget {
    * change fired; edited after a click of this tool: see `_afterEdit`.
    * @param textNode Text edited, hidden until the textarea is removed
    * @param textarea Textarea over the text, created by `_createTextarea`
+   * @param onEnd Called once the edit ended, with the text (null when left empty: removed)
    */
-  private _initEventsTextarea(textNode: Text, textarea: HTMLTextAreaElement) {
+  private _initEventsTextarea(textNode: Text, textarea: HTMLTextAreaElement, onEnd?: (textNode: Text | null) => void) {
     const byTool = this.#byTool;
 
     this.#byTool = false;
@@ -362,6 +382,7 @@ export class TextWidget extends BaseWidget {
         selectWidget?.hideOverlay();
         // tool kept, as after a simple click of a shape tool
         if (byTool && this.drawer.activeWidget === this) this.showToolOverlay();
+        onEnd?.(null);
         return;
       }
 
@@ -370,6 +391,7 @@ export class TextWidget extends BaseWidget {
 
       this.drawer.stage.fire('change');
       if (byTool && this.drawer.activeWidget === this) this._afterEdit(textNode);
+      onEnd?.(textNode);
     };
 
     // title wider than the field: field widened, not wrapped into the frame
@@ -401,12 +423,10 @@ export class TextWidget extends BaseWidget {
       if (e.target !== textarea) {
         textNode.text(value());
         removeTextarea();
-        // press on the canvas, tool kept: its click adds no text (pointer down comes before konva mouse down and
-        // touch start, see `initEvents`)
-        this.#pressEndedEdit =
-          e.type === 'pointerdown' &&
-          this.drawer.activeWidget === this &&
-          this.drawer.stage.content.contains(e.target as globalThis.Node);
+        // press on the canvas: the click of the tool adds no text, nor note (pointer down comes before konva mouse
+        // down and touch start, see `initEvents`)
+        this.pressEndedEdit =
+          e.type === 'pointerdown' && this.drawer.stage.content.contains(e.target as globalThis.Node);
       }
     };
     setTimeout(() => {

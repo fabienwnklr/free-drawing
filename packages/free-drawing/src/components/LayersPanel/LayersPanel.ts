@@ -40,9 +40,12 @@ import CloudIcon from '@/icons/cloud.svg?raw';
 import FrameIcon from '@/icons/frame.svg?raw';
 import { getFrameShapes, isFrame } from '@/utils/frame';
 import HighlighterIcon from '@/icons/highlighter.svg?raw';
+import NoteIcon from '@/icons/note.svg?raw';
 
 /** Icons of shape types, as their tools */
 const typeIcons: Record<string, string> = {
+  // before rectangles: notes are rectangles too
+  [shapeName.note]: NoteIcon,
   [shapeName.line]: BrushIcon,
   [shapeName.straightLine]: LineIcon,
   [shapeName.rect]: SquareIcon,

@@ -35,6 +35,7 @@ export const widgetNames: WidgetName[] = [
   'brush',
   'eraser',
   'text',
+  'note',
   'line',
   'square',
   'circle',
@@ -163,6 +164,8 @@ export const shapeName = {
   frame: 'drawer-frame',
   /** Text */
   text: 'drawer-text',
+  /** Sticky note: a rectangle (also named `rect`) of a light color holding a text, with a shadow (see utils/note) */
+  note: 'drawer-note',
   /** Group of shapes */
   group: 'drawer-group',
   /** Image, its file in the files of the drawing (`fileId` attribute, see `drawer.files`) */
@@ -207,6 +210,8 @@ export const edgesShapes = [shapeName.rect];
  * Type names of drawing shapes (layers panel), keys of their translation
  */
 export const shapeLabels: Record<string, TranslationKey> = {
+  // before rectangles: notes are rectangles too
+  [shapeName.note]: 'shapes.note',
   [shapeName.line]: 'shapes.freehand',
   [shapeName.straightLine]: 'shapes.line',
   [shapeName.rect]: 'shapes.rect',

@@ -99,7 +99,7 @@ The library needs no framework. React and Vue apps can use its `FreeDrawing` com
   },
   collaboration: false, // live collaboration menu: false, true (socket.io server on same origin), server url or { url, auth }
   // toolbar widgets, see below
-  widgets: ['pan', 'selection', 'brush', 'eraser', 'text', 'line', 'square', 'circle', 'arrow', 'image', 'triangle', 'diamond', 'heart', 'cloud', 'highlighter', 'laser', 'frame'],
+  widgets: ['pan', 'selection', 'brush', 'eraser', 'text', 'note', 'line', 'square', 'circle', 'arrow', 'image', 'triangle', 'diamond', 'heart', 'cloud', 'highlighter', 'laser', 'frame'],
   // groups of toolbar widgets, see below
   widgetGroups: [{ widgets: ['triangle', 'diamond', 'heart', 'cloud', 'highlighter', 'laser', 'frame'], icon: 'more' }],
 };
@@ -284,6 +284,8 @@ Brush options (freehand stroke, see [perfect-freehand](https://github.com/stever
 Eraser (E): a click erases the shape under pointer, a drag erases every shape it crosses, faded until the pointer is released (changing tool meanwhile keeps them). A shape of a group erases its group, a shape of a frame is erased alone, locked shapes are kept. Right and middle buttons do not erase.
 
 Text (T): a click adds a text, or edits the text (or name of a frame) clicked. Enter or a press elsewhere validates it (Shift + Enter adds a line, Escape cancels, an empty text is removed), then the tool is kept (`keepTool`, pin of the toolbar) or the selection tool comes back with the text selected. A double click edits any text, whatever the tool.
+
+Note (N): a click adds a sticky note there (a square of a light color, yellow by default, its color chosen in the panel of the tool) and writes in it at once, a click on a note writes in it; validated, the tool is kept (`keepTool`) or the selection tool comes back with the note selected. A note is a rectangle (named `drawer-rect drawer-note`) drawn with a shadow (also in exports): its text is centered in it, the note grows with it (never shorter), it is resized, colored (background), moved and linked by arrows as rectangles. `drawer.getWidget('note').addNote({ x, y })` adds one centered on a point.
 
 If `tool` option (or the tool saved in localStorage) is not in `widgets`, the first widget is activated.
 

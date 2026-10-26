@@ -152,6 +152,7 @@ export const fr: Translations = {
   'tools.brush': 'Pinceau',
   'tools.eraser': 'Gomme',
   'tools.text': 'Texte',
+  'tools.note': 'Note',
   'tools.line': 'Ligne',
   'tools.square': 'Rectangle',
   'tools.circle': 'Ellipse',
@@ -218,6 +219,7 @@ export const fr: Translations = {
   'overlay.shape': 'Options de la forme',
   'overlay.brush': 'Options du pinceau',
   'overlay.highlighter': 'Options du surligneur',
+  'overlay.note': 'Options de la note',
   'overlay.text': 'Options du texte',
   'overlay.stroke': 'Trait',
   'overlay.color': 'Couleur',
@@ -298,6 +300,7 @@ export const fr: Translations = {
   'shapes.frame': 'Cadre',
   'shapes.frameName': 'Cadre {number}',
   'shapes.text': 'Texte',
+  'shapes.note': 'Note',
   'shapes.group': 'Groupe',
   'shapes.image': 'Image',
 

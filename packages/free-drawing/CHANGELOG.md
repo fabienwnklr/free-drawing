@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.35.0](https://github.com/fabienwnklr/free-drawing/compare/v7.34.0...v7.35.0) (2026-10-26)
+
+
+### Features
+
+* **notes:** sticky notes: note tool (N) of the toolbar, a click adds a square of a light color (chosen in the panel of the tool) and writes in it at once, a click on a note writes in it; notes are rectangles drawn with a shadow (also in exports, dark in dark mode), growing with their text, linked by arrows, colored and resized as rectangles (`NoteWidget.addNote`)
+
 ## [7.34.0](https://github.com/fabienwnklr/free-drawing/compare/v7.33.0...v7.34.0) (2026-10-26)
 
 

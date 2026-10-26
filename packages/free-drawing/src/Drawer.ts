@@ -39,6 +39,7 @@ import type { Language, TranslationParams, TranslationKey } from '@/@types/i18n'
 import { bindingAttrs, unbindMoved, updateBindings } from '@/utils/binding';
 import { getBoundText, updateBoundTexts } from '@/utils/boundText';
 import { setupArrows } from '@/utils/arrow';
+import { setupNotes } from '@/utils/note';
 import { fitTextWidth, getFontsToLoad, getTexts, loadFonts } from '@/utils/text';
 import {
   decodeLinkData,
@@ -951,8 +952,9 @@ export class Drawer extends MicroEvent {
     setupHit(shape);
     // element of an image is not saved: from its file
     setupImages(shape, this.files, this.#imageElements);
-    // heads of arrows (drawing function not saved)
+    // heads of arrows, shadows of notes (drawing functions not saved)
     setupArrows(shape);
+    setupNotes(shape);
   }
 
   /**
@@ -2565,8 +2567,8 @@ export class Drawer extends MicroEvent {
     const dark = this.isDarkMode();
 
     this.$drawerContainer.classList.toggle('drawer-dark', dark);
-    // images drawn again: filtered as the drawing in dark mode (see `setupImages`)
-    if (this.drawLayer?.findOne('Image')) this.drawLayer.batchDraw();
+    // images drawn again: filtered as the drawing in dark mode (see `setupImages`), shadows of notes (`setupNotes`)
+    if (this.drawLayer?.findOne('Image') || this.drawLayer?.findOne(`.${shapeName.note}`)) this.drawLayer.batchDraw();
     this.trigger(drawerEvents.themeChange, dark);
   }
 

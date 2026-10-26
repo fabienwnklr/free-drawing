@@ -15,6 +15,7 @@ export const libraryTools = [
   'brush',
   'eraser',
   'text',
+  'note',
   'line',
   'square',
   'circle',
@@ -30,7 +31,7 @@ export const libraryTools = [
 ];
 
 /** Letters of the tools of the library (and Q, keep tool): a tool of a plugin needs another one */
-export const libraryToolLetters = ['a', 'b', 'c', 'd', 'e', 'f', 'h', 'k', 'l', 'm', 'q', 'r', 's', 't'];
+export const libraryToolLetters = ['a', 'b', 'c', 'd', 'e', 'f', 'h', 'k', 'l', 'm', 'n', 'q', 'r', 's', 't'];
 
 /** Shortcuts of the library with Alt (letters after Alt, after Alt + Shift) */
 export const libraryAltShortcuts = { alt: ['z', 'g', 'l', 's'], altShift: ['d', 'c', 's'] };
