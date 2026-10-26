@@ -46,6 +46,7 @@ export const fr: Translations = {
   'error.notAllowed': 'autorisation refusée par le navigateur',
   'error.storageFull': 'stockage du navigateur plein',
   'error.notLibraryFile': "ce n'est pas un fichier de bibliothèque",
+  'error.noDrawingInImage': 'image sans dessin (exportée sans lui, ou modifiée depuis)',
   'toast.selectionTool': "Utilisez l'outil de sélection pour déplacer ou transformer les formes.",
 
   'modal.close': 'Fermer',
@@ -343,6 +344,7 @@ export const fr: Translations = {
   'export.selected': 'Formes sélectionnées uniquement',
   'export.background': 'Fond',
   'export.dark': 'Mode sombre',
+  'export.withDrawing': 'Garder le dessin dans les images PNG et SVG (les rouvrir pour le modifier)',
   'export.scale': 'Échelle (png, pdf)',
   'export.saveAs': 'Enregistrer en {format}',
   'export.saveFile': 'Enregistrer en fichier {extension}',

@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.40.0](https://github.com/fabienwnklr/free-drawing/compare/v7.39.0...v7.40.0) (2026-10-26)
+
+
+### Features
+
+* **export:** drawing kept in exported PNG and SVG images ("Keep the drawing" of the export dialog, `withDrawing` option of `exportImage`): compressed in a `tEXt` chunk of PNG images, in a `<metadata>` element of SVG images; such images are opened again for editing like drawing files (`drawer.open`, Ctrl + O), an image without drawing is refused with its reason
+
 ## [7.39.0](https://github.com/fabienwnklr/free-drawing/compare/v7.38.0...v7.39.0) (2026-10-26)
 
 

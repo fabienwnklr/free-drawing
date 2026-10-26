@@ -44,6 +44,7 @@ export const en = {
   'error.notAllowed': 'permission denied by the browser',
   'error.storageFull': 'browser storage full',
   'error.notLibraryFile': 'not a library file',
+  'error.noDrawingInImage': 'image without a drawing (exported without it, or changed since)',
   'toast.selectionTool': 'Use the selection tool to move or transform shapes.',
 
   // dialogs
@@ -354,6 +355,7 @@ export const en = {
   'export.selected': 'Only selected shapes',
   'export.background': 'Background',
   'export.dark': 'Dark mode',
+  'export.withDrawing': 'Keep the drawing in PNG and SVG images (open them again to edit it)',
   'export.scale': 'Scale (png, pdf)',
   'export.saveAs': 'Save as {format}',
   'export.saveFile': 'Save as {extension} file',

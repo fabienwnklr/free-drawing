@@ -45,6 +45,7 @@ export const de: Translations = {
   'error.notAllowed': 'Berechtigung vom Browser verweigert',
   'error.storageFull': 'Browserspeicher voll',
   'error.notLibraryFile': 'keine Bibliotheksdatei',
+  'error.noDrawingInImage': 'Bild ohne Zeichnung (ohne sie exportiert oder seitdem geändert)',
   'toast.selectionTool': 'Verwenden Sie das Auswahlwerkzeug, um Formen zu verschieben oder zu transformieren.',
 
   'modal.close': 'Schließen',
@@ -343,6 +344,7 @@ export const de: Translations = {
   'export.selected': 'Nur ausgewählte Formen',
   'export.background': 'Hintergrund',
   'export.dark': 'Dunkler Modus',
+  'export.withDrawing': 'Zeichnung in PNG- und SVG-Bildern behalten (zum Bearbeiten erneut öffnen)',
   'export.scale': 'Skalierung (png, pdf)',
   'export.saveAs': 'Als {format} speichern',
   'export.saveFile': 'Als {extension}-Datei speichern',

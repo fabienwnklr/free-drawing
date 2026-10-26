@@ -142,6 +142,8 @@ export type ExportImageOptions = {
   dark?: boolean;
   /** Pixel ratio of png and pdf (default 2) */
   scale?: number;
+  /** Drawing kept in png and svg images (its exported shapes), to open them again for editing (default false) */
+  withDrawing?: boolean;
 };
 
 /** `showSaveFilePicker` of File System Access API (Chromium), not typed by TypeScript */

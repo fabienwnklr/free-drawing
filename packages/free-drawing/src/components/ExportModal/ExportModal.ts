@@ -25,6 +25,8 @@ export class ExportModal extends Modal {
   $background: HTMLInputElement;
   /** Switch exporting colors of dark mode, checked on show when the drawer is dark */
   $dark: HTMLInputElement;
+  /** Switch keeping the drawing in png and svg images, to open them again for editing */
+  $withDrawing: HTMLInputElement;
   /** Radio buttons of the scale of the image (1×, 2×, 3×), 2× by default */
   $scales: HTMLInputElement[];
   /** Buttons of the footer: save as PNG, SVG, PDF, drawing file, then copy, disabled when nothing to export */
@@ -52,6 +54,7 @@ export class ExportModal extends Modal {
     this.$selected = this._createSwitch($options, 'export.selected');
     this.$background = this._createSwitch($options, 'export.background', true);
     this.$dark = this._createSwitch($options, 'export.dark');
+    this.$withDrawing = this._createSwitch($options, 'export.withDrawing');
 
     const $scales = document.createElement('div');
     const scaleName = uniqueId('export-scale');
@@ -138,6 +141,7 @@ export class ExportModal extends Modal {
       selected: this.$selected.checked,
       background: this.$background.checked,
       dark: this.$dark.checked,
+      withDrawing: this.$withDrawing.checked,
       scale: Number(this.$scales.find(($radio) => $radio.checked)?.value ?? 2),
     };
   }
@@ -219,6 +223,7 @@ export class ExportModal extends Modal {
    * Copy png image to clipboard
    */
   async copy() {
-    await this.drawer.copyImage('png', this.exportOptions);
+    // clipboard images are encoded again by browsers: without the drawing
+    await this.drawer.copyImage('png', { ...this.exportOptions, withDrawing: false });
   }
 }

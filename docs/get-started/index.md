@@ -572,7 +572,7 @@ The settings menu opens and saves drawings as `.freedrawing` files (JSON: backgr
 
 ```js
 await drawer.saveAs('my-drawing'); // save dialog when the browser has one (Chromium), else download (Ctrl / Cmd + Shift + S)
-await drawer.open(); // file chosen by user replaces drawing, undo restores it (Ctrl+O), shown in the view
+await drawer.open(); // file chosen by user replaces drawing (.freedrawing, or png / svg image keeping its drawing), undo restores it (Ctrl+O), shown in the view
 const file = drawer.getDrawingFile(); // file content, `drawer.loadDrawing(file)` loads it
 const link = await drawer.getLink(); // current page url with compressed drawing: #drawing=<data> (#<id>=<data> with the id option)
 await drawer.copyLink();
@@ -591,7 +591,10 @@ Files and links can come from anyone: only drawing shapes are created (lines, ar
 ```js
 drawer.showExport(); // export dialog
 const blob = await drawer.exportImage('png', { selected: true, background: true, dark: false, scale: 2 }); // 'png' | 'svg' | 'pdf'
+const editable = await drawer.exportImage('svg', { withDrawing: true }); // drawing kept in the image
 ```
+
+With "Keep the drawing" of the dialog (`withDrawing`), png and svg images keep the drawing of their shapes (compressed as in links: a `tEXt` chunk `free-drawing` of png images, a `<metadata id="free-drawing">` element of svg images): they are opened again for editing like `.freedrawing` files (Ctrl+O), an image without it is refused. Images copied to the clipboard do not keep it (browsers encode them again).
 
 Svg is vector (shapes, texts), pdf contains a png quality image of the drawing (jpeg, always with a background). The scale of png and pdf images is lowered for a very big drawing, so the image fits the canvas limits of browsers (32767 px of side, 268 Mpx, 16.7 Mpx on iPhone and iPad).
 

@@ -41,6 +41,7 @@ import { getBoundText, updateBoundTexts } from '@/utils/boundText';
 import { setupArrows } from '@/utils/arrow';
 import { setupNotes } from '@/utils/note';
 import { getShapesStyle } from '@/utils/style';
+import { embedDrawingInPng, embedDrawingInSvg, readDrawingFile } from '@/utils/embeddedDrawing';
 import { Library } from '@/utils/library';
 import { LibraryPanel } from '@/components/LibraryPanel/LibraryPanel';
 import { SearchBar } from '@/components/SearchBar/SearchBar';
@@ -51,7 +52,6 @@ import {
   encodeLinkData,
   parseDrawingFile,
   pickBlob,
-  pickFile,
   saveFile,
 } from '@/utils/drawingFile';
 import type {
@@ -2173,15 +2173,25 @@ export class Drawer extends MicroEvent {
     if (!image) throw new DrawerError('error.nothingToExport', 'nothing to export');
 
     const { shapes, box, imageOptions } = image;
+    // drawing of the exported shapes kept in png and svg images
+    const drawing = options.withDrawing ? JSON.stringify(this.getDrawingFile(shapes)) : null;
 
-    if (format === 'svg') return new Blob([renderSvg(shapes, box, imageOptions)], { type: 'image/svg+xml' });
+    if (format === 'svg') {
+      const svg = renderSvg(shapes, box, imageOptions);
+
+      return new Blob([drawing ? await embedDrawingInSvg(svg, drawing) : svg], { type: 'image/svg+xml' });
+    }
 
     // texts drawn with their fonts (export right after loading a drawing, slow network): not a fallback font
     await loadFonts(getFontsToLoad(shapes));
 
     const canvas = renderCanvas(shapes, box, imageOptions);
 
-    if (format === 'png') return canvasToBlob(canvas);
+    if (format === 'png') {
+      const png = await canvasToBlob(canvas);
+
+      return drawing ? embedDrawingInPng(png, drawing) : png;
+    }
 
     const jpeg = new Uint8Array(await (await canvasToBlob(canvas, 'image/jpeg', 0.92)).arrayBuffer());
 
@@ -2298,12 +2308,12 @@ export class Drawer extends MicroEvent {
    * Open a `.freedrawing` file chosen by user, it replaces drawing (undo restores it)
    */
   async open() {
-    const content = await pickFile(`${drawingFileExtension},.json,application/json`);
+    const file = await pickBlob(`${drawingFileExtension},.json,application/json,.png,image/png,.svg,image/svg+xml`);
 
-    if (content === null) return;
+    if (file === null) return;
 
     try {
-      this.loadDrawing(content);
+      this.loadDrawing(await readDrawingFile(file));
       // its shapes may be anywhere
       this.zoomToFit();
     } catch (error) {
