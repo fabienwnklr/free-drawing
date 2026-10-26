@@ -43,6 +43,7 @@ import { setupNotes } from '@/utils/note';
 import { getShapesStyle } from '@/utils/style';
 import { Library } from '@/utils/library';
 import { LibraryPanel } from '@/components/LibraryPanel/LibraryPanel';
+import { SearchBar } from '@/components/SearchBar/SearchBar';
 import { fitTextWidth, getFontsToLoad, getTexts, loadFonts } from '@/utils/text';
 import {
   decodeLinkData,
@@ -216,6 +217,8 @@ export class Drawer extends MicroEvent {
   library!: Library;
   /** Panel of the library (`library` option) */
   libraryPanel: LibraryPanel | undefined;
+  /** Search of the texts of the drawing (Ctrl+F) */
+  search!: SearchBar;
   /** Button of header saving the drawing while auto save is off (`saveButton` option) */
   saveButton: SaveButton | undefined;
   /** Theme chosen ('system': device one), see `setTheme` */
@@ -431,6 +434,7 @@ export class Drawer extends MicroEvent {
       this.layersPanel = new LayersPanel(this);
     }
     this.library = new Library(this);
+    this.search = new SearchBar(this);
     if (this.options.library) {
       this.libraryPanel = new LibraryPanel(this);
     }

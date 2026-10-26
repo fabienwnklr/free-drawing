@@ -118,7 +118,7 @@
 - [x] more shapes: star, hexagon, block arrow, check box... (`PathShapeWidget`: also speech bubble)
 - [x] eyedropper (EyeDropper API) and copy / paste of styles (Ctrl+Alt+C / Ctrl+Alt+V)
 - [x] libraries: save a selection as a reusable item, insert it again in any drawing
-- [ ] search the texts of the drawing (Ctrl+F), going from one result to the next
+- [x] search the texts of the drawing (Ctrl+F), going from one result to the next
 - [ ] drawing kept in exported PNG / SVG (metadata), opened again for editing
 - [ ] end-to-end encrypted collaboration: key in the `#` of the link, the server never reads drawings
 

@@ -49,9 +49,10 @@ More in [Selection](/get-started/#selection).
 - **Linked arrows** follow the shapes they link when these are moved or resized, fixed to a side or to the outline; elbow arrows leave the sides facing each other with horizontal and vertical lines and go around the shapes. The handle of a selected curved or elbow arrow bends the curve on either side or moves the middle segment.
 - **Stacking order**: forward and backward past the next overlapping shape, or to the front and back.
 
+- **Search** (Ctrl + F): texts of the drawing found (case and accents ignored), highlighted, the view moved from one to the next.
 - **Library** (Alt + B): selected shapes saved as items, inserted again in any drawing by a click or a drag, kept in the browser, exported and imported as files.
 
-More in [Layers](/get-started/#layers), [Library](/get-started/#library), [Arrows](/get-started/#arrows), [Linked arrows](/get-started/#linked-arrows) and [Stacking order](/get-started/#stacking-order).
+More in [Layers](/get-started/#layers), [Search](/get-started/#search), [Library](/get-started/#library), [Arrows](/get-started/#arrows), [Linked arrows](/get-started/#linked-arrows) and [Stacking order](/get-started/#stacking-order).
 
 ## Menus, shortcuts and command palette
 

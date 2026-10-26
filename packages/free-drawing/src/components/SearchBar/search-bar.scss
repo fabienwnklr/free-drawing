@@ -1,0 +1,91 @@
+@use '@/scss/variables' as *;
+@use '@/scss/mixins' as *;
+
+// Search of texts, at the top in the middle (below the header in a narrow drawer)
+.drawer-container .drawer-search-bar {
+  position: absolute;
+  top: $edge;
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: $space-1;
+  width: min(24rem, calc(100% - #{$edge} * 2));
+  padding: $space-1 $space-1 $space-1 $space-2;
+  transform: translateX(-50%);
+  pointer-events: var(--drawer-pointer-events);
+
+  &[hidden] {
+    display: none;
+  }
+
+  .drawer-search-icon {
+    display: flex;
+    color: $text-muted;
+
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  .drawer-search-input {
+    flex: 1;
+    min-width: 0;
+    height: $btn-size-default;
+    padding: 0 $space-1;
+    border: 0;
+    background-color: transparent;
+    color: inherit;
+    font: inherit;
+    outline: none;
+
+    // clear button of the browser: the close button of the bar is enough
+    &::-webkit-search-cancel-button {
+      display: none;
+    }
+  }
+
+  &:focus-within {
+    box-shadow:
+      $shadow,
+      0 0 0 2px $primary;
+  }
+
+  .drawer-search-count {
+    font-size: $font-size-sm;
+    white-space: nowrap;
+  }
+
+  .drawer-button {
+    width: $btn-size-default;
+    height: $btn-size-default;
+
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  // chevron to the right: up for the previous text, down for the next one
+  .drawer-search-previous svg {
+    transform: rotate(-90deg);
+  }
+
+  .drawer-search-next svg {
+    transform: rotate(90deg);
+  }
+}
+
+.drawer-container.is-compact .drawer-search-bar {
+  top: var(--drawer-header-height, 4rem);
+}
+
+// narrow drawer: panels at the place of the bar hidden while searching (shown again once it is closed)
+.drawer-container.is-compact.is-searching {
+  .drawer-overlay-container,
+  .drawer-layers-panel,
+  .drawer-library-panel {
+    visibility: hidden;
+  }
+}

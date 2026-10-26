@@ -262,6 +262,12 @@ export class HotKey {
         this.drawer.showPreferences();
       }
 
+      // search of the texts of the drawing, instead of the search of the page
+      if (mod && !e.shiftKey && !e.altKey && letter === 'f') {
+        e.preventDefault();
+        this.drawer.search.show();
+      }
+
       // instead of browser search
       if (mod && letter === 'k' && !inField && this.drawer.options.commandPalette) {
         e.preventDefault();

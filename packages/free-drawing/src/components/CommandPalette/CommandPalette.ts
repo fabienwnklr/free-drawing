@@ -1,5 +1,6 @@
 import '@/components/CommandPalette/command-palette.scss';
 import type { Drawer } from '@/Drawer';
+import { normalizeSearch } from '@/utils/search';
 import { Group } from 'konva/lib/Group';
 import { Modal } from '@/components/Modal/Modal';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
@@ -52,16 +53,6 @@ import PaintRollerIcon from '@/icons/paint-roller.svg?raw';
 import type { Command, CommandGroup } from '@/@types/ui';
 import { shapeAlignments, shapeDistributions, shapeOrders, shapeStacks } from '@/constants';
 import { formatShortcut } from '@/utils/shortcut';
-
-/** Accents of decomposed letters (U+0300 to U+036F) */
-const accents = new RegExp(`[${String.fromCharCode(0x300)}-${String.fromCharCode(0x36f)}]`, 'g');
-
-/**
- * Text compared with search: lower case, without accents
- * @param text Search or text of a command (label, group, id)
- * @returns Text decomposed (NFD), without accents, in lower case
- */
-const normalize = (text: string) => text.normalize('NFD').replace(accents, '').toLowerCase();
 
 /**
  * Command palette: search field and commands available now (tools, edition, view, file, language),
@@ -153,10 +144,10 @@ export class CommandPalette extends Modal {
    * Commands matching every word of search, in label, group or id
    */
   private _filter() {
-    const words = normalize(this.$input.value).split(/\s+/).filter(Boolean);
+    const words = normalizeSearch(this.$input.value).split(/\s+/).filter(Boolean);
 
     this.#shown = this.commands.filter((command) => {
-      const text = normalize(`${command.label} ${this.drawer.t(command.group)} ${command.id}`);
+      const text = normalizeSearch(`${command.label} ${this.drawer.t(command.group)} ${command.id}`);
 
       return words.every((word) => text.includes(word));
     });
@@ -556,6 +547,13 @@ export class CommandPalette extends Modal {
             shortcut: 'Alt+L',
             checked: layersPanel.isVisible(),
             run: () => layersPanel.toggle(),
+          },
+          hasShapes && {
+            id: 'search find texts',
+            label: t('search.label'),
+            icon: SearchIcon,
+            shortcut: 'Ctrl+F',
+            run: () => drawer.search.show(),
           },
           libraryPanel && {
             id: 'library panel items',

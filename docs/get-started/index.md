@@ -492,6 +492,17 @@ const group = drawer.groupShapes([first, second]); // selected shapes by default
 drawer.ungroupShapes([group]); // shapes keep their look (group transform, hidden, locked)
 ```
 
+## Search
+
+Ctrl / Cmd + F (also in the context menu and the command palette, in read only too) shows a search bar at the top of the drawer: texts containing the search (case and accents ignored: free texts, texts of shapes and notes, labels of arrows, titles of frames; visible ones) are highlighted, in reading order, the current one outlined. Enter (or the down button) shows the next one, Shift + Enter (or the up button) the previous one: the view moves to it when it is out of view (zoomed out only when it does not fit). Texts are searched again when the drawing changes; Escape closes the bar.
+
+```js
+drawer.search.show('meeting'); // bar shown, text searched (the previous one by default)
+drawer.search.next(); // previous() too
+drawer.search.results; // texts found, current one: drawer.search.results[drawer.search.index]
+drawer.search.hide();
+```
+
 ## Library
 
 The library button of header (Alt+B) shows the library: shapes saved to be inserted again in any drawing. Its add button (also in the context menu and the command palette) saves the selection as an item (with the texts of its shapes, groups and frames with their shapes, files of its images), named by the text of its shape, the name of its shape or its number of shapes. An item is shown by its preview: a click inserts it in the middle of the view, a drag inserts it where it is dropped; inserted shapes get new ids, their arrows stay linked to the shapes of the item (not to others), they are selected, one step of history. The library is kept in the browser (`<localStorageKey>-library`: shared by the drawings of the drawer, of the web app for example), exported to and imported from `.freedrawinglib` files (items already there left out; only drawing shapes are read, as in drawing files). It is shown at the place of the layers panel: one of them at a time. In read only, items are added, not inserted.

@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.39.0](https://github.com/fabienwnklr/free-drawing/compare/v7.38.0...v7.39.0) (2026-10-26)
+
+
+### Features
+
+* **search:** search of the texts of the drawing (Ctrl + F, context menu, command palette, also in read only): bar at the top of the drawer, texts found highlighted in reading order (case and accents ignored: texts, texts of shapes and notes, labels of arrows, titles of frames), Enter / Shift + Enter from one to the next with the view moved to it, found again when the drawing changes (`drawer.search`: `show`, `next`, `previous`, `hide`, `results`)
+
 ## [7.38.0](https://github.com/fabienwnklr/free-drawing/compare/v7.37.0...v7.38.0) (2026-10-26)
 
 

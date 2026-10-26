@@ -205,6 +205,12 @@ export class ContextMenu {
           visible: () => edit() && hasShapes() && !!this.selectWidget,
           run: () => this._selectAll(),
         },
+        {
+          // also in read only
+          $item: this._createItem('search.label', 'Ctrl+F'),
+          visible: () => canvas() && hasShapes(),
+          run: () => drawer.search.show(),
+        },
       ],
       // view (also in read only): whole drawing, or selection
       [

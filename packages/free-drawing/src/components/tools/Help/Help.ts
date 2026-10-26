@@ -67,6 +67,7 @@ export class Help extends Modal {
       { label: t('history.redo'), keys: ['Ctrl+Y', 'Ctrl+Shift+Z'], or: true },
       { label: t('menu.clearCanvas'), keys: ['Ctrl+Delete', 'Ctrl+Backspace'], or: true },
       { label: t('help.selectAll'), keys: ['Ctrl+A'] },
+      { label: t('search.label'), keys: ['Ctrl+F'] },
       { label: t('help.deleteSelection'), keys: ['Delete'] },
       { label: t('help.duplicate'), keys: ['Ctrl+D'] },
       { label: t('action.copyStyle'), keys: ['Ctrl+Alt+C'] },

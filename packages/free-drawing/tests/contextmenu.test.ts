@@ -119,6 +119,7 @@ describe('Context menu', () => {
       'Copy as PNG Shift+Alt+C',
       'Copy as SVG Shift+Alt+S',
       'Select all Ctrl+A',
+      'Search texts Ctrl+F',
       'Zoom to fit Shift+1',
       'Snap to object Alt+S',
       'Show grid Alt+G',
@@ -133,6 +134,7 @@ describe('Context menu', () => {
     expect(items(drawer)).toEqual([
       'Copy as PNG Shift+Alt+C',
       'Copy as SVG Shift+Alt+S',
+      'Search texts Ctrl+F',
       'Zoom to fit Shift+1',
       'Snap to object Alt+S',
       'Show grid Alt+G',
