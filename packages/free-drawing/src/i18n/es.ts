@@ -45,6 +45,9 @@ export const es: Translations = {
   'error.storageFull': 'almacenamiento del navegador lleno',
   'error.notLibraryFile': 'no es un archivo de biblioteca',
   'error.noDrawingInImage': 'imagen sin dibujo (exportada sin él, o modificada desde entonces)',
+  'error.insecurePage': 'el cifrado de extremo a extremo requiere una página segura (HTTPS)',
+  'error.roomKey': 'clave de la sesión ausente o incorrecta en el enlace',
+  'error.encryptionUnsupported': 'el servidor no admite el cifrado de extremo a extremo',
   'toast.selectionTool': 'Usa la herramienta de selección para mover o transformar las formas.',
 
   'modal.close': 'Cerrar',
@@ -372,6 +375,8 @@ export const es: Translations = {
   'collab.canDrawLabel': '{name} puede dibujar',
   'collab.canDraw': 'Puede dibujar',
   'collab.newUsersCanDraw': 'Los nuevos participantes pueden dibujar',
+  'collab.encrypted': 'Cifrado de extremo a extremo: solo las personas con el enlace ven el dibujo, no el servidor.',
+  'collab.notEncrypted': 'Sin cifrar: el servidor de la sesión puede leer el dibujo.',
   'collab.owner': 'Propietario',
   'collab.viewOnly': 'Solo lectura',
   'collab.present': 'Presentar mi vista',

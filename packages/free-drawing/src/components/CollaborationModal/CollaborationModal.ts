@@ -6,6 +6,8 @@ import { drawerEvents } from '@/constants';
 import type { TranslationKey } from '@/@types/i18n';
 import { DrawerError, getErrorText } from '@/utils/errors';
 import { CollaborationMembers } from '@/components/CollaborationMembers/CollaborationMembers';
+import { stringToNode } from '@/utils/functions';
+import LockIcon from '@/icons/lock.svg?raw';
 
 /**
  * Live collaboration dialog: start a session, join one from a link (name required), session link with copy button
@@ -38,10 +40,14 @@ export class CollaborationModal extends Modal {
   $cancelButton: HTMLButtonElement;
   /** Stops the session, shown to the owner */
   $stopButton: HTMLButtonElement;
+  /** Encryption of the session: end to end (lock), or in clear (server reading the drawing) */
+  $security: HTMLParagraphElement;
   /** Room of a link, joined once user gives a name */
   joinRoom: string | null = null;
   /** Id of user who shared the link */
   invitedBy?: string;
+  /** Key of the encrypted room of the link */
+  joinKey?: string;
 
   /**
    * Build the dialog: name field, session part (link, users, QR code) and buttons, updated on collaboration changes
@@ -52,6 +58,9 @@ export class CollaborationModal extends Modal {
     this.$modal.classList.add('drawer-modal-collaboration');
 
     this.$intro = document.createElement('p');
+
+    this.$security = document.createElement('p');
+    this.$security.classList.add('drawer-collaboration-security');
 
     this.$name = this._createField('collab.name', 'text');
     this.$name.maxLength = 40;
@@ -110,7 +119,12 @@ export class CollaborationModal extends Modal {
       this.$members,
       this.$qrCode
     );
-    this.$modalBody.prepend(this.$intro, this.$name.closest('.drawer-collaboration-field')!, this.$session);
+    this.$modalBody.prepend(
+      this.$intro,
+      this.$security,
+      this.$name.closest('.drawer-collaboration-field')!,
+      this.$session
+    );
 
     this.$startButton = createButton('drawer-button', 'drawer-button-primary');
     this.$startButton.addEventListener('click', () => this.start());
@@ -163,10 +177,12 @@ export class CollaborationModal extends Modal {
    * Show dialog, its name field focused for a link (the name to give before joining)
    * @param joinRoom Room of a link: user gives a name before joining it
    * @param invitedBy Id of user who shared the link
+   * @param joinKey Key of the encrypted room of the link
    */
-  show(joinRoom: string | null = null, invitedBy?: string) {
+  show(joinRoom: string | null = null, invitedBy?: string, joinKey?: string) {
     this.joinRoom = joinRoom;
     this.invitedBy = invitedBy;
+    this.joinKey = joinKey;
     this.$name.value = this.drawer.getUserName();
     this.update();
     super.show();
@@ -202,7 +218,7 @@ export class CollaborationModal extends Modal {
 
     this.joinRoom = null;
     try {
-      await this.drawer.startCollaboration(room, this.$name.value, this.invitedBy);
+      await this.drawer.startCollaboration(room, this.$name.value, this.invitedBy, this.joinKey);
       // its name was just given: nothing more to see in the dialog
       if (this.isVisible()) this.hide();
       this.drawer.toast(this.drawer.t('collab.introJoined'), 'info');
@@ -219,6 +235,7 @@ export class CollaborationModal extends Modal {
    */
   cancelJoin() {
     this.joinRoom = null;
+    this.joinKey = undefined;
     window.history.replaceState(null, '', window.location.pathname + window.location.search);
     this.hide();
   }
@@ -273,6 +290,16 @@ export class CollaborationModal extends Modal {
         : this.drawer.t('collab.introJoined');
     } else {
       this.$intro.textContent = this.drawer.t('collab.intro');
+    }
+    this.$security.hidden = !collaboration;
+    this.$security.replaceChildren();
+    if (collaboration) {
+      const $text = document.createElement('span');
+
+      $text.textContent = this.drawer.t(collaboration.cipher ? 'collab.encrypted' : 'collab.notEncrypted');
+      if (collaboration.cipher) this.$security.append(stringToNode<SVGElement>(LockIcon));
+      this.$security.classList.toggle('is-encrypted', !!collaboration.cipher);
+      this.$security.append($text);
     }
     this.$name.required = joining;
     this.$joinButton.disabled = !this.$name.value.trim();

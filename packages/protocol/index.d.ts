@@ -2,7 +2,10 @@
  * Socket.io events of live collaboration, sent by drawers (`@fabwcie/free-drawing`) and server
  */
 export declare const socketEvents: {
-  /** Join a room: `{ room, name, userId, ownerKey, invitedBy }` */
+  /**
+   * Join a room: `{ room, name, userId, ownerKey, invitedBy, keyCheck }`, `keyCheck` proof of the key of an encrypted
+   * room (SHA-256 of the key, base64url): the room is encrypted by the user creating it, joined with the same proof only
+   */
   readonly JOIN: 'JOIN';
   /** Room joined, sent by server to the joining user: `{ userId }` id it gives the user (e.g. of logged in account) */
   readonly JOINED: 'JOINED';
@@ -11,24 +14,36 @@ export declare const socketEvents: {
   /** Users of the room `{ id, name, owner, canEdit, invitedBy }` (sent by server) */
   readonly USERS: 'USERS';
   /**
-   * Drawing change `{ upsert, remove, order, live, full, background }`: shapes added or updated, ids of removed shapes,
-   * stacking order, preview of shapes being drawn, whole drawing of the room (sent by server to a joining user, with
-   * its background once a user sent one), background color when changed
+   * Drawing change `{ upsert, remove, order, live, full, background, files }`: shapes added or updated, ids of removed
+   * shapes, stacking order, preview of shapes being drawn, whole drawing of the room (sent by server to a joining user,
+   * with its background once a user sent one), background color when changed, image files by id. Encrypted room:
+   * `upsert` is `{ id, data }` (encrypted JSON), `background` and `files` (under random ids) encrypted, not read by
+   * the server
    */
   readonly CHANGE: 'CHANGE';
-  /** Pointer of a user: canvas position `{ x, y, laser }` (null out of drawer, `laser` while laser pointer is used), with user id and name from server */
+  /**
+   * Pointer of a user: canvas position `{ x, y, laser }` (null out of drawer, `laser` while laser pointer is used), with
+   * user id and name from server; encrypted room: `{ data }` (encrypted position)
+   */
   readonly POINTER: 'POINTER';
   /** User left the room (id, sent by server) */
   readonly LEAVE: 'LEAVE';
   /** Right to draw given or removed by owner of the room: `{ userId, canEdit }` */
   readonly RIGHTS: 'RIGHTS';
-  /** Settings of the room: `{ newUsersCanEdit }`, sent by server to its users, by owner to change them */
+  /**
+   * Settings of the room: `{ newUsersCanEdit, encrypted }`, sent by server to its users (`encrypted`: room encrypted end
+   * to end), by owner to change them (`newUsersCanEdit`)
+   */
   readonly ROOM: 'ROOM';
-  /** Message of the user refused by server: `{ event, reason }`, reason `full` (room) or `too-big` (drawing) */
+  /**
+   * Message of the user refused by server: `{ event, reason }`, reason `full` (room), `too-big` (drawing) or `key`
+   * (key of an encrypted room missing or wrong)
+   */
   readonly REJECTED: 'REJECTED';
   /**
    * Area of the drawing shown by the owner presenting it: `{ x, y, width, height }` (drawing coordinates), null when
-   * the presentation stops; sent by the owner, relayed by server to the room and to users joining meanwhile
+   * the presentation stops; sent by the owner, relayed by server to the room and to users joining meanwhile;
+   * encrypted room: `{ data }` (encrypted area)
    */
   readonly VIEW: 'VIEW';
   /**

@@ -47,6 +47,9 @@ export const fr: Translations = {
   'error.storageFull': 'stockage du navigateur plein',
   'error.notLibraryFile': "ce n'est pas un fichier de bibliothèque",
   'error.noDrawingInImage': 'image sans dessin (exportée sans lui, ou modifiée depuis)',
+  'error.insecurePage': 'le chiffrement de bout en bout demande une page sécurisée (HTTPS)',
+  'error.roomKey': 'clé de la session absente ou erronée dans le lien',
+  'error.encryptionUnsupported': 'le serveur ne prend pas en charge le chiffrement de bout en bout',
   'toast.selectionTool': "Utilisez l'outil de sélection pour déplacer ou transformer les formes.",
 
   'modal.close': 'Fermer',
@@ -374,6 +377,8 @@ export const fr: Translations = {
   'collab.canDrawLabel': '{name} peut dessiner',
   'collab.canDraw': 'Peut dessiner',
   'collab.newUsersCanDraw': 'Les nouveaux participants peuvent dessiner',
+  'collab.encrypted': 'Chiffré de bout en bout : seules les personnes ayant le lien voient le dessin, pas le serveur.',
+  'collab.notEncrypted': 'Non chiffré : le serveur de la session peut lire le dessin.',
   'collab.owner': 'Propriétaire',
   'collab.viewOnly': 'Lecture seule',
   'collab.present': 'Présenter ma vue',

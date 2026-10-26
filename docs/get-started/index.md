@@ -625,7 +625,7 @@ await drawer.open();
 
 ## Collaboration
 
-`collaboration` option adds "Live collaboration" to settings menu: a dialog to choose a name, start a session in a new room, share its link (or QR code to scan) and stop the session. Opening a room link (`#room=<id>&by=<user id>`) joins the room. Every drawing change (any tool, eraser, moves, styles, background color, undo / redo...) is sent to the other users of the room through a [socket.io](https://socket.io/) server (see [apps/server](https://github.com/fabienwnklr/free-drawing/tree/master/apps/server)), `socket.io-client` and the QR code generator are loaded only then. Undo and redo change only the shapes changed by the user: changes of the other users are kept.
+`collaboration` option adds "Live collaboration" to settings menu: a dialog to choose a name, start a session in a new room, share its link (or QR code to scan) and stop the session. Opening a room link (`#room=<id>&by=<user id>&key=<key>`) joins the room. Sessions are [encrypted end to end](https://free-drawing-docs.netlify.app/get-started/#end-to-end-encryption): the server never reads the drawing. Every drawing change (any tool, eraser, moves, styles, background color, undo / redo...) is sent to the other users of the room through a [socket.io](https://socket.io/) server (see [apps/server](https://github.com/fabienwnklr/free-drawing/tree/master/apps/server)), `socket.io-client` and the QR code generator are loaded only then. Undo and redo change only the shapes changed by the user: changes of the other users are kept.
 
 ```js
 const link = await drawer.startCollaboration(); // new room (or given room id), name of user saved for next sessions
@@ -646,8 +646,40 @@ A user opening a room link enters a name before joining. The user who created th
 
 Links contain the id of the user sharing them (`by`), the page URL of each user too: the owner sees who invited each user, even with a link copied from the address bar.
 
-Socket events: `JOIN` (`{ room, name, userId, ownerKey, invitedBy }`), `JOINED` (`{ userId }`, id given by server to the joining user, e.g. of their logged in account: used to recognize oneself in users), `NAME`, `USERS` (users of the room `{ id, name, owner, canEdit, invitedBy }`, `invitedBy` is the name of the user who shared the link, sent by server), `RIGHTS` (`{ userId, canEdit }`, from owner), `ROOM` (settings of the room `{ newUsersCanEdit }`, sent by server on join and change, by owner to change them), `VIEW` (area `{ x, y, width, height }` shown by the owner presenting it, null when it stops, relayed by server and sent to users joining meanwhile), `REQUEST` (right to draw asked by a viewer, relayed to the owner as `{ userId, name }`; the owner answers `{ userId, accepted }`, a refusal is sent back as `{ accepted: false }`), `REJECTED` (`{ event, reason }` sent by server: `full` room, the session stops, or drawing `too-big`, the user is told their changes are not shared), a change bigger than `maxMessageSize` of the protocol (10 MB: the server would close the connection) is not sent and told the same way, `POINTER` (position in drawing, null out of drawer, relayed with user `id` and `name`), `LEAVE` (id of user leaving, sent by server) and `CHANGE`: `{ upsert, remove, order, live, full, background }`, JSON of shapes added or updated (konva `toObject`, with their `id`) and ids of removed shapes, so concurrent drawings are merged, `order` ids of shapes from bottom to top when stacking order changed, `live` for previews of shapes being drawn, `background` color of the drawing when changed. The server keeps the drawing of each room and sends it to users joining it, whole and also empty (`full`), with its background once a user sent one: a user joining takes the background of the room (the first one gives theirs).
+Socket events: `JOIN` (`{ room, name, userId, ownerKey, invitedBy, keyCheck }`, `keyCheck` for an encrypted room), `JOINED` (`{ userId }`, id given by server to the joining user, e.g. of their logged in account: used to recognize oneself in users), `NAME`, `USERS` (users of the room `{ id, name, owner, canEdit, invitedBy }`, `invitedBy` is the name of the user who shared the link, sent by server), `RIGHTS` (`{ userId, canEdit }`, from owner), `ROOM` (settings of the room `{ newUsersCanEdit, encrypted }`, sent by server on join and change, by owner to change them), `VIEW` (area `{ x, y, width, height }` shown by the owner presenting it, null when it stops, relayed by server and sent to users joining meanwhile), `REQUEST` (right to draw asked by a viewer, relayed to the owner as `{ userId, name }`; the owner answers `{ userId, accepted }`, a refusal is sent back as `{ accepted: false }`), `REJECTED` (`{ event, reason }` sent by server: `full` room, the session stops, drawing `too-big`, the user is told their changes are not shared, or `key` of an encrypted room missing or wrong, the session stops), a change bigger than `maxMessageSize` of the protocol (10 MB: the server would close the connection) is not sent and told the same way, `POINTER` (position in drawing, null out of drawer, relayed with user `id` and `name`), `LEAVE` (id of user leaving, sent by server) and `CHANGE`: `{ upsert, remove, order, live, full, background }`, JSON of shapes added or updated (konva `toObject`, with their `id`) and ids of removed shapes, so concurrent drawings are merged, `order` ids of shapes from bottom to top when stacking order changed, `live` for previews of shapes being drawn, `background` color of the drawing when changed. The server keeps the drawing of each room and sends it to users joining it, whole and also empty (`full`), with its background once a user sent one: a user joining takes the background of the room (the first one gives theirs).
 
 A user whose connection was lost keeps drawing: once connected again, the drawing of the room is merged with the changes made meanwhile, which are sent then. Shapes removed or changed by other users meanwhile are removed or updated (unless changed by this user), a room which lost its drawing (emptied, server restarted) gets it again. With a server without `full`, the whole drawing is sent again as before.
 
 In this repository, run `yarn serve`, open `http://localhost:3000`, start a session from the menu and open its link in other windows.
+
+### End-to-end encryption
+
+Sessions are encrypted end to end: the server relays the drawing and keeps it for users joining later, without being able to read it. Only the people who have the link see it.
+
+How it works:
+
+1. Starting a session creates a random key in the browser (AES-GCM, 128 bits). It is put in the link of the session, after the `#`: `#room=<id>&by=<user id>&key=<key>`. Browsers never send this part of a URL to servers, so the key never reaches the server.
+2. Before they leave the browser, shapes (with their texts, colors, links...), image files, the background color, pointers (and laser trails) and the view presented by the owner are encrypted with this key. Other users decrypt them with the key of their link. A message changed on its way, or encrypted with another key, can't be decrypted: it is ignored.
+3. The server keeps the drawing of the room shape by shape and checks sizes and limits, without reading it. To refuse a link whose key is missing or wrong, it only knows a proof of the key (its SHA-256 hash), from which the key can't be found: such a link is told "key of the session missing or wrong in the link", instead of showing an empty drawing.
+
+The dialog of the session tells whether it is encrypted ("End-to-end encrypted", with a lock).
+
+What the server still sees: names of users and their rights, ids of rooms, shapes and files, the number and size of shapes and files, the stacking order and when changes are made, not their content.
+
+Good to know:
+
+- Anyone with the link sees the drawing: share it as you would share the drawing. The address of the page of each user holds the key too (reloading the page joins the session again). Rights still decide who can draw: participants view only until the owner lets them draw.
+- Copy the whole link (Copy button, QR code): a link cut by an app (characters of the key missing) is refused.
+- Encryption needs Web Crypto, only available on secure pages (https, or localhost): on an http page, starting or joining an encrypted session fails with "end-to-end encryption needs a secure page (HTTPS)".
+- Sessions started by previous versions and links without `key` are in clear, and still work. A server of previous versions can't keep an encrypted room: the session stops and tells it ("the server does not support end-to-end encryption").
+- `collaboration: { encrypt: false }` creates rooms in clear, as previous versions (a server that has to read drawings).
+
+```js
+const drawer = new Drawer($el, { collaboration: { url: 'https://draw.example.com' } }); // encrypted rooms
+const link = await drawer.startCollaboration(); // https://app.example/#room=...&by=...&key=...
+drawer.collaboration?.cipher?.key; // key of the room (cipher null for a room in clear)
+await other.startCollaboration(room, 'Bob', invitedBy, key); // joins an encrypted room with the key of its link
+new Drawer($el, { collaboration: { encrypt: false } }); // rooms in clear
+```
+
+For servers following the protocol: `JOIN` of an encrypted room carries `keyCheck` (SHA-256 of the key, base64url): the first one creates the room as encrypted, then only the same proof joins it (else `REJECTED` `{ event: 'JOIN', reason: 'key' }`); `ROOM` tells `encrypted: true` (without it, the library stops an encrypted session). In an encrypted room, `CHANGE` has `upsert: [{ id, data }]` (id of the shape in clear, its konva JSON encrypted), `background` and `files` encrypted (files under random ids: the id of a file is the hash of the image), `remove` and `order` in clear; `POINTER` and `VIEW` are `{ data }` (`POINTER` relayed as `{ id, name, data }`). Encrypted data is base64url of a random initialization vector of 12 bytes followed by the AES-GCM ciphertext (`RoomCipher`): keep it and relay it as it is.

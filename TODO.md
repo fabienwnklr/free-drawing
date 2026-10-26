@@ -120,7 +120,7 @@
 - [x] libraries: save a selection as a reusable item, insert it again in any drawing
 - [x] search the texts of the drawing (Ctrl+F), going from one result to the next
 - [x] drawing kept in exported PNG / SVG (metadata), opened again for editing
-- [ ] end-to-end encrypted collaboration: key in the `#` of the link, the server never reads drawings
+- [x] end-to-end encrypted collaboration: key in the `#` of the link, the server never reads drawings
 
 # Ideas neither tldraw nor Excalidraw have
 

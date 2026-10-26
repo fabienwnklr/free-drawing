@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import type { Kysely } from 'kysely';
 import type { Server, Socket } from 'socket.io';
-import { groupClasses, shapeClasses, socketEvents } from '@free-drawing/protocol';
+import { groupClasses, maxMessageSize, shapeClasses, socketEvents } from '@free-drawing/protocol';
 import { type Auth, type User, getUser } from './auth';
 import type { Database } from './db';
 
@@ -21,14 +21,19 @@ type SocketData = {
 };
 
 type RoomData = {
-  /** Drawing: shapes JSON by id, in stacking order */
+  /** Drawing: shapes JSON by id (encrypted room: encrypted JSON), in stacking order */
   shapes: Map<string, string>;
-  /** Image files of the drawing by id (data URLs), kept with it */
+  /** Image files of the drawing by id (data URLs, encrypted in an encrypted room), kept with it */
   files: Map<string, string>;
   /** Size of the drawing: length of its shapes JSON and of its image files */
   size: number;
-  /** Background color of the drawing, none until a user sends it (dropped with the drawing) */
+  /** Background color of the drawing (encrypted in an encrypted room), none until a user sends it (dropped with the drawing) */
   background?: string;
+  /**
+   * Proof of the key of an encrypted room (SHA-256 of the key, given by the user creating it): users giving another one
+   * are refused; none for a room in clear. The key itself never reaches the server (`#` of links)
+   */
+  keyCheck?: string;
   /** Users without right to draw */
   viewers: Set<string>;
   /** Names of users who came, for who invited who */
@@ -40,8 +45,8 @@ type RoomData = {
   accounts: Set<string>;
   /** Users coming for the first time can draw (owner setting), else they view only */
   newUsersCanEdit: boolean;
-  /** Area shown by the owner presenting the drawing (sent to users joining meanwhile), not saved */
-  view: ViewArea | null;
+  /** Area shown by the owner presenting the drawing (encrypted in an encrypted room), sent to users joining meanwhile, not saved */
+  view: ViewArea | EncryptedData | null;
   /** Viewers who asked for the right to draw, waiting for the answer of the owner (sent to it when it joins), not saved */
   requests: Set<string>;
   /** Last use (ms): user joining or leaving, rights or settings changed */
@@ -51,6 +56,9 @@ type RoomData = {
 /** Area of the drawing shown by a presenting owner, in drawing coordinates */
 type ViewArea = { x: number; y: number; width: number; height: number };
 
+/** Pointer position or view of an encrypted room, relayed as it is */
+type EncryptedData = { data: string };
+
 /** State of a room kept in database while it is empty and after a restart: everything but its drawing */
 type SavedRoom = {
   ownerKey?: string;
@@ -59,21 +67,29 @@ type SavedRoom = {
   names: [string, string][];
   accounts: string[];
   newUsersCanEdit: boolean;
+  keyCheck?: string;
 };
 
 type CollaborationSocket = Socket<any, any, any, SocketData>;
 
 /** Messages of clients, checked on reception */
-type JoinMessage = { room?: unknown; name?: unknown; userId?: unknown; ownerKey?: unknown; invitedBy?: unknown };
+type JoinMessage = {
+  room?: unknown;
+  name?: unknown;
+  userId?: unknown;
+  ownerKey?: unknown;
+  invitedBy?: unknown;
+  keyCheck?: unknown;
+};
 type RightsMessage = { userId?: unknown; canEdit?: unknown };
 type RoomMessage = { newUsersCanEdit?: unknown };
-type PointerMessage = { x?: unknown; y?: unknown; laser?: unknown } | null;
+type PointerMessage = { x?: unknown; y?: unknown; laser?: unknown; data?: unknown } | null;
 type RequestMessage = { userId?: unknown; accepted?: unknown };
 
 /** Node state of a shape in a change (konva `toObject`), not trusted */
 type ShapeJson = { attrs?: { id?: unknown } | null; className?: unknown; children?: unknown };
 
-/** Change of drawing checked as a whole: only its checked fields, shapes JSON by id */
+/** Change of drawing checked as a whole: only its checked fields, shapes JSON by id (encrypted room: encrypted JSON) */
 type CheckedChange = {
   upsert: Map<string, string>;
   /** Image files sent with the shapes using them */
@@ -125,6 +141,18 @@ const isShapeId = (id: unknown): id is string => typeof id === 'string' && id.le
 /** Id of an image file */
 const isFileId = (id: unknown): id is string => typeof id === 'string' && /^[\w-]{1,64}$/.test(id);
 
+/**
+ * Encrypted data of an encrypted room (base64url of `RoomCipher.encrypt` of the library), not read
+ * @param data Data of a message (not trusted)
+ * @param max Length at most
+ * @returns true for base64url text of this length at most
+ */
+const isEncrypted = (data: unknown, max: number): data is string =>
+  typeof data === 'string' && data.length > 0 && data.length <= max && /^[\w-]+$/.test(data);
+
+/** Proof of the key of an encrypted room: SHA-256 in base64url */
+const isKeyCheck = (check: unknown): check is string => typeof check === 'string' && /^[\w-]{43}$/.test(check);
+
 /** Data URL of an image file: PNG, JPEG, WebP or GIF, 8 MB at most (as `isImageData` of the library) */
 const isImageData = (data: unknown): data is string =>
   typeof data === 'string' &&
@@ -151,11 +179,13 @@ const isShape = (state: ShapeJson, depth = 0): boolean => {
 };
 
 /**
- * Change of a client checked as a whole before it is applied: ids, and JSON of drawing shapes with an id
+ * Change of a client checked as a whole before it is applied: ids, and JSON of drawing shapes with an id; in an
+ * encrypted room, ids and encrypted data (shapes, files, background are not read)
  * @param change Message of the client (not trusted)
+ * @param encrypted Change of an encrypted room
  * @returns Checked change, null when anything is invalid (nothing applied nor relayed)
  */
-const checkChange = (change: unknown): CheckedChange | null => {
+const checkChange = (change: unknown, encrypted: boolean): CheckedChange | null => {
   if (typeof change !== 'object' || change === null) return null;
 
   const { upsert, remove, order, live, background, files } = change as Record<string, unknown>;
@@ -163,7 +193,12 @@ const checkChange = (change: unknown): CheckedChange | null => {
   if (!Array.isArray(upsert) || !Array.isArray(remove) || !remove.every(isShapeId)) return null;
   if (order !== undefined && (!Array.isArray(order) || !order.every(isShapeId))) return null;
   // color of the background, as in drawing files
-  if (background !== undefined && (typeof background !== 'string' || !background || background.length > 100)) {
+  if (
+    background !== undefined &&
+    (encrypted
+      ? !isEncrypted(background, 1000)
+      : typeof background !== 'string' || !background || background.length > 100)
+  ) {
     return null;
   }
 
@@ -173,13 +208,22 @@ const checkChange = (change: unknown): CheckedChange | null => {
   const checkedFiles = new Map<string, string>();
 
   for (const [id, data] of Object.entries(files ?? {})) {
-    if (!isFileId(id) || !isImageData(data)) return null;
+    if (!isFileId(id) || !(encrypted ? isEncrypted(data, 12_000_000) : isImageData(data))) return null;
     checkedFiles.set(id, data);
   }
 
   const shapes = new Map<string, string>();
 
   for (const json of upsert) {
+    // encrypted room: `{ id, data }`
+    if (encrypted) {
+      const { id, data } = (typeof json === 'object' && json !== null ? json : {}) as Record<string, unknown>;
+
+      if (!isShapeId(id) || !isEncrypted(data, maxMessageSize)) return null;
+      shapes.set(id, data);
+      continue;
+    }
+
     let state: ShapeJson;
 
     try {
@@ -199,6 +243,28 @@ const checkChange = (change: unknown): CheckedChange | null => {
     live: live === true,
     background: background as string | undefined,
   };
+};
+
+/**
+ * Shapes of a change or of a drawing as sent to clients: JSON, or `{ id, data }` in an encrypted room
+ * @param shapes Shapes JSON (encrypted room: encrypted JSON) by id
+ * @param encrypted Shapes of an encrypted room
+ * @returns `upsert` of a change
+ */
+const toUpsert = (shapes: Map<string, string>, encrypted: boolean) =>
+  encrypted ? [...shapes].map(([id, data]) => ({ id, data })) : [...shapes.values()];
+
+/**
+ * View of an owner presenting it in an encrypted room, checked
+ * @param view Message of the owner (not trusted): encrypted area, or null when the presentation stops
+ * @returns Encrypted area, null, or undefined when invalid (ignored)
+ */
+const checkEncryptedView = (view: unknown): EncryptedData | null | undefined => {
+  if (view === null) return null;
+
+  const { data } = (typeof view === 'object' ? view : {}) as Record<string, unknown>;
+
+  return isEncrypted(data, 1000) ? { data } : undefined;
 };
 
 /**
@@ -255,9 +321,11 @@ const hashKey = (key: string) => createHash('sha256').update(key).digest('base64
 
 /**
  * Room without users nor drawing yet
+ * @param keyCheck Proof of the key of an encrypted room, none for a room in clear
  * @returns Data of a new room: new users view only, the owner gives them the right to draw
  */
-const newRoom = (): RoomData => ({
+const newRoom = (keyCheck?: string): RoomData => ({
+  keyCheck,
   shapes: new Map(),
   files: new Map(),
   size: 0,
@@ -278,6 +346,8 @@ const newRoom = (): RoomData => ({
  * restart, so nobody takes an empty room over; rooms unused for `roomLifetime` are forgotten.
  * Messages are checked as a whole and limited (`rates`, `limits`): a change making a drawing too big or a join of a
  * full room is refused (`REJECTED` sent to the client), only checked fields are relayed.
+ * Encrypted rooms (end to end, created with the proof of a key: `keyCheck`) are joined with the same proof only: their
+ * shapes, image files, background, pointers and views are kept and relayed encrypted, never read (ids, sizes checked).
  * @param io Socket.io server
  * @param auth Accounts, to identify logged in users by their session cookie
  * @param db Database of the app, rooms of previous runs are read from it first
@@ -306,6 +376,7 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
       names: [...data.names],
       accounts: [...data.accounts],
       newUsersCanEdit: data.newUsersCanEdit,
+      keyCheck: data.keyCheck,
     };
     const content = JSON.stringify(saved);
 
@@ -346,6 +417,7 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
         names: new Map(saved.names),
         accounts: new Set(saved.accounts),
         newUsersCanEdit: saved.newUsersCanEdit !== false,
+        keyCheck: isKeyCheck(saved.keyCheck) ? saved.keyCheck : undefined,
         view: null,
         requests: new Set(),
         usedAt: Date.parse(updatedAt),
@@ -446,20 +518,27 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
     // join refused: room full, too many rooms created
     const refuseJoin = () => socket.emit(socketEvents.REJECTED, { event: socketEvents.JOIN, reason: 'full' });
 
-    socket.on(socketEvents.JOIN, ({ room, name, userId, ownerKey, invitedBy }: JoinMessage = {}) => {
+    socket.on(socketEvents.JOIN, ({ room, name, userId, ownerKey, invitedBy, keyCheck }: JoinMessage = {}) => {
       if (!isId(room)) return;
 
       const { account } = socket.data;
+      const check = isKeyCheck(keyCheck) ? keyCheck : undefined;
 
       leaveRoom(socket);
       if ((io.sockets.adapter.rooms.get(room)?.size ?? 0) >= limits.users) return refuseJoin();
       if (!rooms.has(room)) {
         if ((socket.data.newRooms ?? 0) >= limits.newRooms) return refuseJoin();
         socket.data.newRooms = (socket.data.newRooms ?? 0) + 1;
-        rooms.set(room, newRoom());
+        // encrypted by the user creating it (key of its links)
+        rooms.set(room, newRoom(check));
       }
 
       const data = rooms.get(room)!;
+
+      // encrypted room: users without its key (link cut, changed) refused, also a key for a room in clear
+      if (data.keyCheck !== check) {
+        return socket.emit(socketEvents.REJECTED, { event: socketEvents.JOIN, reason: 'key' });
+      }
       const key = typeof ownerKey === 'string' && ownerKey ? hashKey(ownerKey) : undefined;
 
       // first secret given (room creation) makes its user owner, also when the room is empty later
@@ -492,11 +571,11 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
       saveRoom(room, data);
       // user recognizes itself in users of the room (owner, rights), settings of the room
       socket.emit(socketEvents.JOINED, { userId: socket.data.userId });
-      socket.emit(socketEvents.ROOM, { newUsersCanEdit: data.newUsersCanEdit });
+      socket.emit(socketEvents.ROOM, { newUsersCanEdit: data.newUsersCanEdit, encrypted: !!data.keyCheck });
 
       // whole drawing of the room, also empty: a user joining again merges it with its changes made meanwhile
       socket.emit(socketEvents.CHANGE, {
-        upsert: [...data.shapes.values()],
+        upsert: toUpsert(data.shapes, !!data.keyCheck),
         remove: [],
         order: [...data.shapes.keys()],
         full: true,
@@ -581,7 +660,7 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
     socket.on(socketEvents.VIEW, (message: unknown) => {
       const { room } = socket.data;
       const data = room ? rooms.get(room) : undefined;
-      const view = checkView(message);
+      const view = data?.keyCheck ? checkEncryptedView(message) : checkView(message);
 
       if (!room || !data || !socket.data.owner || view === undefined) return;
 
@@ -598,10 +677,11 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
 
       data.newUsersCanEdit = newUsersCanEdit;
       saveRoom(room, data);
-      io.to(room).emit(socketEvents.ROOM, { newUsersCanEdit });
+      io.to(room).emit(socketEvents.ROOM, { newUsersCanEdit, encrypted: !!data.keyCheck });
     });
 
-    // { upsert: shapes JSON, remove: ids, order: ids from bottom to top when stacking order changed, live }
+    // { upsert: shapes JSON (encrypted room: { id, data }), remove: ids, order: ids from bottom to top when stacking
+    // order changed, live }
     socket.on(socketEvents.CHANGE, (message: unknown) => {
       const { room } = socket.data;
       const data = room ? rooms.get(room) : undefined;
@@ -609,7 +689,7 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
       // users without right to draw: ignored
       if (!room || !data || data.viewers.has(socket.data.userId)) return;
 
-      const change = checkChange(message);
+      const change = checkChange(message, !!data.keyCheck);
 
       if (!change) {
         console.warn(`Invalid change (id: ${socket.id})`);
@@ -658,7 +738,7 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
       // checked fields only, to other users of the room: author already has it (live preview: dropped rather than
       // delayed)
       const relayed = {
-        upsert: [...change.upsert.values()],
+        upsert: toUpsert(change.upsert, !!data.keyCheck),
         remove: change.remove,
         ...(change.order && { order: change.order }),
         ...(change.live && { live: true }),
@@ -669,9 +749,17 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
       (change.live ? socket.to(room).volatile : socket.to(room)).emit(socketEvents.CHANGE, relayed);
     });
 
-    // pointer position in drawing (null out of drawer, laser while pressed), not kept
+    // pointer position in drawing (null out of drawer, laser while pressed), not kept; encrypted in an encrypted room
     socket.on(socketEvents.POINTER, (pointer: PointerMessage) => {
       const { room, name } = socket.data;
+
+      if (room && rooms.get(room)?.keyCheck) {
+        if (isEncrypted(pointer?.data, 1000)) {
+          socket.to(room).volatile.emit(socketEvents.POINTER, { id: socket.id, name, data: pointer.data });
+        }
+        return;
+      }
+
       const { x, y, laser } = pointer ?? {};
       const position =
         Number.isFinite(x) && Number.isFinite(y)

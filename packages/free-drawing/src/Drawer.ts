@@ -93,6 +93,7 @@ import { Zoom } from '@/components/tools/Zoom/Zoom';
 import { Position } from '@/components/tools/Position/Position';
 import { Help } from '@/components/tools/Help/Help';
 import { Collaboration } from '@/components/Collaboration/Collaboration';
+import { RoomCipher, createRoomKey } from '@/utils/encryption';
 import { CollaborationModal } from '@/components/CollaborationModal/CollaborationModal';
 
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
@@ -501,18 +502,20 @@ export class Drawer extends MicroEvent {
   private _openFromUrl() {
     this._loadFromLink();
 
-    // room link (see `getCollaborationLink`), with id of user who shared it
-    const [, room, invitedBy] = window.location.hash.match(/^#room=([\w-]+)(?:&by=([\w-]+))?$/) ?? [];
+    // room link (see `getCollaborationLink`), with id of user who shared it and key of an encrypted room (checked when
+    // joining: a key cut by an app is told)
+    const [, room, invitedBy, key] =
+      window.location.hash.match(/^#room=([\w-]+)(?:&by=([\w-]+))?(?:&key=([^&]*))?$/) ?? [];
 
     if (this.options.collaboration && room) {
       if (this._getOwnerKey(room)) {
         // owner back in the room
-        this.startCollaboration(room).catch((error) => {
+        this.startCollaboration(room, undefined, undefined, key).catch((error) => {
           this.toast(this.t('toast.collaborationUnavailable', { error: getErrorText(error, this.i18n.t) }), 'error');
         });
       } else {
         // invited user gives a name before joining
-        this.showCollaboration(room, invitedBy);
+        this.showCollaboration(room, invitedBy, key);
       }
     }
   }
@@ -560,15 +563,32 @@ export class Drawer extends MicroEvent {
   }
 
   /**
-   * Start a live collaboration session in a room (`collaboration` option gives the server), current session is stopped
+   * Start a live collaboration session in a room (`collaboration` option gives the server), current session is stopped.
+   * A new room is encrypted end to end (unless the `encrypt` option of `collaboration` is false): its key is in its
+   * links, the server never reads the drawing
    * @param room Room id, new room by default
    * @param name Name shown to other users, saved for next sessions
    * @param invitedBy Id of user who shared the link (see `getCollaborationLink`), shown to owner
+   * @param key Key of an encrypted room (`key` of its link), none for a room in clear; a new room gets a new one
    * @returns Link to join the room
+   * @throws {DrawerError} `error.roomKey` for a key cut or changed, `error.insecurePage` for an encrypted room on a page
+   * without Web Crypto (not https)
    */
-  async startCollaboration(room?: string, name: string = this.getUserName(), invitedBy?: string): Promise<string> {
-    if (!this.options.collaboration) throw new Error('collaboration option is disabled');
+  async startCollaboration(
+    room?: string,
+    name: string = this.getUserName(),
+    invitedBy?: string,
+    key?: string
+  ): Promise<string> {
+    const { collaboration } = this.options;
 
+    if (!collaboration) throw new Error('collaboration option is disabled');
+
+    // new room: encrypted end to end, unless disabled
+    if (!room)
+      key = typeof collaboration === 'object' && collaboration.encrypt === false ? undefined : await createRoomKey();
+    // key checked first: a link cut or changed joins nothing
+    const cipher = key === undefined ? undefined : await RoomCipher.create(key);
     // new room: this user is its owner (secret kept for next sessions)
     const ownerKey = room ? this._getOwnerKey(room) : createId() + createId();
 
@@ -584,6 +604,7 @@ export class Drawer extends MicroEvent {
       userId: this.getUserId(),
       ownerKey,
       invitedBy,
+      cipher,
     });
     this.trigger(drawerEvents.collaborationChange);
 
@@ -658,15 +679,19 @@ export class Drawer extends MicroEvent {
   }
 
   /**
-   * Link to join a room: current page with `#room=<id>&by=<user id>`, owner knows who shared it
+   * Link to join a room: current page with `#room=<id>&by=<user id>`, owner knows who shared it, and `&key=<key>` for
+   * the room of an encrypted session (browsers never send the `#` part to servers)
    * @param room Room id, room of current session by default
    * @returns Url of current page with room hash, without hash when there is no room
    */
   getCollaborationLink(room: string | undefined = this.collaboration?.room): string {
     const url = new URL(window.location.href);
+    const key = room && room === this.collaboration?.room ? this.collaboration.cipher?.key : undefined;
 
     // id known by server in a session
-    url.hash = room ? `room=${room}&by=${this.collaboration?.userId || this.getUserId()}` : '';
+    url.hash = room
+      ? `room=${room}&by=${this.collaboration?.userId || this.getUserId()}${key ? `&key=${key}` : ''}`
+      : '';
 
     return url.toString();
   }
@@ -676,10 +701,11 @@ export class Drawer extends MicroEvent {
    * other users give their name
    * @param joinRoom Room of a link, joined once user gave a name
    * @param invitedBy Id of user who shared the link
+   * @param key Key of the encrypted room of the link
    */
-  showCollaboration(joinRoom: string | null = null, invitedBy?: string) {
+  showCollaboration(joinRoom: string | null = null, invitedBy?: string, key?: string) {
     this.collaborationModal ??= new CollaborationModal(this);
-    this.collaborationModal.show(joinRoom, invitedBy);
+    this.collaborationModal.show(joinRoom, invitedBy, key);
   }
 
   /**

@@ -471,7 +471,7 @@ describe('Collaboration', () => {
 
     viewer.socket.emit(socketEvents.ROOM, { newUsersCanEdit: true });
     owner.socket.emit(socketEvents.ROOM, { newUsersCanEdit: true });
-    expect(await settingOn).toEqual({ newUsersCanEdit: true });
+    expect(await settingOn).toEqual({ newUsersCanEdit: true, encrypted: false });
 
     const editor = await joinRoom({ room: 'room-3', name: 'Editor', userId: 'editor-3' });
 
@@ -481,7 +481,7 @@ describe('Collaboration', () => {
     const settingOff = editor.next<{ newUsersCanEdit: boolean }>(socketEvents.ROOM);
 
     owner.socket.emit(socketEvents.ROOM, { newUsersCanEdit: false });
-    expect(await settingOff).toEqual({ newUsersCanEdit: false });
+    expect(await settingOff).toEqual({ newUsersCanEdit: false, encrypted: false });
     expect(canEdit((await joinRoom({ room: 'room-3', name: 'Other', userId: 'other-3' })).users, 'other-3')).toBe(
       false
     );
@@ -770,6 +770,93 @@ describe('Collaboration', () => {
 
     later.socket.emit(socketEvents.JOIN, { room, name: 'Later', userId: 'later-bg' });
     expect(await drawing).toEqual({ upsert: [], remove: [], order: [], full: true, background: '#f5faff' });
+  });
+
+  it('Encrypted rooms: joined with the proof of their key only, drawing kept and relayed without being read', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const room = 'room-encrypted';
+    const keyCheck = `${'k'.repeat(42)}0`;
+    const refused = async (message: object) => {
+      const user = client();
+      const rejected = user.next(socketEvents.REJECTED);
+
+      user.socket.emit(socketEvents.JOIN, message);
+      return rejected;
+    };
+    const owner = client();
+    const settings = owner.next(socketEvents.ROOM);
+
+    owner.socket.emit(socketEvents.JOIN, { room, name: 'Owner', userId: 'owner-e', ownerKey: 'e', keyCheck });
+    // encrypted by the user creating it
+    expect(await settings).toEqual({ newUsersCanEdit: false, encrypted: true });
+
+    const guest = await joinRoom({ room, name: 'Guest', userId: 'guest-e', keyCheck });
+
+    // without the key, with another one
+    expect(await refused({ room, name: 'Eve', userId: 'eve' })).toEqual({ event: socketEvents.JOIN, reason: 'key' });
+    expect(await refused({ room, name: 'Eve', userId: 'eve', keyCheck: 'x'.repeat(43) })).toEqual({
+      event: socketEvents.JOIN,
+      reason: 'key',
+    });
+    // a key for a room in clear
+    await joinRoom({ room: 'room-clear-e', name: 'Clear', userId: 'clear-e' });
+    expect(await refused({ room: 'room-clear-e', name: 'Keyed', keyCheck })).toEqual({
+      event: socketEvents.JOIN,
+      reason: 'key',
+    });
+
+    // shapes in clear, images as data URLs: whole change ignored
+    const relayed = guest.next(socketEvents.CHANGE);
+    const shape = { id: 'e1', data: 'ZW5jcnlwdGVk_-' };
+    const files = { 'random-id': 'ZmlsZQ' };
+
+    owner.socket.emit(socketEvents.CHANGE, { upsert: [rect('r1')], remove: [] });
+    owner.socket.emit(socketEvents.CHANGE, { upsert: [{ id: 'e1', data: 'not base64url!' }], remove: [] });
+    owner.socket.emit(socketEvents.CHANGE, {
+      upsert: [shape],
+      remove: [],
+      files: { f1: 'data:image/png;base64,iVBORw0KGgo=' },
+    });
+    owner.socket.emit(socketEvents.CHANGE, { upsert: [shape], remove: [], background: 'Y29sb3I', files });
+    expect(await relayed).toEqual({ upsert: [shape], remove: [], background: 'Y29sb3I', files });
+    expect(warn).toHaveBeenCalledTimes(3);
+
+    // pointer and view: encrypted, relayed as they are
+    const pointer = guest.next<object>(socketEvents.POINTER);
+    const view = guest.next(socketEvents.VIEW);
+
+    owner.socket.emit(socketEvents.POINTER, { data: 'cG9pbnRlcg', x: 1, y: 2 });
+    expect(await pointer).toEqual({ id: owner.socket.id, name: 'Owner', data: 'cG9pbnRlcg' });
+    owner.socket.emit(socketEvents.VIEW, { x: 0, y: 0, width: 100, height: 100 });
+    owner.socket.emit(socketEvents.VIEW, { data: 'dmlldw' });
+    expect(await view).toEqual({ data: 'dmlldw' });
+
+    // joining later: encrypted drawing of the room
+    const later = client();
+    const drawing = later.next(socketEvents.CHANGE);
+    const presented = later.next(socketEvents.VIEW);
+
+    later.socket.emit(socketEvents.JOIN, { room, name: 'Later', userId: 'later-e', keyCheck });
+    expect(await drawing).toEqual({
+      upsert: [shape],
+      remove: [],
+      order: ['e1'],
+      full: true,
+      background: 'Y29sb3I',
+      files,
+    });
+    expect(await presented).toEqual({ data: 'dmlldw' });
+
+    // proof of the key kept with the room: nobody joins it in clear once empty
+    owner.socket.close();
+    guest.socket.close();
+    later.socket.close();
+    await vi.waitFor(() => expect(server.io.sockets.adapter.rooms.has(room)).toBe(false));
+    expect(await refused({ room, name: 'Eve', userId: 'eve' })).toEqual({ event: socketEvents.JOIN, reason: 'key' });
+
+    const saved = await server.db.selectFrom('room').where('id', '=', room).selectAll().executeTakeFirstOrThrow();
+
+    expect(JSON.parse(saved.content).keyCheck).toBe(keyCheck);
   });
 
   it('Rooms and messages are limited: drawing, users, rate', async () => {

@@ -283,7 +283,7 @@ export function parseDrawingFile(json: string): DrawingFile {
  * @param bytes data to encode
  * @returns encoded text
  */
-function toBase64Url(bytes: Uint8Array): string {
+export function toBase64Url(bytes: Uint8Array): string {
   let binary = '';
 
   // by chunks: too many arguments for one call on big drawings
@@ -300,7 +300,7 @@ function toBase64Url(bytes: Uint8Array): string {
  * @returns decoded bytes
  * @throws {DOMException} `InvalidCharacterError` when not base64
  */
-function fromBase64Url(data: string): Uint8Array<ArrayBuffer> {
+export function fromBase64Url(data: string): Uint8Array<ArrayBuffer> {
   const binary = atob(data.replace(/-/g, '+').replace(/_/g, '/'));
 
   return Uint8Array.from(binary, (char) => char.charCodeAt(0));

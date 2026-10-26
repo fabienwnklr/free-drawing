@@ -36,6 +36,9 @@ export type {
   CollaborationSession,
   CollaborationSocket,
   DrawingChange,
+  EncryptedChange,
+  EncryptedMessage,
+  EncryptedShape,
   ViewArea,
 } from '@/@types/collaboration';
 export type {
@@ -147,6 +150,7 @@ export type { CollaborationModal } from '@/components/CollaborationModal/Collabo
 export type { CollaborationIndicator } from '@/components/CollaborationIndicator/CollaborationIndicator';
 export type { CollaborationPanel } from '@/components/CollaborationPanel/CollaborationPanel';
 export type { CollaborationMembers } from '@/components/CollaborationMembers/CollaborationMembers';
+export type { RoomCipher } from '@/utils/encryption';
 export { drawerEvents, shapeName } from '@/constants';
 export { createButton, setLabel, setPressed } from '@/utils/dom';
 // shortcuts shown as by the library (`Ctrl+Shift+Z`: ⇧⌘Z on Apple devices) and their `aria-keyshortcuts`

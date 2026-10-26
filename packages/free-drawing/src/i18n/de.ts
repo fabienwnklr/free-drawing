@@ -46,6 +46,9 @@ export const de: Translations = {
   'error.storageFull': 'Browserspeicher voll',
   'error.notLibraryFile': 'keine Bibliotheksdatei',
   'error.noDrawingInImage': 'Bild ohne Zeichnung (ohne sie exportiert oder seitdem geändert)',
+  'error.insecurePage': 'Ende-zu-Ende-Verschlüsselung erfordert eine sichere Seite (HTTPS)',
+  'error.roomKey': 'Schlüssel der Sitzung fehlt oder ist falsch im Link',
+  'error.encryptionUnsupported': 'Der Server unterstützt keine Ende-zu-Ende-Verschlüsselung',
   'toast.selectionTool': 'Verwenden Sie das Auswahlwerkzeug, um Formen zu verschieben oder zu transformieren.',
 
   'modal.close': 'Schließen',
@@ -374,6 +377,8 @@ export const de: Translations = {
   'collab.canDrawLabel': '{name} kann zeichnen',
   'collab.canDraw': 'Kann zeichnen',
   'collab.newUsersCanDraw': 'Neue Teilnehmer dürfen zeichnen',
+  'collab.encrypted': 'Ende-zu-Ende-verschlüsselt: Nur Personen mit dem Link sehen die Zeichnung, nicht der Server.',
+  'collab.notEncrypted': 'Nicht verschlüsselt: Der Server der Sitzung kann die Zeichnung lesen.',
   'collab.owner': 'Besitzer',
   'collab.viewOnly': 'Nur ansehen',
   'collab.present': 'Meine Ansicht präsentieren',

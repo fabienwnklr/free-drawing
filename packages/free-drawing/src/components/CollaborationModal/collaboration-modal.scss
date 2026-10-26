@@ -42,6 +42,29 @@
     }
   }
 
+  // end-to-end encryption of the session (lock), or in clear
+  .drawer-collaboration-security {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    color: $text-muted;
+    font-size: $font-size-sm;
+
+    &[hidden] {
+      display: none;
+    }
+
+    &.is-encrypted {
+      color: $primary-text;
+    }
+
+    svg {
+      flex: none;
+      width: 1.1rem;
+      height: 1.1rem;
+    }
+  }
+
   .drawer-collaboration-session {
     display: flex;
     flex-direction: column;

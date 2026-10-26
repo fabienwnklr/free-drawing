@@ -4,7 +4,8 @@ import { Drawer } from '@/Drawer';
 import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { Collaboration } from '@/components/Collaboration/Collaboration';
-import type { CollaborationSocket, DrawingChange } from '@/@types/collaboration';
+import type { CollaborationSocket, DrawingChange, EncryptedShape } from '@/@types/collaboration';
+import { RoomCipher, createRoomKey } from '@/utils/encryption';
 import { createDrawer, fireMouse, keydown, setPointer } from './helpers';
 import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import type { Group } from 'konva/lib/Group';
@@ -49,7 +50,9 @@ type FakeSocket = CollaborationSocket & {
 const createServer = () => {
   const sockets: FakeSocket[] = [];
   type Room = {
-    shapes: Map<string, string>;
+    /** JSON of shapes, `{ id, data }` in an encrypted room */
+    shapes: Map<string, string | EncryptedShape>;
+    keyCheck?: string;
     ownerKey?: string;
     ownerId?: string;
     viewers: Set<string>;
@@ -95,20 +98,28 @@ const createServer = () => {
       }),
       emit: vi.fn((event: string, data: unknown) => {
         if (event === 'JOIN') {
-          const { room, name, userId, ownerKey, invitedBy } = data as {
+          const { room, name, userId, ownerKey, invitedBy, keyCheck } = data as {
             room: string;
             name: string;
             userId: string;
             ownerKey?: string;
             invitedBy?: string;
+            keyCheck?: string;
           };
           const roomData = rooms.get(room) ?? {
-            shapes: new Map<string, string>(),
+            shapes: new Map<string, string | EncryptedShape>(),
             viewers: new Set<string>(),
             names: new Map<string, string>(),
             newUsersCanEdit: true,
             requests: new Set<string>(),
+            keyCheck,
           };
+
+          // encrypted room: proof of its key only
+          if (roomData.keyCheck !== keyCheck) {
+            socket.receive('REJECTED', { event: 'JOIN', reason: 'key' });
+            return;
+          }
 
           if (ownerKey) roomData.ownerKey ??= ownerKey;
           const owner = !!ownerKey && roomData.ownerKey === ownerKey;
@@ -128,7 +139,7 @@ const createServer = () => {
             roomData.viewers.add(socket.userId!);
           roomData.names.set(socket.userId!, name);
           socket.receive('JOINED', { userId: socket.userId });
-          socket.receive('ROOM', { newUsersCanEdit: roomData.newUsersCanEdit });
+          socket.receive('ROOM', { newUsersCanEdit: roomData.newUsersCanEdit, encrypted: !!roomData.keyCheck });
           socket.receive('CHANGE', {
             upsert: [...roomData.shapes.values()],
             remove: [],
@@ -151,8 +162,10 @@ const createServer = () => {
           const { newUsersCanEdit } = data as { newUsersCanEdit: boolean };
 
           if (!socket.owner) return;
-          rooms.get(socket.room!)!.newUsersCanEdit = newUsersCanEdit;
-          for (const s of inRoom(socket.room)) s.receive(event, { newUsersCanEdit });
+          const roomData = rooms.get(socket.room!)!;
+
+          roomData.newUsersCanEdit = newUsersCanEdit;
+          for (const s of inRoom(socket.room)) s.receive(event, { newUsersCanEdit, encrypted: !!roomData.keyCheck });
         } else if (event === 'VIEW') {
           // owner presenting its view
           if (!socket.owner) return;
@@ -187,8 +200,11 @@ const createServer = () => {
           rooms.get(socket.room!)!.names.set(socket.userId!, socket.name);
           sendUsers(socket.room);
         } else if (event === 'POINTER') {
+          // encrypted room: `{ data }`
+          const pointer = data && typeof data === 'object' && 'data' in data ? { data: data.data } : { position: data };
+
           for (const s of inRoom(socket.room).filter((s) => s !== socket)) {
-            s.receive(event, { id: socket.id, name: socket.name, position: data });
+            s.receive(event, { id: socket.id, name: socket.name, ...pointer });
           }
         } else if (event === 'CHANGE') {
           const change = data as DrawingChange;
@@ -202,7 +218,9 @@ const createServer = () => {
           roomData.files ??= new Map();
           for (const [id, file] of Object.entries(change.files ?? {})) roomData.files.set(id, file);
           for (const id of change.remove) shapes.delete(id);
-          for (const json of change.upsert) shapes.set(JSON.parse(json).attrs.id, json);
+          for (const json of change.upsert as (string | EncryptedShape)[]) {
+            shapes.set(typeof json === 'string' ? JSON.parse(json).attrs.id : json.id, json);
+          }
           if (change.order) {
             const ordered = new Map(change.order.filter((id) => shapes.has(id)).map((id) => [id, shapes.get(id)!]));
 
@@ -227,7 +245,7 @@ const createServer = () => {
     drawer: Drawer,
     room = 'room',
     name = '',
-    ids: { userId?: string; ownerKey?: string; invitedBy?: string } = {}
+    ids: { userId?: string; ownerKey?: string; invitedBy?: string; cipher?: RoomCipher } = {}
   ) => {
     const socket = createSocket();
 
@@ -508,14 +526,20 @@ describe('Collaboration', () => {
     modal.$name.value = 'Alice';
     modal.$name.dispatchEvent(new Event('change'));
     modal.$startButton.click();
-    await tick();
-    await tick();
+    // key of the room made, then connected
+    await vi.waitFor(() => expect(window.location.hash).toContain('#room='));
 
     const room = drawer.collaboration!.room;
+    const key = drawer.collaboration!.cipher!.key;
     expect(drawer.collaboration!.name).toBe('Alice');
-    expect(window.location.hash).toBe(`#room=${room}&by=${drawer.getUserId()}`);
+    // new room encrypted end to end: key in its link
+    expect(key).toMatch(/^[\w-]{22}$/);
+    expect(window.location.hash).toBe(`#room=${room}&by=${drawer.getUserId()}&key=${key}`);
+    expect(modal.$security.textContent!.trim()).toBe(
+      'End-to-end encrypted: only people with the link see the drawing, not the server.'
+    );
+    await vi.waitFor(() => expect(modal.$users.textContent).toBe('Connected (1)'));
     expect(modal.$link.value).toBe(drawer.getCollaborationLink());
-    expect(modal.$users.textContent).toBe('Connected (1)');
     // creator of the room is its owner
     expect(modal.$members.textContent).toBe('Alice (you)Owner');
     // QR code generator loaded with a dynamic import
@@ -542,6 +566,8 @@ describe('Collaboration', () => {
       }
     );
     await drawer.startCollaboration(undefined, 'Ada');
+    // users received after the empty drawing of the room, decrypted
+    await vi.waitFor(() => expect(drawer.collaboration!.members).toHaveLength(1));
 
     expect(socket.emit).toHaveBeenCalledWith('JOIN', expect.objectContaining({ userId: drawer.getUserId() }));
     expect(drawer.collaboration!.userId).toBe('account-1');
@@ -617,11 +643,12 @@ describe('Collaboration', () => {
     const owner = createDrawer({ collaboration: true });
     await owner.startCollaboration();
     const room = owner.collaboration!.room;
+    const { hash } = new URL(owner.getCollaborationLink());
     owner.stopCollaboration();
-    window.location.hash = `#room=${room}`;
+    window.location.hash = hash;
     const reloaded = createDrawer({ collaboration: true, localStorageKey: owner.options.localStorageKey });
-    await tick();
-    expect(reloaded.collaboration?.room).toBe(room);
+    await vi.waitFor(() => expect(reloaded.collaboration?.room).toBe(room));
+    expect(reloaded.collaboration!.cipher!.key).toBe(hash.split('&key=')[1]);
     expect(reloaded.collaborationModal).toBeNull();
     reloaded.stopCollaboration();
 
@@ -1414,5 +1441,207 @@ describe('Collaboration', () => {
     a.ungroupShapes([group]);
     expect(classNames(b)).toEqual(['Rect', 'Rect', 'Rect']);
     expect(b.getDrawingShapes().map((shape) => shape.id())).toEqual([first.id(), second.id(), top.id()]);
+  });
+});
+
+describe('Encrypted collaboration', () => {
+  /** Texts of the drawing, sorted */
+  const texts = (drawer: Drawer) =>
+    drawer
+      .getDrawingShapes()
+      .map((shape) => shape.attrs.text as string)
+      .sort();
+
+  it('Shapes, background, files, pointers and views encrypted: the server keeps and relays them without reading them', async () => {
+    const connect = createServer();
+    const cipher = await RoomCipher.create(await createRoomKey());
+    const alice = createDrawer({ collaboration: true, language: 'en' });
+    const bob = createDrawer({ collaboration: true, language: 'en' });
+    const aliceSocket = connect(alice, 'secret-room', 'Alice', { userId: 'alice', ownerKey: 'owner', cipher });
+
+    connect(bob, 'secret-room', 'Bob', { userId: 'bob', cipher });
+    await vi.waitFor(() => expect(bob.collaboration!.members).toHaveLength(2));
+
+    const text = addText(alice, 'top secret');
+    const image = (await alice.addImage({ data: pngData, width: 40, height: 20 }))!;
+
+    alice.setBgColor('#f5faff');
+    await vi.waitFor(() => expect(texts(bob)).toEqual(['top secret', undefined]));
+    await vi.waitFor(() => expect(bob.background.fill()).toBe('#f5faff'));
+    expect(bob.files.get(image.getAttr('fileId'))).toBe(pngData);
+    expect(byId(bob, text.id())).toBeDefined();
+
+    // pointer and presented view
+    setPointer(alice, 100, 50);
+    alice.stage.fire('pointermove');
+    await vi.waitFor(() =>
+      expect(bob.selectionLayer.findOne<Group>('.collaborator-cursor')?.position()).toEqual({ x: 100, y: 50 })
+    );
+    alice.collaboration!.present(true);
+    // as sent (JSON: no -0)
+    await vi.waitFor(() =>
+      expect(bob.collaboration!.presentedView).toEqual(JSON.parse(JSON.stringify(alice.getViewArea())))
+    );
+
+    // nothing of the drawing sent nor kept in clear: texts, colors, images, ids of files, positions
+    const room = connect.rooms.get('secret-room')!;
+    const sent = JSON.stringify(aliceSocket.emit.mock.calls.filter(([event]) => event !== 'JOIN'));
+    const kept = JSON.stringify([[...room.shapes.values()], room.background, [...room.files!], room.view]);
+
+    for (const clear of ['top secret', '#f5faff', 'iVBORw0K', image.getAttr('fileId'), '"x":100', 'Text']) {
+      expect(sent).not.toContain(clear);
+      expect(kept).not.toContain(clear);
+    }
+    // ids of shapes in clear: the server keeps the drawing shape by shape
+    expect([...room.shapes.keys()]).toEqual([text.id(), image.id()]);
+    // the key never reaches the server, its proof only
+    expect(JSON.stringify(aliceSocket.emit.mock.calls)).not.toContain(cipher.key);
+    expect(aliceSocket.emit).toHaveBeenCalledWith('JOIN', expect.objectContaining({ keyCheck: cipher.keyCheck }));
+
+    // joining later: drawing of the room decrypted
+    const carol = createDrawer();
+
+    connect(carol, 'secret-room', 'Carol', { cipher });
+    await vi.waitFor(() => expect(texts(carol)).toEqual(['top secret', undefined]));
+    expect(carol.background.fill()).toBe('#f5faff');
+  });
+
+  it('Links without the key of the room or with another one refused, servers without encryption stop the session', async () => {
+    const connect = createServer();
+    const cipher = await RoomCipher.create(await createRoomKey());
+    const alice = createDrawer();
+    const message = (error: string) => `Collaboration unavailable: ${error}`;
+
+    connect(alice, 'room-k', 'Alice', { cipher });
+    addText(alice, 'top secret');
+
+    for (const keyOf of [undefined, await RoomCipher.create(await createRoomKey())]) {
+      const intruder = createDrawer({ language: 'en' });
+      const toast = vi.spyOn(intruder, 'toast');
+
+      connect(intruder, 'room-k', 'Eve', { cipher: keyOf });
+      expect(toast).toHaveBeenCalledWith(message('key of the session missing or wrong in the link'), 'error');
+      expect(intruder.collaboration).toBeNull();
+      expect(texts(intruder)).toEqual([]);
+    }
+
+    // a key for a room in clear
+    const clear = createDrawer({ language: 'en' });
+    const keyed = createDrawer({ language: 'en' });
+
+    connect(clear, 'room-clear', 'Clear');
+    connect(keyed, 'room-clear', 'Keyed', { cipher });
+    expect(clear.collaboration!.cipher).toBeNull();
+    expect(keyed.collaboration).toBeNull();
+
+    // server of previous versions: no encrypted room
+    const old = createDrawer({ language: 'en' });
+    const toast = vi.spyOn(old, 'toast');
+    const socket = connect(old, 'room-k', 'Old', { cipher });
+
+    socket.receive('ROOM', { newUsersCanEdit: true });
+    await vi.waitFor(() =>
+      expect(toast).toHaveBeenCalledWith(message('the server does not support end-to-end encryption'), 'error')
+    );
+    expect(old.collaboration).toBeNull();
+  });
+
+  it('Reconnection merges the drawing of an encrypted room with changes made meanwhile', async () => {
+    const connect = createServer();
+    const cipher = await RoomCipher.create(await createRoomKey());
+    const alice = createDrawer();
+    const bob = createDrawer();
+
+    connect(alice, 'room-r', 'Alice', { userId: 'alice', ownerKey: 'secret', cipher });
+    const bobSocket = connect(bob, 'room-r', 'Bob', { userId: 'bob', cipher });
+
+    const a = addText(alice, 'A');
+    addText(bob, 'B');
+    await vi.waitFor(() => expect(texts(alice)).toEqual(['A', 'B']));
+    await vi.waitFor(() => expect(texts(bob)).toEqual(['A', 'B']));
+
+    // connection of bob lost: changes of both sides meanwhile
+    bobSocket.room = undefined;
+    bobSocket.receive('disconnect');
+    a.destroy();
+    alice.stage.fire('change');
+    addText(bob, 'C');
+    await vi.waitFor(() => expect(texts(alice)).toEqual(['B']));
+
+    bobSocket.receive('connect');
+    await vi.waitFor(() => expect(texts(bob)).toEqual(['B', 'C']));
+    await vi.waitFor(() => expect(texts(alice)).toEqual(['B', 'C']));
+  });
+
+  it('Links of encrypted rooms carry their key, joined with it; rooms in clear with the option', async () => {
+    const server = createServer();
+    const createSocket = vi.spyOn(
+      Drawer.prototype as unknown as { _createSocket(): Promise<FakeSocket> },
+      '_createSocket'
+    );
+
+    createSocket.mockImplementation(async () => {
+      const socket = server.createSocket();
+
+      setTimeout(() => socket.receive('connect'));
+      return socket;
+    });
+
+    try {
+      const owner = createDrawer({ collaboration: true });
+      const link = await owner.startCollaboration(undefined, 'Alice');
+      const key = owner.collaboration!.cipher!.key;
+
+      expect(link).toBe(owner.getCollaborationLink());
+      expect(link).toContain(`&key=${key}`);
+      addText(owner, 'shared');
+
+      // invited user: key of the link
+      window.location.hash = new URL(link).hash;
+      const invited = createDrawer({ collaboration: true });
+      const modal = invited.collaborationModal!;
+
+      await tick();
+      modal.$name.value = 'Bob';
+      modal.$name.dispatchEvent(new Event('input'));
+      modal.$joinButton.click();
+      await vi.waitFor(() => expect(texts(invited)).toEqual(['shared']));
+      expect(invited.collaboration!.cipher!.key).toBe(key);
+      // shared by this user, with the key
+      expect(invited.getCollaborationLink()).toContain(`&by=${invited.getUserId()}&key=${key}`);
+      invited.stopCollaboration();
+
+      // key cut by an app: told, nothing joined
+      window.location.hash = new URL(link).hash.slice(0, -5);
+      const cut = createDrawer({ collaboration: true, language: 'en' });
+      const toast = vi.spyOn(cut, 'toast');
+
+      await tick();
+      cut.collaborationModal!.$name.value = 'Carol';
+      cut.collaborationModal!.$name.dispatchEvent(new Event('input'));
+      await cut.collaborationModal!.join();
+      expect(toast).toHaveBeenCalledWith(
+        'Collaboration unavailable: key of the session missing or wrong in the link',
+        'error'
+      );
+      expect(cut.collaboration).toBeNull();
+      cut.collaborationModal!.cancelJoin();
+      owner.stopCollaboration();
+
+      // option: rooms in clear, told in the dialog
+      const clear = createDrawer({ collaboration: { encrypt: false }, language: 'en' });
+      const clearLink = await clear.startCollaboration(undefined, 'Dan');
+
+      expect(clear.collaboration!.cipher).toBeNull();
+      expect(clearLink).not.toContain('&key=');
+      clear.showCollaboration();
+      expect(clear.collaborationModal!.$security.textContent).toBe(
+        'Not encrypted: the server of the session can read the drawing.'
+      );
+      clear.collaborationModal!.hide();
+      clear.stopCollaboration();
+    } finally {
+      createSocket.mockRestore();
+    }
   });
 });

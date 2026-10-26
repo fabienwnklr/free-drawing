@@ -71,12 +71,13 @@ More in [Layers](/get-started/#layers), [Search](/get-started/#search), [Library
 ![Cursor and laser of another user on the drawing](/features/collaboration.webp){.screenshot width=1000 height=450}
 
 - **Sessions**: start one from the menu and share its link or QR code, everyone draws on the same drawing in real time.
+- **End-to-end encrypted**: the key is in the link, never sent to the server, which relays and keeps the drawing without being able to read it.
 - **Presence**: cursors of the other users with their names, shapes they are drawing, their laser.
 - **Rights**: participants view only until the owner lets them draw, they ask it in one click, the owner accepts or refuses from the panel of the session.
 - **Presentation**: the owner presents its view, everyone follows its zoom and moves, until they move theirs, then follows it again in one click.
 - **Never forgotten**: during a session, a live reminder in the header (also in zen mode) shows the people connected, opens the session and stops or leaves it in one click.
 - **Reliable**: changes made while the connection is lost are merged with the ones of the others when it comes back.
-- **Server included**: the repository has a Node server (socket.io, accounts, SQLite), or use your own following the [protocol](/get-started/#collaboration).
+- **Server included**: the repository has a Node server (socket.io, accounts, SQLite), or use your own following the [protocol](/get-started/#collaboration). More in [End-to-end encryption](/get-started/#end-to-end-encryption).
 
 ![Dialog of the owner: link, participants with their rights and QR code](/features/collaboration-dialog.webp){.screenshot width=480 height=630}
 

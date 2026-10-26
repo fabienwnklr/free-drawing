@@ -45,6 +45,9 @@ export const en = {
   'error.storageFull': 'browser storage full',
   'error.notLibraryFile': 'not a library file',
   'error.noDrawingInImage': 'image without a drawing (exported without it, or changed since)',
+  'error.insecurePage': 'end-to-end encryption needs a secure page (HTTPS)',
+  'error.roomKey': 'key of the session missing or wrong in the link',
+  'error.encryptionUnsupported': 'the server does not support end-to-end encryption',
   'toast.selectionTool': 'Use the selection tool to move or transform shapes.',
 
   // dialogs
@@ -386,6 +389,8 @@ export const en = {
   'collab.canDrawLabel': '{name} can draw',
   'collab.canDraw': 'Can draw',
   'collab.newUsersCanDraw': 'New participants can draw',
+  'collab.encrypted': 'End-to-end encrypted: only people with the link see the drawing, not the server.',
+  'collab.notEncrypted': 'Not encrypted: the server of the session can read the drawing.',
   'collab.owner': 'Owner',
   'collab.viewOnly': 'View only',
   'collab.present': 'Present my view',

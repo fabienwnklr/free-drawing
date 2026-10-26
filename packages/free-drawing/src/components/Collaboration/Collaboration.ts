@@ -15,9 +15,13 @@ import { maxMessageSize, socketEvents } from '@free-drawing/protocol';
 import { applyOrder } from '@/utils/order';
 import { parseShapeState } from '@/utils/drawingFile';
 import { getFileIds, parseFiles } from '@/utils/image';
+import { decryptChange, encryptChange, type RoomCipher } from '@/utils/encryption';
 import type { ColorLike, DrawingShape } from '@/@types/drawer';
+import type { TranslationKey } from '@/@types/i18n';
 import type {
   DrawingChange,
+  EncryptedChange,
+  EncryptedMessage,
   RemotePointer,
   CollaborationSocket,
   CollaborationMember,
@@ -62,6 +66,21 @@ const checkView = (view: unknown): ViewArea | null | undefined => {
 };
 
 /**
+ * Pointer position of another user in an encrypted room, checked once decrypted (the server can't check it)
+ * @param pointer Decrypted position, null out of the drawer
+ * @returns Position with finite coordinates, null, or undefined when invalid (ignored)
+ */
+const checkPointer = (pointer: unknown): PointerPosition | null | undefined => {
+  if (pointer === null) return null;
+
+  const { x, y, laser } = (typeof pointer === 'object' ? pointer : {}) as Record<string, unknown>;
+
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+
+  return { x: x as number, y: y as number, ...(laser === true && { laser }) };
+};
+
+/**
  * Real time collaboration in a room: changes of drawing (any tool, undo...) are sent shape by shape to other users
  * of the room, through a socket.io server (see apps/server), so concurrent drawings are merged
  */
@@ -96,8 +115,19 @@ export class Collaboration {
   readonly ownerKey?: string;
   /** Id of the user who shared the link used to join, sent on join (the server gives their name to the owner) */
   readonly invitedBy?: string;
+  /**
+   * Encryption of an encrypted room (key of its links): shapes, image files, background, pointers and views are
+   * encrypted before they are sent, the server never reads them; null for a room in clear
+   */
+  readonly cipher: RoomCipher | null;
   /** Drawer whose drawing is shared */
   private readonly drawer: Drawer;
+  /** Messages of an encrypted room being encrypted or decrypted (asynchronous): next ones sent or handled after them */
+  #queue: Promise<void> | null = null;
+  /** Connections to the server so far: a message encrypted during a lost connection is not sent */
+  #connection = 0;
+  /** Session stopped: messages decrypted afterwards are ignored */
+  #stopped = false;
   /** Shapes as other clients know them, by id, in stacking order */
   #synced = new Map<string, string>();
   /** Image files the room has (sent or received): a file is sent once, with the first shape using it */
@@ -146,7 +176,7 @@ export class Collaboration {
   constructor(
     drawer: Drawer,
     socket: CollaborationSocket,
-    { room, name, userId = '', ownerKey, invitedBy }: CollaborationSession
+    { room, name, userId = '', ownerKey, invitedBy, cipher }: CollaborationSession
   ) {
     this.drawer = drawer;
     this.socket = socket;
@@ -155,8 +185,10 @@ export class Collaboration {
     this.userId = userId;
     this.ownerKey = ownerKey;
     this.invitedBy = invitedBy;
+    this.cipher = cipher ?? null;
 
     this.socket.on('connect', () => {
+      if (this.#stopped) return;
       if (this.drawer.debug) console.log('🌍 Connected to collaboration server');
       const { room, name, userId, ownerKey, invitedBy } = this;
 
@@ -164,12 +196,21 @@ export class Collaboration {
 
       // before the answer of the server: connected again, drawing of the room merged with changes made meanwhile
       // (`_merge`), not a copy of this one
+      this.#connection++;
       this.#connected = true;
       this.#joined = true;
       this.#rejoining = rejoin;
       // first join: background of the room received first (a joining user does not impose theirs)
       if (!rejoin) this.#syncedBackground = null;
-      this.socket.emit(socketEvents.JOIN, { room, name, userId, ownerKey, invitedBy });
+      // encrypted room: proof of its key, users with another key (or none) are refused
+      this.socket.emit(socketEvents.JOIN, {
+        room,
+        name,
+        userId,
+        ownerKey,
+        invitedBy,
+        ...(this.cipher && { keyCheck: this.cipher.keyCheck }),
+      });
       // presentation going on after a reconnection
       if (this.presenting) this._sendView();
       if (rejoin) return;
@@ -179,34 +220,47 @@ export class Collaboration {
       this.send();
     });
     this.socket.on('disconnect', () => {
+      this.#connection++;
       this.#connected = false;
     });
     // server identifies this user (logged in account), before sending users of the room
-    this.socket.on(socketEvents.JOINED, ({ userId }: JoinedMessage = {}) => {
+    this._listen(socketEvents.JOINED, ({ userId }: JoinedMessage = {}) => {
       if (typeof userId === 'string' && userId) this.userId = userId;
     });
     // settings of the room (servers of previous versions: none)
-    this.socket.on(socketEvents.ROOM, ({ newUsersCanEdit }: RoomMessage = {}) => {
+    this._listen(socketEvents.ROOM, ({ newUsersCanEdit, encrypted }: RoomMessage = {}) => {
+      // server of previous versions: refuses encrypted changes
+      if (this.cipher && encrypted !== true) {
+        this._stopWith('error.encryptionUnsupported');
+        return;
+      }
       if (typeof newUsersCanEdit !== 'boolean') return;
 
       this.newUsersCanEdit = newUsersCanEdit;
       this.drawer.trigger(drawerEvents.collaborationChange);
     });
-    this.socket.on(socketEvents.CHANGE, (change: DrawingChange) => {
-      if (change.full && this.#rejoining) this._rejoin(change);
-      else this.receive(change);
+    this._listen(socketEvents.CHANGE, (message: unknown) => {
+      if (!this.cipher) return this._onChange(message as DrawingChange);
+
+      return decryptChange(this.cipher, message).then(({ change, failed }) => {
+        if (failed) console.warn(`${failed} parts of a change ignored: not encrypted with the key of the room`);
+        if (!this.#stopped) this._onChange(change);
+      });
     });
-    // message refused by the server: room full (session stopped), drawing too big (changes not shared)
-    this.socket.on(socketEvents.REJECTED, ({ reason }: RejectedMessage = {}) => {
+    // message refused by the server: room full (session stopped), drawing too big (changes not shared), key of an
+    // encrypted room missing or wrong (session stopped)
+    this._listen(socketEvents.REJECTED, ({ reason }: RejectedMessage = {}) => {
       if (reason === 'full') {
         this.drawer.toast(this.drawer.t('toast.collaborationFull'), 'error');
         this.drawer.stopCollaboration();
       } else if (reason === 'too-big') {
         this._tellTooBig();
+      } else if (reason === 'key') {
+        this._stopWith('error.roomKey');
       }
     });
     // names only from servers without rights
-    this.socket.on(socketEvents.USERS, (users: (CollaborationMember | string)[]) => {
+    this._listen(socketEvents.USERS, (users: (CollaborationMember | string)[]) => {
       const canEdit = this.canEdit;
       // first users of the room: right of this user known now (view only by default)
       const joined = !this.members.length;
@@ -231,10 +285,31 @@ export class Collaboration {
       if (this.canEdit !== canEdit) this.drawer._onCollaborationRight(this.canEdit, joined);
       this.drawer.trigger(drawerEvents.collaborationChange);
     });
-    this.socket.on(socketEvents.POINTER, (pointer: RemotePointer) => this._showCursor(pointer));
-    this.socket.on(socketEvents.VIEW, (view: unknown) => this._receiveView(view));
-    this.socket.on(socketEvents.REQUEST, (message: RequestMessage = {}) => this._receiveRequest(message));
-    this.socket.on(socketEvents.LEAVE, (id: string) => {
+    this._listen(socketEvents.POINTER, (pointer: RemotePointer) => {
+      if (!this.cipher) return this._showCursor(pointer);
+
+      return this.cipher.decryptJson(pointer?.data).then(
+        (position) => {
+          const checked = checkPointer(position);
+
+          if (checked !== undefined && !this.#stopped) this._showCursor({ ...pointer, position: checked });
+        },
+        () => console.warn('Pointer of another user ignored: not encrypted with the key of the room')
+      );
+    });
+    this._listen(socketEvents.VIEW, (view: unknown) => {
+      // presentation stopped: in clear
+      if (!this.cipher || view === null) return this._receiveView(view);
+
+      return this.cipher.decryptJson((view as Partial<EncryptedMessage> | undefined)?.data).then(
+        (area) => {
+          if (!this.#stopped) this._receiveView(area);
+        },
+        () => console.warn('View of the owner ignored: not encrypted with the key of the room')
+      );
+    });
+    this._listen(socketEvents.REQUEST, (message: RequestMessage = {}) => this._receiveRequest(message));
+    this._listen(socketEvents.LEAVE, (id: string) => {
       this.#cursors.get(id)?.destroy();
       this.#cursors.delete(id);
       this.#lasers.get(id)?.destroy();
@@ -251,6 +326,106 @@ export class Collaboration {
       if (this.presenting) this._sendView();
       else if (this.presentedView && this.following) this._showView();
     });
+  }
+
+  /**
+   * Operation run in order with the messages of the room: at once, unless messages of an encrypted room are being
+   * encrypted or decrypted (asynchronous), then after them, so messages are sent and handled in the order they come
+   * (whole drawing of the room before its users...). Nothing runs once the session is stopped
+   * @param operation Sends or handles a message, returns a promise while it encrypts or decrypts
+   */
+  private _inOrder(operation: () => Promise<void> | void) {
+    let queue: Promise<void>;
+
+    if (this.#stopped) return;
+    if (this.#queue) {
+      queue = this.#queue.then(() => (this.#stopped ? undefined : operation()));
+    } else {
+      const result = operation();
+
+      if (!result) return;
+      queue = result;
+    }
+    // an error does not stop the next operations
+    this.#queue = queue = queue
+      .catch((error) => console.error(error))
+      .then(() => {
+        if (this.#queue === queue) this.#queue = null;
+      });
+  }
+
+  /**
+   * Messages of an event of the server handled in order (see `_inOrder`)
+   * @param event Event of the server
+   * @param handle Handles a message, returns a promise while it decrypts it
+   */
+  private _listen<T>(event: string, handle: (message: T) => Promise<void> | void) {
+    this.socket.on(event, (message: T) => this._inOrder(() => handle(message)));
+  }
+
+  /**
+   * Session stopped by an error told in a toast (key of the room, server)
+   * @param error Key of the text of the error
+   */
+  private _stopWith(error: TranslationKey) {
+    this.drawer.toast(this.drawer.t('toast.collaborationUnavailable', { error: this.drawer.t(error) }), 'error');
+    this.drawer.stopCollaboration();
+  }
+
+  /**
+   * Position or view sent to the server: encrypted in an encrypted room (`{ data }`, sent once encrypted unless the
+   * connection was lost meanwhile), as it is in a room in clear
+   * @param event `POINTER` or `VIEW`
+   * @param value Pointer position (null out of the drawer), area of the view
+   * @param volatile Dropped rather than delayed when the connection is slow
+   * @returns Promise while it is encrypted
+   */
+  private _emitData(event: string, value: unknown, volatile = false): Promise<void> | void {
+    if (!this.cipher) {
+      (volatile ? this.socket.volatile : this.socket).emit(event, value);
+      return;
+    }
+
+    const connection = this.#connection;
+
+    return this.cipher.encryptJson(value).then((data) => {
+      if (connection !== this.#connection || this.#stopped) return;
+      // `volatile` read when sent: it marks the next message
+      (volatile ? this.socket.volatile : this.socket).emit(event, { data } satisfies EncryptedMessage);
+    });
+  }
+
+  /**
+   * Change sent to the server (encrypted in an encrypted room), unless too big for it: nothing is marked as sent then
+   * @param change Change to send
+   * @param sent Marks its content as known by the room, called just before it is sent
+   * @param volatile Live preview: dropped rather than delayed when the connection is slow
+   * @returns Promise while it is encrypted (sent unless the connection was lost meanwhile)
+   */
+  private _emitChange(change: DrawingChange, sent: () => void, volatile = false): Promise<void> | void {
+    const emit = (message: DrawingChange | EncryptedChange) => {
+      if (!this._fits(message)) return;
+      sent();
+      (volatile ? this.socket.volatile : this.socket).emit(socketEvents.CHANGE, message);
+    };
+
+    if (!this.cipher) return emit(change);
+
+    const connection = this.#connection;
+
+    return encryptChange(this.cipher, change).then((message) => {
+      if (connection === this.#connection && !this.#stopped) emit(message);
+    });
+  }
+
+  /**
+   * Change of another user (decrypted in an encrypted room): whole drawing of the room merged after a reconnection,
+   * else applied
+   * @param change Change received from the server
+   */
+  private _onChange(change: DrawingChange) {
+    if (change.full && this.#rejoining) this._rejoin(change);
+    else this.receive(change);
   }
 
   /**
@@ -281,7 +456,7 @@ export class Collaboration {
       ...(this.#laser && { laser: true }),
     };
     // dropped rather than delayed when connection is slow
-    this._schedule('pointer', () => this.socket.volatile.emit(socketEvents.POINTER, this.#pointer));
+    this._schedule('pointer', () => this._inOrder(() => this._emitData(socketEvents.POINTER, this.#pointer, true)));
   }
 
   /**
@@ -307,17 +482,22 @@ export class Collaboration {
 
       if (drawingShape) this.#live.add(drawingShape);
     });
-    this._schedule('live', () => {
-      const shapes = [...this.#live].filter((shape) => shape.getLayer());
+    this._schedule('live', () =>
+      this._inOrder(() => {
+        const shapes = [...this.#live].filter((shape) => shape.getLayer());
 
-      this.#live.clear();
-      const change: DrawingChange = { upsert: shapes.map(serializeShape), remove: [], live: true };
+        this.#live.clear();
+        if (!shapes.length) return;
 
-      if (shapes.length && this._fits(change)) {
-        for (const shape of shapes) this.#sentLive.add(shape.id());
-        this.socket.volatile.emit(socketEvents.CHANGE, change);
-      }
-    });
+        return this._emitChange(
+          { upsert: shapes.map(serializeShape), remove: [], live: true },
+          () => {
+            for (const shape of shapes) this.#sentLive.add(shape.id());
+          },
+          true
+        );
+      })
+    );
   }
 
   /**
@@ -326,10 +506,15 @@ export class Collaboration {
    * @param shape Shape removed from the drawing without change
    */
   discardLive(shape: DrawingShape) {
+    const id = shape.id();
+
     this.#live.delete(shape);
-    if (this.#sentLive.delete(shape.id()) && this.#connected) {
-      this.socket.emit(socketEvents.CHANGE, { upsert: [], remove: [shape.id()] } satisfies DrawingChange);
-    }
+    // after a preview being encrypted
+    this._inOrder(() => {
+      if (this.#sentLive.delete(id) && this.#connected) {
+        this.socket.emit(socketEvents.CHANGE, { upsert: [], remove: [id] } satisfies DrawingChange);
+      }
+    });
   }
 
   /**
@@ -467,7 +652,12 @@ export class Collaboration {
 
     this.presenting = on;
     if (on) this._sendView();
-    else this.socket.emit(socketEvents.VIEW, null);
+    else {
+      // after a view being encrypted
+      this._inOrder(() => {
+        this.socket.emit(socketEvents.VIEW, null);
+      });
+    }
     this.drawer.trigger(drawerEvents.collaborationChange);
   }
 
@@ -475,9 +665,9 @@ export class Collaboration {
    * View of the presenting owner sent to other users, at live interval at most (latest view when sent)
    */
   private _sendView() {
-    this._schedule('view', () => {
-      if (this.presenting) this.socket.emit(socketEvents.VIEW, this.drawer.getViewArea());
-    });
+    this._schedule('view', () =>
+      this._inOrder(() => (this.presenting ? this._emitData(socketEvents.VIEW, this.drawer.getViewArea()) : undefined))
+    );
   }
 
   /**
@@ -600,6 +790,7 @@ export class Collaboration {
    * Leave room, cursors of other users removed
    */
   stop() {
+    this.#stopped = true;
     this.socket.disconnect();
     this.drawer.stage.off('.collaboration');
     for (const timer of Object.values(this.#timers)) clearTimeout(timer);
@@ -610,9 +801,18 @@ export class Collaboration {
   }
 
   /**
-   * Send shapes changed since last sync, called on drawer change
+   * Send shapes changed since last sync, called on drawer change (in an encrypted room, after the messages being
+   * encrypted or decrypted: changes found then)
    */
   send() {
+    this._inOrder(() => this._send());
+  }
+
+  /**
+   * Shapes changed since last sync sent, see `send`
+   * @returns Promise while the change is encrypted
+   */
+  private _send(): Promise<void> | void {
     // sent once joined again (drawing of the room merged first): not marked synced meanwhile
     if (!this.#connected || this.#rejoining || this.#rejoinDrawing) return;
 
@@ -645,25 +845,27 @@ export class Collaboration {
     };
 
     const changed = upsert.length > 0 || remove.length > 0 || reordered || recolored;
+    const sent = () => {
+      this.#synced = current;
+      for (const id of fileIds) this.#sentFiles.add(id);
+      if (recolored) this.#syncedBackground = background;
+      // final state sent, previews useless
+      this.#live.clear();
+      this.#sentLive.clear();
+    };
 
+    if (!changed) return sent();
     // too big for the server: not marked synced (kept by a merge after a reconnection), sent with a next change
-    if (changed && !this._fits(change)) return;
-    this.#synced = current;
-    for (const id of fileIds) this.#sentFiles.add(id);
-    if (recolored) this.#syncedBackground = background;
-    // final state sent, previews useless
-    this.#live.clear();
-    this.#sentLive.clear();
-    if (changed) this.socket.emit(socketEvents.CHANGE, change);
+    return this._emitChange(change, sent);
   }
 
   /**
    * Change small enough for the server: a bigger message would close the connection, and the reconnection would send it
    * again (loop). Told as a drawing too big
-   * @param change Change to send
+   * @param change Change to send (encrypted in an encrypted room)
    * @returns True when it can be sent
    */
-  private _fits(change: DrawingChange) {
+  private _fits(change: DrawingChange | EncryptedChange) {
     const max = Collaboration.maxMessageSize;
     const json = JSON.stringify(change);
 

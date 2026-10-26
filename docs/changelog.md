@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.41.0](https://github.com/fabienwnklr/free-drawing/compare/v7.40.0...v7.41.0) (2026-10-26)
+
+
+### Features
+
+* **collaboration:** sessions encrypted end to end: a new room gets a key (AES-GCM) put in the `#` of its links, never sent to the server; shapes, image files, background, pointers and presented views are encrypted before they are sent, the server keeps and relays them without reading them; a link without the key, or with another one, is refused (proof of the key checked by the server, `REJECTED` `key`); the dialog of the session tells whether it is encrypted; `collaboration: { encrypt: false }` creates rooms in clear, sessions and links of previous versions stay in clear. Needs a secure page (https or localhost)
+
 ## [7.40.0](https://github.com/fabienwnklr/free-drawing/compare/v7.39.0...v7.40.0) (2026-10-26)
 
 
