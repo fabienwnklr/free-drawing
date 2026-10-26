@@ -65,6 +65,8 @@ describe('Names of a plugin', () => {
       expect.any(String),
       null,
     ]);
+    // panel of the library (Alt + B)
+    expect(checkCommandShortcut('Alt+B')).toBe('Alt+B is a shortcut of the library');
     expect(formatShortcut('shift+alt+n')).toBe('Alt+Shift+N');
     // S and T are used: I
     expect(suggestToolShortcut('Sticky notes')).toBe('i');

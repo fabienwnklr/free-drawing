@@ -23,6 +23,7 @@ describe('Layout', () => {
     expect(classes(layout.$header)).toEqual([
       'drawer-dropdown-container',
       'drawer-layers-button-container',
+      'drawer-library-button-container',
       'drawer-position-container',
       'drawer-save-button-container',
     ]);

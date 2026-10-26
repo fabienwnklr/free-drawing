@@ -79,6 +79,7 @@ export const defaultOptions: DrawerOptions = {
   language: 'auto',
   translations: {},
   layersPanel: true,
+  library: true,
   saveButton: true,
   readOnly: false,
   scaling: 1.11,
@@ -298,6 +299,8 @@ export const drawerEvents = {
   preferencesChange: 'drawer.preferences.change',
   /** Drawing has changes not saved yet (without auto save) or is saved, with unsaved state */
   unsavedChange: 'drawer.unsaved.change',
+  /** Items of the library added, removed, renamed or imported (see `drawer.library`), with the items */
+  libraryChange: 'drawer.library.change',
   /** Dropdown menu hidden (event of dropdown) */
   dropdownHide: 'drawer.dropdown.hide',
   /** Toast hidden (event of toast) */

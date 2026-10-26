@@ -217,10 +217,12 @@ export class LayersPanel {
   }
 
   /**
-   * Show or hide panel
+   * Show or hide panel (the library panel, at the same place, is hidden)
    * @param show Toggle by default
    */
   toggle(show: boolean = !this.isVisible()) {
+    // library panel at the same place
+    if (show) this.drawer.libraryPanel?.toggle(false);
     this.$panel.classList.toggle('show', show);
     setPressed(this.$button, show);
     this.$button.setAttribute('aria-expanded', String(show));

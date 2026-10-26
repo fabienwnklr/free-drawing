@@ -97,6 +97,7 @@ export class Help extends Modal {
       { label: t('menu.zenMode'), keys: ['Alt+Z'] },
       { label: t('help.grid'), keys: ['Alt+G'] },
       { label: t('help.layers'), keys: ['Alt+L'] },
+      ...(this.drawer.libraryPanel ? [{ label: t('library.title'), keys: ['Alt+B'] }] : []),
       {
         label: t('help.layersSelect'),
         keys: ['Ctrl+Click', 'Shift+Click', 'Shift+Arrows', 'Ctrl+Space'],

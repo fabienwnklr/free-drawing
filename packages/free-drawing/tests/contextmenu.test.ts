@@ -77,6 +77,7 @@ describe('Context menu', () => {
     expect(drawer.contextMenu.isVisible()).toBe(true);
     expect(items(drawer)).toEqual([
       'Duplicate Ctrl+D',
+      'Add selection to library ',
       'Copy style Ctrl+Alt+C',
       'Link ',
       'Lock Ctrl+Shift+L',

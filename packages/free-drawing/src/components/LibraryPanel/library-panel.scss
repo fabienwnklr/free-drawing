@@ -1,0 +1,153 @@
+@use '@/scss/variables' as *;
+@use '@/scss/mixins' as *;
+
+.drawer-container .drawer-library-button-container {
+  display: flex;
+
+  .drawer-button {
+    border-radius: $radius-lg;
+  }
+}
+
+// Items of the library, under the header on the left (at the place of the layers panel: one at a time)
+.drawer-container .drawer-library-panel {
+  position: absolute;
+  top: calc(#{$btn-size-lg} + #{$edge} * 2);
+  left: $edge;
+  z-index: 1;
+  display: none;
+  flex-direction: column;
+  width: 18rem;
+  max-width: calc(100% - #{$edge} * 2);
+  // above footer toolbar
+  max-height: calc(100% - #{$btn-size-lg} * 2 - #{$edge} * 5);
+  padding: $space-2;
+  pointer-events: var(--drawer-pointer-events);
+
+  &.show {
+    display: flex;
+  }
+
+  .drawer-library-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 0 $space-2 $space-2;
+
+    .drawer-button {
+      width: $btn-size-default;
+      height: $btn-size-default;
+    }
+  }
+
+  .drawer-library-header-actions {
+    display: flex;
+    gap: $space-1;
+  }
+
+  .drawer-library-title {
+    margin: 0;
+    font-size: $font-size;
+    font-weight: 600;
+  }
+
+  .drawer-library-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: $space-2;
+    margin: 0;
+    padding: $space-1;
+    overflow-y: auto;
+    list-style: none;
+  }
+
+  .drawer-library-item {
+    position: relative;
+
+    // remove button shown on hover and focus
+    &:hover .drawer-library-remove,
+    &:focus-within .drawer-library-remove {
+      opacity: 1;
+    }
+  }
+
+  .drawer-library-insert {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: $space-1;
+    width: 100%;
+    padding: $space-1;
+    border: 1px solid $border;
+    border-radius: $radius;
+    background-color: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background-color: $subtle-bg;
+    }
+
+    &:disabled {
+      cursor: default;
+    }
+
+    @include focus-ring;
+  }
+
+  .drawer-library-preview {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: contain;
+  }
+
+  .drawer-library-name {
+    overflow: hidden;
+    font-size: $font-size-sm;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .drawer-library-remove {
+    position: absolute;
+    top: $space-1;
+    right: $space-1;
+    width: $btn-size-default;
+    height: $btn-size-default;
+    padding: 0;
+    opacity: 0;
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    // touch screens: always shown
+    @media (hover: none) {
+      opacity: 1;
+    }
+  }
+
+  .drawer-library-empty,
+  .drawer-library-hint {
+    margin: 0;
+    padding: $space-2;
+    font-size: $font-size-sm;
+
+    &[hidden] {
+      display: none;
+    }
+  }
+
+  .drawer-library-hint {
+    margin-top: $space-1;
+    padding-bottom: 0;
+    border-top: 1px solid $border;
+  }
+}
+
+// previews shown as the drawing: inverted in dark mode
+.drawer-container.drawer-dark .drawer-library-preview {
+  filter: $dark-drawing-filter;
+}

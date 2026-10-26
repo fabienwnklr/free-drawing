@@ -2,6 +2,12 @@
 
 Changes of `@fabwcie/create-free-drawing-plugin` (`npm create @fabwcie/free-drawing-plugin`). Each version is published by the release workflow of the library once it is not on npm yet.
 
+## 1.1.5 (2026-10-26)
+
+### Bug Fixes
+
+- Alt + B is refused for a command of a plugin: it shows the panel of the library (7.38.0)
+
 ## 1.1.4 (2026-10-26)
 
 ### Bug Fixes

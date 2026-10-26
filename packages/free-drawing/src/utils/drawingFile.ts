@@ -211,7 +211,7 @@ function parseFrame(frame: ShapeState): ShapeState | null {
  * @returns state with only `attrs`, `className` and valid children (groups and frames), null for other classes,
  * without attributes or frames without their parts
  */
-function parseShape(shape: ShapeState): ShapeState | null {
+export function parseShape(shape: ShapeState): ShapeState | null {
   if (typeof shape?.attrs !== 'object' || shape.attrs === null) return null;
 
   const { className } = shape;

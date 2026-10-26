@@ -238,6 +238,7 @@ export class HotKey {
         if (letter === 'z') this.drawer.setting.toggleZenMode();
         if (letter === 'g') this.drawer.setting.toggleGrid();
         if (letter === 'l') this.drawer.layersPanel?.toggle();
+        if (letter === 'b') this.drawer.libraryPanel?.toggle();
       }
 
       if (edit && mod && !e.shiftKey && letter === 'z') {

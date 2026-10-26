@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.38.0](https://github.com/fabienwnklr/free-drawing/compare/v7.37.0...v7.38.0) (2026-10-26)
+
+
+### Features
+
+* **library:** library of shapes (`library` option, header button, Alt + B): the selection saved as an item (header button of the panel, context menu, command palette), inserted again in any drawing by a click (middle of the view) or a drag onto the drawing (new ids, links of its arrows and texts of its shapes kept between them), kept in the browser for the drawings of the drawer, exported and imported as `.freedrawinglib` files (`drawer.library`: `add`, `insert`, `rename`, `remove`, `setItems`, `toFile`, `import`; `drawer.library.change` event)
+
+
+### Bug Fixes
+
+* **types:** `ArrowHandle` (type of `drawer.arrowHandle`) exported by the entry
+
 ## [7.37.0](https://github.com/fabienwnklr/free-drawing/compare/v7.36.0...v7.37.0) (2026-10-26)
 
 

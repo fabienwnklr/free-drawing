@@ -74,6 +74,34 @@ export type DrawingFile = {
 export type DrawingFiles = Record<string, string>;
 
 /**
+ * Item of the library (`drawer.library`): shapes saved to be inserted again in any drawing
+ */
+export type LibraryItem = {
+  /** Unique id */
+  id: string;
+  /** Name shown in the library, accessible name of its button */
+  name: string;
+  /** States of its top shapes (with children of groups and frames), bottom first, where they were in the drawing */
+  shapes: ShapeState[];
+  /** Files of its images by id, only with images */
+  files?: DrawingFiles;
+  /** Time it was added (ms since 1970) */
+  created: number;
+};
+
+/**
+ * Content of a library file (`.freedrawinglib`): items to use in another browser or app
+ */
+export type LibraryFile = {
+  /** Identifies library files */
+  type: 'free-drawing-library';
+  /** Version of the file format */
+  version: 1;
+  /** Items of the library, oldest first */
+  items: LibraryItem[];
+};
+
+/**
  * Image ready to be added to a drawing (`drawer.addImage`): its file and size in pixels
  */
 export type DrawingImage = {

@@ -78,6 +78,7 @@ The library needs no framework. React and Vue apps can use its `FreeDrawing` com
   language: 'auto', // 'auto' (browser one, English when not available) | 'en' | 'fr' | 'es' | 'de', language chosen in menu is saved and used instead
   translations: {}, // texts replacing default ones, by language, see Languages below
   layersPanel: true, // enable/disable layers panel (list of shapes) and its button in header
+  library: true, // enable/disable library panel (shapes saved to insert them again in any drawing), its button and menu items
   saveButton: true, // button in header saving the drawing while auto save is off (dot: changes not saved yet)
   readOnly: false, // drawing can't be modified by user (only pan, zoom, view options, export), API still modifies it
   scaling: 1.11, // scaling on zoom
@@ -489,6 +490,21 @@ Ctrl+G (or group button of selection menu or layers panel) groups selected shape
 ```js
 const group = drawer.groupShapes([first, second]); // selected shapes by default, of the same group
 drawer.ungroupShapes([group]); // shapes keep their look (group transform, hidden, locked)
+```
+
+## Library
+
+The library button of header (Alt+B) shows the library: shapes saved to be inserted again in any drawing. Its add button (also in the context menu and the command palette) saves the selection as an item (with the texts of its shapes, groups and frames with their shapes, files of its images), named by the text of its shape, the name of its shape or its number of shapes. An item is shown by its preview: a click inserts it in the middle of the view, a drag inserts it where it is dropped; inserted shapes get new ids, their arrows stay linked to the shapes of the item (not to others), they are selected, one step of history. The library is kept in the browser (`<localStorageKey>-library`: shared by the drawings of the drawer, of the web app for example), exported to and imported from `.freedrawinglib` files (items already there left out; only drawing shapes are read, as in drawing files). It is shown at the place of the layers panel: one of them at a time. In read only, items are added, not inserted.
+
+```js
+const item = drawer.library.add(); // selected shapes by default, or given ones, and a name
+drawer.library.insert(item.id, { x: 0, y: 0 }); // centered on a point (middle of the view by default)
+drawer.library.rename(item.id, 'Card');
+drawer.library.remove(item.id);
+drawer.library.items; // oldest first
+drawer.library.toFile(); // content of a .freedrawinglib file, see also exportFile() and importFile()
+drawer.library.setItems(items); // library of an app (account, server)
+drawer.on('drawer.library.change', (items) => {});
 ```
 
 Drawing shapes are konva shapes or groups (`DrawingShape` type): `getDrawingShapes()` and `getSelectedShapes()` may return groups, their shapes are their children.

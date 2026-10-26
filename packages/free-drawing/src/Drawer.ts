@@ -41,6 +41,8 @@ import { getBoundText, updateBoundTexts } from '@/utils/boundText';
 import { setupArrows } from '@/utils/arrow';
 import { setupNotes } from '@/utils/note';
 import { getShapesStyle } from '@/utils/style';
+import { Library } from '@/utils/library';
+import { LibraryPanel } from '@/components/LibraryPanel/LibraryPanel';
 import { fitTextWidth, getFontsToLoad, getTexts, loadFonts } from '@/utils/text';
 import {
   decodeLinkData,
@@ -210,6 +212,10 @@ export class Drawer extends MicroEvent {
   plugins!: PluginCollection;
   /** Panel listing shapes (`layersPanel` option) */
   layersPanel: LayersPanel | undefined;
+  /** Library of shapes saved to be inserted again in any drawing, kept in the browser */
+  library!: Library;
+  /** Panel of the library (`library` option) */
+  libraryPanel: LibraryPanel | undefined;
   /** Button of header saving the drawing while auto save is off (`saveButton` option) */
   saveButton: SaveButton | undefined;
   /** Theme chosen ('system': device one), see `setTheme` */
@@ -423,6 +429,10 @@ export class Drawer extends MicroEvent {
     if (this.getWidget('selection')) this.linkEditor = new LinkEditor(this);
     if (this.options.layersPanel) {
       this.layersPanel = new LayersPanel(this);
+    }
+    this.library = new Library(this);
+    if (this.options.library) {
+      this.libraryPanel = new LibraryPanel(this);
     }
     if (this.options.saveButton) {
       this.saveButton = new SaveButton(this);

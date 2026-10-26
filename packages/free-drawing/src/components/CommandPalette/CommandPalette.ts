@@ -19,6 +19,7 @@ import GridIcon from '@/icons/grid.svg?raw';
 import ZenIcon from '@/icons/zen.svg?raw';
 import MoonIcon from '@/icons/moon.svg?raw';
 import LayersIcon from '@/icons/layers.svg?raw';
+import LibraryIcon from '@/icons/library.svg?raw';
 import PlusIcon from '@/icons/plus.svg?raw';
 import MinusIcon from '@/icons/minus.svg?raw';
 import ZoomResetIcon from '@/icons/zoom-reset.svg?raw';
@@ -287,7 +288,7 @@ export class CommandPalette extends Modal {
     const editSelection = edit && selected.length > 0;
     const hasShapes = drawer.getDrawingShapes().length > 0;
     const { collaboration } = drawer;
-    const { zoom, position, layersPanel } = drawer;
+    const { zoom, position, layersPanel, libraryPanel } = drawer;
     const groups: CommandGroup[] = [
       [
         'help.tools',
@@ -347,6 +348,13 @@ export class CommandPalette extends Modal {
             shortcut: 'Ctrl+D',
             run: () => drawer.duplicateShapes(),
           },
+          libraryPanel &&
+            selected.length > 0 && {
+              id: 'add selection to library item',
+              label: t('library.add'),
+              icon: LibraryIcon,
+              run: () => drawer.library.add(),
+            },
           editSelection && {
             id: 'copy style colors format',
             label: t('action.copyStyle'),
@@ -548,6 +556,14 @@ export class CommandPalette extends Modal {
             shortcut: 'Alt+L',
             checked: layersPanel.isVisible(),
             run: () => layersPanel.toggle(),
+          },
+          libraryPanel && {
+            id: 'library panel items',
+            label: t('library.title'),
+            icon: LibraryIcon,
+            shortcut: 'Alt+B',
+            checked: libraryPanel.isVisible(),
+            run: () => libraryPanel.toggle(),
           },
           zoom && { id: 'zoom in', label: t('zoom.in'), icon: PlusIcon, run: () => zoom.zoomPlus() },
           zoom && { id: 'zoom out', label: t('zoom.out'), icon: MinusIcon, run: () => zoom.zoomMinus() },

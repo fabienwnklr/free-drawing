@@ -120,6 +120,13 @@ export class ContextMenu {
           run: () => drawer.duplicateShapes(),
         },
         {
+          $item: this._createItem('library.add', ''),
+          // also in read only (the drawing is not modified), not a locked selection
+          visible: () =>
+            drawer.getSelectedShapes().length > 0 && !this.selectWidget?.isLocked() && !!drawer.libraryPanel,
+          run: () => drawer.library.add(),
+        },
+        {
           $item: this._createItem('action.copyStyle', 'Ctrl+Alt+C'),
           visible: selection,
           run: () => drawer.copyStyle(),

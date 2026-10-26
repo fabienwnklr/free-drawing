@@ -40,6 +40,8 @@ export type {
 } from '@/@types/collaboration';
 export type {
   DrawingFile,
+  LibraryFile,
+  LibraryItem,
   DrawingFiles,
   DrawingImage,
   ExportImageOptions,
@@ -111,6 +113,7 @@ export type { HotKey } from '@/utils/HotKey';
 export type { Frame } from '@/utils/frame';
 export type { FrameHighlight } from '@/utils/frameHighlight';
 export type { ShapeLinks } from '@/utils/shapeLinks';
+export type { ArrowHandle } from '@/utils/arrowHandle';
 export type { TouchGestures } from '@/utils/TouchGestures';
 export type { Toolbar } from '@/components/toolbar/Toolbar';
 export type { GroupWidget } from '@/components/toolbar/widgets/GroupWidget';
@@ -135,6 +138,8 @@ export type { CommandPalette } from '@/components/CommandPalette/CommandPalette'
 export type { PreferencesModal } from '@/components/PreferencesModal/PreferencesModal';
 export type { ExportModal } from '@/components/ExportModal/ExportModal';
 export type { LayersPanel } from '@/components/LayersPanel/LayersPanel';
+export type { LibraryPanel } from '@/components/LibraryPanel/LibraryPanel';
+export type { Library } from '@/utils/library';
 export type { SelectionMenu } from '@/components/SelectionMenu/SelectionMenu';
 export type { LinkEditor } from '@/components/LinkEditor/LinkEditor';
 export type { Collaboration } from '@/components/Collaboration/Collaboration';

@@ -39,7 +39,7 @@ export const libraryTools = [
 export const libraryToolLetters = ['a', 'b', 'c', 'd', 'e', 'f', 'h', 'k', 'l', 'm', 'n', 'q', 'r', 's', 't'];
 
 /** Shortcuts of the library with Alt (letters after Alt, after Alt + Shift) */
-export const libraryAltShortcuts = { alt: ['z', 'g', 'l', 's'], altShift: ['d', 'c', 's'] };
+export const libraryAltShortcuts = { alt: ['b', 'z', 'g', 'l', 's'], altShift: ['d', 'c', 's'] };
 
 /**
  * Words of a name: letters and digits, accents removed, camelCase split
