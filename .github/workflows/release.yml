@@ -142,8 +142,15 @@ jobs:
         if: steps.version.outputs.publish
         working-directory: packages/free-drawing
         run: |
+          # status of npm, not of tee (default shell: bash -e, without pipefail)
+          set -o pipefail
           echo "npm $(npm --version)"
-          if ! npm publish --access public; then
+          if ! npm publish --access public 2>&1 | tee npm-publish.log; then
+            # version received from another run (or this one run again) still checked by npm: not visible yet
+            if grep -q 'previously staged version' npm-publish.log; then
+              echo "::notice::Already published by another run, shown by npm once checked"
+              exit 0
+            fi
             # what npm receives (claims of the GitHub token, answer of its token exchange), what to change on npmjs.com
             node ../../.github/scripts/npm-oidc-check.mjs "$(node -p "require('./package.json').name")" "$GITHUB_REPOSITORY" ||
               echo "::error::Not published: see the error of npm above"
@@ -211,13 +218,21 @@ jobs:
             yarn workspace @fabwcie/free-drawing build && yarn build
           fi
 
-      # prepack: template of plugin copied in the package of the generator, components built
+      # prepack: template of plugin copied in the package of the generator, components built. Tags pushed together run at
+      # once: a package of the same version in both is published by the first run, npm still checks it (not visible yet)
+      # when the second one publishes it: 409 "previously staged version", not an error
       - name: Publish
         if: steps.version.outputs.publish
         working-directory: packages/${{ matrix.package }}
         run: |
+          # status of npm, not of tee (default shell: bash -e, without pipefail)
+          set -o pipefail
           echo "npm $(npm --version)"
-          if ! npm publish --access public; then
+          if ! npm publish --access public 2>&1 | tee npm-publish.log; then
+            if grep -q 'previously staged version' npm-publish.log; then
+              echo "::notice::Already published by another run, shown by npm once checked"
+              exit 0
+            fi
             node ../../.github/scripts/npm-oidc-check.mjs "$(node -p "require('./package.json').name")" "$GITHUB_REPOSITORY" ||
               echo "::error::Not published: see the error of npm above"
             exit 1
