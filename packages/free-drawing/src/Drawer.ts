@@ -35,6 +35,7 @@ import { rectContains, setupHit } from '@/utils/hit';
 import { I18n, getLanguage, languages } from '@/i18n/I18n';
 import type { Language, TranslationParams, TranslationKey } from '@/@types/i18n';
 import { bindingAttrs, unbindMoved, updateBindings } from '@/utils/binding';
+import { getBoundText, updateBoundTexts } from '@/utils/boundText';
 import { fitTextWidth, getFontsToLoad, getTexts, loadFonts } from '@/utils/text';
 import {
   decodeLinkData,
@@ -1050,14 +1051,21 @@ export class Drawer extends MicroEvent {
 
       unbindMoved(selected.includes(e.target as DrawingShape) ? selected : [e.target]);
     });
-    this.drawLayer.on('dragmove.binding', () => updateBindings(this.drawLayer));
+    // texts of shapes too
+    const follow = () => {
+      updateBindings(this.drawLayer);
+      updateBoundTexts(this.drawLayer, this.background.fill() as string);
+    };
+
+    this.drawLayer.on('dragmove.binding', follow);
     transformer?.on('transformstart.binding', () => unbindMoved(transformer.nodes()));
-    transformer?.on('transform.binding', () => updateBindings(this.drawLayer));
+    transformer?.on('transform.binding', follow);
     this.stage.on('change', () => {
       // collaborators changes received during a pointer action, then this one
       this.collaboration?.flush();
-      // arrows on their linked shapes before saving
+      // arrows on their linked shapes, texts in their shapes, before saving
       updateBindings(this.drawLayer);
+      updateBoundTexts(this.drawLayer, this.background.fill() as string);
       this.collaboration?.send();
 
       // unsaved until stored: at once in localStorage (unless it fails), once the save of `storage` option ends, or
@@ -1652,9 +1660,9 @@ export class Drawer extends MicroEvent {
       originals.flatMap((shape, i) => nodes(shape).map((node, j) => [node.id(), nodes(copies[i])[j].id()]))
     );
 
-    // copied arrows linked to copied shapes, unlinked from others
+    // copied arrows linked to copied shapes, texts in copied shapes, unlinked from others
     copies.flatMap(nodes).forEach((node) => {
-      bindingAttrs.forEach((attr) => {
+      [...bindingAttrs, 'containerId'].forEach((attr) => {
         if (node.getAttr(attr)) node.setAttr(attr, ids.get(node.getAttr(attr)));
       });
     });
@@ -1675,7 +1683,10 @@ export class Drawer extends MicroEvent {
    * @returns true if a shape was removed (change saved)
    */
   deleteShapes(shapes: DrawingShape[] = this.getSelectedShapes()): boolean {
-    const removed = shapes.filter((shape) => shape.getLayer());
+    // texts of the shapes too
+    const removed = [
+      ...new Set(shapes.flatMap((shape) => [shape, getBoundText(shape, this.drawLayer) ?? []].flat())),
+    ].filter((shape) => shape.getLayer()) as DrawingShape[];
     const selectWidget = this.getWidget<SelectWidget>('selection');
 
     if (!removed.length) return false;

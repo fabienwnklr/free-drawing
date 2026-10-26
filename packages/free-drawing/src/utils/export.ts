@@ -371,12 +371,18 @@ function shapeElement(shape: Node, dark: boolean | undefined, matrix: number[]):
         (decoration.includes('line-through') ? decorationLine(-decorationOffset) : '')
       );
     });
+    // halo of arrow labels: stroke of the background color under the letters
+    const halo = shape.fillAfterStrokeEnabled() && shape.strokeEnabled() ? colorOf(shape.stroke(), dark) : undefined;
     const font = attrs({
       'font-family': `${shape.fontFamily()}, sans-serif`,
       'font-size': fontSize,
       'font-style': style.includes('italic') ? 'italic' : undefined,
       'font-weight': style.includes('bold') ? 'bold' : undefined,
       fill,
+      stroke: halo,
+      'stroke-width': halo ? shape.strokeWidth() : undefined,
+      'stroke-linejoin': halo ? 'round' : undefined,
+      'paint-order': halo ? 'stroke' : undefined,
     });
 
     return `<g${group}${font}>${lines.join('')}</g>`;

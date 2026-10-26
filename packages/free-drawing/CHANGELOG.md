@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.33.0](https://github.com/fabienwnklr/free-drawing/compare/v7.32.0...v7.33.0) (2026-10-26)
+
+
+### Features
+
+* **texts:** texts of shapes: a double click on a rectangle, an ellipse or a path shape (selection tool, also in its empty inside) or a click of the text tool on it writes in it; the text is centered in the shape, as wide as its inside, and follows it when it is moved, resized (letters not scaled) or turned; selected, styled, copied and removed with it (`containerId` attribute: id of its shape)
+* **texts:** labels of arrows: written with a double click on an arrow, on its middle, with a halo of the background color cutting the line (also in svg exports); arrows link to the shape of a text, not to the text
+
+
+### Bug Fixes
+
+* **texts:** a text whose edit ended at once (Enter typed right after it opened) left a listener of presses out of the field: the next click of the text tool wrote nothing
+
 ## [7.32.0](https://github.com/fabienwnklr/free-drawing/compare/v7.31.0...v7.32.0) (2026-10-26)
 
 

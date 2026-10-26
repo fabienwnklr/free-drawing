@@ -7,6 +7,7 @@ import { crosshairCursor } from '@/constants';
 import { getDrawingShape } from '@/utils/frame';
 import type { DrawingShape } from '@/@types/drawer';
 import { Trail } from '@/components/toolbar/widgets/Eraser/Trail';
+import { getBoundText } from '@/utils/boundText';
 
 /**
  * Opacity of shapes to erase until pointer up, factor of their own opacity
@@ -82,7 +83,11 @@ export class EraserWidget extends BaseWidget {
 
       if (!this.#toErase.size) return;
 
-      for (const shape of this.#toErase.keys()) shape.destroy();
+      // texts of erased shapes too
+      for (const shape of this.#toErase.keys()) {
+        getBoundText(shape, this.drawer.drawLayer)?.destroy();
+        shape.destroy();
+      }
       this.#toErase.clear();
       this.drawer.stage.fire('change');
     });

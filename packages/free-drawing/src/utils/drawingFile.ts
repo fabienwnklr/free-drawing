@@ -112,6 +112,8 @@ const attrChecks: Record<string, AttrCheck> = {
       'endAnchor',
       // file of an image (`files` of the drawing)
       'fileId',
+      // shape holding a text
+      'containerId',
     ].map((key) => [key, isString])
   ),
   ...Object.fromEntries(

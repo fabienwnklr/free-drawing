@@ -39,6 +39,7 @@ import {
 import type { DrawingShape } from '@/@types/drawer';
 import type { SnapStops } from '@/@types/toolbar';
 import type { Node } from 'konva/lib/Node';
+import { withBoundTexts } from '@/utils/boundText';
 
 /**
  * Selection tool: selects shapes (click, Shift toggles, Alt selects the one behind, rectangle selects shapes entirely
@@ -352,6 +353,8 @@ export class SelectWidget extends BaseWidget {
    * @param shapes Drawing shapes or shapes of groups to select, replacing the selection
    */
   select(shapes: (Shape<ShapeConfig> | Group)[]) {
+    // shapes with their texts (and texts with their shapes): moved, styled and removed together
+    shapes = withBoundTexts(shapes, this.drawer.drawLayer);
     // shapes of a selected frame are selected with it
     const visible = shapes.filter(
       (shape) => shape.isVisible() && !shapes.some((other) => isFrame(other) && other.isAncestorOf(shape))

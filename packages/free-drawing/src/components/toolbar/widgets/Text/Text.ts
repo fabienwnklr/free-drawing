@@ -1,8 +1,10 @@
 import type { Drawer } from '@/Drawer';
-import { getDrawingShape, getFrameOfTitle } from '@/utils/frame';
+import { getDrawingShape, getFrameOfTitle, withFrameShapes } from '@/utils/frame';
+import { findContainerAt, getBoundText, isContainer, placeBoundText } from '@/utils/boundText';
 import { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import TextIcon from '@/icons/text.svg?raw';
 import type { Node } from 'konva/lib/Node';
+import type { Shape } from 'konva/lib/Shape';
 import { Text } from 'konva/lib/shapes/Text';
 import type { Vector2d } from 'konva/lib/types';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
@@ -11,9 +13,10 @@ import { TextOverlay } from '@/components/tools/Overlay/TextOverlay/TextOverlay'
 import { isComposing, placeInView } from '@/utils/dom';
 
 /**
- * Text tool: a click adds a text (or edits the text clicked) in a textarea placed over it; once validated, the tool is
- * kept (`keepTool`) or the selection tool comes back with the text selected. A double click on any text (or title of
- * a frame) edits it, whatever the active tool.
+ * Text tool: a click adds a text (or edits the text clicked, or the text of the shape clicked) in a textarea placed over
+ * it; once validated, the tool is kept (`keepTool`) or the selection tool comes back with the text selected. A double
+ * click on any text (or title of a frame) edits it, on a rectangle, an ellipse, a path shape or an arrow edits its text
+ * (created when it has none, see utils/boundText), whatever the active tool.
  */
 export class TextWidget extends BaseWidget {
   /** A text is edited in the textarea */
@@ -36,11 +39,19 @@ export class TextWidget extends BaseWidget {
 
     this.overlay = new TextOverlay(drawer);
 
-    // listen on layer, so any text is editable (created, loaded, restored from history...)
-    this.drawer.drawLayer.on('dblclick.edit dbltap.edit', (e) => {
-      if (this._isEditable(e.target) && !this.drawer.readOnly) {
-        this.editTextNode(e.target);
-      }
+    // listened by the stage (once, not by tool): any text is editable (created, loaded, restored from history...), and
+    // the text of a shape clicked in its empty inside (no hit there)
+    this.drawer.stage.on('dblclick.edit dbltap.edit', (e) => {
+      if (this.drawer.readOnly) return;
+
+      // texts with any tool, texts of shapes with the selection tool (not a double tap of a drawing tool)
+      const textNode = this._isEditable(e.target)
+        ? e.target
+        : this.drawer.activeTool === 'selection'
+        ? this._textAt(e.target)
+        : null;
+
+      if (textNode) this.editTextNode(textNode);
     });
 
     this._loadFonts();
@@ -74,6 +85,50 @@ export class TextWidget extends BaseWidget {
    */
   private _isEditable(node: Node): node is Text {
     return node instanceof Text && (node.hasName(shapeName.text) || !!getFrameOfTitle(node));
+  }
+
+  /**
+   * Text edited at the pointer: the text clicked (or title of a frame), else the text of the shape clicked or of the
+   * smallest shape around the pointer (created when it has none)
+   * @param target Node under the pointer (the stage on an empty place)
+   * @returns Text to edit, null when there is none
+   */
+  private _textAt(target: Node): Text | null {
+    if (this._isEditable(target)) return target;
+
+    const layer = this.drawer.drawLayer;
+    const container = isContainer(target)
+      ? target
+      : findContainerAt(withFrameShapes(this.drawer.getDrawingShapes()), layer, this.drawer._getRelativePointerPos());
+
+    // locked shape: no text edited
+    if (!container?.isListening()) return null;
+
+    return getBoundText(container, layer) ?? this._createBoundText(container);
+  }
+
+  /**
+   * New text of a shape, placed in it (centered, as wide as its inside), in its frame
+   * @param container Rectangle, ellipse, path shape or arrow
+   * @returns The added text node, empty
+   */
+  private _createBoundText(container: Shape) {
+    const { textStyle, strokeColor, opacity } = this.drawer.options;
+    const textNode = new Text({
+      ...textStyle,
+      text: '',
+      name: shapeName.text,
+      fill: strokeColor,
+      opacity,
+      align: 'center',
+      containerId: container.id(),
+    });
+
+    this.drawer.addShape(textNode);
+    placeBoundText(textNode, container, this.drawer.background.fill() as string);
+    this.drawer.placeInFrames([textNode]);
+
+    return textNode;
   }
 
   /**
@@ -138,9 +193,8 @@ export class TextWidget extends BaseWidget {
     this.onStage('click tap', (e) => {
       if (e.evt.button > 0 || this.#skipClick) return;
 
-      const textNode = this._isEditable(e.target)
-        ? e.target
-        : this._createText('', this.drawer._getRelativePointerPos());
+      // text clicked or text of the shape clicked, else a new text
+      const textNode = this._textAt(e.target) ?? this._createText('', this.drawer._getRelativePointerPos());
 
       this.overlay.hide();
       this.#byTool = true;
@@ -361,6 +415,8 @@ export class TextWidget extends BaseWidget {
       // buttons activated with the keyboard
       const options = { capture: true, signal: this.drawer.signal };
 
+      // edit already ended (Enter typed at once: input events come before timers): its listeners would stay
+      if (!textarea.isConnected) return;
       window.addEventListener('pointerdown', handleOutsideClick, options);
       window.addEventListener('click', handleOutsideClick, options);
     });

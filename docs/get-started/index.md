@@ -480,6 +480,12 @@ drawer.ungroupShapes([group]); // shapes keep their look (group transform, hidde
 
 Drawing shapes are konva shapes or groups (`DrawingShape` type): `getDrawingShapes()` and `getSelectedShapes()` may return groups, their shapes are their children.
 
+## Texts of shapes
+
+A double click on a rectangle, an ellipse, a triangle, a diamond, a heart or a cloud (with the selection tool, also in its empty inside), or a click of the text tool on it, writes in it: its text is centered in it, as wide as its inside (inner rectangle of ellipses), and follows it when it is moved, resized (its letters keep their size) or turned. On an arrow, the text is a label on its middle, with a halo of the background color cutting the line. A shape and its text are selected, styled (color, font, size...), copied and removed together; a text whose shape is removed alone stays as a free text.
+
+The text of a shape is a text of the drawing with a `containerId` attribute, the id of its shape: placed in it on each change.
+
 ## Linked arrows
 
 An arrow drawn from a shape to another one (end near them, 12 px on screen whatever the zoom) is linked to them: its ends follow them when they move, are resized or rotated. Rectangles, ellipses, triangles, diamonds, hearts and clouds are linked near their outline as drawn (not the corners of their box), their ends stay on it (the side of a triangle, the dip of a heart), inside only with a background: the empty inside of a big shape is a free place, a small one is linked from its middle. In a frame, ends are linked to its shapes, to the frame only near its border. With the arrow tool, shapes under pointer show the middle of their sides (on the outline of triangles, diamonds, hearts and clouds): an end released near one is fixed to this side (e.g. bottom of a shape to left side of another one), else it stays on the outline aiming at the other end. Ctrl (Cmd) draws an arrow without links. Arrows moved without their shapes (or with removed shapes) are unlinked, copies of arrows and shapes are linked together. Links are `startBinding` / `endBinding` (ids of shapes) and `startAnchor` / `endAnchor` (`top`, `right`, `bottom`, `left`) attributes of arrows.

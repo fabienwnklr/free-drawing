@@ -343,6 +343,8 @@ export function findBindingTarget(
   const layer = shapes[0]?.getLayer();
   const around = shapes.filter((shape) => {
     if (shape === exclude || !shape.isVisible() || shape.hasName(shapeName.arrow)) return false;
+    // text of a shape: its shape is linked
+    if (shape.attrs.containerId) return false;
     if (shape.hasName(shapeName.straightLine)) return false;
 
     const { x, y, width, height } = shape.getClientRect({ relativeTo: layer ?? undefined });
