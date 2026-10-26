@@ -204,3 +204,9 @@ export type SnapStops = {
   /** Y of horizontal guides */
   horizontal: number[];
 };
+
+/** Updates of the selection grouped in one change (see `SelectWidget.batchUpdates`) */
+export type UpdateBatch = {
+  /** A selected shape changed: change fired at the end */
+  changed: boolean;
+};

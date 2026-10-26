@@ -194,6 +194,14 @@ export class HotKey {
         this.drawer.setShapesLocked(!locked);
       }
 
+      // copy the style of the selection, paste it on the selection (Ctrl + Alt: not AltGr typing a character, see
+      // `keyLetter`)
+      if (mod && e.altKey && !e.shiftKey && !inField && (letter === 'c' || letter === 'v')) {
+        e.preventDefault();
+        if (letter === 'c' && selectedNodes.length) this.drawer.copyStyle();
+        if (letter === 'v' && edit && editable.length) this.drawer.pasteStyle();
+      }
+
       // copy selection (whole drawing without selection) as image
       if (e.altKey && e.shiftKey && !mod && (letter === 'c' || letter === 's') && !inField) {
         e.preventDefault();

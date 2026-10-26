@@ -1,24 +1,28 @@
 import '@/components/ColorPicker/color-picker.scss';
 import type { ColorLike } from '@/@types/drawer';
 import { createButton, setLabel, setPressed } from '@/utils/dom';
-import { normalizeColor, toHexColor } from '@/utils/color';
+import { fromDarkColor, normalizeColor, toHexColor } from '@/utils/color';
+import EyedropperIcon from '@/icons/eyedropper.svg?raw';
 import { toDarkColor } from '@/utils/export';
-import type { ColorPickerOptions } from '@/@types/ui';
+import type { ColorPickerOptions, EyeDropperWindow } from '@/@types/ui';
 
 /**
- * Palette buttons, optional transparent button and custom color input, added to given container
+ * Palette buttons, optional transparent button, custom color input and eyedropper (browsers with the EyeDropper API),
+ * added to given container
  */
 export class ColorPicker {
   /** Palette buttons (transparent button last), pressed for the current color */
   readonly $buttons: HTMLButtonElement[] = [];
   /** Native color input for a color out of the palette, highlighted when the current color is not in it */
   readonly $customInput: HTMLInputElement;
+  /** Button picking a color anywhere on the screen (EyeDropper API of Chromium), undefined without it */
+  readonly $pickButton?: HTMLButtonElement;
   /** Options given on creation */
   private readonly options: ColorPickerOptions;
 
   /**
-   * Create palette buttons and custom color input, none pressed until `setColor`
-   * @param $container Element receiving the buttons, then the custom input
+   * Create palette buttons, custom color input and eyedropper, none pressed until `setColor`
+   * @param $container Element receiving the buttons, then the custom input and the eyedropper
    * @param options Palette, attribute and class of buttons, transparent button, change callback and texts
    */
   constructor($container: HTMLElement, options: ColorPickerOptions) {
@@ -57,6 +61,31 @@ export class ColorPicker {
     this.$customInput.addEventListener('click', (e) => e.stopPropagation());
 
     $container.append(...this.$buttons, this.$customInput);
+
+    // color picked anywhere on the screen (the drawing, an image, another window)
+    const { EyeDropper } = window as EyeDropperWindow;
+
+    if (!EyeDropper) return;
+
+    const $pick = createButton(options.buttonClass, 'drawer-color-pick');
+
+    $pick.innerHTML = EyedropperIcon;
+    options.i18n.translate((t) => setLabel($pick, t('color.pick')));
+    $pick.addEventListener('click', async (e) => {
+      // menu containing it (settings) stays open
+      e.stopPropagation();
+      try {
+        const { sRGBHex } = await new EyeDropper().open();
+        // drawing shown inverted in dark mode: its own color
+        const dark = !!$pick.closest('.drawer-dark');
+
+        options.onChange((dark ? fromDarkColor(sRGBHex) : toHexColor(sRGBHex) ?? sRGBHex) as ColorLike);
+      } catch {
+        // cancelled (Escape)
+      }
+    });
+    this.$pickButton = $pick;
+    $container.append($pick);
   }
 
   /**

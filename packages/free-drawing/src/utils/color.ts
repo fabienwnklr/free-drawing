@@ -39,3 +39,27 @@ export function toHexColor(color: string): string | undefined {
 
   return /^#[0-9a-f]{6}$/.test(normalized) ? normalized : undefined;
 }
+
+/**
+ * Color of the drawing shown at a color of the screen in dark mode: inverse of the filter `invert(93%)
+ * hue-rotate(180deg)` of the drawing (see `toDarkColor` of utils/export), for a color picked on the screen
+ * @param color Color seen on the screen
+ * @returns `#rrggbb` color of the drawing; a color whose dark color the filter clamps (saturated or pale ones) comes
+ * back near it, not exactly
+ */
+export function fromDarkColor(color: string): string {
+  const hex = toHexColor(color) ?? '#000000';
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+  // hue rotate 180deg: its own inverse
+  const inverted = [
+    -0.574 * r + 1.43 * g + 0.144 * b,
+    0.426 * r + 0.43 * g + 0.144 * b,
+    0.426 * r + 1.43 * g - 0.856 * b,
+  ];
+
+  // invert 93%: c gives 0.93 - 0.86 c
+  return `#${inverted
+    .map((c) => Math.round(Math.min(1, Math.max(0, (0.93 - c) / 0.86)) * 255))
+    .map((c) => c.toString(16).padStart(2, '0'))
+    .join('')}`;
+}

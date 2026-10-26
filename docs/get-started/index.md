@@ -443,6 +443,7 @@ A right click on a shape selects it (with the selection tool) and shows actions 
 | Action | Shortcut |
 | --- | --- |
 | Duplicate | Ctrl / Cmd + D |
+| Copy style, paste it on the selection | Ctrl / Cmd + Alt + C, Ctrl / Cmd + Alt + V |
 | Lock or unlock selection | Ctrl / Cmd + Shift + L |
 | Delete | Delete |
 | Bring to front, forward, send backward, to back | Ctrl / Cmd + (Shift +) Up / Down |
@@ -459,6 +460,14 @@ Elsewhere, it shows actions on the drawing: paste, copy as PNG or SVG, select al
 drawer.rotateShapes(90); // selected shapes by default, degrees clockwise (-90: left)
 drawer.flipShapes('horizontal'); // selected shapes by default
 await drawer.copyImage('svg'); // svg image and svg code (text), 'png' by default
+```
+
+The style of the selection (color, background, stroke width and style, corners, path and heads of arrows, text style, opacity: each part from the first shape it applies to) is copied with Ctrl / Cmd + Alt + C (context menu, command palette) and pasted on other selected shapes with Ctrl / Cmd + Alt + V, each part on the shapes it applies to, in one step of history; it becomes the style of new shapes too. Color fields have an eyedropper in browsers with the EyeDropper API (Chrome, Edge): a color picked anywhere on the screen, the color of the drawing in dark mode (shown inverted).
+
+```js
+const style = drawer.copyStyle(); // selected shapes by default, null without shape
+drawer.pasteStyle(); // copied style (drawer.copiedStyle) on selected shapes, or a given one
+drawer.pasteStyle({ strokeColor: '#e03131', strokeWidth: 8 });
 ```
 
 ## Layers

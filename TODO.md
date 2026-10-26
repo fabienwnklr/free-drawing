@@ -116,7 +116,7 @@
 - [x] arrows: curved and elbow arrows, styles of arrowheads (none, arrow, triangle, dot, bar) at each end
 - [x] sticky notes (after text in shapes)
 - [x] more shapes: star, hexagon, block arrow, check box... (`PathShapeWidget`: also speech bubble)
-- [ ] eyedropper (EyeDropper API) and copy / paste of styles (Ctrl+Alt+C / Ctrl+Alt+V)
+- [x] eyedropper (EyeDropper API) and copy / paste of styles (Ctrl+Alt+C / Ctrl+Alt+V)
 - [ ] libraries: save a selection as a reusable item, insert it again in any drawing
 - [ ] search the texts of the drawing (Ctrl+F), going from one result to the next
 - [ ] drawing kept in exported PNG / SVG (metadata), opened again for editing

@@ -40,6 +40,7 @@ import { bindingAttrs, unbindMoved, updateBindings } from '@/utils/binding';
 import { getBoundText, updateBoundTexts } from '@/utils/boundText';
 import { setupArrows } from '@/utils/arrow';
 import { setupNotes } from '@/utils/note';
+import { getShapesStyle } from '@/utils/style';
 import { fitTextWidth, getFontsToLoad, getTexts, loadFonts } from '@/utils/text';
 import {
   decodeLinkData,
@@ -251,6 +252,8 @@ export class Drawer extends MicroEvent {
   #saving: Promise<void> | null = null;
   /** Drawing changed during a save in storage: saved again once it ends */
   #saveAgain = false;
+  /** Style copied from shapes by `copyStyle`, pasted by `pasteStyle`; null before a copy */
+  #copiedStyle: OptionsChange | null = null;
   /** Resolved once drawing of `storage` option is loaded (rejected if it can't be) and plugins are initialized */
   ready: Promise<void>;
   /** See `user` option and `setUser` */
@@ -2650,6 +2653,53 @@ export class Drawer extends MicroEvent {
     this.options.textStyle = { ...this.options.textStyle, ...style };
     this.getWidget<SelectWidget>('selection')?.setTextStyle(style);
     this._triggerOptionsChange({ textStyle: style });
+  }
+
+  /**
+   * Copy the style of shapes (Ctrl + Alt + C), given to other shapes by `pasteStyle`: color, background, stroke width
+   * and style, corners, path and heads of arrows, text style, opacity, each part from the first shape it applies to
+   * @param shapes Shapes whose style is copied, selection by default
+   * @returns Style copied (see `getShapesStyle` of utils/style), null without shape
+   */
+  copyStyle(shapes: DrawingShape[] = this.getSelectedShapes()): OptionsChange | null {
+    if (!shapes.length) return null;
+
+    this.#copiedStyle = getShapesStyle(shapes);
+    this.toast(this.t('toast.styleCopied'), 'info');
+
+    return this.#copiedStyle;
+  }
+
+  /**
+   * Style copied by `copyStyle`
+   * @returns Copied style, null before a copy
+   */
+  get copiedStyle(): OptionsChange | null {
+    return this.#copiedStyle;
+  }
+
+  /**
+   * Paste a style on the selected shapes (Ctrl + Alt + V), each part on the shapes it applies to (as the options
+   * panel does), in one change (one step of history); it becomes the style of new shapes too
+   * @param style Style to give, the copied one by default (see `copyStyle`)
+   */
+  pasteStyle(style: OptionsChange | null = this.#copiedStyle) {
+    const selectWidget = this.getWidget<SelectWidget>('selection');
+
+    if (!style || !selectWidget) return;
+
+    selectWidget.batchUpdates(() => {
+      if (style.strokeColor) this.setStrokeColor(style.strokeColor);
+      if (style.fillColor) this.setFillColor(style.fillColor);
+      // width first: dashes follow it
+      if (style.strokeWidth !== undefined) this.setStrokeWidth(style.strokeWidth);
+      if (style.strokeStyle) this.setStrokeStyle(style.strokeStyle);
+      if (style.edges !== undefined) this.setEdges(style.edges);
+      if (style.arrowType) this.setArrowType(style.arrowType);
+      if (style.arrowheads) this.setArrowheads(style.arrowheads);
+      if (style.textStyle) this.setTextStyle(style.textStyle);
+      if (style.opacity !== undefined) this.setOpacity(style.opacity);
+    });
   }
 
   /**

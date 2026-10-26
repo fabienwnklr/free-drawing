@@ -122,6 +122,24 @@ export type ColorPickerOptions = {
   i18n: I18n;
 };
 
+/** Color picked on the screen by the EyeDropper API */
+export type EyeDropperResult = {
+  /** Color picked, `#rrggbb` */
+  sRGBHex: string;
+};
+
+/** EyeDropper API of Chromium (not in the types of the dom): picks a color anywhere on the screen */
+export type EyeDropperConstructor = new () => {
+  /** Lets the user pick a color, rejected when cancelled (Escape) */
+  open(): Promise<EyeDropperResult>;
+};
+
+/** Window of a browser with the EyeDropper API */
+export type EyeDropperWindow = Window & {
+  /** EyeDropper API, undefined without (Firefox, Safari) */
+  EyeDropper?: EyeDropperConstructor;
+};
+
 /**
  * Command of palette
  */

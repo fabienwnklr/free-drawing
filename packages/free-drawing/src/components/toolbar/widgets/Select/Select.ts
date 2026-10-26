@@ -37,7 +37,7 @@ import {
   withFrameShapes,
 } from '@/utils/frame';
 import type { DrawingShape } from '@/@types/drawer';
-import type { SnapStops } from '@/@types/toolbar';
+import type { SnapStops, UpdateBatch } from '@/@types/toolbar';
 import type { Node } from 'konva/lib/Node';
 import { withBoundTexts } from '@/utils/boundText';
 import { arrowheadAttrs, getArrowheads } from '@/utils/arrow';
@@ -107,6 +107,8 @@ export class SelectWidget extends BaseWidget {
   } | null = null;
   // selected shapes of groups, dragged alone while selected
   #nested: DrawingShape[] = [];
+  /** Updates grouped by `batchUpdates`: a shape changed, one change fired at the end; null outside */
+  #batch: UpdateBatch | null = null;
   /**
    * Snap of resize anchors to grid (set by drawer while grid is shown), applied when anchor is not snapped to objects
    */
@@ -1003,7 +1005,25 @@ export class SelectWidget extends BaseWidget {
 
     shapes.forEach(update);
     if (updateFrame) frames.forEach(updateFrame);
-    this.drawer.stage.fire('change');
+    // one change for updates grouped by `batchUpdates`
+    if (this.#batch) this.#batch.changed = true;
+    else this.drawer.stage.fire('change');
+  }
+
+  /**
+   * Updates of the selection grouped in one change (one entry of history, one message of collaboration): style pasted
+   * @param updates Calls of setters of the selection (`setColor`, `setFillColor`...)
+   */
+  batchUpdates(updates: () => void) {
+    const batch: UpdateBatch = { changed: false };
+
+    this.#batch = batch;
+    try {
+      updates();
+    } finally {
+      this.#batch = null;
+    }
+    if (batch.changed) this.drawer.stage.fire('change');
   }
 
   /**

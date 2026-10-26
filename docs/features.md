@@ -18,7 +18,7 @@ free-drawing gives any web page an infinite canvas to draw, organize and share i
 - **Images**: insert (image tool of the toolbar) or paste images (screenshots, photos, SVG), resized with their proportions, kept small in files and links, shared in live sessions, with their colors in dark mode.
 - **Texts**: font, size, bold, italic, underline, alignment, and a width fitted to their content. Write in a shape with a double click: the text stays centered in it when it is moved, resized or turned; on an arrow, it is a label.
 - **Sticky notes** (N): a click adds a note of a light color and writes in it, the note grows with its text.
-- **Styles**: stroke color and width, solid, dashed or dotted strokes, background color, corners, opacity, from the panel of the tool or of the selection.
+- **Styles**: stroke color and width, solid, dashed or dotted strokes, background color, corners, opacity, from the panel of the tool or of the selection. An eyedropper picks a color anywhere on the screen (Chrome, Edge), Ctrl + Alt + C / V copy the style of shapes and paste it on others.
 - **Laser pointer** to show something without drawing it, also seen by the other users of a session.
 - **Eraser**: click a shape or drag through several ones, they fade until the pointer is released.
 - **Shortcuts**: B brush, E eraser, T text, N note, L line, R rectangle, C ellipse, A arrow, D diamond, M highlighter, K laser, F frame, H pan, S select. The pin of the toolbar keeps the tool after a drawing, else the selection comes back.

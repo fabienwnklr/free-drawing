@@ -22,6 +22,7 @@ export const fr: Translations = {
   'toast.requestRefused': 'Le propriétaire de la session a refusé votre demande de dessiner',
   'toast.saveFailed': "Le dessin n'a pas pu être enregistré : {error}",
   'toast.saved': 'Dessin enregistré',
+  'toast.styleCopied': 'Style copié',
   'toast.loadFailed': "Le dessin n'a pas pu être chargé : {error}",
   'toast.invalidFile': 'Fichier de dessin invalide : {error}',
   'toast.linkCopied': 'Lien copié',
@@ -105,6 +106,7 @@ export const fr: Translations = {
   'color.pink': 'Rose',
   'color.transparent': 'Transparent',
   'color.custom': 'Couleur personnalisée',
+  'color.pick': "Prendre une couleur à l'écran",
 
   'help.title': 'Aide',
   'help.documentation': 'Documentation',
@@ -191,6 +193,8 @@ export const fr: Translations = {
 
   'selectionMenu.label': 'Actions sur la sélection',
   'action.duplicate': 'Dupliquer',
+  'action.copyStyle': 'Copier le style',
+  'action.pasteStyle': 'Coller le style',
   'action.group': 'Grouper',
   'action.ungroup': 'Dégrouper',
   'action.sendToBack': "Mettre à l'arrière-plan",

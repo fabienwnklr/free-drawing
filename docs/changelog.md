@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.37.0](https://github.com/fabienwnklr/free-drawing/compare/v7.36.0...v7.37.0) (2026-10-26)
+
+
+### Features
+
+* **styles:** copy the style of the selection (Ctrl + Alt + C) and paste it on other shapes (Ctrl + Alt + V), from the context menu and the command palette too: color, background, stroke width and style, corners, path and heads of arrows, text style and opacity, each part on the shapes it applies to, in one step of history (`drawer.copyStyle`, `pasteStyle`, `copiedStyle`)
+* **colors:** eyedropper of color fields in browsers with the EyeDropper API (Chrome, Edge): a color picked anywhere on the screen, the color of the drawing in dark mode
+* **options:** the options panel of a selected group shows the style of its shapes; the stroke width and style of a selection come from its first shape with a stroke (not from a note)
+
 ## [7.36.0](https://github.com/fabienwnklr/free-drawing/compare/v7.35.0...v7.36.0) (2026-10-26)
 
 

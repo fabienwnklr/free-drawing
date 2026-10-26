@@ -47,6 +47,7 @@ import RotateRightIcon from '@/icons/rotate-right.svg?raw';
 import RotateLeftIcon from '@/icons/rotate-left.svg?raw';
 import FlipVerticalIcon from '@/icons/flip-vertical.svg?raw';
 import FitWidthIcon from '@/icons/fit-width.svg?raw';
+import PaintRollerIcon from '@/icons/paint-roller.svg?raw';
 import type { Command, CommandGroup } from '@/@types/ui';
 import { shapeAlignments, shapeDistributions, shapeOrders, shapeStacks } from '@/constants';
 import { formatShortcut } from '@/utils/shortcut';
@@ -346,6 +347,21 @@ export class CommandPalette extends Modal {
             shortcut: 'Ctrl+D',
             run: () => drawer.duplicateShapes(),
           },
+          editSelection && {
+            id: 'copy style colors format',
+            label: t('action.copyStyle'),
+            icon: PaintRollerIcon,
+            shortcut: 'Ctrl+Alt+C',
+            run: () => drawer.copyStyle(),
+          },
+          editSelection &&
+            !!drawer.copiedStyle && {
+              id: 'paste style colors format',
+              label: t('action.pasteStyle'),
+              icon: PaintRollerIcon,
+              shortcut: 'Ctrl+Alt+V',
+              run: () => drawer.pasteStyle(),
+            },
           editSelection &&
             drawer.linkEditor && {
               id: 'link url address web page',

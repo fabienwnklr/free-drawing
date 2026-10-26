@@ -120,6 +120,16 @@ export class ContextMenu {
           run: () => drawer.duplicateShapes(),
         },
         {
+          $item: this._createItem('action.copyStyle', 'Ctrl+Alt+C'),
+          visible: selection,
+          run: () => drawer.copyStyle(),
+        },
+        {
+          $item: this._createItem('action.pasteStyle', 'Ctrl+Alt+V'),
+          visible: () => selection() && !!drawer.copiedStyle,
+          run: () => drawer.pasteStyle(),
+        },
+        {
           // link editor above the selection
           $item: this._createItem('action.link', ''),
           visible: () => selection() && !!drawer.linkEditor,

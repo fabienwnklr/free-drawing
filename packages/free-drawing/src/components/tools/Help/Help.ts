@@ -69,6 +69,8 @@ export class Help extends Modal {
       { label: t('help.selectAll'), keys: ['Ctrl+A'] },
       { label: t('help.deleteSelection'), keys: ['Delete'] },
       { label: t('help.duplicate'), keys: ['Ctrl+D'] },
+      { label: t('action.copyStyle'), keys: ['Ctrl+Alt+C'] },
+      { label: t('action.pasteStyle'), keys: ['Ctrl+Alt+V'] },
       { label: t('help.group'), keys: ['Ctrl+G', 'Ctrl+Shift+G'] },
       { label: t('help.selectInGroup'), keys: ['Ctrl+Click'] },
       { label: t('help.constrainDrawing'), keys: ['Shift'], after: t('help.whileDrawing') },

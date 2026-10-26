@@ -1,3 +1,4 @@
+import { getTextStyle } from '@/utils/style';
 import type { Drawer } from '@/Drawer';
 import type { OptionsChange, TextStyle } from '@/@types/drawer';
 import type { Shape, ShapeConfig } from 'konva/lib/Shape';
@@ -200,22 +201,7 @@ export class TextOverlay extends BaseOverlay {
 
     const text = shape?.find((s): s is Text => s instanceof Text);
 
-    this.updateTextFields(text ? this._getTextStyle(text) : this.drawer.options.textStyle);
-  }
-
-  /**
-   * Text style of a text node, shown by text fields
-   * @param text Selected text node whose style is read
-   * @returns Font family, size, style, decoration and alignment of the text
-   */
-  private _getTextStyle(text: Text): TextStyle {
-    return {
-      fontFamily: text.fontFamily(),
-      fontSize: text.fontSize(),
-      fontStyle: text.fontStyle() as TextStyle['fontStyle'],
-      textDecoration: text.textDecoration() as TextStyle['textDecoration'],
-      align: text.align() as TextStyle['align'],
-    };
+    this.updateTextFields(text ? getTextStyle(text) : this.drawer.options.textStyle);
   }
 
   /**

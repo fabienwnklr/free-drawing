@@ -21,6 +21,7 @@ export const de: Translations = {
   'toast.requestRefused': 'Der Besitzer der Sitzung hat Ihre Anfrage zum Zeichnen abgelehnt',
   'toast.saveFailed': 'Die Zeichnung konnte nicht gespeichert werden: {error}',
   'toast.saved': 'Zeichnung gespeichert',
+  'toast.styleCopied': 'Stil kopiert',
   'toast.loadFailed': 'Die Zeichnung konnte nicht geladen werden: {error}',
   'toast.invalidFile': 'Ungültige Zeichnungsdatei: {error}',
   'toast.linkCopied': 'Link kopiert',
@@ -104,6 +105,7 @@ export const de: Translations = {
   'color.pink': 'Rosa',
   'color.transparent': 'Transparent',
   'color.custom': 'Eigene Farbe',
+  'color.pick': 'Farbe vom Bildschirm aufnehmen',
 
   'help.title': 'Hilfe',
   'help.documentation': 'Dokumentation',
@@ -190,6 +192,8 @@ export const de: Translations = {
 
   'selectionMenu.label': 'Aktionen der Auswahl',
   'action.duplicate': 'Duplizieren',
+  'action.copyStyle': 'Stil kopieren',
+  'action.pasteStyle': 'Stil einfügen',
   'action.group': 'Gruppieren',
   'action.ungroup': 'Gruppierung aufheben',
   'action.sendToBack': 'In den Hintergrund',

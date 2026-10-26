@@ -1,7 +1,5 @@
 import type { Drawer } from '@/Drawer';
 import type { Arrowheads, ColorLike, Edges, OptionsChange, StrokeStyle } from '@/@types/drawer';
-import { Arrow } from 'konva/lib/shapes/Arrow';
-import { getArrowheads, getArrowType } from '@/utils/arrow';
 import LineIcon from '@/icons/line.svg?raw';
 import LineDottedIcon from '@/icons/line-dotted.svg?raw';
 import LineDashedIcon from '@/icons/line-dashed.svg?raw';
@@ -11,18 +9,13 @@ import DuplicateIcon from '@/icons/duplicate.svg?raw';
 import TrashIcon from '@/icons/trash.svg?raw';
 import LinkIcon from '@/icons/link.svg?raw';
 import '@/components/tools/Overlay/overlay.scss';
-import { Shape, type ShapeConfig } from 'konva/lib/Shape';
+import type { Shape, ShapeConfig } from 'konva/lib/Shape';
 import type { Group } from 'konva/lib/Group';
-import { Text } from 'konva/lib/shapes/Text';
 import {
   dataAttributes,
   drawerEvents,
-  edgesShapes,
   arrowTypeChoices,
   arrowheadChoices,
-  fillShapes,
-  shapeName,
-  strokeStyleShapes,
   shapeAlignments,
   shapeDistributions,
   shapeOrders,
@@ -31,7 +24,8 @@ import {
 import { ColorPicker } from '@/components/ColorPicker/ColorPicker';
 import { createButton, setLabel, setPressed, uniqueId } from '@/utils/dom';
 import { ariaShortcut, formatShortcut } from '@/utils/shortcut';
-import { getEdges, getStrokeStyle } from '@/utils/stroke';
+import { getShapesStyle } from '@/utils/style';
+import { isFrame } from '@/utils/frame';
 import type { TranslationKey } from '@/@types/i18n';
 import type { OverlayOptions } from '@/@types/toolbar';
 import type { Choice, IconChoice } from '@/@types/ui';
@@ -568,8 +562,9 @@ export class BaseOverlay {
 
     const { strokeColor, fillColor, strokeWidth, strokeStyle, edges, opacity, arrowType, arrowheads } =
       this.drawer.options;
-    const shapes = (shape ?? []).filter((s): s is Shape<ShapeConfig> => s instanceof Shape);
-    let data: OptionsChange = {
+    // each section shows the first selected shape it applies to (shapes of groups too), else the options; frames:
+    // opacity only
+    const data: OptionsChange = {
       strokeColor,
       fillColor,
       strokeWidth,
@@ -578,35 +573,10 @@ export class BaseOverlay {
       opacity,
       arrowType,
       arrowheads,
+      ...getShapesStyle((shape ?? []).filter((s) => !isFrame(s))),
     };
 
-    if (shapes.length) {
-      const [first] = shapes;
-      // each section shows the first selected shape it applies to
-      const find = (names: string[]) => shapes.find((s) => names.some((name) => s.hasName(name)));
-      const filled = find(fillShapes);
-      const outlined = shapes.find((s) => !(s instanceof Text) && !s.hasName(shapeName.highlighter)) ?? first;
-
-      data = {
-        // text color is stored in fill
-        strokeColor: (first.stroke() || first.fill()) as ColorLike,
-        // no fill is transparent
-        fillColor: filled ? ((filled.fill() || 'transparent') as ColorLike) : fillColor,
-        strokeWidth: outlined.strokeWidth(),
-        strokeStyle: getStrokeStyle((find(strokeStyleShapes) ?? first).dash()),
-        edges: getEdges((find(edgesShapes) ?? first).getAttr('cornerRadius')),
-        opacity: first.opacity(),
-      };
-
-      // path and heads of the first arrow
-      const arrow = shapes.find((s): s is Arrow => s instanceof Arrow);
-
-      if (arrow) Object.assign(data, { arrowType: getArrowType(arrow), arrowheads: getArrowheads(arrow) });
-    } else if (shape?.length) {
-      // frames
-      data.opacity = shape[0].opacity();
-    }
-
+    if (shape?.length) data.opacity = shape[0].opacity();
     this.updateFields(data);
   }
 

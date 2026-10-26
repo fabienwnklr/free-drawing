@@ -20,6 +20,7 @@ export const en = {
   'toast.requestRefused': 'The owner of the session refused your request to draw',
   'toast.saveFailed': "Drawing can't be saved: {error}",
   'toast.saved': 'Drawing saved',
+  'toast.styleCopied': 'Style copied',
   'toast.loadFailed': "Drawing can't be loaded: {error}",
   'toast.invalidFile': 'Invalid drawing file: {error}',
   'toast.linkCopied': 'Link copied',
@@ -107,6 +108,7 @@ export const en = {
   'color.pink': 'Pink',
   'color.transparent': 'Transparent',
   'color.custom': 'Custom color',
+  'color.pick': 'Pick a color on the screen',
 
   // help
   'help.title': 'Help',
@@ -198,6 +200,8 @@ export const en = {
   // actions on selection
   'selectionMenu.label': 'Selection actions',
   'action.duplicate': 'Duplicate',
+  'action.copyStyle': 'Copy style',
+  'action.pasteStyle': 'Paste style',
   'action.group': 'Group',
   'action.ungroup': 'Ungroup',
   'action.sendToBack': 'Send to back',
