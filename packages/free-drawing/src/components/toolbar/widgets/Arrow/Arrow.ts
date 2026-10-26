@@ -8,9 +8,18 @@ import { Group } from 'konva/lib/Group';
 import type { Vector2d } from 'konva/lib/types';
 import { ShapeWidget, snapAngle } from '@/components/toolbar/widgets/ShapeWidget';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
-import { anchors, bindingMargin, findBindingTarget, getAnchorAt, getAnchorPoints, getBoundEnds } from '@/utils/binding';
-import type { BoundEnd } from '@/@types/shapes';
+import {
+  anchors,
+  bindingMargin,
+  findBindingTarget,
+  getAnchorAt,
+  getAnchorPoints,
+  getBoundEnds,
+  toArrowEnds,
+} from '@/utils/binding';
+import type { BoundEnd, EndBoxes } from '@/@types/shapes';
 import { withFrameShapes } from '@/utils/frame';
+import { arrowheadAttrs, getArrowType, getDrawnBend, routeArrow } from '@/utils/arrow';
 
 /**
  * Arrow head size, proportional to stroke width
@@ -31,6 +40,9 @@ export class ArrowWidget extends ShapeWidget<Arrow> {
   #start: BoundEnd | null = null;
   /** Shapes linked while drawing (or under pointer), highlighted with their sides */
   #highlights: Group[] = [];
+  /** Pointer positions while drawing: a curved arrow bends on the side the pointer went */
+  #path: Vector2d[] = [];
+  protected hasArrowOptions = true;
 
   /**
    * Create the arrow tool, shortcut A
@@ -58,13 +70,15 @@ export class ArrowWidget extends ShapeWidget<Arrow> {
   /**
    * Arrow of length 0 at drag start, start linked to the shape there (kept for `updateShape`)
    * @param start Drag start, in drawing coordinates
-   * @returns Arrow with filled head sized from stroke width
+   * @returns Arrow with heads sized from stroke width, path and heads of the options
    */
   protected createShape(start: Vector2d) {
     const style = this.shapeStyle;
     const pointerSize = arrowPointerSize(style.strokeWidth);
+    const { arrowType, arrowheads } = this.drawer.options;
 
     this.#start = this._findEnd(start);
+    this.#path = [start];
 
     return new Arrow({
       ...style,
@@ -76,6 +90,9 @@ export class ArrowWidget extends ShapeWidget<Arrow> {
       lineCap: 'round',
       lineJoin: 'round',
       name: shapeName.arrow,
+      // straight without attribute (arrows of previous versions)
+      ...(arrowType !== 'straight' && { arrowType }),
+      ...arrowheadAttrs(arrowheads),
     });
   }
 
@@ -93,10 +110,19 @@ export class ArrowWidget extends ShapeWidget<Arrow> {
     const single = !!endBound && endBound.shape === this.#start?.shape;
     const startBound = single ? null : this._unlinked() ? null : this.#start;
     const linkedEnd = single ? null : endBound;
-    const ends = getBoundEnds(this.drawer.drawLayer, startBound ?? start, linkedEnd ?? free) ?? { start, end: free };
+    const layer = this.drawer.drawLayer;
+    const type = getArrowType(arrow);
+    const bound = getBoundEnds(layer, startBound ?? start, linkedEnd ?? free, type === 'elbow');
+    const ends = bound
+      ? toArrowEnds(arrow, layer, bound)
+      : { start, end: free, boxes: [undefined, undefined] as EndBoxes };
 
+    this.#path.push(end);
+    // curve on the side the pointer went
+    if (type === 'curved') arrow.setAttr('bend', getDrawnBend(ends.start, ends.end, this.#path));
+    // straight line, curve or elbow around the linked shapes between the ends
+    routeArrow(arrow, ends.start, ends.end, ends.boxes);
     arrow.setAttrs({
-      points: [ends.start.x, ends.start.y, ends.end.x, ends.end.y],
       startBinding: startBound?.shape.id(),
       startAnchor: startBound?.anchor,
       endBinding: linkedEnd?.shape.id(),
@@ -110,6 +136,7 @@ export class ArrowWidget extends ShapeWidget<Arrow> {
    */
   protected onDrawEnd() {
     this.#start = null;
+    this.#path = [];
     this._highlight([]);
   }
 

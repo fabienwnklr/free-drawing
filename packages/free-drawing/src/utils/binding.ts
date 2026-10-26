@@ -6,8 +6,9 @@ import { Shape } from 'konva/lib/Shape';
 import type { IRect, Vector2d } from 'konva/lib/types';
 import type { DrawingShape } from '@/@types/drawer';
 import { fillShapes, pathShapes, shapeName } from '@/constants';
-import type { Anchor, BoundEnd, OutlineCrossing, PathOutline } from '@/@types/shapes';
+import type { Anchor, ArrowEnds, BoundEnd, BoundEnds, OutlineCrossing, PathOutline } from '@/@types/shapes';
 import { isFrame } from '@/utils/frame';
+import { getArrowType, routeArrow } from '@/utils/arrow';
 
 /**
  * Arrows linked to shapes: their start and end stay on outline of shapes (`startBinding` / `endBinding` attributes:
@@ -371,14 +372,41 @@ export function findBindingTarget(
 
 /**
  * Ends of an arrow from its linked shapes (layer coordinates): at their side, or on their outline aiming at the
- * other end (its side, its shape center or its point)
+ * other end (its side, its shape center or its point); an end of an elbow arrow without side leaves the side of its
+ * shape facing the other end: across the space between them (the axis they are the farthest apart on), between their
+ * centers when they overlap
  * @param layer layer of the arrow and its shapes
- * @param start Start linked to a shape, or start point
- * @param end End linked to a shape, or end point
- * @returns start and end points, null when an end on outline aims at the center of its own shape
+ * @param from Start linked to a shape, or start point
+ * @param to End linked to a shape, or end point
+ * @param elbow Elbow arrow: ends on sides, boxes of the linked shapes given
+ * @returns start and end points, the sides they are fixed to and the boxes of their shapes, null when an end on
+ * outline aims at the center of its own shape
  */
-export function getBoundEnds(layer: Container, start: BoundEnd | Vector2d, end: BoundEnd | Vector2d) {
+export function getBoundEnds(
+  layer: Container,
+  from: BoundEnd | Vector2d,
+  to: BoundEnd | Vector2d,
+  elbow = false
+): BoundEnds | null {
   const isBound = (value: BoundEnd | Vector2d): value is BoundEnd => 'shape' in value;
+  const boxOf = (value: BoundEnd | Vector2d): IRect =>
+    isBound(value) ? value.shape.getClientRect({ relativeTo: layer }) : { ...value, width: 0, height: 0 };
+  // side facing the other end (its shape or its point)
+  const facing = (value: BoundEnd | Vector2d, other: BoundEnd | Vector2d): BoundEnd | Vector2d => {
+    if (!elbow || !isBound(value) || value.anchor) return value;
+
+    const [a, b] = [boxOf(value), boxOf(other)];
+    // space between the boxes on each axis, negative when they overlap on it
+    const spaceX = Math.max(b.x - (a.x + a.width), a.x - (b.x + b.width));
+    const spaceY = Math.max(b.y - (a.y + a.height), a.y - (b.y + b.height));
+    const [dx, dy] = [center(b).x - center(a).x, center(b).y - center(a).y];
+    const horizontal = spaceX > 0 || spaceY > 0 ? spaceX >= spaceY : Math.abs(dx) >= Math.abs(dy);
+    const anchor: Anchor = horizontal ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'bottom' : 'top';
+
+    return { ...value, anchor };
+  };
+  const start = facing(from, to);
+  const end = facing(to, from);
   const aimOf = (other: BoundEnd | Vector2d) => {
     if (!isBound(other)) return other;
 
@@ -393,23 +421,100 @@ export function getBoundEnds(layer: Container, start: BoundEnd | Vector2d, end: 
   };
   const startPoint = pointOf(start, end);
   const endPoint = pointOf(end, start);
+  const anchorOf = (value: BoundEnd | Vector2d) => (isBound(value) ? value.anchor : undefined);
+  // elbow arrows go around their shapes
+  const shapeBox = (value: BoundEnd | Vector2d) => (elbow && isBound(value) ? boxOf(value) : undefined);
 
   return startPoint && endPoint
     ? {
-        /** Start of arrow */
         start: startPoint,
-        /** End of arrow */
         end: endPoint,
+        anchors: [anchorOf(start), anchorOf(end)],
+        boxes: [shapeBox(start), shapeBox(end)],
       }
     : null;
 }
 
 /**
- * Number rounded to 2 decimals (points of arrows)
- * @param n coordinate to round
- * @returns rounded coordinate
+ * Ends of an arrow in its own coordinates, boxes of its shapes as bounding boxes there
+ * @param arrow Arrow
+ * @param layer Layer of the arrow, coordinates of the ends
+ * @param ends Ends in layer coordinates (see `getBoundEnds`)
+ * @returns Ends to route the arrow with (see `routeArrow`)
  */
-const round = (n: number) => Math.round(n * 100) / 100;
+export function toArrowEnds(arrow: Arrow, layer: Container, ends: BoundEnds): ArrowEnds {
+  const toLocal = arrow.getAbsoluteTransform(layer).copy().invert();
+  const localBox = (box: IRect | undefined): IRect | undefined => {
+    if (!box) return undefined;
+
+    const corners = [
+      { x: box.x, y: box.y },
+      { x: box.x + box.width, y: box.y },
+      { x: box.x, y: box.y + box.height },
+      { x: box.x + box.width, y: box.y + box.height },
+    ].map((corner) => toLocal.point(corner));
+    const [xs, ys] = [corners.map(({ x }) => x), corners.map(({ y }) => y)];
+
+    return {
+      x: Math.min(...xs),
+      y: Math.min(...ys),
+      width: Math.max(...xs) - Math.min(...xs),
+      height: Math.max(...ys) - Math.min(...ys),
+    };
+  };
+
+  return {
+    start: toLocal.point(ends.start),
+    end: toLocal.point(ends.end),
+    boxes: [localBox(ends.boxes[0]), localBox(ends.boxes[1])],
+  };
+}
+
+/**
+ * Ends of an arrow: on its linked shapes, else its own first and last points
+ * @param arrow Arrow
+ * @param layer Layer of the arrow and its shapes
+ * @param find Shape of an id (default: searched in the layer)
+ * @returns Ends in coordinates of the arrow (see `toArrowEnds`), null when an end on outline aims at the center of
+ * its own shape
+ */
+export function getArrowEnds(
+  arrow: Arrow,
+  layer: Container,
+  find: (id: string) => Node | undefined = (id) => layer.findOne((node: Node) => node.id() === id)
+): ArrowEnds | null {
+  const [start, end] = bindingAttrs.map((attr, i): BoundEnd | undefined => {
+    const id = arrow.getAttr(attr);
+    const shape = id ? find(id) : undefined;
+    const anchor = arrow.getAttr(anchorAttrs[i]);
+
+    return shape && { shape, anchor: anchors.includes(anchor) ? anchor : undefined };
+  });
+  const transform = arrow.getAbsoluteTransform(layer);
+  const points = arrow.points();
+  const n = points.length;
+  const ends = getBoundEnds(
+    layer,
+    start ?? transform.point({ x: points[0], y: points[1] }),
+    end ?? transform.point({ x: points[n - 2], y: points[n - 1] }),
+    getArrowType(arrow) === 'elbow'
+  );
+
+  return ends && toArrowEnds(arrow, layer, ends);
+}
+
+/**
+ * Path of an arrow drawn again between its ends (see `getArrowEnds`): after a change of its path, its bend or its
+ * middle segment
+ * @param arrow Arrow
+ * @param layer Layer of the arrow and its shapes
+ * @param find Shape of an id (default: searched in the layer)
+ */
+export function rerouteArrow(arrow: Arrow, layer: Container, find?: (id: string) => Node | undefined) {
+  const ends = getArrowEnds(arrow, layer, find);
+
+  if (ends) routeArrow(arrow, ends.start, ends.end, ends.boxes);
+}
 
 /**
  * Arrows follow their linked shapes, links to removed shapes are removed
@@ -424,40 +529,20 @@ export function updateBindings(layer: Container): boolean {
   nodes.forEach((arrow) => {
     if (!(arrow instanceof Arrow) || ![...bindingAttrs, ...anchorAttrs].some((attr) => arrow.getAttr(attr))) return;
 
-    const [start, end] = bindingAttrs.map((attr, i): BoundEnd | undefined => {
-      const shape = byId.get(arrow.getAttr(attr));
-      const anchor = arrow.getAttr(anchorAttrs[i]);
-
-      // link removed with its shape, side without link
-      if (!shape && (arrow.getAttr(attr) || anchor)) {
+    // links of removed shapes, sides without link
+    bindingAttrs.forEach((attr, i) => {
+      if ((arrow.getAttr(attr) || arrow.getAttr(anchorAttrs[i])) && !byId.get(arrow.getAttr(attr))) {
         arrow.setAttrs({ [attr]: undefined, [anchorAttrs[i]]: undefined });
         changed = true;
       }
-      return shape && { shape, anchor: anchors.includes(anchor) ? anchor : undefined };
     });
+    if (!bindingAttrs.some((attr) => arrow.getAttr(attr))) return;
 
-    if (!start && !end) return;
-
-    const transform = arrow.getAbsoluteTransform(layer);
-    const toLocal = transform.copy().invert();
     const points = arrow.points();
-    const n = points.length;
-    const ends = getBoundEnds(
-      layer,
-      start ?? transform.point({ x: points[0], y: points[1] }),
-      end ?? transform.point({ x: points[n - 2], y: points[n - 1] })
-    );
 
-    if (!ends) return;
-
-    const a = toLocal.point(ends.start);
-    const b = toLocal.point(ends.end);
-    const updated = [round(a.x), round(a.y), ...points.slice(2, n - 2), round(b.x), round(b.y)];
-
-    if (updated.some((value, i) => value !== points[i])) {
-      arrow.points(updated);
-      changed = true;
-    }
+    // path from the ends (curve, elbow around the shapes)
+    rerouteArrow(arrow, layer, (id) => byId.get(id));
+    if (arrow.points().join() !== points.join()) changed = true;
   });
 
   return changed;

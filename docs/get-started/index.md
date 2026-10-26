@@ -67,6 +67,8 @@ The library needs no framework. React and Vue apps can use its `FreeDrawing` com
   strokeColor: '#000', // color for drawing stroke
   fillColor: 'transparent', // background color of rectangles and ellipses, 'transparent' for none
   edges: 'sharp', // corners of rectangles: 'sharp', 'round' (radius following their size) or radius (px), drawer.setEdges(12) for new and selected ones
+  arrowType: 'straight', // path of arrows: 'straight' | 'curved' | 'elbow', drawer.setArrowType('elbow') for new and selected ones
+  arrowheads: { start: 'none', end: 'triangle' }, // heads of arrow ends: 'none' | 'arrow' | 'triangle' | 'dot' | 'bar', drawer.setArrowheads({ start: 'dot' })
   zoom: true, // enable/disable zoom (Ctrl + wheel, pinch, Shift + 1 / 2 / 0)
   zoomWidget: true, // enable/disable zoom ui widget
   positionWidget: true, // enable/disable position ui widget (x / y of view, button back to origin)
@@ -486,9 +488,22 @@ A double click on a rectangle, an ellipse, a triangle, a diamond, a heart or a c
 
 The text of a shape is a text of the drawing with a `containerId` attribute, the id of its shape: placed in it on each change.
 
+## Arrows
+
+The panel of the arrow tool (and of selected arrows) chooses their path and the head of each end:
+
+- path: straight, curved or elbow;
+- head of the start and of the end: none, arrow (open), triangle, dot or bar.
+
+A curved arrow bends on the side the pointer went while drawing it, as far as it went (on its left for a straight gesture). An elbow arrow is made of horizontal and vertical lines: it leaves the sides of the shapes it links (straight out of them first, room for its heads), goes around them, never through them, and turns in the middle of the space between them; a free end leaves along the longest distance between the ends.
+
+A selected curved or elbow arrow (alone, with the selection tool) has a handle in its middle: dragged, it bends the curve on either side (straight near the line), or moves the middle segment of the elbow arrow (back to its automatic place near it; a place in a shape is not taken). The arrow keeps it when its shapes move; an elbow arrow whose middle segment turns the other way (shapes moved round each other) gets its automatic path again.
+
+`arrowType` and `arrowheads` options give them to new arrows, `drawer.setArrowType('elbow')` and `drawer.setArrowheads({ start: 'dot' })` change them for new and selected arrows (path drawn again between their ends). They are saved as `arrowType` (none for straight arrows), `startHead`, `endHead`, `bend` (distance of the middle of a curve from the straight line, in lengths of the arrow, positive on its left) and `elbowMid` (distance of the middle segment from the middle between the ends) attributes of arrows: arrows of previous versions keep their triangle at the end. Exports draw them as shown.
+
 ## Linked arrows
 
-An arrow drawn from a shape to another one (end near them, 12 px on screen whatever the zoom) is linked to them: its ends follow them when they move, are resized or rotated. Rectangles, ellipses, triangles, diamonds, hearts and clouds are linked near their outline as drawn (not the corners of their box), their ends stay on it (the side of a triangle, the dip of a heart), inside only with a background: the empty inside of a big shape is a free place, a small one is linked from its middle. In a frame, ends are linked to its shapes, to the frame only near its border. With the arrow tool, shapes under pointer show the middle of their sides (on the outline of triangles, diamonds, hearts and clouds): an end released near one is fixed to this side (e.g. bottom of a shape to left side of another one), else it stays on the outline aiming at the other end. Ctrl (Cmd) draws an arrow without links. Arrows moved without their shapes (or with removed shapes) are unlinked, copies of arrows and shapes are linked together. Links are `startBinding` / `endBinding` (ids of shapes) and `startAnchor` / `endAnchor` (`top`, `right`, `bottom`, `left`) attributes of arrows.
+An arrow drawn from a shape to another one (end near them, 12 px on screen whatever the zoom) is linked to them: its ends follow them when they move, are resized or rotated. Rectangles, ellipses, triangles, diamonds, hearts and clouds are linked near their outline as drawn (not the corners of their box), their ends stay on it (the side of a triangle, the dip of a heart), inside only with a background: the empty inside of a big shape is a free place, a small one is linked from its middle. In a frame, ends are linked to its shapes, to the frame only near its border. With the arrow tool, shapes under pointer show the middle of their sides (on the outline of triangles, diamonds, hearts and clouds): an end released near one is fixed to this side (e.g. bottom of a shape to left side of another one), else it stays on the outline aiming at the other end. An elbow arrow leaves the sides of its shapes facing each other across the space between them (or the sides it is fixed to) and is drawn again around them when they move. Ctrl (Cmd) draws an arrow without links. Arrows moved without their shapes (or with removed shapes) are unlinked, copies of arrows and shapes are linked together. Links are `startBinding` / `endBinding` (ids of shapes) and `startAnchor` / `endAnchor` (`top`, `right`, `bottom`, `left`) attributes of arrows.
 
 ## Stacking order
 

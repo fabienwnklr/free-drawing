@@ -83,6 +83,9 @@ const attrChecks: Record<string, AttrCheck> = {
       'shadowOpacity',
       'shadowOffsetX',
       'shadowOffsetY',
+      // bend of curved arrows, middle segment of elbow ones
+      'bend',
+      'elbowMid',
     ].map((key) => [key, isNumber])
   ),
   ...Object.fromEntries(
@@ -114,6 +117,10 @@ const attrChecks: Record<string, AttrCheck> = {
       'fileId',
       // shape holding a text
       'containerId',
+      // path and heads of arrows
+      'arrowType',
+      'startHead',
+      'endHead',
     ].map((key) => [key, isString])
   ),
   ...Object.fromEntries(

@@ -151,6 +151,8 @@ describe('Drawing files and links', () => {
     drawer.setFillColor('#ffec99');
     drawer.setEdges('round');
     drawer.setOpacity(0.5);
+    drawer.setArrowType('curved');
+    drawer.setArrowheads({ start: 'dot' });
     for (const [index, tool] of [...tools, 'frame'].entries()) {
       drawer.getWidget<BaseWidget>(tool as BaseWidget['id'])!.setActive(true);
       drag(drawer, [10, 10 + index * 60], [80, 50 + index * 60]);

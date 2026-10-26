@@ -1,5 +1,5 @@
 import type { Node } from 'konva/lib/Node';
-import type { Vector2d } from 'konva/lib/types';
+import type { IRect, Vector2d } from 'konva/lib/types';
 import type { Frame } from '@/utils/frame';
 
 /**
@@ -33,6 +33,68 @@ export type BoundEnd = {
   shape: Node;
   /** Side whose middle the end is fixed to, else end on outline */
   anchor?: Anchor;
+};
+
+/** Boxes of the shapes linked to the start and the end of an arrow (undefined: free end) */
+export type EndBoxes = [IRect | undefined, IRect | undefined];
+
+/**
+ * Ends of an arrow from its links (see `getBoundEnds` of utils/binding), in layer coordinates
+ */
+export type BoundEnds = {
+  /** Start of arrow */
+  start: Vector2d;
+  /** End of arrow */
+  end: Vector2d;
+  /** Sides of shapes the start and the end are fixed to */
+  anchors: [Anchor | undefined, Anchor | undefined];
+  /** Boxes of the linked shapes (stroke included), only for elbow arrows: they go around them */
+  boxes: EndBoxes;
+};
+
+/**
+ * Ends of an arrow and boxes of its linked shapes in coordinates of the arrow, to route it (see `routeArrow` of
+ * utils/arrow)
+ */
+export type ArrowEnds = {
+  /** Start of arrow */
+  start: Vector2d;
+  /** End of arrow */
+  end: Vector2d;
+  /** Boxes of the linked shapes (bounding boxes in coordinates of the arrow), only for elbow arrows */
+  boxes: EndBoxes;
+};
+
+/** Line of the grid of elbow arrows (see utils/elbow): coordinate and cost of a turn onto it */
+export type GridLine = {
+  /** Coordinate of the line: x of a vertical line, y of a horizontal one */
+  value: number;
+  /** Cost added by a turn onto it: lines in the middle preferred, others only when needed */
+  cost: number;
+};
+
+/** Line chosen for the middle segment of an elbow arrow (its `elbowMid` attribute) */
+export type ElbowLine = {
+  /** `x` for a vertical segment (moved along x), `y` for a horizontal one */
+  axis: 'x' | 'y';
+  /** Coordinate of the segment on this axis */
+  value: number;
+};
+
+/** Middle segment of an elbow arrow (between two turns, not at its ends): moved by the handle of the arrow */
+export type ElbowSegment = {
+  /** Index of its first point in the points of the arrow */
+  index: number;
+  /** Vertical segment (moved along x), else horizontal */
+  vertical: boolean;
+};
+
+/** Drag of the handle of a selected arrow (see `ArrowHandle` of utils/arrowHandle) */
+export type ArrowHandleDrag = {
+  /** Middle segment of an elbow arrow vertical (moved along x), else horizontal; unused for curves */
+  vertical: boolean;
+  /** Coordinate of the middle segment of the elbow arrow without `elbowMid` (the handle snaps to it), null without */
+  initial: number | null;
 };
 
 /**

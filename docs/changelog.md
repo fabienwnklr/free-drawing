@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.34.0](https://github.com/fabienwnklr/free-drawing/compare/v7.33.0...v7.34.0) (2026-10-26)
+
+
+### Features
+
+* **arrows:** curved and elbow arrows: path chosen in the panel of the arrow tool or of selected arrows (`arrowType` option, `drawer.setArrowType`); a curve bends on the side the pointer went while drawing it; elbow arrows are horizontal and vertical lines leaving the sides of the shapes they link facing each other, around the shapes (never through them), drawn again when these move
+* **arrows:** handle of a selected curved or elbow arrow: it bends the curve on either side (`bend` attribute) or moves the middle segment of the elbow arrow (`elbowMid` attribute), kept when the shapes move
+* **arrows:** head of each end of arrows: none, arrow, triangle, dot or bar (`arrowheads` option, `drawer.setArrowheads`, `startHead` / `endHead` attributes), also in svg exports; arrows of previous versions keep their triangle at the end
+
 ## [7.33.0](https://github.com/fabienwnklr/free-drawing/compare/v7.32.0...v7.33.0) (2026-10-26)
 
 

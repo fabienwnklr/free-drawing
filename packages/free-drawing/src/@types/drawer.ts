@@ -35,6 +35,10 @@ export type DrawerOptions = {
   fillColor: ColorLike;
   /** Corners of rectangles: 'sharp' (default), 'round' (radius following rectangle size) or radius (px) */
   edges: Edges;
+  /** Path of new arrows: 'straight' (default), 'curved' or 'elbow' (horizontal and vertical lines) */
+  arrowType: ArrowType;
+  /** Ends of new arrows (default: no start head, triangle at the end) */
+  arrowheads: Arrowheads;
   /** Opacity of new shapes, from 0 to 1 (default 1) */
   opacity: number;
   /** Style of new texts (font, size, style, decoration, alignment) */
@@ -152,6 +156,22 @@ export type ShapeOrder = 'forward' | 'backward' | 'front' | 'back';
  */
 export type ShapeAlignment = 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom';
 
+/** Path of an arrow: straight line, curve (bent on its left), elbow (horizontal and vertical lines) */
+export type ArrowType = 'straight' | 'curved' | 'elbow';
+
+/** End of an arrow: nothing, open head, filled triangle, dot, bar across the line */
+export type Arrowhead = 'none' | 'arrow' | 'triangle' | 'dot' | 'bar';
+
+/**
+ * Heads of both ends of an arrow
+ */
+export type Arrowheads = {
+  /** Head of the start of the arrow */
+  start: Arrowhead;
+  /** Head of the end of the arrow */
+  end: Arrowhead;
+};
+
 /** Axis of a flip, a distribution or a stack of shapes */
 export type Direction = 'horizontal' | 'vertical';
 
@@ -175,7 +195,10 @@ export type TextStyle = {
  * Options changed by Drawer setters, sent with `drawer.options.change` event (only changed keys)
  */
 export type OptionsChange = Partial<
-  Pick<DrawerOptions, 'strokeColor' | 'fillColor' | 'strokeWidth' | 'strokeStyle' | 'edges' | 'opacity'>
+  Pick<
+    DrawerOptions,
+    'strokeColor' | 'fillColor' | 'strokeWidth' | 'strokeStyle' | 'edges' | 'arrowType' | 'arrowheads' | 'opacity'
+  >
 > & {
   /** Changed keys of text style */
   textStyle?: Partial<TextStyle>;

@@ -1,7 +1,7 @@
 import type { DrawerOptions } from '@/@types/drawer';
 import type { WidgetName } from '@/@types/toolbar';
 import type { TranslationKey } from '@/@types/i18n';
-import type { Direction, ShapeAlignment, ShapeOrder } from '@/@types/drawer';
+import type { Arrowhead, ArrowType, Direction, ShapeAlignment, ShapeOrder } from '@/@types/drawer';
 import type { IconChoice, ShortcutChoice } from '@/@types/ui';
 import SendToBackIcon from '@/icons/send-to-back.svg?raw';
 import SendBackwardIcon from '@/icons/send-backward.svg?raw';
@@ -17,6 +17,14 @@ import DistributeHorizontalIcon from '@/icons/distribute-horizontal.svg?raw';
 import DistributeVerticalIcon from '@/icons/distribute-vertical.svg?raw';
 import StackHorizontalIcon from '@/icons/stack-horizontal.svg?raw';
 import StackVerticalIcon from '@/icons/stack-vertical.svg?raw';
+import ArrowStraightIcon from '@/icons/arrow-straight.svg?raw';
+import ArrowCurvedIcon from '@/icons/arrow-curved.svg?raw';
+import ArrowElbowIcon from '@/icons/arrow-elbow.svg?raw';
+import ArrowheadNoneIcon from '@/icons/arrowhead-none.svg?raw';
+import ArrowheadArrowIcon from '@/icons/arrowhead-arrow.svg?raw';
+import ArrowheadTriangleIcon from '@/icons/arrowhead-triangle.svg?raw';
+import ArrowheadDotIcon from '@/icons/arrowhead-dot.svg?raw';
+import ArrowheadBarIcon from '@/icons/arrowhead-bar.svg?raw';
 
 /**
  * Widgets of toolbar, default order
@@ -52,6 +60,8 @@ export const defaultOptions: DrawerOptions = {
   strokeWidth: 5,
   strokeStyle: 'solid',
   edges: 'sharp',
+  arrowType: 'straight',
+  arrowheads: { start: 'none', end: 'triangle' },
   strokeColor: '#000',
   fillColor: 'transparent',
   zoom: true,
@@ -270,6 +280,10 @@ export const dataAttributes = {
   strokeStyle: 'data-stroke-style',
   /** Corners of rectangles: sharp or round */
   edges: 'data-edges',
+  /** Path of arrows: straight, curved or elbow */
+  arrowType: 'data-arrow-type',
+  /** Head of an end of arrows: none, arrow, triangle, dot or bar */
+  arrowhead: 'data-arrowhead',
   /** Font size of texts (px) */
   fontSize: 'data-font-size',
   /** Font style of texts: bold or italic */
@@ -308,6 +322,22 @@ export const shapeAlignments: IconChoice<ShapeAlignment>[] = [
 export const shapeDistributions: IconChoice<Direction>[] = [
   { value: 'horizontal', label: 'action.distributeHorizontal', icon: DistributeHorizontalIcon },
   { value: 'vertical', label: 'action.distributeVertical', icon: DistributeVerticalIcon },
+];
+
+/** Paths of arrows: buttons of options panels */
+export const arrowTypeChoices: IconChoice<ArrowType>[] = [
+  { value: 'straight', label: 'arrow.straight', icon: ArrowStraightIcon },
+  { value: 'curved', label: 'arrow.curved', icon: ArrowCurvedIcon },
+  { value: 'elbow', label: 'arrow.elbow', icon: ArrowElbowIcon },
+];
+
+/** Heads of the ends of arrows: buttons of options panels (icons of end heads, mirrored for start heads) */
+export const arrowheadChoices: IconChoice<Arrowhead>[] = [
+  { value: 'none', label: 'arrowhead.none', icon: ArrowheadNoneIcon },
+  { value: 'arrow', label: 'arrowhead.arrow', icon: ArrowheadArrowIcon },
+  { value: 'triangle', label: 'arrowhead.triangle', icon: ArrowheadTriangleIcon },
+  { value: 'dot', label: 'arrowhead.dot', icon: ArrowheadDotIcon },
+  { value: 'bar', label: 'arrowhead.bar', icon: ArrowheadBarIcon },
 ];
 
 /** Selected shapes one after the other along an axis: buttons of options panels, commands of the palette */

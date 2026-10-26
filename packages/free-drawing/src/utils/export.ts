@@ -11,6 +11,7 @@ import { Ellipse } from 'konva/lib/shapes/Ellipse';
 import { Text } from 'konva/lib/shapes/Text';
 import { Path } from 'konva/lib/shapes/Path';
 import { Image } from 'konva/lib/shapes/Image';
+import { arrowheadSvg } from '@/utils/arrow';
 import { normalizeColor } from '@/utils/color';
 import { getShapes } from '@/utils/hit';
 import { frameParts } from '@/utils/frame';
@@ -316,18 +317,10 @@ function shapeElement(shape: Node, dark: boolean | undefined, matrix: number[]):
   }
 
   if (shape instanceof Arrow) {
-    const points = shape.points();
-    const n = points.length;
-    const angle = (Math.atan2(points[n - 1] - points[n - 3], points[n - 2] - points[n - 4]) * 180) / Math.PI;
-    const length = shape.pointerLength();
-    const width = shape.pointerWidth();
-    const head = `<path${attrs({
-      d: `M0 0L${num(-length)} ${num(width / 2)}L${num(-length)} ${num(-width / 2)}Z`,
-      transform: `translate(${num(points[n - 2])} ${num(points[n - 1])}) rotate(${num(angle)})`,
-      fill,
-    })}${strokeAttrs(false)}/>`;
+    // heads of both ends, as drawn (open, triangle, dot, bar)
+    const heads = [true, false].map((atStart) => arrowheadSvg(shape, atStart, fill, strokeAttrs(false))).join('');
 
-    return `<g${group}><path${attrs({ d: linePath(shape), fill: 'none' })}${strokeAttrs()}/>${head}</g>`;
+    return `<g${group}><path${attrs({ d: linePath(shape), fill: 'none' })}${strokeAttrs()}/>${heads}</g>`;
   }
 
   if (shape instanceof Line) {

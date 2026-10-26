@@ -14,7 +14,7 @@ free-drawing gives any web page an infinite canvas to draw, organize and share i
 ![Toolbar with the "More tools" group open and the options of the brush](/features/tools.webp){.screenshot width=1280 height=800}
 
 - **Freehand**: a brush with smooth strokes following the speed of the pointer ([perfect-freehand](https://github.com/steveruizok/perfect-freehand)), and a highlighter whose fluorescent colors are multiplied with the drawing below, so texts stay readable.
-- **Shapes**: rectangles with sharp or round corners, ellipses, lines, arrows, triangles, diamonds, hearts and clouds, drawn in the dragged box. Shift draws squares, circles and lines at 45°.
+- **Shapes**: rectangles with sharp or round corners, ellipses, lines, arrows (straight, curved or elbow, a head of your choice at each end: arrow, triangle, dot, bar or none), triangles, diamonds, hearts and clouds, drawn in the dragged box. Shift draws squares, circles and lines at 45°.
 - **Images**: insert (image tool of the toolbar) or paste images (screenshots, photos, SVG), resized with their proportions, kept small in files and links, shared in live sessions, with their colors in dark mode.
 - **Texts**: font, size, bold, italic, underline, alignment, and a width fitted to their content. Write in a shape with a double click: the text stays centered in it when it is moved, resized or turned; on an arrow, it is a label.
 - **Styles**: stroke color and width, solid, dashed or dotted strokes, background color, corners, opacity, from the panel of the tool or of the selection.
@@ -45,10 +45,10 @@ More in [Selection](/get-started/#selection).
 - **Layers panel** (Alt + L): every shape with its name, top first. Rename, hide, lock, drag to reorder, select ranges with Shift.
 - **Groups** move and style their shapes together, which can still be reached alone with Ctrl + click.
 - **Frames**: named areas holding the shapes drawn or moved into them, cut at their border, exported without their title. A frame a shape is moved into or out of is highlighted, the moved shape is drawn whole. A selected frame has its opacity, stacking order and actions.
-- **Linked arrows** follow the shapes they link when these are moved or resized, fixed to a side or to the outline.
+- **Linked arrows** follow the shapes they link when these are moved or resized, fixed to a side or to the outline; elbow arrows leave the sides facing each other with horizontal and vertical lines and go around the shapes. The handle of a selected curved or elbow arrow bends the curve on either side or moves the middle segment.
 - **Stacking order**: forward and backward past the next overlapping shape, or to the front and back.
 
-More in [Layers](/get-started/#layers), [Linked arrows](/get-started/#linked-arrows) and [Stacking order](/get-started/#stacking-order).
+More in [Layers](/get-started/#layers), [Arrows](/get-started/#arrows), [Linked arrows](/get-started/#linked-arrows) and [Stacking order](/get-started/#stacking-order).
 
 ## Menus, shortcuts and command palette
 

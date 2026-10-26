@@ -1,5 +1,7 @@
 import type { Drawer } from '@/Drawer';
-import type { ColorLike, Edges, OptionsChange, StrokeStyle } from '@/@types/drawer';
+import type { Arrowheads, ColorLike, Edges, OptionsChange, StrokeStyle } from '@/@types/drawer';
+import { Arrow } from 'konva/lib/shapes/Arrow';
+import { getArrowheads, getArrowType } from '@/utils/arrow';
 import LineIcon from '@/icons/line.svg?raw';
 import LineDottedIcon from '@/icons/line-dotted.svg?raw';
 import LineDashedIcon from '@/icons/line-dashed.svg?raw';
@@ -16,6 +18,8 @@ import {
   dataAttributes,
   drawerEvents,
   edgesShapes,
+  arrowTypeChoices,
+  arrowheadChoices,
   fillShapes,
   shapeName,
   strokeStyleShapes,
@@ -75,6 +79,15 @@ export class BaseOverlay {
   $edgesBtnContainer!: HTMLDivElement;
   /** Corner radius field, empty for a radius following size (round) */
   $edgesRadius!: HTMLInputElement;
+
+  /** Arrow path section (straight, curved, elbow), shown with `toggleArrowBtns` (arrows) */
+  $arrowTypeContainer!: HTMLDivElement;
+  /** Buttons of arrow paths */
+  $arrowTypeBtnContainer!: HTMLDivElement;
+  /** Sections of the heads of the start and the end of arrows, shown with `toggleArrowBtns` */
+  $arrowheadContainers!: Record<keyof Arrowheads, HTMLDivElement>;
+  /** Buttons of the heads of the start and the end of arrows */
+  $arrowheadBtnContainers!: Record<keyof Arrowheads, HTMLDivElement>;
 
   /** Opacity section: title and range */
   $opacityContainer!: HTMLDivElement;
@@ -147,6 +160,8 @@ export class BaseOverlay {
     this._createStrokeStyleFields();
     // corners
     this._createEdgesFields();
+    // path and heads of arrows
+    this._createArrowFields();
     // opacity
     this._createOpacityField();
     // stacking order of selected shapes
@@ -163,6 +178,9 @@ export class BaseOverlay {
       this.$strokeWidthContainer,
       this.$strokeStyleContainer,
       this.$edgesContainer,
+      this.$arrowTypeContainer,
+      this.$arrowheadContainers.start,
+      this.$arrowheadContainers.end,
       this.$opacityContainer,
       this.$orderContainer,
       this.$alignContainer,
@@ -318,6 +336,42 @@ export class BaseOverlay {
     this.$edgesBtnContainer.append(this.$edgesRadius);
 
     this.toggleEdgesBtns(false);
+  }
+
+  /**
+   * Arrow sections: path (`drawer.setArrowType`), heads of the start and of the end (`drawer.setArrowheads`), hidden
+   * until `toggleArrowBtns`
+   */
+  private _createArrowFields() {
+    const type = this._createSection('overlay.arrowType');
+
+    this.$arrowTypeContainer = type.$container;
+    this.$arrowTypeBtnContainer = type.$btnContainer;
+    for (const { value, label, icon } of arrowTypeChoices) {
+      const $btn = this._createButton(icon, dataAttributes.arrowType, value, label);
+
+      $btn.addEventListener('click', () => this.drawer.setArrowType(value));
+      type.$btnContainer.append($btn);
+    }
+
+    const heads = (end: keyof Arrowheads) => {
+      const section = this._createSection(end === 'start' ? 'overlay.startHead' : 'overlay.endHead');
+
+      // icons of end heads, mirrored for the start (see overlay.scss)
+      section.$container.classList.add(`overlay-arrowheads-${end}`);
+      for (const { value, label, icon } of arrowheadChoices) {
+        const $btn = this._createButton(icon, dataAttributes.arrowhead, value, label);
+
+        $btn.addEventListener('click', () => this.drawer.setArrowheads({ [end]: value }));
+        section.$btnContainer.append($btn);
+      }
+      return section;
+    };
+    const [start, end] = [heads('start'), heads('end')];
+
+    this.$arrowheadContainers = { start: start.$container, end: end.$container };
+    this.$arrowheadBtnContainers = { start: start.$btnContainer, end: end.$btnContainer };
+    this.toggleArrowBtns(false);
   }
 
   /**
@@ -512,9 +566,19 @@ export class BaseOverlay {
     this.$distributeContainer.style.display = (shape?.length ?? 0) > 1 ? '' : 'none';
     for (const $btn of this.$distributeBtns) $btn.disabled = (shape?.length ?? 0) < 3;
 
-    const { strokeColor, fillColor, strokeWidth, strokeStyle, edges, opacity } = this.drawer.options;
+    const { strokeColor, fillColor, strokeWidth, strokeStyle, edges, opacity, arrowType, arrowheads } =
+      this.drawer.options;
     const shapes = (shape ?? []).filter((s): s is Shape<ShapeConfig> => s instanceof Shape);
-    let data: OptionsChange = { strokeColor, fillColor, strokeWidth, strokeStyle, edges, opacity };
+    let data: OptionsChange = {
+      strokeColor,
+      fillColor,
+      strokeWidth,
+      strokeStyle,
+      edges,
+      opacity,
+      arrowType,
+      arrowheads,
+    };
 
     if (shapes.length) {
       const [first] = shapes;
@@ -533,6 +597,11 @@ export class BaseOverlay {
         edges: getEdges((find(edgesShapes) ?? first).getAttr('cornerRadius')),
         opacity: first.opacity(),
       };
+
+      // path and heads of the first arrow
+      const arrow = shapes.find((s): s is Arrow => s instanceof Arrow);
+
+      if (arrow) Object.assign(data, { arrowType: getArrowType(arrow), arrowheads: getArrowheads(arrow) });
     } else if (shape?.length) {
       // frames
       data.opacity = shape[0].opacity();
@@ -579,6 +648,22 @@ export class BaseOverlay {
       );
     }
 
+    if (change.arrowType !== undefined) {
+      this._setActiveBtn(
+        this.$arrowTypeBtnContainer,
+        this.$arrowTypeBtnContainer.querySelector(`[${dataAttributes.arrowType}="${change.arrowType}"]`)
+      );
+    }
+    if (change.arrowheads !== undefined) {
+      for (const end of ['start', 'end'] as const) {
+        const $container = this.$arrowheadBtnContainers[end];
+
+        this._setActiveBtn(
+          $container,
+          $container.querySelector(`[${dataAttributes.arrowhead}="${change.arrowheads[end]}"]`)
+        );
+      }
+    }
     if (change.edges !== undefined) {
       const { edges } = change;
       const round = edges === 'round' || (typeof edges === 'number' && edges > 0);
@@ -627,6 +712,16 @@ export class BaseOverlay {
    */
   toggleEdgesBtns(visible: boolean) {
     this.$edgesContainer.style.display = visible ? '' : 'none';
+  }
+
+  /**
+   * Show / hide path and heads buttons, only relevant for arrows
+   * @param visible True to show the sections, false to hide them
+   */
+  toggleArrowBtns(visible: boolean) {
+    for (const $container of [this.$arrowTypeContainer, ...Object.values(this.$arrowheadContainers)]) {
+      $container.style.display = visible ? '' : 'none';
+    }
   }
 
   /**

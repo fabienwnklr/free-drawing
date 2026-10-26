@@ -1,6 +1,11 @@
 @use '@/scss/variables' as *;
 @use '@/scss/mixins' as *;
 
+// heads of the start of arrows: icons of the end heads, mirrored
+.drawer-container .overlay-arrowheads-start svg {
+  transform: scaleX(-1);
+}
+
 .drawer-container .drawer-overlay-container {
   position: absolute;
   top: $edge;

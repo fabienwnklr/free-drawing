@@ -13,6 +13,8 @@ import type {
   DrawerStorage,
   DrawerUser,
   DrawingShape,
+  Arrowheads,
+  ArrowType,
   Edges,
   OptionsChange,
   Preferences,
@@ -36,6 +38,7 @@ import { I18n, getLanguage, languages } from '@/i18n/I18n';
 import type { Language, TranslationParams, TranslationKey } from '@/@types/i18n';
 import { bindingAttrs, unbindMoved, updateBindings } from '@/utils/binding';
 import { getBoundText, updateBoundTexts } from '@/utils/boundText';
+import { setupArrows } from '@/utils/arrow';
 import { fitTextWidth, getFontsToLoad, getTexts, loadFonts } from '@/utils/text';
 import {
   decodeLinkData,
@@ -78,6 +81,7 @@ import {
 import { FrameHighlight } from '@/utils/frameHighlight';
 import { parseLink } from '@/utils/link';
 import { ShapeLinks } from '@/utils/shapeLinks';
+import { ArrowHandle } from '@/utils/arrowHandle';
 import type { FrameChanges } from '@/@types/shapes';
 
 import { Zoom } from '@/components/tools/Zoom/Zoom';
@@ -175,6 +179,8 @@ export class Drawer extends MicroEvent {
   frameHighlight!: FrameHighlight;
   /** Icons of shapes having a link, in the selection layer (see `setShapeLink`) */
   shapeLinks!: ShapeLinks;
+  /** Handle of a selected curved or elbow arrow: bends the curve, moves the middle segment of the elbow */
+  arrowHandle!: ArrowHandle;
   /** Two finger gestures on the canvas: pinch zoom and move of the view (tools ignore touches while `active`) */
   gestures!: TouchGestures;
   /** Shapes being dragged or transformed: frames they come from, end of drawing above the drawing (`drawAbove`) */
@@ -945,6 +951,8 @@ export class Drawer extends MicroEvent {
     setupHit(shape);
     // element of an image is not saved: from its file
     setupImages(shape, this.files, this.#imageElements);
+    // heads of arrows (drawing function not saved)
+    setupArrows(shape);
   }
 
   /**
@@ -1012,6 +1020,7 @@ export class Drawer extends MicroEvent {
     this._initKeyboardFocus();
     this._initFrameMoves();
     this.shapeLinks = new ShapeLinks(this);
+    this.arrowHandle = new ArrowHandle(this);
     this.gestures = new TouchGestures(this);
 
     this.stage.on('dragmove', (e) => {
@@ -2587,6 +2596,29 @@ export class Drawer extends MicroEvent {
   }
 
   /**
+   * Path of new arrows, applied to selected arrows
+   * @param arrowType 'straight', 'curved' or 'elbow'
+   */
+  setArrowType(arrowType: ArrowType) {
+    this.options.arrowType = arrowType;
+    this.getWidget<SelectWidget>('selection')?.setArrowType(arrowType);
+    this._triggerOptionsChange({ arrowType });
+  }
+
+  /**
+   * Heads of the ends of new arrows (given ends only), applied to selected arrows
+   * @param heads Head of the start, of the end: 'none', 'arrow', 'triangle', 'dot' or 'bar'
+   */
+  setArrowheads(heads: Partial<Arrowheads>) {
+    // new object: options keep their defaults (never mutated)
+    const arrowheads = { ...this.options.arrowheads, ...heads };
+
+    this.options.arrowheads = arrowheads;
+    this.getWidget<SelectWidget>('selection')?.setArrowheads(heads);
+    this._triggerOptionsChange({ arrowheads });
+  }
+
+  /**
    * Set corners of rectangles (new and selected ones)
    * @param value 'sharp', 'round' (radius following rectangle size) or radius (px, 0 is sharp)
    */
@@ -2955,7 +2987,8 @@ export class Drawer extends MicroEvent {
    * and drawing options given on init (color, width, opacity, text style...)
    */
   resetDrawer() {
-    const { strokeColor, fillColor, strokeWidth, strokeStyle, edges, opacity, textStyle } = this.#initialOptions;
+    const { strokeColor, fillColor, strokeWidth, strokeStyle, edges, arrowType, arrowheads, opacity, textStyle } =
+      this.#initialOptions;
 
     this.clearCanvas(true);
     this.setBgColor('#fff');
@@ -2964,6 +2997,8 @@ export class Drawer extends MicroEvent {
     this.setStrokeWidth(strokeWidth);
     this.setStrokeStyle(strokeStyle);
     this.setEdges(edges);
+    this.setArrowType(arrowType);
+    this.setArrowheads(arrowheads);
     this.setOpacity(opacity);
     this.setTextStyle({ ...textStyle });
   }

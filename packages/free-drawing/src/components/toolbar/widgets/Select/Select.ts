@@ -9,7 +9,7 @@ import { clickTolerance, drawerEvents, edgesShapes, fillShapes, shapeName, strok
 import { toFill } from '@/utils/color';
 import { getCornerRadius, getDash, getStrokeStyle } from '@/utils/stroke';
 import { setPressed } from '@/utils/dom';
-import type { ColorLike, Edges, StrokeStyle, TextStyle } from '@/@types/drawer';
+import type { Arrowheads, ArrowType, ColorLike, Edges, StrokeStyle, TextStyle } from '@/@types/drawer';
 import { SelectOverlay } from '@/components/tools/Overlay/SelectOverlay/SelectOverlay';
 import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import { Text } from 'konva/lib/shapes/Text';
@@ -40,6 +40,8 @@ import type { DrawingShape } from '@/@types/drawer';
 import type { SnapStops } from '@/@types/toolbar';
 import type { Node } from 'konva/lib/Node';
 import { withBoundTexts } from '@/utils/boundText';
+import { arrowheadAttrs, getArrowheads } from '@/utils/arrow';
+import { rerouteArrow } from '@/utils/binding';
 
 /**
  * Selection tool: selects shapes (click, Shift toggles, Alt selects the one behind, rectangle selects shapes entirely
@@ -541,6 +543,7 @@ export class SelectWidget extends BaseWidget {
       this.overlay.toggleStyleBtns(has(strokeStyleShapes));
       this.overlay.toggleFillBtns(has(fillShapes));
       this.overlay.toggleEdgesBtns(has(edgesShapes));
+      this.overlay.toggleArrowBtns(has([shapeName.arrow]));
       this.overlay.toggleWidthBtns(styled.some((s) => !isText(s) && !s.hasName(shapeName.highlighter)));
       // with texts: their fields, color is also the one of texts
       this.overlay.toggleTextFields(shapes.some(isText));
@@ -1021,6 +1024,30 @@ export class SelectWidget extends BaseWidget {
    */
   setBgColor(color: ColorLike) {
     this.setFillColor(color);
+  }
+
+  /**
+   * Path of selected arrows, routed again between their ends (on their linked shapes)
+   * @param type 'straight', 'curved' or 'elbow'
+   */
+  setArrowType(type: ArrowType) {
+    this._updateSelected((s) => {
+      if (!(s instanceof Arrow)) return;
+
+      // straight without attribute (arrows of previous versions)
+      s.setAttr('arrowType', type === 'straight' ? undefined : type);
+      rerouteArrow(s, this.drawer.drawLayer);
+    });
+  }
+
+  /**
+   * Heads of selected arrows (given ends only)
+   * @param heads Head of the start, of the end
+   */
+  setArrowheads(heads: Partial<Arrowheads>) {
+    this._updateSelected((s) => {
+      if (s instanceof Arrow) s.setAttrs(arrowheadAttrs({ ...getArrowheads(s), ...heads }));
+    });
   }
 
   /**

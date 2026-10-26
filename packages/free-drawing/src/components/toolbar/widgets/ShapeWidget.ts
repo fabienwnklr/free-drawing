@@ -66,6 +66,8 @@ export abstract class ShapeWidget<T extends DrawingShape> extends BaseWidget {
   protected hasFill: boolean = false;
   /** Corners sharp or round (`edges` option) */
   protected hasEdges: boolean = false;
+  /** Path and heads of arrows (`arrowType`, `arrowheads` options) */
+  protected hasArrowOptions: boolean = false;
   /** Last pointer event of drawing (modifier keys) */
   protected pointerEvent: MouseEvent | TouchEvent | null = null;
 
@@ -158,6 +160,7 @@ export abstract class ShapeWidget<T extends DrawingShape> extends BaseWidget {
   protected onActive(): void {
     this.overlay.toggleFillBtns(this.hasFill);
     this.overlay.toggleEdgesBtns(this.hasEdges);
+    this.overlay.toggleArrowBtns(this.hasArrowOptions);
   }
 
   /**
