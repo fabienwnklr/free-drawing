@@ -99,6 +99,15 @@ describe('FreeDrawing (Vue)', () => {
     expect(setUser).toHaveBeenCalledWith({ id: 'u2', name: 'Bob' });
   });
 
+  it('settings given as options are kept without props', async () => {
+    const { board } = await mount({ options: { ...options(), readOnly: true, theme: 'dark', language: 'es' } });
+    const drawer = board.value!.drawer!;
+
+    expect(drawer.readOnly).toBe(true);
+    expect(drawer.isDarkMode()).toBe(true);
+    expect(drawer.i18n.language).toBe('es');
+  });
+
   it('change event emitted with the drawer', async () => {
     const onChange = vi.fn();
     const { board } = await mount({ options: options(), onChange });

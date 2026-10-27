@@ -2,6 +2,12 @@
 
 Changes of `@fabwcie/free-drawing-react`. Each version is published by the release workflow of the library once it is not on npm yet.
 
+## 1.0.1 (2026-10-27)
+
+### Bug Fixes
+
+- `readOnly`, `theme`, `language` and `user` given in `options` are kept when their props are not given (they were dropped: a theme of the options was ignored)
+
 ## 1.0.0 (2026-10-24)
 
 ### Features

@@ -121,6 +121,24 @@ describe('FreeDrawing (React)', () => {
     expect(setUser).toHaveBeenCalledWith({ id: 'u2', name: 'Bob' });
   });
 
+  it('settings given as options are kept without props', async () => {
+    const ref = createRef<Drawer>();
+    const base = props();
+
+    await render(
+      createElement(FreeDrawing, {
+        ...base,
+        options: { ...base.options, readOnly: true, theme: 'dark', language: 'es' },
+        ref,
+      }),
+      ref
+    );
+
+    expect(ref.current!.readOnly).toBe(true);
+    expect(ref.current!.isDarkMode()).toBe(true);
+    expect(ref.current!.i18n.language).toBe('es');
+  });
+
   it('change event calls the last onChange', async () => {
     const ref = createRef<Drawer>();
     const first = vi.fn();

@@ -23,6 +23,19 @@ export interface MountHandlers {
 }
 
 /**
+ * Options of the drawer with the settings of the component: settings not given leave the ones of the options
+ * @param options Options of the component
+ * @param settings Settings of the component, undefined when not given
+ * @returns Options of the drawer
+ */
+export function withSettings(
+  options: Partial<DrawerOptions> | undefined,
+  settings: DrawerSettings
+): Partial<DrawerOptions> & DrawerSettings {
+  return { ...options, ...Object.fromEntries(Object.entries(settings).filter(([, value]) => value !== undefined)) };
+}
+
+/**
  * Settings of the component given to the drawer: readOnly, theme and language when they differ from its own ones (the
  * theme and language saved in the browser win over the options)
  * @param drawer Drawer of the component
