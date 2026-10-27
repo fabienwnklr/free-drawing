@@ -47,12 +47,13 @@ const drawer = new Drawer($el, {
 });
 ```
 
-## React and Vue
+## React, Vue and Web Component
 
-The library needs no framework. React and Vue apps can use its `FreeDrawing` component, which creates the drawer when it is mounted and destroys it when it is unmounted, takes the size of its element and follows its props (`readOnly`, `theme`, `language`, `user`), with the same options and API:
+The library needs no framework. React and Vue apps can use its `FreeDrawing` component, other apps (Angular, Svelte, plain HTML...) its `<free-drawing>` element: they create the drawer when they are mounted (added to the page) and destroy it when they are unmounted, take the size of their element and follow their settings (`readOnly`, `theme`, `language`, `user`), with the same options and API:
 
 - React: [`@fabwcie/free-drawing-react`](https://free-drawing-docs.netlify.app/get-started/react) (`<FreeDrawing ref={drawer} options={...} onChange={...} />`)
 - Vue: [`@fabwcie/free-drawing-vue`](https://free-drawing-docs.netlify.app/get-started/vue) (`<FreeDrawing ref="board" :options="..." @change="..." />`)
+- Web Component: [`@fabwcie/free-drawing-element`](https://free-drawing-docs.netlify.app/get-started/element) (`<free-drawing theme="dark" options='{ ... }'></free-drawing>`, `drawerchange` event)
 
 ## Available options
 

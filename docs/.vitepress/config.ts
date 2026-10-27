@@ -116,6 +116,7 @@ export default defineConfig({
             // components (READMEs of their packages)
             { text: 'React', link: '/get-started/react' },
             { text: 'Vue', link: '/get-started/vue' },
+            { text: 'Web Component', link: '/get-started/element' },
             { text: 'Contribute', link: '/get-started/contribute' },
           ],
         },

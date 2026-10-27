@@ -4,7 +4,7 @@ layout: home
 
 hero:
   name: free-drawing
-  text: Infinite canvas drawing for vanilla JS, React and Vue
+  text: Infinite canvas drawing for vanilla JS, React, Vue and web components
   tagline: A whiteboard in one element or one component. Draw, organize and share ideas with tools, layers, frames, live collaboration and exports.
   image:
     src: /logo.svg
@@ -63,8 +63,8 @@ features:
     link: /plugins
     linkText: Extend it
   - icon: 🧩
-    title: Vanilla, React or Vue
-    details: One element and one line in any page, or the FreeDrawing component of React and Vue. Your own storage, events, preferences and typed API, Konva as only peer dependency.
+    title: Vanilla, React, Vue or any framework
+    details: One element and one line in any page, the FreeDrawing component of React and Vue, or the free-drawing web component for Angular, Svelte and plain HTML. Your own storage, events, preferences and typed API, Konva as only peer dependency.
     link: /features#made-for-apps
     linkText: Integrate
 ---
@@ -77,7 +77,7 @@ features:
 
 ## Why free-drawing?
 
-- **Any framework, or none**: a class for any page, a component for [React](/get-started/react) and [Vue](/get-started/vue), with the same options and API.
+- **Any framework, or none**: a class for any page, a component for [React](/get-started/react) and [Vue](/get-started/vue), a [`<free-drawing>` element](/get-started/element) for Angular, Svelte or plain HTML, with the same options and API.
 - **Truly open source**: [MIT licence](https://github.com/fabienwnklr/free-drawing/blob/master/LICENCE), no licence key, no watermark, no paid features. Use it in any app, commercial ones included.
 - **Rights in live sessions**: participants view the drawing until its owner lets them draw, they ask in one click, and follow the view the owner presents. See [live collaboration](/features#live-collaboration).
 - **A real layers panel**: name, hide, lock and reorder every shape, select ranges of them. See [layers](/features#layers-groups-and-frames).
@@ -87,7 +87,7 @@ features:
 
 ## Quick start
 
-The library works in any page, without framework. React and Vue apps can use its component, which creates the drawer when it is mounted and destroys it when it is unmounted. Install it with [Konva](https://konvajs.org/), its only peer dependency (also with yarn or pnpm):
+The library works in any page, without framework. React and Vue apps can use its component, other apps (Angular, Svelte, plain HTML...) its `<free-drawing>` element: they create the drawer when they are mounted and destroy it when they are unmounted. Install it with [Konva](https://konvajs.org/), its only peer dependency (also with yarn or pnpm):
 
 ::: code-group
 
@@ -103,9 +103,13 @@ npm install @fabwcie/free-drawing-react @fabwcie/free-drawing konva
 npm install @fabwcie/free-drawing-vue @fabwcie/free-drawing konva
 ```
 
+```bash [Web Component]
+npm install @fabwcie/free-drawing-element @fabwcie/free-drawing konva
+```
+
 :::
 
-Then give it an element of your page, or render its component:
+Then give it an element of your page, render its component, or add its element:
 
 ::: code-group
 
@@ -154,9 +158,23 @@ const onChange = (drawer: Drawer) => console.log(drawer.getDrawingFile());
 </template>
 ```
 
+```html [Web Component]
+<script type="module">
+  import '@fabwcie/free-drawing-element';
+  import '@fabwcie/free-drawing/style.css';
+
+  const board = document.querySelector('free-drawing');
+
+  // drawing changed: keep it anywhere as JSON
+  board.addEventListener('drawerchange', (event) => console.log(event.detail.getDrawingFile()));
+</script>
+
+<free-drawing theme="system" language="auto" style="height: 600px"></free-drawing>
+```
+
 :::
 
-The [guide](/get-started/) describes every option, the [React](/get-started/react) and [Vue](/get-started/vue) pages the props of the components, the [features](/features) page shows what the drawer can do, the [plugins](/plugins) guide shows how to add your own features and the [API](/api/) documents each class and method.
+The [guide](/get-started/) describes every option, the [React](/get-started/react), [Vue](/get-started/vue) and [Web Component](/get-started/element) pages the props of the components and the attributes of the element, the [features](/features) page shows what the drawer can do, the [plugins](/plugins) guide shows how to add your own features and the [API](/api/) documents each class and method.
 
 ## Open source
 

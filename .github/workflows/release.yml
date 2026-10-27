@@ -172,8 +172,9 @@ jobs:
       # each package published on its own
       fail-fast: false
       matrix:
-        # @fabwcie/create-free-drawing-plugin (`npm create @fabwcie/free-drawing-plugin`), components of React and Vue
-        package: [create-plugin, react, vue]
+        # @fabwcie/create-free-drawing-plugin (`npm create @fabwcie/free-drawing-plugin`), components of React and Vue,
+        # web component
+        package: [create-plugin, react, vue, element]
 
     steps:
       - name: Checkout

@@ -124,7 +124,7 @@
 
 # Ideas neither tldraw nor Excalidraw have
 
-- [ ] Web Component `<free-drawing>`: Angular, Svelte, plain HTML
+- [x] Web Component `<free-drawing>`: Angular, Svelte, plain HTML
 - [ ] presentation by frames: each frame a slide, participants of a session follow
 - [ ] keyboard navigation between shapes, with a description read by screen readers
 - [ ] shape recognition: a freehand stroke turned into a rectangle, an ellipse or an arrow
