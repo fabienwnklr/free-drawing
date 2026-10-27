@@ -36,6 +36,7 @@ export type {
   CollaborationSession,
   CollaborationSocket,
   DrawingChange,
+  PresentedView,
   EncryptedChange,
   EncryptedMessage,
   EncryptedShape,
@@ -64,6 +65,7 @@ export type {
   LayoutItemOptions,
   LayoutRegion,
   ModalOptions,
+  SlideshowOptions,
 } from '@/@types/ui';
 export type { Listener } from '@/@types/utils';
 export type { FrameChanges } from '@/@types/shapes';
@@ -150,6 +152,8 @@ export type { CollaborationModal } from '@/components/CollaborationModal/Collabo
 export type { CollaborationIndicator } from '@/components/CollaborationIndicator/CollaborationIndicator';
 export type { CollaborationPanel } from '@/components/CollaborationPanel/CollaborationPanel';
 export type { CollaborationMembers } from '@/components/CollaborationMembers/CollaborationMembers';
+export type { SearchBar } from '@/components/SearchBar/SearchBar';
+export type { Slideshow } from '@/components/Slideshow/Slideshow';
 export type { RoomCipher } from '@/utils/encryption';
 export { drawerEvents, shapeName } from '@/constants';
 export { createButton, setLabel, setPressed } from '@/utils/dom';

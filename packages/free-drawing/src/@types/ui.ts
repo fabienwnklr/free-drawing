@@ -2,6 +2,8 @@ import type { ColorLike } from '@/@types/drawer';
 import type { TranslationKey } from '@/@types/i18n';
 import type { I18n } from '@/i18n/I18n';
 import type { ConfirmModal } from '@/components/Modal/ConfirmModal';
+import type { Vector2d } from 'konva/lib/types';
+import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 
 /**
  * Choice of a group of buttons (options panels, menus, dialogs): its value and accessible name
@@ -233,4 +235,22 @@ export type ViewArea = {
   right: number;
   /** Bottom edge, above the toolbar of the footer */
   bottom: number;
+};
+
+/** Options of a slideshow (see `Slideshow.start`) */
+export type SlideshowOptions = {
+  /** Drawer shown on the whole screen while presenting, when the browser allows it (true by default) */
+  fullscreen?: boolean;
+};
+
+/** State of a drawer before its slideshow, given back once it stops */
+export type SlideshowState = {
+  /** Position of the stage (px) */
+  position: Vector2d;
+  /** Zoom level */
+  scale: number;
+  /** Active tool, null without */
+  tool: BaseWidget | null;
+  /** Size of the stage (px), changed on the whole screen */
+  size: { width: number; height: number };
 };

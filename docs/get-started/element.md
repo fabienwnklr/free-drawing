@@ -105,23 +105,23 @@ Svelte sets `options` and `user` as properties (objects), as the element is defi
 
 ## Attributes and properties
 
-| Attribute       | Property   | Type                                     | Description                                                                                                                                                                                     |
-| --------------- | ---------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `options`       | `options`  | `Partial<DrawerOptions>`                 | [Options of the drawer](https://free-drawing-docs.netlify.app/get-started/#available-options), read when it is created (attribute: JSON, used without property): create another element for other options |
-| `read-only`     | `readOnly` | `boolean`                                | Drawing can't be modified by the user (`drawer.setReadOnly`); `read-only="false"` or a removed attribute let the user draw again                                                                |
-| `theme`         | `theme`    | `'light' \| 'dark' \| 'system'`          | Theme (`drawer.setTheme`), wins over the theme saved in the browser                                                                                                                             |
-| `language`      | `language` | `'en' \| 'fr' \| 'es' \| 'de' \| 'auto'` | Language of the interface (`drawer.setLanguage`), `'auto'` for the one of the browser                                                                                                           |
-|                 | `user`     | `DrawerUser \| null`                     | User of the app: id and name in collaboration sessions (`drawer.setUser`), given again only when it changes                                                                                     |
-|                 | `drawer`   | `Drawer \| null`                         | Drawer of the element (read only), `null` until it is created and once the element left the page                                                                                               |
+| Attribute   | Property   | Type                                     | Description                                                                                                                                                                                               |
+| ----------- | ---------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `options`   | `options`  | `Partial<DrawerOptions>`                 | [Options of the drawer](https://free-drawing-docs.netlify.app/get-started/#available-options), read when it is created (attribute: JSON, used without property): create another element for other options |
+| `read-only` | `readOnly` | `boolean`                                | Drawing can't be modified by the user (`drawer.setReadOnly`); `read-only="false"` or a removed attribute let the user draw again                                                                          |
+| `theme`     | `theme`    | `'light' \| 'dark' \| 'system'`          | Theme (`drawer.setTheme`), wins over the theme saved in the browser                                                                                                                                       |
+| `language`  | `language` | `'en' \| 'fr' \| 'es' \| 'de' \| 'auto'` | Language of the interface (`drawer.setLanguage`), `'auto'` for the one of the browser                                                                                                                     |
+|             | `user`     | `DrawerUser \| null`                     | User of the app: id and name in collaboration sessions (`drawer.setUser`), given again only when it changes                                                                                               |
+|             | `drawer`   | `Drawer \| null`                         | Drawer of the element (read only), `null` until it is created and once the element left the page                                                                                                          |
 
 `read-only`, `theme`, `language` and `user` are followed once the drawer is created; when they are not given, the drawer keeps its own settings (its options, menus of its interface, preferences saved in the browser). Properties set by a framework before the element is defined are kept.
 
 ## Events
 
-| Event          | `detail` | Description                                                                |
-| -------------- | -------- | -------------------------------------------------------------------------- |
+| Event          | `detail` | Description                                                               |
+| -------------- | -------- | ------------------------------------------------------------------------- |
 | `drawerready`  | `Drawer` | Drawer ready: plugins initialized, drawing of the `storage` option loaded |
-| `drawerchange` | `Drawer` | Drawing changed: shapes, background...                                     |
+| `drawerchange` | `Drawer` | Drawing changed: shapes, background...                                    |
 
 They do not bubble. They are not named `ready` and `change`: the `change` events of the fields of the drawer (dialogs, panels) bubble to the element.
 

@@ -53,8 +53,8 @@ type RoomData = {
   usedAt: number;
 };
 
-/** Area of the drawing shown by a presenting owner, in drawing coordinates */
-type ViewArea = { x: number; y: number; width: number; height: number };
+/** Area of the drawing shown by a presenting owner, in drawing coordinates (`slide`: a frame of its slideshow, seen alone) */
+type ViewArea = { x: number; y: number; width: number; height: number; slide?: true };
 
 /** Pointer position or view of an encrypted room, relayed as it is */
 type EncryptedData = { data: string };
@@ -275,11 +275,11 @@ const checkEncryptedView = (view: unknown): EncryptedData | null | undefined => 
 const checkView = (view: unknown): ViewArea | null | undefined => {
   if (view === null) return null;
 
-  const { x, y, width, height } = (typeof view === 'object' ? view : {}) as Record<string, unknown>;
+  const { x, y, width, height, slide } = (typeof view === 'object' ? view : {}) as Record<string, unknown>;
 
   if (![x, y, width, height].every(Number.isFinite) || (width as number) <= 0 || (height as number) <= 0) return;
 
-  return { x, y, width, height } as ViewArea;
+  return { x, y, width, height, ...(slide === true && { slide }) } as ViewArea;
 };
 
 /**

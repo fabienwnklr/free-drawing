@@ -112,6 +112,11 @@ export class HotKey {
     askLayout();
     this.drawer.$drawerContainer.addEventListener('keydown', (e) => {
       learnLetter(e);
+      // slideshow: its keys only (also while the laser is pressed)
+      if (this.drawer.slideshow.active) {
+        this.drawer.slideshow.handleKey(e);
+        return;
+      }
       if (this.drawer._duringAction()) return;
 
       // Ctrl on Windows / Linux, Cmd on Mac
@@ -206,6 +211,12 @@ export class HotKey {
       if (e.altKey && e.shiftKey && !mod && (letter === 'c' || letter === 's') && !inField) {
         e.preventDefault();
         this.drawer.copyImage(letter === 'c' ? 'png' : 'svg');
+      }
+
+      // frames presented as slides (also in read only)
+      if (e.altKey && e.shiftKey && !mod && letter === 'p' && !inField) {
+        e.preventDefault();
+        this.drawer.slideshow.start();
       }
 
       // Toolbar shortcut, the letter displayed on widget button (whatever caps lock)
@@ -308,7 +319,7 @@ export class HotKey {
         const target = e.target as HTMLElement;
 
         if (!this.drawer.$drawerContainer.contains(document.activeElement)) return;
-        if (this.drawer._duringAction() || this.drawer.readOnly) return;
+        if (this.drawer._duringAction() || this.drawer.readOnly || this.drawer.slideshow.active) return;
         // pasted in a field of the drawer (search, name, link, radius...): text of the field
         if (target.matches('input, textarea, select') || target.isContentEditable) return;
 

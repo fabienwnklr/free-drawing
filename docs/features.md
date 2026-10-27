@@ -46,13 +46,14 @@ More in [Selection](/get-started/#selection).
 - **Layers panel** (Alt + L): every shape with its name, top first. Rename, hide, lock, drag to reorder, select ranges with Shift.
 - **Groups** move and style their shapes together, which can still be reached alone with Ctrl + click.
 - **Frames**: named areas holding the shapes drawn or moved into them, cut at their border, exported without their title. A frame a shape is moved into or out of is highlighted, the moved shape is drawn whole. A selected frame has its opacity, stacking order and actions.
+- **Slideshow** (Alt + Shift + P): frames presented one after the other as slides, alone on the whole screen, the arrows going from one to the next, the laser as pointer. In a live session, the other users follow the slides of the owner.
 - **Linked arrows** follow the shapes they link when these are moved or resized, fixed to a side or to the outline; elbow arrows leave the sides facing each other with horizontal and vertical lines and go around the shapes. The handle of a selected curved or elbow arrow bends the curve on either side or moves the middle segment.
 - **Stacking order**: forward and backward past the next overlapping shape, or to the front and back.
 
 - **Search** (Ctrl + F): texts of the drawing found (case and accents ignored), highlighted, the view moved from one to the next.
 - **Library** (Alt + B): selected shapes saved as items, inserted again in any drawing by a click or a drag, kept in the browser, exported and imported as files.
 
-More in [Layers](/get-started/#layers), [Search](/get-started/#search), [Library](/get-started/#library), [Arrows](/get-started/#arrows), [Linked arrows](/get-started/#linked-arrows) and [Stacking order](/get-started/#stacking-order).
+More in [Layers](/get-started/#layers), [Slideshow](/get-started/#slideshow), [Search](/get-started/#search), [Library](/get-started/#library), [Arrows](/get-started/#arrows), [Linked arrows](/get-started/#linked-arrows) and [Stacking order](/get-started/#stacking-order).
 
 ## Menus, shortcuts and command palette
 
@@ -74,7 +75,7 @@ More in [Layers](/get-started/#layers), [Search](/get-started/#search), [Library
 - **End-to-end encrypted**: the key is in the link, never sent to the server, which relays and keeps the drawing without being able to read it.
 - **Presence**: cursors of the other users with their names, shapes they are drawing, their laser.
 - **Rights**: participants view only until the owner lets them draw, they ask it in one click, the owner accepts or refuses from the panel of the session.
-- **Presentation**: the owner presents its view, everyone follows its zoom and moves, until they move theirs, then follows it again in one click.
+- **Presentation**: the owner presents its view, or its frames as slides, everyone follows its zoom and moves, until they move theirs, then follows it again in one click.
 - **Never forgotten**: during a session, a live reminder in the header (also in zen mode) shows the people connected, opens the session and stops or leaves it in one click.
 - **Reliable**: changes made while the connection is lost are merged with the ones of the others when it comes back.
 - **Server included**: the repository has a Node server (socket.io, accounts, SQLite), or use your own following the [protocol](/get-started/#collaboration). More in [End-to-end encryption](/get-started/#end-to-end-encryption).

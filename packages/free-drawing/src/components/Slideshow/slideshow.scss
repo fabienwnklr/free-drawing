@@ -1,0 +1,77 @@
+@use '@/scss/variables' as *;
+@use '@/scss/mixins' as *;
+
+// Slideshow: interface hidden but its bar, at the bottom in the middle, faded until the pointer or the focus is on it
+.drawer-container .drawer-slideshow-bar {
+  position: absolute;
+  bottom: $edge;
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: $space-1;
+  max-width: calc(100% - #{$edge} * 2);
+  padding: $space-1;
+  transform: translateX(-50%);
+  opacity: 0.6;
+  transition: opacity 0.2s;
+  pointer-events: var(--drawer-pointer-events);
+
+  &[hidden] {
+    display: none;
+  }
+
+  &:hover,
+  &:focus-within {
+    opacity: 1;
+  }
+
+  .drawer-slideshow-count {
+    padding: 0 $space-1;
+    font-size: $font-size-sm;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .drawer-slideshow-title {
+    overflow: hidden;
+    max-width: 16rem;
+    font-size: $font-size-sm;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &[hidden] {
+      display: none;
+    }
+  }
+
+  .drawer-button {
+    width: $btn-size-default;
+    height: $btn-size-default;
+
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  // chevron to the right: to the left for the previous slide
+  .drawer-slideshow-previous svg {
+    transform: rotate(180deg);
+  }
+}
+
+// interface of the drawer hidden during the slideshow: the slide alone (toasts and dialogs kept)
+.drawer-container.is-presenting {
+  .drawer-header-container,
+  .drawer-footer-container,
+  .drawer-context-menu,
+  .tool:not(.drawer-slideshow-bar) {
+    display: none !important;
+  }
+
+  // focus of the drawer (keys of the slideshow) not framed around the slide, buttons of the bar keep theirs
+  &.drawer-keyboard-focus:focus::after {
+    display: none;
+  }
+}

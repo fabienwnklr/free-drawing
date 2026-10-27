@@ -7,7 +7,7 @@ import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import '@/components/ContextMenu/context-menu.scss';
 import { arrowNavigation, createButton, setPressed } from '@/utils/dom';
-import { getDrawingShape } from '@/utils/frame';
+import { getDrawingShape, isFrame } from '@/utils/frame';
 import { getTexts } from '@/utils/text';
 import type { TranslationKey } from '@/@types/i18n';
 import { getErrorText } from '@/utils/errors';
@@ -224,6 +224,12 @@ export class ContextMenu {
           visible: () => drawer.options.zoom && !canvas(),
           run: () => drawer.zoomToSelection(),
         },
+        {
+          // from the frame selected (right click on it)
+          $item: this._createItem('slideshow.start', 'Alt+Shift+P'),
+          visible: () => drawer.getDrawingShapes().some(isFrame),
+          run: () => drawer.slideshow.start(),
+        },
       ],
       [snapping, grid],
     ];
@@ -324,6 +330,8 @@ export class ContextMenu {
       if (e.target !== this.drawer.$drawerContainer) return;
 
       e.preventDefault();
+      // slides presented: no menu
+      if (this.drawer.slideshow.active) return;
       this.#position = null;
       this.show();
 
@@ -334,6 +342,7 @@ export class ContextMenu {
 
     this.drawer.stage.on('contextmenu', (e) => {
       e.evt.preventDefault();
+      if (this.drawer.slideshow.active) return;
       this.#position = this.drawer._getRelativePointerPos();
       this._selectAt(e);
       this.show();

@@ -1,7 +1,7 @@
 {
   "name": "@fabwcie/create-free-drawing-plugin",
   "description": "Create a plugin of free-drawing: npm create @fabwcie/free-drawing-plugin",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "type": "module",
   "license": "MIT",
   "author": "Winkler Fabien <fabienwinkler@outlook.fr>",

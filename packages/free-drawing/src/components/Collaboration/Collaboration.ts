@@ -32,7 +32,7 @@ import type {
   RejectedMessage,
   RequestMessage,
   AccessRequest,
-  ViewArea,
+  PresentedView,
 } from '@/@types/collaboration';
 
 /** Minimum interval of pointer and live drawing messages (ms) */
@@ -52,17 +52,17 @@ const checkBackground = (background: unknown): ColorLike | null =>
 
 /**
  * Area presented by the owner, checked on reception
- * @param view Message of the server: area, or null when the presentation stops
+ * @param view Message of the server: area (of a slide with `slide`), or null when the presentation stops
  * @returns Area with finite coordinates and a positive size, null, or undefined when invalid (ignored)
  */
-const checkView = (view: unknown): ViewArea | null | undefined => {
+const checkView = (view: unknown): PresentedView | null | undefined => {
   if (view === null) return null;
 
-  const { x, y, width, height } = (typeof view === 'object' ? view : {}) as Record<string, unknown>;
+  const { x, y, width, height, slide } = (typeof view === 'object' ? view : {}) as Record<string, unknown>;
 
   if (![x, y, width, height].every(Number.isFinite) || (width as number) <= 0 || (height as number) <= 0) return;
 
-  return { x, y, width, height } as ViewArea;
+  return { x, y, width, height, ...(slide === true && { slide }) } as PresentedView;
 };
 
 /**
@@ -102,7 +102,7 @@ export class Collaboration {
   /** This user (owner) presents their view: other users follow it, see `present` */
   presenting = false;
   /** Area shown by the owner presenting it, null without presentation */
-  presentedView: ViewArea | null = null;
+  presentedView: PresentedView | null = null;
   /** This user follows the presented view: stops when they move or zoom theirs, see `follow` */
   following = true;
   /** This user (viewer) asked for the right to draw, waiting for the answer of the owner */
@@ -662,11 +662,19 @@ export class Collaboration {
   }
 
   /**
-   * View of the presenting owner sent to other users, at live interval at most (latest view when sent)
+   * View of the presenting owner sent to other users, at live interval at most (latest view when sent): the slide shown
+   * during a slideshow (seen alone), else its view
    */
   private _sendView() {
     this._schedule('view', () =>
-      this._inOrder(() => (this.presenting ? this._emitData(socketEvents.VIEW, this.drawer.getViewArea()) : undefined))
+      this._inOrder(() => {
+        if (!this.presenting) return;
+
+        const slide = this.drawer.slideshow.getSlideArea();
+        const view: PresentedView = slide ? { ...slide, slide: true } : this.drawer.getViewArea();
+
+        return this._emitData(socketEvents.VIEW, view);
+      })
     );
   }
 
@@ -679,6 +687,8 @@ export class Collaboration {
       this._sendView();
     } else if (this.presentedView && this.following && !this.#showingView) {
       this.following = false;
+      // slide no longer seen alone
+      this.drawer.slideshow.hideSlideArea();
       this.drawer.trigger(drawerEvents.collaborationChange);
     }
   }
@@ -695,13 +705,20 @@ export class Collaboration {
   }
 
   /**
-   * Presented area shown in the view of this user (not a move of theirs)
+   * Presented area shown in the view of this user (not a move of theirs): a slide alone (around it masked)
    */
   private _showView() {
-    if (!this.presentedView) return;
+    const view = this.presentedView;
+
+    if (!view) return;
 
     this.#showingView = true;
-    this.drawer.showArea(this.presentedView);
+    if (view.slide) {
+      this.drawer.slideshow.showSlideArea(view);
+    } else {
+      this.drawer.slideshow.hideSlideArea();
+      this.drawer.showArea(view);
+    }
     this.#showingView = false;
   }
 
@@ -727,6 +744,8 @@ export class Collaboration {
       drawer.toast(drawer.t(view ? 'toast.presentationStarted' : 'toast.presentationEnded', { name: owner }), 'info');
       drawer.trigger(drawerEvents.collaborationChange);
     }
+    // stopped: slide no longer seen alone
+    if (!view) drawer.slideshow.hideSlideArea();
     if (this.following) this._showView();
   }
 
@@ -798,6 +817,8 @@ export class Collaboration {
     this.#cursors.clear();
     for (const laser of this.#lasers.values()) laser.destroy();
     this.#lasers.clear();
+    // slide of the owner no longer seen alone
+    if (this.presentedView?.slide) this.drawer.slideshow.hideSlideArea();
   }
 
   /**

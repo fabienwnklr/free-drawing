@@ -45,6 +45,7 @@ import { embedDrawingInPng, embedDrawingInSvg, readDrawingFile } from '@/utils/e
 import { Library } from '@/utils/library';
 import { LibraryPanel } from '@/components/LibraryPanel/LibraryPanel';
 import { SearchBar } from '@/components/SearchBar/SearchBar';
+import { Slideshow } from '@/components/Slideshow/Slideshow';
 import { fitTextWidth, getFontsToLoad, getTexts, loadFonts } from '@/utils/text';
 import {
   decodeLinkData,
@@ -220,6 +221,8 @@ export class Drawer extends MicroEvent {
   libraryPanel: LibraryPanel | undefined;
   /** Search of the texts of the drawing (Ctrl+F) */
   search!: SearchBar;
+  /** Presentation of the frames as slides (Alt+Shift+P) */
+  slideshow!: Slideshow;
   /** Button of header saving the drawing while auto save is off (`saveButton` option) */
   saveButton: SaveButton | undefined;
   /** Theme chosen ('system': device one), see `setTheme` */
@@ -436,6 +439,7 @@ export class Drawer extends MicroEvent {
     }
     this.library = new Library(this);
     this.search = new SearchBar(this);
+    this.slideshow = new Slideshow(this);
     if (this.options.library) {
       this.libraryPanel = new LibraryPanel(this);
     }
@@ -910,11 +914,20 @@ export class Drawer extends MicroEvent {
     );
     const scale = Math.min(Math.max(fit, zoomLimits.min), zoomLimits.max);
 
+    this._setView(
+      { x: this.stage.width() / 2 - (x + width / 2) * scale, y: this.stage.height() / 2 - (y + height / 2) * scale },
+      scale
+    );
+  }
+
+  /**
+   * View moved and zoomed: zoom level shown, background, position and collaboration updated
+   * @param position Position of the stage (px)
+   * @param scale Zoom level
+   */
+  _setView(position: Vector2d, scale: number) {
     this.stage.scale({ x: scale, y: scale });
-    this.stage.position({
-      x: this.stage.width() / 2 - (x + width / 2) * scale,
-      y: this.stage.height() / 2 - (y + height / 2) * scale,
-    });
+    this.stage.position(position);
 
     if (this.zoom) {
       this.zoom.update();

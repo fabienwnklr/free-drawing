@@ -168,6 +168,15 @@ export type ViewArea = {
   height: number;
 };
 
+/**
+ * View presented by the owner (`VIEW`): area of its view, or of the slide (frame) it shows during a slideshow, which
+ * other users see alone (around it masked)
+ */
+export type PresentedView = ViewArea & {
+  /** Area of a slide: a frame presented, shown alone */
+  slide?: boolean;
+};
+
 /** Viewer asking the owner for the right to draw, waiting for its answer */
 export type AccessRequest = {
   /** Id of the user */

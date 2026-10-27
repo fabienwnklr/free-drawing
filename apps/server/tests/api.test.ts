@@ -553,6 +553,12 @@ describe('Collaboration', () => {
     late.socket.emit(socketEvents.JOIN, { room: 'room-view', name: 'Late', userId: 'late-v' });
     expect(await lateView).toEqual(view);
 
+    // slide of a slideshow: flag kept
+    const slide = viewer.next(socketEvents.VIEW);
+
+    owner.socket.emit(socketEvents.VIEW, { ...view, slide: true });
+    expect(await slide).toEqual({ ...view, slide: true });
+
     // owner gone: presentation stopped
     const stopped = viewer.next(socketEvents.VIEW);
 

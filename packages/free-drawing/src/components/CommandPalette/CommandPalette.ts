@@ -41,6 +41,7 @@ import StoreIcon from '@/icons/store.svg?raw';
 import LanguageIcon from '@/icons/language.svg?raw';
 import SlidersIcon from '@/icons/sliders.svg?raw';
 import LockIcon from '@/icons/lock.svg?raw';
+import PresentIcon from '@/icons/present.svg?raw';
 import { isFrame } from '@/utils/frame';
 import { getTexts } from '@/utils/text';
 import UnlockIcon from '@/icons/unlock.svg?raw';
@@ -554,6 +555,14 @@ export class CommandPalette extends Modal {
             icon: SearchIcon,
             shortcut: 'Ctrl+F',
             run: () => drawer.search.show(),
+          },
+          // from the frame selected
+          drawer.getDrawingShapes().some(isFrame) && {
+            id: 'slideshow present slides frames presentation',
+            label: t('slideshow.start'),
+            icon: PresentIcon,
+            shortcut: 'Alt+Shift+P',
+            run: () => drawer.slideshow.start(),
           },
           libraryPanel && {
             id: 'library panel items',

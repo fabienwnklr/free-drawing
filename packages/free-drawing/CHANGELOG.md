@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.42.0](https://github.com/fabienwnklr/free-drawing/compare/v7.41.0...v7.42.0) (2026-10-27)
+
+
+### Features
+
+* **slideshow:** frames presented one after the other as slides ("Present slides", Alt + Shift + P, menu, context menu, command palette, `drawer.slideshow`): reading order of the frames, from the selected one; each slide fills the view, around it masked, the interface hidden but a bar (previous, number and name, next, stop), on the whole screen when the browser allows it; arrows, Page Up / Down, Space, Home / End go from one slide to another, Escape stops; laser as pointer; view, tool and size given back once stopped; `drawer.slideshow.change` event. In a live session, the owner presents its slides: the other users follow them, alone in their view
+
 ## [7.41.0](https://github.com/fabienwnklr/free-drawing/compare/v7.40.0...v7.41.0) (2026-10-26)
 
 

@@ -45,7 +45,8 @@ export class TextWidget extends BaseWidget {
     // listened by the stage (once, not by tool): any text is editable (created, loaded, restored from history...), and
     // the text of a shape clicked in its empty inside (no hit there)
     this.drawer.stage.on('dblclick.edit dbltap.edit', (e) => {
-      if (this.drawer.readOnly) return;
+      // slides presented: nothing edited
+      if (this.drawer.readOnly || this.drawer.slideshow.active) return;
 
       // texts with any tool, texts of shapes with the selection tool (not a double tap of a drawing tool)
       const textNode = this._isEditable(e.target)

@@ -6,6 +6,8 @@ import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { Collaboration } from '@/components/Collaboration/Collaboration';
 import type { CollaborationSocket, DrawingChange, EncryptedShape } from '@/@types/collaboration';
 import { RoomCipher, createRoomKey } from '@/utils/encryption';
+import { createFrame } from '@/utils/frame';
+import { slideMaskName } from '@/components/Slideshow/Slideshow';
 import { createDrawer, fireMouse, keydown, setPointer } from './helpers';
 import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import type { Group } from 'konva/lib/Group';
@@ -1643,5 +1645,52 @@ describe('Encrypted collaboration', () => {
     } finally {
       createSocket.mockRestore();
     }
+  });
+});
+
+describe('Slideshow in a session', () => {
+  it('Slides of the owner followed by the other users, alone (around them masked), until they move their view', async () => {
+    const connect = createServer();
+    const alice = createDrawer({ collaboration: true, language: 'en' });
+    const bob = createDrawer({ collaboration: true, language: 'en' });
+    alice.addShape(createFrame({ x: 0, y: 0, width: 400, height: 300, label: 'Intro' }));
+    alice.addShape(createFrame({ x: 600, y: 0, width: 300, height: 300, label: 'Plan' }));
+    const mask = (drawer: Drawer) => drawer.selectionLayer.findOne(`.${slideMaskName}`);
+    const center = (drawer: Drawer) => {
+      const view = drawer.getViewArea();
+
+      return [Math.round(view.x + view.width / 2), Math.round(view.y + view.height / 2)];
+    };
+
+    connect(alice, 'room', 'Alice', { userId: 'alice', ownerKey: 'secret' });
+    connect(bob, 'room', 'Bob', { userId: 'bob' });
+    alice.stage.fire('change');
+
+    // owner: presentation started with the slideshow
+    alice.slideshow.start();
+    await wait();
+    expect(alice.collaboration!.presenting).toBe(true);
+    expect(bob.collaboration!.presentedView).toEqual({ x: 0, y: 0, width: 400, height: 300, slide: true });
+    expect(center(bob)).toEqual([200, 150]);
+    expect(mask(bob)).toBeDefined();
+
+    alice.slideshow.next();
+    await wait();
+    expect(center(bob)).toEqual([750, 150]);
+
+    // view moved: slide no longer alone, followed again with the button
+    bob.setZoomLevel(0.5);
+    expect(bob.collaboration!.following).toBe(false);
+    expect(mask(bob)).toBeUndefined();
+    bob.collaboration!.follow();
+    expect(mask(bob)).toBeDefined();
+    expect(center(bob)).toEqual([750, 150]);
+
+    // stopped: presentation stopped (started by the slideshow), whole drawing shown again
+    alice.slideshow.stop();
+    await wait();
+    expect(alice.collaboration!.presenting).toBe(false);
+    expect(bob.collaboration!.presentedView).toBeNull();
+    expect(mask(bob)).toBeUndefined();
   });
 });

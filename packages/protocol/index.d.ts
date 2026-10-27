@@ -41,9 +41,9 @@ export declare const socketEvents: {
    */
   readonly REJECTED: 'REJECTED';
   /**
-   * Area of the drawing shown by the owner presenting it: `{ x, y, width, height }` (drawing coordinates), null when
-   * the presentation stops; sent by the owner, relayed by server to the room and to users joining meanwhile;
-   * encrypted room: `{ data }` (encrypted area)
+   * Area of the drawing shown by the owner presenting it: `{ x, y, width, height, slide }` (drawing coordinates, `slide`:
+   * a frame of its slideshow, seen alone), null when the presentation stops; sent by the owner, relayed by server to the
+   * room and to users joining meanwhile; encrypted room: `{ data }` (encrypted area)
    */
   readonly VIEW: 'VIEW';
   /**

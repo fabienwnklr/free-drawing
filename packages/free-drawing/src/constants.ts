@@ -307,6 +307,8 @@ export const drawerEvents = {
   toastHide: 'drawer.toast.hide',
   /** Plugin disabled or enabled again (`forceDisabled`), with the plugin */
   pluginChange: 'drawer.plugin.change',
+  /** Slideshow started, stopped or showing another slide (see `drawer.slideshow`), with the index of the slide shown */
+  slideshowChange: 'drawer.slideshow.change',
 } as const;
 
 /**
