@@ -66,6 +66,12 @@ export class ContextMenu {
     const selection = () => edit() && drawer.getSelectedShapes().length > 0 && !locked();
     const canvas = () => drawer.getSelectedShapes().length === 0;
     const hasShapes = () => drawer.getDrawingShapes().length > 0;
+    // one frame selected (also locked): the slideshow from it
+    const oneFrame = () => {
+      const shapes = drawer.getSelectedShapes();
+
+      return shapes.length === 1 && isFrame(shapes[0]);
+    };
     const order = (label: TranslationKey, value: ShapeOrder, shortcut: string): ContextMenuItem => ({
       $item: this._createItem(label, shortcut),
       visible: selection,
@@ -226,8 +232,13 @@ export class ContextMenu {
         },
         {
           // from the frame selected (right click on it)
+          $item: this._createItem('slideshow.presentFrom', 'Alt+Shift+P'),
+          visible: () => oneFrame(),
+          run: () => drawer.slideshow.start(),
+        },
+        {
           $item: this._createItem('slideshow.start', 'Alt+Shift+P'),
-          visible: () => drawer.getDrawingShapes().some(isFrame),
+          visible: () => !oneFrame() && drawer.getDrawingShapes().some(isFrame),
           run: () => drawer.slideshow.start(),
         },
       ],

@@ -559,7 +559,11 @@ export class CommandPalette extends Modal {
           // from the frame selected
           drawer.getDrawingShapes().some(isFrame) && {
             id: 'slideshow present slides frames presentation',
-            label: t('slideshow.start'),
+            label: t(
+              drawer.getSelectedShapes().length === 1 && isFrame(drawer.getSelectedShapes()[0])
+                ? 'slideshow.presentFrom'
+                : 'slideshow.start'
+            ),
             icon: PresentIcon,
             shortcut: 'Alt+Shift+P',
             run: () => drawer.slideshow.start(),

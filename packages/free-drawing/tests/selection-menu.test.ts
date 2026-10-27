@@ -27,6 +27,7 @@ describe('Selection menu', () => {
     expect(menu.$menu.getAttribute('aria-label')).toBe('Selection actions');
     expect([...menu.$menu.querySelectorAll('button')].map(($btn) => $btn.getAttribute('aria-label'))).toEqual([
       'Unlock',
+      'Present from this frame',
       'Duplicate',
       'Group',
       'Ungroup',

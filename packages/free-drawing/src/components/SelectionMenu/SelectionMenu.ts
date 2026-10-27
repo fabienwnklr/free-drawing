@@ -12,6 +12,7 @@ import LockIcon from '@/icons/lock.svg?raw';
 import RotateLeftIcon from '@/icons/rotate-left.svg?raw';
 import RotateRightIcon from '@/icons/rotate-right.svg?raw';
 import FitWidthIcon from '@/icons/fit-width.svg?raw';
+import PresentIcon from '@/icons/present.svg?raw';
 import { Group } from 'konva/lib/Group';
 import { arrowNavigation, createButton, placeInView, setLabel } from '@/utils/dom';
 import { ariaShortcut, formatShortcut } from '@/utils/shortcut';
@@ -56,6 +57,8 @@ export class SelectionMenu {
   $lockBtn: HTMLButtonElement;
   /** Unlocks selected shapes (Ctrl+Shift+L), only button shown for a locked selection */
   $unlockBtn: HTMLButtonElement;
+  /** Presents the frames from the selected one (Alt+Shift+P), shown for one frame, also locked */
+  $presentBtn: HTMLButtonElement;
   /** Separator before the delete button */
   $separator: HTMLSpanElement;
 
@@ -104,12 +107,17 @@ export class SelectionMenu {
       this.drawer.setShapesLocked(false)
     );
 
+    this.$presentBtn = this._createButton(PresentIcon, 'slideshow.presentFrom', 'Alt+Shift+P', () =>
+      this.drawer.slideshow.start()
+    );
+
     this.$separator = document.createElement('span');
     this.$separator.classList.add('drawer-selection-menu-separator');
     this.$separator.setAttribute('aria-hidden', 'true');
 
     this.$menu.append(
       this.$unlockBtn,
+      this.$presentBtn,
       this.$duplicateBtn,
       this.$groupBtn,
       this.$ungroupBtn,
@@ -201,6 +209,8 @@ export class SelectionMenu {
     // frames are not rotated
     this.$rotateLeftBtn.hidden = this.$rotateRightBtn.hidden = locked || shapes.every(isFrame);
     this.$fitWidthBtn.hidden = locked || !getTexts(shapes).length;
+    // one frame, also locked (nothing changed): the slideshow from it
+    this.$presentBtn.hidden = shapes.length !== 1 || !isFrame(shapes[0]);
 
     const { left, top } = this._getPlace();
 

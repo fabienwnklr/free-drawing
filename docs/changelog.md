@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.43.0](https://github.com/fabienwnklr/free-drawing/compare/v7.42.0...v7.43.0) (2026-10-27)
+
+
+### Features
+
+* **slideshow:** a selected frame shows "Present from this frame" in its selection menu, its options panel (actions), the context menu and the command palette; "Present slides" is now "Present frames": the slides are the frames of the drawing
+
 ## [7.42.0](https://github.com/fabienwnklr/free-drawing/compare/v7.41.0...v7.42.0) (2026-10-27)
 
 

@@ -171,8 +171,50 @@ describe('Slideshow', () => {
     const labels = [...drawer.commandPalette!.$list.querySelectorAll('[role="option"]')].map(($o) => $o.textContent);
     drawer.commandPalette!.hide();
 
-    expect(labels.some((label) => label?.includes('Present slides'))).toBe(true);
-    expect(drawer.help.$modalBody.textContent).toContain('Present slides');
+    expect(labels.some((label) => label?.includes('Present frames'))).toBe(true);
+    expect(drawer.help.$modalBody.textContent).toContain('Present frames');
     expect(drawer.help.$modalBody.textContent).toContain('Next / previous slide');
+  });
+
+  it('A selected frame presents the frames from it: selection menu, options panel, context menu, palette', () => {
+    const drawer = createDrawer({ language: 'en' });
+    const frames = addFrames(drawer);
+    const selectWidget = drawer.getWidget<SelectWidget>('selection')!;
+    const { $presentBtn } = drawer.selectionMenu!;
+    const $panelBtn = selectWidget.overlay.$presentBtn;
+    const contextItems = () =>
+      [...drawer.contextMenu.$menu.querySelectorAll<HTMLElement>('[role="menuitem"]')]
+        .filter(($item) => !$item.hidden)
+        .map(($item) => $item.textContent);
+
+    selectWidget.setActive(true);
+    selectWidget.select([frames[1]]);
+    drawer.selectionMenu!.update();
+    expect($presentBtn.hidden).toBe(false);
+    expect($presentBtn.getAttribute('aria-label')).toBe('Present from this frame');
+    expect($panelBtn.style.display).toBe('');
+
+    drawer.contextMenu.show();
+    expect(contextItems().some((text) => text?.includes('Present from this frame'))).toBe(true);
+    expect(contextItems().some((text) => text?.includes('Present frames'))).toBe(false);
+    drawer.contextMenu.hide();
+
+    drawer.showCommandPalette();
+    const labels = [...drawer.commandPalette!.$list.querySelectorAll('[role="option"]')].map(($o) => $o.textContent);
+    drawer.commandPalette!.hide();
+    expect(labels.some((label) => label?.includes('Present from this frame'))).toBe(true);
+
+    $presentBtn.click();
+    expect(drawer.slideshow.index).toBe(1);
+    drawer.slideshow.stop();
+
+    // not a frame, or several shapes: no button, the frames of the drawing from the first one
+    selectWidget.select([frames[0], frames[2]]);
+    drawer.selectionMenu!.update();
+    expect($presentBtn.hidden).toBe(true);
+    expect($panelBtn.style.display).toBe('none');
+    drawer.contextMenu.show();
+    expect(contextItems().some((text) => text?.includes('Present frames'))).toBe(true);
+    drawer.contextMenu.hide();
   });
 });

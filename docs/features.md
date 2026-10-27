@@ -45,7 +45,7 @@ More in [Selection](/get-started/#selection).
 
 - **Layers panel** (Alt + L): every shape with its name, top first. Rename, hide, lock, drag to reorder, select ranges with Shift.
 - **Groups** move and style their shapes together, which can still be reached alone with Ctrl + click.
-- **Frames**: named areas holding the shapes drawn or moved into them, cut at their border, exported without their title. A frame a shape is moved into or out of is highlighted, the moved shape is drawn whole. A selected frame has its opacity, stacking order and actions.
+- **Frames**: named areas holding the shapes drawn or moved into them, cut at their border, exported without their title. A frame a shape is moved into or out of is highlighted, the moved shape is drawn whole. A selected frame has its opacity, stacking order and actions (the slideshow from it among them).
 - **Slideshow** (Alt + Shift + P): frames presented one after the other as slides, alone on the whole screen, the arrows going from one to the next, the laser as pointer. In a live session, the other users follow the slides of the owner.
 - **Linked arrows** follow the shapes they link when these are moved or resized, fixed to a side or to the outline; elbow arrows leave the sides facing each other with horizontal and vertical lines and go around the shapes. The handle of a selected curved or elbow arrow bends the curve on either side or moves the middle segment.
 - **Stacking order**: forward and backward past the next overlapping shape, or to the front and back.

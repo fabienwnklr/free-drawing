@@ -8,6 +8,7 @@ import EdgesRoundIcon from '@/icons/edges-round.svg?raw';
 import DuplicateIcon from '@/icons/duplicate.svg?raw';
 import TrashIcon from '@/icons/trash.svg?raw';
 import LinkIcon from '@/icons/link.svg?raw';
+import PresentIcon from '@/icons/present.svg?raw';
 import '@/components/tools/Overlay/overlay.scss';
 import type { Shape, ShapeConfig } from 'konva/lib/Shape';
 import type { Group } from 'konva/lib/Group';
@@ -103,6 +104,8 @@ export class BaseOverlay {
   $actionsContainer!: HTMLDivElement;
   /** Link button of actions section, shows the link editor above the selection (`drawer.linkEditor`) */
   $linkBtn!: HTMLButtonElement;
+  /** Button of actions section presenting the frames from the selected one (`drawer.slideshow`), shown for one frame */
+  $presentBtn!: HTMLButtonElement;
 
   /** CSS classes of sections and of their buttons, shared with subclasses */
   selectors = {
@@ -433,13 +436,17 @@ export class BaseOverlay {
   }
 
   /**
-   * Actions section: duplicate, delete and link of selected shapes (link editor above the selection)
+   * Actions section: duplicate, delete and link of selected shapes (link editor above the selection), slideshow from a
+   * selected frame
    */
   private _createActionsFields() {
     const { $container, $btnContainer } = this._createSection('overlay.actions');
 
     this.$actionsContainer = $container;
     this.$linkBtn = this._createAction(LinkIcon, 'action.link', '', () => this.drawer.linkEditor?.edit());
+    this.$presentBtn = this._createAction(PresentIcon, 'slideshow.presentFrom', 'Alt+Shift+P', () =>
+      this.drawer.slideshow.start()
+    );
     $btnContainer.append(
       this._createAction(DuplicateIcon, 'action.duplicate', 'Ctrl+D', () => this.drawer.duplicateShapes()),
       this._createAction(TrashIcon, 'action.delete', 'Delete', () => {
@@ -447,7 +454,8 @@ export class BaseOverlay {
         // panel hidden with the selection
         this.drawer.focus();
       }),
-      this.$linkBtn
+      this.$linkBtn,
+      this.$presentBtn
     );
   }
 
@@ -555,6 +563,8 @@ export class BaseOverlay {
     // stacking order and actions only for selected shapes, not for tool options
     this.$orderContainer.style.display = selected ? '' : 'none';
     this.$actionsContainer.style.display = selected ? '' : 'none';
+    // one frame: the slideshow from it
+    this.$presentBtn.style.display = shape?.length === 1 && isFrame(shape[0]) ? '' : 'none';
     // align and stack 2 shapes, distribute 3
     this.$alignContainer.style.display = (shape?.length ?? 0) > 1 ? '' : 'none';
     this.$distributeContainer.style.display = (shape?.length ?? 0) > 1 ? '' : 'none';
