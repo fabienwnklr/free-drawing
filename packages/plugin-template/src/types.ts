@@ -1,6 +1,6 @@
 /**
- * Options of the stamps plugin. The app gives them with the `pluginOptions` drawer option, under the name of the
- * plugin: `new Drawer($el, { plugins: [StampsPlugin], pluginOptions: { Stamps: { max: 20 } } })`
+ * Options of the stamps plugin. The app gives them with the class of the plugin in the `plugins` drawer option:
+ * `new Drawer($el, { plugins: [[StampsPlugin, { max: 20 }]] })`
  */
 export type StampsOptions = {
   /** Symbols of stamps: the first one for new stamps (a double click on a symbol edits it, as any text) */

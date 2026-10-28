@@ -80,6 +80,7 @@ The library needs no framework. React and Vue apps can use its `FreeDrawing` com
   translations: {}, // texts replacing default ones, by language, see Languages below
   layersPanel: true, // enable/disable layers panel (list of shapes) and its button in header
   library: true, // enable/disable library panel (shapes saved to insert them again in any drawing), its button and menu items
+  slideshow: true, // enable/disable the slideshow of frames in the interface (menu, context menu, command palette, Alt + Shift + P, button of a selected frame)
   saveButton: true, // button in header saving the drawing while auto save is off (dot: changes not saved yet)
   readOnly: false, // drawing can't be modified by user (only pan, zoom, view options, export), API still modifies it
   scaling: 1.11, // scaling on zoom
@@ -88,8 +89,7 @@ The library needs no framework. React and Vue apps can use its `FreeDrawing` com
   localStorageKey: 'free-drawing', // localStorage key used for store data, use a different key for each drawer of a page
   storage: null, // drawing saved somewhere else than localStorage (e.g. server of your app), see "Use in an app" below
   user: null, // user of your app ({ id, name }), used in collaboration sessions instead of id and name kept in browser
-  plugins: [], // plugins added to the drawer (classes extending Plugin), see Plugins below
-  pluginOptions: {}, // options of plugins by plugin name, e.g. { Stamps: { max: 20 } }
+  plugins: [], // plugins added to the drawer: classes extending Plugin, or [class, options] to give its options, e.g. [[StampsPlugin, { max: 20 }]], see Plugins below
   opacity: 1, // opacity of draw
   textStyle: {
     // style of new text
@@ -383,10 +383,10 @@ drawer.plugins.get(Stamps); // also by name: drawer.plugins.get('Stamps'), drawe
 - Commands are available unless their `isAvailable()` returns false. Commands with `readOnly: true` do not modify the drawing: also available in read only and while their plugin is disabled. Shortcuts of plugins run before the ones of the library: avoid the ones listed in help. Written `Ctrl+Shift+M` (Ctrl is also Cmd), they are shown ⇧⌘M on Apple devices: `formatShortcut(shortcut, drawer.i18n.t)` and `ariaShortcut(shortcut)` do the same for the interface of a plugin.
 - `isEnabled` is false in read only, or while the plugin is disabled by `forceDisabled(reason)` (until `clearForceDisabled(reason)` for every reason): its tools and commands modifying the drawing are disabled, `drawer.plugin.change` is triggered.
 - Texts: `this.t(key, params)`, in the language of the drawer; the `translations` option can replace them.
-- Options: the app gives them by plugin name, the plugin reads them with its defaults: `options = this.getOptions({ max: 0 })` with `pluginOptions: { Stamps: { max: 20 } }`.
+- Options: the app gives them with the class of the plugin, `plugins: [[Stamps, { max: 20 }]]` (a plugin required by another one too: given this way, it is created once, before it), the plugin reads them with its defaults: `options = this.getOptions({ max: 0 })` gives `{ max: 20 }`. The `pluginOptions` option of previous versions (options by plugin name, `pluginOptions: { Stamps: { max: 20 } }`) still works, with a warning: options given with the class replace its ones.
 - Drawer API useful to plugins: `addShape`, `stage.fire('change')`, `placeInFrames`, `getPointerPosition()` (pointer in drawing coordinates), `getSelectedShapes()`, `getWidget<SelectWidget>('selection')?.select(shapes)`, `layout.add(region, element)`, `toast(message)`.
 - Shapes: draw with the shapes of the library (`Line`, `Arrow`, `Rect`, `Ellipse`, `Text`, `Path` and groups of them), marked with a name or attributes. Files, links and collaboration accept only these classes.
-- Exported for plugins: `Plugin`, `BaseWidget`, `ShapeWidget`, `drawerEvents`, `shapeName`, `createButton`, `setLabel`, `setPressed`, `formatShortcut`, `ariaShortcut`, and types (`PluginClass`, `PluginCommand`, `PluginOptions`, `PluginTranslations`, `SelectWidget`, `WidgetClass`, classes of the members of the drawer...).
+- Exported for plugins: `Plugin`, `BaseWidget`, `ShapeWidget`, `drawerEvents`, `shapeName`, `createButton`, `setLabel`, `setPressed`, `formatShortcut`, `ariaShortcut`, and types (`PluginClass`, `PluginEntry`, `PluginCommand`, `PluginTranslations`, `SelectWidget`, `WidgetClass`, classes of the members of the drawer...).
 
 ## Touch screens
 
@@ -507,7 +507,7 @@ drawer.search.hide();
 
 ## Slideshow
 
-Frames are slides: "Present frames" (Alt + Shift + P, also in the menu, the context menu and the command palette, in read only too) presents them one after the other, from the selected frame, else from the first one. A selected frame shows "Present from this frame" in its selection menu, its options panel (actions) and the context menu.
+Frames are slides: "Present frames" (Alt + Shift + P, also in the menu, the context menu and the command palette, in read only too) presents them one after the other, from the selected frame, else from the first one. A selected frame shows "Present from this frame" in its selection menu, its options panel (actions) and the context menu. The `slideshow: false` option removes these commands from the interface (Alt + Shift + P left to the browser): `drawer.slideshow.start()` still presents the frames, from a button of your app for example.
 
 - Order: reading order of the frames, rows from top to bottom (a frame starting above the middle of the first one of a row belongs to this row, they need not be aligned), left to right in a row. Move a frame to change its place; hidden frames are left out.
 - Each slide fills the view (zoomed in or out), around it is masked with the background color: the shapes of the frame alone, without its name. The interface of the drawer is hidden but a bar at the bottom (previous, number and name of the slide, next, stop), on the whole screen when the browser allows it.

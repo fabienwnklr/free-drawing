@@ -233,12 +233,12 @@ export class ContextMenu {
         {
           // from the frame selected (right click on it)
           $item: this._createItem('slideshow.presentFrom', 'Alt+Shift+P'),
-          visible: () => oneFrame(),
+          visible: () => drawer.options.slideshow && oneFrame(),
           run: () => drawer.slideshow.start(),
         },
         {
           $item: this._createItem('slideshow.start', 'Alt+Shift+P'),
-          visible: () => !oneFrame() && drawer.getDrawingShapes().some(isFrame),
+          visible: () => drawer.options.slideshow && !oneFrame() && drawer.getDrawingShapes().some(isFrame),
           run: () => drawer.slideshow.start(),
         },
       ],

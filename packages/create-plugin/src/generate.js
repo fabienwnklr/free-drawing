@@ -208,9 +208,9 @@ export function readme({ packageName, names, css, options, start }, parts) {
     css && `import '${packageName}/style.css';`,
     '',
     "const drawer = new Drawer(document.getElementById('drawer'), {",
-    `  plugins: [${names.pascal}Plugin],`,
-    options && start === 'custom' && `  pluginOptions: { ${names.pascal}: { color: '#a5d8ff', size: 120 } },`,
-    options && start === 'template' && `  pluginOptions: { ${names.pascal}: { max: 20 } },`,
+    !options && `  plugins: [${names.pascal}Plugin],`,
+    options && start === 'custom' && `  plugins: [[${names.pascal}Plugin, { color: '#a5d8ff', size: 120 }]],`,
+    options && start === 'template' && `  plugins: [[${names.pascal}Plugin, { max: 20 }]],`,
     '});',
     '```',
     '',
@@ -272,7 +272,8 @@ function readmeParts({ names, tool, toolId, toolShortcut, command, commandShortc
         contextMenu ? ', context menu of the drawing' : ''
       }.`,
     header && '- Button of the header: number of shapes of the plugin.',
-    options && `- Options (\`pluginOptions.${names.pascal}\`): \`color\` (background), \`size\` (in drawing units).`,
+    options &&
+      `- Options (given with the class: \`plugins: [[${names.pascal}Plugin, { size: 120 }]]\`): \`color\` (background), \`size\` (in drawing units).`,
     `- Texts: \`${names.camel}.*\` keys, replaceable with the \`translations\` option of the drawer.`,
   ].filter((line) => typeof line === 'string');
 }
@@ -325,8 +326,8 @@ function constantsFile({ names }) {
 function typesFile({ names }) {
   return lines(
     '/**',
-    ' * Options of the plugin, given by the app with the `pluginOptions` option of the drawer:',
-    ` * \`pluginOptions: { ${names.pascal}: { color: '#a5d8ff' } }\``,
+    ' * Options of the plugin, given by the app with its class in the `plugins` option of the drawer:',
+    ` * \`plugins: [[${names.pascal}Plugin, { color: '#a5d8ff' }]]\``,
     ' */',
     `export type ${names.pascal}Options = {`,
     '  /** Background color of its shapes */',
@@ -430,13 +431,13 @@ function pluginFile(answers) {
     ` * Guide: ${guideUrl}`,
     ' */',
     `export class ${P}Plugin extends Plugin {`,
-    `  /** Unique name: \`drawer.plugins.get('${P}')\`${options ? `, \`pluginOptions: { ${P}: {...} }\`` : ''} */`,
+    `  /** Unique name: \`drawer.plugins.get('${P}')\`, \`requires\` of other plugins */`,
     `  static readonly pluginName = ${quote(P)};`,
     '  /** Plugins required: classes (added when missing) or names, created and initialized before this one */',
     '  static readonly requires = [];',
     '',
     options &&
-      `  /** Options: these defaults replaced by the ones of the app (\`pluginOptions.${P}\` of the drawer) */`,
+      `  /** Options: these defaults replaced by the ones of the app (\`plugins: [[${P}Plugin, {...}]]\` of the drawer) */`,
     options && `  readonly options = this.getOptions<${P}Options>({ color: defaultColor, size: defaultSize });`,
     options && '',
     header && '  /** Element of the header: `tool` class gives the surface of the panels of the drawer */',
@@ -857,7 +858,7 @@ function testFile(answers) {
     command && '  });',
     options && '',
     options && "  it('Options of the app replace the defaults', async () => {",
-    options && `    const drawer = createDrawer({ pluginOptions: { ${P}: { size: 40 } } });`,
+    options && `    const drawer = createDrawer({ plugins: [[${P}Plugin, { size: 40 }]] });`,
     options && `    const plugin = drawer.plugins.get(${P}Plugin)!;`,
     options && '',
     options && '    await drawer.ready;',

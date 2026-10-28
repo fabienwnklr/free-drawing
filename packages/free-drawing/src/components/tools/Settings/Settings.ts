@@ -209,7 +209,7 @@ export class Settings extends Dropdown {
         this.$saveAsButton,
         this.$copyLinkButton,
         this.$exportButton,
-        this.$slideshowButton,
+        ...(this.drawer.options.slideshow ? [this.$slideshowButton] : []),
         // server given by collaboration option
         ...(this.drawer.options.collaboration ? [this.$collaborationButton] : []),
         this.getSeparator(),

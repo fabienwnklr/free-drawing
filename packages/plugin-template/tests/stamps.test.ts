@@ -157,7 +157,7 @@ describe('Stamps plugin (template)', () => {
   });
 
   it('Options of the app: limit of stamps disables the plugin and its tools until stamps are removed', async () => {
-    const drawer = createDrawer({ plugins: [StampsPlugin], pluginOptions: { Stamps: { max: 2, symbols: ['A'] } } });
+    const drawer = createDrawer({ plugins: [[StampsPlugin, { max: 2, symbols: ['A'] }]] });
     const stamps = drawer.plugins.get(StampsPlugin)!;
     const toast = vi.spyOn(drawer, 'toast');
 

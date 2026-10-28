@@ -213,8 +213,8 @@ export class HotKey {
         this.drawer.copyImage(letter === 'c' ? 'png' : 'svg');
       }
 
-      // frames presented as slides (also in read only)
-      if (e.altKey && e.shiftKey && !mod && letter === 'p' && !inField) {
+      // frames presented as slides (also in read only), browser shortcut kept without slideshow option
+      if (e.altKey && e.shiftKey && !mod && letter === 'p' && !inField && this.drawer.options.slideshow) {
         e.preventDefault();
         this.drawer.slideshow.start();
       }

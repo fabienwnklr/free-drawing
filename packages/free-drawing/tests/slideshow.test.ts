@@ -217,4 +217,42 @@ describe('Slideshow', () => {
     expect(contextItems().some((text) => text?.includes('Present frames'))).toBe(true);
     drawer.contextMenu.hide();
   });
+
+  it('Without slideshow option: no command in the interface, Alt + Shift + P left to the browser, API still presents', () => {
+    const drawer = createDrawer({ language: 'en', slideshow: false });
+    const frames = addFrames(drawer);
+    const selectWidget = drawer.getWidget<SelectWidget>('selection')!;
+    const menuTexts = () =>
+      [...drawer.contextMenu.$menu.querySelectorAll<HTMLElement>('[role="menuitem"]')]
+        .filter(($item) => !$item.hidden)
+        .map(($item) => $item.textContent)
+        .join();
+
+    selectWidget.setActive(true);
+    selectWidget.select([frames[0]]);
+    drawer.selectionMenu!.update();
+    expect(drawer.selectionMenu!.$presentBtn.hidden).toBe(true);
+    expect(selectWidget.overlay.$presentBtn.style.display).toBe('none');
+    drawer.contextMenu.show();
+    expect(menuTexts()).not.toContain('Present');
+    drawer.contextMenu.hide();
+    selectWidget.clearSelection();
+    drawer.contextMenu.show();
+    expect(menuTexts()).not.toContain('Present');
+    drawer.contextMenu.hide();
+
+    expect(drawer.setting.$dropdownList.contains(drawer.setting.$slideshowButton)).toBe(false);
+    expect(drawer.help.$modalBody.textContent).not.toContain('Present frames');
+    drawer.showCommandPalette();
+    const labels = [...drawer.commandPalette!.$list.querySelectorAll('[role="option"]')].map(($o) => $o.textContent);
+    drawer.commandPalette!.hide();
+    expect(labels.join()).not.toContain('Present');
+
+    expect(keydown(drawer, { key: 'P', code: 'KeyP', altKey: true, shiftKey: true })).toBe(true);
+    expect(drawer.slideshow.active).toBe(false);
+
+    expect(drawer.slideshow.start(frames[1], { fullscreen: false })).toBe(true);
+    expect(drawer.slideshow.index).toBe(1);
+    drawer.slideshow.stop();
+  });
 });

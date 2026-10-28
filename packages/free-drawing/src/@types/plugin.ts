@@ -12,6 +12,12 @@ export type PluginClass<T extends Plugin = Plugin> = (new (drawer: Drawer) => T)
   readonly requires?: readonly (PluginClass | string)[];
 };
 
+/**
+ * Plugin given to the `plugins` drawer option: its class, or its class with its options (`[StampsPlugin, { max: 20 }]`),
+ * read by `Plugin.getOptions`
+ */
+export type PluginEntry = PluginClass | readonly [plugin: PluginClass, options?: object];
+
 /** Options of plugins given by the app (`pluginOptions` drawer option), by plugin name, read by `Plugin.getOptions` */
 export type PluginOptions = Record<string, object>;
 

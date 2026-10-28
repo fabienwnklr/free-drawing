@@ -20,7 +20,7 @@ pnpm create @fabwcie/free-drawing-plugin
 | Tool in the toolbar         | a click adds a shape (`BaseWidget`), a shape drawn by dragging (`ShapeWidget`), or none                                                           |
 | Id and shortcut of the tool | `stickyNotes`, first free letter of the name                                                                                                      |
 | Command                     | command palette, shortcut (first free `Alt` + letter of the name), context menu of the drawing                                                    |
-| Options given by the app    | `pluginOptions: { StickyNotes: { color, size } }`                                                                                                 |
+| Options given by the app    | `plugins: [[StickyNotesPlugin, { color, size }]]`                                                                                                 |
 | Button in the header        | number of shapes of the plugin                                                                                                                    |
 | Style sheet                 | `style.css`, imported by the app                                                                                                                  |
 | Languages of the texts      | English, and French, Spanish, German                                                                                                              |

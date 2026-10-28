@@ -126,7 +126,7 @@
 
 - [x] Web Component `<free-drawing>`: Angular, Svelte, plain HTML
 - [x] presentation by frames: each frame a slide, participants of a session follow (option to active/desactivate)
-- [ ] fusionne les options plugins et pluginOptions, par ex si je veux set des options sur un plugin je fais :
+- [x] fusionne les options plugins et pluginOptions, par ex si je veux set des options sur un plugin je fais :
 
 {
     "myPlugin": {

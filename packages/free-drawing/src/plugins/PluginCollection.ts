@@ -1,5 +1,5 @@
 import type { TranslationKey } from '@/@types/i18n';
-import type { PluginClass, PluginCommandMenu, RegisteredCommand, WidgetClass } from '@/@types/plugin';
+import type { PluginClass, PluginCommandMenu, PluginEntry, RegisteredCommand, WidgetClass } from '@/@types/plugin';
 import type { Command } from '@/@types/ui';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { widgetNames } from '@/constants';
@@ -8,13 +8,22 @@ import type { Plugin } from '@/plugins/Plugin';
 import { matchesShortcut } from '@/utils/HotKey';
 
 /**
+ * Class of a plugin of the `plugins` drawer option
+ * @param entry Class of the plugin, or its class with its options
+ * @returns class of the plugin
+ */
+function classOf(entry: PluginEntry): PluginClass {
+  return Array.isArray(entry) ? entry[0] : (entry as PluginClass);
+}
+
+/**
  * Plugin classes in creation order: required plugins before the ones requiring them, classes required by others added
- * @param classes Classes of the `plugins` drawer option
+ * @param classes Plugins of the `plugins` drawer option: classes, or classes with their options
  * @returns every plugin class once, required ones first
  * @throws {Error} plugin without name, two plugins of the same name, required plugin missing, plugins requiring each
  * other
  */
-export function resolvePlugins(classes: readonly PluginClass[]): PluginClass[] {
+export function resolvePlugins(classes: readonly PluginEntry[]): PluginClass[] {
   const byName = new Map<string, PluginClass>();
   // given classes and classes they require, by name
   const collect = (plugin: PluginClass) => {
@@ -28,7 +37,7 @@ export function resolvePlugins(classes: readonly PluginClass[]): PluginClass[] {
     for (const required of plugin.requires ?? []) if (typeof required !== 'string') collect(required);
   };
 
-  for (const plugin of classes) collect(plugin);
+  for (const entry of classes) collect(classOf(entry));
 
   const ordered: PluginClass[] = [];
   // names of plugins being ordered (with their required plugins)
@@ -84,6 +93,8 @@ export class PluginCollection {
   drawer: Drawer;
   /** Plugins in creation order, required ones first */
   #plugins: Plugin[] = [];
+  /** Options given with the classes of the `plugins` option, by plugin name (read by `Plugin.getOptions`) */
+  #options = new Map<string, object>();
   /** Widgets added by plugins (`Plugin.addWidget`), by id, created by the toolbar */
   widgets = new Map<string, WidgetClass>();
   /** Commands added by plugins (`Plugin.addCommand`) */
@@ -101,12 +112,36 @@ export class PluginCollection {
 
   /**
    * Create the plugins of the `plugins` option and the ones they require, required ones first (their constructor can
-   * use `drawer.plugins`). Called by the drawer
-   * @param classes Classes of the `plugins` option
+   * use `drawer.plugins` and their options). Called by the drawer
+   * @param entries Plugins of the `plugins` option: classes, or classes with their options
    * @throws {Error} invalid plugins (see `resolvePlugins`)
    */
-  _create(classes: readonly PluginClass[]) {
-    for (const PluginType of resolvePlugins(classes)) this.#plugins.push(new PluginType(this.drawer));
+  _create(entries: readonly PluginEntry[]) {
+    if (Object.keys(this.drawer.options.pluginOptions ?? {}).length) {
+      console.warn(
+        '[free-drawing] pluginOptions option is deprecated: give the options of a plugin with its class, plugins: [[StampsPlugin, { max: 20 }]]'
+      );
+    }
+
+    for (const entry of entries) {
+      if (!Array.isArray(entry)) continue;
+
+      const [{ pluginName }, options] = entry as Exclude<PluginEntry, PluginClass>;
+
+      // given twice: options merged
+      this.#options.set(pluginName, { ...this.#options.get(pluginName), ...options });
+    }
+    for (const PluginType of resolvePlugins(entries)) this.#plugins.push(new PluginType(this.drawer));
+  }
+
+  /**
+   * Options given to a plugin by the app: with its class in the `plugins` option, over the ones of the deprecated
+   * `pluginOptions` option. Read by `Plugin.getOptions`
+   * @param name Name of the plugin
+   * @returns options of the app, empty without them
+   */
+  _getOptions(name: string): object {
+    return { ...this.drawer.options.pluginOptions?.[name], ...this.#options.get(name) };
   }
 
   /**

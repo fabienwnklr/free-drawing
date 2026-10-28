@@ -31,7 +31,7 @@ What you write, and what the drawer does for you:
 | `this.addTranslations({ en, fr })`                          | Texts in the language of the drawer, updated when it changes, replaceable by the app                                                                                              |
 | `drawer.addShape(shape)` then `drawer.stage.fire('change')` | Saving (localStorage or your storage), history, live collaboration, layers panel, selection and its options panel, files, links, exports                                          |
 | `this.listenTo(target, event, handler)`                     | Listeners removed when the plugin is destroyed                                                                                                                                    |
-| `this.getOptions(defaults)`                                 | Options given by each app (`pluginOptions`)                                                                                                                                       |
+| `this.getOptions(defaults)`                                 | Options given by each app with the class of the plugin (`plugins: [[StampsPlugin, { max: 20 }]]`)                                                                                 |
 
 ## Create a plugin
 
@@ -107,7 +107,7 @@ The command is in the command palette (Ctrl + K), Alt + N runs it, a right click
 
 | Member              | Use                                                                                                                                                 |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `static pluginName` | Unique name of the plugin, required (class names are changed by minification). Used by `drawer.plugins.get('Name')`, `requires` and `pluginOptions` |
+| `static pluginName` | Unique name of the plugin, required (class names are changed by minification). Used by `drawer.plugins.get('Name')` and `requires`                 |
 | `static requires`   | Plugins required, created and initialized before this one: classes (added when the app does not give them) or names (the app must give them)        |
 
 ### Steps
@@ -214,7 +214,7 @@ Prefix the keys with your plugin, `tools.<id>` gives the title of a tool. Missin
 
 ## Options
 
-The app gives the options of a plugin under its name, the plugin reads them with its defaults:
+The app gives the options of a plugin with its class, in a pair `[class, options]` of the `plugins` option; the plugin reads them with its defaults:
 
 ```js
 class StampsPlugin extends Plugin {
@@ -222,9 +222,15 @@ class StampsPlugin extends Plugin {
   options = this.getOptions({ max: 0, size: 48 });
 }
 
-new Drawer($el, { plugins: [StampsPlugin], pluginOptions: { Stamps: { max: 20 } } });
+new Drawer($el, { plugins: [[StampsPlugin, { max: 20 }]] });
 // options: { max: 20, size: 48 }
 ```
+
+- `getOptions` merges one level deep: an option given replaces the default one, an object or a list too (not merged).
+- The options are known in the constructor of the plugin (a field initialized with `getOptions`, as above, works).
+- A plugin required by another one is added without options: give it in the `plugins` option with its options, it is still created once, before the plugins requiring it (`[StampCounterPlugin, [StampsPlugin, { max: 20 }]]`).
+- In TypeScript, a pair written in the option is typed as `PluginEntry`; a list built apart is typed `PluginEntry[]` (or written `as const`).
+- The `pluginOptions` option of previous versions (options by plugin name: `pluginOptions: { Stamps: { max: 20 } }`) still works, with a warning in the console; options given with the class replace its ones.
 
 ## Shapes and data
 

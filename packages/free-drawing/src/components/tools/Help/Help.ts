@@ -114,10 +114,14 @@ export class Help extends Modal {
           ]
         : []),
       { label: t('preferences.title'), keys: ['Ctrl+,'] },
-      { label: t('slideshow.start'), keys: ['Alt+Shift+P'] },
-      { label: t('slideshow.nextPrevious'), keys: ['Arrows', 'Space'], after: t('slideshow.whilePresenting') },
-      { label: t('slideshow.firstLast'), keys: ['Home', 'End'], after: t('slideshow.whilePresenting') },
-      { label: t('slideshow.stop'), keys: ['Escape'], after: t('slideshow.whilePresenting') },
+      ...(this.drawer.options.slideshow
+        ? [
+            { label: t('slideshow.start'), keys: ['Alt+Shift+P'] },
+            { label: t('slideshow.nextPrevious'), keys: ['Arrows', 'Space'], after: t('slideshow.whilePresenting') },
+            { label: t('slideshow.firstLast'), keys: ['Home', 'End'], after: t('slideshow.whilePresenting') },
+            { label: t('slideshow.stop'), keys: ['Escape'], after: t('slideshow.whilePresenting') },
+          ]
+        : []),
     ];
 
     // commands of plugins

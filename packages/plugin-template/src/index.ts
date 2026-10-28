@@ -1,6 +1,6 @@
 // Entry of the plugin package: what apps import
 // import { StampsPlugin, StampCounterPlugin } from '@free-drawing/plugin-template';
-// new Drawer($el, { plugins: [StampCounterPlugin], pluginOptions: { Stamps: { max: 20 } } });
+// new Drawer($el, { plugins: [StampCounterPlugin, [StampsPlugin, { max: 20 }]] });
 import './style.css';
 
 export { StampsPlugin, stampName } from './StampsPlugin';

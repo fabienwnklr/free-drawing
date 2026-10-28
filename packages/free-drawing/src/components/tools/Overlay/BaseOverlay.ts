@@ -564,7 +564,8 @@ export class BaseOverlay {
     this.$orderContainer.style.display = selected ? '' : 'none';
     this.$actionsContainer.style.display = selected ? '' : 'none';
     // one frame: the slideshow from it
-    this.$presentBtn.style.display = shape?.length === 1 && isFrame(shape[0]) ? '' : 'none';
+    this.$presentBtn.style.display =
+      this.drawer.options.slideshow && shape?.length === 1 && isFrame(shape[0]) ? '' : 'none';
     // align and stack 2 shapes, distribute 3
     this.$alignContainer.style.display = (shape?.length ?? 0) > 1 ? '' : 'none';
     this.$distributeContainer.style.display = (shape?.length ?? 0) > 1 ? '' : 'none';

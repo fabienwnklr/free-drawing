@@ -236,18 +236,43 @@ describe('Plugins', () => {
     expect(stamps.stamps).toBe(2);
   });
 
-  it('Options of a plugin: its defaults replaced by the ones of the app, under its name', () => {
+  it('Options of a plugin: its defaults replaced by the ones given with its class, deprecated pluginOptions under it', () => {
     class Limited extends Plugin {
       static readonly pluginName = 'Limited';
       /** Options of the plugin */
       options = this.getOptions({ max: 10, color: '#f08c00' });
     }
+    class Counter extends Plugin {
+      static readonly pluginName = 'Counter';
+      static readonly requires = [Limited];
+    }
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-    const configured = createDrawer({ plugins: [Limited], pluginOptions: { Limited: { max: 3 } } });
+    const configured = createDrawer({ plugins: [[Limited, { max: 3 }]] });
     const defaults = createDrawer({ plugins: [Limited] });
 
     expect(configured.plugins.get(Limited)!.options).toEqual({ max: 3, color: '#f08c00' });
     expect(defaults.plugins.get(Limited)!.options).toEqual({ max: 10, color: '#f08c00' });
+    // deprecated option: no default
+    expect(defaults.options.pluginOptions).toBeUndefined();
+
+    // required plugin given with its options: created once, before the plugin requiring it
+    const required = createDrawer({ plugins: [Counter, [Limited, { color: '#000' }]] });
+
+    expect([...required.plugins].map((plugin) => plugin.name)).toEqual(['Limited', 'Counter']);
+    expect(required.plugins.get(Limited)!.options).toEqual({ max: 10, color: '#000' });
+    expect(resolvePlugins([[Limited], Counter])).toEqual([Limited, Counter]);
+    expect(warn).not.toHaveBeenCalled();
+
+    // previous versions: options by name, under the ones given with the class
+    const deprecated = createDrawer({
+      plugins: [[Limited, { max: 5 }]],
+      pluginOptions: { Limited: { max: 3, color: '#fff' } },
+    });
+
+    expect(deprecated.plugins.get(Limited)!.options).toEqual({ max: 5, color: '#fff' });
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('pluginOptions option is deprecated'));
+    warn.mockRestore();
   });
 
   it('Pointer position in drawing coordinates for plugins, view moved and zoomed', () => {

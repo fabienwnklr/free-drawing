@@ -13,12 +13,11 @@ It adds stamps (circles with a symbol) to the drawer:
 ```js
 import { Drawer } from '@fabwcie/free-drawing';
 import '@fabwcie/free-drawing/style.css';
-import { StampCounterPlugin } from '@free-drawing/plugin-template';
+import { StampCounterPlugin, StampsPlugin } from '@free-drawing/plugin-template';
 
 const drawer = new Drawer(document.getElementById('drawer'), {
-  // the stamps plugin is required by the counter: added with it
-  plugins: [StampCounterPlugin],
-  pluginOptions: { Stamps: { max: 20, symbols: ['✓', '✗'] } },
+  // the stamps plugin is required by the counter: added with it, given here with its options
+  plugins: [StampCounterPlugin, [StampsPlugin, { max: 20, symbols: ['✓', '✗'] }]],
   // tools of plugins can be placed like the other ones (else at the end of the toolbar)
   widgets: ['selection', 'stamp', 'zone', 'brush', 'eraser', 'text'],
 });

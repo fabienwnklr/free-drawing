@@ -111,14 +111,14 @@ export abstract class Plugin {
   }
 
   /**
-   * Options of the plugin: defaults of the plugin replaced by the ones the app gives in the `pluginOptions` drawer
-   * option, under the name of the plugin
+   * Options of the plugin: defaults of the plugin replaced by the ones the app gives with its class in the `plugins`
+   * drawer option (`plugins: [[StampsPlugin, { max: 20 }]]`)
    * @template T options of the plugin
    * @param defaults Default value of every option
    * @returns defaults with the options of the app (merged one level deep)
    */
   getOptions<T extends object>(defaults: T): T {
-    return { ...defaults, ...(this.drawer.options.pluginOptions[this.name] as Partial<T> | undefined) };
+    return { ...defaults, ...(this.drawer.plugins._getOptions(this.name) as Partial<T>) };
   }
 
   /**

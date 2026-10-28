@@ -28,7 +28,7 @@ import {
  * @property {boolean} command command of the palette (shortcut, help)
  * @property {string} commandShortcut shortcut of the command (`Alt+N`), empty for none
  * @property {boolean} contextMenu command also in the context menu of the drawing
- * @property {boolean} options options given by the app (`pluginOptions`)
+ * @property {boolean} options options given by the app (`plugins: [[plugin, options]]`)
  * @property {boolean} header button in the header of the drawer
  * @property {boolean} css style sheet of the plugin
  * @property {string[]} languages languages of texts besides English (`fr`, `es`, `de`)
@@ -145,7 +145,7 @@ export async function ask(prompter, given = {}) {
     );
     answers.contextMenu = await prompter.confirm('contextMenu', 'Command in the context menu of the drawing?', true);
   }
-  answers.options = await prompter.confirm('options', 'Options given by the app (pluginOptions)?', true);
+  answers.options = await prompter.confirm('options', 'Options given by the app?', true);
   answers.header = await prompter.confirm('header', 'Button in the header of the drawer (number of shapes)?', false);
   answers.css = await prompter.confirm('css', 'Style sheet (style.css)?', answers.header);
   answers.languages = await prompter.multiselect('languages', 'Languages of the texts, besides English', languages, [
@@ -184,7 +184,7 @@ export function summarize({ names, packageName, directory, start, ...answers }) 
   const others = languages.filter(({ value }) => answers.languages.includes(value)).map((l) => l.label);
 
   lines.push(`${label('Texts')}${names.camel}.*: English${others.map((l) => `, ${l}`).join('')}`);
-  if (answers.options) lines.push(`${label('Options')}pluginOptions.${names.pascal}`);
+  if (answers.options) lines.push(`${label('Options')}plugins: [[${names.pascal}Plugin, {...}]]`);
   if (answers.header) lines.push(`${label('Header')}button with the number of shapes`);
   if (answers.css) lines.push(`${label('Styles')}style.css`);
   if (answers.tests) lines.push(`${label('Tests')}Vitest`);

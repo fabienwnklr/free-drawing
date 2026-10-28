@@ -80,6 +80,7 @@ export const defaultOptions: DrawerOptions = {
   translations: {},
   layersPanel: true,
   library: true,
+  slideshow: true,
   saveButton: true,
   readOnly: false,
   scaling: 1.11,
@@ -91,7 +92,6 @@ export const defaultOptions: DrawerOptions = {
   user: null,
   storage: null,
   plugins: [],
-  pluginOptions: {},
   widgets: widgetNames,
   // more tools in one button
   widgetGroups: [

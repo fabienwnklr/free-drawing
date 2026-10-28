@@ -4,7 +4,7 @@ import type { Group } from 'konva/lib/Group';
 import type { CustomTranslations, Language } from '@/@types/i18n';
 import type { DrawingFile } from '@/@types/file';
 import type { CollaborationOptions } from '@/@types/collaboration';
-import type { PluginClass, PluginOptions } from '@/@types/plugin';
+import type { PluginEntry, PluginOptions } from '@/@types/plugin';
 
 /**
  * Node of drawing: a shape or a group of drawing nodes
@@ -69,6 +69,8 @@ export type DrawerOptions = {
   layersPanel: boolean;
   /** Library of shapes saved to be inserted again in any drawing (panel, button in header, menus), kept in the browser (default true) */
   library: boolean;
+  /** Slideshow of the frames in the interface: menu, context menu, command palette, Alt + Shift + P, button of a selected frame; `drawer.slideshow.start()` presents them anyway (default true) */
+  slideshow: boolean;
   /** Button in header saving the drawing while auto save is off, a dot shows unsaved changes (default true) */
   saveButton: boolean;
   /** Drawing can't be modified by user (only pan, zoom, view options, export), API methods still modify it (default false) */
@@ -85,10 +87,16 @@ export type DrawerOptions = {
   user: DrawerUser | null;
   /** Storage of drawing instead of localStorage (e.g. server of the app), see `DrawerStorage` */
   storage: DrawerStorage | null;
-  /** Plugins added to the drawer (classes extending `Plugin`), plugins they require are added too */
-  plugins: PluginClass[];
-  /** Options of plugins by plugin name (e.g. `{ Stamps: { max: 20 } }`), read by `Plugin.getOptions` */
-  pluginOptions: PluginOptions;
+  /**
+   * Plugins added to the drawer: classes extending `Plugin`, or a class with its options (`[StampsPlugin, { max: 20 }]`,
+   * read by `Plugin.getOptions`); plugins they require are added too
+   */
+  plugins: readonly PluginEntry[];
+  /**
+   * Options of plugins by plugin name (e.g. `{ Stamps: { max: 20 } }`), read by `Plugin.getOptions` (no default)
+   * @deprecated give them with the class of the plugin: `plugins: [[StampsPlugin, { max: 20 }]]`
+   */
+  pluginOptions?: PluginOptions;
 };
 
 /**

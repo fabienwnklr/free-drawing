@@ -104,7 +104,7 @@ export function generateFromTemplate(answers, template = findTemplate()) {
       '- Tool `stamp` (P): a press adds a stamp under the pointer, it follows the pointer until released, Shift keeps it on an axis.',
       '- Tool `zone` (Z): dashed rounded rectangles drawn in the dragged box.',
       `- Commands: stamp in the middle (Alt+P), select all stamps, remove selected stamps, count stamps.`,
-      `- Options (\`pluginOptions.${names.pascal}\`): \`symbols\`, \`colors\`, \`size\`, \`max\` (limit disabling the plugin).`,
+      `- Options (given with the class: \`plugins: [[${names.pascal}Plugin, { max: 20 }]]\`): \`symbols\`, \`colors\`, \`size\`, \`max\` (limit disabling the plugin).`,
       `- ${names.pascal}CounterPlugin: button of the header with the number of stamps, requires ${names.pascal}Plugin.`,
       '',
       'Started from the complete template: rename the tools, texts and shapes of the example (stamps, zones) for your plugin.',

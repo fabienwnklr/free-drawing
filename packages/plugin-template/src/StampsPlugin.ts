@@ -41,7 +41,7 @@ export class StampsPlugin extends Plugin {
 
   /**
    * Unique name of the plugin (class names are changed by minification): `drawer.plugins.get('Stamps')`,
-   * `requires: ['Stamps']` of other plugins, `pluginOptions: { Stamps: {...} }` of the app
+   * `requires: ['Stamps']` of other plugins
    */
   static readonly pluginName = 'Stamps';
 
@@ -53,7 +53,7 @@ export class StampsPlugin extends Plugin {
 
   // 2. Options of the app -----------------------------------------------------------------------------------------
 
-  /** Options: these defaults replaced by the ones of the app (`pluginOptions.Stamps` of the drawer) */
+  /** Options: these defaults replaced by the ones of the app (`plugins: [[StampsPlugin, { max: 20 }]]` of the drawer) */
   readonly options = this.getOptions<StampsOptions>({
     symbols: ['✓', '★', '!'],
     colors: ['#b2f2bb', '#a5d8ff', '#ffec99', '#ffc9c9'],

@@ -557,17 +557,18 @@ export class CommandPalette extends Modal {
             run: () => drawer.search.show(),
           },
           // from the frame selected
-          drawer.getDrawingShapes().some(isFrame) && {
-            id: 'slideshow present slides frames presentation',
-            label: t(
-              drawer.getSelectedShapes().length === 1 && isFrame(drawer.getSelectedShapes()[0])
-                ? 'slideshow.presentFrom'
-                : 'slideshow.start'
-            ),
-            icon: PresentIcon,
-            shortcut: 'Alt+Shift+P',
-            run: () => drawer.slideshow.start(),
-          },
+          drawer.options.slideshow &&
+            drawer.getDrawingShapes().some(isFrame) && {
+              id: 'slideshow present slides frames presentation',
+              label: t(
+                drawer.getSelectedShapes().length === 1 && isFrame(drawer.getSelectedShapes()[0])
+                  ? 'slideshow.presentFrom'
+                  : 'slideshow.start'
+              ),
+              icon: PresentIcon,
+              shortcut: 'Alt+Shift+P',
+              run: () => drawer.slideshow.start(),
+            },
           libraryPanel && {
             id: 'library panel items',
             label: t('library.title'),

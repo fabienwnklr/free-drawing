@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.44.0](https://github.com/fabienwnklr/free-drawing/compare/v7.43.0...v7.44.0) (2026-10-28)
+
+
+### Features
+
+* **plugins:** options of a plugin given with its class in the `plugins` option: `plugins: [[StampsPlugin, { max: 20 }]]` (`PluginEntry` type), also for a plugin required by another one (created once, before it); the `pluginOptions` option is deprecated: no longer among the default options, still read under the options given with the class, with a warning
+* **slideshow:** `slideshow` option (default true): false removes the slideshow from the interface (menu, context menu, command palette, help, Alt + Shift + P left to the browser, button of a selected frame), `drawer.slideshow.start()` still presents the frames
+
 ## [7.43.0](https://github.com/fabienwnklr/free-drawing/compare/v7.42.0...v7.43.0) (2026-10-27)
 
 

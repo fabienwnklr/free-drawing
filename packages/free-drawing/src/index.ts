@@ -95,6 +95,7 @@ export type {
 export type {
   ListenedTarget,
   PluginClass,
+  PluginEntry,
   PluginCommand,
   PluginCommandMenu,
   PluginOptions,

@@ -210,7 +210,7 @@ export class SelectionMenu {
     this.$rotateLeftBtn.hidden = this.$rotateRightBtn.hidden = locked || shapes.every(isFrame);
     this.$fitWidthBtn.hidden = locked || !getTexts(shapes).length;
     // one frame, also locked (nothing changed): the slideshow from it
-    this.$presentBtn.hidden = shapes.length !== 1 || !isFrame(shapes[0]);
+    this.$presentBtn.hidden = !this.drawer.options.slideshow || shapes.length !== 1 || !isFrame(shapes[0]);
 
     const { left, top } = this._getPlace();
 

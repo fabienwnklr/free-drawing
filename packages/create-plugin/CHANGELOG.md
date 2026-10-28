@@ -2,6 +2,12 @@
 
 Changes of `@fabwcie/create-free-drawing-plugin` (`npm create @fabwcie/free-drawing-plugin`). Each version is published by the release workflow of the library once it is not on npm yet.
 
+## 1.2.0 (2026-10-28)
+
+### Features
+
+- Options of the generated plugin given with its class in the `plugins` option of the drawer (`plugins: [[MyPlugin, { size: 120 }]]`: README, tests, comments), `pluginOptions` being deprecated: library `^7.44.0`
+
 ## 1.1.6 (2026-10-27)
 
 ### Bug Fixes
