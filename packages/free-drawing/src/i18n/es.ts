@@ -83,6 +83,7 @@ export const es: Translations = {
   'menu.preferences': 'Preferencias...',
   'preferences.title': 'Preferencias',
   'preferences.autoSave': 'Guardado automático',
+  'preferences.shapeRecognition': 'Reconocer las formas dibujadas con el pincel',
   'preferences.save': 'Guardar',
   'preferences.appearance': 'Apariencia',
   'preferences.theme': 'Tema',
@@ -277,6 +278,9 @@ export const es: Translations = {
   'overlay.selection': 'Opciones de la selección',
   'overlay.shape': 'Opciones de la forma',
   'overlay.brush': 'Opciones del pincel',
+  'overlay.recognizeShapes': 'Reconocer las formas',
+  'overlay.recognizeShapesHint':
+    'Un rectángulo, una elipse, un triángulo, un rombo, una línea o una flecha trazados de un solo trazo se convierten en esa forma (deshacer devuelve el trazo)',
   'overlay.highlighter': 'Opciones del resaltador',
   'overlay.note': 'Opciones de la nota',
   'overlay.text': 'Opciones del texto',

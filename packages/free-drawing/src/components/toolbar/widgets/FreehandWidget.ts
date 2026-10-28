@@ -3,8 +3,11 @@ import { Line } from 'konva/lib/shapes/Line';
 import type { Vector2d } from 'konva/lib/types';
 import { getStroke } from 'perfect-freehand';
 import { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
-import { crosshairCursor } from '@/constants';
+import type { ShapeWidget } from '@/components/toolbar/widgets/ShapeWidget';
+import { crosshairCursor, recognitionMinSize, recognizedTools } from '@/constants';
+import type { DrawingShape } from '@/@types/drawer';
 import type { FreehandSettings } from '@/@types/toolbar';
+import { recognizeShape } from '@/utils/recognition';
 
 /**
  * Points of a straight stroke, regularly spaced (same width all along)
@@ -48,6 +51,14 @@ export abstract class FreehandWidget extends BaseWidget {
    * @returns Thinning, smoothing and streamline of new strokes
    */
   protected abstract freehandSettings(): FreehandSettings;
+
+  /**
+   * Strokes of the tool recognized as shapes (see `replaceByShape`)
+   * @returns false: strokes kept as drawn
+   */
+  protected recognizesShapes(): boolean {
+    return false;
+  }
 
   /**
    * Stroke being drawn (pointer action in progress)
@@ -112,18 +123,42 @@ export abstract class FreehandWidget extends BaseWidget {
       // mouseup without mousedown on stage (e.g. started on overlay) must not alter last line
       if (e.evt.button === 2 || !this.inAction) return;
 
-      this._updateLine(true, !!e.evt.shiftKey);
+      const straight = !!e.evt.shiftKey;
+      // pointer path from the press
+      const points = [this.#start, ...this.#allPoints];
+
+      this._updateLine(true, straight);
       this.endAction();
       this.#allPoints = [];
       // in frame containing it
       this.drawer.placeInFrames([this.#lastLine]);
 
       this.drawer.stage.fire('change');
+      if (!straight && this.recognizesShapes()) this._replaceByShape(points);
 
       this.clearSelection();
       this.afterDraw();
       e.evt.preventDefault();
     });
+  }
+
+  /**
+   * Stroke replaced by the shape recognized in it, drawn by the tool of this shape (style of the options, ends of an
+   * arrow linked to the shapes there), after the stroke in history: undo gives back the stroke as drawn
+   * @param points Points of the pointer path
+   */
+  private _replaceByShape(points: Vector2d[]) {
+    const recognized = recognizeShape(points, recognitionMinSize / this.drawer.getZoomLevel());
+    const widget = recognized && this.drawer.getWidget<ShapeWidget<DrawingShape>>(recognizedTools[recognized.kind]);
+
+    if (!recognized || !widget) return;
+    // removed first: not a shape the ends of an arrow are linked to
+    this.#lastLine.destroy();
+
+    const shape = this.drawer.addShape(widget.drawShape(recognized.start, recognized.end));
+
+    this.drawer.placeInFrames([shape]);
+    this.drawer.stage.fire('change');
   }
 
   /**

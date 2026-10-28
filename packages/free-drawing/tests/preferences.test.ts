@@ -26,6 +26,7 @@ describe('Preferences', () => {
       zen: true,
       autoSave: false,
       keepTool: true,
+      shapeRecognition: false,
     });
 
     const reloaded = createDrawer({ localStorageKey: drawer.options.localStorageKey, language: 'en' });
@@ -124,6 +125,7 @@ describe('Preferences', () => {
       zen: true,
       autoSave: false,
       keepTool: true,
+      shapeRecognition: false,
     });
 
     // cancelled, closed with Escape: nothing applied, fields show preferences again

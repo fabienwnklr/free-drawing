@@ -106,3 +106,18 @@ export type FrameChanges = {
   /** Frames losing shapes */
   left: Frame[];
 };
+
+/** Shape recognized in a freehand stroke (see `recognizeShape` of utils/recognition) */
+export type RecognizedKind = 'rect' | 'ellipse' | 'triangle' | 'diamond' | 'line' | 'arrow';
+
+/**
+ * Shape recognized in a freehand stroke: drawn by the tool of its kind from `start` to `end`, as by a drag
+ */
+export type RecognizedShape = {
+  /** Kind of shape */
+  kind: RecognizedKind;
+  /** Top left corner of its box (closed shapes), start of a line, tail of an arrow */
+  start: Vector2d;
+  /** Bottom right corner of its box (closed shapes), end of a line, tip of an arrow */
+  end: Vector2d;
+};

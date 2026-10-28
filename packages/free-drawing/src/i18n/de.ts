@@ -84,6 +84,7 @@ export const de: Translations = {
   'menu.preferences': 'Einstellungen...',
   'preferences.title': 'Einstellungen',
   'preferences.autoSave': 'Automatisch speichern',
+  'preferences.shapeRecognition': 'Mit dem Pinsel gezeichnete Formen erkennen',
   'preferences.save': 'Speichern',
   'preferences.appearance': 'Darstellung',
   'preferences.theme': 'Design',
@@ -279,6 +280,9 @@ export const de: Translations = {
   'overlay.selection': 'Optionen der Auswahl',
   'overlay.shape': 'Formoptionen',
   'overlay.brush': 'Pinseloptionen',
+  'overlay.recognizeShapes': 'Formen erkennen',
+  'overlay.recognizeShapesHint':
+    'Ein in einem Zug gezeichnetes Rechteck, eine Ellipse, ein Dreieck, eine Raute, eine Linie oder ein Pfeil wird zu dieser Form (Rückgängig gibt den Strich zurück)',
   'overlay.highlighter': 'Textmarker-Optionen',
   'overlay.note': 'Notiz-Optionen',
   'overlay.text': 'Textoptionen',

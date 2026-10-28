@@ -188,6 +188,7 @@ describe('Preferences', () => {
       zen: true,
       autoSave: false,
       keepTool: false,
+      shapeRecognition: true,
       other: 1,
     });
 
@@ -198,6 +199,7 @@ describe('Preferences', () => {
       zen: true,
       autoSave: false,
       keepTool: false,
+      shapeRecognition: true,
     });
     expect((await agent.get('/api/preferences')).body).toEqual({
       theme: 'dark',
@@ -206,6 +208,7 @@ describe('Preferences', () => {
       zen: true,
       autoSave: false,
       keepTool: false,
+      shapeRecognition: true,
     });
 
     // replaced

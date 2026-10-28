@@ -30,6 +30,15 @@
     @include picker;
   }
 
+  // option of the tool turned on or off (brush: shapes recognized)
+  .overlay-switch {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-2;
+    padding: $space-1;
+  }
+
   .overlay-picker-btn-container {
     display: flex;
     align-items: center;

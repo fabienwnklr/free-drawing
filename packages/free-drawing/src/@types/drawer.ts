@@ -81,6 +81,8 @@ export type DrawerOptions = {
   autoSave: boolean;
   /** Drawing tool kept after drawing a shape, else selection tool activated, nothing selected (user preference) */
   keepTool: boolean;
+  /** Brush strokes recognized as rectangles, ellipses, triangles, diamonds, lines or arrows (user preference, default false) */
+  shapeRecognition: boolean;
   /** Key of the drawing in localStorage and prefix of other saved data (tool, preferences...), unique for each drawer */
   localStorageKey: string;
   /** User of the app (e.g. logged in): id and name used in collaboration sessions instead of ones kept in browser */
@@ -138,6 +140,8 @@ export type Preferences = {
   autoSave: boolean;
   /** Drawing tool kept after drawing a shape, else selection tool activated, nothing selected */
   keepTool: boolean;
+  /** Brush strokes recognized as shapes */
+  shapeRecognition: boolean;
 };
 
 /**

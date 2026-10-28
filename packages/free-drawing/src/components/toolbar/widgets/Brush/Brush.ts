@@ -52,6 +52,14 @@ export class BrushWidget extends FreehandWidget {
   }
 
   /**
+   * Brush strokes recognized as shapes with the `shapeRecognition` preference
+   * @returns `shapeRecognition` option
+   */
+  protected recognizesShapes() {
+    return this.drawer.options.shapeRecognition;
+  }
+
+  /**
    * Width of brush strokes
    * @returns `strokeWidth` option
    */

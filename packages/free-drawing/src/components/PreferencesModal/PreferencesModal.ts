@@ -35,6 +35,8 @@ export class PreferencesModal extends Modal {
   $autoSave: HTMLInputElement;
   /** Keep tool after drawing, with selection widget only */
   $keepTool: HTMLInputElement | null = null;
+  /** Shapes recognized in brush strokes, with brush widget only */
+  $shapeRecognition: HTMLInputElement | null = null;
   /** Name in collaboration sessions, with `collaboration` option */
   $name: HTMLInputElement | null = null;
   /** Cancel button: hides the dialog, fields not applied */
@@ -90,6 +92,8 @@ export class PreferencesModal extends Modal {
     // else saved from menu
     this.$autoSave = this._createSwitch($drawing, 'preferences.autoSave');
     if (drawer.toolbar.$keepToolButton) this.$keepTool = this._createSwitch($drawing, 'toolbar.keepTool', 'Q');
+    if (drawer.getWidget('brush'))
+      this.$shapeRecognition = this._createSwitch($drawing, 'preferences.shapeRecognition');
 
     this.$modalBody.append($appearance, $drawing);
 
@@ -155,6 +159,7 @@ export class PreferencesModal extends Modal {
       snapping: this.$snapping.checked,
       autoSave: this.$autoSave.checked,
       ...(this.$keepTool && { keepTool: this.$keepTool.checked }),
+      ...(this.$shapeRecognition && { shapeRecognition: this.$shapeRecognition.checked }),
     });
     if (this.$name) this.drawer.setUserName(this.$name.value);
     this.hide();
@@ -173,6 +178,7 @@ export class PreferencesModal extends Modal {
     this.$snapping.checked = preferences.snapping;
     this.$autoSave.checked = preferences.autoSave;
     if (this.$keepTool) this.$keepTool.checked = preferences.keepTool;
+    if (this.$shapeRecognition) this.$shapeRecognition.checked = preferences.shapeRecognition;
     if (this.$name) this.$name.value = this.drawer.getUserName();
   }
 

@@ -97,6 +97,7 @@ The library needs no framework. React and Vue apps can use its `FreeDrawing` com
   scaling: 1.11, // scaling on zoom
   autoSave: true, // drawing saved on each change (localStorage or storage), user preference (see Preferences)
   keepTool: true, // drawing tool kept after drawing a shape, else selection tool activated, user preference (see Preferences)
+  shapeRecognition: false, // brush strokes recognized as rectangles, ellipses, triangles, diamonds, lines or arrows, user preference (see Shape recognition)
   localStorageKey: 'free-drawing', // localStorage key used for store data, use a different key for each drawer of a page
   storage: null, // drawing saved somewhere else than localStorage (e.g. server of your app), see "Use in an app" below
   user: null, // user of your app ({ id, name }), used in collaboration sessions instead of id and name kept in browser
@@ -147,7 +148,7 @@ Components trigger `drawer.dropdown.hide` (dropdown menu) and `drawer.toast.hide
 
 ## Preferences
 
-"Preferences..." of settings menu (Ctrl / Cmd + ,, also in the command palette) opens a dialog: theme (light, dark or system), language, zen mode, grid, snapping to objects, auto save, keep tool active and name in collaboration sessions. Changes are applied together with "Save" ("Cancel", Escape or close keep current preferences) and saved in the browser (`<localStorageKey>-preferences`), also with the `storage` option. An app can save them with the account of its user (see "Use in an app").
+"Preferences..." of settings menu (Ctrl / Cmd + ,, also in the command palette) opens a dialog: theme (light, dark or system), language, zen mode, grid, snapping to objects, auto save, keep tool active, shape recognition and name in collaboration sessions. Changes are applied together with "Save" ("Cancel", Escape or close keep current preferences) and saved in the browser (`<localStorageKey>-preferences`), also with the `storage` option. An app can save them with the account of its user (see "Use in an app").
 
 ```js
 drawer.showPreferences();
@@ -165,6 +166,24 @@ await drawer.saveNow(); // save, "Drawing saved" message (Ctrl / Cmd + S)
 
 ```js
 drawer.setKeepTool(false);
+```
+
+### Shape recognition
+
+"Recognize shapes" (switch of the brush options, preferences dialog, command palette; `shapeRecognition` option and preference, off by default) turns a brush stroke into the shape it looks like, drawn by the tool of this shape:
+
+| Stroke | Shape |
+| --- | --- |
+| Closed (its end near its start) | Rectangle, ellipse, triangle pointing up or diamond, in the box of the stroke: the one whose outline is the nearest to the stroke, both ways (a side missing counts) |
+| Straight | Line between its ends |
+| Straight with a head (short strokes behind one end, at least one aside, drawn after or before the shaft) | Arrow from its tail to its tip, linked to the shapes at its ends as with the arrow tool |
+
+- The shape takes the style of the options (color, width, stroke style, background, corners, arrowheads), as if drawn with its tool; a tool missing from the toolbar (`widgets` option) gives no shape of its kind.
+- Undo gives back the stroke as drawn (the stroke and its shape are two steps of history).
+- Strokes kept as drawn: other strokes, strokes smaller than 32 px on screen (letters), straight strokes of Shift.
+
+```js
+drawer.setShapeRecognition(true);
 ```
 
 ## Dark mode
@@ -390,7 +409,7 @@ drawer.plugins.get(Stamps); // also by name: drawer.plugins.get('Stamps'), drawe
 ```
 
 - Steps: constructor (before the toolbar: `addWidget`, `addTranslations`), `init()` (drawer created: `addCommand`, `listenTo`...), `afterInit()` (every plugin initialized), `destroy()` (`drawer.plugins.destroy()`, listeners of `listenTo` removed: call `super.destroy()` when overriding it). Required plugins are created and initialized first. A plugin missing, two plugins of the same name or plugins requiring each other throw an error when the drawer is created; an error of `init` is logged, other plugins are still initialized.
-- Tools are placed at their place in the `widgets` and `widgetGroups` options (e.g. `widgets: ['selection', 'stamp', 'brush']`), else at the end of the toolbar. Their title is the text of `tools.<id>`, their shortcut is shown in help and command palette. `ShapeWidget` is the base of tools drawing in the dragged box. A second finger on a touch screen cancels the pointer action of a tool (`cancelAction()`): `onCancel()` removes what it was drawing (done by `ShapeWidget`).
+- Tools are placed at their place in the `widgets` and `widgetGroups` options (e.g. `widgets: ['selection', 'stamp', 'brush']`), else at the end of the toolbar. Their title is the text of `tools.<id>`, their shortcut is shown in help and command palette. `ShapeWidget` is the base of tools drawing in the dragged box: `drawShape(start, end)` gives the shape of such a tool as drawn by a drag (not added: `drawer.addShape`). A second finger on a touch screen cancels the pointer action of a tool (`cancelAction()`): `onCancel()` removes what it was drawing (done by `ShapeWidget`).
 - Commands are available unless their `isAvailable()` returns false. Commands with `readOnly: true` do not modify the drawing: also available in read only and while their plugin is disabled. Shortcuts of plugins run before the ones of the library: avoid the ones listed in help. Written `Ctrl+Shift+M` (Ctrl is also Cmd), they are shown ⇧⌘M on Apple devices: `formatShortcut(shortcut, drawer.i18n.t)` and `ariaShortcut(shortcut)` do the same for the interface of a plugin.
 - `isEnabled` is false in read only, or while the plugin is disabled by `forceDisabled(reason)` (until `clearForceDisabled(reason)` for every reason): its tools and commands modifying the drawing are disabled, `drawer.plugin.change` is triggered.
 - Texts: `this.t(key, params)`, in the language of the drawer; the `translations` option can replace them.

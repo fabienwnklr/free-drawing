@@ -1,5 +1,6 @@
 import type { DrawerOptions } from '@/@types/drawer';
 import type { WidgetName } from '@/@types/toolbar';
+import type { RecognizedKind } from '@/@types/shapes';
 import type { TranslationKey } from '@/@types/i18n';
 import type { Arrowhead, ArrowType, Direction, ShapeAlignment, ShapeOrder } from '@/@types/drawer';
 import type { IconChoice, ShortcutChoice } from '@/@types/ui';
@@ -86,6 +87,7 @@ export const defaultOptions: DrawerOptions = {
   scaling: 1.11,
   autoSave: true,
   keepTool: true,
+  shapeRecognition: false,
   localStorageKey: 'free-drawing',
   opacity: 1,
   collaboration: false,
@@ -252,6 +254,19 @@ export const edgesShapes = [shapeName.rect];
 
 /** Space kept around an area the view moves to (text found, shape reached with the keyboard), on screen in px */
 export const viewMargin = 64;
+
+/** Diagonal of a brush stroke recognized as a shape, at least, on screen in px (smaller ones, as letters, are kept) */
+export const recognitionMinSize = 32;
+
+/** Tools drawing the shapes recognized in brush strokes */
+export const recognizedTools: Record<RecognizedKind, WidgetName> = {
+  rect: 'square',
+  ellipse: 'circle',
+  triangle: 'triangle',
+  diamond: 'diamond',
+  line: 'line',
+  arrow: 'arrow',
+};
 
 /**
  * Type names of drawing shapes (layers panel), keys of their translation

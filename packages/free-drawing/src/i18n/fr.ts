@@ -85,6 +85,7 @@ export const fr: Translations = {
   'menu.preferences': 'Préférences...',
   'preferences.title': 'Préférences',
   'preferences.autoSave': 'Enregistrement automatique',
+  'preferences.shapeRecognition': 'Reconnaître les formes dessinées au pinceau',
   'preferences.save': 'Enregistrer',
   'preferences.appearance': 'Apparence',
   'preferences.theme': 'Thème',
@@ -279,6 +280,9 @@ export const fr: Translations = {
   'overlay.selection': 'Options de la sélection',
   'overlay.shape': 'Options de la forme',
   'overlay.brush': 'Options du pinceau',
+  'overlay.recognizeShapes': 'Reconnaître les formes',
+  'overlay.recognizeShapesHint':
+    "Un rectangle, une ellipse, un triangle, un losange, une ligne ou une flèche tracés d'un seul trait deviennent cette forme (annuler redonne le trait)",
   'overlay.highlighter': 'Options du surligneur',
   'overlay.note': 'Options de la note',
   'overlay.text': 'Options du texte',

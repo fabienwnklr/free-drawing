@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.46.0](https://github.com/fabienwnklr/free-drawing/compare/v7.45.0...v7.46.0) (2026-10-28)
+
+
+### Features
+
+* **brush:** shape recognition ("Recognize shapes": switch of the brush options, preferences dialog, command palette, `shapeRecognition` option and preference, off by default): a closed stroke becomes a rectangle, an ellipse, a triangle or a diamond, a straight one a line, a straight one with a head an arrow (linked to the shapes at its ends), drawn by the tool of the shape with the style of the options; undo gives back the stroke as drawn; small strokes (letters) and straight strokes of Shift are kept (`setShapeRecognition`, `ShapeWidget.drawShape`)
+
 ## [7.45.0](https://github.com/fabienwnklr/free-drawing/compare/v7.44.0...v7.45.0) (2026-10-28)
 
 

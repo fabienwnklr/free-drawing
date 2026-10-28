@@ -33,6 +33,7 @@ import ImageIcon from '@/icons/image.svg?raw';
 import SaveIcon from '@/icons/save.svg?raw';
 import SaveNowIcon from '@/icons/save-now.svg?raw';
 import PinIcon from '@/icons/pin.svg?raw';
+import ShapesIcon from '@/icons/shapes.svg?raw';
 import LinkIcon from '@/icons/link.svg?raw';
 import ExportIcon from '@/icons/export.svg?raw';
 import UsersIcon from '@/icons/users.svg?raw';
@@ -302,6 +303,13 @@ export class CommandPalette extends Modal {
             shortcut: 'Q',
             checked: drawer.options.keepTool,
             run: () => drawer.setKeepTool(!drawer.options.keepTool),
+          },
+          !!drawer.getWidget('brush') && {
+            id: 'shape recognition recognize brush stroke rectangle ellipse arrow',
+            label: t('overlay.recognizeShapes'),
+            icon: ShapesIcon,
+            checked: drawer.options.shapeRecognition,
+            run: () => drawer.setShapeRecognition(!drawer.options.shapeRecognition),
           },
         ],
       ],

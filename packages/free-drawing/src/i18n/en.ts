@@ -86,6 +86,7 @@ export const en = {
   'menu.preferences': 'Preferences...',
   'preferences.title': 'Preferences',
   'preferences.autoSave': 'Auto save',
+  'preferences.shapeRecognition': 'Recognize shapes drawn with the brush',
   'preferences.save': 'Save',
   'preferences.appearance': 'Appearance',
   'preferences.theme': 'Theme',
@@ -287,6 +288,9 @@ export const en = {
   'overlay.selection': 'Selection options',
   'overlay.shape': 'Shape options',
   'overlay.brush': 'Brush options',
+  'overlay.recognizeShapes': 'Recognize shapes',
+  'overlay.recognizeShapesHint':
+    'A rectangle, ellipse, triangle, diamond, line or arrow drawn in one stroke becomes this shape (undo gives back the stroke)',
   'overlay.highlighter': 'Highlighter options',
   'overlay.note': 'Note options',
   'overlay.text': 'Text options',

@@ -432,7 +432,7 @@ describe('Accessibility', () => {
       ...exportModal.$modal.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'),
     ];
 
-    expect(switches).toHaveLength(9);
+    expect(switches).toHaveLength(10);
     switches.forEach(($switch) => {
       expect($switch.getAttribute('role')).toBe('switch');
       expect($switch.closest('label')!.textContent!.trim()).not.toBe('');

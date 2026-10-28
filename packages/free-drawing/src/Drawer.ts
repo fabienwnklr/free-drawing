@@ -334,6 +334,7 @@ export class Drawer extends MicroEvent {
     this.#languageChoice = preferences.language ?? this.options.language;
     this.options.autoSave = preferences.autoSave ?? this.options.autoSave;
     this.options.keepTool = preferences.keepTool ?? this.options.keepTool;
+    this.options.shapeRecognition = preferences.shapeRecognition ?? this.options.shapeRecognition;
     this.i18n = new I18n(
       this.#languageChoice === 'auto' ? getLanguage() : this.#languageChoice,
       this.options.translations
@@ -1311,6 +1312,18 @@ export class Drawer extends MicroEvent {
     if (keepTool === this.options.keepTool) return;
 
     this.options.keepTool = keepTool;
+    this._preferencesChanged();
+  }
+
+  /**
+   * Brush strokes recognized as shapes (preference): a rectangle, an ellipse, a triangle, a diamond, a line or an arrow
+   * drawn in one stroke is replaced by the shape of its tool (undo gives back the stroke)
+   * @param shapeRecognition True recognizes shapes, false keeps the strokes as drawn
+   */
+  setShapeRecognition(shapeRecognition: boolean) {
+    if (shapeRecognition === this.options.shapeRecognition) return;
+
+    this.options.shapeRecognition = shapeRecognition;
     this._preferencesChanged();
   }
 
@@ -2540,7 +2553,7 @@ export class Drawer extends MicroEvent {
 
   /**
    * Interface settings of user (e.g. saved by the app for its logged in user)
-   * @returns Current theme, language choice, grid, snapping, zen mode, auto save and keep tool
+   * @returns Current theme, language choice, grid, snapping, zen mode, auto save, keep tool and shape recognition
    */
   getPreferences(): Preferences {
     return {
@@ -2551,6 +2564,7 @@ export class Drawer extends MicroEvent {
       zen: this.setting.zenMode,
       autoSave: this.options.autoSave,
       keepTool: this.options.keepTool,
+      shapeRecognition: this.options.shapeRecognition,
     };
   }
 
@@ -2558,9 +2572,10 @@ export class Drawer extends MicroEvent {
    * Apply interface settings (given ones only), one `drawer.preferences.change` event
    * @param preferences Grid wins when grid and snapping are both true
    */
-  setPreferences({ theme, language, grid, snapping, zen, autoSave, keepTool }: Partial<Preferences>) {
+  setPreferences({ theme, language, grid, snapping, zen, autoSave, keepTool, shapeRecognition }: Partial<Preferences>) {
     if (autoSave !== undefined) this.setAutoSave(autoSave);
     if (keepTool !== undefined) this.setKeepTool(keepTool);
+    if (shapeRecognition !== undefined) this.setShapeRecognition(shapeRecognition);
     if (theme !== undefined && theme !== this.theme) this.setTheme(theme);
     if (language !== undefined && language !== this.#languageChoice) this.setLanguage(language);
     if (zen !== undefined && zen !== this.setting.zenMode) this.setting.toggleZenMode();
@@ -2595,7 +2610,7 @@ export class Drawer extends MicroEvent {
     const language = [saved.language, this._getStorageItem(`${key}-language`)].find(isLanguage);
     const preferences: Partial<Preferences> = { ...(theme && { theme }), ...(language && { language }) };
 
-    (['grid', 'snapping', 'zen', 'autoSave', 'keepTool'] as const).forEach((name) => {
+    (['grid', 'snapping', 'zen', 'autoSave', 'keepTool', 'shapeRecognition'] as const).forEach((name) => {
       if (typeof saved[name] === 'boolean') preferences[name] = saved[name];
     });
 

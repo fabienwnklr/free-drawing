@@ -117,6 +117,24 @@ export abstract class ShapeWidget<T extends DrawingShape> extends BaseWidget {
   protected abstract updateShape(shape: T, start: Vector2d, end: Vector2d, constrain: boolean): void;
 
   /**
+   * Shape of the tool from a start to an end, as drawn by a drag (shapes recognized in brush strokes): links of
+   * arrows to the shapes at their ends, not added to the drawing
+   * @param start Start of the drag, in drawing coordinates
+   * @param end End of the drag, in drawing coordinates
+   * @returns Shape of the tool, to add with `drawer.addShape`
+   */
+  drawShape(start: Vector2d, end: Vector2d): T {
+    this.pointerEvent = null;
+
+    const shape = this.createShape(start);
+
+    this.updateShape(shape, start, end, false);
+    this.onDrawEnd?.(shape);
+
+    return shape;
+  }
+
+  /**
    * Style of new shapes, from drawer options
    */
   protected get shapeStyle() {
