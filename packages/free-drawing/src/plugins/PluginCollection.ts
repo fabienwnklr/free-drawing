@@ -101,6 +101,8 @@ export class PluginCollection {
   commands: RegisteredCommand[] = [];
   /** Resolved once every plugin is initialized (`init`, `afterInit`), waited by `drawer.ready` */
   ready: Promise<void> = Promise.resolve();
+  /** `destroy` called: initialization still running stops (next plugins, menus) */
+  #destroyed = false;
 
   /**
    * Plugins of a drawer, created by `_create`
@@ -175,10 +177,12 @@ export class PluginCollection {
   /**
    * Initialize plugins once the drawer is created: `init` of each plugin (in creation order, a promise is waited
    * before the next one), then `afterInit`, then their commands added to the context menu and help. Errors are
-   * logged, other plugins are still initialized. Called by the drawer
+   * logged, other plugins are still initialized; nothing more once destroyed. Called by the drawer
    */
   _init() {
     const step = (plugin: Plugin, name: 'init' | 'afterInit') => () => {
+      if (this.#destroyed) return;
+
       const failed = (error: unknown) =>
         console.error(`[free-drawing] ${name} of plugin "${plugin.name}" failed`, error);
 
@@ -195,7 +199,9 @@ export class PluginCollection {
       runInOrder([
         ...this.#plugins.map((plugin) => step(plugin, 'init')),
         ...this.#plugins.map((plugin) => step(plugin, 'afterInit')),
-        () => this._addToMenus(),
+        () => {
+          if (!this.#destroyed) this._addToMenus();
+        },
       ]) ?? Promise.resolve();
   }
 
@@ -204,6 +210,7 @@ export class PluginCollection {
    * @returns promise resolved once every plugin is destroyed
    */
   async destroy() {
+    this.#destroyed = true;
     for (const plugin of [...this.#plugins].reverse()) {
       try {
         await plugin.destroy();

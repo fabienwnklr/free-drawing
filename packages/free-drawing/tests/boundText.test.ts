@@ -8,7 +8,7 @@ import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { shapeName } from '@/constants';
 import { findBindingTarget } from '@/utils/binding';
-import { getBoundText } from '@/utils/boundText';
+import { getBoundText, updateBoundTexts } from '@/utils/boundText';
 import { parseDrawingFile } from '@/utils/drawingFile';
 import { renderSvg } from '@/utils/export';
 import { createDrawer, fireMouse, setPointer } from './helpers';
@@ -208,5 +208,32 @@ describe('Texts of shapes', () => {
     const file = parseDrawingFile(JSON.stringify(drawer.getDrawingFile()));
 
     expect(file.shapes[1].attrs.containerId).toBe(rect.id());
+  });
+
+  it('Undo and redo move the texts of their shapes too: redo kept (text of another user in a shape moved back)', () => {
+    const drawer = createDrawer();
+    const rect = createRect(drawer);
+
+    drawer.stage.fire('change');
+    rect.x(400);
+    drawer.stage.fire('change');
+    // text written by another user (collaboration) after the move, placed by them: not a change of this user
+    const text = drawer.addShape(
+      new Text({ name: shapeName.text, text: 'Hi', align: 'center', containerId: rect.id() })
+    ) as Text;
+
+    updateBoundTexts(drawer.drawLayer, '#fff');
+    drawer.undoRedo.ignoreChanges([text.id()]);
+    drawer.stage.fire('change');
+    const placed = centerOf(text);
+
+    drawer.undoRedo.undo();
+    drawer.stage.fire('change');
+    expect(centerOf(text)).toEqual({ x: placed.x - 300, y: placed.y });
+    expect(drawer.undoRedo.canRedo()).toBe(true);
+
+    drawer.undoRedo.redo();
+    drawer.stage.fire('change');
+    expect(centerOf(text)).toEqual(placed);
   });
 });

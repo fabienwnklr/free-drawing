@@ -5,6 +5,7 @@ import type { NoteWidget } from '@/components/toolbar/widgets/Note/Note';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import { parseDrawingFile } from '@/utils/drawingFile';
+import { createFrame } from '@/utils/frame';
 import { createDrawer, drag, keydown } from './helpers';
 
 beforeAll(() => {
@@ -80,6 +81,60 @@ describe('Drawing files and links', () => {
       })
     );
     expect(drawer.getDrawingShapes().map((s) => s.getClassName())).toEqual(['Rect']);
+  });
+
+  it('Ids of shapes unique and short, background color of a usual length: changes accepted by collaboration servers', () => {
+    const long = 'x'.repeat(300);
+    const file = parseDrawingFile(
+      JSON.stringify({
+        type: 'free-drawing',
+        version: 1,
+        background: `#${'f'.repeat(200)}`,
+        shapes: [
+          { className: 'Rect', attrs: { id: 'r1', width: 10, height: 10 } },
+          { className: 'Rect', attrs: { id: 'r1', width: 20, height: 20 } },
+          { className: 'Rect', attrs: { id: long, width: 30, height: 30 } },
+          { className: 'Text', attrs: { id: 't1', text: 'in', containerId: long } },
+          { className: 'Rect', attrs: { id: 42, width: 40, height: 40 } },
+        ],
+      })
+    );
+    const ids = file.shapes.map((shape) => shape.attrs.id);
+
+    expect(file.background).toBe('#fff');
+    expect(ids[0]).toBe('r1');
+    expect(ids[1]).not.toBe('r1');
+    expect((ids[2] as string).length).toBeLessThanOrEqual(200);
+    // text follows its shape
+    expect(file.shapes[3].attrs.containerId).toBe(ids[2]);
+    // given when added
+    expect(ids[4]).toBeUndefined();
+
+    // copy of a shape added by an app (its id, also of the shapes of a group): new ids
+    const drawer = createDrawer();
+    const rect = drawer.addShape(new Rect({ name: 'drawer-rect', width: 10, height: 10 }));
+    const copy = drawer.addShape(rect.clone());
+
+    expect(copy.id()).not.toBe(rect.id());
+    expect(drawer.addShape(new Rect({ id: long })).id().length).toBeLessThanOrEqual(200);
+  });
+
+  it('Drawing file of a selection: shapes of frames and of groups at their place in the drawing, as drawn', () => {
+    const drawer = createDrawer();
+    const frame = drawer.addShape(createFrame({ x: 100, y: 50, width: 400, height: 300, label: 'Frame' }));
+    const rect = drawer.addShape(new Rect({ name: 'drawer-rect', x: 150, y: 100, width: 50, height: 50 }));
+    const top = drawer.addShape(new Rect({ name: 'drawer-rect', x: 700, y: 0, width: 10, height: 10 }));
+
+    drawer.placeInFrames([rect]);
+    expect(rect.getParent()).not.toBe(drawer.drawLayer);
+
+    const file = drawer.getDrawingFile([top, rect]);
+
+    expect(file.shapes.map((shape) => [shape.attrs.id, Math.round(shape.attrs.x as number)])).toEqual([
+      [rect.id(), 150],
+      [top.id(), 700],
+    ]);
+    expect(frame.id()).toBeTruthy();
   });
 
   it('Crafted file: attributes of wrong types and incomplete frames ignored, drawing never emptied by an error', () => {

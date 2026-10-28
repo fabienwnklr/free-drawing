@@ -1,4 +1,5 @@
 import type { AttrCheck, ShapeState, DrawingFile, FilePickerWindow } from '@/@types/file';
+import type { ColorLike } from '@/@types/drawer';
 import { DrawerError } from '@/utils/errors';
 import { groupClasses, shapeClasses } from '@free-drawing/protocol';
 import { Konva } from 'konva/lib/Global';
@@ -6,6 +7,49 @@ import type { Node } from 'konva/lib/Node';
 import { parseLink } from '@/utils/link';
 import { frameParts } from '@/utils/frame';
 import { parseFiles } from '@/utils/image';
+import { createId } from '@/utils/functions';
+
+/** Longest id of a shape: collaboration servers refuse a change holding a longer one */
+export const maxShapeIdLength = 200;
+
+/** Longest background color: collaboration servers refuse a change holding a longer one */
+const maxBackgroundLength = 100;
+
+/**
+ * Ids of the shapes of a drawing file made unique and short enough (`maxShapeIdLength`): a repeated id is replaced, a
+ * long one too, with the links of arrows and texts to it; shapes without id get one when added
+ * @param shapes States of the shapes of the file (changed)
+ */
+function fixIds(shapes: ShapeState[]) {
+  const states: ShapeState[] = [];
+  const visit = (state: ShapeState) => {
+    states.push(state);
+    state.children?.forEach(visit);
+  };
+  const seen = new Set<string>();
+  const renamed = new Map<string, string>();
+
+  shapes.forEach(visit);
+  for (const { attrs } of states) {
+    const { id } = attrs;
+
+    if (typeof id !== 'string' || !id) {
+      delete attrs.id;
+    } else if (id.length > maxShapeIdLength || seen.has(id)) {
+      attrs.id = createId();
+      // links follow a long id (a repeated one links to its first shape)
+      if (!seen.has(id) && !renamed.has(id)) renamed.set(id, attrs.id as string);
+    }
+    if (typeof attrs.id === 'string') seen.add(attrs.id);
+  }
+  for (const { attrs } of states) {
+    for (const key of ['containerId', 'startBinding', 'endBinding']) {
+      const target = renamed.get(attrs[key] as string);
+
+      if (target) attrs[key] = target;
+    }
+  }
+}
 
 /**
  * Extension of drawing files (JSON)
@@ -250,7 +294,7 @@ export function parseShapeState(json: unknown): ShapeState | null {
 /**
  * Drawing file from its JSON, shapes other than drawing ones are ignored
  * @param json content of a `.freedrawing` file or of a link
- * @returns drawing file of version 1, white background when missing
+ * @returns drawing file of version 1, white background when missing or invalid, ids of shapes unique (`fixIds`)
  * @throws {Error} not a drawing file
  */
 export function parseDrawingFile(json: string): DrawingFile {
@@ -268,12 +312,19 @@ export function parseDrawingFile(json: string): DrawingFile {
 
   // valid image files only
   const files = parseFiles(data.files);
+  const shapes = data.shapes.map(parseShape).filter((shape: ShapeState | null): shape is ShapeState => !!shape);
+  const { background } = data;
+
+  fixIds(shapes);
 
   return {
     type: 'free-drawing',
     version: 1,
-    background: typeof data.background === 'string' ? data.background : '#fff',
-    shapes: data.shapes.map(parseShape).filter((shape: ShapeState | null): shape is ShapeState => !!shape),
+    background:
+      typeof background === 'string' && background && background.length <= maxBackgroundLength
+        ? (background as ColorLike)
+        : '#fff',
+    shapes,
     ...(Object.keys(files).length > 0 && { files }),
   };
 }

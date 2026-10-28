@@ -5,6 +5,7 @@ import { Modal } from '@/components/Modal/Modal';
 import { drawingFileExtension, saveFile } from '@/utils/drawingFile';
 import { createButton, createSwitch, setLabel, uniqueId } from '@/utils/dom';
 import { getFontsToLoad, loadFonts } from '@/utils/text';
+import { getImagesToLoad, loadImages } from '@/utils/image';
 import type { TranslationKey } from '@/@types/i18n';
 import { getErrorText } from '@/utils/errors';
 
@@ -162,8 +163,8 @@ export class ExportModal extends Modal {
 
   /**
    * Preview rendered at once (canvas shown as is: no image encoding), at screen resolution, again once fonts of its texts
-   * are loaded (drawn with a fallback font before)
-   * @param fontsLoaded Fonts of texts loaded since the last preview: not loaded again
+   * and its images are loaded (drawn with a fallback font, without the images before)
+   * @param fontsLoaded Fonts of texts and images loaded since the last preview: not loaded again
    */
   updatePreview(fontsLoaded = false) {
     const scale = window.devicePixelRatio || 1;
@@ -184,10 +185,12 @@ export class ExportModal extends Modal {
     this.$preview.replaceWith($canvas);
     this.$preview = $canvas;
 
-    const fonts = fontsLoaded ? [] : getFontsToLoad(this.drawer.getExportShapes(this.exportOptions.selected));
+    const shapes = fontsLoaded ? [] : this.drawer.getExportShapes(this.exportOptions.selected);
+    const fonts = getFontsToLoad(shapes);
+    const images = getImagesToLoad(shapes);
 
-    if (fonts.length) {
-      loadFonts(fonts).then(() => {
+    if (fonts.length || images.length) {
+      Promise.all([loadFonts(fonts), loadImages(images)]).then(() => {
         if (this.isVisible()) this.updatePreview(true);
       });
     }

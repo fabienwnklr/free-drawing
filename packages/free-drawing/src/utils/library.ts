@@ -6,7 +6,8 @@ import type { Drawer } from '@/Drawer';
 import type { DrawingShape } from '@/@types/drawer';
 import type { LibraryFile, LibraryItem, ShapeState } from '@/@types/file';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
-import { getShapeState } from '@/components/tools/UndoRedo/History';
+import { getStateInDrawing } from '@/components/tools/UndoRedo/History';
+import { inDrawingOrder } from '@/utils/order';
 import { drawerEvents } from '@/constants';
 import { bindingAttrs } from '@/utils/binding';
 import { getBoundText, isBoundText } from '@/utils/boundText';
@@ -116,25 +117,13 @@ export class Library {
    * @returns New item, null without shape
    */
   add(shapes: DrawingShape[] = this.drawer.getSelectedShapes(), name?: string): LibraryItem | null {
-    const layer = this.drawer.drawLayer;
     // as drawn: bottom first
-    const saved = shapes
-      .filter((shape) => shape.getLayer())
-      .sort((a, b) => a.getAbsoluteZIndex() - b.getAbsoluteZIndex());
+    const saved = inDrawingOrder(shapes.filter((shape) => shape.getLayer()));
 
     if (!saved.length) return null;
 
-    const states = saved.map((shape) => {
-      const state = getShapeState(shape);
-
-      // shape of a group or of a frame: at its place in the drawing
-      if (shape.getParent() !== layer) {
-        const transform = layer.getAbsoluteTransform().copy().invert().multiply(shape.getAbsoluteTransform());
-
-        state.attrs = { ...state.attrs, ...transform.decompose() };
-      }
-      return state;
-    });
+    // shapes of groups or of frames: at their place in the drawing
+    const states = saved.map(getStateInDrawing);
     const files = Object.fromEntries(
       getFileIds(saved)
         .filter((id) => this.drawer.files.has(id))

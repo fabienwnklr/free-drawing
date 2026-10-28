@@ -45,10 +45,10 @@ import { hasFocusOutside, setPressed } from '@/utils/dom';
 import { announce, createLiveRegion } from '@/utils/liveRegion';
 import { DrawerError, getErrorText } from '@/utils/errors';
 import { getStrokeStyle } from '@/utils/stroke';
-import { reorderShapes } from '@/utils/order';
+import { inDrawingOrder, reorderShapes } from '@/utils/order';
 import { alignShapes, distributeShapes, stackShapes } from '@/utils/align';
 import { rectContains, setupHit } from '@/utils/hit';
-import { I18n, getLanguage, languages } from '@/i18n/I18n';
+import { I18n, getLanguage, isLanguage, toLanguageChoice } from '@/i18n/I18n';
 import type { Language, TranslationParams, TranslationKey } from '@/@types/i18n';
 import { bindingAttrs, unbindMoved, updateBindings } from '@/utils/binding';
 import { getBoundText, updateBoundTexts } from '@/utils/boundText';
@@ -68,6 +68,7 @@ import {
   decodeLinkData,
   drawingFileExtension,
   encodeLinkData,
+  maxShapeIdLength,
   parseDrawingFile,
   pickBlob,
   saveFile,
@@ -81,8 +82,18 @@ import type {
   ExportImageOptions,
 } from '@/@types/file';
 import { Image } from 'konva/lib/shapes/Image';
-import { getFileId, getFileIds, isImageData, parseFiles, readImage, setupImages } from '@/utils/image';
-import { getShapeState } from '@/components/tools/UndoRedo/History';
+import {
+  getFileId,
+  getFileIds,
+  getImagesToLoad,
+  getSvgFiles,
+  isImageData,
+  loadImages,
+  parseFiles,
+  readImage,
+  setupImages,
+} from '@/utils/image';
+import { getShapeState, getStateInDrawing } from '@/components/tools/UndoRedo/History';
 import { canvasToBlob, createPdf, getExportBox, renderCanvas, renderSvg } from '@/utils/export';
 import { toHexColor } from '@/utils/color';
 import { ExportModal } from '@/components/ExportModal/ExportModal';
@@ -281,6 +292,8 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
   #saveFailed = false;
   /** Drawing of `storage` option loaded (on init, see `ready`, or with `loadFromStorage`), else not saved */
   #storageLoaded = false;
+  /** Loads of `storage` started: a load ending after a later one started is outdated (another drawing of the app) */
+  #storageLoads = 0;
   /**
    * Image files of the drawing by id: data URLs of PNG, JPEG, WebP or GIF images, shown by images (`fileId`
    * attribute), saved, exported in files and links and shared with the drawing. Add files with `addFiles`
@@ -355,7 +368,8 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
     // preferences saved in browser, else options
     const preferences = this._readPreferences();
 
-    this.#languageChoice = preferences.language ?? this.options.language;
+    // a locale gives its language ('fr-FR'), a language not supported the one of the browser
+    this.#languageChoice = toLanguageChoice(preferences.language ?? this.options.language);
     this.options.autoSave = preferences.autoSave ?? this.options.autoSave;
     this.options.keepTool = preferences.keepTool ?? this.options.keepTool;
     this.options.shapeRecognition = preferences.shapeRecognition ?? this.options.shapeRecognition;
@@ -547,6 +561,7 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
       if (this._getOwnerKey(room)) {
         // owner back in the room
         this.startCollaboration(room, undefined, undefined, key).catch((error) => {
+          if (this.#destroyed) return;
           this.toast(this.t('toast.collaborationUnavailable', { error: getErrorText(error, this.i18n.t) }), 'error');
         });
       } else {
@@ -581,11 +596,26 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
     } else {
       for (const widget of this.#readOnlyWidgets) widget.setDisabled(false);
       this.#readOnlyWidgets = [];
-      this.#toolBeforeReadOnly?.setActive(true);
+      // widgets of disabled plugins stay disabled, their tool is not activated again
+      for (const plugin of this.plugins) plugin._updateWidgets();
+      if (this.#toolBeforeReadOnly?.isDisabled) this._leaveDisabledTool();
+      else this.#toolBeforeReadOnly?.setActive(true);
     }
 
     this.undoRedo.manageButtons();
     this.trigger(drawerEvents.readOnlyChange, readOnly);
+  }
+
+  /**
+   * Active tool disabled (its plugin disabled): the selection tool activated instead, else the first tool enabled, else
+   * none (its pointer action stopped)
+   */
+  _leaveDisabledTool() {
+    const tools = [...this.toolbar.widgets.values()].filter((widget) => !widget.actionOnly && !widget.isDisabled);
+    const tool = tools.find((widget) => widget.id === 'selection') ?? tools[0];
+
+    if (tool) tool.setActive(true);
+    else this.activeWidget?.setActive(false);
   }
 
   /**
@@ -645,6 +675,7 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
     const { collaboration } = this.options;
     const start = ++this.#collaborationStarts;
     const overtaken = () => {
+      if (this.#destroyed) throw new Error('drawer destroyed');
       if (start !== this.#collaborationStarts) throw new Error('another collaboration session was started meanwhile');
     };
 
@@ -692,6 +723,8 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
       this.stopCollaboration();
       throw error;
     }
+    // stopped meanwhile (drawer destroyed, another session started): link of no session
+    overtaken();
 
     const link = this.getCollaborationLink(room);
 
@@ -1084,10 +1117,30 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
   /**
    * Add drawing shape (or group) to draw layer, draggable only with selection tool.
    * Every drawing shape must be added with this method (tools, history, collaboration...)
-   * @param shape Shape or group to add on top of drawing, given an id if it has none
+   * @param shape Shape or group to add on top of drawing, given an id if it has none; an id already in the drawing (a
+   * copy) or too long for collaboration servers (`maxShapeIdLength`) is replaced, also of its shapes
    * @returns added shape
    */
   addShape<T extends DrawingShape>(shape: T): T {
+    const used = new Set(this.drawLayer.find(() => true).map((node) => node.id()));
+
+    for (const node of [shape, ...(shape instanceof Group ? shape.find(() => true) : [])]) {
+      const id = node.id();
+
+      if (id && (id.length > maxShapeIdLength || used.has(id))) node.id(createId());
+      used.add(node.id());
+    }
+
+    return this._addShape(shape);
+  }
+
+  /**
+   * Add drawing shape keeping its ids, see `addShape`: shapes of history, of other users (collaboration), of a drawing
+   * file (ids made unique by `parseDrawingFile`)
+   * @param shape Shape or group to add on top of drawing, given an id if it has none
+   * @returns added shape
+   */
+  _addShape<T extends DrawingShape>(shape: T): T {
     shape.draggable(this.activeTool === 'selection');
     this._setupShape(shape);
     this.drawLayer.add(shape);
@@ -1386,6 +1439,8 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
   save(): Promise<void> {
     const { storage, localStorageKey } = this.options;
 
+    // drawing removed: nothing to save (an empty drawing would replace the stored one)
+    if (this.#destroyed) return Promise.resolve();
     try {
       // tool of this browser
       localStorage.setItem(`${localStorageKey}-tool`, this.activeTool);
@@ -1491,10 +1546,12 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
 
     this.#saving = (async () => {
       // result of the last save
-      let saved: boolean;
+      let saved = false;
 
       do {
         this.#saveAgain = false;
+        // destroyed during the save: its stage is empty
+        if (this.#destroyed) break;
         try {
           await storage.save(this.getDrawingFile());
           saved = true;
@@ -1534,7 +1591,8 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
 
   /**
    * Load drawing of `storage` option (on init, again after login...): it replaces drawing (kept if nothing is
-   * stored), history starts from it, changes are saved in storage once it is loaded
+   * stored), history starts from it, changes are saved in storage once it is loaded. Only the last load started is
+   * applied (an app switching drawings quickly)
    * @returns Rejected if drawing can't be loaded (shown in a toast): changes are not saved
    */
   async loadFromStorage(): Promise<void> {
@@ -1542,11 +1600,17 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
 
     if (!storage) throw new Error('storage option is not set');
 
+    const load = ++this.#storageLoads;
+    // a later load started: this one is outdated, nothing applied nor told
+    const outdated = () => this.#destroyed || load !== this.#storageLoads;
+
     this.#storageLoaded = false;
     this.$drawerContainer.setAttribute('aria-busy', 'true');
     try {
       const file = await storage.load();
 
+      // removed meanwhile, or another drawing loaded: nothing loaded nor saved
+      if (outdated()) return;
       if (file) {
         this.loadDrawing(file);
         this.undoRedo.reset();
@@ -1561,10 +1625,11 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
         this.save();
       }
     } catch (error) {
+      if (outdated()) return;
       this.toast(this.t('toast.loadFailed', { error: getErrorText(error, this.i18n.t) }), 'error');
       throw error;
     } finally {
-      this.$drawerContainer.removeAttribute('aria-busy');
+      if (load === this.#storageLoads) this.$drawerContainer.removeAttribute('aria-busy');
     }
   }
 
@@ -1615,7 +1680,8 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
 
   /**
    * Drawing as file content (`.freedrawing` file, link): background color and drawing shapes
-   * @param shapes Shapes written in the file, all drawing shapes by default
+   * @param shapes Shapes written in the file, all drawing shapes by default (shapes of groups and frames: at their place
+   * in the drawing)
    * @returns Drawing file with background color and states of shapes
    */
   getDrawingFile(shapes: DrawingShape[] = this.getDrawingShapes()): DrawingFile {
@@ -1625,7 +1691,8 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
       type: 'free-drawing',
       version: 1,
       background: this.background.fill() as ColorLike,
-      shapes: shapes.map(getShapeState),
+      // shapes of groups and frames selected alone: at their place in the drawing, as drawn (bottom first)
+      shapes: inDrawingOrder(shapes).map(getStateInDrawing),
       // only with images
       ...(Object.keys(files).length > 0 && { files }),
     };
@@ -1683,11 +1750,15 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
         throw new DrawerError('error.notImage', 'not an image of a drawing');
       }
     } catch (error) {
-      this.toast(this.t('toast.imageFailed', { error: getErrorText(error, this.i18n.t) }), 'error');
+      if (!this.#destroyed)
+        this.toast(this.t('toast.imageFailed', { error: getErrorText(error, this.i18n.t) }), 'error');
       return null;
     }
 
     const fileId = await getFileId(image.data);
+
+    // removed meanwhile
+    if (this.#destroyed) return null;
     const view = this.getViewArea();
     const center = position ?? { x: view.x + view.width / 2, y: view.y + view.height / 2 };
     const scale = Math.min(1, (0.6 * Math.min(view.width, view.height)) / Math.max(image.width, image.height));
@@ -2395,8 +2466,9 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
       return new Blob([drawing ? await embedDrawingInSvg(svg, drawing) : svg], { type: 'image/svg+xml' });
     }
 
-    // texts drawn with their fonts (export right after loading a drawing, slow network): not a fallback font
-    await loadFonts(getFontsToLoad(shapes));
+    // texts drawn with their fonts (export right after loading a drawing, slow network): not a fallback font; images
+    // decoded: not empty
+    await Promise.all([loadFonts(getFontsToLoad(shapes)), loadImages(getImagesToLoad(shapes))]);
 
     const canvas = renderCanvas(shapes, box, imageOptions);
 
@@ -2490,6 +2562,8 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
     // drawings of other apps converted, then validated: files and links can come from anyone
     const json = typeof file === 'string' ? fromOtherApp(file, this.t('shapes.frame')) : JSON.stringify(file);
     const { background, shapes, files } = parseDrawingFile(json);
+    // svg images of other apps: read once the drawing is shown
+    const svgFiles = typeof file === 'string' && json !== file ? getSvgFiles(JSON.parse(json).files) : [];
 
     // before its images are set up
     if (files) this._storeFiles(files);
@@ -2498,9 +2572,31 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
 
     this.getWidget<SelectWidget>('selection')?.clearSelection();
     for (const shape of this.getDrawingShapes()) shape.destroy();
-    for (const node of nodes) this.addShape(node);
+    for (const node of nodes) this._addShape(node);
     // fires change: history, saved, sent to collaborators
     this.setBgColor(background);
+    if (svgFiles.length) this._readSvgFiles(svgFiles);
+  }
+
+  /**
+   * SVG images of a drawing of another app read as images of drawings (PNG, WebP: drawing files and collaboration
+   * servers keep these only), shown once read, then saved and shared
+   * @param files SVG files by id (`getSvgFiles`), unread ones left empty
+   */
+  private async _readSvgFiles(files: [string, Blob][]) {
+    const read = await Promise.all(
+      files.map(async ([id, svg]) => {
+        try {
+          return [[id, (await readImage(svg)).data]];
+        } catch {
+          return [];
+        }
+      })
+    );
+
+    if (this.#destroyed || !read.flat().length) return;
+    this.addFiles(Object.fromEntries(read.flat()));
+    this.stage.fire('change');
   }
 
   /**
@@ -2580,10 +2676,15 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
     // taken before decoding (asynchronous): not opened by another drawer of the page
     window.history.replaceState(null, '', window.location.pathname + window.location.search);
     try {
-      this.loadDrawing(await decodeLinkData(hash.slice(prefix.length)));
+      const file = await decodeLinkData(hash.slice(prefix.length));
+
+      // removed meanwhile: nothing loaded nor saved
+      if (this.#destroyed) return;
+      this.loadDrawing(file);
       this.zoomToFit();
     } catch (error) {
-      this.toast(this.t('toast.invalidLink', { error: getErrorText(error, this.i18n.t) }), 'error');
+      if (!this.#destroyed)
+        this.toast(this.t('toast.invalidLink', { error: getErrorText(error, this.i18n.t) }), 'error');
     }
   }
 
@@ -2685,11 +2786,14 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
 
   /**
    * Set language of interface (saved for next visits): every text is translated at once
-   * @param language 'en', 'fr', 'es', 'de' or 'auto' (browser one)
+   * @param language 'en', 'fr', 'es', 'de' or 'auto' (browser one); a locale gives its language ('fr-FR'), a language
+   * not supported the one of the browser
    */
   setLanguage(language: Language | 'auto') {
-    this.#languageChoice = language;
-    this.i18n.setLanguage(language === 'auto' ? getLanguage() : language);
+    const choice = toLanguageChoice(language);
+
+    this.#languageChoice = choice;
+    this.i18n.setLanguage(choice === 'auto' ? getLanguage() : choice);
     this.$drawerContainer.lang = this.i18n.language;
     this.trigger(drawerEvents.languageChange, this.i18n.language);
     this._preferencesChanged();
@@ -2730,7 +2834,7 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
     // before the grid: shown in its style
     if (gridStyle !== undefined) this.setGridStyle(gridStyle);
     if (theme !== undefined && theme !== this.theme) this.setTheme(theme);
-    if (language !== undefined && language !== this.#languageChoice) this.setLanguage(language);
+    if (language !== undefined && toLanguageChoice(language) !== this.#languageChoice) this.setLanguage(language);
     if (zen !== undefined && zen !== this.setting.zenMode) this.setting.toggleZenMode();
     if (snapping !== undefined) this.getWidget<SelectWidget>('selection')?.toggleSnapping(snapping);
     if (grid !== undefined && grid !== this.grid) {
@@ -2756,11 +2860,10 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
     }
 
     const isTheme = (value: unknown): value is Theme => value === 'light' || value === 'dark' || value === 'system';
-    const isLanguage = (value: unknown): value is Language | 'auto' =>
-      typeof value === 'string' && (value === 'auto' || value in languages);
+    const isChoice = (value: unknown): value is Language | 'auto' => value === 'auto' || isLanguage(value);
     // first valid one
     const theme = [saved.theme, this._getStorageItem(`${key}-theme`)].find(isTheme);
-    const language = [saved.language, this._getStorageItem(`${key}-language`)].find(isLanguage);
+    const language = [saved.language, this._getStorageItem(`${key}-language`)].find(isChoice);
     const gridStyle = gridStyles.find(({ value }) => value === saved.gridStyle)?.value;
     const wheelAction = wheelActions.find(({ value }) => value === saved.wheelAction)?.value;
     const preferences: Partial<Preferences> = {

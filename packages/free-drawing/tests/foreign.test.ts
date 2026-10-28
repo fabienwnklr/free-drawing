@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { Group } from 'konva/lib/Group';
 import type { Arrow } from 'konva/lib/shapes/Arrow';
 import type { Ellipse } from 'konva/lib/shapes/Ellipse';
@@ -440,5 +440,39 @@ describe('Drawings of other apps', () => {
     // nothing usable: empty drawing
     expect(JSON.parse(fromOtherApp('{"type":"excalidraw","elements":"x"}', 'Frame')).shapes).toEqual([]);
     expect(JSON.parse(fromOtherApp('{"tldrawFileFormatVersion":1}', 'Frame')).shapes).toEqual([]);
+  });
+
+  it('Svg images of other apps read as images of drawings (raster), shown once read, saved', async () => {
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="10" height="10"/></svg>';
+    // images read by the browser (jsdom reads none)
+    const image = HTMLImageElement.prototype as { decode: () => Promise<void> };
+    const { decode } = image;
+    const { createObjectURL, revokeObjectURL } = URL;
+
+    image.decode = async () => {};
+    URL.createObjectURL = () => 'blob:svg';
+    URL.revokeObjectURL = () => {};
+    try {
+      const drawer = createDrawer();
+      const file = {
+        type: 'excalidraw',
+        elements: [
+          { ...base, id: 'img1', type: 'image', x: 0, y: 0, width: 64, height: 64, fileId: 'svg1', status: 'saved' },
+        ],
+        appState: { viewBackgroundColor: '#fff' },
+        files: { svg1: { mimeType: 'image/svg+xml', id: 'svg1', dataURL: `data:image/svg+xml;base64,${btoa(svg)}` } },
+      };
+
+      drawer.loadDrawing(JSON.stringify(file));
+      const fileId = drawer.getDrawingShapes()[0].attrs.fileId as string;
+
+      expect(drawer.files.has(fileId)).toBe(false);
+      await vi.waitFor(() => expect(drawer.files.get(fileId)).toMatch(/^data:image\/(png|webp|jpeg);base64,/));
+      expect(drawer.getDrawingFile().files).toEqual({ [fileId]: drawer.files.get(fileId) });
+    } finally {
+      image.decode = decode;
+      URL.createObjectURL = createObjectURL;
+      URL.revokeObjectURL = revokeObjectURL;
+    }
   });
 });

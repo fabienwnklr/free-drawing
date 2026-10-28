@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [8.0.3](https://github.com/fabienwnklr/free-drawing/compare/v8.0.2...v8.0.3) (2026-10-28)
+
+
+### Bug Fixes
+
+* **storage:** a drawer removed during a save of the `storage` option no longer saves an empty drawing over the stored one; a load, a link, an image or a collaboration session ending after `destroy()` does nothing; only the last `loadFromStorage` started is applied (an app switching drawings quickly no longer gets an outdated drawing saved into the new one)
+* **i18n:** a locale (`language: 'en-US'`, `<free-drawing language="fr-FR">`) gives its language and a language not supported the one of the browser: the drawer is created (every text failed); a saved preference such as `"constructor"` is ignored
+* **files:** ids of shapes made unique (a copy added by `addShape`, ids repeated in files and links) and short enough for collaboration servers (200 characters), background colors of files longer than 100 characters replaced: changes of a session are no longer dropped by the server, undo no longer removes another shape
+* **export:** png, pdf and copied images wait for their images to be decoded (right after a drawing is opened or an image added): no longer blank; the preview of the export dialog is drawn again once they are
+* **files:** the drawing kept in an export of selected shapes (`withDrawing`) and library items write shapes of frames and of groups at their place in the drawing, in the order they are drawn
+* **plugins:** the active tool of a plugin disabled by `forceDisabled` gives way to the selection tool and is not activated again when read only ends; a plugin whose asynchronous `init` ends after `drawer.destroy()` adds no listener, the next plugins are not initialized
+* **files:** SVG images of Excalidraw and tldraw drawings are read as images of the drawing (they were empty), also shared in a collaboration session
+* **history:** undo and redo place the texts of shapes too: redo is no longer lost when a text of another user is in a shape moved back
+
 ## [8.0.2](https://github.com/fabienwnklr/free-drawing/compare/v8.0.1...v8.0.2) (2026-10-28)
 
 

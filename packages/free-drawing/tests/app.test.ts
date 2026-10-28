@@ -116,6 +116,54 @@ describe('Integration in an app', () => {
     ]);
   });
 
+  it('Storage: drawer removed during a save or a load saves nothing more, only the last load started is applied', async () => {
+    const ends: (() => void)[] = [];
+    const loads: ((file: DrawingFile | null) => void)[] = [];
+    const storage: DrawerStorage = {
+      load: vi.fn(() => new Promise<DrawingFile | null>((resolve) => loads.push(resolve))),
+      save: vi.fn(() => new Promise<void>((resolve) => ends.push(resolve))),
+    };
+    const drawer = createDrawer({ autoSave: true, storage });
+
+    loads[0](fileWith('stored'));
+    await drawer.ready;
+    addText(drawer, 'a');
+    addText(drawer, 'b');
+    expect(storage.save).toHaveBeenCalledTimes(1);
+
+    // removed during the save: the changes made meanwhile are not saved from its emptied stage
+    await drawer.destroy();
+    ends[0]();
+    await flush();
+    expect(storage.save).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(storage.save).mock.calls[0][0].shapes).toHaveLength(2);
+
+    // loads of an app switching drawings: the slower first one is outdated
+    const other = createDrawer({ autoSave: true, storage });
+
+    loads[1](fileWith('first'));
+    await other.ready;
+    const first = other.loadFromStorage();
+    const second = other.loadFromStorage();
+
+    loads[3](fileWith('second'));
+    await second;
+    loads[2](fileWith('outdated'));
+    await first;
+    expect(texts(other)).toEqual(['second']);
+    expect(other.$drawerContainer.hasAttribute('aria-busy')).toBe(false);
+
+    // removed while loading: nothing loaded nor saved
+    const saves = vi.mocked(storage.save).mock.calls.length;
+    const third = other.loadFromStorage();
+
+    await other.destroy();
+    loads[4](fileWith('late'));
+    await third;
+    await flush();
+    expect(storage.save).toHaveBeenCalledTimes(saves);
+  });
+
   it('Toast message is shown as text (error messages of a server)', () => {
     const { $toastContainer } = createDrawer().toast('<img src=x onerror=alert(1)>', 'error', 0);
 

@@ -39,6 +39,15 @@ export const languages = {
 };
 
 /**
+ * Language of the interface (own key of `languages`: not `constructor`, `toString`...)
+ * @param value Value of an option, a preference or a choice (not trusted)
+ * @returns true for `en`, `fr`, `es` or `de`
+ */
+export function isLanguage(value: unknown): value is Language {
+  return typeof value === 'string' && Object.keys(languages).includes(value);
+}
+
+/**
  * Language of a locale (`fr-FR` gives `fr`), English when not supported
  * @param locale Browser language by default
  * @returns Supported language of the locale, else `en`
@@ -46,7 +55,20 @@ export const languages = {
 export function getLanguage(locale: string | undefined = globalThis.navigator?.language): Language {
   const language = locale?.slice(0, 2).toLowerCase();
 
-  return language && language in languages ? (language as Language) : 'en';
+  return isLanguage(language) ? language : 'en';
+}
+
+/**
+ * Language chosen by an option or an app: a locale gives its language (`fr-FR` gives `fr`)
+ * @param value `auto`, a language or a locale (not trusted)
+ * @returns The language, `auto` (browser one) when not supported
+ */
+export function toLanguageChoice(value: unknown): Language | 'auto' {
+  if (value === 'auto' || isLanguage(value)) return value;
+
+  const language = typeof value === 'string' ? value.slice(0, 2).toLowerCase() : '';
+
+  return isLanguage(language) ? language : 'auto';
 }
 
 /**
@@ -68,7 +90,7 @@ export class I18n {
    * @param custom Texts replacing default ones, per language
    */
   constructor(language: Language, custom: CustomTranslations = {}) {
-    this.language = language;
+    this.language = isLanguage(language) ? language : 'en';
     this.#custom = custom;
   }
 
@@ -124,10 +146,10 @@ export class I18n {
 
   /**
    * Change language: texts given to `translate` are updated
-   * @param language New language of texts
+   * @param language New language of texts (English for another value)
    */
   setLanguage(language: Language) {
-    this.language = language;
+    this.language = isLanguage(language) ? language : 'en';
     for (const update of this.#updates) update(this.t);
   }
 }

@@ -929,15 +929,16 @@ export class Collaboration {
       ids.filter((id) => synced.has(id)).join() !== [...synced.keys()].filter((id) => current.has(id)).join() ||
       added.join() !== ids.slice(ids.length - added.length).join();
     const background = this.drawer.background.fill() as string;
-    // changed here, once the background of the room is known
-    const recolored = this.#syncedBackground !== null && background !== this.#syncedBackground;
+    // changed here, once the background of the room is known (a color the server accepts)
+    const recolored =
+      this.#syncedBackground !== null && background !== this.#syncedBackground && checkBackground(background) !== null;
     // image files no longer used: the room may forget them, sent again when used again
     const used = new Set(getFileIds(shapes));
 
     for (const id of this.#sentFiles) if (!used.has(id)) this.#sentFiles.delete(id);
     for (const id of this.#tooBig.keys()) if (!current.has(id) && !used.has(id)) this.#tooBig.delete(id);
 
-    const parts = this._split(upserted, current, remove, reordered && ids, recolored ? background : undefined);
+    const parts = this._split(upserted, current, remove, reordered && ids, recolored ? background : undefined, used);
     // stacking order sent (or unchanged): known in this order
     let ordered = !reordered;
     const mark = ({ change, ids }: ChangePart) => {
@@ -989,13 +990,14 @@ export class Collaboration {
 
   /**
    * Change cut into messages small enough for the server (encrypted ones are bigger): shapes with the image files the
-   * room does not have yet, a shape and its files too big together apart; removals and background in the first one,
-   * stacking order in the last one
+   * room does not have yet, a shape and its files too big together apart, then other files of the drawing the room does
+   * not have (images read later); removals and background in the first one, stacking order in the last one
    * @param shapes Shapes to send, in stacking order
    * @param current JSON of the shapes of the drawing by id
    * @param remove Ids of removed shapes
    * @param order Ids of all shapes from bottom to top when stacking order changed, else false
    * @param background Background color when changed
+   * @param used Ids of the image files of the drawing
    * @returns Parts to send in order, none when nothing changed
    */
   private _split(
@@ -1003,9 +1005,22 @@ export class Collaboration {
     current: Map<string, string>,
     remove: string[],
     order: string[] | false,
-    background?: string
+    background: string | undefined,
+    used: Set<string>
   ): ChangePart[] {
-    if (!shapes.length && !remove.length && !order && background === undefined) return [];
+    const added = new Set<string>();
+    // image files the room does not have yet, each one once
+    const unsent = (fileIds: Iterable<string>) =>
+      [...fileIds]
+        .filter((fileId) => !this.#sentFiles.has(fileId) && !this.#tooBig.has(fileId) && !added.has(fileId))
+        .filter((fileId) => this.drawer.files.has(fileId))
+        .map((fileId): [string, string] => {
+          added.add(fileId);
+          return [fileId, this.drawer.files.get(fileId)!];
+        });
+
+    if (!shapes.length && !remove.length && !order && background === undefined && !unsent(used).length) return [];
+    added.clear();
 
     const budget = Collaboration.maxMessageSize / (this.cipher ? 2 : 1.25);
     const first: ChangePart = {
@@ -1016,7 +1031,6 @@ export class Collaboration {
     let size = JSON.stringify(first.change).length;
     // part holding something to send: a new part for what does not fit
     let filled = remove.length > 0 || background !== undefined;
-    const added = new Set<string>();
     const filesSize = (files: [string, string][]) =>
       files.reduce((sum, [fileId, data]) => sum + fileId.length + data.length + 8, 0);
     /**
@@ -1046,14 +1060,8 @@ export class Collaboration {
     for (const shape of shapes) {
       const id = shape.id();
       const jsonSize = JSON.stringify(current.get(id)).length;
-      // image files of the shape the room does not have yet, with the first shape using them
-      const files = getFileIds([shape])
-        .filter((fileId) => !this.#sentFiles.has(fileId) && !this.#tooBig.has(fileId) && !added.has(fileId))
-        .filter((fileId) => this.drawer.files.has(fileId))
-        .map((fileId): [string, string] => {
-          added.add(fileId);
-          return [fileId, this.drawer.files.get(fileId)!];
-        });
+      // with the first shape using them
+      const files = unsent(getFileIds([shape]));
 
       if (jsonSize + filesSize(files) > budget) {
         for (const file of files) add(null, 0, [file]);
@@ -1062,6 +1070,8 @@ export class Collaboration {
         add(id, jsonSize, files);
       }
     }
+    // files of shapes known by the room (images read later): alone
+    for (const file of unsent(used)) add(null, 0, [file]);
     if (order) {
       if (filled && size + JSON.stringify(order).length > budget)
         parts.push({ change: { upsert: [], remove: [] }, ids: [] });
@@ -1338,7 +1348,7 @@ export class Collaboration {
         const node = Node.create(state) as DrawingShape;
 
         shape.destroy();
-        shape = this.drawer.addShape(node);
+        shape = this.drawer._addShape(node);
         shape.zIndex(index);
         if (selected.some((node) => !node.getLayer())) {
           this.drawer
@@ -1346,7 +1356,7 @@ export class Collaboration {
             ?.select([...selected.filter((node) => node.getLayer()), shape]);
         }
       } else if (!shape) {
-        shape = this.drawer.addShape(Node.create(state) as DrawingShape);
+        shape = this.drawer._addShape(Node.create(state) as DrawingShape);
       }
       // as serialized here, not to send it back
       this.#synced.set(shape.id(), serializeShape(shape));

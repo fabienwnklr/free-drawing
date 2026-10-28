@@ -30,6 +30,32 @@ export const isImageData = (value: unknown): value is string =>
   typeof value === 'string' && value.length <= maxFileLength && imageData.test(value);
 
 /**
+ * SVG images of a drawing of another app (Excalidraw, tldraw): read as images of drawings by `readImage`, drawings
+ * keep raster images only
+ * @param files Image files of the converted drawing (not trusted)
+ * @returns SVG files by id, as blobs
+ */
+export function getSvgFiles(files: unknown): [string, Blob][] {
+  if (typeof files !== 'object' || files === null || Array.isArray(files)) return [];
+
+  return Object.entries(files).flatMap(([id, data]) => {
+    const [, params = '', content] = /^data:image\/svg\+xml((?:;[^,]*)?),([\s\S]*)$/.exec(String(data)) ?? [];
+
+    if (content === undefined || id === '__proto__' || !fileIdPattern.test(id)) return [];
+    try {
+      // bytes of UTF-8 text
+      const svg = params.includes(';base64')
+        ? Uint8Array.from(atob(content), (char) => char.charCodeAt(0))
+        : decodeURIComponent(content);
+
+      return [[id, new Blob([svg], { type: 'image/svg+xml' })]];
+    } catch {
+      return [];
+    }
+  });
+}
+
+/**
  * Image files of a drawing, only valid ones (files, links and other users can send anything)
  * @param files Files read (not trusted)
  * @returns Files with a valid id and data, in a new object
@@ -109,6 +135,29 @@ export async function readImage(source: Blob): Promise<DrawingImage> {
  */
 export const findImages = (node: Node): Image[] =>
   node instanceof Image ? [node] : 'find' in node ? (node as Container).find<Image>('Image') : [];
+
+/**
+ * Elements of the images of shapes still loading (drawn empty until then): exports wait for them
+ * @param nodes Drawing shapes or groups
+ * @returns Elements not loaded yet, each one once
+ */
+export const getImagesToLoad = (nodes: Node[]): HTMLImageElement[] => [
+  ...new Set(
+    nodes
+      .flatMap(findImages)
+      .map((image) => image.image())
+      .filter((element): element is HTMLImageElement => element instanceof HTMLImageElement && !element.complete)
+  ),
+];
+
+/**
+ * Wait for images to be decoded before they are drawn (export right after a drawing is opened or an image added)
+ * @param elements Elements of images, see `getImagesToLoad`
+ * @returns Resolved once each one is decoded, or can't be (drawn empty)
+ */
+export async function loadImages(elements: HTMLImageElement[]): Promise<void> {
+  await Promise.all(elements.map((element) => element.decode?.().catch(() => undefined)));
+}
 
 /**
  * Ids of the files of images

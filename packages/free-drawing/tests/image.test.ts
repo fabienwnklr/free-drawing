@@ -4,7 +4,7 @@ import type { Image } from 'konva/lib/shapes/Image';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import { shapeName } from '@/constants';
-import { isImageData, parseFiles } from '@/utils/image';
+import { getImagesToLoad, isImageData, parseFiles } from '@/utils/image';
 import { parseDrawingFile } from '@/utils/drawingFile';
 import { renderSvg } from '@/utils/export';
 import { createDrawer } from './helpers';
@@ -18,6 +18,29 @@ const elementOf = (image: Image) => image.image() as HTMLImageElement | undefine
 
 describe('Images', () => {
   document.body.innerHTML = `<div id="test"></div>`;
+
+  it('Exports of images still loading wait for them: not drawn empty', async () => {
+    const drawer = createDrawer();
+    const image = (await drawer.addImage({ data: pngData, width: 10, height: 10 }))!;
+    const element = elementOf(image)!;
+    let release: () => void = () => {};
+    let exported = false;
+
+    Object.defineProperty(element, 'complete', { value: false, configurable: true });
+    element.decode = vi.fn(() => new Promise<void>((resolve) => (release = resolve)));
+    expect(getImagesToLoad([image])).toEqual([element]);
+
+    const png = drawer.exportImage('png').then((blob) => {
+      exported = true;
+      return blob;
+    });
+
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(element.decode).toHaveBeenCalled();
+    expect(exported).toBe(false);
+    release();
+    expect(await png).toBeInstanceOf(Blob);
+  });
 
   it('Image files: data URLs of PNG, JPEG, WebP or GIF images only, from anyone', () => {
     expect(isImageData(pngData)).toBe(true);

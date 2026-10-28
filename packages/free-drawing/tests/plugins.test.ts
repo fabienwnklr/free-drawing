@@ -344,4 +344,61 @@ describe('Plugins', () => {
     expect(clicks).toHaveBeenCalledTimes(3);
     error.mockRestore();
   });
+
+  it('Drawer removed during an asynchronous init: its listeners not added, next plugins not initialized', async () => {
+    const changes = vi.fn();
+    let loaded: () => void = () => {};
+
+    class Slow extends Plugin {
+      static readonly pluginName = 'Slow';
+
+      /**
+       * Listener added once loaded
+       */
+      async init() {
+        await new Promise<void>((resolve) => (loaded = resolve));
+        this.listenTo(this.drawer, drawerEvents.change, changes);
+      }
+    }
+    class Next extends Plugin {
+      static readonly pluginName = 'Next';
+      static readonly requires = [Slow];
+      /** Initialized */
+      initialized = false;
+
+      /**
+       * Step recorded
+       */
+      init() {
+        this.initialized = true;
+      }
+    }
+
+    const drawer = createDrawer({ plugins: [Next] });
+
+    await drawer.destroy();
+    loaded();
+    await drawer.ready;
+    drawer.trigger(drawerEvents.change, drawer);
+    expect(changes).not.toHaveBeenCalled();
+    expect(drawer.plugins.get(Next)!.initialized).toBe(false);
+  });
+
+  it('Tool of a plugin disabled while active: the selection tool instead, not activated again after read only', () => {
+    const drawer = createDrawer({ plugins: [Stamps] });
+    const stamps = drawer.plugins.get(Stamps)!;
+
+    drawer.getWidget<BaseWidget>('stamp')!.setActive(true);
+    stamps.forceDisabled('test');
+    expect(drawer.activeTool).toBe('selection');
+
+    // active before read only, disabled meanwhile
+    stamps.clearForceDisabled('test');
+    drawer.getWidget<BaseWidget>('stamp')!.setActive(true);
+    drawer.setReadOnly(true);
+    stamps.forceDisabled('test');
+    drawer.setReadOnly(false);
+    expect(drawer.activeTool).toBe('selection');
+    expect(drawer.getWidget<BaseWidget>('stamp')!.isDisabled).toBe(true);
+  });
 });

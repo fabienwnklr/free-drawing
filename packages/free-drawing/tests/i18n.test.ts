@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, afterEach } from 'vitest';
-import { I18n, getLanguage, languages } from '@/i18n/I18n';
+import { I18n, getLanguage, isLanguage, languages, toLanguageChoice } from '@/i18n/I18n';
 import { en } from '@/i18n/en';
 import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import { createDrawer, keydown } from './helpers';
@@ -31,6 +31,37 @@ describe('Languages', () => {
     expect(getLanguage('ES-mx')).toBe('es');
     expect(getLanguage('pt-BR')).toBe('en');
     expect(getLanguage(undefined)).toBe('en');
+    // names of the object are no languages
+    expect(getLanguage('constructor')).toBe('en');
+    expect(isLanguage('constructor')).toBe(false);
+    expect(isLanguage('toString')).toBe(false);
+  });
+
+  it('Locales and languages not supported given by options, apps and saved preferences: the drawer is created', () => {
+    expect(toLanguageChoice('en-US')).toBe('en');
+    expect(toLanguageChoice('auto')).toBe('auto');
+    expect(toLanguageChoice('it')).toBe('auto');
+    expect(toLanguageChoice(42)).toBe('auto');
+
+    const drawer = createDrawer({ language: 'fr-FR' as never });
+
+    expect([drawer.language, drawer.languageChoice]).toEqual(['fr', 'fr']);
+    expect(drawer.t('tools.text')).toBe(languages.fr.translations['tools.text']);
+    drawer.setLanguage('de-DE' as never);
+    expect([drawer.language, drawer.languageChoice]).toEqual(['de', 'de']);
+    // not supported: language of the browser
+    drawer.setLanguage('it' as never);
+    expect([drawer.language, drawer.languageChoice]).toEqual([getLanguage(), 'auto']);
+    drawer.setPreferences({ language: 'constructor' as never });
+    expect(drawer.languageChoice).toBe('auto');
+
+    // saved value of the object: ignored
+    const key = 'drawer-saved-language';
+
+    localStorage.setItem(`${key}-preferences`, JSON.stringify({ language: 'constructor' }));
+    expect(createDrawer({ localStorageKey: key, language: 'es' }).language).toBe('es');
+    localStorage.removeItem(`${key}-preferences`);
+    expect(new I18n('constructor' as never).t('tools.text')).toBe(en['tools.text']);
   });
 
   it('Texts with placeholders, custom texts replace default ones', () => {

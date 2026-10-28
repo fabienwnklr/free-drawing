@@ -89,7 +89,7 @@ Extra tools (shapes, highlighter) as plugins: [`@fabwcie/free-drawing-extra-tool
   selectionMenu: true, // enable/disable menu next to selected shapes (duplicate, rotate, bring forward, send backward, lock, delete)
   commandPalette: true, // enable/disable command palette (menu item, Ctrl / Cmd + K): search and run tools and commands
   theme: 'light', // 'light' | 'dark' | 'system' (device one), theme chosen in menu is saved and used instead
-  language: 'auto', // 'auto' (browser one, English when not available) | 'en' | 'fr' | 'es' | 'de', language chosen in menu is saved and used instead
+  language: 'auto', // 'auto' (browser one, English when not available) | 'en' | 'fr' | 'es' | 'de' (a locale gives its language: 'fr-FR'; another one is 'auto'), language chosen in menu is saved and used instead
   translations: {}, // texts replacing default ones, by language, see Languages below
   layersPanel: true, // enable/disable layers panel (list of shapes) and its button in header
   library: true, // enable/disable library panel (shapes saved to insert them again in any drawing), its button and menu items
@@ -310,7 +310,7 @@ const drawer = new Drawer($el, {
 });
 
 await drawer.ready;
-await drawer.loadFromStorage(); // again, e.g. after login (drawing kept if nothing is stored)
+await drawer.loadFromStorage(); // again, e.g. after login (drawing kept if nothing is stored; only the last load started is applied)
 ```
 
 `user` option gives the user of your app: their id is used in collaboration sessions (rights given by owners, links) and their name is shown to other users (the user can change it for the current visit). `setUser` changes it on login or logout.
@@ -489,10 +489,10 @@ drawer.plugins.get(Stamps); // also by name: drawer.plugins.get('Stamps'), drawe
 - Steps: constructor (before the toolbar: `addWidget`, `addTranslations`), `init()` (drawer created: `addCommand`, `listenTo`...), `afterInit()` (every plugin initialized), `destroy()` (`drawer.plugins.destroy()`, listeners of `listenTo` removed: call `super.destroy()` when overriding it). Required plugins are created and initialized first. A plugin missing, two plugins of the same name or plugins requiring each other throw an error when the drawer is created; an error of `init` is logged, other plugins are still initialized.
 - Tools are placed at their place in the `widgets` and `widgetGroups` options (e.g. `widgets: ['selection', 'stamp', 'brush']`), else at the end of the toolbar. Their title is the text of `tools.<id>`, their shortcut is shown in help and command palette. `ShapeWidget` is the base of tools drawing in the dragged box: `drawShape(start, end)` gives the shape of such a tool as drawn by a drag (not added: `drawer.addShape`). A second finger on a touch screen cancels the pointer action of a tool (`cancelAction()`): `onCancel()` removes what it was drawing (done by `ShapeWidget`).
 - Commands are available unless their `isAvailable()` returns false. Commands with `readOnly: true` do not modify the drawing: also available in read only and while their plugin is disabled. Shortcuts of plugins run before the ones of the library: avoid the ones listed in help. Written `Ctrl+Shift+M` (Ctrl is also Cmd), they are shown ⇧⌘M on Apple devices: `formatShortcut(shortcut, drawer.i18n.t)` and `ariaShortcut(shortcut)` do the same for the interface of a plugin.
-- `isEnabled` is false in read only, or while the plugin is disabled by `forceDisabled(reason)` (until `clearForceDisabled(reason)` for every reason): its tools and commands modifying the drawing are disabled, `plugin.change` is triggered.
+- `isEnabled` is false in read only, or while the plugin is disabled by `forceDisabled(reason)` (until `clearForceDisabled(reason)` for every reason): its tools and commands modifying the drawing are disabled (its active tool gives way to the selection tool), `plugin.change` is triggered. Once the drawer is destroyed, `listenTo` adds nothing (an `init` still running) and the next plugins are not initialized.
 - Texts: `this.t(key, params)`, in the language of the drawer; the `translations` option can replace them.
 - Options: the app gives them with the class of the plugin, `plugins: [[Stamps, { max: 20 }]]` (a plugin required by another one too: given this way, it is created once, before it), the plugin reads them with its defaults: `options = this.getOptions({ max: 0 })` gives `{ max: 20 }`. The `pluginOptions` option of previous versions (options by plugin name, `pluginOptions: { Stamps: { max: 20 } }`) still works, with a warning: options given with the class replace its ones.
-- Drawer API useful to plugins: `addShape`, `stage.fire('change')`, `placeInFrames`, `getPointerPosition()` (pointer in drawing coordinates), `getSelectedShapes()`, `getWidget<SelectWidget>('selection')?.select(shapes)`, `layout.add(region, element)`, `toast(message)`.
+- Drawer API useful to plugins: `addShape` (a shape with the id of another one of the drawing, e.g. a copy, gets a new id), `stage.fire('change')`, `placeInFrames`, `getPointerPosition()` (pointer in drawing coordinates), `getSelectedShapes()`, `getWidget<SelectWidget>('selection')?.select(shapes)`, `layout.add(region, element)`, `toast(message)`.
 - Shapes: draw with the shapes of the library (`Line`, `Arrow`, `Rect`, `Ellipse`, `Text`, `Path` and groups of them), marked with a name or attributes. Files, links and collaboration accept only these classes.
 - Exported for plugins: `Plugin`, `BaseWidget`, `ShapeWidget`, `PathShapeWidget` (shapes drawn by a path in their box: `pathShapeData`, `scalePath`), `FreehandWidget` (freehand strokes), `ColorPicker` and `createOverlaySection` (options panels), `drawerEvents`, `shapeName`, `createButton`, `setLabel`, `setPressed`, `formatShortcut`, `ariaShortcut`, and types (`PluginClass`, `PluginEntry`, `PluginCommand`, `PluginTranslations`, `SelectWidget`, `WidgetClass`, classes of the members of the drawer...).
 

@@ -128,6 +128,8 @@ export abstract class BaseWidget {
     }
     // group disabled with its widgets
     this.drawer.toolbar?.update();
+    // active tool disabled (its plugin disabled): another tool, its drawing stopped (read only chooses its own)
+    if (disabled && !this.drawer.readOnly && this.drawer.activeWidget === this) this.drawer._leaveDisabledTool();
   }
 
   /** Widget can not be activated (see `setDisabled`) */

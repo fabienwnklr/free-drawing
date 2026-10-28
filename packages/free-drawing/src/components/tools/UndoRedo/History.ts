@@ -6,6 +6,7 @@ import { historyLimit } from '@/constants';
 import type { HistoryChange, HistoryEntry, ShapeState } from '@/@types/file';
 import { applyOrder } from '@/utils/order';
 import { updateBindings } from '@/utils/binding';
+import { updateBoundTexts } from '@/utils/boundText';
 
 /**
  * State of a drawing shape or group (history, collaboration, files), without `draggable` which depends on active tool
@@ -14,6 +15,24 @@ import { updateBindings } from '@/utils/binding';
  */
 export function getShapeState(shape: DrawingShape): ShapeState {
   return toState(shape.toObject());
+}
+
+/**
+ * State of a drawing shape at its place in the drawing: a shape of a group or of a frame selected alone takes the
+ * transform of its parents (drawing files of a selection, library items)
+ * @param shape Drawing shape or group
+ * @returns State of `getShapeState`, with its position, rotation and scale in the drawing
+ */
+export function getStateInDrawing(shape: DrawingShape): ShapeState {
+  const state = getShapeState(shape);
+  const layer = shape.getLayer();
+
+  if (layer && shape.getParent() !== layer) {
+    const transform = layer.getAbsoluteTransform().copy().invert().multiply(shape.getAbsoluteTransform());
+
+    state.attrs = { ...state.attrs, ...transform.decompose() };
+  }
+  return state;
 }
 
 /**
@@ -311,7 +330,7 @@ export class History {
       const index = shape?.zIndex();
 
       shape?.destroy();
-      const node = this.drawer.addShape(Node.create(JSON.parse(state)) as DrawingShape);
+      const node = this.drawer._addShape(Node.create(JSON.parse(state)) as DrawingShape);
 
       if (index === undefined) restored.add(change.id);
       else node.zIndex(index);
@@ -330,8 +349,10 @@ export class History {
     if (order && restored.size) this._place(restored, order);
     if (!applied) return false;
 
-    // arrows of other users linked to these shapes follow them, as part of this change
+    // arrows of other users linked to these shapes follow them, texts stay in their shapes, as part of this change (the
+    // change handler would find them changed: redo lost)
     updateBindings(this.drawer.drawLayer);
+    updateBoundTexts(this.drawer.drawLayer, this._readBackground() as string);
     this.#known = this._read();
     this.#knownBackground = this._readBackground();
     return true;

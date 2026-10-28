@@ -30,6 +30,8 @@ export abstract class Plugin {
   readonly drawer: Drawer;
   /** Listeners added by `listenTo`, removed by `destroy` */
   #listeners: PluginListener[] = [];
+  /** Destroyed: listeners of an `init` still running are not added */
+  #destroyed = false;
   /** Reasons disabling the plugin, see `forceDisabled` */
   #disabledBy = new Set<string>();
   /** Ids of the widgets of the plugin (`addWidget`), disabled with it */
@@ -70,6 +72,7 @@ export abstract class Plugin {
    * @returns nothing, or a promise when overridden
    */
   destroy(): void | Promise<void> {
+    this.#destroyed = true;
     for (const remove of this.#listeners.splice(0)) remove();
   }
 
@@ -163,13 +166,14 @@ export abstract class Plugin {
   }
 
   /**
-   * Listen an event until the plugin is destroyed: of the drawer (`drawerEvents`), of a konva node (stage, layers,
-   * shapes...) or of a DOM element
+   * Listen an event until the plugin is destroyed (nothing once destroyed: `init` still running): of the drawer
+   * (`drawerEvents`), of a konva node (stage, layers, shapes...) or of a DOM element
    * @param target Drawer, konva node or DOM element
    * @param event Name of the event (several ones separated by spaces for the drawer and konva nodes)
    * @param handler Function called with the arguments of the event
    */
   listenTo(target: ListenedTarget, event: string, handler: (...args: never[]) => unknown) {
+    if (this.#destroyed) return;
     if (target instanceof EventTarget) {
       target.addEventListener(event, handler as EventListener);
       this.#listeners.push(() => target.removeEventListener(event, handler as EventListener));
@@ -188,9 +192,9 @@ export abstract class Plugin {
   }
 
   /**
-   * Widgets of the plugin disabled while it is disabled (or in read only)
+   * Widgets of the plugin disabled while it is disabled (or in read only), also by the drawer when read only ends
    */
-  private _updateWidgets() {
+  _updateWidgets() {
     for (const id of this.#widgets) this.drawer.getWidget<BaseWidget>(id)?.setDisabled(!this.isEnabled);
   }
 }

@@ -73,3 +73,32 @@ export function applyOrder(nodes: Node[], ids: string[]) {
     if (node.index !== index) node.zIndex(index);
   });
 }
+
+/**
+ * Nodes in the order they are drawn, bottom first: a shape of a group or of a frame at the place of its parent (konva
+ * `getAbsoluteZIndex` counts depth by depth)
+ * @param nodes Nodes of a layer, at any depth
+ * @returns The nodes sorted, in a new array
+ */
+export function inDrawingOrder<T extends Node>(nodes: T[]): T[] {
+  // indices of the node and of its parents, from the layer
+  const path = (node: Node) => {
+    const indices: number[] = [];
+
+    for (let current: Node | null = node; current?.getParent() && current.nodeType !== 'Layer'; ) {
+      indices.unshift(current.zIndex());
+      current = current.getParent();
+    }
+    return indices;
+  };
+  const paths = new Map(nodes.map((node) => [node, path(node)]));
+
+  return [...nodes].sort((a, b) => {
+    const [first, second] = [paths.get(a)!, paths.get(b)!];
+
+    for (let i = 0; i < Math.min(first.length, second.length); i++) {
+      if (first[i] !== second[i]) return first[i] - second[i];
+    }
+    return first.length - second.length;
+  });
+}

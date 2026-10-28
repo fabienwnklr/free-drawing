@@ -30,16 +30,16 @@ Audit of 2026-10-28 (library 8.0.0): items ordered by priority in each section.
 
 ### Core, files, persistence
 
-- [ ] `destroy()` during a save of `storage` saves an empty drawing over the stored one (save loop runs again after `stage.destroy()`); async work ending after destroy (link decoding, `loadFromStorage`, `addImage`) saves or starts a collaboration on the destroyed drawer (`Drawer.ts`)
-- [ ] unsupported language makes every `t()` throw, the drawer is not created: `language: 'en-US'`, `<free-drawing language="fr-FR">`, account preference `'it'` accepted by the server, saved `"constructor"` passing `value in languages` (`I18n.t`, `Drawer.setLanguage`, `_readPreferences`)
-- [ ] duplicate shape ids accepted (files, links, `addShape(node.clone())`): undo destroys the wrong shape, changes of collaboration lost; ids over 200 characters or a background over 100 make the server drop the whole CHANGE (`addShape`, `parseDrawingFile`)
-- [ ] concurrent `loadFromStorage`: an outdated slower load wins and is auto saved into the drawing the app now targets (`Drawer.loadFromStorage`: counter of loads)
-- [ ] png / pdf export and copy right after loading or adding images draw them blank: elements not decoded yet (`exportImage`: wait for `decode()` as for fonts)
-- [ ] selection saved or exported with `withDrawing`: shapes of frames and shapes of groups selected alone written in coordinates of their parent (`getDrawingFile(shapes)`: transform to the layer as `Library.add`)
-- [ ] `forceDisabled` of a plugin disables its tool button but the active tool keeps drawing; the end of read only activates it again (`Plugin.forceDisabled`, `Drawer.setReadOnly`)
-- [ ] svg images of Excalidraw and tldraw files imported as empty `Image` shapes (`parseFiles` keeps png / jpeg / webp / gif only): rasterize them (`foreignDrawing.ts`)
-- [ ] async `init` of a plugin keeps running after `drawer.destroy()`: listeners added then are never removed (`PluginCollection._init`)
-- [ ] undo / redo in a session can drop the redo stack: `updateBoundTexts` runs after `History._apply` recorded the drawing
+- [x] `destroy()` during a save of `storage` saves an empty drawing over the stored one (save loop runs again after `stage.destroy()`); async work ending after destroy (link decoding, `loadFromStorage`, `addImage`) saves or starts a collaboration on the destroyed drawer (`Drawer.ts`)
+- [x] unsupported language makes every `t()` throw, the drawer is not created: `language: 'en-US'`, `<free-drawing language="fr-FR">`, account preference `'it'` accepted by the server, saved `"constructor"` passing `value in languages` (`I18n.t`, `Drawer.setLanguage`, `_readPreferences`)
+- [x] duplicate shape ids accepted (files, links, `addShape(node.clone())`): undo destroys the wrong shape, changes of collaboration lost; ids over 200 characters or a background over 100 make the server drop the whole CHANGE (`addShape`, `parseDrawingFile`)
+- [x] concurrent `loadFromStorage`: an outdated slower load wins and is auto saved into the drawing the app now targets (`Drawer.loadFromStorage`: counter of loads)
+- [x] png / pdf export and copy right after loading or adding images draw them blank: elements not decoded yet (`exportImage`: wait for `decode()` as for fonts)
+- [x] selection saved or exported with `withDrawing`: shapes of frames and shapes of groups selected alone written in coordinates of their parent (`getDrawingFile(shapes)`: transform to the layer as `Library.add`)
+- [x] `forceDisabled` of a plugin disables its tool button but the active tool keeps drawing; the end of read only activates it again (`Plugin.forceDisabled`, `Drawer.setReadOnly`)
+- [x] svg images of Excalidraw and tldraw files imported as empty `Image` shapes (`parseFiles` keeps png / jpeg / webp / gif only): rasterize them (`foreignDrawing.ts`)
+- [x] async `init` of a plugin keeps running after `drawer.destroy()`: listeners added then are never removed (`PluginCollection._init`)
+- [x] undo / redo in a session can drop the redo stack: `updateBoundTexts` runs after `History._apply` recorded the drawing
 
 ### Tools and interaction
 
