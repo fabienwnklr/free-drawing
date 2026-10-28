@@ -1347,10 +1347,12 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
     $container.addEventListener('focus', () => $container.classList.toggle(className, navigationKey));
     $container.addEventListener('blur', () => $container.classList.remove(className));
     $container.addEventListener('pointerdown', () => $container.classList.remove(className));
-    // konva prevents default of mouse down on canvas (no focus change): focus taken from the page (app bar...),
-    // so shortcuts (Ctrl + A...) go to drawer
+    // konva prevents default of mouse down on canvas (no focus change): focus taken from the page (app bar...) and from
+    // a button of the drawer (color, zoom...), so shortcuts (Ctrl + A, arrows moving the selection...) go to drawer
     this.$stageContainer.addEventListener('pointerdown', () => {
-      if (!$container.contains(document.activeElement)) this.focus({ preventScroll: true });
+      const focused = document.activeElement;
+
+      if (!$container.contains(focused) || focused instanceof HTMLButtonElement) this.focus({ preventScroll: true });
     });
   }
 

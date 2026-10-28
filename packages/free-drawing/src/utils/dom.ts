@@ -1,16 +1,38 @@
 import type { Drawer } from '@/Drawer';
 
 /**
- * Disable an element: `aria-disabled` and `disabled` class, `disabled` property of buttons
+ * Disable an element: `aria-disabled` and `disabled` class, `disabled` property of buttons. Focused (by its own
+ * action: undo at the end of history, next slide at the last one...), the focus stays in the drawer: the browser would
+ * give it to the page (not in a modal dialog: it keeps its focus)
  * @param $el button, menu item or other element to disable
  */
 export function disableElement($el: HTMLElement) {
+  const focused = $el.contains(document.activeElement);
+
   $el.setAttribute('aria-disabled', 'true');
   $el.classList.add('disabled');
 
   if ($el instanceof HTMLButtonElement) {
     $el.disabled = true;
   }
+  if (focused && !$el.closest('[aria-modal="true"]')) {
+    $el.closest<HTMLElement>('.drawer-container')?.focus({ preventScroll: true });
+  }
+}
+
+/**
+ * Element the focus can't stay on: removed, hidden (also by a parent, or by zen mode) or disabled
+ * @param $el Element focused before a change (button hidden by its own action...)
+ * @returns true when the focus has to go elsewhere
+ */
+export function isUnreachable($el: Element): boolean {
+  return (
+    !$el.isConnected ||
+    !!$el.closest('[hidden]') ||
+    ($el instanceof HTMLButtonElement && $el.disabled) ||
+    // zen mode
+    (!!$el.closest('.drawer-zen-hidden') && !!$el.closest('.is-zen'))
+  );
 }
 
 /**

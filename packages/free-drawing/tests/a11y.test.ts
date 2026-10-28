@@ -501,3 +501,147 @@ describe('Accessibility', () => {
     expect(document.activeElement).toBe(drawer.$drawerContainer);
   });
 });
+
+describe('Focus and keys of the interface', () => {
+  document.body.innerHTML = `<div id="test"></div>`;
+
+  /** Drawer with a text selected */
+  const withText = (options = {}) => {
+    const drawer = createDrawer({ language: 'en', ...options });
+    const text = drawer.getWidget<TextWidget>('text')!.addTextNode('hello');
+
+    drawer.stage.fire('change');
+    drawer.getWidget<SelectWidget>('selection')!.select([text]);
+    return { drawer, text };
+  };
+
+  it('Arrows on a button out of a list do not move shapes; a press on the canvas gives the focus to the drawer', () => {
+    const { drawer, text } = withText();
+    const x = text.x();
+    // undo: a button out of the toolbar and menus
+    const { $btnUndo } = drawer.undoRedo;
+
+    $btnUndo.focus();
+    key($btnUndo, 'ArrowRight');
+    expect(text.x()).toBe(x);
+    drawer.$stageContainer.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+    expect(document.activeElement).toBe(drawer.$drawerContainer);
+    key(drawer.$drawerContainer, 'ArrowRight');
+    expect(text.x()).toBeGreaterThan(x);
+  });
+
+  it('Rows of the layers panel not reordered in read only; panel hidden with the focus in it: focus on its button', () => {
+    const { drawer, text } = withText();
+    const other = drawer.getWidget<TextWidget>('text')!.addTextNode('other');
+    const panel = drawer.layersPanel!;
+
+    drawer.stage.fire('change');
+    panel.toggle(true);
+    drawer.setReadOnly(true);
+    const $row = panel.$list.querySelector<HTMLElement>('.drawer-layers-name')!;
+
+    $row.focus();
+    key($row, 'ArrowDown', { altKey: true });
+    expect(drawer.getDrawingShapes()).toEqual([text, other]);
+    drawer.setReadOnly(false);
+
+    panel.$list.querySelector<HTMLElement>('.drawer-layers-name')!.focus();
+    panel.toggle(false);
+    expect(document.activeElement).toBe(panel.$button);
+    // zen mode hiding it: on the drawer
+    panel.toggle(true);
+    panel.$list.querySelector<HTMLElement>('.drawer-layers-name')!.focus();
+    drawer.layout.setZen(true);
+    expect(document.activeElement).toBe(drawer.$drawerContainer);
+    drawer.layout.setZen(false);
+  });
+
+  it('Buttons hidden or disabled by their own action keep the focus in the drawer', () => {
+    const { drawer } = withText();
+    const { $btnUndo } = drawer.undoRedo;
+    const menu = drawer.selectionMenu!;
+
+    // undo at the end of history
+    $btnUndo.focus();
+    $btnUndo.click();
+    expect($btnUndo.disabled).toBe(true);
+    expect(document.activeElement).toBe(drawer.$drawerContainer);
+
+    // lock: unlock focused
+    const text = drawer.getWidget<TextWidget>('text')!.addTextNode('locked');
+
+    drawer.stage.fire('change');
+    drawer.getWidget<SelectWidget>('selection')!.select([text]);
+    menu.update();
+    menu.$lockBtn.focus();
+    menu.$lockBtn.click();
+    menu.update();
+    expect(document.activeElement).toBe(menu.$unlockBtn);
+  });
+
+  it('Escape ending a composition (input method) does not close a dialog', () => {
+    const drawer = createDrawer();
+
+    drawer.showPreferences();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', isComposing: true }));
+    expect(drawer.preferencesModal!.isVisible()).toBe(true);
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(drawer.preferencesModal!.isVisible()).toBe(false);
+  });
+
+  it('Read only without pan tool: the toolbar still reached with Tab; help without the panels not shown', () => {
+    const drawer = createDrawer({ widgets: ['selection', 'brush'], layersPanel: false, language: 'en' });
+    const buttons = (drawer.toolbar as unknown as { _getButtons(): HTMLButtonElement[] })._getButtons();
+
+    drawer.setReadOnly(true);
+    expect(buttons.filter(($btn) => $btn.tabIndex === 0).map(($btn) => $btn.disabled)).toEqual([false]);
+    drawer.setReadOnly(false);
+    expect(buttons.find(($btn) => $btn.tabIndex === 0)).toBe(drawer.toolbar.getButton(drawer.activeWidget));
+
+    drawer.help.show();
+    expect(drawer.help.$modalBody.textContent).not.toContain('Alt+L');
+    drawer.help.hide();
+  });
+
+  it('Search and command palette finding nothing: read once', () => {
+    const drawer = createDrawer({ language: 'en' });
+    const announce = vi.spyOn(drawer, '_announce');
+    const type = ($input: HTMLInputElement, value: string) => {
+      $input.value = value;
+      $input.dispatchEvent(new Event('input'));
+    };
+
+    drawer.search.show();
+    type(drawer.search.$input, 'nothing');
+    type(drawer.search.$input, 'nothing here');
+    expect(announce.mock.calls.filter(([message]) => message === 'No results')).toHaveLength(1);
+    drawer.search.hide();
+
+    drawer.showCommandPalette();
+    type(drawer.commandPalette!.$input, 'zzzz');
+    type(drawer.commandPalette!.$input, 'zzzzz');
+    expect(announce.mock.calls.filter(([message]) => message === 'No command found')).toHaveLength(1);
+    drawer.commandPalette!.hide();
+  });
+
+  it('Link of a shape opened with the keyboard in read only: Enter on the shape reached, command palette', () => {
+    const drawer = createDrawer({ language: 'en' });
+    const text = drawer.getWidget<TextWidget>('text')!.addTextNode('site');
+    const open = vi.spyOn(window, 'open').mockImplementation(() => null);
+
+    drawer.setShapeLink('example.com', [text]);
+    drawer.stage.fire('change');
+    drawer.setReadOnly(true);
+    drawer.focus();
+    // first shape, then its link
+    key(drawer.$drawerContainer, 'Enter');
+    expect(drawer.navigation.current).toBe(text);
+    key(drawer.$drawerContainer, 'Enter');
+    expect(open).toHaveBeenCalledWith('https://example.com/', '_blank', 'noopener,noreferrer');
+
+    drawer.showCommandPalette();
+    expect(drawer.commandPalette!.commands.map(({ id }) => id)).toContain('open link url web page');
+    drawer.commandPalette!.hide();
+    open.mockRestore();
+  });
+});

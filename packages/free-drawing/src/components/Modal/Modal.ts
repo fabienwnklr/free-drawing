@@ -4,7 +4,7 @@ import { stringToNode } from '@/utils/functions';
 import type { Drawer } from '@/Drawer';
 import type { ModalOptions } from '@/@types/ui';
 import CloseIcon from '@/icons/close.svg?raw';
-import { hasFocusOutside, uniqueId } from '@/utils/dom';
+import { hasFocusOutside, isComposing, uniqueId } from '@/utils/dom';
 import { createLiveRegion } from '@/utils/liveRegion';
 
 const focusableSelector =
@@ -135,7 +135,8 @@ export class Modal {
 
   #onDocumentKeydown = (event: KeyboardEvent) => {
     if (this.#removedFromPage()) return;
-    if (event.key === 'Escape' && this.options.closeOnEsc) {
+    // Escape ending a composition (Chinese, Japanese, Korean...) of a field: the text still typed
+    if (event.key === 'Escape' && this.options.closeOnEsc && !isComposing(event)) {
       event.stopPropagation();
       this.hide();
     } else if (event.key === 'Tab') {

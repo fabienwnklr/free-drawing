@@ -288,7 +288,8 @@ export class ShapeNavigation {
     const textWidget = this.drawer.getWidget<TextWidget>('text');
 
     if (!selectWidget || !textWidget || !current.isListening() || !(current instanceof Text || isContainer(current))) {
-      return false;
+      // read only, nothing to edit: its link opened
+      return this.drawer.openShapeLink(current);
     }
 
     // a text of a shape left empty is removed (and the selection with it): the shape selected again

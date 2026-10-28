@@ -101,12 +101,14 @@ export class Help extends Modal {
     const view: Shortcut[] = [
       { label: t('menu.zenMode'), keys: ['Alt+Z'] },
       { label: t('help.grid'), keys: ['Alt+G'] },
-      { label: t('help.layers'), keys: ['Alt+L'] },
+      // panels of the drawer (`layersPanel`, `library` options)
+      ...(this.drawer.layersPanel
+        ? [
+            { label: t('help.layers'), keys: ['Alt+L'] },
+            { label: t('help.layersSelect'), keys: ['Ctrl+Click', 'Shift+Click', 'Shift+Arrows', 'Ctrl+Space'] },
+          ]
+        : []),
       ...(this.drawer.libraryPanel ? [{ label: t('library.title'), keys: ['Alt+B'] }] : []),
-      {
-        label: t('help.layersSelect'),
-        keys: ['Ctrl+Click', 'Shift+Click', 'Shift+Arrows', 'Ctrl+Space'],
-      },
       { label: t('menu.darkMode'), keys: ['Alt+Shift+D'] },
       { label: t('help.snap'), keys: ['Alt+S'] },
       // mouse wheel zooming or moving the view (preference)

@@ -9,7 +9,7 @@ import LibraryIcon from '@/icons/library.svg?raw';
 import OpenIcon from '@/icons/open.svg?raw';
 import SaveIcon from '@/icons/save.svg?raw';
 import TrashIcon from '@/icons/trash.svg?raw';
-import { arrowNavigation, createButton, setLabel, setPressed, uniqueId } from '@/utils/dom';
+import { arrowNavigation, createButton, isUnreachable, setLabel, setPressed, uniqueId } from '@/utils/dom';
 import { libraryDragType } from '@/utils/library';
 import { ariaShortcut, formatShortcut } from '@/utils/shortcut';
 
@@ -155,9 +155,14 @@ export class LibraryPanel {
    */
   toggle(show: boolean = !this.isVisible()) {
     if (show) this.drawer.layersPanel?.toggle(false);
+    // hidden with the focus in it (Alt + L, Alt + B...): on its button, else on the drawer, not lost in the page
+    const focused = !show && this.$panel.contains(document.activeElement);
+
     this.$panel.classList.toggle('show', show);
     setPressed(this.$button, show);
     this.$button.setAttribute('aria-expanded', String(show));
+    if (focused)
+      (isUnreachable(this.$button) ? this.drawer.$drawerContainer : this.$button).focus({ preventScroll: true });
   }
 
   /**

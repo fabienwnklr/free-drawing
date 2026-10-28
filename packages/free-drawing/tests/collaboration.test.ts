@@ -976,6 +976,10 @@ describe('Collaboration', () => {
     aliceIndicator.$button.click();
     expect(alicePanel.$requests.hidden).toBe(false);
     expect(alicePanel.$requestList.textContent).toBe('BobAcceptRefuse');
+    // in the language chosen since
+    alice.setLanguage('fr');
+    expect(alicePanel.$requestList.textContent).toBe('BobAccepterRefuser');
+    alice.setLanguage('en');
     answer(1);
     expect(bobToast).toHaveBeenLastCalledWith('The owner of the session refused your request to draw', 'warning');
     expect(bob.collaboration!.requested).toBe(false);

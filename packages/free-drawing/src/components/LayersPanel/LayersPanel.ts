@@ -11,6 +11,7 @@ import {
   disableElement,
   enableElement,
   isComposing,
+  isUnreachable,
   setLabel,
   setPressed,
   uniqueId,
@@ -223,9 +224,14 @@ export class LayersPanel {
   toggle(show: boolean = !this.isVisible()) {
     // library panel at the same place
     if (show) this.drawer.libraryPanel?.toggle(false);
+    // hidden with the focus in it (Alt + L, Alt + B...): on its button, else on the drawer, not lost in the page
+    const focused = !show && this.$panel.contains(document.activeElement);
+
     this.$panel.classList.toggle('show', show);
     setPressed(this.$button, show);
     this.$button.setAttribute('aria-expanded', String(show));
+    if (focused)
+      (isUnreachable(this.$button) ? this.drawer.$drawerContainer : this.$button).focus({ preventScroll: true });
     if (show) this.update();
   }
 
@@ -543,7 +549,8 @@ export class LayersPanel {
     } else if ((e.ctrlKey || e.metaKey) && e.key === ' ') {
       this._select(shape, 'toggle');
     } else if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
-      this.moveShape(shape, siblings - 1 - shape.zIndex() + (e.key === 'ArrowUp' ? -1 : 1));
+      // not in read only (as the drag of rows)
+      if (!this.drawer.readOnly) this.moveShape(shape, siblings - 1 - shape.zIndex() + (e.key === 'ArrowUp' ? -1 : 1));
     } else if (e.key === 'ArrowRight' && shape instanceof Group && !expanded) {
       this.setExpanded(shape, true);
     } else if (e.key === 'ArrowLeft' && expanded) {

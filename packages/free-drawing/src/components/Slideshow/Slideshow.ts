@@ -10,7 +10,7 @@ import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { drawerEvents } from '@/constants';
 import ChevronIcon from '@/icons/chevron.svg?raw';
 import CloseIcon from '@/icons/close.svg?raw';
-import { createButton, hasFocusOutside, isComposing, setLabel } from '@/utils/dom';
+import { createButton, disableElement, enableElement, hasFocusOutside, isComposing, setLabel } from '@/utils/dom';
 import { type Frame, isFrame } from '@/utils/frame';
 import { keyLetter } from '@/utils/HotKey';
 import { formatShortcut } from '@/utils/shortcut';
@@ -371,8 +371,9 @@ export class Slideshow {
       : '';
     this.$title.textContent = title;
     this.$title.hidden = !title;
-    this.$previousButton.disabled = this.index <= 0;
-    this.$nextButton.disabled = this.index >= this.slides.length - 1;
+    // focus kept in the drawer at the first and last slides (its keys still go to the slideshow)
+    (this.index <= 0 ? disableElement : enableElement)(this.$previousButton);
+    (this.index >= this.slides.length - 1 ? disableElement : enableElement)(this.$nextButton);
   }
 
   /**

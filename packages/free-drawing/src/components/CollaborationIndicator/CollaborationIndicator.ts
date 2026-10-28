@@ -151,7 +151,11 @@ export class CollaborationIndicator {
         .join(', ')
     );
     // presentation no longer followed (view moved): one click to follow it again
+    const following = document.activeElement === this.$followButton;
+
     this.$followButton.hidden = !collaboration.presentedView || collaboration.following;
+    // hidden by its own click: focus on the reminder of the session
+    if (following && this.$followButton.hidden) this.$button.focus({ preventScroll: true });
     this.$followText.textContent = drawer.t('collab.follow');
     this.$followButton.title = drawer.t('collab.followPresentation', { name: presenter });
     setLabel(this.$stopButton, drawer.t(collaboration.isOwner ? 'collab.stop' : 'collab.leave'));

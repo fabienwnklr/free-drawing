@@ -124,6 +124,14 @@ export class DrawerLayout {
   setZen(zen: boolean) {
     this.zen = zen;
     this.$container.classList.toggle('is-zen', zen);
+    // focus in an element now hidden (panel, button of the header): on the drawer, not lost in the page
+    if (
+      zen &&
+      document.activeElement?.closest('.drawer-zen-hidden') &&
+      this.$container.contains(document.activeElement)
+    ) {
+      this.$container.focus({ preventScroll: true });
+    }
     // footer start hidden: toolbar may fit on one line
     this.updateCompact();
   }

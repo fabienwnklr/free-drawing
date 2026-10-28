@@ -519,7 +519,7 @@ drawer.distributeShapes('horizontal'); // or 'vertical', 3 shapes at least
 drawer.stackShapes('vertical', shapes); // or 'horizontal'
 ```
 
-Links: the link action (panel, context menu, command palette) shows the link of the selection above it, a web page or an email address (`https://` added without protocol, other protocols refused). Enter applies it, Escape cancels, its buttons open or remove it. A shape with a link shows it above itself when selected, and a link icon at its top right corner (at the end of the title of a frame): a click opens the link in a new tab, its address is shown on hover. Links are saved with shapes, shared with collaborators and kept around shapes in svg exports.
+Links: the link action (panel, context menu, command palette) shows the link of the selection above it, a web page or an email address (`https://` added without protocol, other protocols refused). Enter applies it, Escape cancels, its buttons open or remove it. A shape with a link shows it above itself when selected, and a link icon at its top right corner (at the end of the title of a frame): a click opens the link in a new tab, its address is shown on hover. "Open link" of the context menu and of the command palette opens it too, also in read only, as Enter on a shape reached with the keyboard in read only. Links are saved with shapes, shared with collaborators and kept around shapes in svg exports.
 
 ```js
 drawer.setShapeLink('example.com/roadmap'); // selected shapes by default, false for an invalid address

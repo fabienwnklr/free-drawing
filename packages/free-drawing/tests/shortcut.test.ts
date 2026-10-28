@@ -18,10 +18,17 @@ describe('Shortcuts shown', () => {
     const { t } = createDrawer({ language: 'fr' }).i18n;
 
     expect(isApple()).toBe(false);
-    expect(formatShortcut('Ctrl+Shift+Z', t)).toBe('Ctrl+Shift+Z');
-    expect(formatShortcut('Ctrl+Shift+Up', t)).toBe('Ctrl+Shift+↑');
+    expect(formatShortcut('Ctrl+Shift+Z', t)).toBe('Ctrl+Maj+Z');
+    expect(formatShortcut('Ctrl+Shift+Up', t)).toBe('Ctrl+Maj+↑');
     expect(formatShortcut('Ctrl+Delete', t)).toBe('Ctrl+Suppr');
-    expect(formatShortcut('Shift+Click', t)).toBe('Shift+Clic');
+    expect(formatShortcut('Shift+Click', t)).toBe('Maj+Clic');
+    expect(formatShortcut('Escape', t)).toBe('Échap');
+    expect(formatShortcut('Shift+Enter', t)).toBe('Maj+Entrée');
+    // names of the keyboards of the language
+    const de = createDrawer({ language: 'de' }).i18n.t;
+
+    expect(formatShortcut('Ctrl+Shift+Z', de)).toBe('Strg+Umschalt+Z');
+    expect(formatShortcut('Home', de)).toBe('Pos1');
     expect(formatShortcut('Ctrl+,', t)).toBe('Ctrl+,');
     expect(formatShortcut('', t)).toBe('');
     expect(ariaShortcut('Ctrl+Shift+Up')).toBe('Control+Shift+ArrowUp');

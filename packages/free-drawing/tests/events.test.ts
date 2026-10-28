@@ -56,9 +56,10 @@ describe('Test drawer event', () => {
     $range.remove();
   });
 
-  it('Pointer down on canvas focuses drawer when focus is out of it (page, app bar)', () => {
+  it('Pointer down on canvas focuses drawer when focus is out of it (page, app bar) or on one of its buttons', () => {
     const drawer = createDrawer();
     const $outside = document.createElement('button');
+    const $field = document.createElement('input');
     const $tool = drawer.toolbar.getButton(drawer.getWidget<BrushWidget>('brush')!);
 
     document.body.append($outside);
@@ -66,10 +67,17 @@ describe('Test drawer event', () => {
     drawer.$stageContainer.dispatchEvent(new Event('pointerdown'));
     expect(document.activeElement).toBe(drawer.$drawerContainer);
 
-    // already in drawer: kept
+    // button of the drawer: its shortcuts (arrows moving the selection) from the drawing
     $tool.focus();
     drawer.$stageContainer.dispatchEvent(new Event('pointerdown'));
-    expect(document.activeElement).toBe($tool);
+    expect(document.activeElement).toBe(drawer.$drawerContainer);
+
+    // field of the drawer: kept
+    drawer.$drawerContainer.append($field);
+    $field.focus();
+    drawer.$stageContainer.dispatchEvent(new Event('pointerdown'));
+    expect(document.activeElement).toBe($field);
+    $field.remove();
     $outside.remove();
   });
 

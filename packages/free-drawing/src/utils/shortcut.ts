@@ -2,7 +2,16 @@ import type { Translate, TranslationKey } from '@/@types/i18n';
 
 /** Words of shortcuts written in English (`Ctrl+Click`), shown in the language of the drawer */
 const keyNames: Record<string, TranslationKey> = {
+  Ctrl: 'key.ctrl',
+  Shift: 'key.shift',
+  Alt: 'key.alt',
   Delete: 'key.delete',
+  Backspace: 'key.backspace',
+  Escape: 'key.escape',
+  Enter: 'key.enter',
+  Tab: 'key.tab',
+  Home: 'key.home',
+  End: 'key.end',
   Arrows: 'key.arrows',
   Click: 'key.click',
   Space: 'key.space',
@@ -72,7 +81,8 @@ export function formatShortcut(shortcut: string, t: Translate): string {
   const apple = isApple();
   const keyText = (apple && appleKeys[key]) || arrows[key] || (keyNames[key] ? t(keyNames[key]) : key);
 
-  if (!apple) return [...modifiers, keyText].join('+');
+  // names of the keys of the language (Strg, Maj...)
+  if (!apple) return [...modifiers.map((modifier) => t(keyNames[modifier])), keyText].join('+');
 
   const symbols = Object.keys(appleModifiers)
     .filter((modifier) => modifiers.includes(modifier))

@@ -171,14 +171,25 @@ export class Toolbar {
    */
   update() {
     for (const group of this.groups) group.update();
+    // tab stop on a button disabled since (read only): moved to an enabled one
+    const $stop = this._getButtons().find(($btn) => $btn.tabIndex === 0);
+
+    if ($stop?.disabled) this.setTabStop($stop);
   }
 
   /**
    * Only given button of toolbar is reached with Tab (roving tabindex), arrow keys move between them
-   * @param $button Top button (widget or group) getting tabindex 0, others get -1
+   * @param $button Top button (widget or group) getting tabindex 0, others get -1; disabled (active tool in read only),
+   * the first enabled button instead, so the toolbar is still reached
    */
   setTabStop($button: HTMLElement) {
-    for (const $btn of this._getButtons()) $btn.tabIndex = $btn === $button ? 0 : -1;
+    const buttons = this._getButtons();
+    const $stop =
+      $button instanceof HTMLButtonElement && $button.disabled
+        ? buttons.find(($btn) => !$btn.disabled) ?? $button
+        : $button;
+
+    for (const $btn of buttons) $btn.tabIndex = $btn === $stop ? 0 : -1;
     // widgets of groups reached with arrow keys
     for (const group of this.groups) {
       for (const widget of group.widgets) widget.$button.tabIndex = -1;

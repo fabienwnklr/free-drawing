@@ -14,7 +14,7 @@ import RotateRightIcon from '@/icons/rotate-right.svg?raw';
 import FitWidthIcon from '@/icons/fit-width.svg?raw';
 import PresentIcon from '@/icons/present.svg?raw';
 import { Group } from 'konva/lib/Group';
-import { arrowNavigation, createButton, placeInView, setLabel } from '@/utils/dom';
+import { arrowNavigation, createButton, isUnreachable, placeInView, setLabel } from '@/utils/dom';
 import { ariaShortcut, formatShortcut } from '@/utils/shortcut';
 import type { TranslationKey } from '@/@types/i18n';
 import { drawerEvents } from '@/constants';
@@ -186,6 +186,8 @@ export class SelectionMenu {
 
     this.$menu.classList.add('show');
 
+    // button hidden by its own action (lock, group...): focus kept
+    const focused = this.$menu.contains(document.activeElement) ? document.activeElement : null;
     const shapes = this.drawer.getSelectedShapes();
     const locked = !!this.drawer.getWidget<SelectWidget>('selection')?.isLocked();
 
@@ -211,6 +213,19 @@ export class SelectionMenu {
     this.$fitWidthBtn.hidden = locked || !getTexts(shapes).length;
     // one frame, also locked (nothing changed): the slideshow from it
     this.$presentBtn.hidden = !this.drawer.options.slideshow || shapes.length !== 1 || !isFrame(shapes[0]);
+    if (focused && isUnreachable(focused)) {
+      // its counterpart (unlock for lock...), else the drawer
+      const pairs = new Map([
+        [this.$lockBtn, this.$unlockBtn],
+        [this.$unlockBtn, this.$lockBtn],
+        [this.$groupBtn, this.$ungroupBtn],
+        [this.$ungroupBtn, this.$groupBtn],
+      ]);
+      const $next = pairs.get(focused as HTMLButtonElement);
+
+      if ($next && !isUnreachable($next)) $next.focus({ preventScroll: true });
+      else this.drawer.focus({ preventScroll: true });
+    }
 
     const { left, top } = this._getPlace();
 

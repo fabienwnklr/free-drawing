@@ -184,8 +184,12 @@ export class CommandPalette extends Modal {
         return $group;
       })
     );
+    const empty = !this.$empty.hidden;
+
     this.$list.hidden = !this.#shown.length;
     this.$empty.hidden = !this.$list.hidden;
+    // no command found (once, not at each key): read
+    if (!this.#shown.length && !empty) this.drawer._announce(this.$empty.textContent ?? '');
     this.$list.scrollTop = 0;
     this._setActive(0);
   }
@@ -283,6 +287,10 @@ export class CommandPalette extends Modal {
     // shapes aligned, distributed or stacked: texts of shapes follow their shape
     const arranged = withoutBoundTexts(selected).length;
     const editSelection = edit && selected.length > 0;
+    // shape whose link can be opened
+    const linked = [drawer.navigation.current, ...drawer.getSelectedShapes()].find(
+      (shape) => shape && drawer.getShapeLink(shape)
+    );
     const hasShapes = drawer.getDrawingShapes().length > 0;
     const { collaboration } = drawer;
     const { zoom, position, layersPanel, libraryPanel } = drawer;
@@ -381,6 +389,13 @@ export class CommandPalette extends Modal {
               icon: LinkIcon,
               run: () => drawer.linkEditor?.edit(),
             },
+          // shape reached with the keyboard or selected, also in read only
+          linked && {
+            id: 'open link url web page',
+            label: t('link.open'),
+            icon: LinkIcon,
+            run: () => drawer.openShapeLink(linked),
+          },
           edit &&
             drawer.canGroupShapes(selected) && {
               id: 'group',

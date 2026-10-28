@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [8.0.5](https://github.com/fabienwnklr/free-drawing/compare/v8.0.4...v8.0.5) (2026-10-28)
+
+
+### Bug Fixes
+
+* **a11y:** arrow keys on a button of the drawer (swatch, zoom, undo, rows of the layers panel) no longer move the selected shapes, they move it from the drawing; a press on the canvas takes the focus from a button of the drawer
+* **a11y:** the focus stays in the drawer when its button is hidden or disabled by its own action (undo and redo at the end of history, lock and group of the selection menu, group of the layers panel, Follow, previous and next of the slideshow and of the search) and when the layers or library panel is hidden with the focus in it (Alt + L, Alt + B, zen mode)
+* **a11y:** read only without the pan tool: the toolbar is still reached with Tab; Escape ending a composition of an input method no longer closes the dialog; "No results" of the search and "No command found" of the command palette are read
+* **a11y:** links of shapes opened with the keyboard: "Open link" in the context menu and the command palette (also in read only), Enter on a shape reached with the keyboard in read only
+* **layers:** Alt + Up / Down no longer reorders shapes in read only
+* **help:** shortcuts of the layers panel listed only with it
+* **i18n:** names of the keys of shortcuts in the language of the drawer (Strg, Umschalt, Maj, Échap, Entrée, Mayús, Intro...); requests to draw of the collaboration panel translated when the language changes; one form of address in German and Spanish
+
 ## [8.0.4](https://github.com/fabienwnklr/free-drawing/compare/v8.0.3...v8.0.4) (2026-10-28)
 
 

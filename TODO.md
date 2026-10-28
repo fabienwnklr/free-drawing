@@ -56,19 +56,19 @@ Audit of 2026-10-28 (library 8.0.0): items ordered by priority in each section.
 
 ### Interface, accessibility, translations
 
-- [ ] arrow keys on buttons out of `arrowNavigation` lists (swatches of the options panel, settings menu, buttons of layers rows, zoom, undo...) move the selected shapes (`HotKey`: arrows only from the container)
-- [ ] layers panel: Alt + Up / Down reorders shapes in read only (`LayersPanel` keydown, `moveShape`)
-- [ ] slideshow previous / next buttons disabled while focused: focus on the body, keys of the slideshow and Escape lost (`Slideshow.ts`: `aria-disabled`)
-- [ ] buttons hidden or disabled by their own action drop the focus to the page: lock / group of the selection menu, undo / redo at the end of history, group of the layers panel, Follow, search (`disableElement`: focus back to the drawer)
-- [ ] layers or library panel hidden by Alt + L, Alt + B or zen mode with the focus in it: focus lost (`LayersPanel.toggle`, `LibraryPanel`)
-- [ ] Escape ending an IME composition closes the dialog (`Modal` document keydown: `isComposing`)
-- [ ] read only without the `pan` widget: toolbar unreachable with Tab, the disabled active tool keeps the tab stop (`Toolbar` `setTabStop`)
-- [ ] help lists Alt + L and the shortcuts of layers rows without the layers panel (`Help.ts`)
-- [ ] collaboration panel: rows of requests keep the old language after `setLanguage` (`CollaborationPanel.ts`)
-- [ ] key names partly English in fr / es / de (Ctrl, Shift, Escape, Enter, Home: Strg, Maj, Échap, Entrée...) (`formatShortcut`); `navigation.description` says "Maj + Tab" while help says "Shift+Tab"
-- [ ] mixed forms of address: de `slideshow.noFrames` (du), es `library.empty` / `library.hint` (usted)
-- [ ] "no results" of the search bar and the empty command palette not announced (`SearchBar`, `CommandPalette`)
-- [ ] links of shapes can't be opened with the keyboard in read only, no "Open link" item (`shapeLinks.ts`, `LinkEditor`)
+- [x] arrow keys on buttons out of `arrowNavigation` lists (swatches of the options panel, settings menu, buttons of layers rows, zoom, undo...) move the selected shapes (`HotKey`: arrows only from the container)
+- [x] layers panel: Alt + Up / Down reorders shapes in read only (`LayersPanel` keydown, `moveShape`)
+- [x] slideshow previous / next buttons disabled while focused: focus on the body, keys of the slideshow and Escape lost (`Slideshow.ts`: `aria-disabled`)
+- [x] buttons hidden or disabled by their own action drop the focus to the page: lock / group of the selection menu, undo / redo at the end of history, group of the layers panel, Follow, search (`disableElement`: focus back to the drawer)
+- [x] layers or library panel hidden by Alt + L, Alt + B or zen mode with the focus in it: focus lost (`LayersPanel.toggle`, `LibraryPanel`)
+- [x] Escape ending an IME composition closes the dialog (`Modal` document keydown: `isComposing`)
+- [x] read only without the `pan` widget: toolbar unreachable with Tab, the disabled active tool keeps the tab stop (`Toolbar` `setTabStop`)
+- [x] help lists Alt + L and the shortcuts of layers rows without the layers panel (`Help.ts`)
+- [x] collaboration panel: rows of requests keep the old language after `setLanguage` (`CollaborationPanel.ts`)
+- [x] key names partly English in fr / es / de (Ctrl, Shift, Escape, Enter, Home: Strg, Maj, Échap, Entrée...) (`formatShortcut`); `navigation.description` says "Maj + Tab" while help says "Shift+Tab"
+- [x] mixed forms of address: de `slideshow.noFrames` (du), es `library.empty` / `library.hint` (usted)
+- [x] "no results" of the search bar and the empty command palette not announced (`SearchBar`, `CommandPalette`)
+- [x] links of shapes can't be opened with the keyboard in read only, no "Open link" item (`shapeLinks.ts`, `LinkEditor`)
 
 ### Web app, components, generator
 

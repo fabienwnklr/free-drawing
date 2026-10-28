@@ -8,7 +8,7 @@ import { drawerEvents } from '@/constants';
 import ChevronIcon from '@/icons/chevron.svg?raw';
 import CloseIcon from '@/icons/close.svg?raw';
 import SearchIcon from '@/icons/search.svg?raw';
-import { createButton, hasFocusOutside, isComposing, setLabel } from '@/utils/dom';
+import { createButton, disableElement, enableElement, hasFocusOutside, isComposing, setLabel } from '@/utils/dom';
 import { findTexts } from '@/utils/search';
 import { ariaShortcut, formatShortcut } from '@/utils/shortcut';
 
@@ -44,6 +44,8 @@ export class SearchBar {
   index = -1;
   /** Highlights in the selection layer, created again once it is emptied (drawing loaded) */
   #highlights: Group | null = null;
+  /** Nothing searched yet: a first search finding nothing is read */
+  #first = true;
 
   /**
    * Create the hidden bar in the floating region, texts found again when the drawing changes, highlights following it
@@ -173,6 +175,7 @@ export class SearchBar {
    */
   private _search(show: boolean = true) {
     const current = this.results[this.index];
+    const found = this.results.length > 0;
 
     this.results = findTexts(this.drawer.drawLayer, this.$input.value);
     this.index = this.results.length ? Math.max(0, this.results.indexOf(current as Text)) : -1;
@@ -182,6 +185,11 @@ export class SearchBar {
     }
     this._updateCount();
     this._highlight();
+    // search typed finding nothing (once, not at each key): read
+    if (show && (found || this.#first) && !this.results.length && this.$input.value.trim()) {
+      this.drawer._announce(this.$count.textContent ?? '');
+    }
+    this.#first = !this.$input.value.trim();
   }
 
   /**
@@ -209,8 +217,9 @@ export class SearchBar {
       : this.results.length
       ? t('search.count', { current: this.index + 1, total: this.results.length })
       : t('search.none');
-    this.$previousButton.disabled = !this.results.length;
-    this.$nextButton.disabled = !this.results.length;
+    for (const $button of [this.$previousButton, this.$nextButton]) {
+      (this.results.length ? enableElement : disableElement)($button);
+    }
   }
 
   /**

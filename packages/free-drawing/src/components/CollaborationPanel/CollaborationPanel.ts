@@ -211,7 +211,8 @@ export class CollaborationPanel {
   }
 
   /**
-   * Rows of the requests to draw (owner): rows of requests still waiting kept, answered ones removed
+   * Rows of the requests to draw (owner): rows of requests still waiting kept (their texts in the current language),
+   * answered ones removed
    */
   private _updateRequests() {
     const { requests } = this.drawer.collaboration!;
@@ -239,16 +240,22 @@ export class CollaborationPanel {
 
       $row.dataset.member = userId;
       $name.textContent = name;
-      $accept.textContent = t('collab.accept');
-      setLabel($accept, t('collab.acceptLabel', { name }));
       $accept.addEventListener('click', () => answer(true));
-      $refuse.textContent = t('collab.refuse');
-      setLabel($refuse, t('collab.refuseLabel', { name }));
       $refuse.addEventListener('click', () => answer(false));
       $actions.classList.add('drawer-collaboration-actions');
       $actions.append($accept, $refuse);
       $row.append($name, $actions);
       this.$requestList.append($row);
+    }
+    // texts of every row: in the language now
+    for (const $row of Array.from(this.$requestList.children) as HTMLLIElement[]) {
+      const name = requests.find((request) => request.userId === $row.dataset.member)?.name ?? '';
+      const [$accept, $refuse] = Array.from($row.querySelectorAll('button'));
+
+      $accept.textContent = t('collab.accept');
+      setLabel($accept, t('collab.acceptLabel', { name }));
+      $refuse.textContent = t('collab.refuse');
+      setLabel($refuse, t('collab.refuseLabel', { name }));
     }
   }
 

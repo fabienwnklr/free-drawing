@@ -136,6 +136,8 @@ export class HotKey {
       const editable = locked ? [] : selectedNodes;
       // fields keep their keys (arrows of opacity, select all of a text field...)
       const inField = (e.target as HTMLElement).matches('input, select, textarea');
+      // arrows move the selection from the drawing only, not from a button (swatch, zoom, row of the layers panel...)
+      const onDrawing = e.target === this.drawer.$drawerContainer;
       // Ctrl + A selects text of these fields, else text of page (range, checkbox...)
       const inTextField =
         e.target instanceof HTMLTextAreaElement ||
@@ -194,7 +196,7 @@ export class HotKey {
       if (edit && editable.length && order && !inField) {
         this.drawer.reorderShapes(order);
         e.preventDefault();
-      } else if (edit && editable.length && e.key in arrowMoves && !inField) {
+      } else if (edit && editable.length && e.key in arrowMoves && onDrawing) {
         // only arrow keys, other keys keep their default behavior (F5, Tab...)
         if (!arrowMoved) unbindMoved(editable);
         // along the axes of the drawing, also for shapes of groups turned or flipped

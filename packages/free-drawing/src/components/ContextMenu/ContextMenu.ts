@@ -37,6 +37,8 @@ export class ContextMenu {
   #sections: ContextMenuSection[] = [];
   /** Place of right click in drawing: pasted text goes there (pointer is on menu then) */
   #position: Vector2d | null = null;
+  /** Shape with a link under the right click, reached with the keyboard or selected: "Open link" (also in read only) */
+  #linked: DrawingShape | null = null;
 
   /**
    * Create the menu (hidden) in the floating region and listen to right clicks and the context menu key
@@ -147,6 +149,12 @@ export class ContextMenu {
           $item: this._createItem('action.link', ''),
           visible: () => selection() && !!drawer.linkEditor,
           run: () => drawer.linkEditor?.edit(),
+        },
+        {
+          // also in read only: the drawing is not modified
+          $item: this._createItem('link.open', ''),
+          visible: () => !!this.#linked,
+          run: () => this.#linked && drawer.openShapeLink(this.#linked),
         },
         {
           $item: this._createItem('context.lock', 'Ctrl+Shift+L'),
@@ -349,6 +357,7 @@ export class ContextMenu {
       // slides presented: no menu
       if (this.drawer.slideshow.active || this.drawer.replay.active) return;
       this.#position = null;
+      this.#linked = this._linkedShape(null);
       this.show();
 
       const { clientWidth, clientHeight } = this.drawer.$drawerContainer;
@@ -361,12 +370,29 @@ export class ContextMenu {
       if (this.drawer.slideshow.active || this.drawer.replay.active) return;
       this.#position = this.drawer._getRelativePointerPos();
       this._selectAt(e);
+      this.#linked = this._linkedShape(e.target.getLayer() === this.drawer.drawLayer ? e.target : null);
       this.show();
 
       const container = this.drawer.$drawerContainer.getBoundingClientRect();
 
       this._moveTo(e.evt.clientX - container.left, e.evt.clientY - container.top);
     });
+  }
+
+  /**
+   * Shape whose link the menu opens: the shape under the pointer (its group or frame with a link too), else the shape
+   * reached with the keyboard or the first selected one with a link
+   * @param hit Node of the drawing under the right click, null for the keyboard
+   * @returns Shape with a link, null without one
+   */
+  private _linkedShape(hit: Node | null): DrawingShape | null {
+    const { drawer } = this;
+    const candidates: Node[] = [];
+
+    for (let node: Node | null = hit; node && node !== drawer.drawLayer; node = node.getParent()) candidates.push(node);
+    candidates.push(...(drawer.navigation.current ? [drawer.navigation.current] : []), ...drawer.getSelectedShapes());
+
+    return (candidates.find((node) => drawer.getShapeLink(node as DrawingShape)) as DrawingShape | undefined) ?? null;
   }
 
   /**

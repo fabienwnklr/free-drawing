@@ -167,6 +167,15 @@ export const en = {
   'key.click': 'Click',
   'key.space': 'Space',
   'key.wheel': 'Wheel',
+  'key.ctrl': 'Ctrl',
+  'key.shift': 'Shift',
+  'key.alt': 'Alt',
+  'key.escape': 'Escape',
+  'key.enter': 'Enter',
+  'key.tab': 'Tab',
+  'key.home': 'Home',
+  'key.end': 'End',
+  'key.backspace': 'Backspace',
 
   // toolbar
   'toolbar.label': 'Tools',
@@ -254,7 +263,7 @@ export const en = {
   'replay.firstLast': 'Start / whole drawing',
   'replay.whileReplaying': 'while replaying',
   'navigation.description':
-    'Enter: first shape. Tab, Shift + Tab: next, previous shape. Enter: shapes of a group or frame, edit a text. Shift + Enter: its group or frame. Escape: leave the shapes.',
+    'Enter: first shape. Tab, Shift + Tab: next, previous shape. Enter: shapes of a group or frame, edit a text (read only: open its link). Shift + Enter: its group or frame. Escape: leave the shapes.',
   'navigation.text': 'text: {text}',
   'navigation.shapes': 'shapes inside: {count}',
   'navigation.from': 'from {name}',
