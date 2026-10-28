@@ -370,6 +370,37 @@ describe('Collaboration', () => {
     expect(b.getWidget<SelectWidget>('selection')!.transformer.nodes()).toEqual([]);
   });
 
+  it('Shapes serialized once per change, for collaboration and history', () => {
+    const connect = createServer();
+    const a = createDrawer();
+    const b = createDrawer();
+
+    connect(a);
+    connect(b);
+    const text = addText(a, 'hello');
+    const toObject = vi.spyOn(text, 'toObject');
+
+    text.x(50);
+    a.stage.fire('change');
+    expect(toObject).toHaveBeenCalledTimes(1);
+    expect(byId(b, text.id())!.x()).toBe(50);
+    expect(a.undoRedo.canUndo()).toBe(true);
+
+    // a selection dragged: shown to others once per move of the pointer, not for each shape
+    const other = addText(a, 'world');
+    const selection = a.getWidget<SelectWidget>('selection')!;
+    const sendLive = vi.spyOn(a.collaboration!, 'sendLive');
+
+    selection.setActive(true);
+    selection.select([text, other]);
+    a.stage.setPointersPositions(new MouseEvent('mousedown', { clientX: 60, clientY: 10 }));
+    text.startDrag();
+    for (const clientX of [70, 80, 90]) window.dispatchEvent(new MouseEvent('mousemove', { clientX, clientY: 10 }));
+    window.dispatchEvent(new MouseEvent('mouseup', { clientX: 90, clientY: 10 }));
+    expect(sendLive).toHaveBeenCalledTimes(3);
+    expect(byId(b, other.id())!.x()).toBe(other.x());
+  });
+
   it('Changes received during a pointer action are applied when it ends', () => {
     const connect = createServer();
     const a = createDrawer();

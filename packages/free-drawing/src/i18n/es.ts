@@ -32,6 +32,7 @@ export const es: Translations = {
   'toast.clipboardUnavailable': 'Portapapeles no disponible: {error}',
   'toast.exportFailed': 'La exportación falló: {error}',
   'toast.imageCopied': 'Imagen copiada',
+  'toast.storageCleared': 'Datos guardados eliminados',
   'toast.imageNotCopied': 'No se pudo copiar la imagen: {error}',
   // detalles de los errores, después del texto de un aviso
   'error.clipboardUnavailable': 'portapapeles no disponible en este navegador o página',
@@ -53,7 +54,8 @@ export const es: Translations = {
   'modal.close': 'Cerrar',
   'confirm.message': '¿Confirmar esta acción?',
   'confirm.clearCanvas': '¿Borrar todo el dibujo?',
-  'confirm.clearStorage': '¿Eliminar todos los datos guardados?',
+  'confirm.clearStorage':
+    '¿Eliminar el dibujo, sus imágenes, la biblioteca y las preferencias guardados en este navegador?',
   'confirm.stopCollaboration': '¿Detener la sesión de colaboración en directo?',
   'confirm.leaveCollaboration': '¿Salir de la sesión de colaboración en directo?',
   'confirm.cancel': 'Cancelar',
@@ -95,6 +97,7 @@ export const es: Translations = {
   'wheel.pan': 'Mover la vista',
   'wheel.command': 'Rueda: {action}',
   'help.spaceDrag': 'mantenida, luego arrastrar',
+  'help.wheelDrag': 'pulsada, luego arrastrar',
   'preferences.save': 'Guardar',
   'preferences.appearance': 'Apariencia',
   'preferences.theme': 'Tema',
@@ -140,6 +143,7 @@ export const es: Translations = {
   'help.selectInGroup': 'Seleccionar una forma de un grupo',
   'help.constrainDrawing': 'Cuadrado, círculo, línea a 45°, trazo recto',
   'help.whileDrawing': 'al dibujar',
+  'help.cancelDrawing': 'Cancelar la forma, el trazo o la selección en curso',
   'help.arrowUnlinked': 'Flecha no vinculada a las formas',
   'help.constrainSelection': 'Mantener proporciones, girar 15°, mover en línea recta',
   'help.whileTransforming': 'al redimensionar, girar, mover',

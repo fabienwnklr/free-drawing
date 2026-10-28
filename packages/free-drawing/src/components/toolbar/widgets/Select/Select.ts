@@ -17,7 +17,7 @@ import { Text } from 'konva/lib/shapes/Text';
 import type { Group } from 'konva/lib/Group';
 import { Arrow } from 'konva/lib/shapes/Arrow';
 import { arrowPointerSize } from '@/components/toolbar/widgets/Arrow/Arrow';
-import type { Vector2d } from 'konva/lib/types';
+import type { IRect, Vector2d } from 'konva/lib/types';
 import {
   getLockedNode,
   getShapes,
@@ -108,6 +108,12 @@ export class SelectWidget extends BaseWidget {
   } | null = null;
   // selected shapes of groups, dragged alone while selected
   #nested: DrawingShape[] = [];
+  /** Guides of the shapes not moved by the drag in progress, found once at its start (a big drawing) */
+  #dragStops: SnapStops | null = null;
+  /** Box of the shapes moved by the drag in progress at its start, moved with each of them */
+  #dragBox: IRect | null = null;
+  /** Absolute positions of the nodes of the drag in progress at its start */
+  #dragStarts = new Map<Node, Vector2d>();
   /** Updates grouped by `batchUpdates`: a shape changed, one change fired at the end; null outside */
   #batch: UpdateBatch | null = null;
   /**
@@ -675,6 +681,17 @@ export class SelectWidget extends BaseWidget {
   private _initSnapEvents() {
     this.snapping = true;
     // namespaced, grid snapping and change saving also listen drag events of draw layer
+    // guides and box of the moved shapes found once per drag, not for each shape moved at each move (big selection)
+    this.drawer.drawLayer.on('dragstart.snap', (e) => {
+      const selected = this._getSelected();
+      const moved: Node[] = selected.includes(e.target as DrawingShape) ? selected : [e.target];
+
+      if (!this.#dragStops) {
+        this.#dragStops = this._getLineGuideStops(moved);
+        this.#dragBox = this._getBox(moved);
+      }
+      this.#dragStarts.set(e.target, e.target.absolutePosition());
+    });
     this.drawer.drawLayer.on('dragmove.snap', (e) => {
       // clear all previous lines on the screen
       this._clearGuides();
@@ -682,10 +699,16 @@ export class SelectWidget extends BaseWidget {
       // find possible snapping lines (not of shapes moved with it)
       const selected = this._getSelected();
       const moved: Node[] = selected.includes(e.target as DrawingShape) ? selected : [e.target];
-      const lineGuideStops = this._getLineGuideStops(moved);
-      // edges and centers of the moved shapes together: the gaps between them are kept (each one is dragged by
-      // konva and fires this event, the box is already snapped for the next ones)
-      const itemBounds = this._getObjectSnappingEdges(moved, e.target);
+      const lineGuideStops = this.#dragStops ?? this._getLineGuideStops(moved);
+      // edges and centers of the moved shapes together, moved by the same distance as this one: the gaps between them
+      // are kept (each one is dragged by konva and fires this event, the box is already snapped for the next ones)
+      const start = this.#dragStarts.get(e.target);
+      const position = e.target.absolutePosition();
+      const box =
+        this.#dragBox && start
+          ? { ...this.#dragBox, x: this.#dragBox.x + position.x - start.x, y: this.#dragBox.y + position.y - start.y }
+          : this._getBox(moved);
+      const itemBounds = this._getObjectSnappingEdges(box, e.target);
 
       // now find where can we snap current object
       const guides = this._getGuides(lineGuideStops, itemBounds);
@@ -712,7 +735,33 @@ export class SelectWidget extends BaseWidget {
       }
     });
 
-    this.drawer.drawLayer.on('dragend.snap', () => this._clearGuides());
+    this.drawer.drawLayer.on('dragend.snap', (e) => {
+      this._clearGuides();
+      this.#dragStarts.delete(e.target);
+      // last node of the drag ended: guides found again for the next one
+      if (!this.#dragStarts.size) {
+        this.#dragStops = null;
+        this.#dragBox = null;
+      }
+    });
+  }
+
+  /**
+   * Box of nodes together (absolute)
+   * @param nodes Nodes moved together (selection), or the node dragged alone
+   * @returns Box around their boxes
+   */
+  private _getBox(nodes: Node[]): IRect {
+    const boxes = nodes.map((moved) => moved.getClientRect());
+    const left = Math.min(...boxes.map(({ x }) => x));
+    const top = Math.min(...boxes.map(({ y }) => y));
+
+    return {
+      x: left,
+      y: top,
+      width: Math.max(...boxes.map(({ x, width }) => x + width)) - left,
+      height: Math.max(...boxes.map(({ y, height }) => y + height)) - top,
+    };
   }
 
   /**
@@ -803,20 +852,11 @@ export class SelectWidget extends BaseWidget {
 
   /**
    * Points of dragged nodes which snap to guides: edges and center of their box on each axis (absolute)
-   * @param nodes Nodes moved together (selection), or the node dragged alone
+   * @param box Box of the nodes moved together (selection), or of the node dragged alone (see `_getBox`)
    * @param node Node being dragged, whose position gives the offsets
    * @returns Points of the box on each axis, with the offset to the position of the node
    */
-  private _getObjectSnappingEdges(nodes: Node[], node: Node) {
-    const boxes = nodes.map((moved) => moved.getClientRect());
-    const left = Math.min(...boxes.map(({ x }) => x));
-    const top = Math.min(...boxes.map(({ y }) => y));
-    const box = {
-      x: left,
-      y: top,
-      width: Math.max(...boxes.map(({ x, width }) => x + width)) - left,
-      height: Math.max(...boxes.map(({ y, height }) => y + height)) - top,
-    };
+  private _getObjectSnappingEdges(box: IRect, node: Node) {
     const absPos = node.absolutePosition();
 
     return {

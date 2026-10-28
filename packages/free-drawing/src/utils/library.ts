@@ -100,6 +100,16 @@ export class Library {
   constructor(drawer: Drawer) {
     this.drawer = drawer;
     this.#items = this._read();
+    // changed by another tab: read again (not written back), so this tab does not replace its items
+    window.addEventListener(
+      'storage',
+      (e) => {
+        if (e.storageArea !== localStorage || e.key !== this._key()) return;
+        this.#items = this._read();
+        drawer.trigger(drawerEvents.libraryChange, this.#items);
+      },
+      { signal: drawer.signal }
+    );
   }
 
   /**
@@ -339,6 +349,16 @@ export class Library {
         );
       }
     }
+  }
+
+  /**
+   * Items forgotten with the library removed from the browser (`Drawer.clearStoredData`): nothing written,
+   * `library.change` event
+   */
+  _forget() {
+    this.#items = [];
+    this.#previews.clear();
+    this.drawer.trigger(drawerEvents.libraryChange, this.#items);
   }
 
   /**

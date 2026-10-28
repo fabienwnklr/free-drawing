@@ -34,7 +34,10 @@ export class App {
   readonly $bar: HTMLElement;
   readonly $main: HTMLElement;
   readonly $name: HTMLInputElement;
+  /** Save state shown (saving, saved, error, unsaved), not read at each save */
   readonly $saveState: HTMLElement;
+  /** Live region of the bar: changes not saved read once (errors of saves are read with the toast of the drawer) */
+  readonly $status: HTMLElement;
   /** Auto save on / off (preference of drawer) */
   readonly $autoSaveButton: HTMLButtonElement;
   /** Saves the drawing while auto save is off */
@@ -55,7 +58,8 @@ export class App {
       <header class="app-bar">
         <span class="app-logo"><img src="${logoUrl}" alt="" width="22" height="22" /><span class="app-logo-text">free-drawing</span></span>
         <input class="app-name" maxlength="100" hidden />
-        <span class="app-save-state text-muted" aria-live="polite"></span>
+        <span class="app-save-state text-muted"></span>
+        <span class="app-status" role="status"></span>
         <button type="button" class="app-toggle" role="switch" data-autosave>
           <span class="app-toggle-track" aria-hidden="true"></span><span data-label></span>
         </button>
@@ -70,6 +74,7 @@ export class App {
     this.$main = $root.querySelector('.app-main')!;
     this.$name = $root.querySelector('.app-name')!;
     this.$saveState = $root.querySelector('.app-save-state')!;
+    this.$status = $root.querySelector('.app-status')!;
     this.$autoSaveButton = $root.querySelector('[data-autosave]')!;
     this.$saveButton = $root.querySelector('[data-save]')!;
     this.$drawingsButton = $root.querySelector('[data-drawings]')!;
@@ -407,6 +412,10 @@ export class App {
     if (document.activeElement !== this.$name) this.$name.value = this.drawing?.name ?? '';
     this.$saveState.textContent = saveTexts[this.#saveState];
     this.$saveState.classList.toggle('is-error', this.#saveState === 'error');
+    // same text not written again (read again by screen readers at each render)
+    const status = this.#saveState === 'unsaved' ? t('unsaved') : '';
+
+    if (this.$status.textContent !== status) this.$status.textContent = status;
     this.$autoSaveButton.setAttribute('aria-checked', String(this.drawer.options.autoSave));
     this.$autoSaveButton.querySelector('[data-label]')!.textContent = t('autoSave');
     this.$autoSaveButton.title = t('autoSaveHint');

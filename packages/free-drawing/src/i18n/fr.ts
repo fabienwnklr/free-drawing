@@ -34,6 +34,7 @@ export const fr: Translations = {
   'toast.clipboardUnavailable': 'Presse-papiers indisponible : {error}',
   'toast.exportFailed': "L'export a échoué : {error}",
   'toast.imageCopied': 'Image copiée',
+  'toast.storageCleared': 'Données enregistrées supprimées',
   'toast.imageNotCopied': "L'image n'a pas pu être copiée : {error}",
   // détails des erreurs, après le texte d'un toast
   'error.clipboardUnavailable': 'presse-papiers non disponible dans ce navigateur ou cette page',
@@ -55,7 +56,8 @@ export const fr: Translations = {
   'modal.close': 'Fermer',
   'confirm.message': 'Confirmer cette action ?',
   'confirm.clearCanvas': 'Effacer tout le dessin ?',
-  'confirm.clearStorage': 'Supprimer toutes les données enregistrées ?',
+  'confirm.clearStorage':
+    'Supprimer le dessin, ses images, la bibliothèque et les préférences enregistrés dans ce navigateur ?',
   'confirm.stopCollaboration': 'Arrêter la session de collaboration en direct ?',
   'confirm.leaveCollaboration': 'Quitter la session de collaboration en direct ?',
   'confirm.cancel': 'Annuler',
@@ -97,6 +99,7 @@ export const fr: Translations = {
   'wheel.pan': 'Déplacer la vue',
   'wheel.command': 'Molette : {action}',
   'help.spaceDrag': 'maintenue, puis faire glisser',
+  'help.wheelDrag': 'enfoncée, puis faire glisser',
   'preferences.save': 'Enregistrer',
   'preferences.appearance': 'Apparence',
   'preferences.theme': 'Thème',
@@ -142,6 +145,7 @@ export const fr: Translations = {
   'help.selectInGroup': "Sélectionner une forme d'un groupe",
   'help.constrainDrawing': 'Carré, cercle, ligne à 45°, trait droit',
   'help.whileDrawing': 'en dessinant',
+  'help.cancelDrawing': 'Annuler la forme, le trait ou la sélection en cours',
   'help.arrowUnlinked': 'Flèche non liée aux formes',
   'help.constrainSelection': 'Garder les proportions, tourner de 15°, déplacer en ligne droite',
   'help.whileTransforming': 'en redimensionnant, tournant, déplaçant',

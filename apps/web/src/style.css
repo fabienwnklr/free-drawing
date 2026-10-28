@@ -102,6 +102,16 @@ body {
   color: var(--app-danger);
 }
 
+/* live region of the bar: read, not shown */
+.app-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 /* on / off switch: track with knob, then label */
 .app-toggle {
   display: flex;

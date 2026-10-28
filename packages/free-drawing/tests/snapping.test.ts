@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Rect } from 'konva/lib/shapes/Rect';
+import { Arrow } from 'konva/lib/shapes/Arrow';
 import type { Vector2d } from 'konva/lib/types';
 import type { Drawer } from '@/Drawer';
 import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
@@ -166,6 +167,34 @@ describe('Snapping while moving', () => {
     drawer.undoRedo.undo();
     drawer.undoRedo.undo();
     expect([a, b, c].map((shape) => drawer.stage.findOne(`#${shape.id()}`)!.x())).toEqual([100, 150, 600]);
+  });
+
+  it('Big selection dragged: guides found once per drag, frames and links followed once per move', () => {
+    const { drawer, selectWidget, a, b } = createRects();
+    const c = drawer.addShape(new Rect({ name: shapeName.rect, x: 600, y: 100, width: 50, height: 50 }));
+    const stops = vi.spyOn(selectWidget as unknown as Record<string, () => unknown>, '_getLineGuideStops');
+    const moves = vi.spyOn(drawer as unknown as Record<string, () => void>, '_updateMove');
+    const arrow = drawer.addShape(
+      new Arrow({ name: shapeName.arrow, points: [625, 0, 625, 100], endBinding: c.id(), endAnchor: 'top' })
+    ) as Arrow;
+
+    selectWidget.setActive(true);
+    selectWidget.toggleSnapping(true);
+    selectWidget.select([a, b, c]);
+    // links followed from the first move (the transformer starts the drag of the other shapes there)
+    drawer.stage.setPointersPositions(new MouseEvent('mousedown', { clientX: 200, clientY: 100 }));
+    a.startDrag();
+    window.dispatchEvent(new MouseEvent('mousemove', { clientX: 225, clientY: 100 }));
+    expect([c.x(), arrow.points()[2]]).toEqual([625, 650]);
+    // two moves of the pointer, three shapes moved by konva
+    window.dispatchEvent(new MouseEvent('mousemove', { clientX: 250, clientY: 100 }));
+    window.dispatchEvent(new MouseEvent('mouseup', { clientX: 250, clientY: 100 }));
+    expect([a.x(), b.x(), c.x(), arrow.points()[2]]).toEqual([150, 200, 650, 675]);
+    expect(stops).toHaveBeenCalledTimes(1);
+    expect(moves).toHaveBeenCalledTimes(2);
+    // found again for the next drag
+    dragBy(drawer, a, { x: 250, y: 100 }, 20);
+    expect(stops).toHaveBeenCalledTimes(2);
   });
 
   it('Shapes moved together on the grid: the one dragged by the pointer snapped, the others follow it', () => {

@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [8.1.0](https://github.com/fabienwnklr/free-drawing/compare/v8.0.6...v8.1.0) (2026-10-29)
+
+
+### Features
+
+* **tools:** Escape cancels the shape, stroke, erasing or selection rectangle being drawn (pointer still pressed): nothing kept, the tool stays active (shown in help)
+* **view:** a drag with the middle button moves the view whatever the tool, without the autoscroll of the browser (tools ignore the middle button; shown in help)
+* **persistence:** tabs of the same drawing (same `localStorageKey`, without `storage` option) follow each other: a drawing saved by a tab is shown in the others (not over changes they have not saved yet, nor during a collaboration session; not undone there), with its images and the library, so a tab no longer saves an older drawing or library over the other one
+* **persistence:** "Clear stored data" removes what the drawer keeps in the browser (drawing, images, tool, library, preferences, drawings known by collaboration rooms; identity in collaboration sessions kept), empties the drawing shown (unless read only or during a collaboration session) and confirms it with a message; not offered with the `storage` option
+
+
+### Performance Improvements
+
+* **selection:** dragging a big selection finds the snapping guides once per drag and updates links, texts of shapes, frames and the live view of collaborators once per move of the pointer, not once per selected shape (links now follow from the first move)
+* **history:** each change serializes the drawing once for the history and the collaboration
+* **images:** files of images no longer used by the drawing nor by its history are forgotten when another drawing is opened (`loadDrawing`, `loadFromStorage`)
+
+
+### Bug Fixes
+
+* **search:** results follow the reading order (rows, as keyboard navigation and slides), not the exact top of each text
+
 ## [8.0.6](https://github.com/fabienwnklr/free-drawing/compare/v8.0.5...v8.0.6) (2026-10-28)
 
 

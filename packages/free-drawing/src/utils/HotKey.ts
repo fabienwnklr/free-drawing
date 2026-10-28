@@ -123,6 +123,12 @@ export class HotKey {
         this.drawer.replay.handleKey(e);
         return;
       }
+      // Escape: shape, stroke, erasing or selection rectangle of the pointer action cancelled (nothing kept)
+      if (e.key === 'Escape' && this.drawer.activeWidget?.inAction) {
+        e.preventDefault();
+        this.drawer.activeWidget.cancelAction();
+        return;
+      }
       if (this.drawer._duringAction()) return;
 
       // Ctrl on Windows / Linux, Cmd on Mac

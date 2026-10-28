@@ -82,15 +82,15 @@ Audit of 2026-10-28 (library 8.0.0): items ordered by priority in each section.
 
 ## Improvements
 
-- [ ] Escape cancels the pointer action (shape, stroke, eraser, selection rectangle) (`HotKey` returns during actions; `cancelAction` exists)
-- [ ] drag with the middle button moves the view whatever the tool (draws now) (`ShapeWidget`, `FreehandWidget`, `Laser`, `Select`)
-- [ ] dragging a big selection: handlers of the whole drawing (bindings, texts of shapes, snapping, frames, live send) run once per selected node at each move, O(N²) (`Drawer._initEvents`, `SelectWidget` snap)
-- [ ] each change serializes the whole drawing 3 to 4 times (history, collaboration, save), frames and groups as a whole: one map of states per change (`Drawer`, `History`, `Collaboration`)
-- [ ] two tabs overwrite each other's drawing and library in localStorage: follow `storage` events (`Drawer.save`, `library.ts`)
-- [ ] `drawer.files` and decoded images never pruned: memory grows with each drawing opened or received
-- [ ] search goes through results by exact y then x: `inReadingOrder` as navigation and slides (`utils/search.ts`)
-- [ ] "Clear stored data" removes the drawing key only (files, library, preferences kept), no toast, drawing saved again at the next change, shown with `storage` (`Drawer.clearStoredData`)
-- [ ] save state of the app bar announced ("Saving…", "Saved") at each change: announce errors and unsaved changes only (web `App.ts`)
+- [x] Escape cancels the pointer action (shape, stroke, eraser, selection rectangle) (`HotKey` returns during actions; `cancelAction` exists)
+- [x] drag with the middle button moves the view whatever the tool (draws now) (`ShapeWidget`, `FreehandWidget`, `Laser`, `Select`)
+- [x] dragging a big selection: handlers of the whole drawing (bindings, texts of shapes, snapping, frames, live send) run once per selected node at each move, O(N²) (`Drawer._initEvents`, `SelectWidget` snap)
+- [x] each change serializes the whole drawing 3 to 4 times (history, collaboration, save), frames and groups as a whole: one map of states per change (`Drawer`, `History`, `Collaboration`)
+- [x] two tabs overwrite each other's drawing and library in localStorage: follow `storage` events (`Drawer.save`, `library.ts`)
+- [x] `drawer.files` and decoded images never pruned: memory grows with each drawing opened or received
+- [x] search goes through results by exact y then x: `inReadingOrder` as navigation and slides (`utils/search.ts`)
+- [x] "Clear stored data" removes the drawing key only (files, library, preferences kept), no toast, drawing saved again at the next change, shown with `storage` (`Drawer.clearStoredData`)
+- [x] save state of the app bar announced ("Saving…", "Saved") at each change: announce errors and unsaved changes only (web `App.ts`)
 
 ## Docs and tooling
 

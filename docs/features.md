@@ -62,7 +62,7 @@ More in [Layers](/get-started/#layers), [Slideshow](/get-started/#slideshow), [R
 
 - **Context menu**: a right click shows the actions of the selection or of the drawing, each with its shortcut.
 - **Command palette** (Ctrl / Cmd + K): search any tool or command by its name, in the current language.
-- **View**: the mouse wheel zooms around the pointer (Ctrl + wheel moves the view; or the other way round, a preference for trackpads), Space held moves the view with any tool; zoom to fit the whole drawing (Shift + 1), to the selection (Shift + 2) or back to 100 % (Shift + 0), from the context menu and the command palette too: see [mouse wheel and Space](/get-started/#mouse-wheel-and-space).
+- **View**: the mouse wheel zooms around the pointer (Ctrl + wheel moves the view; or the other way round, a preference for trackpads), Space held or the middle button moves the view with any tool; zoom to fit the whole drawing (Shift + 1), to the selection (Shift + 2) or back to 100 % (Shift + 0), from the context menu and the command palette too: see [mouse wheel and Space](/get-started/#mouse-wheel-and-space).
 - **Help** lists every shortcut, **preferences** (Ctrl + ,) keep the theme, language, grid, snapping, zen mode and auto save.
 - **Clipboard**: paste a text (Ctrl + V), copy the selection as a PNG or SVG image.
 

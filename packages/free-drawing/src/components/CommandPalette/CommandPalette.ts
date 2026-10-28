@@ -752,7 +752,8 @@ export class CommandPalette extends Modal {
               icon: UsersIcon,
               run: () => collaboration.requestEdit(),
             },
-          {
+          // drawing of an app (`storage` option): the app keeps it
+          !drawer.options.storage && {
             id: 'clear storage',
             label: t('menu.clearStorage'),
             icon: StoreIcon,

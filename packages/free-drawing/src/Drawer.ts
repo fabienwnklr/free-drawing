@@ -94,7 +94,7 @@ import {
   readImage,
   setupImages,
 } from '@/utils/image';
-import { getShapeState, getStateInDrawing } from '@/components/tools/UndoRedo/History';
+import { getShapeState, getStateInDrawing, serializeShape } from '@/components/tools/UndoRedo/History';
 import { canvasToBlob, createPdf, getExportBox, renderCanvas, renderSvg } from '@/utils/export';
 import { toHexColor } from '@/utils/color';
 import { ExportModal } from '@/components/ExportModal/ExportModal';
@@ -130,7 +130,7 @@ import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 
 import { Settings } from '@/components/tools/Settings/Settings';
-import { Node } from 'konva/lib/Node';
+import { Node, type KonvaEventObject } from 'konva/lib/Node';
 import MicroEvent from '@/utils/MicroEvent';
 import { ConfirmModal } from '@/components/Modal/ConfirmModal';
 import { UndoRedo } from '@/components/tools/UndoRedo/UndoRedo';
@@ -192,6 +192,10 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
   readonly signal = this.#abort.signal;
   /** `destroy` called: not destroyed twice */
   #destroyed = false;
+  /** JSON of the drawing shapes while a change is handled: found once, read by history and collaboration */
+  #shapeStates: Map<string, string> | null = null;
+  /** A change is handled (`change` of the stage): `_shapeStates` kept until it ends */
+  #inChange = false;
   /** Sessions started so far: a start overtaken by a later one (another room) stops there, its socket closed */
   #collaborationStarts = 0;
   /** Start of a session in a new room, while it connects: asked again meanwhile (double click), the same session */
@@ -1119,6 +1123,20 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
   }
 
   /**
+   * JSON of each drawing shape (`serializeShape`) by id, bottom first: found once while a change is handled (history,
+   * collaboration), else each time
+   * @returns States of the top nodes of the drawing
+   */
+  _shapeStates(): Map<string, string> {
+    if (this.#inChange && this.#shapeStates) return this.#shapeStates;
+
+    const states = new Map(this.getDrawingShapes().map((shape) => [shape.id(), serializeShape(shape)]));
+
+    if (this.#inChange) this.#shapeStates = states;
+    return states;
+  }
+
+  /**
    * Get all shape drawing
    * @returns Copy of the top nodes of draw layer (shapes and groups), bottom first
    */
@@ -1266,6 +1284,7 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
    * and drawing changes (`change` of stage: save, history, `change` event)
    */
   private _initEvents() {
+    this._followOtherTabs();
     this._initHotKey();
     this._initWheel();
     this._initKeyboardFocus();
@@ -1301,7 +1320,8 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
       );
     };
 
-    this.drawLayer.on('dragmove.live', (e) => sendLive(e.target));
+    // once per move of the pointer (the whole selection sent), not for each shape of a big selection
+    this.drawLayer.on('dragmove.live', this._oncePerMove(sendLive));
     this.getWidget<SelectWidget>('selection')?.transformer.on('transform.live', (e) => sendLive(e.target));
 
     // arrows linked to shapes follow them, unlinked when moved without them
@@ -1318,7 +1338,8 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
       updateBoundTexts(this.drawLayer, this.background.fill() as string);
     };
 
-    this.drawLayer.on('dragmove.binding', follow);
+    // once per move of the pointer, not for each shape of a big selection
+    this.drawLayer.on('dragmove.binding', this._oncePerMove(follow));
     transformer?.on('transformstart.binding', () => unbindMoved(transformer.nodes()));
     transformer?.on('transform.binding', follow);
     this.stage.on('change', () => {
@@ -1327,14 +1348,22 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
       // arrows on their linked shapes, texts in their shapes, before saving
       updateBindings(this.drawLayer);
       updateBoundTexts(this.drawLayer, this.background.fill() as string);
-      this.collaboration?.send();
+      // drawing as it is now, serialized once for collaboration and history
+      this.#inChange = true;
+      this.#shapeStates = null;
+      try {
+        this.collaboration?.send();
 
-      // unsaved until stored: at once in localStorage (unless it fails), once the save of `storage` option ends, or
-      // when the user saves
-      if (this.options.storage || !this.options.autoSave) this._setUnsaved(true);
-      if (this.options.autoSave) this.save();
+        // unsaved until stored: at once in localStorage (unless it fails), once the save of `storage` option ends, or
+        // when the user saves
+        if (this.options.storage || !this.options.autoSave) this._setUnsaved(true);
+        if (this.options.autoSave) this.save();
 
-      this.undoRedo.saveState();
+        this.undoRedo.saveState();
+      } finally {
+        this.#inChange = false;
+        this.#shapeStates = null;
+      }
       this.undoRedo.manageButtons();
       this.trigger(drawerEvents.change, this);
     });
@@ -1632,6 +1661,8 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
         this.loadDrawing(file);
         this.undoRedo.reset();
         this.undoRedo.manageButtons();
+        // history starts here: files of the previous drawing forgotten
+        this._pruneFiles();
       }
       this.#storageLoaded = true;
       if (file) {
@@ -1693,6 +1724,84 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
 
     console.warn(`[free-drawing] invalid saved data "${this.options.localStorageKey}" ignored`);
     return null;
+  }
+
+  /**
+   * Drawing saved by another tab of the browser (same key, without `storage` option): shown here, so the next save of
+   * this tab does not replace it with an older drawing; nothing saved again nor added to the history of this tab.
+   * Not while this tab has changes not saved (its next save wins) nor during a collaboration session (the drawing of
+   * the room). Image files of the other tab added as they come
+   */
+  private _followOtherTabs() {
+    if (this.options.storage) return;
+
+    window.addEventListener(
+      'storage',
+      (e) => {
+        const key = this.options.localStorageKey;
+
+        if (e.storageArea !== localStorage || !e.newValue || this.collaboration) return;
+        if (e.key === `${key}-files`) {
+          try {
+            this.addFiles(JSON.parse(e.newValue));
+          } catch {
+            // invalid JSON
+          }
+        } else if (e.key === key && !this.#unsaved) {
+          this._showSaved(e.newValue);
+        }
+      },
+      { signal: this.signal }
+    );
+  }
+
+  /**
+   * Drawing of a saved stage (`stage.toJSON` of another tab) shown: its shapes and background, history of this tab
+   * kept (its next changes only), `change` event
+   * @param json Saved stage
+   */
+  private _showSaved(json: string) {
+    try {
+      const layers: ShapeState[] = JSON.parse(json)?.children ?? [];
+      const isNamed = (state: ShapeState, name: string) =>
+        String(state.attrs?.name ?? '')
+          .split(' ')
+          .includes(name);
+      const draw = layers.find((layer) => isNamed(layer, 'draw'));
+      const background = layers
+        .flatMap((layer) => layer.children ?? [])
+        .find((state) => isNamed(state, shapeName.background))?.attrs.fill;
+
+      if (!draw) return;
+
+      const nodes = (draw.children ?? []).map((state) => Node.create(state) as DrawingShape);
+      const ids = new Set([...this.getDrawingShapes(), ...nodes].map((shape) => shape.id()));
+
+      this.getWidget<SelectWidget>('selection')?.clearSelection();
+      for (const shape of this.getDrawingShapes()) shape.destroy();
+      for (const node of nodes) this._addShape(node);
+      if (typeof background === 'string') this._setBackground(background as ColorLike);
+      // changes of the other tab: not undone here
+      this.undoRedo.ignoreChanges(ids);
+      this.undoRedo.ignoreBackground();
+      this.trigger(drawerEvents.change, this);
+    } catch {
+      // stage saved by another version: shown again once this tab reloads
+    }
+  }
+
+  /**
+   * Image files no longer used by the drawing nor by its history forgotten, with their elements (memory of drawings
+   * opened one after the other, images of other users received)
+   */
+  private _pruneFiles() {
+    const used = new Set([...getFileIds(this.getDrawingShapes()), ...this.undoRedo.fileIds()]);
+
+    for (const id of this.files.keys()) {
+      if (used.has(id)) continue;
+      this.files.delete(id);
+      this.#imageElements.delete(id);
+    }
   }
 
   /**
@@ -2248,9 +2357,39 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
     };
 
     this.drawLayer.on('dragstart.frames', (e) => this._startMove(moved(e.target)));
-    this.drawLayer.on('dragmove.frames', () => this._updateMove());
+    // once per move of the pointer, not for each shape of a big selection
+    this.drawLayer.on(
+      'dragmove.frames',
+      this._oncePerMove(() => this._updateMove())
+    );
     transformer?.on('transformstart.frames', () => this._startMove(transformer.nodes() as DrawingShape[]));
     transformer?.on('transform.frames', () => this._updateMove());
+  }
+
+  /**
+   * Work on the whole drawing during drags done once per move of the pointer: konva moves each node of a selection and
+   * fires their `dragmove` in turn (each one snapped there, the transformer starts the drag of the others at the first
+   * one), the work is done once all of them moved: window `mousemove` / `touchmove` listened after the one of konva
+   * (added with the first stage). A node not dragged by konva (`dragmove` fired by code) does it at once
+   * @param run Work done, given the last node moved
+   * @returns Listener of `dragmove`
+   */
+  private _oncePerMove(run: (target: Node) => void): (e: KonvaEventObject<DragEvent>) => void {
+    let pending: Node | null = null;
+    const flush = () => {
+      const target = pending;
+
+      if (!target) return;
+      pending = null;
+      run(target);
+    };
+
+    for (const type of ['mousemove', 'touchmove']) window.addEventListener(type, flush, { signal: this.signal });
+
+    return (e) => {
+      if (e.target.isDragging()) pending = e.target;
+      else run(e.target);
+    };
   }
 
   /**
@@ -2619,6 +2758,8 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
     for (const node of nodes) this._addShape(node);
     // fires change: history, saved, sent to collaborators
     this.setBgColor(background);
+    // files of the previous drawing kept for its undo only
+    this._pruneFiles();
     if (svgFiles.length) this._readSvgFiles(svgFiles);
   }
 
@@ -3201,22 +3342,62 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
   }
 
   /**
-   * Remove localstorage data
+   * Remove the data kept in the browser by the drawer: drawing, its image files and tool, library, preferences, drawings
+   * known by collaboration rooms (identity in collaboration sessions kept: id, name, secrets of rooms owned). The drawing
+   * shown is emptied (a new drawing, history cleared), unless it is the one of the `storage` option (drawing of the app),
+   * of a collaboration session or read only: kept, stored again by its next change. Preferences and library shown keep
+   * their values until the next visit (a preference changed is stored again)
    * @param force Force clear (don't show confirm modal)
    */
   clearStoredData(force: boolean = false) {
     if (!force) {
       this.clearStoredConfirmModal ??= new ConfirmModal(this, {
         onConfirm: (modal) => {
-          localStorage.removeItem(this.options.localStorageKey);
           modal.hide();
+          this._clearStoredData();
         },
       });
       this.clearStoredConfirmModal.setMessage(this.t('confirm.clearStorage'));
       this.clearStoredConfirmModal.show();
     } else {
-      localStorage.removeItem(this.options.localStorageKey);
+      this._clearStoredData();
     }
+  }
+
+  /**
+   * Data of the browser removed (see `clearStoredData`), toast
+   */
+  private _clearStoredData() {
+    const key = this.options.localStorageKey;
+    // `<key>-<suffix>`, drawings known by rooms `<key>-room-<id>` (not `user`, `user-key`, `name`, `owner`)
+    const suffixes = ['files', 'tool', 'library', 'preferences', 'theme', 'language', 'rooms'];
+    const isRemoved = (stored: string) =>
+      stored === key ||
+      (stored.startsWith(`${key}-`) &&
+        (suffixes.includes(stored.slice(key.length + 1)) || stored.startsWith(`${key}-room-`)));
+
+    try {
+      const keys = Array.from({ length: localStorage.length }, (_, i) => localStorage.key(i) ?? '');
+
+      for (const stored of keys.filter(isRemoved)) localStorage.removeItem(stored);
+    } catch {
+      // storage unavailable: nothing stored
+    }
+    this.library._forget();
+
+    if (!this.options.storage && !this.collaboration && !this.readOnly) {
+      // new drawing: nothing to undo (undo would store it again), nothing to save
+      this.getWidget<SelectWidget>('selection')?.clearSelection();
+      for (const shape of this.getDrawingShapes()) shape.destroy();
+      this._setBackground('#fff');
+      this.undoRedo.reset();
+      this.undoRedo.manageButtons();
+      // no shape nor history using them
+      this._pruneFiles();
+      this._setUnsaved(false);
+      this.trigger(drawerEvents.change, this);
+    }
+    this.toast(this.t('toast.storageCleared'), 'info');
   }
 
   /**

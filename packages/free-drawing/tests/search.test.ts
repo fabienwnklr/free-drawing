@@ -46,6 +46,12 @@ describe('Search of texts', () => {
     expect(findTexts(layer, 'reunion')[3].getParent()).toBe(frame);
     expect(findTexts(layer, '   ')).toEqual([]);
     expect(findTexts(layer, 'absent')).toEqual([]);
+
+    // a text a little higher on the right: same line, after
+    const right = addText(drawer, 'Plan', 600, 500);
+    const left = addText(drawer, 'Plan', 100, 504);
+
+    expect(findTexts(layer, 'plan')).toEqual([left, right]);
   });
 
   it('Ctrl+F: texts found highlighted, Enter and Shift+Enter from one to the next, view moved to the current one', () => {

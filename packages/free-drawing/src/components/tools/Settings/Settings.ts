@@ -226,8 +226,8 @@ export class Settings extends Dropdown {
         this.$preferencesButton,
         this.$githubButton,
         this.getSeparator(),
-        this.$clearStorageButton,
-        this.getSeparator(),
+        // drawing of an app (`storage` option): the app keeps it
+        ...(this.drawer.options.storage ? [] : [this.$clearStorageButton, this.getSeparator()]),
         this.$bgColorContainer,
       ]
     );

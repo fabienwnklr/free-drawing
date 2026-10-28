@@ -540,12 +540,15 @@ export class Collaboration {
    * @param shapes Shapes being drawn or moved (shapes of groups send their whole group)
    */
   sendLive(shapes: DrawingShape[]) {
-    // shapes of groups: whole group
-    shapes.forEach((shape) => {
-      const drawingShape = this.drawer.getDrawingShapes().find((s) => s === shape || s.isAncestorOf(shape));
+    // shapes of groups and of frames: whole group or frame (top node), found by their parents (a big selection)
+    const tops = new Set<Node>(this.drawer.getDrawingShapes());
 
-      if (drawingShape) this.#live.add(drawingShape);
-    });
+    for (const shape of shapes) {
+      let node: Node | null = shape;
+
+      while (node && !tops.has(node)) node = node.getParent();
+      if (node) this.#live.add(node as DrawingShape);
+    }
     this._schedule('live', () =>
       this._inOrder(() => {
         const shapes = [...this.#live].filter((shape) => shape.getLayer());
@@ -911,7 +914,8 @@ export class Collaboration {
     if (!this.canEdit) return this._keepSynced();
 
     const shapes = this.drawer.getDrawingShapes();
-    const current = new Map(shapes.map((shape) => [shape.id(), serializeShape(shape)]));
+    // found once per change (also read by history)
+    const current = this.drawer._shapeStates();
     const synced = this.#synced;
     // changed since last sync, except shapes too big for a message (tried again once changed)
     const upserted = shapes.filter((shape) => {

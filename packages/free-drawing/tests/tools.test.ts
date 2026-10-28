@@ -709,3 +709,42 @@ describe('Pointer actions', () => {
     expect(document.querySelector('.drawer-text-editor')).toBeNull();
   });
 });
+
+describe('Escape during a pointer action', () => {
+  document.body.innerHTML = `<div id="test"></div>`;
+
+  it('Shape, stroke or selection rectangle being drawn cancelled: nothing kept, tool kept', () => {
+    const drawer = createDrawer();
+    const change = vi.fn();
+
+    drawer.on('change', change);
+    for (const tool of ['square', 'brush']) {
+      const widget = drawer.getWidget<BaseWidget>(tool)!;
+
+      widget.setActive(true);
+      fireMouse(drawer, 'mousedown', 100, 100);
+      fireMouse(drawer, 'mousemove', 200, 180);
+      expect(widget.inAction).toBe(true);
+      expect(keydown(drawer, { key: 'Escape' })).toBe(false);
+      expect(widget.inAction).toBe(false);
+      // released after: nothing drawn
+      fireMouse(drawer, 'mouseup', 200, 180);
+      expect(drawer.getDrawingShapes()).toEqual([]);
+      expect(drawer.activeTool).toBe(tool);
+    }
+    expect(change).not.toHaveBeenCalled();
+
+    // selection rectangle: nothing selected
+    drawer.addShape(new Rect({ name: shapeName.rect, x: 120, y: 120, width: 40, height: 40 }));
+    const selection = drawer.getWidget<SelectWidget>('selection')!;
+
+    selection.setActive(true);
+    fireMouse(drawer, 'mousedown', 100, 100);
+    fireMouse(drawer, 'mousemove', 200, 200);
+    expect(selection.inAction).toBe(true);
+    keydown(drawer, { key: 'Escape' });
+    fireMouse(drawer, 'mouseup', 200, 200);
+    expect(drawer.getSelectedShapes()).toEqual([]);
+    expect(selection.selectionRectangle.visible()).toBe(false);
+  });
+});

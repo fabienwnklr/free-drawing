@@ -137,6 +137,29 @@ describe('Images', () => {
     expect(localStorage.getItem(`${key}-files`)).toBeNull();
   });
 
+  it('Files of the drawings opened before forgotten, unless the history may put their images back', async () => {
+    const source = createDrawer();
+    const image = (await source.addImage({ data: pngData, width: 40, height: 20 }))!;
+    const withImage = source.getDrawingFile();
+    const fileId = image.getAttr('fileId');
+    let stored = withImage;
+    const drawer = createDrawer({ storage: { load: async () => stored, save: async () => {} } });
+
+    await drawer.ready;
+    expect([...drawer.files.keys()]).toEqual([fileId]);
+
+    // another drawing opened: undo puts the image back
+    drawer.loadDrawing({ ...withImage, shapes: [], files: undefined });
+    expect([...drawer.files.keys()]).toEqual([fileId]);
+    drawer.undoRedo.undo();
+    expect(elementOf(drawer.getDrawingShapes()[0] as Image)?.src).toBe(pngData);
+
+    // drawing of the app loaded: history starts again, file forgotten
+    stored = { ...withImage, shapes: [], files: undefined };
+    await drawer.loadFromStorage();
+    expect(drawer.files.size).toBe(0);
+  });
+
   it('Svg export: the image with its file; options of a selected image: opacity, not stroke nor color', async () => {
     const drawer = createDrawer();
     const image = (await drawer.addImage({ data: pngData, width: 40, height: 20 }, { x: 20, y: 10 }))!;

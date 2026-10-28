@@ -188,6 +188,14 @@ drawer.hasUnsavedChanges(); // true after a change, until saved (also during a s
 await drawer.saveNow(); // save, "Drawing saved" message (Ctrl / Cmd + S)
 ```
 
+Several tabs of the same drawing (same `localStorageKey`, without `storage` option): a drawing saved by a tab is shown in the others, with its images, so a tab never saves an older drawing over it (not over changes a tab has not saved yet, nor during a collaboration session); the library follows too. Undo in a tab does not take back the changes of another one.
+
+"Clear stored data" (settings menu, command palette) removes what the drawer keeps in the browser: the drawing, its images and tool, the library, the preferences and the drawings known by collaboration rooms; the identity of the user in collaboration sessions stays (id, name, rooms owned). The drawing shown is emptied (a new drawing, nothing to undo), unless read only or during a collaboration session. With the `storage` option, the menu and the palette do not offer it: the drawing belongs to the app.
+
+```js
+drawer.clearStoredData(); // confirmation asked, clearStoredData(true) at once
+```
+
 "Keep tool active" (pin button at the start of the toolbar, Q, also in the command palette) keeps the drawing tool after drawing a shape. Turned off, the selection tool is activated after drawing (shapes, frames, brush, highlighter), nothing selected, or after a text, the text selected. The button is shown with the selection tool only.
 
 ```js
@@ -249,6 +257,7 @@ The mouse wheel zooms around the pointer (`wheelAction: 'zoom'`, default), or mo
 - A notch of a mouse wheel zooms by the `scaling` option (1.11), the small steps of a trackpad less: zooming follows the fingers. Browsers give the Ctrl key to the wheel events of a pinch: a pinch is told apart from Ctrl + wheel by the Ctrl key really pressed. With `zoom: false`, the wheel does not zoom, it still moves the view.
 - `'pan'` suits trackpads (two fingers move the view, a pinch zooms), `'zoom'` mice.
 - Space held, a drag moves the view whatever the tool (as the pan tool, H): the tool, its options and the selection stay as they were, the view is saved on release. Space is taken with the focus on the drawing, or on a button of the drawer with the pointer on the canvas (a tool just clicked); fields and the other buttons keep it.
+- A drag with the middle button (wheel pressed) moves the view too, whatever the tool, without the autoscroll of the browser.
 
 ```js
 drawer.setWheelAction('pan');
@@ -388,6 +397,8 @@ Eraser (E): a click erases the shape under pointer, a drag erases every shape it
 Text (T): a click adds a text, or edits the text (or name of a frame) clicked. Enter or a press elsewhere validates it (Shift + Enter adds a line, Escape cancels, an empty text is removed), then the tool is kept (`keepTool`, pin of the toolbar) or the selection tool comes back with the text selected. A double click edits any text, whatever the tool.
 
 Note (N): a click adds a sticky note there (a square of a light color, yellow by default, its color chosen in the panel of the tool) and writes in it at once, a click on a note writes in it; validated, the tool is kept (`keepTool`) or the selection tool comes back with the note selected. A note is a rectangle (named `drawer-rect drawer-note`) drawn with a shadow (also in exports): its text is centered in it, the note grows with it (never shorter), it is resized, colored (background), moved and linked by arrows as rectangles. `drawer.getWidget('note').addNote({ x, y })` adds one centered on a point.
+
+Escape pressed while drawing, the pointer still pressed (a shape, a stroke, an erasing, a selection rectangle), cancels it: nothing is drawn, erased nor selected, the tool stays active.
 
 If `tool` option (or the tool saved in localStorage) is not in `widgets`, the first widget is activated.
 
@@ -728,7 +739,7 @@ drawer.reorderShapes('back', [shape]);
 
 "Insert image" (image tool of the toolbar, settings menu, context menu, command palette) adds an image file chosen by the user, Ctrl / Cmd + V pastes a copied image (screenshot, image of a page, file) at the pointer. PNG, JPEG, WebP, GIF and SVG files are reduced to 2048 px on their longest side and encoded as WebP (PNG or JPEG in browsers without WebP encoder), so drawings stay small. An image is shown whole in the view (60 % of it at most, never enlarged), keeps its proportions when resized (Shift frees them), and has the options of opacity, stacking order and actions. In dark mode, images keep their colors.
 
-The file of an image is in the files of the drawing (`drawer.files`: data URLs by id, `fileId` attribute of the image), not in the image itself: it is saved with the drawing (`<localStorageKey>-files` in the browser, `files` of drawing files, links and of the `storage` option) and sent once to the users of a collaboration session. Links holding images are long: share a file or a session for big ones. The image tool runs this action and never becomes the active tool; it has no shortcut by default (`widgets: { image: { shortcut: 'i' } }` gives one).
+The file of an image is in the files of the drawing (`drawer.files`: data URLs by id, `fileId` attribute of the image), not in the image itself: it is saved with the drawing (`<localStorageKey>-files` in the browser, `files` of drawing files, links and of the `storage` option) and sent once to the users of a collaboration session. Files no longer used by the drawing nor by its history are forgotten when another drawing is opened. Links holding images are long: share a file or a session for big ones. The image tool runs this action and never becomes the active tool; it has no shortcut by default (`widgets: { image: { shortcut: 'i' } }` gives one).
 
 ```js
 const image = await drawer.addImage(file, { x: 100, y: 100 }); // image file (Blob) or { data, width, height }, null when not an image

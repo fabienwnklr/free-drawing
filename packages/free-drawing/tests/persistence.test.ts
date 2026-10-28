@@ -1,8 +1,14 @@
 import { describe, expect, it, beforeAll, afterEach, vi } from 'vitest';
 import { Line } from 'konva/lib/shapes/Line';
+import { Rect } from 'konva/lib/shapes/Rect';
+import type { Drawer } from '@/Drawer';
 import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import { historyLimit, shapeName } from '@/constants';
 import { createDrawer, fireMouse } from './helpers';
+
+/** Image file of 1 x 1 pixel */
+const pngData =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
 
 beforeAll(() => {
   function noOp() {}
@@ -125,5 +131,139 @@ describe('Persistence and performance', () => {
       'draw',
       'selection',
     ]);
+  });
+});
+
+/** Value stored by another tab of the browser (`storage` event of the window) */
+const storedByOtherTab = (key: string, newValue: string) => {
+  localStorage.setItem(key, newValue);
+  window.dispatchEvent(new StorageEvent('storage', { key, newValue, storageArea: localStorage }));
+};
+
+/** Drawing with a rectangle and a background, saved as a tab does */
+const savedDrawing = () => {
+  const other = createDrawer();
+  const rect = other.addShape(new Rect({ name: shapeName.rect, x: 10, y: 20, width: 50, height: 40 }));
+
+  other.setBgColor('#ffeeaa');
+  return { json: other.stage.toJSON(), rect };
+};
+
+describe('Other tabs of the browser', () => {
+  document.body.innerHTML = `<div id="test"></div>`;
+
+  it('Drawing saved by another tab shown here: not saved again nor undone; not over changes not saved', () => {
+    const drawer = createDrawer({ autoSave: true });
+    const key = drawer.options.localStorageKey;
+    const { json, rect } = savedDrawing();
+    const save = vi.spyOn(drawer, 'save');
+    const change = vi.fn();
+
+    drawer.on('change', change);
+    storedByOtherTab(key, json);
+    expect(drawer.getDrawingShapes().map((shape) => shape.id())).toEqual([rect.id()]);
+    expect(drawer.background.fill()).toBe('#ffeeaa');
+    expect(change).toHaveBeenCalledTimes(1);
+    expect(save).not.toHaveBeenCalled();
+    expect(drawer.undoRedo.canUndo()).toBe(false);
+    // other keys and invalid data ignored
+    storedByOtherTab(`${key}-other`, json);
+    storedByOtherTab(key, '{not json');
+    expect(drawer.getDrawingShapes()).toHaveLength(1);
+
+    // changes of this tab not saved yet: kept, saved over the other drawing
+    const manual = createDrawer();
+
+    manual.addShape(new Rect({ name: shapeName.rect, width: 10, height: 10 }));
+    manual.stage.fire('change');
+    expect(manual.hasUnsavedChanges()).toBe(true);
+    storedByOtherTab(manual.options.localStorageKey, json);
+    expect(manual.getDrawingShapes().map((shape) => shape.id())).not.toContain(rect.id());
+  });
+
+  it('Library and image files of another tab taken', () => {
+    const drawer = createDrawer();
+    const key = drawer.options.localStorageKey;
+    const other = createDrawer();
+    const libraryChange = vi.fn();
+
+    other.library.add([other.addShape(new Rect({ name: shapeName.rect, width: 10, height: 10 }))], 'Card');
+    drawer.on('library.change', libraryChange);
+    storedByOtherTab(`${key}-library`, JSON.stringify(other.library.toFile()));
+    expect(drawer.library.items.map(({ name }) => name)).toEqual(['Card']);
+    expect(libraryChange).toHaveBeenCalledTimes(1);
+
+    storedByOtherTab(`${key}-files`, JSON.stringify({ image: pngData, bad: 'data:text/plain,x' }));
+    expect([...drawer.files.keys()]).toEqual(['image']);
+  });
+
+  it('Drawing of the `storage` option: drawings of other tabs ignored', () => {
+    const drawer = createDrawer({ storage: { load: async () => null, save: async () => {} } });
+
+    storedByOtherTab(drawer.options.localStorageKey, savedDrawing().json);
+    expect(drawer.getDrawingShapes()).toEqual([]);
+  });
+});
+
+describe('Stored data cleared', () => {
+  document.body.innerHTML = `<div id="test"></div>`;
+
+  /** Data kept in the browser for a drawer */
+  const store = (drawer: Drawer) => {
+    const key = drawer.options.localStorageKey;
+
+    drawer.addShape(new Rect({ name: shapeName.rect, width: 10, height: 10 }));
+    drawer.library.add([drawer.getDrawingShapes()[0]]);
+    drawer.setPreferences({ grid: true });
+    drawer.save();
+    drawer.getUserId();
+    drawer.setUserName('Ada');
+    localStorage.setItem(`${key}-user-key`, 'secret');
+    localStorage.setItem(`${key}-owner`, '{}');
+    localStorage.setItem(`${key}-room-abc`, '[]');
+    localStorage.setItem(`${key}-rooms`, '["abc"]');
+    localStorage.setItem(`${key}-theme`, 'dark');
+    localStorage.setItem(`${key}-other`, 'kept');
+    localStorage.setItem(`${key}2`, 'kept');
+  };
+
+  it('Drawing, files, library and preferences removed, identity kept; new drawing shown, toast', () => {
+    const drawer = createDrawer();
+    const key = drawer.options.localStorageKey;
+    const toast = vi.spyOn(drawer, 'toast');
+
+    store(drawer);
+    const removed = ['', '-tool', '-library', '-preferences', '-room-abc', '-rooms', '-theme'].map((end) => key + end);
+    const kept = ['-user', '-user-key', '-owner', '-name', '-other', '2'].map((end) => key + end);
+
+    expect(removed.concat(kept).filter((stored) => localStorage.getItem(stored) === null)).toEqual([]);
+
+    // confirmed in a dialog
+    drawer.clearStoredData();
+    expect(localStorage.getItem(key)).not.toBeNull();
+    drawer.clearStoredConfirmModal!.$confirmBtn.click();
+    expect(removed.filter((stored) => localStorage.getItem(stored) !== null)).toEqual([]);
+    expect(kept.filter((stored) => localStorage.getItem(stored) === null)).toEqual([]);
+    expect(toast).toHaveBeenCalledWith('Stored data removed', 'info');
+
+    // new drawing: nothing to undo nor to save, library emptied
+    expect(drawer.getDrawingShapes()).toEqual([]);
+    expect(drawer.undoRedo.canUndo()).toBe(false);
+    expect(drawer.hasUnsavedChanges()).toBe(false);
+    expect(drawer.library.items).toEqual([]);
+    expect(drawer.getUserName()).toBe('Ada');
+  });
+
+  it('Drawing of a read only drawer kept; menu and palette without it with the `storage` option', () => {
+    const drawer = createDrawer({ readOnly: true });
+
+    drawer.addShape(new Rect({ name: shapeName.rect, width: 10, height: 10 }));
+    drawer.clearStoredData(true);
+    expect(drawer.getDrawingShapes()).toHaveLength(1);
+
+    const app = createDrawer({ storage: { load: async () => null, save: async () => {} } });
+
+    expect(app.setting.$clearStorageButton.isConnected).toBe(false);
+    expect(createDrawer().setting.$clearStorageButton.isConnected).toBe(true);
   });
 });

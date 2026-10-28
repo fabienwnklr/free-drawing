@@ -80,6 +80,7 @@ export class Help extends Modal {
       { label: t('help.selectInGroup'), keys: ['Ctrl+Click'] },
       { label: t('help.constrainDrawing'), keys: ['Shift'], after: t('help.whileDrawing') },
       { label: t('help.arrowUnlinked'), keys: ['Ctrl'], after: t('help.whileDrawing') },
+      { label: t('help.cancelDrawing'), keys: ['Escape'], after: t('help.whileDrawing') },
       { label: t('help.constrainSelection'), keys: ['Shift'], after: t('help.whileTransforming') },
       { label: t('help.move'), keys: ['Arrows'] },
       { label: t('help.forwardBackward'), keys: ['Ctrl+Up', 'Ctrl+Down'] },
@@ -122,6 +123,7 @@ export class Help extends Modal {
             { label: t('wheel.pan'), keys: ['Wheel', 'Shift+Wheel'] },
           ]),
       { label: t('wheel.pan'), keys: ['Space'], after: t('help.spaceDrag') },
+      { label: t('wheel.pan'), keys: ['Wheel'], after: t('help.wheelDrag') },
       ...(this.drawer.options.zoom
         ? [
             { label: t('zoom.fit'), keys: ['Shift+1'] },

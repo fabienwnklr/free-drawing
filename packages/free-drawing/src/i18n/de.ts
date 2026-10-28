@@ -33,6 +33,7 @@ export const de: Translations = {
   'toast.clipboardUnavailable': 'Zwischenablage nicht verfügbar: {error}',
   'toast.exportFailed': 'Export fehlgeschlagen: {error}',
   'toast.imageCopied': 'Bild kopiert',
+  'toast.storageCleared': 'Gespeicherte Daten gelöscht',
   'toast.imageNotCopied': 'Das Bild konnte nicht kopiert werden: {error}',
   // Details von Fehlern, nach dem Text einer Meldung
   'error.clipboardUnavailable': 'Zwischenablage in diesem Browser oder auf dieser Seite nicht verfügbar',
@@ -54,7 +55,8 @@ export const de: Translations = {
   'modal.close': 'Schließen',
   'confirm.message': 'Diese Aktion bestätigen?',
   'confirm.clearCanvas': 'Die ganze Zeichnung löschen?',
-  'confirm.clearStorage': 'Alle gespeicherten Daten löschen?',
+  'confirm.clearStorage':
+    'Die in diesem Browser gespeicherte Zeichnung, ihre Bilder, die Bibliothek und die Einstellungen löschen?',
   'confirm.stopCollaboration': 'Live-Zusammenarbeit beenden?',
   'confirm.leaveCollaboration': 'Live-Zusammenarbeit verlassen?',
   'confirm.cancel': 'Abbrechen',
@@ -96,6 +98,7 @@ export const de: Translations = {
   'wheel.pan': 'Ansicht verschieben',
   'wheel.command': 'Mausrad: {action}',
   'help.spaceDrag': 'gedrückt halten und ziehen',
+  'help.wheelDrag': 'gedrückt und ziehen',
   'preferences.save': 'Speichern',
   'preferences.appearance': 'Darstellung',
   'preferences.theme': 'Design',
@@ -141,6 +144,7 @@ export const de: Translations = {
   'help.selectInGroup': 'Form in einer Gruppe auswählen',
   'help.constrainDrawing': 'Quadrat, Kreis, 45°-Linie, gerader Strich',
   'help.whileDrawing': 'beim Zeichnen',
+  'help.cancelDrawing': 'Aktuelle Form, Strich oder Auswahl abbrechen',
   'help.arrowUnlinked': 'Pfeil nicht mit Formen verbunden',
   'help.constrainSelection': 'Proportionen behalten, um 15° drehen, gerade verschieben',
   'help.whileTransforming': 'beim Skalieren, Drehen, Verschieben',

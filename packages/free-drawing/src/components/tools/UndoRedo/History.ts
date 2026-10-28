@@ -187,7 +187,8 @@ export class History {
    * @returns JSON by id, bottom first
    */
   private _read() {
-    return new Map(this.drawer.getDrawingShapes().map((shape) => [shape.id(), serializeShape(shape)]));
+    // found once per change (also read by collaboration)
+    return this.drawer._shapeStates();
   }
 
   /**
@@ -238,6 +239,23 @@ export class History {
       this.entries = this.entries.slice(1 - historyLimit);
     }
     this.step = this.entries.length;
+  }
+
+  /**
+   * Image files of the shapes of the history (put back by undo or redo): kept by the drawer
+   * @returns Ids of the files of the images in the entries
+   */
+  fileIds(): Set<string> {
+    const ids = new Set<string>();
+
+    for (const { changes } of this.entries) {
+      for (const { before, after } of changes) {
+        for (const state of [before, after]) {
+          for (const [, id] of state?.matchAll(/"fileId":"([\w-]+)"/g) ?? []) ids.add(id);
+        }
+      }
+    }
+    return ids;
   }
 
   /**

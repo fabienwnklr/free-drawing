@@ -4,7 +4,8 @@ import type { Drawer } from '@/Drawer';
 /**
  * Hand of the Space key: while Space is held (focus on the drawing, or pointer on the canvas out of the fields of the
  * drawer), a drag moves the view whatever the tool, as the pan tool; the tool and the selection stay as they were.
- * Shapes and the transformer are not reached meanwhile (layers not listening), tools ignore the pointer (`active`)
+ * Shapes and the transformer are not reached meanwhile (layers not listening), tools ignore the pointer (`active`).
+ * A drag with the middle button of the mouse moves the view too (tools ignore this button)
  */
 export class SpacePan {
   /** Drawer whose view is moved */
@@ -29,6 +30,60 @@ export class SpacePan {
       this.stop();
     });
     window.addEventListener('blur', () => this.stop(), { signal: drawer.signal });
+    this._initMiddleButton();
+  }
+
+  /**
+   * Middle button dragged on the canvas: the view follows it whatever the tool (no autoscroll of the browser), change
+   * fired once released when it moved (view saved)
+   */
+  private _initMiddleButton() {
+    const { drawer } = this;
+    const options = { signal: drawer.signal };
+    // last position of the pointer, null without drag
+    let last: { x: number; y: number } | null = null;
+    let moved = false;
+    const end = () => {
+      if (!last) return;
+      last = null;
+      if (drawer.activeWidget) drawer.activeWidget.updateCursor();
+      else drawer.$stageContainer.style.cursor = '';
+      if (moved) drawer.stage.fire('change');
+    };
+
+    drawer.stage.content.addEventListener(
+      'mousedown',
+      (e) => {
+        if (e.button !== 1 || drawer.slideshow.active || drawer.replay.active) return;
+        e.preventDefault();
+        last = { x: e.clientX, y: e.clientY };
+        moved = false;
+        drawer.$stageContainer.style.cursor = grabbingCursor;
+      },
+      options
+    );
+    window.addEventListener(
+      'mousemove',
+      (e) => {
+        if (!last) return;
+        // released out of the window
+        if (!(e.buttons & 4)) return end();
+
+        const { stage } = drawer;
+
+        drawer._setView({ x: stage.x() + e.clientX - last.x, y: stage.y() + e.clientY - last.y }, stage.scaleX());
+        last = { x: e.clientX, y: e.clientY };
+        moved = true;
+      },
+      options
+    );
+    window.addEventListener(
+      'mouseup',
+      (e) => {
+        if (e.button === 1) end();
+      },
+      options
+    );
   }
 
   /**

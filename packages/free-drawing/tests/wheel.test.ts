@@ -166,3 +166,52 @@ describe('Mouse wheel and Space', () => {
     $input.remove();
   });
 });
+
+describe('Middle button', () => {
+  document.body.innerHTML = `<div id="test"></div>`;
+
+  /** Middle button pressed on the canvas */
+  const press = (drawer: Drawer, clientX: number, clientY: number) => {
+    const evt = new MouseEvent('mousedown', {
+      button: 1,
+      buttons: 4,
+      clientX,
+      clientY,
+      bubbles: true,
+      cancelable: true,
+    });
+
+    drawer.stage.content.dispatchEvent(evt);
+    return evt;
+  };
+  /** Pointer moved in the page */
+  const move = (clientX: number, clientY: number, buttons = 4) =>
+    window.dispatchEvent(new MouseEvent('mousemove', { buttons, clientX, clientY }));
+
+  it('Dragged on the canvas: the view moves whatever the tool, nothing drawn, change once released', () => {
+    const drawer = createDrawer();
+    const brush = drawer.getWidget<BrushWidget>('brush')!;
+    const change = vi.fn();
+    const { x, y } = drawer.stage.position();
+
+    brush.setActive(true);
+    drawer.on('change', change);
+    // no autoscroll of the browser
+    expect(press(drawer, 100, 100).defaultPrevented).toBe(true);
+    expect(brush.inAction).toBe(false);
+    move(130, 90);
+    move(150, 80);
+    expect(drawer.stage.position()).toEqual({ x: x + 50, y: y - 20 });
+    expect(change).not.toHaveBeenCalled();
+    window.dispatchEvent(new MouseEvent('mouseup', { button: 1, clientX: 150, clientY: 80 }));
+    expect(change).toHaveBeenCalledTimes(1);
+    expect(drawer.getDrawingShapes()).toEqual([]);
+
+    // released out of the window: the next move without the button ends it, view not moved
+    press(drawer, 100, 100);
+    move(300, 300, 0);
+    move(320, 300);
+    expect(drawer.stage.position()).toEqual({ x: x + 50, y: y - 20 });
+    expect(change).toHaveBeenCalledTimes(1);
+  });
+});
