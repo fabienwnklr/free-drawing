@@ -2,6 +2,12 @@
 
 Changes of `@fabwcie/free-drawing-element`. Each version is published by the release workflow of the library once it is not on npm yet.
 
+## 1.0.1 (2026-10-28)
+
+### Bug Fixes
+
+- Library 8 accepted (peer dependency `^7.29.0 || ^8.0.0`)
+
 ## 1.0.0 (2026-10-27)
 
 ### Features

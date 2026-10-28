@@ -66,6 +66,8 @@ The library needs no framework. React and Vue apps can use its `FreeDrawing` com
 - Vue: [`@fabwcie/free-drawing-vue`](https://free-drawing-docs.netlify.app/get-started/vue) (`<FreeDrawing ref="board" :options="..." @change="..." />`)
 - Web Component: [`@fabwcie/free-drawing-element`](https://free-drawing-docs.netlify.app/get-started/element) (`<free-drawing theme="dark" options='{ ... }'></free-drawing>`, `drawerchange` event)
 
+Extra tools (shapes, highlighter) as plugins: [`@fabwcie/free-drawing-extra-tools`](https://free-drawing-docs.netlify.app/get-started/extra-tools).
+
 ## Available options
 
 ```js
@@ -115,8 +117,8 @@ The library needs no framework. React and Vue apps can use its `FreeDrawing` com
   },
   collaboration: false, // live collaboration menu: false, true (socket.io server on same origin), server url or { url, auth }
   // toolbar widgets, see below
-  widgets: ['pan', 'selection', 'brush', 'eraser', 'text', 'note', 'line', 'square', 'circle', 'arrow', 'image', 'triangle', 'diamond', 'heart', 'cloud', 'star', 'hexagon', 'blockArrow', 'bubble', 'checkbox', 'highlighter', 'laser', 'frame'],
-  // groups of toolbar widgets, see below
+  widgets: ['pan', 'selection', 'brush', 'eraser', 'text', 'note', 'line', 'square', 'circle', 'arrow', 'image', 'triangle', 'diamond', 'laser', 'frame'],
+  // groups of toolbar widgets, see below (tools of the extra tools take their place in it once added)
   widgetGroups: [{ widgets: ['triangle', 'diamond', 'heart', 'cloud', 'star', 'hexagon', 'blockArrow', 'bubble', 'checkbox', 'highlighter', 'laser', 'frame'], icon: 'more' }],
 };
 ```
@@ -412,10 +414,19 @@ The default toolbar groups the tools below in "More tools" (`widgetGroups` repla
 
 ### More tools
 
-- Triangle, diamond (D), heart, cloud, star, hexagon, block arrow (pointing right: rotate or flip it for another direction), speech bubble and check box (rounded square with a check mark, for to-do lists): drawn in the dragged box (Shift: in a square), background color and stroke style as rectangles.
-- Highlighter (M): wide strokes of its own fluorescent colors (yellow by default, green, blue, pink, orange or custom) and widths, multiplied with the drawing under them so texts stay readable.
+- Triangle and diamond (D): drawn in the dragged box (Shift: in a square), background color and stroke style as rectangles.
 - Laser pointer (K): trail following pointer while pressed, fading after a second, never saved. Users of a collaboration session see it with the color of the user's cursor. Usable in read only.
 - Frame (F): area with a name above it ("Frame 1"...: double click or layers panel renames it). Shapes entirely in a new frame belong to it, so do shapes drawn, moved or duplicated in it (their center), shapes moved out of it are back in the drawing. While shapes are dragged or resized, they are drawn whole above the drawing (not cut) and the frames they would enter (solid, tinted) or leave (dashed) are highlighted, briefly after a move with arrow keys. Its shapes are moved with it and cut at its edges, selected alone (click), or with it (its name or border). Resizing it does not scale its shapes, frames are not rotated, flipped, grouped nor styled. Exports cut its shapes, without its name. Frames are the slides of the [slideshow](https://free-drawing-docs.netlify.app/get-started/#slideshow): "Present from this frame" of a selected frame (selection menu, options panel, context menu) or Alt + Shift + P presents them one after the other.
+
+### Extra tools
+
+The heart, cloud, star, hexagon, block arrow, speech bubble and check box shapes and the highlighter (M) are plugins of [`@fabwcie/free-drawing-extra-tools`](https://free-drawing-docs.netlify.app/get-started/extra-tools) (tools of the library until its version 7): added to the `plugins` option, they take their place in "More tools". Drawings holding their shapes open, are drawn, selected, styled, exported and shared by any drawer, with or without them.
+
+```js
+import { ExtraShapesPlugin, HighlighterPlugin } from '@fabwcie/free-drawing-extra-tools';
+
+new Drawer($el, { plugins: [ExtraShapesPlugin, HighlighterPlugin] });
+```
 
 ## Plugins
 
@@ -483,7 +494,7 @@ drawer.plugins.get(Stamps); // also by name: drawer.plugins.get('Stamps'), drawe
 - Options: the app gives them with the class of the plugin, `plugins: [[Stamps, { max: 20 }]]` (a plugin required by another one too: given this way, it is created once, before it), the plugin reads them with its defaults: `options = this.getOptions({ max: 0 })` gives `{ max: 20 }`. The `pluginOptions` option of previous versions (options by plugin name, `pluginOptions: { Stamps: { max: 20 } }`) still works, with a warning: options given with the class replace its ones.
 - Drawer API useful to plugins: `addShape`, `stage.fire('change')`, `placeInFrames`, `getPointerPosition()` (pointer in drawing coordinates), `getSelectedShapes()`, `getWidget<SelectWidget>('selection')?.select(shapes)`, `layout.add(region, element)`, `toast(message)`.
 - Shapes: draw with the shapes of the library (`Line`, `Arrow`, `Rect`, `Ellipse`, `Text`, `Path` and groups of them), marked with a name or attributes. Files, links and collaboration accept only these classes.
-- Exported for plugins: `Plugin`, `BaseWidget`, `ShapeWidget`, `drawerEvents`, `shapeName`, `createButton`, `setLabel`, `setPressed`, `formatShortcut`, `ariaShortcut`, and types (`PluginClass`, `PluginEntry`, `PluginCommand`, `PluginTranslations`, `SelectWidget`, `WidgetClass`, classes of the members of the drawer...).
+- Exported for plugins: `Plugin`, `BaseWidget`, `ShapeWidget`, `PathShapeWidget` (shapes drawn by a path in their box: `pathShapeData`, `scalePath`), `FreehandWidget` (freehand strokes), `ColorPicker` and `createOverlaySection` (options panels), `drawerEvents`, `shapeName`, `createButton`, `setLabel`, `setPressed`, `formatShortcut`, `ariaShortcut`, and types (`PluginClass`, `PluginEntry`, `PluginCommand`, `PluginTranslations`, `SelectWidget`, `WidgetClass`, classes of the members of the drawer...).
 
 ## Touch screens
 

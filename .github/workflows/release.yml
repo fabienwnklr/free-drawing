@@ -174,7 +174,7 @@ jobs:
       matrix:
         # @fabwcie/create-free-drawing-plugin (`npm create @fabwcie/free-drawing-plugin`), components of React and Vue,
         # web component
-        package: [create-plugin, react, vue, element]
+        package: [create-plugin, react, vue, element, extra-tools]
 
     steps:
       - name: Checkout

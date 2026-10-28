@@ -181,14 +181,6 @@ export const fr: Translations = {
   'tools.image': 'Insérer une image',
   'tools.triangle': 'Triangle',
   'tools.diamond': 'Losange',
-  'tools.heart': 'Cœur',
-  'tools.cloud': 'Nuage',
-  'tools.star': 'Étoile',
-  'tools.hexagon': 'Hexagone',
-  'tools.blockArrow': 'Flèche pleine',
-  'tools.bubble': 'Bulle',
-  'tools.checkbox': 'Case cochée',
-  'tools.highlighter': 'Surligneur',
   'tools.laser': 'Pointeur laser',
   'tools.frame': 'Cadre',
 
@@ -308,7 +300,6 @@ export const fr: Translations = {
   'overlay.recognizeShapes': 'Reconnaître les formes',
   'overlay.recognizeShapesHint':
     "Un rectangle, une ellipse, un triangle, un losange, une ligne ou une flèche tracés d'un seul trait deviennent cette forme (annuler redonne le trait)",
-  'overlay.highlighter': 'Options du surligneur',
   'overlay.note': 'Options de la note',
   'overlay.text': 'Options du texte',
   'overlay.stroke': 'Trait',

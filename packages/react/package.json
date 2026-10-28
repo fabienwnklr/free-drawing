@@ -1,7 +1,7 @@
 {
   "name": "@fabwcie/free-drawing-react",
   "description": "React component of free-drawing, infinite canvas drawing board",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "module",
   "license": "MIT",
   "author": "Winkler Fabien <fabienwinkler@outlook.fr>",
@@ -42,7 +42,7 @@
     "format": "prettier --write \"*.{json,md}\" \"src/**/*.ts\" \"tests/**/*.ts\""
   },
   "peerDependencies": {
-    "@fabwcie/free-drawing": "^7.29.0",
+    "@fabwcie/free-drawing": "^7.29.0 || ^8.0.0",
     "react": ">=18.0.0"
   },
   "devDependencies": {

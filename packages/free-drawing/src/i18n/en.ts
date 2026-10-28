@@ -185,14 +185,6 @@ export const en = {
   'tools.image': 'Insert image',
   'tools.triangle': 'Triangle',
   'tools.diamond': 'Diamond',
-  'tools.heart': 'Heart',
-  'tools.cloud': 'Cloud',
-  'tools.star': 'Star',
-  'tools.hexagon': 'Hexagon',
-  'tools.blockArrow': 'Block arrow',
-  'tools.bubble': 'Speech bubble',
-  'tools.checkbox': 'Check box',
-  'tools.highlighter': 'Highlighter',
   'tools.laser': 'Laser pointer',
   'tools.frame': 'Frame',
 
@@ -316,7 +308,6 @@ export const en = {
   'overlay.recognizeShapes': 'Recognize shapes',
   'overlay.recognizeShapesHint':
     'A rectangle, ellipse, triangle, diamond, line or arrow drawn in one stroke becomes this shape (undo gives back the stroke)',
-  'overlay.highlighter': 'Highlighter options',
   'overlay.note': 'Note options',
   'overlay.text': 'Text options',
   'overlay.stroke': 'Stroke',

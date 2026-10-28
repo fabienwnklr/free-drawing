@@ -142,4 +142,4 @@
 - [x] import of `.excalidraw` and `.tldr` files
 - [x] replay how a drawing was made, from its history
 - [x] why use namespace for event like drawer.** ? it's really usefull ? because for listen we use drawer.on method; then need typing for event, for show error in ts if we use an unknow event
-- [ ] split most common widget to main repo, other one to dedicated plugin
+- [x] split most common widget to main repo, other one to dedicated plugin

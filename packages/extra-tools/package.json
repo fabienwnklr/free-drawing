@@ -1,0 +1,49 @@
+{
+  "name": "@fabwcie/free-drawing-extra-tools",
+  "description": "Extra tools of free-drawing, infinite canvas drawing board: heart, cloud, star, hexagon, block arrow, speech bubble, check box shapes and highlighter, as plugins",
+  "version": "1.0.0",
+  "type": "module",
+  "license": "MIT",
+  "author": "Winkler Fabien <fabienwinkler@outlook.fr>",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "CHANGELOG.md"
+  ],
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fabienwnklr/free-drawing.git",
+    "directory": "packages/extra-tools"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "free-drawing",
+    "plugin",
+    "shapes",
+    "highlighter",
+    "drawing",
+    "whiteboard",
+    "canvas"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepack": "tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "typecheck": "tsc -p .",
+    "lint": "prettier --check \"*.{json,md}\" \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "format": "prettier --write \"*.{json,md}\" \"src/**/*.ts\" \"tests/**/*.ts\""
+  },
+  "peerDependencies": {
+    "@fabwcie/free-drawing": "^8.0.0"
+  }
+}

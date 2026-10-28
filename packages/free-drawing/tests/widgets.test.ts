@@ -350,4 +350,17 @@ describe('Widgets', () => {
     expect(brushLine.fill()).toBe(brushColor);
     expect(filled.fill()).toBe('#ffc9c9');
   });
+
+  it('Tools of the extra tools asked without their plugin: told, the others created', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const drawer = createDrawer({ widgets: ['selection', 'heart', 'highlighter', 'nothing'] });
+
+    expect([...drawer.toolbar.widgets.keys()]).toEqual(['selection']);
+    expect(warn.mock.calls.map(([message]) => message)).toEqual([
+      '[free-drawing] tool "heart" is in @fabwcie/free-drawing-extra-tools: add ExtraShapesPlugin to plugins',
+      '[free-drawing] tool "highlighter" is in @fabwcie/free-drawing-extra-tools: add HighlighterPlugin to plugins',
+      '[free-drawing] unknown widget "nothing" ignored',
+    ]);
+    warn.mockRestore();
+  });
 });

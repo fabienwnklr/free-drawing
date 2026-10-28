@@ -135,23 +135,8 @@ describe('Drawing files and links', () => {
 
   it('File of every kind of shape is read back unchanged', () => {
     const drawer = createDrawer({ keepTool: true });
-    const tools = [
-      'brush',
-      'highlighter',
-      'line',
-      'square',
-      'circle',
-      'arrow',
-      'triangle',
-      'diamond',
-      'heart',
-      'cloud',
-      'star',
-      'hexagon',
-      'blockArrow',
-      'bubble',
-      'checkbox',
-    ];
+    // tools of @fabwcie/free-drawing-extra-tools: in its tests
+    const tools = ['brush', 'line', 'square', 'circle', 'arrow', 'triangle', 'diamond'];
 
     drawer.setStrokeStyle('dashed');
     drawer.setFillColor('#ffec99');

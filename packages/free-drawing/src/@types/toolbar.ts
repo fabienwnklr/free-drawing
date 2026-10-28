@@ -1,4 +1,4 @@
-import type { ColorLike, DrawingShape } from '@/@types/drawer';
+import type { DrawingShape } from '@/@types/drawer';
 import type { TranslationKey } from '@/@types/i18n';
 import type { TextChoice } from '@/@types/ui';
 import type { Vector2d } from 'konva/lib/types';
@@ -6,10 +6,10 @@ import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 
 /**
  * Widgets of toolbar: `pan` (move the view), `selection` (select, move, resize, rotate), `brush` (freehand stroke),
- * `eraser`, `text` (edited in place), `line`, `square` (rectangle, square with Shift), `circle` (ellipse, circle with
- * Shift), `arrow` (ends linked to shapes), `triangle`, `diamond`, `heart`, `cloud`, `highlighter` (wide stroke
- * multiplied with the drawing under it), `laser` (trail following pointer, not saved), `frame` (holds shapes, with a
- * title)
+ * `eraser`, `text` (edited in place), `note`, `line`, `square` (rectangle, square with Shift), `circle` (ellipse,
+ * circle with Shift), `arrow` (ends linked to shapes), `image`, `triangle`, `diamond`, `laser` (trail following
+ * pointer, not saved), `frame` (holds shapes, with a title). Heart, cloud, star, hexagon, block arrow, speech bubble,
+ * check box and highlighter: plugins of `@fabwcie/free-drawing-extra-tools`
  */
 export type WidgetName =
   | 'pan'
@@ -25,14 +25,6 @@ export type WidgetName =
   | 'image'
   | 'triangle'
   | 'diamond'
-  | 'heart'
-  | 'cloud'
-  | 'star'
-  | 'hexagon'
-  | 'blockArrow'
-  | 'bubble'
-  | 'checkbox'
-  | 'highlighter'
   | 'laser'
   | 'frame';
 
@@ -165,28 +157,6 @@ export type OverlayOptions = {
   colorTitle: TranslationKey;
   /** Accessible name of overlay (default tool options) */
   label: TranslationKey;
-};
-
-/**
- * Color or size of highlighter strokes chosen in its overlay
- */
-export type HighlighterChange = {
-  /** Color chosen */
-  color?: ColorLike;
-  /** Width chosen */
-  size?: number;
-};
-
-/**
- * Current choices of highlighter widget, updated by the overlay
- */
-export type HighlighterOverlayOptions = {
-  /** Color of strokes, one of `highlighterColors` or custom */
-  color: ColorLike;
-  /** Width of strokes, one of `highlighterSizes` */
-  size: number;
-  /** Color or size chosen */
-  onChange: (change: HighlighterChange) => void;
 };
 
 /**

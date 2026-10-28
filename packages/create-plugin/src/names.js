@@ -23,19 +23,14 @@ export const libraryTools = [
   'image',
   'triangle',
   'diamond',
-  'heart',
-  'cloud',
-  'star',
-  'hexagon',
-  'blockArrow',
-  'bubble',
-  'checkbox',
-  'highlighter',
   'laser',
   'frame',
 ];
 
-/** Letters of the tools of the library (and Q, keep tool): a tool of a plugin needs another one */
+/** Ids of the tools of `@fabwcie/free-drawing-extra-tools` (plugins of the library): a tool of a plugin needs another one */
+export const extraTools = ['heart', 'cloud', 'star', 'hexagon', 'blockArrow', 'bubble', 'checkbox', 'highlighter'];
+
+/** Letters of the tools of the library and of the extra tools (and Q, keep tool): a tool of a plugin needs another one */
 export const libraryToolLetters = ['a', 'b', 'c', 'd', 'e', 'f', 'h', 'k', 'l', 'm', 'n', 'q', 'r', 's', 't'];
 
 /** Shortcuts of the library with Alt (letters after Alt, after Alt + Shift) */
@@ -102,13 +97,14 @@ export function checkPackageName(name) {
 }
 
 /**
- * Id of a tool: camelCase, not the id of a tool of the library
+ * Id of a tool: camelCase, not the id of a tool of the library nor of its extra tools
  * @param {string} id id of the tool
  * @returns {string | null} error, null when valid
  */
 export function checkToolId(id) {
   if (!/^[a-z][a-zA-Z0-9]*$/.test(id)) return 'Use camelCase: a lower case letter, then letters and digits';
   if (libraryTools.includes(id)) return `"${id}" is a tool of the library`;
+  if (extraTools.includes(id)) return `"${id}" is a tool of @fabwcie/free-drawing-extra-tools`;
 
   return null;
 }

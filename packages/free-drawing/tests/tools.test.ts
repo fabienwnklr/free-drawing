@@ -1,8 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { Path } from 'konva/lib/shapes/Path';
-import type { Line } from 'konva/lib/shapes/Line';
+import { Line } from 'konva/lib/shapes/Line';
 import { Shape } from 'konva/lib/Shape';
-import type { HighlighterWidget } from '@/components/toolbar/widgets/Highlighter/Highlighter';
 import { Rect } from 'konva/lib/shapes/Rect';
 import { Node } from 'konva/lib/Node';
 import { Frame, getFrameShapes, getFrameTitle, isFrame } from '@/utils/frame';
@@ -14,7 +13,6 @@ import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import { scalePath } from '@/components/toolbar/widgets/PathShapeWidget';
 import { shapeName } from '@/constants';
 import { parseDrawingFile } from '@/utils/drawingFile';
-import { getAnchorPoints } from '@/utils/binding';
 import { createDrawer, drag, finger, fireMouse, fireTouch, keydown } from './helpers';
 
 /** Text of a blob (jsdom has no `blob.text()`) */
@@ -34,7 +32,7 @@ describe('Tools of shapes', () => {
     expect(scalePath('M0.5 1C0.18 0.78 0 0.56 0 0.3', 10, 10)).toBe('M5 10C1.8 7.8 0 5.6 0 3');
   });
 
-  it('Triangle, diamond, heart and cloud drawn in dragged box, square with Shift', () => {
+  it('Triangle and diamond drawn in dragged box, square with Shift', () => {
     const drawer = createDrawer();
     const draw = (tool: string, from: [number, number], to: [number, number], shiftKey = false) => {
       drawer.getWidget<BaseWidget>(tool as BaseWidget['id'])!.setActive(true);
@@ -52,45 +50,9 @@ describe('Tools of shapes', () => {
     expect([diamond.x(), diamond.y(), diamond.data()]).toEqual([250, 250, 'M25 0L50 25L25 50L0 25Z']);
     expect(drawer.getWidget<BaseWidget>('diamond')!.shortcut).toBe('d');
 
-    expect(draw('heart', [0, 0], [40, 40]).hasName(shapeName.heart)).toBe(true);
-    expect(draw('cloud', [0, 0], [40, 40]).hasName(shapeName.cloud)).toBe(true);
     // a click draws nothing
-    draw('cloud', [500, 500], [500, 500]);
-    expect(drawer.getDrawingShapes()).toHaveLength(4);
-  });
-
-  it('Star, hexagon, block arrow, speech bubble and check box: in the dragged box, in "More tools", outline as drawn', () => {
-    const drawer = createDrawer();
-    const layer = drawer.drawLayer;
-    const draw = (tool: string, to: [number, number]) => {
-      drawer.getWidget<BaseWidget>(tool as BaseWidget['id'])!.setActive(true);
-      drag(drawer, [0, 0], to);
-      return drawer.getDrawingShapes().at(-1) as Path;
-    };
-    const tools = ['star', 'hexagon', 'blockArrow', 'bubble', 'checkbox'];
-
-    expect(draw('hexagon', [100, 50]).data()).toBe('M25 0L75 0L100 25L75 50L25 50L0 25Z');
-    expect(draw('blockArrow', [100, 100]).data()).toBe('M0 30L60 30L60 0L100 50L60 100L60 70L0 70Z');
-
-    const star = draw('star', [200, 200]);
-    const bubble = draw('bubble', [200, 100]);
-    const checkbox = draw('checkbox', [200, 200]);
-
-    expect([star, bubble, checkbox].map((shape) => shape.name())).toEqual([
-      shapeName.star,
-      shapeName.bubble,
-      shapeName.checkbox,
-    ]);
-    // in the group of the toolbar, without shortcut, named in the layers panel
-    expect(tools.every((tool) => drawer.options.widgetGroups[0].widgets.includes(tool))).toBe(true);
-    expect(tools.map((tool) => drawer.getWidget<BaseWidget>(tool as BaseWidget['id'])!.shortcut)).toEqual(
-      tools.map(() => undefined)
-    );
-    expect(drawer.getShapeLabel(star)).toBe('Star');
-    // sides on the outline: top point of the star, side of the check box (its check mark is not an outline)
-    expect(getAnchorPoints(star, layer).top).toEqual({ x: 100, y: 0 });
-    const right = getAnchorPoints(checkbox, layer).right;
-    expect([Math.round(right.x), Math.round(right.y)]).toEqual([200, 100]);
+    draw('triangle', [500, 500], [500, 500]);
+    expect(drawer.getDrawingShapes()).toHaveLength(2);
   });
 
   it('Background color, stroke style, svg export and files', async () => {
@@ -479,63 +441,32 @@ describe('Laser', () => {
     // pointing does not change drawing
     drawer.setReadOnly(true);
     expect(laser.isDisabled).toBe(false);
-    expect(drawer.getWidget<BaseWidget>('highlighter')!.isDisabled).toBe(true);
+    expect(drawer.getWidget<BaseWidget>('brush')!.isDisabled).toBe(true);
     drawer.setReadOnly(false);
   });
 });
 
-describe('Highlighter', () => {
-  it('Wide fluorescent strokes multiplied with drawing, its own colors and widths', async () => {
+describe('Strokes of the highlighter', () => {
+  it('Selected: its color is its fill, without stroke nor width; multiplied with the drawing in svg exports', async () => {
     const drawer = createDrawer({ language: 'en' });
-    const highlighter = drawer.getWidget<HighlighterWidget>('highlighter')!;
-    const strokeColor = drawer.options.strokeColor;
-    const draw = () => {
-      highlighter.setActive(true);
-      drag(drawer, [100, 100], [300, 100]);
-      return drawer.getDrawingShapes().at(-1) as Line;
-    };
-
-    expect(highlighter.shortcut).toBe('m');
-    const yellow = draw();
-    const box = yellow.getClientRect();
-
-    expect(yellow.hasName(shapeName.highlighter)).toBe(true);
-    expect([yellow.fill(), yellow.stroke(), yellow.globalCompositeOperation()]).toEqual([
-      '#ffe066',
-      undefined,
-      'multiply',
-    ]);
-    // medium width (20)
-    expect(Math.round(box.height)).toBeGreaterThanOrEqual(19);
-
-    // overlay: own colors and widths, stroke color of other tools kept
-    const { overlay } = highlighter;
-    expect(overlay.$overlayContainer.getAttribute('aria-label')).toBe('Highlighter options');
-    expect(overlay.colorPicker.$buttons.map(($btn) => $btn.getAttribute('aria-label'))).toEqual([
-      'Yellow',
-      'Green',
-      'Blue',
-      'Pink',
-      'Orange',
-    ]);
-    overlay.colorPicker.$buttons[3].click();
-    overlay.$sizeButtons[2].click();
-    expect(overlay.$sizeButtons[2].getAttribute('aria-pressed')).toBe('true');
-
-    const pink = draw();
-
-    expect(pink.fill()).toBe('#faa2c1');
-    expect(Math.round(pink.getClientRect().height)).toBeGreaterThanOrEqual(31);
-    expect(drawer.options.strokeColor).toBe(strokeColor);
-
-    // selected: color is its fill, no stroke nor width
+    // as drawn by the highlighter of @fabwcie/free-drawing-extra-tools
+    const stroke = drawer.addShape(
+      new Line({
+        name: shapeName.highlighter,
+        closed: true,
+        points: [100, 90, 300, 90, 300, 110, 100, 110],
+        fill: '#faa2c1',
+        strokeWidth: 0,
+        globalCompositeOperation: 'multiply',
+      })
+    ) as Line;
     const selectWidget = drawer.getWidget<SelectWidget>('selection')!;
 
     selectWidget.setActive(true);
-    selectWidget.select([pink]);
+    selectWidget.select([stroke]);
     drawer.setStrokeColor('#2f9e44');
     drawer.setStrokeWidth(12);
-    expect([pink.fill(), pink.stroke(), pink.strokeWidth()]).toEqual(['#2f9e44', undefined, 0]);
+    expect([stroke.fill(), stroke.stroke(), stroke.strokeWidth()]).toEqual(['#2f9e44', undefined, 0]);
 
     const svg = await readText(await drawer.exportImage('svg', { background: false }));
 

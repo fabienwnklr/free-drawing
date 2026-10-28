@@ -24,7 +24,7 @@ hero:
 features:
   - icon: ✏️
     title: Drawing tools
-    details: Brush, highlighter, rectangles, ellipses, lines, arrows, triangles, diamonds, hearts, clouds, texts, images, laser pointer and eraser.
+    details: Brush, rectangles, ellipses, lines, arrows, triangles, diamonds, texts, notes, images, laser pointer and eraser; hearts, clouds, stars and a highlighter as extra tools.
     link: /features#drawing-tools
     linkText: See the tools
   - icon: 🎯

@@ -15,17 +15,9 @@ import { ArrowWidget } from '@/components/toolbar/widgets/Arrow/Arrow';
 import { ImageWidget } from '@/components/toolbar/widgets/Image/Image';
 import { TriangleWidget } from '@/components/toolbar/widgets/Triangle/Triangle';
 import { DiamondWidget } from '@/components/toolbar/widgets/Diamond/Diamond';
-import { HeartWidget } from '@/components/toolbar/widgets/Heart/Heart';
-import { CloudWidget } from '@/components/toolbar/widgets/Cloud/Cloud';
-import { HighlighterWidget } from '@/components/toolbar/widgets/Highlighter/Highlighter';
 import { LaserWidget } from '@/components/toolbar/widgets/Laser/Laser';
 import { FrameWidget } from '@/components/toolbar/widgets/Frame/Frame';
 import { NoteWidget } from '@/components/toolbar/widgets/Note/Note';
-import { StarWidget } from '@/components/toolbar/widgets/Star/Star';
-import { HexagonWidget } from '@/components/toolbar/widgets/Hexagon/Hexagon';
-import { BlockArrowWidget } from '@/components/toolbar/widgets/BlockArrow/BlockArrow';
-import { BubbleWidget } from '@/components/toolbar/widgets/Bubble/Bubble';
-import { CheckboxWidget } from '@/components/toolbar/widgets/Checkbox/Checkbox';
 import { GroupWidget } from '@/components/toolbar/widgets/GroupWidget';
 import { getWidgetGroups, getWidgetNames } from '@/utils/widgets';
 import { arrowNavigation, createButton, setLabel, setPressed } from '@/utils/dom';
@@ -47,14 +39,6 @@ const widgetClasses: Record<WidgetName, new (drawer: Drawer) => BaseWidget> = {
   image: ImageWidget,
   triangle: TriangleWidget,
   diamond: DiamondWidget,
-  heart: HeartWidget,
-  cloud: CloudWidget,
-  star: StarWidget,
-  hexagon: HexagonWidget,
-  blockArrow: BlockArrowWidget,
-  bubble: BubbleWidget,
-  checkbox: CheckboxWidget,
-  highlighter: HighlighterWidget,
   laser: LaserWidget,
   frame: FrameWidget,
 };

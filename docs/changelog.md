@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [8.0.0](https://github.com/fabienwnklr/free-drawing/compare/v7.53.0...v8.0.0) (2026-10-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* **toolbar:** the heart, cloud, star, hexagon, block arrow, speech bubble, check box and highlighter tools are plugins of the new package `@fabwcie/free-drawing-extra-tools` (`ExtraShapesPlugin`, `HighlighterPlugin`): add them to the `plugins` option to keep them, they take their place in "More tools"; a drawer asked for one of them without its plugin (`widgets` option) tells which one to add in the console. Drawings holding their shapes still open, are drawn, selected, styled, exported and shared as before
+
+### Features
+
+* **plugins:** `PathShapeWidget` (tools of shapes drawn by a path in their box, with `pathShapeData` and `scalePath`), `FreehandWidget` (tools of freehand strokes), `ColorPicker` and `createOverlaySection` (options panels of tools) exported for plugins
+
 ## [7.53.0](https://github.com/fabienwnklr/free-drawing/compare/v7.52.0...v7.53.0) (2026-10-28)
 
 

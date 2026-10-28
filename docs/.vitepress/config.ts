@@ -117,6 +117,8 @@ export default defineConfig({
             { text: 'React', link: '/get-started/react' },
             { text: 'Vue', link: '/get-started/vue' },
             { text: 'Web Component', link: '/get-started/element' },
+            // plugins of the repository
+            { text: 'Extra tools', link: '/get-started/extra-tools' },
             { text: 'Contribute', link: '/get-started/contribute' },
           ],
         },

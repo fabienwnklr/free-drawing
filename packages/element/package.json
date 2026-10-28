@@ -1,7 +1,7 @@
 {
   "name": "@fabwcie/free-drawing-element",
   "description": "Web component <free-drawing> of free-drawing, infinite canvas drawing board: any page, Angular, Svelte...",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "license": "MIT",
   "author": "Winkler Fabien <fabienwinkler@outlook.fr>",
@@ -45,6 +45,6 @@
     "format": "prettier --write \"*.{json,md}\" \"src/**/*.ts\" \"tests/**/*.ts\""
   },
   "peerDependencies": {
-    "@fabwcie/free-drawing": "^7.29.0"
+    "@fabwcie/free-drawing": "^7.29.0 || ^8.0.0"
   }
 }

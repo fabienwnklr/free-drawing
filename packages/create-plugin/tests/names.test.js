@@ -9,6 +9,7 @@ import {
   formatShortcut,
   getNames,
   libraryToolLetters,
+  extraTools,
   libraryTools,
   suggestCommandShortcut,
   suggestToolShortcut,
@@ -38,9 +39,10 @@ describe('Names of a plugin', () => {
       expect.any(String),
       expect.any(String),
     ]);
-    expect(['stickyNotes', 'brush', 'Sticky', 'sticky-notes'].map(checkToolId)).toEqual([
+    expect(['stickyNotes', 'brush', 'heart', 'Sticky', 'sticky-notes'].map(checkToolId)).toEqual([
       null,
       '"brush" is a tool of the library',
+      '"heart" is a tool of @fabwcie/free-drawing-extra-tools',
       expect.any(String),
       expect.any(String),
     ]);
@@ -77,7 +79,7 @@ describe('Names of a plugin', () => {
     ]);
   });
 
-  it('Tools and their letters follow the sources of the library', () => {
+  it('Tools and their letters follow the sources of the library and of its extra tools', () => {
     const src = new URL('../../free-drawing/src/', import.meta.url);
     const constants = readFileSync(new URL('constants.ts', src), 'utf8');
     const list = constants.match(/export const widgetNames[^=]*= \[([^\]]*)\]/)?.[1] ?? '';
@@ -92,9 +94,18 @@ describe('Names of a plugin', () => {
         ),
       ])
       .map(([, letter]) => letter);
+    // tools of the plugins of the extra tools: addWidget(id, class), super(drawer, id, title, icon, letter)
+    const extra = ['ExtraShapesPlugin.ts', 'HighlighterPlugin.ts'].map((file) =>
+      readFileSync(new URL(`../../extra-tools/src/${file}`, import.meta.url), 'utf8')
+    );
+    const extraIds = extra.flatMap((source) => [...source.matchAll(/this\.addWidget\('(\w+)'/g)].map(([, id]) => id));
+    const extraLetters = extra.flatMap((source) =>
+      [...source.matchAll(/super\(drawer, '\w+', '[^']*', \w+, '(\w)'\)/g)].map(([, letter]) => letter)
+    );
 
     expect([...libraryTools].sort()).toEqual([...list.matchAll(/'(\w+)'/g)].map(([, name]) => name).sort());
+    expect([...extraTools].sort()).toEqual(extraIds.sort());
     // Q: tool kept
-    expect([...libraryToolLetters].sort()).toEqual([...letters, 'q'].sort());
+    expect([...libraryToolLetters].sort()).toEqual([...letters, ...extraLetters, 'q'].sort());
   });
 });

@@ -13,7 +13,7 @@
     "format": "prettier --write \"src/**/*.{ts,css}\" \"tests/**/*.ts\""
   },
   "peerDependencies": {
-    "@fabwcie/free-drawing": "^7.19.0",
+    "@fabwcie/free-drawing": "^8.0.0",
     "konva": "^10.9.0"
   }
 }

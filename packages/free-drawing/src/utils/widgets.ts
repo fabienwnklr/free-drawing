@@ -5,7 +5,7 @@ import type {
   WidgetOptions,
   WidgetsOptions,
 } from '@/@types/toolbar';
-import { widgetNames } from '@/constants';
+import { extraTools, widgetNames } from '@/constants';
 
 /**
  * Names of widgets option (list or object), in given order, unknown names are ignored
@@ -21,7 +21,13 @@ export function getWidgetNames(
 
   return names.filter((name) => {
     const exists = known.includes(name);
-    if (!exists) console.warn(`[free-drawing] unknown widget "${name}" ignored`);
+    const plugin = extraTools[name];
+
+    if (!exists && plugin) {
+      console.warn(`[free-drawing] tool "${name}" is in @fabwcie/free-drawing-extra-tools: add ${plugin} to plugins`);
+    } else if (!exists) {
+      console.warn(`[free-drawing] unknown widget "${name}" ignored`);
+    }
     return exists;
   });
 }

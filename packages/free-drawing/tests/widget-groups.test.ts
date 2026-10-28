@@ -102,7 +102,12 @@ describe('Groups of widgets', () => {
 
     expect(small.$menu.style.getPropertyValue('--drawer-group-columns')).toBe('2');
 
-    const drawer = createDrawer();
+    // 3 lines of tools
+    const drawer = createDrawer({
+      widgetGroups: [
+        { widgets: ['line', 'square', 'circle', 'arrow', 'triangle', 'diamond', 'note', 'image', 'laser', 'frame'] },
+      ],
+    });
     const [group] = drawer.toolbar.groups;
     const buttons = group.widgets.map((widget) => widget.$button);
 

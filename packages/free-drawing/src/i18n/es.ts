@@ -179,14 +179,6 @@ export const es: Translations = {
   'tools.image': 'Insertar imagen',
   'tools.triangle': 'Triángulo',
   'tools.diamond': 'Rombo',
-  'tools.heart': 'Corazón',
-  'tools.cloud': 'Nube',
-  'tools.star': 'Estrella',
-  'tools.hexagon': 'Hexágono',
-  'tools.blockArrow': 'Flecha de bloque',
-  'tools.bubble': 'Bocadillo',
-  'tools.checkbox': 'Casilla marcada',
-  'tools.highlighter': 'Resaltador',
   'tools.laser': 'Puntero láser',
   'tools.frame': 'Marco',
 
@@ -306,7 +298,6 @@ export const es: Translations = {
   'overlay.recognizeShapes': 'Reconocer las formas',
   'overlay.recognizeShapesHint':
     'Un rectángulo, una elipse, un triángulo, un rombo, una línea o una flecha trazados de un solo trazo se convierten en esa forma (deshacer devuelve el trazo)',
-  'overlay.highlighter': 'Opciones del resaltador',
   'overlay.note': 'Opciones de la nota',
   'overlay.text': 'Opciones del texto',
   'overlay.stroke': 'Trazo',

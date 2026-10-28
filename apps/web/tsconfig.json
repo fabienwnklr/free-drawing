@@ -12,6 +12,7 @@
     "useDefineForClassFields": true,
     /* library sources, as in vite.config.ts */
     "paths": {
+      "@fabwcie/free-drawing-extra-tools": ["../../packages/extra-tools/src/index.ts"],
       "@fabwcie/free-drawing": ["../../packages/free-drawing/src/index.ts"],
       "@/*": ["../../packages/free-drawing/src/*"]
     }

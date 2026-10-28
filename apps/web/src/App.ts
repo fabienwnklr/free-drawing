@@ -1,4 +1,5 @@
 import { Drawer, ariaShortcut, type DrawerStorage, type Preferences } from '@fabwcie/free-drawing';
+import { ExtraShapesPlugin, HighlighterPlugin } from '@fabwcie/free-drawing-extra-tools';
 import { type DrawingSummary, type DrawingsStore, type User, api } from './api';
 import { local, localDrawings } from './local';
 import { Texts } from './texts';
@@ -82,6 +83,8 @@ export class App {
       storage: this._createStorage(),
       // save button of app bar instead
       saveButton: false,
+      // every tool of the demo: shapes and highlighter of the extra tools, in "More tools"
+      plugins: [ExtraShapesPlugin, HighlighterPlugin],
     });
     this.texts = new Texts(this.drawer);
     this.accountDialog = new AccountDialog(this);

@@ -109,6 +109,11 @@ export { Plugin } from '@/plugins/Plugin';
 export { PluginCollection } from '@/plugins/PluginCollection';
 export { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 export { ShapeWidget } from '@/components/toolbar/widgets/ShapeWidget';
+// tools of shapes drawn by a path in their box, of freehand strokes; parts of their options panels
+export { PathShapeWidget, scalePath } from '@/components/toolbar/widgets/PathShapeWidget';
+export { FreehandWidget } from '@/components/toolbar/widgets/FreehandWidget';
+export { ColorPicker } from '@/components/ColorPicker/ColorPicker';
+export { createOverlaySection } from '@/components/tools/Overlay/section';
 // selection of shapes from code: `drawer.getWidget<SelectWidget>('selection')?.select(shapes)`
 export type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 // classes of the public API, as types: members of the drawer (`drawer.layout` is a `DrawerLayout`), results of its
@@ -128,7 +133,6 @@ export type { BaseOverlay } from '@/components/tools/Overlay/BaseOverlay';
 export type { ShapeOverlay } from '@/components/tools/Overlay/ShapeOverlay/ShapeOverlay';
 export type { TextOverlay } from '@/components/tools/Overlay/TextOverlay/TextOverlay';
 export type { SelectOverlay } from '@/components/tools/Overlay/SelectOverlay/SelectOverlay';
-export type { ColorPicker } from '@/components/ColorPicker/ColorPicker';
 export type { Dropdown } from '@/components/Dropdown/Dropdown';
 export type { Settings } from '@/components/tools/Settings/Settings';
 export type { SaveButton } from '@/components/tools/SaveButton/SaveButton';
@@ -158,7 +162,7 @@ export type { SearchBar } from '@/components/SearchBar/SearchBar';
 export type { Slideshow } from '@/components/Slideshow/Slideshow';
 export type { ShapeNavigation } from '@/utils/shapeNavigation';
 export type { RoomCipher } from '@/utils/encryption';
-export { drawerEvents, shapeName } from '@/constants';
+export { drawerEvents, pathShapeData, shapeName } from '@/constants';
 export { createButton, setLabel, setPressed } from '@/utils/dom';
 // shortcuts shown as by the library (`Ctrl+Shift+Z`: ⇧⌘Z on Apple devices) and their `aria-keyshortcuts`
 export { ariaShortcut, formatShortcut } from '@/utils/shortcut';

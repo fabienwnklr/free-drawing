@@ -2,6 +2,12 @@
 
 Changes of `@fabwcie/create-free-drawing-plugin` (`npm create @fabwcie/free-drawing-plugin`). Each version is published by the release workflow of the library once it is not on npm yet.
 
+## 1.3.0 (2026-10-28)
+
+### Features
+
+- Generated plugins depend on the library 8 (`^8.0.0`): its tools of shapes and freehand strokes (`PathShapeWidget`, `FreehandWidget`) and parts of options panels are exported for plugins
+
 ## 1.2.1 (2026-10-28)
 
 ### Bug Fixes

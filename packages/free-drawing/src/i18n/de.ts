@@ -180,14 +180,6 @@ export const de: Translations = {
   'tools.image': 'Bild einfügen',
   'tools.triangle': 'Dreieck',
   'tools.diamond': 'Raute',
-  'tools.heart': 'Herz',
-  'tools.cloud': 'Wolke',
-  'tools.star': 'Stern',
-  'tools.hexagon': 'Sechseck',
-  'tools.blockArrow': 'Blockpfeil',
-  'tools.bubble': 'Sprechblase',
-  'tools.checkbox': 'Kontrollkästchen',
-  'tools.highlighter': 'Textmarker',
   'tools.laser': 'Laserpointer',
   'tools.frame': 'Rahmen',
 
@@ -308,7 +300,6 @@ export const de: Translations = {
   'overlay.recognizeShapes': 'Formen erkennen',
   'overlay.recognizeShapesHint':
     'Ein in einem Zug gezeichnetes Rechteck, eine Ellipse, ein Dreieck, eine Raute, eine Linie oder ein Pfeil wird zu dieser Form (Rückgängig gibt den Strich zurück)',
-  'overlay.highlighter': 'Textmarker-Optionen',
   'overlay.note': 'Notiz-Optionen',
   'overlay.text': 'Textoptionen',
   'overlay.stroke': 'Strich',

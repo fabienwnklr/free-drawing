@@ -52,17 +52,21 @@ export const widgetNames: WidgetName[] = [
   'image',
   'triangle',
   'diamond',
-  'heart',
-  'cloud',
-  'star',
-  'hexagon',
-  'blockArrow',
-  'bubble',
-  'checkbox',
-  'highlighter',
   'laser',
   'frame',
 ];
+
+/** Tools of previous versions in plugins of @fabwcie/free-drawing-extra-tools, by name: told when asked without them */
+export const extraTools: Record<string, string> = {
+  heart: 'ExtraShapesPlugin',
+  cloud: 'ExtraShapesPlugin',
+  star: 'ExtraShapesPlugin',
+  hexagon: 'ExtraShapesPlugin',
+  blockArrow: 'ExtraShapesPlugin',
+  bubble: 'ExtraShapesPlugin',
+  checkbox: 'ExtraShapesPlugin',
+  highlighter: 'HighlighterPlugin',
+};
 
 /**
  * Default options of a drawer, merged with options given to `new Drawer($el, options)` (see `DrawerOptions`)
@@ -105,7 +109,7 @@ export const defaultOptions: DrawerOptions = {
   storage: null,
   plugins: [],
   widgets: widgetNames,
-  // more tools in one button
+  // more tools in one button; tools of @fabwcie/free-drawing-extra-tools (shapes, highlighter) take their place in it
   widgetGroups: [
     {
       widgets: [
