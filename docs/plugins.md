@@ -300,7 +300,7 @@ class StampCounterPlugin extends Plugin {
 
 ## Packaging and publishing
 
-A plugin is a package depending on the library and Konva as peer dependencies: the app gives them, the drawer and the plugin use the same Konva.
+A plugin is a package depending on the library and Konva as peer dependencies: the app gives them, the drawer and the plugin use the same Konva ([why](/get-started/#why-is-konva-a-peer-dependency): one copy of Konva in the page, its classes shared).
 
 ```json
 {

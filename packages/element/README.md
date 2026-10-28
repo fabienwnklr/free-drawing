@@ -10,7 +10,7 @@ React and Vue apps can also use their own components: [`@fabwcie/free-drawing-re
 npm install @fabwcie/free-drawing-element @fabwcie/free-drawing konva
 ```
 
-`konva` is a peer dependency of the library. Importing the package defines `<free-drawing>`: import it once, before the element is used.
+`konva` is a peer dependency of the library ([why](https://free-drawing-docs.netlify.app/get-started/#why-is-konva-a-peer-dependency)). Importing the package defines `<free-drawing>`: import it once, before the element is used.
 
 ## Use
 

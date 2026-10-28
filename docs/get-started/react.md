@@ -8,7 +8,7 @@ React component of [free-drawing](https://github.com/fabienwnklr/free-drawing), 
 npm install @fabwcie/free-drawing-react @fabwcie/free-drawing konva
 ```
 
-React 18 or later. `konva` is a peer dependency of the library.
+React 18 or later. `konva` is a peer dependency of the library ([why](https://free-drawing-docs.netlify.app/get-started/#why-is-konva-a-peer-dependency)).
 
 ## Use
 

@@ -8,7 +8,7 @@ Vue component of [free-drawing](https://github.com/fabienwnklr/free-drawing), an
 npm install @fabwcie/free-drawing-vue @fabwcie/free-drawing konva
 ```
 
-Vue 3.3 or later. `konva` is a peer dependency of the library.
+Vue 3.3 or later. `konva` is a peer dependency of the library ([why](https://free-drawing-docs.netlify.app/get-started/#why-is-konva-a-peer-dependency)).
 
 ## Use
 

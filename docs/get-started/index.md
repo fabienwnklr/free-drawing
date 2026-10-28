@@ -33,7 +33,18 @@ See [Contribute guide](https://github.com/fabienwnklr/free-drawing/blob/master/C
 yarn add @fabwcie/free-drawing konva
 ```
 
-`konva` (version 10) is a peer dependency, install it with the package.
+`konva` (version 10) is a peer dependency, install it with the package: npm (7 or later) and pnpm add it when your app does not have it, Yarn only warns.
+
+### Why is Konva a peer dependency?
+
+The drawer is built on [Konva](https://konvajs.org/): its stage, layers and shapes are Konva nodes, and they are part of its API (`drawer.stage`, `drawer.addShape(new Rect({ ... }))`, plugins drawing with `konva/lib/shapes/...`). Your app gives Konva instead of the library bundling its own copy:
+
+- **One Konva in the page.** Konva keeps its state in one global object: the classes `Node.create` knows (the library registers its `Frame` class there, needed to open drawings, links and changes of collaborators), the shapes being dragged, settings such as `Konva.pixelRatio`. A second copy has its own state: shapes created with one copy are not instances of the classes of the other (the library checks the class of the shapes it is given: `instanceof Group`, `Text`, `Arrow`...), frames are unknown to it, and Konva logs "Several Konva instances detected" in the console. As a peer dependency, your package manager installs one copy shared by your app, the library and its plugins.
+- **Your code draws with the same classes.** Shapes given to `drawer.addShape`, listeners of `drawer.stage`, plugins: they import Konva themselves, the copy of the drawer.
+- **Downloaded once.** The build of the library leaves Konva out: your bundler adds it once, also when your app already uses Konva (react-konva, vue-konva, stages of its own). The library imports its classes by their path (`konva/lib/shapes/Rect`): only the parts it uses are bundled, unless your app imports the whole of Konva.
+- **Your choice of version.** Any Konva 10 from 10.9.0 works (`^10.9.0`): a fix of Konva reaches your app without waiting for a new version of the library.
+
+The other dependencies (`perfect-freehand` for strokes, `socket.io-client` and `uqr` loaded only when a collaboration session starts) are internal: none of their objects reach your code, so they are installed with the library.
 
 ## Use it
 
