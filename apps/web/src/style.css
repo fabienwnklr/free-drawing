@@ -186,6 +186,10 @@ body {
   gap: 0.375rem;
 }
 
+.app-button[hidden] {
+  display: none;
+}
+
 .app-button svg {
   flex-shrink: 0;
 }
