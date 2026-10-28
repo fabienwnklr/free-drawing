@@ -3,6 +3,7 @@ import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import type { ShapeOrder } from '@/@types/drawer';
 import type { KeyboardLayoutNavigator } from '@/@types/ui';
 import { unbindMoved } from '@/utils/binding';
+import { moveBy } from '@/utils/align';
 import type { Drawer } from '@/Drawer';
 
 /** Types of inputs with editable text */
@@ -196,7 +197,8 @@ export class HotKey {
       } else if (edit && editable.length && e.key in arrowMoves && !inField) {
         // only arrow keys, other keys keep their default behavior (F5, Tab...)
         if (!arrowMoved) unbindMoved(editable);
-        for (const shape of editable) shape.move(arrowMoves[e.key]);
+        // along the axes of the drawing, also for shapes of groups turned or flipped
+        for (const shape of editable) moveBy(shape, this.drawer.drawLayer, arrowMoves[e.key].x, arrowMoves[e.key].y);
         arrowMoved = true;
         e.preventDefault();
       }

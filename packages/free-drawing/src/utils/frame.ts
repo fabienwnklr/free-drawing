@@ -261,7 +261,7 @@ export function withFrameShapes(shapes: DrawingShape[]): DrawingShape[] {
 /**
  * Frame whose box contains the center of a shape (top one), null if none
  * @param shape shape to place (drawn, dragged, transformed...)
- * @param frames frames of the drawing, bottom first (hidden ones ignored)
+ * @param frames frames of the drawing, bottom first (hidden ones ignored, locked ones too unless the shape is in it)
  * @returns topmost visible frame containing the shape center (absolute coordinates), null if none
  */
 export function findFrameAt(shape: DrawingShape, frames: Frame[]): Frame | null {
@@ -273,7 +273,10 @@ export function findFrameAt(shape: DrawingShape, frames: Frame[]): Frame | null 
     [...frames].reverse().find((frame) => {
       const rect = frame.getClientRect();
 
-      return frame.isVisible() && x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height;
+      // a locked frame takes no shape (it would be locked too)
+      if (!frame.isVisible() || (!frame.listening() && !frame.isAncestorOf(shape))) return false;
+
+      return x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height;
     }) ?? null
   );
 }

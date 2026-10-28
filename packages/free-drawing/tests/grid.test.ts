@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest';
 import type { Context } from 'konva/lib/Context';
 import { Rect } from 'konva/lib/shapes/Rect';
 import type { Shape } from 'konva/lib/Shape';
+import type { Group } from 'konva/lib/Group';
 import type { GridStyle } from '@/@types/drawer';
 import { gridSize, shapeName } from '@/constants';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { drawGrid, gridRotationSnaps, gridShapeStyle, gridStep, snapToGrid } from '@/utils/grid';
+import { createFrame } from '@/utils/frame';
 import { createDrawer } from './helpers';
 
 /**
@@ -113,6 +115,39 @@ describe('Grid styles', () => {
     rect.fire('dragmove', { target: rect }, true);
     expect(rect.position()).toEqual({ x: 13, y: 40 });
     rect.fire('dragend', { target: rect }, true);
+  });
+
+  it('Drags snapped to the grid of the drawing: shapes of frames wherever their frame is, frames, groups', () => {
+    const drawer = createDrawer();
+    const drag = (node: Shape | Group, x: number, y: number) => {
+      node.fire('dragstart', { target: node }, true);
+      node.absolutePosition(drawer.drawLayer.getAbsoluteTransform().point({ x, y }));
+      node.fire('dragmove', { target: node }, true);
+      node.fire('dragend', { target: node }, true);
+    };
+    const frame = drawer.addShape(createFrame({ x: 13, y: 7, width: 300, height: 200, label: 'Frame' }));
+    const rect = drawer.addShape(new Rect({ name: shapeName.rect, x: 50, y: 50, width: 40, height: 40 }));
+
+    drawer.placeInFrames([rect]);
+    drawer.showGrid();
+    drawer.getWidget<SelectWidget>('selection')!.setActive(true);
+
+    // in drawing coordinates, not in the ones of the frame
+    drag(rect as Shape, 87, 93);
+    expect(rect.getAbsolutePosition(drawer.drawLayer)).toEqual({ x: 80, y: 80 });
+    // frames and groups too (group: top left corner of its box)
+    drag(frame, 47, 33);
+    expect(frame.position()).toEqual({ x: 40, y: 40 });
+
+    const group = drawer.groupShapes([
+      drawer.addShape(new Rect({ name: shapeName.rect, x: 500, y: 500, width: 10, height: 10 })),
+      drawer.addShape(new Rect({ name: shapeName.rect, x: 530, y: 500, width: 10, height: 10 })),
+    ])!;
+
+    drag(group, 7, 3);
+    const box = group.getClientRect({ relativeTo: drawer.drawLayer });
+
+    expect([box.x, box.y].map((n) => Math.round(n) % gridSize)).toEqual([0, 0]);
   });
 
   it('Resize anchors snapped to the grid of the drawing, also with the view moved and zoomed', () => {

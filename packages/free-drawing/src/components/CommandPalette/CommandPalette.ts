@@ -45,6 +45,7 @@ import LockIcon from '@/icons/lock.svg?raw';
 import PresentIcon from '@/icons/present.svg?raw';
 import ReplayIcon from '@/icons/replay.svg?raw';
 import { isFrame } from '@/utils/frame';
+import { withoutBoundTexts } from '@/utils/boundText';
 import { getTexts } from '@/utils/text';
 import UnlockIcon from '@/icons/unlock.svg?raw';
 import FlipHorizontalIcon from '@/icons/flip-horizontal.svg?raw';
@@ -279,6 +280,8 @@ export class CommandPalette extends Modal {
     // locked shapes are selected to be unlocked, not modified
     const locked = edit && !!selectWidget?.isLocked();
     const selected = selectWidget && !locked ? drawer.getSelectedShapes() : [];
+    // shapes aligned, distributed or stacked: texts of shapes follow their shape
+    const arranged = withoutBoundTexts(selected).length;
     const editSelection = edit && selected.length > 0;
     const hasShapes = drawer.getDrawingShapes().length > 0;
     const { collaboration } = drawer;
@@ -405,11 +408,11 @@ export class CommandPalette extends Modal {
                 run: () => drawer.reorderShapes(order),
               }
           ),
-          // 2 shapes at least (distribute: 3)
+          // 2 shapes at least (distribute: 3), texts of shapes not counted
           ...shapeAlignments.map(
             ({ value, label, icon }) =>
               editSelection &&
-              selected.length > 1 && {
+              arranged > 1 && {
                 id: `align shapes ${value}`,
                 label: t(label),
                 icon,
@@ -419,7 +422,7 @@ export class CommandPalette extends Modal {
           ...shapeDistributions.map(
             ({ value, label, icon }) =>
               editSelection &&
-              selected.length > 2 && {
+              arranged > 2 && {
                 id: `distribute shapes spacing ${value}`,
                 label: t(label),
                 icon,
@@ -429,7 +432,7 @@ export class CommandPalette extends Modal {
           ...shapeStacks.map(
             ({ value, label, icon }) =>
               editSelection &&
-              selected.length > 1 && {
+              arranged > 1 && {
                 id: `stack shapes ${value}`,
                 label: t(label),
                 icon,

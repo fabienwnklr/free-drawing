@@ -326,6 +326,27 @@ describe('Frame', () => {
     expect(drawer.selectionLayer.find(`.${frameHighlightName}`).map((h) => h.attrs.dash)).toEqual([[6, 4]]);
   });
 
+  it('Shapes flipped or turned out of their frame leave it, onto it enter it; a locked frame takes no shape', () => {
+    const { drawer, frame, inside } = createFrame();
+    const other = drawer.addShape(
+      new Rect({ name: shapeName.rect, x: 400, y: 120, width: 50, height: 50, stroke: '#000' })
+    );
+
+    // mirrored around the middle of both: they change places
+    drawer.flipShapes('horizontal', [inside, other]);
+    expect(getFrameShapes(frame)).toEqual([other]);
+    expect(inside.getParent()).toBe(drawer.drawLayer);
+    drawer.rotateShapes(180, [inside, other]);
+    expect(getFrameShapes(frame)).toEqual([inside]);
+
+    // locked: shapes drawn on it stay out of it (they would be locked too)
+    frame.listening(false);
+    drawer.getWidget<BaseWidget>('square')!.setActive(true);
+    drag(drawer, [200, 180], [260, 230]);
+    expect(drawer.getDrawingShapes().at(-1)!.getParent()).toBe(drawer.drawLayer);
+    expect(getFrameShapes(frame)).toEqual([inside]);
+  });
+
   it('Selection: shapes of frame alone, frame with its border or title, resized without scaling its shapes', () => {
     const { drawer, frame, inside, selectWidget } = createFrame();
     const { transformer } = selectWidget;
@@ -663,5 +684,28 @@ describe('Pointer actions', () => {
     drag(drawer, [300, 300], [320, 310]);
     const { x } = drawer.getDrawingShapes().at(-1)!.getClientRect({ skipTransform: true });
     expect(x).toBeGreaterThan(250);
+  });
+
+  it('Tool stopped during its pointer action (read only, right removed): what it drew removed; text typed dropped', () => {
+    const drawer = createDrawer();
+
+    drawer.getWidget<BaseWidget>('square')!.setActive(true);
+    fireMouse(drawer, 'mousedown', 10, 10);
+    fireMouse(drawer, 'mousemove', 80, 60);
+    expect(drawer.getDrawingShapes()).toHaveLength(1);
+    drawer.setReadOnly(true);
+    expect(drawer.getDrawingShapes()).toEqual([]);
+    expect(drawer.undoRedo.canUndo()).toBe(false);
+    drawer.setReadOnly(false);
+
+    // text being typed: its previous text kept, field removed
+    const textWidget = drawer.getWidget<TextWidget>('text')!;
+    const text = textWidget.addTextNode('before');
+
+    textWidget.editTextNode(text);
+    document.querySelector<HTMLTextAreaElement>('.drawer-text-editor')!.value = 'typed';
+    drawer.setReadOnly(true);
+    expect([text.text(), textWidget.isEditing]).toEqual(['before', false]);
+    expect(document.querySelector('.drawer-text-editor')).toBeNull();
   });
 });

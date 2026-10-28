@@ -27,6 +27,7 @@ import { createButton, setLabel, setPressed, uniqueId } from '@/utils/dom';
 import { ariaShortcut, formatShortcut } from '@/utils/shortcut';
 import { getShapesStyle } from '@/utils/style';
 import { isFrame } from '@/utils/frame';
+import { withoutBoundTexts } from '@/utils/boundText';
 import type { TranslationKey } from '@/@types/i18n';
 import type { OverlayOptions } from '@/@types/toolbar';
 import type { Choice, IconChoice } from '@/@types/ui';
@@ -566,10 +567,12 @@ export class BaseOverlay {
     // one frame: the slideshow from it
     this.$presentBtn.style.display =
       this.drawer.options.slideshow && shape?.length === 1 && isFrame(shape[0]) ? '' : 'none';
-    // align and stack 2 shapes, distribute 3
-    this.$alignContainer.style.display = (shape?.length ?? 0) > 1 ? '' : 'none';
-    this.$distributeContainer.style.display = (shape?.length ?? 0) > 1 ? '' : 'none';
-    for (const $btn of this.$distributeBtns) $btn.disabled = (shape?.length ?? 0) < 3;
+    // align and stack 2 shapes, distribute 3 (texts of shapes follow their shape)
+    const arranged = withoutBoundTexts(shape ?? []).length;
+
+    this.$alignContainer.style.display = arranged > 1 ? '' : 'none';
+    this.$distributeContainer.style.display = arranged > 1 ? '' : 'none';
+    for (const $btn of this.$distributeBtns) $btn.disabled = arranged < 3;
 
     const { strokeColor, fillColor, strokeWidth, strokeStyle, edges, opacity, arrowType, arrowheads } =
       this.drawer.options;

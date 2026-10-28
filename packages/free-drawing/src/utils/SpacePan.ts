@@ -13,8 +13,6 @@ export class SpacePan {
   active = false;
   /** View moved while Space was held: change fired on release (view saved) */
   #moved = false;
-  /** Stage draggable before (pan tool active) */
-  #draggable = false;
   /** Draw and selection layers listening before */
   #listening: boolean[] = [];
 
@@ -64,7 +62,6 @@ export class SpacePan {
     if (this.active) return;
     this.active = true;
     this.#moved = false;
-    this.#draggable = stage.draggable();
     this.#listening = [drawLayer.listening(), selectionLayer.listening()];
     stage.draggable(true);
     drawLayer.listening(false);
@@ -78,8 +75,17 @@ export class SpacePan {
   }
 
   /**
-   * Back to the tool: drag stopped, stage and layers as before, cursor of the tool, change fired when the view moved
-   * (view saved)
+   * Tool changed while Space is held (button of the toolbar clicked): drags still move the view until Space is released
+   */
+  _toolChanged() {
+    if (!this.active) return;
+    this.drawer.stage.draggable(true);
+    this.drawer.$stageContainer.style.cursor = grabCursor;
+  }
+
+  /**
+   * Back to the tool: drag stopped, stage draggable with the pan tool only (the tool may have changed meanwhile), layers
+   * as before, cursor of the tool, change fired when the view moved (view saved)
    */
   stop() {
     const { drawer } = this;
@@ -89,7 +95,7 @@ export class SpacePan {
     this.active = false;
     if (stage.isDragging()) stage.stopDrag();
     stage.off('.spacePan');
-    stage.draggable(this.#draggable);
+    stage.draggable(drawer.activeTool === 'pan');
     drawLayer.listening(this.#listening[0]);
     selectionLayer.listening(this.#listening[1]);
     if (drawer.activeWidget) drawer.activeWidget.updateCursor();

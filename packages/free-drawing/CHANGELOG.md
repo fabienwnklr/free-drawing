@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [8.0.4](https://github.com/fabienwnklr/free-drawing/compare/v8.0.3...v8.0.4) (2026-10-28)
+
+
+### Bug Fixes
+
+* **frames:** shapes flipped or turned out of their frame leave it, onto a frame enter it (they stayed in it, cut away); a locked frame no longer takes the shapes drawn, dropped or pasted on it (they were locked too)
+* **groups:** a shape of a group turned, flipped or scaled is moved by the arrow keys and flipped by Shift + H / V along the axes of the drawing; Ctrl / Cmd + drag on a shape of a group not selected yet drags the shape alone, not the group; a text written in a shape of a group is added to the group (it stayed behind when the group was moved, removed, hidden or locked)
+* **align:** texts of shapes and labels of arrows selected with their shape are no longer counted as shapes by align, distribute and stack (distribute with 2 shapes and a text, buttons shown for one shape)
+* **tools:** a tool stopped during its pointer action (read only, right to draw removed) removes what it was drawing, also for other users of a session; read only ends the edit of a text, its previous text kept
+* **grid:** drags snap to the grid of the drawing: shapes of frames wherever their frame is, frames and groups too
+* **text:** the field of a text being typed follows the view zoomed or moved meanwhile (wheel, pinch, Space)
+* **view:** a tool chosen while Space is held keeps moving the view until it is released, then only the pan tool moves it
+
 ## [8.0.3](https://github.com/fabienwnklr/free-drawing/compare/v8.0.2...v8.0.3) (2026-10-28)
 
 

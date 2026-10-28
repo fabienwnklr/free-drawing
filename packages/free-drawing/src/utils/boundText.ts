@@ -74,6 +74,18 @@ export function withBoundTexts<T extends Node>(nodes: T[], layer: Container): T[
 }
 
 /**
+ * Shapes arranged by themselves (align, distribute, stack): texts of shapes and labels of arrows given with their
+ * shape follow it, they are not counted
+ * @param nodes Shapes (selection...)
+ * @returns Shapes without the texts whose shape is given too
+ */
+export function withoutBoundTexts<T extends Node>(nodes: T[]): T[] {
+  const ids = new Set(nodes.map((node) => node.id()));
+
+  return nodes.filter((node) => !isBoundText(node) || !ids.has(node.getAttr('containerId')));
+}
+
+/**
  * Point at the middle of the length of a line
  * @param points Points of the line (x and y in turn)
  * @returns Middle point, in coordinates of the line

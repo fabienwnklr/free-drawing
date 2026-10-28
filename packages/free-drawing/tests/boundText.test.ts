@@ -6,6 +6,7 @@ import { Text } from 'konva/lib/shapes/Text';
 import type { Drawer } from '@/Drawer';
 import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
+import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import { shapeName } from '@/constants';
 import { findBindingTarget } from '@/utils/binding';
 import { getBoundText, updateBoundTexts } from '@/utils/boundText';
@@ -42,6 +43,24 @@ const doubleClick = (drawer: Drawer, target: Rect | Arrow | null, x = 0, y = 0) 
 
 describe('Texts of shapes', () => {
   document.body.innerHTML = `<div id="test"></div>`;
+
+  it('Field of a text being typed follows the view moved or zoomed meanwhile (wheel, pinch, Space)', () => {
+    const drawer = createDrawer();
+    const textWidget = drawer.getWidget<TextWidget>('text')!;
+    const text = textWidget.addTextNode('Hi', { x: 100, y: 100 });
+
+    textWidget.editTextNode(text);
+    const textarea = document.querySelector<HTMLTextAreaElement>('.drawer-text-editor')!;
+    const [size, left, top] = [parseFloat(textarea.style.fontSize), textarea.style.left, textarea.style.top];
+
+    drawer.stage.scale({ x: 2, y: 2 });
+    drawer.stage.position({ x: 30, y: 10 });
+    drawer._update();
+    expect(parseFloat(textarea.style.fontSize)).toBe(size * 2);
+    expect([textarea.style.left, textarea.style.top]).not.toEqual([left, top]);
+    write('Hello');
+    expect(text.text()).toBe('Hello');
+  });
 
   it('Text tool click on a shape writes in it: centered, as wide as its inside', () => {
     const drawer = createDrawer({ keepTool: true });

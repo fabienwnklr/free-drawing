@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { Drawer } from '@/Drawer';
 import type { BrushWidget } from '@/components/toolbar/widgets/Brush/Brush';
+import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import { createDrawer, fireMouse, keydown, setPointer } from './helpers';
 
 /**
@@ -131,6 +132,26 @@ describe('Mouse wheel and Space', () => {
     keydown(drawer, { key: ' ' });
     window.dispatchEvent(new Event('blur'));
     expect(drawer.spacePan.active).toBe(false);
+  });
+
+  it('Tool changed while Space is held: the view still moved, then the stage draggable with the pan tool only', () => {
+    const drawer = createDrawer();
+    const space = (type: 'keydown' | 'keyup') =>
+      drawer.$drawerContainer.dispatchEvent(new KeyboardEvent(type, { key: ' ', cancelable: true }));
+
+    drawer.getWidget<BaseWidget>('pan')!.setActive(true);
+    space('keydown');
+    drawer.getWidget<BaseWidget>('selection')!.setActive(true);
+    expect(drawer.stage.draggable()).toBe(true);
+    space('keyup');
+    // the selection tool does not move the view
+    expect([drawer.stage.draggable(), drawer.activeTool]).toEqual([false, 'selection']);
+
+    space('keydown');
+    drawer.getWidget<BaseWidget>('pan')!.setActive(true);
+    space('keyup');
+    // the pan tool moves it
+    expect(drawer.stage.draggable()).toBe(true);
   });
 
   it('Space kept by fields, and by buttons of the drawer with the pointer out of the canvas', () => {

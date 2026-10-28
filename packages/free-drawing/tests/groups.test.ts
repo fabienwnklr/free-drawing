@@ -8,6 +8,9 @@ import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import type { EraserWidget } from '@/components/toolbar/widgets/Eraser/Eraser';
 import { shapeName } from '@/constants';
 import { parseDrawingFile } from '@/utils/drawingFile';
+import { DD } from 'konva/lib/DragAndDrop';
+import type { Text } from 'konva/lib/shapes/Text';
+import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import { createDrawer, fireMouse, keydown, setPointer } from './helpers';
 
 /** Drawer with a rectangle, an ellipse and a rectangle on top */
@@ -104,6 +107,69 @@ describe('Groups', () => {
 
     selectWidget.clearSelection();
     expect(rect.draggable()).toBe(false);
+
+    // Ctrl + press on a shape not selected yet: the drag of the shape is prepared, not the one of the group
+    setPointer(drawer, 10, 10);
+    rect.fire('mousedown', { evt: { button: 0, ctrlKey: true, preventDefault() {} } }, true);
+    expect([...DD._dragElements.values()].map(({ node }) => node)).toEqual([rect]);
+    window.dispatchEvent(new MouseEvent('mouseup'));
+    DD._dragElements.clear();
+  });
+
+  it('Shape of a group turned or flipped: moved by arrow keys and flipped along the axes of the drawing', () => {
+    const { drawer, rect, ellipse, selectWidget } = createShapes();
+    const group = drawer.groupShapes([rect, ellipse])!;
+    const layer = drawer.drawLayer;
+    /** Corners of the rectangle in the drawing */
+    const corners = () => {
+      const transform = layer.getAbsoluteTransform().copy().invert().multiply(rect.getAbsoluteTransform());
+
+      return [transform.point({ x: 0, y: 0 }), transform.point({ x: 50, y: 0 })].map(({ x, y }) => [
+        Math.round(x),
+        Math.round(y),
+      ]);
+    };
+
+    group.rotation(90);
+    selectWidget.setActive(true);
+    selectWidget.select([rect]);
+    const before = rect.getAbsolutePosition(layer);
+
+    keydown(drawer, { key: 'ArrowRight' });
+    drawer.$drawerContainer.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowRight' }));
+    const after = rect.getAbsolutePosition(layer);
+
+    expect([Math.round(after.x - before.x), Math.round(after.y - before.y)]).toEqual([4, 0]);
+
+    // mirrored left and right on screen, around its middle
+    const [first, second] = corners();
+    const box = rect.getClientRect({ relativeTo: layer });
+    const middle = box.x + box.width / 2;
+
+    drawer.flipShapes('horizontal', [rect]);
+    expect(corners()).toEqual([
+      [Math.round(2 * middle - first[0]), first[1]],
+      [Math.round(2 * middle - second[0]), second[1]],
+    ]);
+  });
+
+  it('Text written in a shape of a group: in the group, above its shape', () => {
+    const { drawer, rect, ellipse } = createShapes();
+    const group = drawer.groupShapes([rect, ellipse])!;
+    const textWidget = drawer.getWidget<TextWidget>('text')!;
+
+    textWidget.editTextOf(rect);
+    const textarea = document.querySelector<HTMLTextAreaElement>('.drawer-text-editor')!;
+
+    textarea.value = 'In';
+    textarea.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+    const text = group.findOne<Text>('Text')!;
+
+    expect(group.getChildren()).toEqual([rect, text, ellipse]);
+    expect(text.draggable()).toBe(false);
+    // removed with its group
+    drawer.deleteShapes([group]);
+    expect(text.getLayer()).toBeNull();
   });
 
   it('Styles apply to shapes of selected groups, duplicates and deletions of groups', () => {

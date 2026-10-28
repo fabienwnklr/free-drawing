@@ -1,5 +1,5 @@
 import type { Drawer } from '@/Drawer';
-import { getDrawingShape, getFrameOfTitle, withFrameShapes } from '@/utils/frame';
+import { getDrawingShape, getFrameOfTitle, isFrame, withFrameShapes } from '@/utils/frame';
 import { findContainerAt, getBoundText, isContainer, placeBoundText } from '@/utils/boundText';
 import { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import TextIcon from '@/icons/text.svg?raw';
@@ -30,6 +30,12 @@ export class TextWidget extends BaseWidget {
   pressEndedEdit = false;
   /** Current press ended the edit of a text: its click adds no text */
   #skipClick = false;
+  /** Ends the edit in progress (the text typed, none: previous one kept), null without edit */
+  #endEdit: ((text?: string) => void) | null = null;
+  /** Text edited, placed again with its field when the view moves (`followView`) */
+  #editedText: Text | null = null;
+  /** Field of the text edited */
+  #textarea: HTMLTextAreaElement | null = null;
   overlay: TextOverlay;
   protected cursor = 'text';
 
@@ -113,7 +119,8 @@ export class TextWidget extends BaseWidget {
   }
 
   /**
-   * New text of a shape, placed in it (centered, as wide as its inside), in its frame
+   * New text of a shape, placed in it (centered, as wide as its inside), in its frame; in the group of a shape of a group,
+   * above it (moved, removed, hidden and duplicated with the group)
    * @param container Rectangle, ellipse, path shape or arrow
    * @returns The added text node, empty
    */
@@ -129,7 +136,14 @@ export class TextWidget extends BaseWidget {
       containerId: container.id(),
     });
 
+    const parent = container.getParent();
+
     this.drawer.addShape(textNode);
+    if (parent && parent !== this.drawer.drawLayer && !isFrame(parent.getParent())) {
+      textNode.moveTo(parent);
+      textNode.zIndex(container.zIndex() + 1);
+      this.drawer._setupAdded(textNode);
+    }
     placeBoundText(textNode, container, this.drawer.background.fill() as string);
     this.drawer.placeInFrames([textNode]);
 
@@ -282,7 +296,56 @@ export class TextWidget extends BaseWidget {
     textarea.focus();
 
     this.isEditing = true;
+    this.#editedText = textNode;
+    this.#textarea = textarea;
     this._initEventsTextarea(textNode, textarea, onEnd);
+  }
+
+  /**
+   * View moved or zoomed during an edit (wheel, pinch, Space): field placed again on its text, at the new zoom
+   */
+  followView() {
+    const textNode = this.#editedText;
+    const textarea = this.#textarea;
+
+    if (!textNode || !textarea?.isConnected) return;
+
+    this._placeTextarea(textNode, textarea);
+    // titles of frames widened while typing
+    if (getFrameOfTitle(textNode)) {
+      textarea.style.width = `${Math.max(parseFloat(textarea.style.width), textarea.scrollWidth + 2)}px`;
+    }
+    // lines typed
+    textarea.style.height = 'auto';
+    textarea.style.height = `${textarea.scrollHeight + 3}px`;
+  }
+
+  /**
+   * Field placed over its text: same position, size and font size whatever zoom and scale, room around it for glyphs
+   * higher than line height
+   * @param textNode Text edited, its absolute position and scale place the textarea
+   * @param textarea Field of the text
+   */
+  private _placeTextarea(textNode: Text, textarea: HTMLTextAreaElement) {
+    // zoom and scale of text and its groups
+    const scale = textNode.getAbsoluteScale().x;
+    const fontSize = textNode.fontSize() * scale;
+    // room around text: glyphs higher than line height (accents) or italic overhang would be cut by textarea,
+    // textarea is moved back by the same amount so text stays exactly on canvas text
+    const spacing = Math.ceil(fontSize * 0.25);
+    const textPosition = textNode.absolutePosition();
+    const textPadding = textNode.padding() * scale;
+
+    // konva places lines like css (font box centered in line height); in the drawer, wherever it is in the page (below
+    // the bar of an app...)
+    placeInView(this.drawer, textarea, textPosition.x + textPadding - spacing, textPosition.y + textPadding - spacing);
+    // content width is text width (border-box), so lines wrap the same way
+    textarea.style.width = `${(textNode.width() - textNode.padding() * 2) * scale + spacing * 2}px`;
+    textarea.style.height = `${(textNode.height() - textNode.padding() * 2) * scale + spacing * 2}px`;
+    textarea.style.fontSize = `${fontSize}px`;
+    textarea.style.padding = `${spacing}px`;
+    // rotation around text position, not textarea corner
+    textarea.style.transformOrigin = `${spacing}px ${spacing}px`;
   }
 
   /**
@@ -292,14 +355,6 @@ export class TextWidget extends BaseWidget {
    * @returns the textarea, added to the layout
    */
   private _createTextarea(textNode: Text) {
-    // zoom and scale of text and its groups
-    const scale = textNode.getAbsoluteScale().x;
-    const fontSize = textNode.fontSize() * scale;
-    // room around text: glyphs higher than line height (accents) or italic overhang would be cut by textarea,
-    // textarea is moved back by the same amount so text stays exactly on canvas text
-    const spacing = Math.ceil(fontSize * 0.25);
-    const textPosition = textNode.absolutePosition();
-    const textPadding = textNode.padding() * scale;
     const textarea = document.createElement('textarea');
     // colors of drawing in dark mode
     textarea.classList.add('drawer-text-editor');
@@ -307,15 +362,8 @@ export class TextWidget extends BaseWidget {
 
     textarea.value = textNode.text();
     textarea.style.position = 'absolute';
-    // konva places lines like css (font box centered in line height); in the drawer, wherever it is in the page (below
-    // the bar of an app...)
-    placeInView(this.drawer, textarea, textPosition.x + textPadding - spacing, textPosition.y + textPadding - spacing);
-    // content width is text width (border-box), so lines wrap the same way
-    textarea.style.width = `${(textNode.width() - textNode.padding() * 2) * scale + spacing * 2}px`;
-    textarea.style.height = `${(textNode.height() - textNode.padding() * 2) * scale + spacing * 2}px`;
-    textarea.style.fontSize = `${fontSize}px`;
+    this._placeTextarea(textNode, textarea);
     textarea.style.border = 'none';
-    textarea.style.padding = `${spacing}px`;
     textarea.style.margin = '0px';
     textarea.style.overflow = 'hidden';
     textarea.style.background = 'none';
@@ -328,8 +376,6 @@ export class TextWidget extends BaseWidget {
     textarea.style.fontWeight = textNode.fontStyle().includes('bold') ? 'bold' : 'normal';
     textarea.style.textDecoration = textNode.textDecoration();
     textarea.style.opacity = textNode.opacity().toString();
-    // rotation around text position, not textarea corner
-    textarea.style.transformOrigin = `${spacing}px ${spacing}px`;
     textarea.style.textAlign = textNode.align();
     // texts are filled with a color, not a gradient
     textarea.style.color = textNode.fill() as string;
@@ -340,6 +386,14 @@ export class TextWidget extends BaseWidget {
     }
 
     return textarea;
+  }
+
+  /**
+   * End the text edit in progress keeping the previous text (as Escape): read only started, a new text left empty is
+   * removed. Nothing without edit
+   */
+  cancelEdit() {
+    this.#endEdit?.();
   }
 
   /**
@@ -364,6 +418,11 @@ export class TextWidget extends BaseWidget {
      * @param text Text typed, none to keep the previous one (Escape)
      */
     const removeTextarea = (text?: string) => {
+      // ended once (Enter then a press, read only)
+      if (this.#endEdit !== removeTextarea) return;
+      this.#endEdit = null;
+      this.#editedText = null;
+      this.#textarea = null;
       // changes of other users received during the edit applied first: the text typed comes after them (else they would
       // replace it, and it would equal the drawing known by the room: not sent)
       const received = !!this.drawer.collaboration?.flush();
@@ -407,6 +466,7 @@ export class TextWidget extends BaseWidget {
       onEnd?.(textNode);
     };
 
+    this.#endEdit = removeTextarea;
     // title wider than the field: field widened, not wrapped into the frame
     textarea.addEventListener('input', () => {
       if (!title) return;

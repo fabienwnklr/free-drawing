@@ -2,6 +2,7 @@ import type { Drawer } from '@/Drawer';
 import { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import SelectIcon from '@/icons/select.svg?raw';
 import { Transformer } from 'konva/lib/shapes/Transformer';
+import { DD } from 'konva/lib/DragAndDrop';
 import { Rect } from 'konva/lib/shapes/Rect';
 import { Line } from 'konva/lib/shapes/Line';
 import type { Shape, ShapeConfig } from 'konva/lib/Shape';
@@ -243,6 +244,14 @@ export class SelectWidget extends BaseWidget {
         if (!nodes.includes(shape) && !altKey) {
           this.select(shiftKey ? [...nodes, shape] : [shape]);
           this.#press.selected = true;
+        }
+        // Ctrl / Cmd on a shape of a group: dragged alone, not its group (konva prepared the drag of the group, the
+        // shape was not draggable yet)
+        if (deep && shape.draggable()) {
+          for (const [id, { node, dragStatus }] of DD._dragElements) {
+            if (dragStatus === 'ready' && node.isAncestorOf(shape)) DD._dragElements.delete(id);
+          }
+          if (!DD._dragElements.has(shape._id)) shape._createDragElement(e);
         }
         return;
       }

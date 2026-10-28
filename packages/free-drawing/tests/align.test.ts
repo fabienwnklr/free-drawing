@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Rect } from 'konva/lib/shapes/Rect';
 import { Group } from 'konva/lib/Group';
+import { Text } from 'konva/lib/shapes/Text';
 import type { Drawer } from '@/Drawer';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { shapeName } from '@/constants';
@@ -119,6 +120,23 @@ describe('Align, distribute and stack shapes', () => {
     expect(overlay.$distributeBtns.every(($btn) => $btn.disabled)).toBe(true);
     expect(commandIds(drawer)).toEqual(expect.arrayContaining(['align shapes left', 'stack shapes vertical']));
     expect(commandIds(drawer)).not.toContain('distribute shapes spacing horizontal');
+
+    // text of a shape (selected with it) follows it: not counted
+    const text = drawer.addShape(new Text({ name: shapeName.text, text: 'A', containerId: a.id() }));
+
+    selectWidget.select([a]);
+    expect(drawer.getSelectedShapes()).toEqual([a, text]);
+    expect(shown(overlay.$alignContainer)).toBe(false);
+    expect(commandIds(drawer)).not.toContain('align shapes left');
+    selectWidget.select([a, b]);
+    expect(overlay.$distributeBtns.every(($btn) => $btn.disabled)).toBe(true);
+    expect(commandIds(drawer)).not.toContain('distribute shapes spacing horizontal');
+    drawer.distributeShapes('horizontal');
+    expect(positions(a, b)).toEqual([
+      [0, 0],
+      [200, 100],
+    ]);
+    text.destroy();
 
     selectWidget.select([a, b, c]);
     expect(overlay.$distributeBtns.some(($btn) => $btn.disabled)).toBe(false);

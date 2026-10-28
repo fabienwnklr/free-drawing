@@ -361,9 +361,12 @@ export abstract class BaseWidget {
       this.onActive();
       // shortcuts of the drawer, unless the user is in a field or a dialog, or out of the drawer
       this.drawer._takeFocus();
+      // Space held: the view still moved
+      this.drawer.spacePan?._toolChanged();
     } else {
-      // pointer action stopped by tool change: shortcuts and UI usable again
-      if (this.inAction) this.endAction();
+      // pointer action stopped by tool change (read only, right removed, API): what it was drawing removed, also for
+      // other users (live preview), shortcuts and UI usable again
+      if (this.inAction) this.cancelAction();
       this.removeEvents();
       if (this.showOverlayOnActive) this.overlay?.hide();
       this.onDesactive();

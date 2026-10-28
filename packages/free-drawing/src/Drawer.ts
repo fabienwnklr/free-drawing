@@ -2,6 +2,7 @@ import '@/scss/drawer.scss';
 import { Stage } from 'konva/lib/Stage';
 import { Layer } from 'konva/lib/Layer';
 import { DD } from 'konva/lib/DragAndDrop';
+import { Transform } from 'konva/lib/Util';
 import { TouchGestures } from '@/utils/TouchGestures';
 import { Toolbar } from '@/components/toolbar/Toolbar';
 import { Rect } from 'konva/lib/shapes/Rect';
@@ -46,12 +47,12 @@ import { announce, createLiveRegion } from '@/utils/liveRegion';
 import { DrawerError, getErrorText } from '@/utils/errors';
 import { getStrokeStyle } from '@/utils/stroke';
 import { inDrawingOrder, reorderShapes } from '@/utils/order';
-import { alignShapes, distributeShapes, stackShapes } from '@/utils/align';
+import { alignShapes, distributeShapes, moveBy, stackShapes } from '@/utils/align';
 import { rectContains, setupHit } from '@/utils/hit';
 import { I18n, getLanguage, isLanguage, toLanguageChoice } from '@/i18n/I18n';
 import type { Language, TranslationParams, TranslationKey } from '@/@types/i18n';
 import { bindingAttrs, unbindMoved, updateBindings } from '@/utils/binding';
-import { getBoundText, updateBoundTexts } from '@/utils/boundText';
+import { getBoundText, updateBoundTexts, withoutBoundTexts } from '@/utils/boundText';
 import { setupArrows } from '@/utils/arrow';
 import { setupNotes } from '@/utils/note';
 import { getShapesStyle } from '@/utils/style';
@@ -584,6 +585,8 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
     if (readOnly) {
       const pan = this.getWidget<BaseWidget>('pan');
 
+      // text being typed: previous one kept
+      this.getWidget<TextWidget>('text')?.cancelEdit();
       this.getWidget<SelectWidget>('selection')?.clearSelection();
       this.#toolBeforeReadOnly = this.activeWidget ?? null;
       if (pan) pan.setActive(true);
@@ -1244,6 +1247,8 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
     this.position?.update();
     this.collaboration?.updateCursors();
     this.collaboration?.onViewChange();
+    // field of a text being typed on its text
+    this.getWidget<TextWidget>('text')?.followView();
   }
 
   /**
@@ -1820,24 +1825,47 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
 
     const horizontal = direction === 'horizontal';
     const center = this._getCenter(shapes);
-    // mirrored around an axis, in coordinates of its parent
-    const mirror = (node: Node, axis: Vector2d) => {
-      node.rotation(-node.rotation());
-      if (horizontal) node.setAttrs({ x: 2 * axis.x - node.x(), scaleX: -node.scaleX() });
-      else node.setAttrs({ y: 2 * axis.y - node.y(), scaleY: -node.scaleY() });
+    /**
+     * Node mirrored around an axis of the drawing (absolute point), in coordinates of its parent
+     * @param node Shape, group or text
+     * @param point Point of the axis, absolute
+     */
+    const mirror = (node: Node, point: Vector2d) => {
+      const parent = node.getParent()!.getAbsoluteTransform();
+      const [, b, c] = parent.getMatrix();
+
+      // parent not turned (drawing, frame, group only moved or scaled): exact attributes
+      if (Math.abs(b) < 1e-9 && Math.abs(c) < 1e-9) {
+        const axis = parent.copy().invert().point(point);
+
+        node.rotation(-node.rotation());
+        if (horizontal) node.setAttrs({ x: 2 * axis.x - node.x(), scaleX: -node.scaleX() });
+        else node.setAttrs({ y: 2 * axis.y - node.y(), scaleY: -node.scaleY() });
+        return;
+      }
+
+      // in a turned group: mirror of the drawing in its coordinates
+      const flip = new Transform()
+        .translate(point.x, point.y)
+        .scale(horizontal ? -1 : 1, horizontal ? 1 : -1)
+        .translate(-point.x, -point.y);
+
+      node.setAttrs(parent.copy().invert().multiply(flip).multiply(node.getAbsoluteTransform()).decompose());
     };
 
     // arrows flipped without their shapes are unlinked
     unbindMoved(shapes);
     shapes.forEach((shape) => {
-      mirror(shape, shape.getParent()!.getAbsoluteTransform().copy().invert().point(center));
+      mirror(shape, center);
       // texts mirrored again around their center: moved, still readable
       (shape instanceof Text ? [shape] : shape instanceof Group ? shape.find<Text>('Text') : []).forEach((text) => {
-        const box = text.getClientRect({ relativeTo: text.getParent()! });
+        const box = text.getClientRect();
 
         mirror(text, { x: box.x + box.width / 2, y: box.y + box.height / 2 });
       });
     });
+    // shapes mirrored out of their frame or onto another one
+    this.frameHighlight.flash(this.placeInFrames(shapes));
     this.stage.fire('change');
   }
 
@@ -1875,6 +1903,8 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
         rotation: (shape.rotation() + degrees) % 360,
       });
     });
+    // shapes turned out of their frame or onto another one
+    this.frameHighlight.flash(this.placeInFrames(shapes));
     this.stage.fire('change');
   }
 
@@ -2395,7 +2425,7 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
    * @param shapes Shapes to align (2 at least), selected shapes by default
    */
   alignShapes(alignment: ShapeAlignment, shapes: DrawingShape[] = this.getSelectedShapes()) {
-    this._arrangeShapes(shapes, 2, () => alignShapes(shapes, this.drawLayer, alignment));
+    this._arrangeShapes(shapes, 2, (arranged) => alignShapes(arranged, this.drawLayer, alignment));
   }
 
   /**
@@ -2404,7 +2434,7 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
    * @param shapes Shapes to distribute (3 at least), selected shapes by default
    */
   distributeShapes(direction: Direction, shapes: DrawingShape[] = this.getSelectedShapes()) {
-    this._arrangeShapes(shapes, 3, () => distributeShapes(shapes, this.drawLayer, direction));
+    this._arrangeShapes(shapes, 3, (arranged) => distributeShapes(arranged, this.drawLayer, direction));
   }
 
   /**
@@ -2414,21 +2444,23 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
    * @param shapes Shapes to stack (2 at least), selected shapes by default
    */
   stackShapes(direction: Direction, shapes: DrawingShape[] = this.getSelectedShapes()) {
-    this._arrangeShapes(shapes, 2, () => stackShapes(shapes, this.drawLayer, direction));
+    this._arrangeShapes(shapes, 2, (arranged) => stackShapes(arranged, this.drawLayer, direction));
   }
 
   /**
    * Shapes moved by an alignment, a distribution or a stack: arrows moved without their shapes unlinked, shapes placed
    * in the frames they are moved into or out of (highlighted), change saved
    * @param shapes Shapes moved
-   * @param min Fewest shapes for this move (nothing done with less)
-   * @param move Move of the shapes
+   * @param min Fewest shapes for this move (nothing done with less), texts of given shapes not counted
+   * @param move Move of the shapes, given without the texts of given shapes
    */
-  private _arrangeShapes(shapes: DrawingShape[], min: number, move: () => void) {
+  private _arrangeShapes(shapes: DrawingShape[], min: number, move: (shapes: DrawingShape[]) => void) {
+    // texts of shapes follow their shape
+    shapes = withoutBoundTexts(shapes);
     if (shapes.length < min) return;
 
     unbindMoved(shapes);
-    move();
+    move(shapes);
     this.frameHighlight.flash(this.placeInFrames(shapes));
     this.stage.fire('change');
   }
@@ -3211,18 +3243,32 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
       if (e.target === lead) lead = null;
     });
     this.drawLayer.on('dragmove.grid', (e) => {
-      if (e.target !== lead || !(e.target instanceof Shape) || e.target instanceof Line) return;
+      const node = e.target;
 
-      const before = e.target.absolutePosition();
+      if (node !== lead || !(node instanceof Shape || node instanceof Group) || node instanceof Line) return;
 
-      e.target.position(snapToGrid(e.target.position(), this.options.gridStyle));
+      const before = node.absolutePosition();
+      const layer = this.drawLayer;
 
-      const after = e.target.absolutePosition();
+      if (node.getParent() === layer && !(node instanceof Group && !isFrame(node))) {
+        // exact position
+        node.position(snapToGrid(node.position(), this.options.gridStyle));
+      } else {
+        // in drawing coordinates (shape of a frame, of a group dragged alone): position, top left corner of the box of a
+        // group
+        const box = node.getClientRect({ relativeTo: layer });
+        const point = node instanceof Group && !isFrame(node) ? box : node.getAbsolutePosition(layer);
+        const snapped = snapToGrid(point, this.options.gridStyle);
+
+        moveBy(node, layer, snapped.x - point.x, snapped.y - point.y);
+      }
+
+      const after = node.absolutePosition();
       const selected = this.getSelectedShapes();
 
-      if (!selected.includes(e.target as DrawingShape)) return;
+      if (!selected.includes(node as DrawingShape)) return;
       for (const shape of selected) {
-        if (shape === e.target) continue;
+        if (shape === node) continue;
 
         const pos = shape.absolutePosition();
 

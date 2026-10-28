@@ -43,16 +43,16 @@ Audit of 2026-10-28 (library 8.0.0): items ordered by priority in each section.
 
 ### Tools and interaction
 
-- [ ] flip and rotate never place shapes in frames: a shape of a frame mirrored out of it stays in it, cut away; a shape mirrored onto a frame is not in it (`Drawer.flipShapes` / `rotateShapes`: `placeInFrames`)
-- [ ] a locked frame takes shapes drawn, dropped or pasted on it, which become locked (`findFrameAt` ignores `isListening`)
-- [ ] text written in a shape of a group is added at the top of the drawing: left behind when the group is deleted, erased, duplicated, hidden or locked (`TextWidget._createBoundText`)
-- [ ] align / distribute / stack count texts of shapes and arrow labels as shapes: gaps of stack, distribute run with 2 shapes, buttons enabled for one shape with its text (`Drawer._arrangeShapes`, `BaseOverlay.show`)
-- [ ] tool deactivated during a pointer action (right removed, `setReadOnly`) keeps the half drawn shape and its live preview for others (`endAction` instead of `cancelAction`); a text edit stays open in read only (`BaseWidget.setActive(false)`)
-- [ ] Ctrl / Cmd + drag on a shape of a group not selected yet drags the whole group (`SelectWidget` mousedown: Konva starts the drag of the group first)
-- [ ] grid snapping of drags in coordinates of the parent: shapes of frames off the grid by the position of the frame, frames and groups never snapped (`Drawer._initSnapGridEvents`)
-- [ ] text editor does not follow the view zoomed or moved during an edit (wheel, pinch) (`TextWidget`)
-- [ ] tool changed while Space is held: releasing Space restores the old draggable state of the stage, pan tool can't move, selection tool moves the view (`SpacePan.stop`)
-- [ ] arrow keys and Shift + H / V on a shape of a rotated, flipped or scaled group use the axes of the group (`HotKey` `shape.move`, `flipShapes`)
+- [x] flip and rotate never place shapes in frames: a shape of a frame mirrored out of it stays in it, cut away; a shape mirrored onto a frame is not in it (`Drawer.flipShapes` / `rotateShapes`: `placeInFrames`)
+- [x] a locked frame takes shapes drawn, dropped or pasted on it, which become locked (`findFrameAt` ignores `isListening`)
+- [x] text written in a shape of a group is added at the top of the drawing: left behind when the group is deleted, erased, duplicated, hidden or locked (`TextWidget._createBoundText`)
+- [x] align / distribute / stack count texts of shapes and arrow labels as shapes: gaps of stack, distribute run with 2 shapes, buttons enabled for one shape with its text (`Drawer._arrangeShapes`, `BaseOverlay.show`)
+- [x] tool deactivated during a pointer action (right removed, `setReadOnly`) keeps the half drawn shape and its live preview for others (`endAction` instead of `cancelAction`); a text edit stays open in read only (`BaseWidget.setActive(false)`)
+- [x] Ctrl / Cmd + drag on a shape of a group not selected yet drags the whole group (`SelectWidget` mousedown: Konva starts the drag of the group first)
+- [x] grid snapping of drags in coordinates of the parent: shapes of frames off the grid by the position of the frame, frames and groups never snapped (`Drawer._initSnapGridEvents`)
+- [x] text editor does not follow the view zoomed or moved during an edit (wheel, pinch) (`TextWidget`)
+- [x] tool changed while Space is held: releasing Space restores the old draggable state of the stage, pan tool can't move, selection tool moves the view (`SpacePan.stop`)
+- [x] arrow keys and Shift + H / V on a shape of a rotated, flipped or scaled group use the axes of the group (`HotKey` `shape.move`, `flipShapes`)
 
 ### Interface, accessibility, translations
 

@@ -15,14 +15,20 @@ export const stackGap = 16;
 const boxOf = (node: Node, layer: Container): IRect => node.getClientRect({ relativeTo: layer });
 
 /**
- * Move a node by a distance in layer coordinates, whatever its parent (group, content of a frame)
+ * Move a node by a distance in layer coordinates, whatever its parent (group turned, flipped or scaled, content of a
+ * frame): along the axes of the drawing
  * @param node shape, group or frame
  * @param layer draw layer
  * @param dx horizontal distance, layer units
  * @param dy vertical distance, layer units
  */
-function moveBy(node: Node, layer: Container, dx: number, dy: number) {
+export function moveBy(node: Node, layer: Container, dx: number, dy: number) {
   if (!dx && !dy) return;
+  // exact positions
+  if (node.getParent() === layer) {
+    node.move({ x: dx, y: dy });
+    return;
+  }
 
   const position = node.getAbsolutePosition(layer);
 
