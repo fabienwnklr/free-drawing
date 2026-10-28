@@ -48,12 +48,13 @@ function onChange(drawer: Drawer) {
 | `language`  | `'en' \| 'fr' \| 'es' \| 'de' \| 'auto'` | Language of the interface (`drawer.setLanguage`), `'auto'` for the one of the browser                                                                                            |
 | `user`      | `DrawerUser \| null`                     | User of the app: id and name in collaboration sessions (`drawer.setUser`)                                                                                                        |
 
-| Event    | Payload  | Description                                                               |
-| -------- | -------- | ------------------------------------------------------------------------- |
-| `ready`  | `Drawer` | Drawer ready: plugins initialized, drawing of the `storage` option loaded |
-| `change` | `Drawer` | Drawing changed: shapes, background...                                    |
+| Event    | Payload   | Description                                                                                    |
+| -------- | --------- | ---------------------------------------------------------------------------------------------- |
+| `ready`  | `Drawer`  | Drawer ready: plugins initialized, drawing of the `storage` option loaded                      |
+| `change` | `Drawer`  | Drawing changed: shapes, background...                                                         |
+| `error`  | `unknown` | Drawer not created: library not loaded (network), invalid options (also logged in the console) |
 
-`class`, `style` and other attributes go to the `div` of the component. `read-only`, `theme`, `language` and `user` follow their props once the drawer is created; when they are not given, the drawer keeps its own settings (menus of its interface, preferences saved in the browser).
+`class`, `style` and other attributes go to the `div` of the component. `read-only`, `theme`, `language` and `user` follow their props once the drawer is created; when they are not given, the drawer keeps its own settings (menus of its interface, preferences saved in the browser). Only a setting that changed is given again: a language chosen in the menu is kept when the theme changes, a viewer of a collaboration session stays read only.
 
 ## Size
 

@@ -72,13 +72,13 @@ Audit of 2026-10-28 (library 8.0.0): items ordered by priority in each section.
 
 ### Web app, components, generator
 
-- [ ] components apply every setting again when one changes: a viewer of a session gets tools back when the theme changes, language chosen in the menu reverted; `drawer.options.readOnly` keeps the value of creation (`mountDrawer.ts` `applySettings`)
-- [ ] login / logout switch the store before the drawing: saves in between go to the API with the id of a browser drawing (404, change lost); a failed `listDrawings` leaves this state (web `App.login`)
-- [ ] app height `100vh`: toolbar under the bars of mobile browsers (web `style.css`: `100dvh`)
-- [ ] storage of the browser full shown as the English message of the browser: error wrapped again, its name lost (web `App.ts` save)
-- [ ] mount of components: a failed import or an error of `new Drawer` gives an unhandled rejection, no error event (`mountDrawer.ts`)
-- [ ] `<free-drawing>` in a shadow root (Lit) gets no style (`addStyle` on the document only)
-- [ ] generator: "Next" steps `bun test` / `bun build` run the tools of Bun (`create-plugin` `cli.js`: `bun run`)
+- [x] components apply every setting again when one changes: a viewer of a session gets tools back when the theme changes, language chosen in the menu reverted; `drawer.options.readOnly` keeps the value of creation (`mountDrawer.ts` `applySettings`)
+- [x] login / logout switch the store before the drawing: saves in between go to the API with the id of a browser drawing (404, change lost); a failed `listDrawings` leaves this state (web `App.login`)
+- [x] app height `100vh`: toolbar under the bars of mobile browsers (web `style.css`: `100dvh`)
+- [x] storage of the browser full shown as the English message of the browser: error wrapped again, its name lost (web `App.ts` save)
+- [x] mount of components: a failed import or an error of `new Drawer` gives an unhandled rejection, no error event (`mountDrawer.ts`)
+- [x] `<free-drawing>` in a shadow root (Lit) gets no style (`addStyle` on the document only)
+- [x] generator: "Next" steps `bun test` / `bun build` run the tools of Bun (`create-plugin` `cli.js`: `bun run`)
 
 ## Improvements
 

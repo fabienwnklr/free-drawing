@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [8.0.6](https://github.com/fabienwnklr/free-drawing/compare/v8.0.5...v8.0.6) (2026-10-28)
+
+
+### Bug Fixes
+
+* **read only:** `setReadOnly` of the app is kept when a collaboration session gives the right to draw, and a viewer of a session stays read only when the app turns read only off (`options.readOnly` follows `setReadOnly`)
+
 ## [8.0.5](https://github.com/fabienwnklr/free-drawing/compare/v8.0.4...v8.0.5) (2026-10-28)
 
 

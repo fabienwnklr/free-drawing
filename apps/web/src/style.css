@@ -46,6 +46,8 @@ body {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  /* without the bars of mobile browsers: toolbar at the bottom of what is seen */
+  height: 100dvh;
 }
 
 .app-bar {

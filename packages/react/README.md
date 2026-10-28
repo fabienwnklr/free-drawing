@@ -44,8 +44,9 @@ export function Board({ dark }: { dark: boolean }) {
 | `user`     | `DrawerUser \| null`                     | User of the app: id and name in collaboration sessions (`drawer.setUser`)                                                                                                        |
 | `onReady`  | `(drawer: Drawer) => void`               | Drawer ready: plugins initialized, drawing of the `storage` option loaded                                                                                                        |
 | `onChange` | `(drawer: Drawer) => void`               | Drawing changed: shapes, background...                                                                                                                                           |
+| `onError`  | `(error: unknown) => void`               | Drawer not created: library not loaded (network), invalid options (also logged in the console)                                                                                   |
 
-Other props (`className`, `style`, `id`, `aria-*`...) go to the `div` of the component. `readOnly`, `theme`, `language` and `user` follow their props once the drawer is created; when they are not given, the drawer keeps its own settings (menus of its interface, preferences saved in the browser).
+Other props (`className`, `style`, `id`, `aria-*`...) go to the `div` of the component. `readOnly`, `theme`, `language` and `user` follow their props once the drawer is created; when they are not given, the drawer keeps its own settings (menus of its interface, preferences saved in the browser). Only a setting that changed is given again: a language chosen in the menu is kept when the theme changes, a viewer of a collaboration session stays read only.
 
 ## Size
 

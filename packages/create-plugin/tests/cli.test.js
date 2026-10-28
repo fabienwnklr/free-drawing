@@ -72,6 +72,16 @@ describe('Command', () => {
     expect(output.text).toContain('--yes needs --name');
     expect(await main([], { cwd, output, prompter: createAnswersPrompter({ name: 'Notes', create: false }) })).toBe(1);
     expect(existsSync(join(cwd, 'free-drawing-plugin-notes'))).toBe(false);
+    // scripts of the package run by Bun (not its test runner and bundler)
+    const bunOutput = createOutput();
+
+    await main([], {
+      cwd,
+      output: bunOutput,
+      prompter: createAnswersPrompter({ name: 'Bun notes', tool: 'shape' }),
+      userAgent: 'bun/1.2.0',
+    });
+    expect(bunOutput.text).toContain('  bun install\n  bun run test\n  bun run build');
     expect(['npm/11 node/v24', 'pnpm/9 npm/? node/v24', 'bun/1', ''].map(packageManager)).toEqual([
       'npm',
       'pnpm',

@@ -114,20 +114,23 @@ Svelte sets `options` and `user` as properties (objects), as the element is defi
 |             | `user`     | `DrawerUser \| null`                     | User of the app: id and name in collaboration sessions (`drawer.setUser`), given again only when it changes                                                                                               |
 |             | `drawer`   | `Drawer \| null`                         | Drawer of the element (read only), `null` until it is created and once the element left the page                                                                                                          |
 
-`read-only`, `theme`, `language` and `user` are followed once the drawer is created; when they are not given, the drawer keeps its own settings (its options, menus of its interface, preferences saved in the browser). Properties set by a framework before the element is defined are kept.
+`read-only`, `theme`, `language` and `user` are followed once the drawer is created; when they are not given, the drawer keeps its own settings (its options, menus of its interface, preferences saved in the browser). Only a setting that changed is given again: a language chosen in the menu is kept when the theme changes, a viewer of a collaboration session stays read only. Properties set by a framework before the element is defined are kept.
 
 ## Events
 
-| Event          | `detail` | Description                                                               |
-| -------------- | -------- | ------------------------------------------------------------------------- |
-| `drawerready`  | `Drawer` | Drawer ready: plugins initialized, drawing of the `storage` option loaded |
-| `drawerchange` | `Drawer` | Drawing changed: shapes, background...                                    |
+| Event          | `detail`  | Description                                                                                    |
+| -------------- | --------- | ---------------------------------------------------------------------------------------------- |
+| `drawerready`  | `Drawer`  | Drawer ready: plugins initialized, drawing of the `storage` option loaded                      |
+| `drawerchange` | `Drawer`  | Drawing changed: shapes, background...                                                         |
+| `drawererror`  | `unknown` | Drawer not created: library not loaded (network), invalid options (also logged in the console) |
 
 They do not bubble. They are not named `ready` and `change`: the `change` events of the fields of the drawer (dialogs, panels) bubble to the element.
 
+In the shadow root of a component (Lit...), the style sheet of the page does not reach the drawer: add `@fabwcie/free-drawing/style.css` to the styles of the component.
+
 ## Size
 
-The element is a block (`display: block`, `[hidden]` still hides it) whose drawer takes its size and follows it: give it a size (`style`, a class, flex or grid item). An element without height gives the drawer the height of the window. The `width` and `height` options give a fixed size instead. The style of the element has no specificity: any style of the app wins.
+The element is a block (`display: block`, `[hidden]` still hides it, also in the shadow root of a component: Lit...) whose drawer takes its size and follows it: give it a size (`style`, a class, flex or grid item). An element without height gives the drawer the height of the window. The `width` and `height` options give a fixed size instead. The style of the element has no specificity: any style of the app wins.
 
 ## Drawer
 

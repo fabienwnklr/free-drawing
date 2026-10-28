@@ -26,6 +26,8 @@ export const FreeDrawing = defineComponent({
     ready: (drawer: Drawer) => !!drawer,
     /** Drawing changed: shapes, background... (`change` event) */
     change: (drawer: Drawer) => !!drawer,
+    /** Drawer not created: library not loaded (network), invalid options */
+    error: (_error: unknown) => true,
   },
   setup(props, { emit, expose }) {
     /** Element of the component */
@@ -49,6 +51,7 @@ export const FreeDrawing = defineComponent({
           },
           ready: (created) => emit('ready', created),
           change: (changed) => emit('change', changed),
+          error: (error) => emit('error', error),
         }
       );
     });

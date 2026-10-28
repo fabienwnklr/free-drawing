@@ -15,13 +15,15 @@ import type { Drawer, DrawerOptions } from '@fabwcie/free-drawing';
 import { applySettings, mountDrawer, withSettings, type DrawerSettings } from './mountDrawer.js';
 
 /** Properties of `FreeDrawing`: options and settings of the drawer, its events, attributes of its element */
-export interface FreeDrawingProps extends DrawerSettings, Omit<HTMLAttributes<HTMLDivElement>, 'onChange'> {
+export interface FreeDrawingProps extends DrawerSettings, Omit<HTMLAttributes<HTMLDivElement>, 'onChange' | 'onError'> {
   /** Options of the drawer, read when it is created: give another `key` to create it again with other options */
   options?: Partial<DrawerOptions>;
   /** Drawer ready: plugins initialized, drawing of the `storage` option loaded (`drawer.ready`) */
   onReady?: (drawer: Drawer) => void;
   /** Drawing changed: shapes, background... (`change` event) */
   onChange?: (drawer: Drawer) => void;
+  /** Drawer not created: library not loaded (network), invalid options */
+  onError?: (error: unknown) => void;
 }
 
 /**
@@ -30,19 +32,19 @@ export interface FreeDrawingProps extends DrawerSettings, Omit<HTMLAttributes<HT
  * follows it. The ref gives the drawer, null until it is created.
  */
 export const FreeDrawing = forwardRef<Drawer | null, FreeDrawingProps>(function FreeDrawing(
-  { options, readOnly, theme, language, user, onReady, onChange, ...attributes },
+  { options, readOnly, theme, language, user, onReady, onChange, onError, ...attributes },
   ref
 ) {
   const host = useRef<HTMLDivElement>(null);
   const [drawer, setDrawer] = useState<Drawer | null>(null);
   // props of the last render, read when the drawer is created and by its events
-  const props = useRef({ options, readOnly, theme, language, user, onReady, onChange });
+  const props = useRef({ options, readOnly, theme, language, user, onReady, onChange, onError });
   // an equal user of another render is not given again
   const userKey = user === undefined ? undefined : JSON.stringify(user);
 
   // before the effect creating the drawer
   useEffect(() => {
-    props.current = { options, readOnly, theme, language, user, onReady, onChange };
+    props.current = { options, readOnly, theme, language, user, onReady, onChange, onError };
   });
 
   useEffect(() => {
@@ -56,6 +58,7 @@ export const FreeDrawing = forwardRef<Drawer | null, FreeDrawingProps>(function 
         created: setDrawer,
         ready: (created) => props.current.onReady?.(created),
         change: (changed) => props.current.onChange?.(changed),
+        error: (error) => props.current.onError?.(error),
       }
     );
 

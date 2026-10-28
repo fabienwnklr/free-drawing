@@ -10,11 +10,13 @@ declare global {
     drawerready: CustomEvent<Drawer>;
     /** Drawing of a `<free-drawing>` element changed: shapes, background... */
     drawerchange: CustomEvent<Drawer>;
+    /** Drawer of a `<free-drawing>` element not created: library not loaded (network), invalid options */
+    drawererror: CustomEvent<unknown>;
   }
 }
 
-/** Events of `<free-drawing>`, whose `detail` is the drawer (they do not bubble) */
-export type FreeDrawingElementEventMap = Pick<HTMLElementEventMap, 'drawerready' | 'drawerchange'>;
+/** Events of `<free-drawing>`, whose `detail` is the drawer, or the error (they do not bubble) */
+export type FreeDrawingElementEventMap = Pick<HTMLElementEventMap, 'drawerready' | 'drawerchange' | 'drawererror'>;
 
 /** HTMLElement in a browser, an empty class on a server (module imported by server rendering: nothing is defined) */
 const Base = (typeof HTMLElement === 'undefined' ? class {} : HTMLElement) as typeof HTMLElement;
@@ -22,35 +24,40 @@ const Base = (typeof HTMLElement === 'undefined' ? class {} : HTMLElement) as ty
 /** Properties a framework may set before the element is defined: set again through their setters */
 const properties = ['options', 'readOnly', 'theme', 'language', 'user'] as const;
 
-/** Names of the elements whose style was added to the page */
-const styledNames = new Set<string>();
+/** Names of the elements whose style was added, by page or shadow root */
+const styledNames = new WeakMap<Document | ShadowRoot, Set<string>>();
 
 /**
- * Style of an element added to the page once: a block whose drawer does not give its size to it (contain) nor to its
- * grid or flex box (overflow). Without specificity (`:where`): any style of the app wins
+ * Style of an element added once to its page, or to the shadow root holding it (component of Lit...: the styles of
+ * the page do not reach it): a block whose drawer does not give its size to it (contain) nor to its grid or flex box
+ * (overflow). Without specificity (`:where`): any style of the app wins
  * @param name Name of the element
+ * @param root Root node of the element: the page, or a shadow root
  */
-function addStyle(name: string) {
-  if (styledNames.has(name)) return;
+function addStyle(name: string, root: Node) {
+  const target = typeof ShadowRoot !== 'undefined' && root instanceof ShadowRoot ? root : document;
+  const names = styledNames.get(target) ?? new Set<string>();
+
+  if (names.has(name)) return;
 
   const css = `:where(${name}:not([hidden])) { display: block; overflow: hidden; contain: inline-size; }`;
 
-  styledNames.add(name);
+  styledNames.set(target, names.add(name));
   // constructed style sheet: allowed by a content security policy without inline styles
   if (
-    'adoptedStyleSheets' in document &&
+    'adoptedStyleSheets' in target &&
     typeof CSSStyleSheet === 'function' &&
     'replaceSync' in CSSStyleSheet.prototype
   ) {
     const sheet = new CSSStyleSheet();
 
     sheet.replaceSync(css);
-    document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
+    target.adoptedStyleSheets = [...target.adoptedStyleSheets, sheet];
   } else {
     const style = document.createElement('style');
 
     style.textContent = css;
-    document.head.prepend(style);
+    (target === document ? document.head : (target as ShadowRoot)).prepend(style);
   }
 }
 
@@ -157,7 +164,7 @@ export class FreeDrawingElement extends Base {
    */
   connectedCallback() {
     for (const property of properties) this._upgrade(property);
-    addStyle(this.localName);
+    addStyle(this.localName, this.getRootNode());
     if (this.#unmount) return;
 
     this.#unmount = mountDrawer(
@@ -176,6 +183,7 @@ export class FreeDrawingElement extends Base {
         },
         ready: (drawer) => this.dispatchEvent(new CustomEvent('drawerready', { detail: drawer })),
         change: (drawer) => this.dispatchEvent(new CustomEvent('drawerchange', { detail: drawer })),
+        error: (error) => this.dispatchEvent(new CustomEvent('drawererror', { detail: error })),
       }
     );
   }

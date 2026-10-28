@@ -2,6 +2,16 @@
 
 Changes of `@fabwcie/free-drawing-vue`. Each version is published by the release workflow of the library once it is not on npm yet.
 
+## 1.1.0 (2026-10-28)
+
+### Features
+
+- `error` event: drawer not created (library not loaded, invalid options), also logged in the console (it was an unhandled rejection)
+
+### Bug Fixes
+
+- Only the settings changed are given again to the drawer: a language chosen in its menu is kept when the theme changes, a viewer of a collaboration session no longer gets the tools back (library 8.0.6 keeps the read only of the app through sessions)
+
 ## 1.0.2 (2026-10-28)
 
 ### Bug Fixes

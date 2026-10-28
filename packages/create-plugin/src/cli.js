@@ -53,7 +53,11 @@ export function packageManager(userAgent) {
 function commands(manager) {
   return {
     install: manager === 'yarn' ? 'yarn' : `${manager} install`,
-    run: (script) => (manager === 'npm' && script !== 'test' ? `npm run ${script}` : `${manager} ${script}`),
+    // `bun test` and `bun build` are tools of Bun, not the scripts of the package
+    run: (script) =>
+      manager === 'bun' || (manager === 'npm' && script !== 'test')
+        ? `${manager} run ${script}`
+        : `${manager} ${script}`,
   };
 }
 

@@ -2,6 +2,12 @@
 
 Changes of `@fabwcie/create-free-drawing-plugin` (`npm create @fabwcie/free-drawing-plugin`). Each version is published by the release workflow of the library once it is not on npm yet.
 
+## 1.3.1 (2026-10-28)
+
+### Bug Fixes
+
+- Next steps with Bun: `bun run test` and `bun run build` run the scripts of the package (`bun test` and `bun build` are the tools of Bun)
+
 ## 1.3.0 (2026-10-28)
 
 ### Features

@@ -1073,6 +1073,25 @@ describe('Collaboration', () => {
     alice.collaborationModal!.hide();
   });
 
+  it('Read only of the app kept by the right to draw of a session, a viewer stays read only', () => {
+    const connect = createServer();
+    const alice = createDrawer();
+    const bob = createDrawer();
+
+    connect(alice, 'room', 'Alice', { userId: 'alice', ownerKey: 'secret' });
+    connect(bob, 'room', 'Bob', { userId: 'bob' });
+    // viewer: the app turning read only off gives no right
+    alice.collaboration!.setRight('bob', false);
+    bob.setReadOnly(false);
+    expect(bob.readOnly).toBe(true);
+    // read only asked by the app: kept when the right is given
+    bob.setReadOnly(true);
+    alice.collaboration!.setRight('bob', true);
+    expect(bob.readOnly).toBe(true);
+    bob.setReadOnly(false);
+    expect(bob.readOnly).toBe(false);
+  });
+
   it('Background color shared: the one of the room for users joining, changes sent, kept by undo of others', () => {
     const connect = createServer();
     const alice = createDrawer();

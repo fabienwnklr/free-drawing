@@ -20,6 +20,8 @@ export interface MountHandlers {
   ready: (drawer: Drawer) => void;
   /** Drawing changed: shapes, background... (`change` event) */
   change: (drawer: Drawer) => void;
+  /** Drawer not created: library not loaded (network), invalid options (also logged in the console) */
+  error: (error: unknown) => void;
 }
 
 /**
@@ -35,16 +37,27 @@ export function withSettings(
   return { ...options, ...Object.fromEntries(Object.entries(settings).filter(([, value]) => value !== undefined)) };
 }
 
+/** Settings last given to each drawer: only the ones changed since are applied again */
+const applied = new WeakMap<Drawer, DrawerSettings>();
+
 /**
  * Settings of the component given to the drawer: readOnly, theme and language when they differ from its own ones (the
- * theme and language saved in the browser win over the options)
+ * theme and language saved in the browser win over the options). Only the settings changed since the last call are
+ * applied: the user may have chosen another language in the menu, a session may have made the drawer read only
  * @param drawer Drawer of the component
  * @param settings Settings of the component, undefined ones are left to the drawer
  */
-export function applySettings(drawer: Drawer, { readOnly, theme, language }: DrawerSettings) {
-  if (readOnly !== undefined) drawer.setReadOnly(readOnly);
-  if (theme !== undefined && drawer.theme !== theme) drawer.setTheme(theme);
-  if (language !== undefined && drawer.getPreferences().language !== language) drawer.setLanguage(language);
+export function applySettings(drawer: Drawer, settings: DrawerSettings) {
+  const { readOnly, theme, language } = settings;
+  const previous = applied.get(drawer);
+  const changed = (key: keyof DrawerSettings) => !previous || previous[key] !== settings[key];
+
+  applied.set(drawer, { readOnly, theme, language });
+  if (readOnly !== undefined && changed('readOnly')) drawer.setReadOnly(readOnly);
+  if (theme !== undefined && changed('theme') && drawer.theme !== theme) drawer.setTheme(theme);
+  if (language !== undefined && changed('language') && drawer.getPreferences().language !== language) {
+    drawer.setLanguage(language);
+  }
 }
 
 /**
@@ -67,40 +80,47 @@ export function mountDrawer(
   let unmounted = false;
 
   host.append($el);
-  void import('@fabwcie/free-drawing').then(({ Drawer, drawerEvents }) => {
-    if (unmounted) return;
+  import('@fabwcie/free-drawing')
+    .then(({ Drawer, drawerEvents }) => {
+      if (unmounted) return;
 
-    // undefined settings left to the drawer
-    const options: Partial<DrawerOptions> = Object.fromEntries(
-      Object.entries(getOptions()).filter(([, value]) => value !== undefined)
-    );
-    const sized = !!(options.width || options.height);
-    const created = new Drawer($el, {
-      // size of the host, else of the window (e.g. height of a host whose height comes from its content)
-      ...(!sized && host.clientWidth ? { width: host.clientWidth } : {}),
-      ...(!sized && host.clientHeight ? { height: host.clientHeight } : {}),
-      ...options,
-    });
-
-    drawer = created;
-    applySettings(created, options);
-    if (!sized && typeof ResizeObserver !== 'undefined') {
-      observer = new ResizeObserver(() => {
-        if (host.clientWidth && host.clientHeight) created.setSize(host.clientWidth, host.clientHeight);
+      // undefined settings left to the drawer
+      const options: Partial<DrawerOptions> = Object.fromEntries(
+        Object.entries(getOptions()).filter(([, value]) => value !== undefined)
+      );
+      const sized = !!(options.width || options.height);
+      const created = new Drawer($el, {
+        // size of the host, else of the window (e.g. height of a host whose height comes from its content)
+        ...(!sized && host.clientWidth ? { width: host.clientWidth } : {}),
+        ...(!sized && host.clientHeight ? { height: host.clientHeight } : {}),
+        ...options,
       });
-      observer.observe(host);
-    }
-    created.on(drawerEvents.change, () => handlers.change(created));
-    created.ready.then(
-      () => {
-        if (!unmounted) handlers.ready(created);
-      },
-      () => {
-        // drawing of `storage` not loaded: error shown by the drawer, `drawer.ready` rejected
+
+      drawer = created;
+      applySettings(created, options);
+      if (!sized && typeof ResizeObserver !== 'undefined') {
+        observer = new ResizeObserver(() => {
+          if (host.clientWidth && host.clientHeight) created.setSize(host.clientWidth, host.clientHeight);
+        });
+        observer.observe(host);
       }
-    );
-    handlers.created(created);
-  });
+      created.on(drawerEvents.change, () => handlers.change(created));
+      created.ready.then(
+        () => {
+          if (!unmounted) handlers.ready(created);
+        },
+        () => {
+          // drawing of `storage` not loaded: error shown by the drawer, `drawer.ready` rejected
+        }
+      );
+      handlers.created(created);
+    })
+    .catch((error: unknown) => {
+      // removed meanwhile: nothing to tell
+      if (unmounted) return;
+      console.error('[free-drawing] drawer not created', error);
+      handlers.error(error);
+    });
 
   return () => {
     unmounted = true;

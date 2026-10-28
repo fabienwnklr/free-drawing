@@ -121,6 +121,44 @@ describe('FreeDrawing (React)', () => {
     expect(setUser).toHaveBeenCalledWith({ id: 'u2', name: 'Bob' });
   });
 
+  it('only the settings changed are given again: language chosen in the menu, read only kept', async () => {
+    const ref = createRef<Drawer>();
+    const base = props({ readOnly: false, theme: 'light', language: 'fr' });
+
+    await render(createElement(FreeDrawing, { ...base, ref }), ref);
+    const drawer = ref.current!;
+
+    // chosen by the user in the menu, made read only by the app (a session): kept when the theme changes
+    drawer.setLanguage('de');
+    drawer.setReadOnly(true);
+    await act(async () => root!.render(createElement(FreeDrawing, { ...base, theme: 'dark', ref })));
+    expect(drawer.isDarkMode()).toBe(true);
+    expect([drawer.i18n.language, drawer.readOnly]).toEqual(['de', true]);
+  });
+
+  it('drawer not created (invalid options): error given to onError, logged', async () => {
+    const onError = vi.fn();
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const base = props();
+
+    host = document.createElement('div');
+    document.body.append(host);
+    root = createRoot(host);
+    await act(async () =>
+      root!.render(
+        createElement(FreeDrawing, {
+          ...base,
+          // plugin without name: refused by the drawer
+          options: { ...base.options, plugins: [class {} as never] },
+          onError,
+        })
+      )
+    );
+    await act(() => vi.waitFor(() => expect(onError).toHaveBeenCalledWith(expect.any(Error))));
+    expect(error).toHaveBeenCalledWith('[free-drawing] drawer not created', expect.any(Error));
+    error.mockRestore();
+  });
+
   it('settings given as options are kept without props', async () => {
     const ref = createRef<Drawer>();
     const base = props();

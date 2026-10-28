@@ -13,6 +13,7 @@ type TestProps = {
   class?: string;
   onReady?: (drawer: Drawer) => void;
   onChange?: (drawer: Drawer) => void;
+  onError?: (error: unknown) => void;
 };
 
 let count = 0;
@@ -106,6 +107,35 @@ describe('FreeDrawing (Vue)', () => {
     expect(drawer.readOnly).toBe(true);
     expect(drawer.isDarkMode()).toBe(true);
     expect(drawer.i18n.language).toBe('es');
+  });
+
+  it('only the settings changed are given again; drawer not created: error event', async () => {
+    const props = reactive<TestProps>({ options: options(), readOnly: false, theme: 'light', language: 'fr' });
+    const { board } = await mount(props);
+    const drawer = board.value!.drawer!;
+
+    // chosen in the menu, made read only by the app: kept when the theme changes
+    drawer.setLanguage('de');
+    drawer.setReadOnly(true);
+    props.theme = 'dark';
+    await nextTick();
+    expect(drawer.isDarkMode()).toBe(true);
+    expect([drawer.i18n.language, drawer.readOnly]).toEqual(['de', true]);
+    app!.unmount();
+    host.remove();
+
+    // plugin without name: refused by the drawer
+    const onError = vi.fn();
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    host = document.createElement('div');
+    document.body.append(host);
+    app = createApp({
+      render: () => h(FreeDrawing, { options: { ...options(), plugins: [class {} as never] }, onError }),
+    });
+    app.mount(host);
+    await vi.waitFor(() => expect(onError).toHaveBeenCalledWith(expect.any(Error)));
+    error.mockRestore();
   });
 
   it('change event emitted with the drawer', async () => {

@@ -104,6 +104,29 @@ describe('<free-drawing>', () => {
     expect(setUser).toHaveBeenCalledWith({ id: 'u2', name: 'Bob' });
   });
 
+  it('in a shadow root (component of Lit...): style of the element added to it; not created: error event', async () => {
+    const shadowHost = document.createElement('div');
+    const shadow = shadowHost.attachShadow({ mode: 'open' });
+    const element = create();
+
+    document.body.append(shadowHost);
+    elements.push(shadowHost);
+    shadow.append(element);
+    await vi.waitFor(() => expect(element.drawer).not.toBeNull());
+    expect(shadow.textContent).toContain(':where(free-drawing:not([hidden])) { display: block;');
+
+    // plugin without name: refused by the drawer
+    const failed = create({ plugins: [class {} as never] });
+    const onError = vi.fn();
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    failed.addEventListener('drawererror', (event) => onError(event.detail));
+    elements.push(failed);
+    document.body.append(failed);
+    await vi.waitFor(() => expect(onError).toHaveBeenCalledWith(expect.any(Error)));
+    error.mockRestore();
+  });
+
   it('settings given as options are kept without attribute', async () => {
     const drawer = await connect(create({ readOnly: true, theme: 'dark', language: 'es' }));
 

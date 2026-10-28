@@ -519,7 +519,7 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
     // drawer created: commands, listeners of plugins (read only after: plugins may listen to it)
     this.plugins._init();
 
-    if (this.options.readOnly) this.setReadOnly(true);
+    if (this.options.readOnly) this._setReadOnly(true);
 
     if (this.options.storage) {
       this.ready = this.loadFromStorage();
@@ -574,10 +574,20 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
 
   /**
    * Read only: drawing can't be modified by user (tools except pan, shortcuts and menu items modifying drawing,
-   * text edition), API methods still modify it
+   * text edition), API methods still modify it. Asked by the app (kept in `options.readOnly`): a collaboration session
+   * giving the right to draw keeps it, a viewer of a session stays read only
    * @param readOnly True disables tools modifying drawing (pan activated), false enables them and the previous tool
    */
   setReadOnly(readOnly: boolean) {
+    this.options.readOnly = readOnly;
+    this._setReadOnly(readOnly || (!!this.collaboration && !this.collaboration.canEdit));
+  }
+
+  /**
+   * Read only applied, see `setReadOnly`: also by the right to draw of a collaboration session
+   * @param readOnly True disables tools modifying drawing (pan activated), false enables them and the previous tool
+   */
+  private _setReadOnly(readOnly: boolean) {
     if (readOnly === this.readOnly) return;
 
     this.readOnly = readOnly;
@@ -627,7 +637,7 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
    * @param joined Room just joined as viewer: told how to ask the owner to draw (no right removed)
    */
   _onCollaborationRight(canEdit: boolean, joined = false) {
-    this.setReadOnly(!canEdit || this.options.readOnly);
+    this._setReadOnly(!canEdit || this.options.readOnly);
     this.toast(this.t(canEdit ? 'toast.canDraw' : joined ? 'toast.joinedViewOnly' : 'toast.viewOnly'), 'info');
   }
 
@@ -787,7 +797,7 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
     this.collaboration = null;
     this.socket = null;
     // right to draw back
-    this.setReadOnly(this.options.readOnly);
+    this._setReadOnly(this.options.readOnly);
     if (window.location.hash.startsWith('#room=')) {
       window.history.replaceState(null, '', window.location.pathname + window.location.search);
     }

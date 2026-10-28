@@ -135,9 +135,12 @@ export class App {
           if (this.drawing?.id === saved.id) this.drawing = saved;
           this._setSaveState('saved');
         } catch (error) {
-          // shown by drawer once, reason explained (drawings of the account too big)
+          // shown by drawer once, reason explained (drawings of the account too big); other errors as they are, so the
+          // drawer translates the ones of the browser by their name (storage full)
+          const reason = this.texts.reason(error as Error);
+
           this._setSaveState('error');
-          throw new Error(this.texts.reason(error as Error));
+          throw reason === (error as Error).message ? error : new Error(reason);
         }
       },
     };
@@ -278,11 +281,13 @@ export class App {
   async login(user: User) {
     // drawing of browser kept there
     await this.drawer.save();
-    this.user = user;
 
+    // drawing of the account known before the drawings of the account are used: saves meanwhile still go to the browser
+    // (a failure keeps the drawings of the browser)
     const drawings = await api.listDrawings();
     const drawing = drawings[0] ?? (await api.createDrawing({ content: this.drawer.getDrawingFile() }));
 
+    this.user = user;
     this.drawer.setUser({ id: user.id, name: user.name });
     await this._open(drawing);
     // once loaded: grid and snapping preferences fire changes, saved in this drawing
