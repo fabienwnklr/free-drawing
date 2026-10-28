@@ -27,6 +27,7 @@ describe('Preferences', () => {
       autoSave: false,
       keepTool: true,
       shapeRecognition: false,
+      gridStyle: 'squares',
     });
 
     const reloaded = createDrawer({ localStorageKey: drawer.options.localStorageKey, language: 'en' });
@@ -126,6 +127,7 @@ describe('Preferences', () => {
       autoSave: false,
       keepTool: true,
       shapeRecognition: false,
+      gridStyle: 'squares',
     });
 
     // cancelled, closed with Escape: nothing applied, fields show preferences again

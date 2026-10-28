@@ -16,6 +16,9 @@ const tooBig = { error: 'drawings of the account too big', code: 'DRAWINGS_TOO_B
 
 const themes = ['light', 'dark', 'system'];
 
+/** Styles of the grid (`GridStyle` of the library) */
+const gridStyles = ['squares', 'dots', 'lines', 'isometric'];
+
 type Handler = (req: Request, res: Response, user: User) => Promise<unknown>;
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
@@ -40,7 +43,7 @@ function isDrawingFile(value: unknown) {
  * Known preferences of the library (`Preferences`) only, invalid values ignored
  */
 function toPreferences(value: Record<string, unknown>) {
-  const { theme, language, grid, snapping, zen, autoSave, keepTool, shapeRecognition } = value;
+  const { theme, language, grid, snapping, zen, autoSave, keepTool, shapeRecognition, gridStyle } = value;
 
   return {
     ...(typeof theme === 'string' && themes.includes(theme) && { theme }),
@@ -51,6 +54,7 @@ function toPreferences(value: Record<string, unknown>) {
     ...(typeof autoSave === 'boolean' && { autoSave }),
     ...(typeof keepTool === 'boolean' && { keepTool }),
     ...(typeof shapeRecognition === 'boolean' && { shapeRecognition }),
+    ...(typeof gridStyle === 'string' && gridStyles.includes(gridStyle) && { gridStyle }),
   };
 }
 

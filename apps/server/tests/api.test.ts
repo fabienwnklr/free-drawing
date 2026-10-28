@@ -189,6 +189,7 @@ describe('Preferences', () => {
       autoSave: false,
       keepTool: false,
       shapeRecognition: true,
+      gridStyle: 'dots',
       other: 1,
     });
 
@@ -200,6 +201,7 @@ describe('Preferences', () => {
       autoSave: false,
       keepTool: false,
       shapeRecognition: true,
+      gridStyle: 'dots',
     });
     expect((await agent.get('/api/preferences')).body).toEqual({
       theme: 'dark',
@@ -209,6 +211,7 @@ describe('Preferences', () => {
       autoSave: false,
       keepTool: false,
       shapeRecognition: true,
+      gridStyle: 'dots',
     });
 
     // replaced

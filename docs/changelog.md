@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.47.0](https://github.com/fabienwnklr/free-drawing/compare/v7.46.0...v7.47.0) (2026-10-28)
+
+
+### Features
+
+* **grid:** styles of the grid (preferences dialog, command palette, `gridStyle` option and preference, `setGridStyle`): squares, dots, lines of ruled paper or triangles of isometric paper; shapes snap to its crossings, dots, lines (heights) or corners of triangles, and rotate by 30° on isometric paper; zoomed out, its lines stay at least 10 px apart on screen
+
+
+### Bug Fixes
+
+* **grid:** resize anchors snapped to the lines of the grid of the drawing once the view is moved or zoomed (they snapped to a grid of the screen)
+
 ## [7.46.0](https://github.com/fabienwnklr/free-drawing/compare/v7.45.0...v7.46.0) (2026-10-28)
 
 

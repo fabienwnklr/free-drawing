@@ -98,6 +98,7 @@ The library needs no framework. React and Vue apps can use its `FreeDrawing` com
   autoSave: true, // drawing saved on each change (localStorage or storage), user preference (see Preferences)
   keepTool: true, // drawing tool kept after drawing a shape, else selection tool activated, user preference (see Preferences)
   shapeRecognition: false, // brush strokes recognized as rectangles, ellipses, triangles, diamonds, lines or arrows, user preference (see Shape recognition)
+  gridStyle: 'squares', // style of the grid: 'squares' | 'dots' | 'lines' (ruled paper) | 'isometric', user preference (see Grid)
   localStorageKey: 'free-drawing', // localStorage key used for store data, use a different key for each drawer of a page
   storage: null, // drawing saved somewhere else than localStorage (e.g. server of your app), see "Use in an app" below
   user: null, // user of your app ({ id, name }), used in collaboration sessions instead of id and name kept in browser
@@ -139,7 +140,7 @@ drawer.off('drawer.change', callback);
 | `drawer.collaboration.change` | | Collaboration started or stopped, users or rights changed |
 | `drawer.theme.change` | dark state | Light or dark theme shown |
 | `drawer.language.change` | language | Language of interface changed |
-| `drawer.preferences.change` | preferences | Theme, language, grid or snapping changed (one event for several changes) |
+| `drawer.preferences.change` | preferences | Theme, language, grid, snapping or another preference changed (one event for several changes) |
 | `drawer.unsaved.change` | unsaved | Drawing has changes not saved yet (auto save off, save of `storage` in progress, failed save), or is saved again |
 | `drawer.plugin.change` | plugin | Plugin disabled (`forceDisabled`) or enabled again |
 | `drawer.slideshow.change` | index of the slide | Slideshow started, showing another slide, or stopped (-1) |
@@ -148,7 +149,7 @@ Components trigger `drawer.dropdown.hide` (dropdown menu) and `drawer.toast.hide
 
 ## Preferences
 
-"Preferences..." of settings menu (Ctrl / Cmd + ,, also in the command palette) opens a dialog: theme (light, dark or system), language, zen mode, grid, snapping to objects, auto save, keep tool active, shape recognition and name in collaboration sessions. Changes are applied together with "Save" ("Cancel", Escape or close keep current preferences) and saved in the browser (`<localStorageKey>-preferences`), also with the `storage` option. An app can save them with the account of its user (see "Use in an app").
+"Preferences..." of settings menu (Ctrl / Cmd + ,, also in the command palette) opens a dialog: theme (light, dark or system), language, zen mode, grid and its style, snapping to objects, auto save, keep tool active, shape recognition and name in collaboration sessions. Changes are applied together with "Save" ("Cancel", Escape or close keep current preferences) and saved in the browser (`<localStorageKey>-preferences`), also with the `storage` option. An app can save them with the account of its user (see "Use in an app").
 
 ```js
 drawer.showPreferences();
@@ -184,6 +185,25 @@ drawer.setKeepTool(false);
 
 ```js
 drawer.setShapeRecognition(true);
+```
+
+### Grid
+
+"Show grid" (settings menu, context menu, Alt + G, command palette) shows a grid the shapes snap to while they are moved, resized and rotated (snapping to objects and the grid exclude each other). Its style is a preference (preferences dialog, command palette: "Grid: Dots"..., which shows the grid too; `gridStyle` option):
+
+| Style | Grid | Shapes snap to |
+| --- | --- | --- |
+| `squares` (default) | Squares of dashed lines | Crossings of the lines, rotation by 90° |
+| `dots` | Dots at the crossings | Dots, rotation by 90° |
+| `lines` | Horizontal lines of ruled paper | Heights of the lines (left and right free), rotation by 90° |
+| `isometric` | Triangles of isometric paper: vertical lines and lines at 30° | Corners of the triangles, rotation by 30° |
+
+- The grid belongs to the drawing, not to the screen: whatever the view is moved or zoomed, shapes snap to the lines drawn. Zoomed out, lines stay at least 10 px apart on screen (every other one is drawn).
+- It helps to draw: it is not saved in drawing files, nor exported, nor shared in collaboration sessions (each user chooses).
+
+```js
+drawer.setGridStyle('isometric');
+drawer.showGrid(); // hideGrid(), drawer.grid
 ```
 
 ## Dark mode
@@ -251,12 +271,12 @@ drawer.setUser({ id: 'user-1', name: 'Ada' });
 drawer.setUser(null); // anonymous: id and name kept in browser
 ```
 
-Preferences are the interface settings of the user (theme, language, grid, snapping to objects, zen mode, auto save, keep tool active), saved in the browser by the drawer, to save them with their account too:
+Preferences are the interface settings of the user (theme, language, grid and its style, snapping to objects, zen mode, auto save, keep tool active, shape recognition), saved in the browser by the drawer, to save them with their account too:
 
 ```js
 drawer.setPreferences(await api.getPreferences()); // given ones only
 drawer.on('drawer.preferences.change', (preferences) => api.savePreferences(preferences));
-drawer.getPreferences(); // { theme: 'light', language: 'auto', grid: false, snapping: false, zen: false, autoSave: true, keepTool: true }
+drawer.getPreferences(); // { theme: 'light', language: 'auto', grid: false, snapping: false, zen: false, autoSave: true, keepTool: true, shapeRecognition: false, gridStyle: 'squares' }
 ```
 
 `collaboration` option can also give data read by the server on connection (`socket.handshake.auth`), e.g. a token of the logged in user, or a function giving it on each connection:

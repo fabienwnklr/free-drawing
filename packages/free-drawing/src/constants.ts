@@ -2,8 +2,8 @@ import type { DrawerOptions } from '@/@types/drawer';
 import type { WidgetName } from '@/@types/toolbar';
 import type { RecognizedKind } from '@/@types/shapes';
 import type { TranslationKey } from '@/@types/i18n';
-import type { Arrowhead, ArrowType, Direction, ShapeAlignment, ShapeOrder } from '@/@types/drawer';
-import type { IconChoice, ShortcutChoice } from '@/@types/ui';
+import type { Arrowhead, ArrowType, Direction, GridStyle, ShapeAlignment, ShapeOrder } from '@/@types/drawer';
+import type { Choice, IconChoice, ShortcutChoice } from '@/@types/ui';
 import SendToBackIcon from '@/icons/send-to-back.svg?raw';
 import SendBackwardIcon from '@/icons/send-backward.svg?raw';
 import BringForwardIcon from '@/icons/bring-forward.svg?raw';
@@ -88,6 +88,7 @@ export const defaultOptions: DrawerOptions = {
   autoSave: true,
   keepTool: true,
   shapeRecognition: false,
+  gridStyle: 'squares',
   localStorageKey: 'free-drawing',
   opacity: 1,
   collaboration: false,
@@ -146,6 +147,14 @@ export const grabbingCursor = `url("data:image/svg+xml,<svg xmlns='http://www.w3
  * Grid cell size, used for drawing and snapping
  */
 export const gridSize = 40;
+
+/** Styles of the grid (preferences dialog, command palette) */
+export const gridStyles: Choice<GridStyle>[] = [
+  { value: 'squares', label: 'grid.squares' },
+  { value: 'dots', label: 'grid.dots' },
+  { value: 'lines', label: 'grid.lines' },
+  { value: 'isometric', label: 'grid.isometric' },
+];
 
 /**
  * Max undo / redo states kept

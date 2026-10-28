@@ -83,6 +83,8 @@ export type DrawerOptions = {
   keepTool: boolean;
   /** Brush strokes recognized as rectangles, ellipses, triangles, diamonds, lines or arrows (user preference, default false) */
   shapeRecognition: boolean;
+  /** Style of the grid: 'squares' (default), 'dots', 'lines' (ruled paper) or 'isometric' (user preference) */
+  gridStyle: GridStyle;
   /** Key of the drawing in localStorage and prefix of other saved data (tool, preferences...), unique for each drawer */
   localStorageKey: string;
   /** User of the app (e.g. logged in): id and name used in collaboration sessions instead of ones kept in browser */
@@ -142,7 +144,12 @@ export type Preferences = {
   keepTool: boolean;
   /** Brush strokes recognized as shapes */
   shapeRecognition: boolean;
+  /** Style of the grid */
+  gridStyle: GridStyle;
 };
+
+/** Style of the grid: squares of dashed lines, dots at their crossings, lines of ruled paper, triangles of isometric paper */
+export type GridStyle = 'squares' | 'dots' | 'lines' | 'isometric';
 
 /**
  * Stroke style of shapes: dash and dots computed from stroke width (`getDash`), read back from shape dash

@@ -16,6 +16,7 @@ import type {
   Arrowheads,
   ArrowType,
   Edges,
+  GridStyle,
   OptionsChange,
   Preferences,
   ShapeAlignment,
@@ -26,7 +27,8 @@ import type {
 } from '@/@types/drawer';
 import type { CollaborationOptions, CollaborationSocket, ViewArea } from '@/@types/collaboration';
 import { createId, deepMerge } from '@/utils/functions';
-import { defaultOptions, drawerEvents, gridSize, shapeLabels, shapeName, viewMargin, zoomLimits } from '@/constants';
+import { defaultOptions, drawerEvents, gridStyles, shapeLabels, shapeName, viewMargin, zoomLimits } from '@/constants';
+import { drawGrid, gridRotationSnaps, gridShapeStyle, snapToGrid } from '@/utils/grid';
 import { hasFocusOutside, setPressed } from '@/utils/dom';
 import { announce, createLiveRegion } from '@/utils/liveRegion';
 import { DrawerError, getErrorText } from '@/utils/errors';
@@ -335,6 +337,7 @@ export class Drawer extends MicroEvent {
     this.options.autoSave = preferences.autoSave ?? this.options.autoSave;
     this.options.keepTool = preferences.keepTool ?? this.options.keepTool;
     this.options.shapeRecognition = preferences.shapeRecognition ?? this.options.shapeRecognition;
+    this.options.gridStyle = preferences.gridStyle ?? this.options.gridStyle;
     this.i18n = new I18n(
       this.#languageChoice === 'auto' ? getLanguage() : this.#languageChoice,
       this.options.translations
@@ -2553,7 +2556,8 @@ export class Drawer extends MicroEvent {
 
   /**
    * Interface settings of user (e.g. saved by the app for its logged in user)
-   * @returns Current theme, language choice, grid, snapping, zen mode, auto save, keep tool and shape recognition
+   * @returns Current theme, language choice, grid and its style, snapping, zen mode, auto save, keep tool and shape
+   * recognition
    */
   getPreferences(): Preferences {
     return {
@@ -2565,6 +2569,7 @@ export class Drawer extends MicroEvent {
       autoSave: this.options.autoSave,
       keepTool: this.options.keepTool,
       shapeRecognition: this.options.shapeRecognition,
+      gridStyle: this.options.gridStyle,
     };
   }
 
@@ -2572,10 +2577,14 @@ export class Drawer extends MicroEvent {
    * Apply interface settings (given ones only), one `drawer.preferences.change` event
    * @param preferences Grid wins when grid and snapping are both true
    */
-  setPreferences({ theme, language, grid, snapping, zen, autoSave, keepTool, shapeRecognition }: Partial<Preferences>) {
+  setPreferences(preferences: Partial<Preferences>) {
+    const { theme, language, grid, snapping, zen, autoSave, keepTool, shapeRecognition, gridStyle } = preferences;
+
     if (autoSave !== undefined) this.setAutoSave(autoSave);
     if (keepTool !== undefined) this.setKeepTool(keepTool);
     if (shapeRecognition !== undefined) this.setShapeRecognition(shapeRecognition);
+    // before the grid: shown in its style
+    if (gridStyle !== undefined) this.setGridStyle(gridStyle);
     if (theme !== undefined && theme !== this.theme) this.setTheme(theme);
     if (language !== undefined && language !== this.#languageChoice) this.setLanguage(language);
     if (zen !== undefined && zen !== this.setting.zenMode) this.setting.toggleZenMode();
@@ -2608,7 +2617,12 @@ export class Drawer extends MicroEvent {
     // first valid one
     const theme = [saved.theme, this._getStorageItem(`${key}-theme`)].find(isTheme);
     const language = [saved.language, this._getStorageItem(`${key}-language`)].find(isLanguage);
-    const preferences: Partial<Preferences> = { ...(theme && { theme }), ...(language && { language }) };
+    const gridStyle = gridStyles.find(({ value }) => value === saved.gridStyle)?.value;
+    const preferences: Partial<Preferences> = {
+      ...(theme && { theme }),
+      ...(language && { language }),
+      ...(gridStyle && { gridStyle }),
+    };
 
     (['grid', 'snapping', 'zen', 'autoSave', 'keepTool', 'shapeRecognition'] as const).forEach((name) => {
       if (typeof saved[name] === 'boolean') preferences[name] = saved[name];
@@ -2952,10 +2966,7 @@ export class Drawer extends MicroEvent {
 
       const before = e.target.absolutePosition();
 
-      e.target.position({
-        x: Math.round(e.target.x() / gridSize) * gridSize,
-        y: Math.round(e.target.y() / gridSize) * gridSize,
-      });
+      e.target.position(snapToGrid(e.target.position(), this.options.gridStyle));
 
       const after = e.target.absolutePosition();
       const selected = this.getSelectedShapes();
@@ -2969,72 +2980,37 @@ export class Drawer extends MicroEvent {
         shape.absolutePosition({ x: pos.x + after.x - before.x, y: pos.y + after.y - before.y });
       }
     });
-    // applied by selection when anchor is not snapped to objects
+    /**
+     * Resize anchor snapped to the grid of the drawing (lines, points) less than 10 px away on screen, applied by the
+     * selection when the anchor is not snapped to objects
+     * @param oldPos Absolute position of the anchor before the move
+     * @param newPos Absolute position asked by the move
+     * @returns Snapped position, new position when far from old one (fast move) or from the grid
+     */
     const gridAnchorBound = (oldPos: Vector2d, newPos: Vector2d) => {
-      // do not snap if grid disabled
-      if (!this.grid) {
-        return newPos;
-      }
+      if (!this.grid || Math.hypot(newPos.x - oldPos.x, newPos.y - oldPos.y) > 10) return newPos;
 
-      const dist = Math.sqrt((newPos.x - oldPos.x) ** 2 + (newPos.y - oldPos.y) ** 2);
+      const style = this.options.gridStyle;
+      // grid of the drawing, whatever the view
+      const transform = this.drawLayer.getAbsoluteTransform();
+      const snapped = transform.point(snapToGrid(transform.copy().invert().point(newPos), style));
+      const snappedX = Math.abs(snapped.x - newPos.x) < 10;
+      const snappedY = Math.abs(snapped.y - newPos.y) < 10;
 
-      // do not do any snapping with new absolute position (pointer position)
-      // is too far away from old position
-      if (dist > 10) {
-        return newPos;
-      }
+      // corners of triangles only
+      if (style === 'isometric') return snappedX && snappedY ? snapped : newPos;
+      // heights of lines only
+      if (style === 'lines') return { x: newPos.x, y: snappedY ? snapped.y : newPos.y };
 
-      return calc(oldPos, newPos);
+      // snapped on one axis: the other one kept where it was
+      return {
+        x: snappedX ? snapped.x : snappedY ? oldPos.x : newPos.x,
+        y: snappedY ? snapped.y : snappedX ? oldPos.y : newPos.y,
+      };
     };
 
     if (selectWidget) selectWidget.gridAnchorBound = gridAnchorBound;
-
-    /**
-     * Anchor position snapped to the closest grid lines (x, y or both) when they are less than 10px away
-     * @param oldPos Absolute position of the anchor before the move
-     * @param newPos Absolute position asked by the move
-     * @returns Snapped position, new position when far from old one or from grid lines
-     */
-    function calc(oldPos: Vector2d, newPos: Vector2d) {
-      const dist = Math.sqrt((newPos.x - oldPos.x) ** 2 + (newPos.y - oldPos.y) ** 2);
-
-      // do not do any snapping with new absolute position (pointer position)
-      // is too far away from old position
-      if (dist > 10) {
-        return newPos;
-      }
-
-      const closestX = Math.round(newPos.x / gridSize) * gridSize;
-      const diffX = Math.abs(newPos.x - closestX);
-
-      const closestY = Math.round(newPos.y / gridSize) * gridSize;
-      const diffY = Math.abs(newPos.y - closestY);
-
-      const snappedX = diffX < 10;
-      const snappedY = diffY < 10;
-
-      // a bit different snap strategies based on snap direction
-      // we need to reuse old position for better UX
-      if (snappedX && !snappedY) {
-        return {
-          x: closestX,
-          y: oldPos.y,
-        };
-      } else if (snappedY && !snappedX) {
-        return {
-          x: oldPos.x,
-          y: closestY,
-        };
-      } else if (snappedX && snappedY) {
-        return {
-          x: closestX,
-          y: closestY,
-        };
-      }
-      return newPos;
-    }
-
-    selectWidget?.transformer.rotationSnaps([0, 90, 180, 270]);
+    selectWidget?.transformer.rotationSnaps(gridRotationSnaps(this.options.gridStyle));
   }
 
   /**
@@ -3059,38 +3035,29 @@ export class Drawer extends MicroEvent {
   }
 
   /**
-   * Draw grid: one shape drawing lines of visible area, redrawn with stage (pan, zoom) without creating nodes
+   * Draw grid in its style (`gridStyle` option): one shape drawing the visible area, redrawn with stage (pan, zoom)
+   * without creating nodes
    */
   private _drawGrid() {
+    const style = this.options.gridStyle;
+
     this.gridLayer.destroyChildren();
     this.gridLayer.add(
       new Shape({
         name: shapeName.gridLine,
-        stroke: 'rgba(0, 0, 0, 0.2)',
-        strokeWidth: 1,
-        dash: [3, 3],
+        ...gridShapeStyle(style),
         listening: false,
         sceneFunc: (ctx, shape) => {
           const scale = this.getZoomLevel();
           // visible area in stage coordinates
-          const x1 = -this.stage.x() / scale;
-          const y1 = -this.stage.y() / scale;
-          const x2 = x1 + this.stage.width() / scale;
-          const y2 = y1 + this.stage.height() / scale;
-          // lines start on grid, so dashes don't move with view
-          const startX = Math.floor(x1 / gridSize) * gridSize;
-          const startY = Math.floor(y1 / gridSize) * gridSize;
-
-          // one stroke per line: browsers optimize dashes of a straight line, not of a path with many lines
-          const strokeLine = (fromX: number, fromY: number, toX: number, toY: number) => {
-            ctx.beginPath();
-            ctx.moveTo(fromX, fromY);
-            ctx.lineTo(toX, toY);
-            ctx.strokeShape(shape);
+          const area = {
+            x: -this.stage.x() / scale,
+            y: -this.stage.y() / scale,
+            width: this.stage.width() / scale,
+            height: this.stage.height() / scale,
           };
 
-          for (let x = startX; x <= x2; x += gridSize) strokeLine(x, startY, x, y2);
-          for (let y = startY; y <= y2; y += gridSize) strokeLine(startX, y, x2, y);
+          drawGrid(ctx, shape, area, scale, style);
         },
       })
     );
@@ -3105,6 +3072,22 @@ export class Drawer extends MicroEvent {
     setPressed(this.contextMenu.$gridBtn, false);
     this.gridLayer.destroyChildren();
     this._removeSnapGridEvents();
+    this._preferencesChanged();
+  }
+
+  /**
+   * Style of the grid (preference): squares, dots, lines of ruled paper or triangles of isometric paper; shapes snap
+   * to its lines or points, selections rotate by 30 degrees on isometric paper
+   * @param gridStyle Style of the grid, drawn again when shown
+   */
+  setGridStyle(gridStyle: GridStyle) {
+    if (gridStyle === this.options.gridStyle) return;
+
+    this.options.gridStyle = gridStyle;
+    if (this.grid) {
+      this._drawGrid();
+      this.getWidget<SelectWidget>('selection')?.transformer.rotationSnaps(gridRotationSnaps(gridStyle));
+    }
     this._preferencesChanged();
   }
 

@@ -53,7 +53,7 @@ import FlipVerticalIcon from '@/icons/flip-vertical.svg?raw';
 import FitWidthIcon from '@/icons/fit-width.svg?raw';
 import PaintRollerIcon from '@/icons/paint-roller.svg?raw';
 import type { Command, CommandGroup } from '@/@types/ui';
-import { shapeAlignments, shapeDistributions, shapeOrders, shapeStacks } from '@/constants';
+import { gridStyles, shapeAlignments, shapeDistributions, shapeOrders, shapeStacks } from '@/constants';
 import { formatShortcut } from '@/utils/shortcut';
 
 /**
@@ -526,6 +526,17 @@ export class CommandPalette extends Modal {
             checked: drawer.grid,
             run: () => drawer.setting.toggleGrid(),
           },
+          // style chosen and grid shown
+          ...gridStyles.map(({ value, label }) => ({
+            id: `grid style paper ${value}`,
+            label: t('grid.styleCommand', { style: t(label) }),
+            icon: GridIcon,
+            checked: drawer.grid && drawer.options.gridStyle === value,
+            run: () => {
+              drawer.setGridStyle(value);
+              if (!drawer.grid) drawer.setting.toggleGrid();
+            },
+          })),
           selectWidget && {
             id: 'snap objects',
             label: t('context.snap'),

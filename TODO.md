@@ -138,7 +138,7 @@
 - [x] explain why use konva as peer dependencies
 - [x] keyboard navigation between shapes, with a description read by screen readers
 - [x] shape recognition: a freehand stroke turned into a rectangle, an ellipse or an arrow (need to be enable/disable)
-- [ ] page backgrounds: lined, dotted, isometric paper
+- [x] page backgrounds: lined, dotted, isometric paper
 - [ ] import of `.excalidraw` and `.tldr` files
 - [ ] replay how a drawing was made, from its history
 - [ ] why use namespace for event like drawer.** ? it's really usefull ? because for listen we use drawer.on method; then need typing for event, for show error in ts if we use an unknow event

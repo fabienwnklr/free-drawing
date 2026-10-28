@@ -107,7 +107,14 @@ describe('Command palette', () => {
     const palette = open(drawer);
 
     search(palette, 'GRILLE');
-    expect(options(palette)).toEqual(['Afficher la grille']);
+    // also the styles of the grid
+    expect(options(palette)).toEqual([
+      'Afficher la grille',
+      'Grille : Carreaux',
+      'Grille : Points',
+      'Grille : Lignes',
+      'Grille : Isométrique',
+    ]);
 
     search(palette, 'selection');
     expect(options(palette)).toEqual(['Sélection']);

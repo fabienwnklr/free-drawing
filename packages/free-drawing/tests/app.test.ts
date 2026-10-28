@@ -162,6 +162,7 @@ describe('Integration in an app', () => {
       autoSave: false,
       keepTool: true,
       shapeRecognition: false,
+      gridStyle: 'squares',
     });
     drawer.on('drawer.preferences.change', onChange);
 
@@ -177,6 +178,7 @@ describe('Integration in an app', () => {
       autoSave: false,
       keepTool: true,
       shapeRecognition: false,
+      gridStyle: 'squares',
     });
     expect(drawer.isDarkMode()).toBe(true);
     expect(drawer.language).toBe('fr');
@@ -195,6 +197,7 @@ describe('Integration in an app', () => {
       autoSave: false,
       keepTool: true,
       shapeRecognition: false,
+      gridStyle: 'squares',
     });
 
     // same values: no event
