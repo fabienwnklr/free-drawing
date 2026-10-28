@@ -111,7 +111,7 @@ import { Zoom } from '@/components/tools/Zoom/Zoom';
 import { Position } from '@/components/tools/Position/Position';
 import { Help } from '@/components/tools/Help/Help';
 import { Collaboration } from '@/components/Collaboration/Collaboration';
-import { RoomCipher, createRoomKey } from '@/utils/encryption';
+import { RoomCipher, createRoomKey, createSecret } from '@/utils/encryption';
 import { CollaborationModal } from '@/components/CollaborationModal/CollaborationModal';
 
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
@@ -621,10 +621,10 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
       key = typeof collaboration === 'object' && collaboration.encrypt === false ? undefined : await createRoomKey();
     // key checked first: a link cut or changed joins nothing
     const cipher = key === undefined ? undefined : await RoomCipher.create(key);
-    // new room: this user is its owner (secret kept for next sessions)
-    const ownerKey = room ? this._getOwnerKey(room) : createId() + createId();
+    // new room: this user is its owner (secret kept for next sessions); ids of rooms can't be guessed either
+    const ownerKey = room ? this._getOwnerKey(room) : createSecret();
 
-    room ??= createId();
+    room ??= createSecret();
     if (ownerKey) this._setOwnerKey(room, ownerKey);
 
     this.stopCollaboration();
@@ -634,6 +634,7 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
       room,
       name,
       userId: this.getUserId(),
+      userKey: this._getUserKey(),
       ownerKey,
       invitedBy,
       cipher,
@@ -783,6 +784,27 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
     }
 
     return userId;
+  }
+
+  /**
+   * Secret of this browser given to collaboration servers with the id of the user: they give this id to this browser
+   * only, not to another user who saw it (users of a room, `by` of links)
+   * @returns Secret kept in localStorage, or a new one (new each session if storage is unavailable)
+   */
+  private _getUserKey(): string {
+    const key = `${this.options.localStorageKey}-user-key`;
+    let userKey = this._getStorageItem(key);
+
+    if (!userKey) {
+      userKey = createSecret();
+      try {
+        localStorage.setItem(key, userKey);
+      } catch {
+        // new secret each session
+      }
+    }
+
+    return userKey;
   }
 
   /**

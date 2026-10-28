@@ -111,6 +111,8 @@ export class Collaboration {
   requests: AccessRequest[] = [];
   /** Id of this user: given by drawer, then by server when it joins (e.g. id of logged in account) */
   userId: string;
+  /** Secret of the browser of this user, sent on join with its id: nobody else gets this id from the server */
+  readonly userKey?: string;
   /** Secret of the owner of the room, sent on join: the server makes this user its owner */
   readonly ownerKey?: string;
   /** Id of the user who shared the link used to join, sent on join (the server gives their name to the owner) */
@@ -176,13 +178,14 @@ export class Collaboration {
   constructor(
     drawer: Drawer,
     socket: CollaborationSocket,
-    { room, name, userId = '', ownerKey, invitedBy, cipher }: CollaborationSession
+    { room, name, userId = '', userKey, ownerKey, invitedBy, cipher }: CollaborationSession
   ) {
     this.drawer = drawer;
     this.socket = socket;
     this.room = room;
     this.name = name;
     this.userId = userId;
+    this.userKey = userKey;
     this.ownerKey = ownerKey;
     this.invitedBy = invitedBy;
     this.cipher = cipher ?? null;
@@ -190,7 +193,7 @@ export class Collaboration {
     this.socket.on('connect', () => {
       if (this.#stopped) return;
       if (this.drawer.debug) console.log('🌍 Connected to collaboration server');
-      const { room, name, userId, ownerKey, invitedBy } = this;
+      const { room, name, userId, userKey, ownerKey, invitedBy } = this;
 
       const rejoin = this.#joined;
 
@@ -207,6 +210,7 @@ export class Collaboration {
         room,
         name,
         userId,
+        userKey,
         ownerKey,
         invitedBy,
         ...(this.cipher && { keyCheck: this.cipher.keyCheck }),

@@ -1,7 +1,7 @@
-import { type Server as HttpServer, createServer as createHttpServer } from 'node:http';
+import { type IncomingMessage, type Server as HttpServer, createServer as createHttpServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import express, { type Express, type RequestHandler } from 'express';
+import express, { type Express, type Request, type RequestHandler } from 'express';
 import { Server } from 'socket.io';
 import { maxMessageSize } from '@free-drawing/protocol';
 import { toNodeHandler } from 'better-auth/node';
@@ -110,8 +110,12 @@ export async function createServer(config: ServerConfig) {
     maxHttpBufferSize: maxMessageSize,
   });
 
+  // address of the client of a socket as `req.ip` of Express: of the connection, or given by trusted proxies
+  const addressOf = (request: IncomingMessage) =>
+    (Object.create(app.request, { headers: { value: request.headers }, socket: { value: request.socket } }) as Request)
+      .ip ?? '';
   // rooms of previous runs read before connections
-  const collaboration = await attachCollaboration(io, auth, db);
+  const collaboration = await attachCollaboration(io, auth, db, addressOf);
 
   return {
     app,

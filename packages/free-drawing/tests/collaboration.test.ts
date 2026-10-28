@@ -572,6 +572,18 @@ describe('Collaboration', () => {
     await vi.waitFor(() => expect(drawer.collaboration!.members).toHaveLength(1));
 
     expect(socket.emit).toHaveBeenCalledWith('JOIN', expect.objectContaining({ userId: drawer.getUserId() }));
+    // secret of this browser with its id (kept for next sessions), secret of the owner and id of the new room: random
+    // values of Web Crypto
+    const [, join] = socket.emit.mock.calls.find(([event]) => event === 'JOIN')! as [
+      string,
+      { room: string; userKey: string; ownerKey: string },
+    ];
+
+    expect(join.userKey).toMatch(/^[\w-]{22}$/);
+    expect(localStorage.getItem(`${drawer.options.localStorageKey}-user-key`)).toBe(join.userKey);
+    expect(join.ownerKey).toMatch(/^[\w-]{22}$/);
+    expect(join.ownerKey).not.toBe(join.userKey);
+    expect(join.room).toMatch(/^[\w-]{22}$/);
     expect(drawer.collaboration!.userId).toBe('account-1');
     expect(drawer.collaboration!.isOwner).toBe(true);
     expect(drawer.getCollaborationLink()).toContain('&by=account-1');

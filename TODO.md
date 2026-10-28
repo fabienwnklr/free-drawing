@@ -4,11 +4,11 @@ Audit of 2026-10-28 (library 8.0.0): items ordered by priority in each section.
 
 ## Security (collaboration, server)
 
-- [ ] one malformed message crashes the server: `null` payload of JOIN / RIGHTS / ROOM / REQUEST (destructured parameter), name `{ toString: 1 }` (`String(name)` throws); socket.io runs listeners in `process.nextTick` and nothing handles `uncaughtException`, so every room is lost (server `collaboration.ts`: check objects and `typeof name === 'string'`)
-- [ ] limits of rooms bypassed by an id repeated in `remove` (`Array(2e6).fill(id)`): size and shape count go negative, then nothing is refused and memory is exhausted (server `collaboration.ts` CHANGE: deduplicate `remove` in `checkChange`)
-- [ ] a viewer gets the right to draw by joining with the id of an anonymous editor (ids public in `USERS` and in `by=` of links): bind anonymous ids to a secret of the browser, as `ownerKey` (server `collaboration.ts` JOIN)
-- [ ] `ownerKey` built from `Math.random` (`createId() + createId()`), whose outputs are in the room id and every shape id sent: secrets from `crypto.getRandomValues` (`Drawer.startCollaboration`, `utils/functions.ts`)
-- [ ] rooms created without global or per address limit (10 per connection, unlimited connections), kept 30 days and all loaded in memory on start; a room remembering 1000 users refuses every new one for good (server `collaboration.ts`)
+- [x] one malformed message crashes the server: `null` payload of JOIN / RIGHTS / ROOM / REQUEST (destructured parameter), name `{ toString: 1 }` (`String(name)` throws); socket.io runs listeners in `process.nextTick` and nothing handles `uncaughtException`, so every room is lost (server `collaboration.ts`: check objects and `typeof name === 'string'`)
+- [x] limits of rooms bypassed by an id repeated in `remove` (`Array(2e6).fill(id)`): size and shape count go negative, then nothing is refused and memory is exhausted (server `collaboration.ts` CHANGE: deduplicate `remove` in `checkChange`)
+- [x] a viewer gets the right to draw by joining with the id of an anonymous editor (ids public in `USERS` and in `by=` of links): bind anonymous ids to a secret of the browser, as `ownerKey` (server `collaboration.ts` JOIN)
+- [x] `ownerKey` built from `Math.random` (`createId() + createId()`), whose outputs are in the room id and every shape id sent: secrets from `crypto.getRandomValues` (`Drawer.startCollaboration`, `utils/functions.ts`)
+- [x] rooms created without global or per address limit (10 per connection, unlimited connections), kept 30 days and all loaded in memory on start; a room remembering 1000 users refuses every new one for good (server `collaboration.ts`)
 
 ## Bugs
 

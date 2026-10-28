@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [8.0.1](https://github.com/fabienwnklr/free-drawing/compare/v8.0.0...v8.0.1) (2026-10-28)
+
+
+### Bug Fixes
+
+* **collaboration:** the secret of the owner of a new room and its id come from `crypto.getRandomValues`: they were made with `Math.random`, whose outputs can be found again from the ids of shapes sent to other users
+* **collaboration:** the id of the user is sent with a secret of their browser (`userKey` of `JOIN`, kept in localStorage): the server of this version gives this id to this browser only, a user who saw it in the room or in a link can't take its right to draw any more. A user of the `user` option joining a room from another browser is a new user of the room there (users logged in on the server are recognized by their account)
+
 ## [8.0.0](https://github.com/fabienwnklr/free-drawing/compare/v7.53.0...v8.0.0) (2026-10-28)
 
 

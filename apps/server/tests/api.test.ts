@@ -10,7 +10,7 @@ import { socketEvents } from '@free-drawing/protocol';
 import { createServer } from '../src/app';
 import { type ServerConfig, getConfig } from '../src/config';
 import { drawingsLimits } from '../src/api';
-import { limits, roomLifetime } from '../src/collaboration';
+import { clientOf, limits, roomLifetime } from '../src/collaboration';
 
 const config: ServerConfig = {
   port: 0,
@@ -904,6 +904,17 @@ describe('Collaboration', () => {
       owner.socket.emit(socketEvents.CHANGE, { upsert: [rect('c')], remove: ['a'] });
       expect(await replaced).toEqual({ upsert: [rect('c')], remove: ['a'] });
 
+      // an id removed several times counts once: limits kept, relayed once
+      const repeated = owner.next(socketEvents.REJECTED);
+
+      owner.socket.emit(socketEvents.CHANGE, { upsert: [rect('d'), rect('e')], remove: ['b', 'b', 'b'] });
+      expect(await repeated).toEqual({ event: socketEvents.CHANGE, reason: 'too-big' });
+
+      const once = guest.next(socketEvents.CHANGE);
+
+      owner.socket.emit(socketEvents.CHANGE, { upsert: [rect('d')], remove: ['b', 'b'], order: ['c', 'd', 'c'] });
+      expect(await once).toEqual({ upsert: [rect('d')], remove: ['b'], order: ['c', 'd'] });
+
       // names changed too often: more ignored (10 at once, then 2 per second)
       let updates = 0;
 
@@ -914,6 +925,155 @@ describe('Collaboration', () => {
       expect(updates).toBeLessThanOrEqual(11);
     } finally {
       Object.assign(limits, saved);
+    }
+  });
+
+  it('Messages of an unexpected shape are ignored: the server keeps running', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const room = 'room-malformed';
+    const owner = await joinRoom({ room, name: 'Owner', userId: 'owner-m', ownerKey: 'secret m' });
+    // a name of another type (an object without text) is no name
+    const guest = await joinRoom({ room, name: { toString: 1 }, userId: 'guest-m' });
+
+    expect(guest.users.find((user) => user.id === 'guest-m')?.name).toBe('Anonymous');
+    for (const event of Object.values(socketEvents)) {
+      for (const message of [null, 42, 'text', [], { toString: 1 }]) {
+        owner.socket.emit(event, message);
+        guest.socket.emit(event, message);
+      }
+    }
+    await new Promise((resolve) => setTimeout(resolve, 200));
+
+    const later = await joinRoom({ room, name: 'Later', userId: 'later-m' });
+
+    expect(later.users.map(({ id, name }) => [id, name])).toEqual([
+      ['owner-m', 'Anonymous'],
+      ['guest-m', 'Anonymous'],
+      ['later-m', 'Later'],
+    ]);
+    // invalid changes only, no listener failed
+    expect(warn.mock.calls.every(([message]) => String(message).startsWith('Invalid change'))).toBe(true);
+  });
+
+  it('Ids of anonymous users are bound to the secret of their browser: nobody else takes them', async () => {
+    const room = 'room-keys';
+    const owner = await joinRoom({ room, name: 'Owner', userId: 'owner-k', userKey: 'owner browser', ownerKey: 'k' });
+    const editor = await joinRoom({ room, name: 'Editor', userId: 'editor-k', userKey: 'editor browser' });
+    const updated = owner.next(socketEvents.USERS);
+
+    owner.socket.emit(socketEvents.RIGHTS, { userId: 'editor-k', canEdit: true });
+    await updated;
+    editor.socket.close();
+
+    // id seen in the users of the room or in a link: not given without the secret of its browser
+    const impostor = await joinRoom({ room, name: 'Impostor', userId: 'editor-k' });
+    const other = await joinRoom({ room, name: 'Other', userId: 'editor-k', userKey: 'other browser' });
+
+    expect(impostor.userId).not.toBe('editor-k');
+    expect(other.userId).not.toBe('editor-k');
+    expect(other.users.find((user) => user.id === other.userId)?.canEdit).toBe(false);
+
+    // browser of the user: its id and right
+    const back = await joinRoom({ room, name: 'Editor', userId: 'editor-k', userKey: 'editor browser' });
+
+    expect(back.userId).toBe('editor-k');
+    expect(back.users.find((user) => user.id === 'editor-k')?.canEdit).toBe(true);
+
+    // secrets not kept, their hashes only
+    await vi.waitFor(async () => {
+      const saved = await server.db.selectFrom('room').where('id', '=', room).selectAll().executeTakeFirstOrThrow();
+
+      expect(JSON.parse(saved.content).userKeys.map(([id]: string[]) => id)).toEqual(['owner-k', 'editor-k']);
+      expect(saved.content).not.toContain('editor browser');
+    });
+  });
+
+  it('A room remembering too many users forgets the ones with the right of new users', async () => {
+    const saved = { ...limits };
+    const room = 'room-known';
+
+    Object.assign(limits, { knownUsers: 3 });
+    try {
+      const owner = await joinRoom({ room, name: 'Owner', userId: 'owner-n', ownerKey: 'secret n' });
+      const editor = await joinRoom({ room, name: 'Editor', userId: 'editor-n' });
+      const updated = owner.next(socketEvents.USERS);
+
+      owner.socket.emit(socketEvents.RIGHTS, { userId: 'editor-n', canEdit: true });
+      await updated;
+
+      const viewer = await joinRoom({ room, name: 'Viewer', userId: 'viewer-n' });
+
+      editor.socket.close();
+      viewer.socket.close();
+      await vi.waitFor(() => expect(server.io.sockets.adapter.rooms.get(room)?.size).toBe(1));
+
+      // viewer forgotten (new users view only): nothing changes for them
+      const newcomer = await joinRoom({ room, name: 'New', userId: 'new-n' });
+
+      expect(newcomer.userId).toBe('new-n');
+
+      // every other user connected or given another right: refused
+      const refused = client();
+      const rejected = refused.next(socketEvents.REJECTED);
+
+      refused.socket.emit(socketEvents.JOIN, { room, name: 'Viewer', userId: 'viewer-n' });
+      expect(await rejected).toEqual({ event: socketEvents.JOIN, reason: 'full' });
+
+      // editor remembered with its right
+      const back = await joinRoom({ room, name: 'Editor', userId: 'editor-n' });
+
+      expect(back.users.find((user) => user.id === 'editor-n')?.canEdit).toBe(true);
+    } finally {
+      Object.assign(limits, saved);
+    }
+  });
+
+  it('Clients of addresses: IPv4 address, network of 64 bits of an IPv6 address', () => {
+    expect(clientOf('203.0.113.7')).toBe('203.0.113.7');
+    expect(clientOf('::ffff:203.0.113.7')).toBe('203.0.113.7');
+    expect(clientOf('2001:db8:1:2:3:4:5:6')).toBe('2001:db8:1:2');
+    expect(clientOf('2001:0DB8:0001:0002::')).toBe('2001:db8:1:2');
+    expect(clientOf('2001:db8::1')).toBe('2001:db8:0:0');
+    expect(clientOf('::1')).toBe('0:0:0:0');
+    expect(clientOf('fe80::1%eth0')).toBe('fe80:0:0:0');
+  });
+
+  it('Rooms created by a client and kept by the server are limited', async () => {
+    // clients behind a proxy: address given by `X-Forwarded-For`
+    const proxied = await createServer({ ...config, trustProxy: 'loopback' });
+    const saved = { ...limits };
+
+    await new Promise<void>((resolve) => proxied.httpServer.listen(0, resolve));
+    const proxiedUrl = `http://localhost:${(proxied.httpServer.address() as AddressInfo).port}`;
+    /** Answer of the server to a join from an address: joined, or reason of refusal */
+    const joinFrom = (address: string, room: string) =>
+      new Promise<string>((resolve) => {
+        const socket = connect(proxiedUrl, { forceNew: true, extraHeaders: { 'x-forwarded-for': address } });
+
+        sockets.push(socket);
+        socket.once(socketEvents.REJECTED, ({ reason }: { reason: string }) => resolve(reason));
+        socket.once(socketEvents.JOINED, () => resolve('joined'));
+        socket.emit(socketEvents.JOIN, { room, name: 'User' });
+      });
+
+    Object.assign(limits, { newRooms: 1 });
+    try {
+      expect(await joinFrom('203.0.113.1', 'room-p1')).toBe('joined');
+      expect(await joinFrom('203.0.113.1', 'room-p2')).toBe('full');
+      // rooms that exist: joined
+      expect(await joinFrom('203.0.113.1', 'room-p1')).toBe('joined');
+      expect(await joinFrom('203.0.113.2', 'room-p2')).toBe('joined');
+      // addresses of an IPv6 network: one client
+      expect(await joinFrom('2001:db8:1:2::1', 'room-p3')).toBe('joined');
+      expect(await joinFrom('2001:db8:1:2::2', 'room-p4')).toBe('full');
+
+      // rooms of the server
+      Object.assign(limits, { rooms: 3 });
+      expect(await joinFrom('203.0.113.3', 'room-p4')).toBe('full');
+      expect(await joinFrom('203.0.113.3', 'room-p3')).toBe('joined');
+    } finally {
+      Object.assign(limits, saved);
+      await proxied.close();
     }
   });
 

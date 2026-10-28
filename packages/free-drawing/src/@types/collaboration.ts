@@ -28,6 +28,8 @@ export type CollaborationSession = {
   name: string;
   /** User id, kept between sessions (rights) */
   userId?: string;
+  /** Secret of the browser of the user, sent with its id: the server gives this id to this browser only */
+  userKey?: string;
   /** Secret of owner of the room, given when the room is created */
   ownerKey?: string;
   /** Id of user who shared the link used to join */

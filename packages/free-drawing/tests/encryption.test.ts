@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { RoomCipher, createRoomKey, decryptChange, encryptChange } from '@/utils/encryption';
+import { describe, expect, it, vi } from 'vitest';
+import { RoomCipher, createRoomKey, createSecret, decryptChange, encryptChange } from '@/utils/encryption';
 import type { DrawingChange } from '@/@types/collaboration';
 
 /** Image file of 1 x 1 pixel */
@@ -29,6 +29,23 @@ describe('End-to-end encryption of collaboration', () => {
     await expect(RoomCipher.create(key.slice(0, 20))).rejects.toMatchObject(error);
     await expect(RoomCipher.create(`${key.slice(0, 21)}!`)).rejects.toMatchObject(error);
     await expect(RoomCipher.create('')).rejects.toMatchObject(error);
+  });
+
+  it('Secrets of 128 bits from the random values of Web Crypto, never from Math.random', () => {
+    const random = vi.spyOn(Math, 'random');
+    const getRandomValues = vi.spyOn(crypto, 'getRandomValues');
+
+    try {
+      const secret = createSecret();
+
+      expect(secret).toMatch(/^[\w-]{22}$/);
+      expect(createSecret()).not.toBe(secret);
+      expect(getRandomValues).toHaveBeenCalledTimes(2);
+      expect(random).not.toHaveBeenCalled();
+    } finally {
+      random.mockRestore();
+      getRandomValues.mockRestore();
+    }
   });
 
   it('Messages encrypted with a random vector: read with the same key only, changed ones refused', async () => {

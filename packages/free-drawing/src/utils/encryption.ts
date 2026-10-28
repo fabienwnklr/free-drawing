@@ -28,6 +28,16 @@ function getSubtle(): SubtleCrypto {
 }
 
 /**
+ * Secret that can't be guessed (id of a room, secret of its owner, secret of the browser of a user): random bytes of
+ * `crypto.getRandomValues`, also on pages without Web Crypto (not https), unlike `Math.random` whose outputs can be
+ * found again from the ids of shapes
+ * @returns 128 random bits in base64url (22 characters)
+ */
+export function createSecret(): string {
+  return toBase64Url(crypto.getRandomValues(new Uint8Array(16)));
+}
+
+/**
  * New key of an encrypted room
  * @returns Key of 128 bits in base64url (22 characters), put in the links of the room
  * @throws {DrawerError} `error.insecurePage` on a page without Web Crypto

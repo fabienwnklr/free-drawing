@@ -3,8 +3,9 @@
  */
 export declare const socketEvents: {
   /**
-   * Join a room: `{ room, name, userId, ownerKey, invitedBy, keyCheck }`, `keyCheck` proof of the key of an encrypted
-   * room (SHA-256 of the key, base64url): the room is encrypted by the user creating it, joined with the same proof only
+   * Join a room: `{ room, name, userId, userKey, ownerKey, invitedBy, keyCheck }`, `userKey` secret of the browser of the
+   * user (its id is given to the browser giving the same secret only), `keyCheck` proof of the key of an encrypted room
+   * (SHA-256 of the key, base64url): the room is encrypted by the user creating it, joined with the same proof only
    */
   readonly JOIN: 'JOIN';
   /** Room joined, sent by server to the joining user: `{ userId }` id it gives the user (e.g. of logged in account) */

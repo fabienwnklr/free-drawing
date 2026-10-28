@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import type { IncomingMessage } from 'node:http';
 import type { Kysely } from 'kysely';
 import type { Server, Socket } from 'socket.io';
 import { groupClasses, maxMessageSize, shapeClasses, socketEvents } from '@free-drawing/protocol';
@@ -8,6 +9,8 @@ import type { Database } from './db';
 type SocketData = {
   /** Logged in user (session cookie of handshake) */
   account: User | null;
+  /** Client of the connection for limits: address, or network of an IPv6 address (`clientOf`) */
+  client: string;
   room?: string;
   name: string;
   userId: string;
@@ -16,8 +19,6 @@ type SocketData = {
   owner?: boolean;
   /** Messages allowed now by event (token bucket, see `rates`) and time they were counted */
   buckets?: Record<string, { tokens: number; at: number }>;
-  /** Rooms created by this connection (`limits.newRooms`) */
-  newRooms?: number;
 };
 
 type RoomData = {
@@ -36,13 +37,18 @@ type RoomData = {
   keyCheck?: string;
   /** Users without right to draw */
   viewers: Set<string>;
-  /** Names of users who came, for who invited who */
+  /** Names of users who came, for who invited who, seen least recently first */
   names: Map<string, string>;
   /** Hash of the secret given when the room was created (`hashKey`), its user is owner */
   ownerKey?: string;
   ownerId?: string;
   /** Ids of logged in users who came: never taken by anonymous users */
   accounts: Set<string>;
+  /**
+   * Hashes of the secrets of the browsers of anonymous users (`hashKey`), by id: an id is given to the browser giving the
+   * same secret only, not to a user who saw it (users of the room, `by` of links)
+   */
+  userKeys: Map<string, string>;
   /** Users coming for the first time can draw (owner setting), else they view only */
   newUsersCanEdit: boolean;
   /** Area shown by the owner presenting the drawing (encrypted in an encrypted room), sent to users joining meanwhile, not saved */
@@ -66,25 +72,13 @@ type SavedRoom = {
   viewers: string[];
   names: [string, string][];
   accounts: string[];
+  /** None in rooms saved by previous versions */
+  userKeys?: [string, string][];
   newUsersCanEdit: boolean;
   keyCheck?: string;
 };
 
 type CollaborationSocket = Socket<any, any, any, SocketData>;
-
-/** Messages of clients, checked on reception */
-type JoinMessage = {
-  room?: unknown;
-  name?: unknown;
-  userId?: unknown;
-  ownerKey?: unknown;
-  invitedBy?: unknown;
-  keyCheck?: unknown;
-};
-type RightsMessage = { userId?: unknown; canEdit?: unknown };
-type RoomMessage = { newUsersCanEdit?: unknown };
-type PointerMessage = { x?: unknown; y?: unknown; laser?: unknown; data?: unknown } | null;
-type RequestMessage = { userId?: unknown; accepted?: unknown };
 
 /** Node state of a shape in a change (konva `toObject`), not trusted */
 type ShapeJson = { attrs?: { id?: unknown } | null; className?: unknown; children?: unknown };
@@ -110,10 +104,15 @@ export const limits = {
   totalSize: 500_000_000,
   /** Users connected to a room at once */
   users: 50,
-  /** Different users a room remembers (names, rights) */
+  /**
+   * Different users a room remembers (names, rights): beyond, the one seen least recently with the right of new users is
+   * forgotten (nothing changes for them), the room refuses new users only when every other one got another right
+   */
   knownUsers: 1_000,
-  /** Rooms created by a connection */
-  newRooms: 10,
+  /** Rooms created by a client per hour (users behind the same address share it) */
+  newRooms: 50,
+  /** Rooms kept by the server, with or without users (new ones refused beyond) */
+  rooms: 10_000,
 };
 
 /** Messages a client may send by event: per second and at once (burst), more are ignored (unknown events too) */
@@ -130,11 +129,53 @@ const rates: Record<string, [perSecond: number, burst: number]> = {
   [socketEvents.REQUEST]: [1, 5],
 };
 
-const userName = (name: unknown) =>
-  String(name ?? '')
-    .trim()
-    .slice(0, 40);
+/**
+ * Fields of a message (not trusted): socket.io runs listeners in `process.nextTick`, an error reading one (null
+ * message) would stop the server with every room
+ * @param message Message of a client
+ * @returns The message when it is an object, else an object without fields (null, text, number, array)
+ */
+const fieldsOf = (message: unknown): Record<string, unknown> =>
+  typeof message === 'object' && message !== null && !Array.isArray(message)
+    ? (message as Record<string, unknown>)
+    : {};
+
+/**
+ * Name of a user given by its client
+ * @param name Name of a message (not trusted)
+ * @returns Text trimmed and cut to 40 characters, empty for anything else (an object would not convert to text)
+ */
+const userName = (name: unknown) => (typeof name === 'string' ? name.trim().slice(0, 40) : '');
+
 const isId = (id: unknown): id is string => typeof id === 'string' && /^[\w-]{1,64}$/.test(id);
+
+/** Secret of a room owner or of the browser of a user (hashed by `hashKey`, never kept) */
+const isSecret = (key: unknown): key is string => typeof key === 'string' && key.length > 0 && key.length <= 200;
+
+/**
+ * Client of an address, for limits: an IPv4 address, or the network of 64 bits of an IPv6 address (a client gets many
+ * addresses of it)
+ * @param address Address of a client (Express `req.ip`)
+ * @returns IPv4 address, or the 4 first groups of an IPv6 address
+ */
+export const clientOf = (address: string) => {
+  const ip = address.replace(/%.*$/, '').toLowerCase();
+  const ipv4 = ip.match(/^(?:::ffff:)?(\d+\.\d+\.\d+\.\d+)$/)?.[1];
+
+  if (ipv4 || !ip.includes(':')) return ipv4 ?? ip;
+
+  // `::` stands for groups of zeros
+  const [head, tail] = ip.split('::').map((part) => (part ? part.split(':') : []));
+  const groups = tail
+    ? [...head, ...Array<string>(Math.max(0, 8 - head.length - tail.length)).fill('0'), ...tail]
+    : head;
+
+  return groups
+    .slice(0, 4)
+    .map((group) => Number.parseInt(group, 16).toString(16))
+    .join(':');
+};
+
 // ids of shapes: also of files made by other apps
 const isShapeId = (id: unknown): id is string => typeof id === 'string' && id.length > 0 && id.length <= 200;
 
@@ -238,8 +279,9 @@ const checkChange = (change: unknown, encrypted: boolean): CheckedChange | null 
   return {
     upsert: shapes,
     files: checkedFiles,
-    remove,
-    order: order as string[] | undefined,
+    // each id once: an id repeated would be counted again out of the size and shapes of the drawing (limits passed)
+    remove: [...new Set(remove)],
+    order: order && [...new Set(order as string[])],
     live: live === true,
     background: background as string | undefined,
   };
@@ -262,7 +304,7 @@ const toUpsert = (shapes: Map<string, string>, encrypted: boolean) =>
 const checkEncryptedView = (view: unknown): EncryptedData | null | undefined => {
   if (view === null) return null;
 
-  const { data } = (typeof view === 'object' ? view : {}) as Record<string, unknown>;
+  const { data } = fieldsOf(view);
 
   return isEncrypted(data, 1000) ? { data } : undefined;
 };
@@ -275,7 +317,7 @@ const checkEncryptedView = (view: unknown): EncryptedData | null | undefined => 
 const checkView = (view: unknown): ViewArea | null | undefined => {
   if (view === null) return null;
 
-  const { x, y, width, height, slide } = (typeof view === 'object' ? view : {}) as Record<string, unknown>;
+  const { x, y, width, height, slide } = fieldsOf(view);
 
   if (![x, y, width, height].every(Number.isFinite) || (width as number) <= 0 || (height as number) <= 0) return;
 
@@ -332,6 +374,7 @@ const newRoom = (keyCheck?: string): RoomData => ({
   viewers: new Set(),
   names: new Map(),
   accounts: new Set(),
+  userKeys: new Map(),
   newUsersCanEdit: false,
   view: null,
   requests: new Set(),
@@ -341,7 +384,8 @@ const newRoom = (keyCheck?: string): RoomData => ({
 /**
  * Live collaboration rooms: drawing kept for users joining later, owner gives or removes the right to draw.
  * Logged in users are identified by their account (id given by client ignored), others by the id of their browser,
- * which can't be the one of an account or of the owner: owner is the user who gives the secret of the room.
+ * bound to the secret of their browser (`userKeys`), which can't be the one of an account or of the owner: owner is the
+ * user who gives the secret of the room.
  * Owner, rights and settings of rooms are saved in database (not drawings): kept while a room is empty and after a
  * restart, so nobody takes an empty room over; rooms unused for `roomLifetime` are forgotten.
  * Messages are checked as a whole and limited (`rates`, `limits`): a change making a drawing too big or a join of a
@@ -351,12 +395,20 @@ const newRoom = (keyCheck?: string): RoomData => ({
  * @param io Socket.io server
  * @param auth Accounts, to identify logged in users by their session cookie
  * @param db Database of the app, rooms of previous runs are read from it first
+ * @param addressOf Address of the client of a connection (rooms created per client), of the connection by default
  * @returns `close`, to stop forgetting old rooms and wait for writes of rooms (before closing the database)
  */
-export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Database>) {
+export async function attachCollaboration(
+  io: Server,
+  auth: Auth,
+  db: Kysely<Database>,
+  addressOf: (request: IncomingMessage) => string = (request) => request.socket.remoteAddress ?? ''
+) {
   const rooms = new Map<string, RoomData>();
   // size of the drawings of all rooms
   let totalSize = 0;
+  // rooms created by each client this hour (`limits.newRooms`)
+  const newRooms = new Map<string, number>();
   // writes of rooms one after the other (database closed after them)
   let writes = Promise.resolve();
 
@@ -375,6 +427,7 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
       viewers: [...data.viewers],
       names: [...data.names],
       accounts: [...data.accounts],
+      userKeys: [...data.userKeys],
       newUsersCanEdit: data.newUsersCanEdit,
       keyCheck: data.keyCheck,
     };
@@ -416,6 +469,7 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
         viewers: new Set(saved.viewers),
         names: new Map(saved.names),
         accounts: new Set(saved.accounts),
+        userKeys: new Map(saved.userKeys ?? []),
         newUsersCanEdit: saved.newUsersCanEdit !== false,
         keyCheck: isKeyCheck(saved.keyCheck) ? saved.keyCheck : undefined,
         view: null,
@@ -428,9 +482,12 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
   }
   forgetOldRooms();
   const forgetTimer = setInterval(forgetOldRooms, 24 * 60 * 60 * 1000);
+  // clients create rooms again each hour
+  const newRoomsTimer = setInterval(() => newRooms.clear(), 60 * 60 * 1000);
 
-  // does not keep the process running
+  // do not keep the process running
   forgetTimer.unref();
+  newRoomsTimer.unref();
 
   // users of a room with their rights, sent to them when someone joins, leaves, changes name or rights
   const sendUsers = (room: string) => {
@@ -461,6 +518,26 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
   // message to some sockets (none: nobody, `io.to([])` would send it to every socket of the server)
   const emitTo = (ids: string[], event: string, message: unknown) => {
     if (ids.length) io.to(ids).emit(event, message);
+  };
+
+  // room remembering too many users: the one seen least recently whose right is the one of new users (forgetting it
+  // changes nothing for them, its secret too), neither the owner nor connected, is forgotten; false when there is none
+  const forgetUser = (room: string, data: RoomData) => {
+    const connected = new Set(
+      [...(io.sockets.adapter.rooms.get(room) ?? [])].map(
+        (id) => (io.sockets.sockets.get(id) as CollaborationSocket | undefined)?.data.userId
+      )
+    );
+
+    for (const id of data.names.keys()) {
+      if (id === data.ownerId || connected.has(id) || data.viewers.has(id) === data.newUsersCanEdit) continue;
+      data.names.delete(id);
+      data.viewers.delete(id);
+      data.userKeys.delete(id);
+      return true;
+    }
+
+    return false;
   };
 
   const leaveRoom = (socket: CollaborationSocket) => {
@@ -499,8 +576,9 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
     }
   };
 
-  // account of session cookie, anonymous without it (or if session can't be read)
+  // client of the connection (limits), account of session cookie, anonymous without it (or if session can't be read)
   io.use(async (socket: CollaborationSocket, next) => {
+    socket.data.client = clientOf(addressOf(socket.request));
     try {
       socket.data.account = await getUser(auth, socket.request.headers);
     } catch {
@@ -518,17 +596,32 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
     // join refused: room full, too many rooms created
     const refuseJoin = () => socket.emit(socketEvents.REJECTED, { event: socketEvents.JOIN, reason: 'full' });
 
-    socket.on(socketEvents.JOIN, ({ room, name, userId, ownerKey, invitedBy, keyCheck }: JoinMessage = {}) => {
+    // listener of a message: an error (message of an unexpected shape) is logged, socket.io runs listeners in
+    // `process.nextTick` where it would stop the server with every room
+    const on = (event: string, listener: (message: unknown) => void) =>
+      socket.on(event, (message: unknown) => {
+        try {
+          listener(message);
+        } catch (error) {
+          console.warn(`Message ignored (${event}, id: ${socket.id}): ${(error as Error).message}`);
+        }
+      });
+
+    on(socketEvents.JOIN, (message) => {
+      const { room, name, userId, userKey, ownerKey, invitedBy, keyCheck } = fieldsOf(message);
+
       if (!isId(room)) return;
 
-      const { account } = socket.data;
+      const { account, client } = socket.data;
       const check = isKeyCheck(keyCheck) ? keyCheck : undefined;
 
       leaveRoom(socket);
       if ((io.sockets.adapter.rooms.get(room)?.size ?? 0) >= limits.users) return refuseJoin();
       if (!rooms.has(room)) {
-        if ((socket.data.newRooms ?? 0) >= limits.newRooms) return refuseJoin();
-        socket.data.newRooms = (socket.data.newRooms ?? 0) + 1;
+        const created = newRooms.get(client) ?? 0;
+
+        if (created >= limits.newRooms || rooms.size >= limits.rooms) return refuseJoin();
+        newRooms.set(client, created + 1);
         // encrypted by the user creating it (key of its links)
         rooms.set(room, newRoom(check));
       }
@@ -539,18 +632,25 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
       if (data.keyCheck !== check) {
         return socket.emit(socketEvents.REJECTED, { event: socketEvents.JOIN, reason: 'key' });
       }
-      const key = typeof ownerKey === 'string' && ownerKey ? hashKey(ownerKey) : undefined;
+      const key = isSecret(ownerKey) ? hashKey(ownerKey) : undefined;
+      const browserKey = isSecret(userKey) ? hashKey(userKey) : undefined;
 
       // first secret given (room creation) makes its user owner, also when the room is empty later
       if (key) data.ownerKey ??= key;
 
       const owner = !!key && data.ownerKey === key;
-      // id of browser, unless it is the one of an account or of the owner (secret not given)
-      const free = isId(userId) && !data.accounts.has(userId) && (owner || userId !== data.ownerId);
+      // id of browser, unless it is the one of an account, of the owner (secret not given) or of another browser (other
+      // secret: users of previous versions give none)
+      const free =
+        isId(userId) &&
+        !data.accounts.has(userId) &&
+        (owner || userId !== data.ownerId) &&
+        (!data.userKeys.has(userId) || data.userKeys.get(userId) === browserKey);
       const id = account?.id ?? (free ? userId : socket.id);
+      const known = data.names.has(id);
 
       // a new user remembered by a full room
-      if (!data.names.has(id) && data.names.size >= limits.knownUsers) return refuseJoin();
+      if (!known && data.names.size >= limits.knownUsers && !forgetUser(room, data)) return refuseJoin();
 
       socket.data.room = room;
       socket.data.owner = owner;
@@ -559,14 +659,18 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
       socket.data.invitedBy = isId(invitedBy) && invitedBy !== socket.data.userId ? invitedBy : undefined;
       socket.join(room);
       if (account) data.accounts.add(account.id);
+      // id bound to the secret of this browser
+      else if (id === userId && browserKey && !data.userKeys.has(id)) data.userKeys.set(id, browserKey);
 
       if (owner) {
         data.ownerId = socket.data.userId;
         data.viewers.delete(data.ownerId);
-      } else if (!data.names.has(socket.data.userId) && !data.newUsersCanEdit) {
+      } else if (!known && !data.newUsersCanEdit) {
         // first time in the room: view only when the owner chose so (new ids of viewers too)
         data.viewers.add(socket.data.userId);
       }
+      // seen last
+      data.names.delete(socket.data.userId);
       data.names.set(socket.data.userId, socket.data.name);
       saveRoom(room, data);
       // user recognizes itself in users of the room (owner, rights), settings of the room
@@ -591,7 +695,7 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
       }
     });
 
-    socket.on(socketEvents.NAME, (name: unknown) => {
+    on(socketEvents.NAME, (name) => {
       socket.data.name = userName(name) || socket.data.account?.name || 'Anonymous';
       const { room } = socket.data;
       const data = room ? rooms.get(room) : undefined;
@@ -604,7 +708,8 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
     });
 
     // owner gives or removes the right to draw
-    socket.on(socketEvents.RIGHTS, ({ userId, canEdit }: RightsMessage = {}) => {
+    on(socketEvents.RIGHTS, (message) => {
+      const { userId, canEdit } = fieldsOf(message);
       const { room } = socket.data;
       const data = room ? rooms.get(room) : undefined;
 
@@ -624,7 +729,8 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
     });
 
     // viewer asks for the right to draw (told to the owner, also when it joins later), the owner answers it
-    socket.on(socketEvents.REQUEST, ({ userId, accepted }: RequestMessage = {}) => {
+    on(socketEvents.REQUEST, (message) => {
+      const { userId, accepted } = fieldsOf(message);
       const { room } = socket.data;
       const data = room ? rooms.get(room) : undefined;
 
@@ -657,7 +763,7 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
     });
 
     // owner presenting: area of the drawing it shows (null: presentation stopped), followed by the other users
-    socket.on(socketEvents.VIEW, (message: unknown) => {
+    on(socketEvents.VIEW, (message) => {
       const { room } = socket.data;
       const data = room ? rooms.get(room) : undefined;
       const view = data?.keyCheck ? checkEncryptedView(message) : checkView(message);
@@ -669,7 +775,8 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
     });
 
     // owner changes the settings of the room: right to draw of users coming for the first time
-    socket.on(socketEvents.ROOM, ({ newUsersCanEdit }: RoomMessage = {}) => {
+    on(socketEvents.ROOM, (message) => {
+      const { newUsersCanEdit } = fieldsOf(message);
       const { room } = socket.data;
       const data = room ? rooms.get(room) : undefined;
 
@@ -682,7 +789,7 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
 
     // { upsert: shapes JSON (encrypted room: { id, data }), remove: ids, order: ids from bottom to top when stacking
     // order changed, live }
-    socket.on(socketEvents.CHANGE, (message: unknown) => {
+    on(socketEvents.CHANGE, (message) => {
       const { room } = socket.data;
       const data = room ? rooms.get(room) : undefined;
 
@@ -750,17 +857,15 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
     });
 
     // pointer position in drawing (null out of drawer, laser while pressed), not kept; encrypted in an encrypted room
-    socket.on(socketEvents.POINTER, (pointer: PointerMessage) => {
+    on(socketEvents.POINTER, (pointer) => {
       const { room, name } = socket.data;
+      const { x, y, laser, data } = fieldsOf(pointer);
 
       if (room && rooms.get(room)?.keyCheck) {
-        if (isEncrypted(pointer?.data, 1000)) {
-          socket.to(room).volatile.emit(socketEvents.POINTER, { id: socket.id, name, data: pointer.data });
-        }
+        if (isEncrypted(data, 1000)) socket.to(room).volatile.emit(socketEvents.POINTER, { id: socket.id, name, data });
         return;
       }
 
-      const { x, y, laser } = pointer ?? {};
       const position =
         Number.isFinite(x) && Number.isFinite(y)
           ? { x: x as number, y: y as number, ...(laser === true && { laser }) }
@@ -776,6 +881,7 @@ export async function attachCollaboration(io: Server, auth: Auth, db: Kysely<Dat
     /** Stop forgetting old rooms, wait for writes of rooms (before closing the database) */
     async close() {
       clearInterval(forgetTimer);
+      clearInterval(newRoomsTimer);
       await writes;
     },
   };
