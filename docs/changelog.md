@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.51.0](https://github.com/fabienwnklr/free-drawing/compare/v7.50.0...v7.51.0) (2026-10-28)
+
+
+### Features
+
+* **files:** drawings of Excalidraw (`.excalidraw`) and tldraw (`.tldr`) opened ("Open...", Ctrl / Cmd + O, `drawer.loadDrawing(text)`): their rectangles, ellipses, diamonds and other geometric shapes, texts (also of shapes and arrows), notes, lines, arrows (linked to their shapes, curved or elbow, their heads), freehand strokes, highlights, frames, groups and images become shapes of the library, with their colors, strokes, opacity and rotation
+
 ## [7.50.0](https://github.com/fabienwnklr/free-drawing/compare/v7.49.0...v7.50.0) (2026-10-28)
 
 

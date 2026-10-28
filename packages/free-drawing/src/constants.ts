@@ -256,6 +256,38 @@ export const pathShapes = [
 ];
 
 /**
+ * Paths of path shapes in a box of width and height 1 (see `scalePath`), by shape name: tools of the toolbar, shapes
+ * of other apps opened
+ */
+export const pathShapeData: Record<string, string> = {
+  [shapeName.triangle]: 'M0.5 0L1 1L0 1Z',
+  [shapeName.diamond]: 'M0.5 0L1 0.5L0.5 1L0 0.5Z',
+  // from bottom tip: left lobe, dip, right lobe
+  [shapeName.heart]:
+    'M0.5 1C0.18 0.78 0 0.56 0 0.3C0 0.11 0.14 0 0.29 0C0.4 0 0.47 0.06 0.5 0.16C0.53 0.06 0.6 0 0.71 0' +
+    'C0.86 0 1 0.11 1 0.3C1 0.56 0.82 0.78 0.5 1Z',
+  // flat bottom, bumps on left, top and right
+  [shapeName.cloud]:
+    'M0.22 1C0.08 1 0 0.88 0 0.74C0 0.6 0.1 0.5 0.22 0.49C0.21 0.24 0.36 0 0.55 0C0.7 0 0.8 0.12 0.83 0.27' +
+    'C0.93 0.3 1 0.42 1 0.6C1 0.82 0.9 1 0.76 1Z',
+  // from the top point, clockwise, inner points between
+  [shapeName.star]: 'M0.5 0L0.618 0.382L1 0.382L0.691 0.618L0.809 1L0.5 0.764L0.191 1L0.309 0.618L0 0.382L0.382 0.382Z',
+  // flat top and bottom
+  [shapeName.hexagon]: 'M0.25 0L0.75 0L1 0.5L0.75 1L0.25 1L0 0.5Z',
+  // shaft on the left, head on the right
+  [shapeName.blockArrow]: 'M0 0.3L0.6 0.3L0.6 0L1 0.5L0.6 1L0.6 0.7L0 0.7Z',
+  // box in the top 80 %, tail below its left part
+  [shapeName.bubble]:
+    'M0.1 0L0.9 0C0.96 0 1 0.04 1 0.1L1 0.7C1 0.76 0.96 0.8 0.9 0.8L0.45 0.8L0.22 1L0.27 0.8L0.1 0.8' +
+    'C0.04 0.8 0 0.76 0 0.7L0 0.1C0 0.04 0.04 0 0.1 0Z',
+  // rounded square, then the check mark (open, drawn by the stroke; turning as the square: inside the filled square,
+  // not a hole)
+  [shapeName.checkbox]:
+    'M0.12 0L0.88 0C0.95 0 1 0.05 1 0.12L1 0.88C1 0.95 0.95 1 0.88 1L0.12 1C0.05 1 0 0.95 0 0.88L0 0.12' +
+    'C0 0.05 0.05 0 0.12 0ZM0.76 0.3L0.42 0.7L0.25 0.52',
+};
+
+/**
  * Shapes drawn with an outline, which can be dashed (brush line is a filled outline)
  */
 export const strokeStyleShapes = [

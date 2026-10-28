@@ -87,11 +87,12 @@ More in [Layers](/get-started/#layers), [Slideshow](/get-started/#slideshow), [S
 ![Export dialog with its preview](/features/export.webp){.screenshot width=680 height=470}
 
 - **Files**: save and open `.freedrawing` files (Ctrl + Shift + S, Ctrl + O). Only drawing shapes are read: files can come from anyone.
+- **Drawings of Excalidraw and tldraw**: open a `.excalidraw` or `.tldr` file, its shapes become shapes of the library (arrows still linked, texts in their shapes, frames, groups, images), ready to be changed.
 - **Links** hold the whole drawing, compressed, so no server is needed to share it.
 - **Export** the drawing or the selection as PNG (1×, 2× or 3×), SVG or PDF, with or without background, in dark mode or not, or copy it to the clipboard.
 - **Editable images**: a PNG or SVG image can keep its drawing. It is shared and shown as any image, and opened again (Ctrl + O) its shapes come back, ready to be changed: no `.freedrawing` file to keep next to it.
 
-More in [Files and links](/get-started/#files-and-links), [Export](/get-started/#export) and [Editable images](/get-started/#editable-images).
+More in [Files and links](/get-started/#files-and-links), [Drawings of Excalidraw and tldraw](/get-started/#drawings-of-excalidraw-and-tldraw), [Export](/get-started/#export) and [Editable images](/get-started/#editable-images).
 
 ## Themes, languages and accessibility
 

@@ -693,7 +693,7 @@ The settings menu opens and saves drawings as `.freedrawing` files (JSON: backgr
 
 ```js
 await drawer.saveAs('my-drawing'); // save dialog when the browser has one (Chromium), else download (Ctrl / Cmd + Shift + S)
-await drawer.open(); // file chosen by user replaces drawing (.freedrawing, or png / svg image keeping its drawing), undo restores it (Ctrl+O), shown in the view
+await drawer.open(); // file chosen by user replaces drawing (.freedrawing, png / svg image keeping its drawing, .excalidraw, .tldr), undo restores it (Ctrl+O), shown in the view
 const file = drawer.getDrawingFile(); // file content, `drawer.loadDrawing(file)` loads it
 const link = await drawer.getLink(); // current page url with compressed drawing: #drawing=<data> (#<id>=<data> with the id option)
 await drawer.copyLink();
@@ -704,6 +704,24 @@ drawer.zoomToSelection(); // view on the selected shapes, filling it up to 200 %
 No server is needed for links: the drawing is in the url hash. The first drawer of the page without `id` option opens a `#drawing=` link (a drawer with an `id`, a `#<id>=` link): its drawing replaces the saved one (undo restores it), is shown in the view, and the hash is removed from the url.
 
 Files and links can come from anyone: only drawing shapes are created (lines, arrows, rectangles, ellipses, texts, paths, groups and frames of them), other nodes and frames without their parts are ignored. Attributes of the drawing shapes must have their type (number, text, true / false, list of numbers), other attributes read by Konva (patterns, functions...) are ignored, attributes of data (e.g. of plugins) are kept. All shapes are created before the drawing is replaced: a file that can't be loaded leaves it as it is. Shapes received from other users of a collaboration session are checked the same way.
+
+### Drawings of Excalidraw and tldraw
+
+"Open..." (Ctrl / Cmd + O) also opens the drawings of [Excalidraw](https://excalidraw.com) (`.excalidraw`) and [tldraw](https://www.tldraw.com) (`.tldr`), `drawer.loadDrawing(text)` their content: they become drawings of the library, to change and save as `.freedrawing` files. Their shapes become the shapes of its tools:
+
+| Excalidraw | tldraw | Shape |
+| --- | --- | --- |
+| Rectangle, ellipse, diamond | Rectangle, ellipse, triangle, diamond, hexagon (also pentagon, octagon), star, cloud, heart, check box, arrows (block arrows turned) | Same shape, its text in it |
+| Arrow (straight, curved, elbow), its label | Arrow (straight, curved, elbow), its label | Arrow linked to the shapes of its ends, its heads |
+| Line | Line (straight, curved) | Line |
+| Freehand drawing | Drawing, highlight | Brush stroke, highlighter |
+| Text | Text, note | Text, sticky note |
+| Frame, group | Frame, group | Frame (its shapes in it), group |
+| Image (its file) | Image (file of the drawing) | Image |
+
+- Kept: colors, stroke widths and styles (solid, dashed, dotted), background (solid; hatches of Excalidraw too), opacity, rotation, round corners, locked shapes, links, background color of Excalidraw.
+- Not kept: the hand-drawn look (shapes of the library are clean), fonts (the font of the texts of the library), embedded pages, bookmarks and videos, images of other sites, pages of tldraw after the first one.
+- As any file, their content is checked: only drawing shapes with valid attributes are created.
 
 ## Export
 

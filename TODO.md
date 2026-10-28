@@ -139,7 +139,7 @@
 - [x] keyboard navigation between shapes, with a description read by screen readers
 - [x] shape recognition: a freehand stroke turned into a rectangle, an ellipse or an arrow (need to be enable/disable)
 - [x] page backgrounds: lined, dotted, isometric paper
-- [ ] import of `.excalidraw` and `.tldr` files
+- [x] import of `.excalidraw` and `.tldr` files
 - [ ] replay how a drawing was made, from its history
 - [ ] why use namespace for event like drawer.** ? it's really usefull ? because for listen we use drawer.on method; then need typing for event, for show error in ts if we use an unknow event
 - [ ] split most common widget to main repo, other one to dedicated plugin

@@ -157,3 +157,9 @@ export type FilePickerWindow = Window & {
   /** Save dialog of the browser, undefined out of Chromium */
   showSaveFilePicker?: SaveFilePicker;
 };
+
+/**
+ * Object of a file of another app (element of Excalidraw, record of tldraw...), read with checks: any field may be
+ * missing or of another type
+ */
+export type ForeignObject = Record<string, unknown>;

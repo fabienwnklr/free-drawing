@@ -55,6 +55,7 @@ import { setupArrows } from '@/utils/arrow';
 import { setupNotes } from '@/utils/note';
 import { getShapesStyle } from '@/utils/style';
 import { embedDrawingInPng, embedDrawingInSvg, readDrawingFile } from '@/utils/embeddedDrawing';
+import { fromOtherApp } from '@/utils/foreignDrawing';
 import { Library } from '@/utils/library';
 import { LibraryPanel } from '@/components/LibraryPanel/LibraryPanel';
 import { SearchBar } from '@/components/SearchBar/SearchBar';
@@ -2403,8 +2404,9 @@ export class Drawer extends MicroEvent {
    * @throws {Error} not a drawing file
    */
   loadDrawing(file: DrawingFile | string) {
-    // validated: files and links can come from anyone
-    const { background, shapes, files } = parseDrawingFile(typeof file === 'string' ? file : JSON.stringify(file));
+    // drawings of other apps converted, then validated: files and links can come from anyone
+    const json = typeof file === 'string' ? fromOtherApp(file, this.t('shapes.frame')) : JSON.stringify(file);
+    const { background, shapes, files } = parseDrawingFile(json);
 
     // before its images are set up
     if (files) this._storeFiles(files);
@@ -2437,7 +2439,10 @@ export class Drawer extends MicroEvent {
    * Open a `.freedrawing` file chosen by user, it replaces drawing (undo restores it)
    */
   async open() {
-    const file = await pickBlob(`${drawingFileExtension},.json,application/json,.png,image/png,.svg,image/svg+xml`);
+    // files of the library (also kept in images), drawings of Excalidraw and tldraw
+    const file = await pickBlob(
+      `${drawingFileExtension},.json,application/json,.png,image/png,.svg,image/svg+xml,.excalidraw,.tldr`
+    );
 
     if (file === null) return;
 

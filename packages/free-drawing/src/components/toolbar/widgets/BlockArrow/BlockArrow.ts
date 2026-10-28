@@ -1,6 +1,6 @@
 import BlockArrowIcon from '@/icons/block-arrow.svg?raw';
 import type { Drawer } from '@/Drawer';
-import { shapeName } from '@/constants';
+import { pathShapeData, shapeName } from '@/constants';
 import { PathShapeWidget } from '@/components/toolbar/widgets/PathShapeWidget';
 
 /**
@@ -8,8 +8,7 @@ import { PathShapeWidget } from '@/components/toolbar/widgets/PathShapeWidget';
  */
 export class BlockArrowWidget extends PathShapeWidget {
   protected shapeName = shapeName.blockArrow;
-  // shaft on the left, head on the right
-  protected path = 'M0 0.3L0.6 0.3L0.6 0L1 0.5L0.6 1L0.6 0.7L0 0.7Z';
+  protected path = pathShapeData[shapeName.blockArrow];
 
   /**
    * Create the block arrow tool, without shortcut
