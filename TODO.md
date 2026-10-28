@@ -1,145 +1,103 @@
 # TODO
 
-- [x] add group of widgets with some usefull tools like triangle, losange, square, laser, frame, surligner, etc
-- [x] can enable/disable auto save
-- [x] add save button to preference, and updtade eveything visually (including name)
-- [x] add button to keep same tool or after every use switch on selection tool automatically
-- [x] for text object add feature to crop width to his content
-- [x] check why release tag doesn't appear on github
-- [x] when i use ctrl+a shortcut, everything in appbar is select, when drawer is focused limit to himself
-- [x] after draw and if 'keepActiveTool' active, last draw automatically selected, don't, just change tool to select
-- [x] selection tool dosn't work if i don't select every objet
-- [x] create logo for drawer
-- [x] if i disable auto save, how save? add button
-- [x] use jsdoc with @param etc.
-- [x] if i select multiple object, for example text, square, hand draw, i want every available tool on panel
-- [x] scan files and fix error/warning
-- [x] the eraser effect on object isn't really great for any case, find something else
+Audit of 2026-10-28 (library 8.0.0): items ordered by priority in each section.
 
 ## Security (collaboration, server)
 
-- [x] anonymous socket can take the identity of the room owner or any user: `userId` sent by client is trusted, owner then removes rights of everyone, viewers rejoin with a new id to draw (server `collaboration.ts`)
-- [x] empty room can be taken over: room and `ownerKey` deleted when last user leaves, next JOIN with any key becomes owner (server `collaboration.ts`)
-- [x] received CHANGE creates any Konva class (`Node.create`, no allow list as `parseDrawingFile`): a `Stage` upsert empties a page element of every user, kept by server for later users (`Collaboration.ts`)
-- [x] no limit on room data: shape count, size and rate of CHANGE / POINTER / NAME, anonymous sockets allowed, server memory can be exhausted; check a whole CHANGE before applying it and relay only checked fields (server `collaboration.ts`)
-- [x] account deleted without password while session is fresh (Better Auth `/delete-user`, password only required by UI): reject it without password in a hook (server `auth.ts`)
-- [x] rate limit of sign in relies on a forgeable `x-forwarded-for`, or one bucket for everyone without it: set `advanced.ipAddress` (server `auth.ts`)
-- [x] check Origin of socket.io handshakes (cookies sent by other origins of the same site), require `BASE_URL` in production (Secure cookies), limit drawings per account (server `app.ts`, `config.ts`, `api.ts`)
+- [ ] one malformed message crashes the server: `null` payload of JOIN / RIGHTS / ROOM / REQUEST (destructured parameter), name `{ toString: 1 }` (`String(name)` throws); socket.io runs listeners in `process.nextTick` and nothing handles `uncaughtException`, so every room is lost (server `collaboration.ts`: check objects and `typeof name === 'string'`)
+- [ ] limits of rooms bypassed by an id repeated in `remove` (`Array(2e6).fill(id)`): size and shape count go negative, then nothing is refused and memory is exhausted (server `collaboration.ts` CHANGE: deduplicate `remove` in `checkChange`)
+- [ ] a viewer gets the right to draw by joining with the id of an anonymous editor (ids public in `USERS` and in `by=` of links): bind anonymous ids to a secret of the browser, as `ownerKey` (server `collaboration.ts` JOIN)
+- [ ] `ownerKey` built from `Math.random` (`createId() + createId()`), whose outputs are in the room id and every shape id sent: secrets from `crypto.getRandomValues` (`Drawer.startCollaboration`, `utils/functions.ts`)
+- [ ] rooms created without global or per address limit (10 per connection, unlimited connections), kept 30 days and all loaded in memory on start; a room remembering 1000 users refuses every new one for good (server `collaboration.ts`)
 
 ## Bugs
 
-- [x] switching drawing, login or logout during a collaboration session replaces the drawing of the room for everyone with the opened one (web `App.ts`: stop or leave session first)
-- [x] reconnection sends a stale copy of the drawing that overwrites newer changes of others, deleted shapes come back (`Collaboration.ts` connect)
-- [x] undo / redo during collaboration restore whole snapshots: changes of other users are reverted for everyone (`History.ts`)
-- [x] save state says saved when nothing was saved: `save()` clears unsaved before saving (storage not loaded, storage or quota error), no leave warning during a save or after a failed one, `#saveFailed` only reset with storage (`Drawer.ts`)
-- [x] view changes (pan, grid, snapping, preferences with theme only) fire `change`: drawing marked unsaved, or same drawing sent again to storage (`Pan.ts`, `Settings.ts`, `Drawer.setPreferences`) — not wanted: view changes keep firing `change`
-- [x] a crafted file or link (frame without content, path `data` not a string) throws after current shapes were destroyed: empty or partial drawing saved at next change; build all nodes before replacing, check attribute types (`drawingFile.ts`, `Drawer.loadDrawing`)
-- [x] reloading a page with a room link creates a new empty drawing each time for a logged in user (web `App.ts`)
-- [x] pointer released out of the canvas (or `touchcancel`): tool stays in action, UI ignores pointer, stroke follows the pointer; next brush stroke contains the previous one (`#allPoints` not reset) (`BaseWidget`, `FreehandWidget`, `ShapeWidget`)
-- [x] eraser stroke starting on a shape erases nothing (`Eraser.ts`: press must be on stage)
-- [x] right and middle click run click actions: eraser erases the shape, text tool creates a text (`Eraser.ts`, `Text.ts`)
-- [x] paste in a field of the drawer (command palette, preferences or collaboration name, radius field) adds a text shape to the drawing instead (`HotKey.ts` paste listener)
-- [x] arrow keys in selection menu, context menu or a layers panel row also move the selected shapes (`arrowNavigation` in `dom.ts` lets other arrows propagate)
-- [x] shortcuts with some keyboards: Alt + S / Z / G / L read `e.key` (macOS Option gives other characters), Shift + W is on Z key of AZERTY (`e.code`), Ctrl shortcuts ignored with Caps Lock (`HotKey.ts`)
-- [x] "Save now" item of settings menu always shown: `display: flex` of `menu-item` overrides `hidden` (`dropdown.scss`)
-- [x] group created or ungrouped in a frame can't be dragged until tool change (`Drawer.groupShapes` / `ungroupShapes`)
-- [x] arrow drawn in a frame links to the frame instead of shapes of the frame (`findBindingTarget` in `binding.ts`)
-- [x] text editing: Enter validating an IME composition (Chinese, Japanese, Korean) closes the editor (`Text.ts`: check `isComposing`)
-- [x] text editing on touch devices: a tap on canvas does not close the editor (window `click` suppressed) (`Text.ts`)
-- [x] frame tool leaves the shape options panel shown after drawing (`Frame.ts`, `BaseWidget` overlay with `showOverlayOnActive` false)
-- [x] shape drawn then released at its start (simple click) stays at collaborators: its live preview was sent, no removal (`ShapeWidget.ts`)
-- [x] snapping of several selected shapes snaps each one on its own: gaps between them change (`Select.ts` snap)
-- [x] a second finger starts another shape or stroke, first one left half drawn (no pointer id tracking)
-- [x] click outside the settings menu or a dialog gives focus back to the drawer even when clicking a field of the page or another drawer (`Dropdown.ts`, `Modal.ts`)
-- [x] Tab leaves dialogs: hidden buttons counted in focus trap (collaboration dialog, export dialog with nothing to export) (`Modal._getFocusables`)
-- [x] owner loses focus when toggling the right to draw of a user (users list rebuilt, live region reads it again) (`CollaborationModal.ts`)
-- [x] error and warning toasts unreadable in dark mode (contrast 2.3:1 and 1.7:1) (`toast.scss`)
-- [x] small screens: settings menu, context menu and options panels overflow the drawer, items out of reach (no max height / scroll)
-- [x] phone (390 px wide): app bar overflows (name on two lines, "My drawings" cut), options panel of the tool covers the header widgets, toolbar pushed out of view by zoom and undo / redo (web `style.css`, `DrawerLayout` footer)
-- [x] export: italic texts drawn with a serif font in png / pdf (preview of the export dialog), Ubuntu italic on canvas (`export.ts` `renderCanvas`, fonts of `TextWidget`)
-- [x] font select of text options: an arrow key gives focus back to the drawer, fonts can't be browsed with keyboard (`TextOverlay.ts`)
-- [x] `drawer.off` called in a handler skips the next handler of the same event (`MicroEvent.trigger` loops on the live array)
-- [x] background color not in history (undo after opening a file keeps its background) nor sent to collaborators
-- [x] drawer of window size does not follow height changes of the window, nor any change with a page scrollbar (`DrawerLayout.ts`)
-- [x] drawings over 1 MB can't join a collaboration session (socket.io `maxHttpBufferSize` 1 MB, API accepts 5 MB): reconnection loop
-- [x] focus of drawer on creation scrolls the host page to it (`Drawer.focus` without `preventScroll`)
-- [x] right to draw given or removed by the owner takes the focus of the user (tool changed: `BaseWidget.setActive` focuses the drawer), even typing in a field of the page or a dialog
+### Collaboration
+
+- [ ] a page reloaded in a room (stored copy reopened) sends its stale drawing on first join: newer changes of others reverted, deleted shapes back, users diverge (`Collaboration.ts` connect: wait for `full` and merge)
+- [ ] text typed during an edit lost when another user changes the text, its shape or its frame meanwhile: pending changes applied by `flush()` after the typed text, which then equals `#synced` (`Text.ts` end of edit, `Drawer` change handler); a new text cancelled with Escape leaves them pending until the next change
+- [ ] live change of another user in a frame replaces the whole frame: text being typed in it lost, drag of its shapes stopped, selected shape of the frame replaced by the frame (`Collaboration._apply` replaces groups, frames included)
+- [ ] reconnecting to a room emptied by others (Clear canvas) sends the whole drawing again: deleted shapes come back for everyone (`Collaboration._merge`: `full` does not tell a dropped room from an emptied one)
+- [ ] drawing of a dropped room (server restart, last user disconnected) sent again without its image files (`#sentFiles` not cleared by `_merge`): blank images for later users
+- [ ] a drawing over `maxMessageSize` (10 MB, 7.5 MB encrypted) is never shared and blocks every later change of its user: the whole unsynced drawing retried in one message (`Collaboration._send` / `_fits`: split changes, files apart)
+- [ ] changes refused by the server (`too-big`, right removed while drawing) are marked synced: never sent again, users diverge (`Collaboration.ts`; server ignores CHANGE of viewers without answer)
+- [ ] image files of a room never released while it has users, and stored again under a new random id at each resend in encrypted rooms: the room reaches 20 MB and refuses every new shape (server `collaboration.ts`, `encryptChange`)
+- [ ] changes received after the `full` of a reconnection during a pointer action or a text edit reverted by the merge (`Collaboration.flush`: pending changes applied before `_merge`)
+- [ ] request to draw lost when the connection drops: the viewer stays on "Request sent" and can't ask again (`Collaboration.requestEdit`, server `leaveRoom`)
+- [ ] cursors and lasers of users who left during a disconnection stay on screen, a presentation stopped meanwhile is still followed (`Collaboration.ts`: reset on reconnection; server sends no `VIEW` null on join)
+- [ ] owner keys kept for the 20 rooms created last, not used last: a room used daily loses its owner after 20 other rooms; an owner logged in is not recognized from another browser (`Drawer._setOwnerKey`, server JOIN)
+- [ ] double click on "Start" starts two sessions, the first socket is never stopped (`Drawer.startCollaboration`: guard while starting)
+
+### Core, files, persistence
+
+- [ ] `destroy()` during a save of `storage` saves an empty drawing over the stored one (save loop runs again after `stage.destroy()`); async work ending after destroy (link decoding, `loadFromStorage`, `addImage`) saves or starts a collaboration on the destroyed drawer (`Drawer.ts`)
+- [ ] unsupported language makes every `t()` throw, the drawer is not created: `language: 'en-US'`, `<free-drawing language="fr-FR">`, account preference `'it'` accepted by the server, saved `"constructor"` passing `value in languages` (`I18n.t`, `Drawer.setLanguage`, `_readPreferences`)
+- [ ] duplicate shape ids accepted (files, links, `addShape(node.clone())`): undo destroys the wrong shape, changes of collaboration lost; ids over 200 characters or a background over 100 make the server drop the whole CHANGE (`addShape`, `parseDrawingFile`)
+- [ ] concurrent `loadFromStorage`: an outdated slower load wins and is auto saved into the drawing the app now targets (`Drawer.loadFromStorage`: counter of loads)
+- [ ] png / pdf export and copy right after loading or adding images draw them blank: elements not decoded yet (`exportImage`: wait for `decode()` as for fonts)
+- [ ] selection saved or exported with `withDrawing`: shapes of frames and shapes of groups selected alone written in coordinates of their parent (`getDrawingFile(shapes)`: transform to the layer as `Library.add`)
+- [ ] `forceDisabled` of a plugin disables its tool button but the active tool keeps drawing; the end of read only activates it again (`Plugin.forceDisabled`, `Drawer.setReadOnly`)
+- [ ] svg images of Excalidraw and tldraw files imported as empty `Image` shapes (`parseFiles` keeps png / jpeg / webp / gif only): rasterize them (`foreignDrawing.ts`)
+- [ ] async `init` of a plugin keeps running after `drawer.destroy()`: listeners added then are never removed (`PluginCollection._init`)
+- [ ] undo / redo in a session can drop the redo stack: `updateBoundTexts` runs after `History._apply` recorded the drawing
+
+### Tools and interaction
+
+- [ ] flip and rotate never place shapes in frames: a shape of a frame mirrored out of it stays in it, cut away; a shape mirrored onto a frame is not in it (`Drawer.flipShapes` / `rotateShapes`: `placeInFrames`)
+- [ ] a locked frame takes shapes drawn, dropped or pasted on it, which become locked (`findFrameAt` ignores `isListening`)
+- [ ] text written in a shape of a group is added at the top of the drawing: left behind when the group is deleted, erased, duplicated, hidden or locked (`TextWidget._createBoundText`)
+- [ ] align / distribute / stack count texts of shapes and arrow labels as shapes: gaps of stack, distribute run with 2 shapes, buttons enabled for one shape with its text (`Drawer._arrangeShapes`, `BaseOverlay.show`)
+- [ ] tool deactivated during a pointer action (right removed, `setReadOnly`) keeps the half drawn shape and its live preview for others (`endAction` instead of `cancelAction`); a text edit stays open in read only (`BaseWidget.setActive(false)`)
+- [ ] Ctrl / Cmd + drag on a shape of a group not selected yet drags the whole group (`SelectWidget` mousedown: Konva starts the drag of the group first)
+- [ ] grid snapping of drags in coordinates of the parent: shapes of frames off the grid by the position of the frame, frames and groups never snapped (`Drawer._initSnapGridEvents`)
+- [ ] text editor does not follow the view zoomed or moved during an edit (wheel, pinch) (`TextWidget`)
+- [ ] tool changed while Space is held: releasing Space restores the old draggable state of the stage, pan tool can't move, selection tool moves the view (`SpacePan.stop`)
+- [ ] arrow keys and Shift + H / V on a shape of a rotated, flipped or scaled group use the axes of the group (`HotKey` `shape.move`, `flipShapes`)
+
+### Interface, accessibility, translations
+
+- [ ] arrow keys on buttons out of `arrowNavigation` lists (swatches of the options panel, settings menu, buttons of layers rows, zoom, undo...) move the selected shapes (`HotKey`: arrows only from the container)
+- [ ] layers panel: Alt + Up / Down reorders shapes in read only (`LayersPanel` keydown, `moveShape`)
+- [ ] slideshow previous / next buttons disabled while focused: focus on the body, keys of the slideshow and Escape lost (`Slideshow.ts`: `aria-disabled`)
+- [ ] buttons hidden or disabled by their own action drop the focus to the page: lock / group of the selection menu, undo / redo at the end of history, group of the layers panel, Follow, search (`disableElement`: focus back to the drawer)
+- [ ] layers or library panel hidden by Alt + L, Alt + B or zen mode with the focus in it: focus lost (`LayersPanel.toggle`, `LibraryPanel`)
+- [ ] Escape ending an IME composition closes the dialog (`Modal` document keydown: `isComposing`)
+- [ ] read only without the `pan` widget: toolbar unreachable with Tab, the disabled active tool keeps the tab stop (`Toolbar` `setTabStop`)
+- [ ] help lists Alt + L and the shortcuts of layers rows without the layers panel (`Help.ts`)
+- [ ] collaboration panel: rows of requests keep the old language after `setLanguage` (`CollaborationPanel.ts`)
+- [ ] key names partly English in fr / es / de (Ctrl, Shift, Escape, Enter, Home: Strg, Maj, Échap, Entrée...) (`formatShortcut`); `navigation.description` says "Maj + Tab" while help says "Shift+Tab"
+- [ ] mixed forms of address: de `slideshow.noFrames` (du), es `library.empty` / `library.hint` (usted)
+- [ ] "no results" of the search bar and the empty command palette not announced (`SearchBar`, `CommandPalette`)
+- [ ] links of shapes can't be opened with the keyboard in read only, no "Open link" item (`shapeLinks.ts`, `LinkEditor`)
+
+### Web app, components, generator
+
+- [ ] components apply every setting again when one changes: a viewer of a session gets tools back when the theme changes, language chosen in the menu reverted; `drawer.options.readOnly` keeps the value of creation (`mountDrawer.ts` `applySettings`)
+- [ ] login / logout switch the store before the drawing: saves in between go to the API with the id of a browser drawing (404, change lost); a failed `listDrawings` leaves this state (web `App.login`)
+- [ ] app height `100vh`: toolbar under the bars of mobile browsers (web `style.css`: `100dvh`)
+- [ ] storage of the browser full shown as the English message of the browser: error wrapped again, its name lost (web `App.ts` save)
+- [ ] mount of components: a failed import or an error of `new Drawer` gives an unhandled rejection, no error event (`mountDrawer.ts`)
+- [ ] `<free-drawing>` in a shadow root (Lit) gets no style (`addStyle` on the document only)
+- [ ] generator: "Next" steps `bun test` / `bun build` run the tools of Bun (`create-plugin` `cli.js`: `bun run`)
 
 ## Improvements
 
-- [x] `drawer.destroy()`: remove document, window, `matchMedia` and ResizeObserver listeners, for apps mounting and unmounting drawers
-- [x] one `change` per drag: N selected shapes fire N + 1 changes (save, history, collaboration, layers panel each time)
-- [x] history memory: 100 full JSON snapshots, cumulative ones built on reload; store shapes once or diffs (`History.ts`)
-- [x] touch: track one pointer, pinch zoom and two finger pan, window `pointerup` / `pointercancel` or pointer capture
-- [x] text tool follows `keepTool` and selects the validated text like other tools (`Text.ts`)
-- [x] Ctrl / Cmd + S saves (`saveNow`) with `storage` or auto save off, download with another shortcut; Ctrl / Cmd + Shift + Z redo (macOS standard)
-- [x] macOS shortcut names (⌘, ⌥) in menus, command palette, help, tooltips and `aria-keyshortcuts`
-- [x] linked arrows: link near outlines, not anywhere in bounding box; binding margin and click threshold independent of zoom (`binding.ts`, `ShapeWidget.ts`)
-- [x] snapping stops: shapes of frames and own frame of the dragged shape, not view edges and center (`Select.ts`)
-- [x] eraser: hit test along the segment between pointer positions (fast strokes skip thin lines) (`Eraser.ts`): done by `_findAlong` (every 4 px), outlines of 3 units found at 10 % zoom in Chromium
-- [x] names of new frames repeat after a frame is deleted (`count + 1` in `Frame.ts`)
-- [x] links of drawings depend on the `drawer-<n>` id: a link copied from a remounted drawer does not open (`Drawer._loadFromLink`)
-- [x] export: limit `pixelRatio` to canvas size limits of browsers (big drawing at scale 2 gives no image)
-- [x] loading a file or link: fit view to its content (may be out of view)
-- [x] toasts: one live region kept in the page (inserted `role=status` not always announced, not read outside an `aria-modal` dialog) (`Toast.ts`)
-- [x] error details in English inside translated toasts ("clipboard unavailable", "not a drawing file", "server unreachable", "nothing to export")
-- [x] translations: es `collab.start` reads as "sign in", de `edges.sharp` should be "Eckig"
-- [x] GitHub menu item: `window.open(url, 'blank')` opens a window named blank without `noopener`, use a link with `target="_blank" rel="noopener"` (`Settings.ts`): button kept (public `$githubButton` type), `window.open(url, '_blank', 'noopener,noreferrer')` as links of shapes
-- [x] preferences switches: `aria-keyshortcuts` of shortcuts not working in the dialog, `<kbd>` in the accessible name (`PreferencesModal.ts`)
-- [x] theming: `color-scheme: light` on light theme (dark host pages), custom color swatch converted in dark mode, help grid scrolls under 380 px wide
-- [x] collaboration dialog opened from an invitation link: focus the name field
-- [x] tests of the collaboration server: impersonation, rights, empty rooms, ownership
+- [ ] Escape cancels the pointer action (shape, stroke, eraser, selection rectangle) (`HotKey` returns during actions; `cancelAction` exists)
+- [ ] drag with the middle button moves the view whatever the tool (draws now) (`ShapeWidget`, `FreehandWidget`, `Laser`, `Select`)
+- [ ] dragging a big selection: handlers of the whole drawing (bindings, texts of shapes, snapping, frames, live send) run once per selected node at each move, O(N²) (`Drawer._initEvents`, `SelectWidget` snap)
+- [ ] each change serializes the whole drawing 3 to 4 times (history, collaboration, save), frames and groups as a whole: one map of states per change (`Drawer`, `History`, `Collaboration`)
+- [ ] two tabs overwrite each other's drawing and library in localStorage: follow `storage` events (`Drawer.save`, `library.ts`)
+- [ ] `drawer.files` and decoded images never pruned: memory grows with each drawing opened or received
+- [ ] search goes through results by exact y then x: `inReadingOrder` as navigation and slides (`utils/search.ts`)
+- [ ] "Clear stored data" removes the drawing key only (files, library, preferences kept), no toast, drawing saved again at the next change, shown with `storage` (`Drawer.clearStoredData`)
+- [ ] save state of the app bar announced ("Saving…", "Saved") at each change: announce errors and unsaved changes only (web `App.ts`)
 
-## Tooling
+## Docs and tooling
 
-- [x] Prettier: `format` script glob not quoted (`src/**/*.ts` not recursive), 22 files not formatted; add a format check to lint, pre-push and CI (done: `yarn lint` checks format, so pre-push too; CI with the item below)
-- [x] CI only runs tests: add typecheck, lint and build; update `actions/checkout@v3` and `actions/setup-node@v3` (`vitest.yaml`)
-- [x] old toolchain: vite 4, vitest 0.34, eslint 8 (end of life), husky 8 (`husky install` deprecated), `@playwright/test` 1.39 (can no longer launch Edge 155 for browser checks)
-- [x] export classes used by the public API: `DrawerLayout` (`drawer.layout`), `Frame`... (types are exported from `src/@types`)
-- [x] deploy the static demo like the docs (Netlify from this repository, `yarn build:static`) instead of `deploy:static` pushing to free-drawing-demo (demo not updated since 2024)
-- [x] npm package stuck at 2.0.1: publish the current version (`yarn release`) (7.29.0 published by the release workflow; releases of 7.21.2 to 7.28.5 created by its `all` run)
-
-# Other
-
-- [x] Generate 3 differents logo for drawer and propose to me one to chose (infinite loop chosen)
-- [x] Create package to use drawer with react/vuejs (`@fabwcie/free-drawing-react`, `@fabwcie/free-drawing-vue`: `FreeDrawing` components, first versions to publish by hand)
-- [x] dans la docs mettre en valeur que c'est pour du vanilla comme du react/vue (hero, card and quick start in tabs of the homepage, React and Vue pages of the guide, features, READMEs)
-- [x] quels features pertinente on a pas qu'on pourrait intégré en s'inspirant de tldraw/escalidraw, et quels features eux n'ont pas qu'on pourrait pertinemment intégrer? (answered 2026-10-25: features to choose, added once chosen)
-- [x] le lien via une fleche n'ai pas assez précis, si j'ai un triagle ça s'attache au cadre qui entoure l'objet pas vraiment a la surface du dessin par exemple (7.29.2: outline of path shapes as drawn)
-
-# Features of tldraw / Excalidraw we don't have (strong and medium interest, by priority)
-
-- [x] zoom to fit the drawing, to the selection and to 100 % (Shift+1, Shift+2, Shift+0): menu, command palette, help (`showArea` exists)
-- [x] align, distribute and stack the selection (left, center, right, top, middle, bottom; even horizontal / vertical spacing)
-- [x] images: paste and pick image files, resize, kept in files, links and collaboration (`Image` in `shapeClasses` of the protocol, size of collaboration messages)
-- [x] text in shapes: double click a rectangle, ellipse or path shape to write in it (centered, follows the shape), labels on arrows
-- [x] arrows: curved and elbow arrows, styles of arrowheads (none, arrow, triangle, dot, bar) at each end
-- [x] sticky notes (after text in shapes)
-- [x] more shapes: star, hexagon, block arrow, check box... (`PathShapeWidget`: also speech bubble)
-- [x] eyedropper (EyeDropper API) and copy / paste of styles (Ctrl+Alt+C / Ctrl+Alt+V)
-- [x] libraries: save a selection as a reusable item, insert it again in any drawing
-- [x] search the texts of the drawing (Ctrl+F), going from one result to the next
-- [x] drawing kept in exported PNG / SVG (metadata), opened again for editing
-- [x] end-to-end encrypted collaboration: key in the `#` of the link, the server never reads drawings
-
-# Ideas neither tldraw nor Excalidraw have
-
-- [x] Web Component `<free-drawing>`: Angular, Svelte, plain HTML
-- [x] presentation by frames: each frame a slide, participants of a session follow (option to active/desactivate)
-- [x] fusionne les options plugins et pluginOptions, par ex si je veux set des options sur un plugin je fais :
-
-{
-    "myPlugin": {
-        "option1": true,
-        "option2": "value2"
-        // Add more options as needed
-    }
-}
-- [x] explain why use konva as peer dependencies
-- [x] keyboard navigation between shapes, with a description read by screen readers
-- [x] shape recognition: a freehand stroke turned into a rectangle, an ellipse or an arrow (need to be enable/disable)
-- [x] page backgrounds: lined, dotted, isometric paper
-- [x] import of `.excalidraw` and `.tldr` files
-- [x] replay how a drawing was made, from its history
-- [x] why use namespace for event like drawer.** ? it's really usefull ? because for listen we use drawer.on method; then need typing for event, for show error in ts if we use an unknow event
-- [x] split most common widget to main repo, other one to dedicated plugin
+- [ ] CI: run `check:generated` of the generator after the build (a change of the plugin API breaks generated plugins unseen)
+- [ ] Netlify: demo not deployed for changes of `packages/extra-tools`, docs not rebuilt for READMEs of the components and extra tools (`ignore` of `netlify.toml`)
+- [ ] element README "Without bundler" loads the library 7 (`@7` of jsdelivr / esm.sh)
+- [ ] extra tools README: its `widgets` example keeps the tools in "More tools" (needs `widgetGroups`)
+- [ ] CONTRIBUTING says npm (Yarn 1 workspaces), lists `yarn sync-labels` and `.github/labels.json` (missing); root README without `packages/extra-tools`
+- [ ] generator: a stale `template/` (ignored, left by `prepack`) used before `packages/plugin-template` by local tests (`template.js`)
+- [ ] npm description and keywords of the library ("Infinite canvas", `typescript`): whiteboard, canvas, drawing, konva
