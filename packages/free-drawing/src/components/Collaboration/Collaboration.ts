@@ -2,8 +2,8 @@ import type { Drawer } from '@/Drawer';
 import { Node } from 'konva/lib/Node';
 import type { Trail } from '@/components/toolbar/widgets/Eraser/Trail';
 import { createLaserTrail } from '@/components/toolbar/widgets/Laser/Laser';
-import type { ShapeConfig } from 'konva/lib/Shape';
 import type { Vector2d } from 'konva/lib/types';
+import { Container } from 'konva/lib/Container';
 import { Group } from 'konva/lib/Group';
 import { Line } from 'konva/lib/shapes/Line';
 import { Label, Tag } from 'konva/lib/shapes/Label';
@@ -18,6 +18,7 @@ import { getFileIds, parseFiles } from '@/utils/image';
 import { decryptChange, encryptChange, type RoomCipher } from '@/utils/encryption';
 import type { ColorLike, DrawingShape } from '@/@types/drawer';
 import type { TranslationKey } from '@/@types/i18n';
+import type { ShapeState } from '@/@types/file';
 import type {
   DrawingChange,
   EncryptedChange,
@@ -26,6 +27,7 @@ import type {
   CollaborationSocket,
   CollaborationMember,
   CollaborationSession,
+  ChangePart,
   PointerPosition,
   JoinedMessage,
   RoomMessage,
@@ -39,6 +41,30 @@ import type {
 const liveInterval = 50;
 
 const cursorColors = ['#e03131', '#2f9e44', '#1971c2', '#f08c00', '#9c36b5', '#0c8599', '#c2255c'];
+
+/** Rooms whose shapes are kept in browser (`_keepSynced`): the ones used last */
+const keptRooms = 5;
+
+/**
+ * Hash of a text (cyrb53, 53 bits): a shape known again without keeping its JSON
+ * @param text JSON of a shape
+ * @returns Hash in base 36
+ */
+const hashText = (text: string) => {
+  let h1 = 0xdeadbeef;
+  let h2 = 0x41c6ce57;
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text.charCodeAt(i);
+
+    h1 = Math.imul(h1 ^ char, 2654435761);
+    h2 = Math.imul(h2 ^ char, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+};
 
 /**
  * Background color of another user or of the room, checked on reception (any color, as in files)
@@ -132,8 +158,20 @@ export class Collaboration {
   #stopped = false;
   /** Shapes as other clients know them, by id, in stacking order */
   #synced = new Map<string, string>();
-  /** Image files the room has (sent or received): a file is sent once, with the first shape using it */
+  /** Shapes known by the room changed since they were kept in browser (`_keepSynced`) */
+  #syncChanged = false;
+  /**
+   * First join: shapes known by the room in a previous visit of this browser (hashes of their JSON by id, see
+   * `_keepSynced`), until the drawing of the room is merged
+   */
+  #restored: Map<string, string> | null = null;
+  /**
+   * Image files the room has (sent or received): a file is sent once, with the first shape using it, again once it was
+   * no longer used (the room may forget it)
+   */
   #sentFiles = new Set<string>();
+  /** Shapes (their JSON) and image files (empty) too big for a message alone, by id: not sent again until changed */
+  #tooBig = new Map<string, string>();
   /**
    * Background color as other clients know it: null until the one of the room is received (a joining user does not
    * impose theirs), empty when the room has none (this one sent)
@@ -141,16 +179,19 @@ export class Collaboration {
   #syncedBackground: string | null = null;
   /** Time of the last warning of a change refused by the server (drawing too big), shown again after a while */
   #tooBigAt = 0;
-  /** Changes received during a pointer action of this client, applied when it ends */
-  #pending: DrawingChange[] = [];
+  /**
+   * Changes received during a pointer action of this client, applied in order when it ends: the drawing of the room
+   * received again after a reconnection (`rejoin`) is merged at its place
+   */
+  #pending: [change: DrawingChange, rejoin: boolean][] = [];
   /** Connected to the server: changes made while disconnected are sent once joined again */
   #connected = false;
   /** Joined the room before: a reconnection merges the drawing of the room with changes made meanwhile */
   #joined = false;
-  /** Joined again, drawing of the room awaited: nothing sent meanwhile */
+  /** Joined (first time or again), drawing of the room awaited: nothing sent meanwhile */
   #rejoining = false;
-  /** Drawing of the room received again during a pointer action of this client, merged when it ends */
-  #rejoinDrawing: DrawingChange | null = null;
+  /** Drawing of the room received again during a pointer action of this client, merged when it ends: nothing sent before */
+  #rejoinPending = false;
   /** Shapes being drawn or moved, sent at next live message */
   #live = new Set<DrawingShape>();
   /** Ids of shapes sent as live previews since the last final change: removed for everyone if they are discarded */
@@ -197,14 +238,20 @@ export class Collaboration {
 
       const rejoin = this.#joined;
 
-      // before the answer of the server: connected again, drawing of the room merged with changes made meanwhile
-      // (`_merge`), not a copy of this one
+      // before the answer of the server: nothing sent until the drawing of the room is received and merged with this
+      // one (`_merge`), not overwritten by a copy of it (page reloaded, changes made while disconnected)
       this.#connection++;
       this.#connected = true;
       this.#joined = true;
-      this.#rejoining = rejoin;
-      // first join: background of the room received first (a joining user does not impose theirs)
-      if (!rejoin) this.#syncedBackground = null;
+      this.#rejoining = true;
+      if (!rejoin) {
+        // first join: background of the room received first (a joining user does not impose theirs), drawing known by
+        // the room in a previous visit of this browser
+        this.#syncedBackground = null;
+        this.#synced.clear();
+        this.#sentFiles.clear();
+        this.#restored = this._readSynced();
+      }
       // encrypted room: proof of its key, users with another key (or none) are refused
       this.socket.emit(socketEvents.JOIN, {
         room,
@@ -217,11 +264,12 @@ export class Collaboration {
       });
       // presentation going on after a reconnection
       if (this.presenting) this._sendView();
-      if (rejoin) return;
-      // first join: whole drawing sent, merged with other ones of the room
-      this.#synced.clear();
-      this.#sentFiles.clear();
-      this.send();
+      if (rejoin) {
+        // request forgotten by the server with the connection: asked again
+        if (this.requested) this.socket.emit(socketEvents.REQUEST);
+        // users who left meanwhile: no cursor (others shown again as they move)
+        this._removeCursors();
+      }
     });
     this.socket.on('disconnect', () => {
       this.#connection++;
@@ -251,14 +299,15 @@ export class Collaboration {
         if (!this.#stopped) this._onChange(change);
       });
     });
-    // message refused by the server: room full (session stopped), drawing too big (changes not shared), key of an
-    // encrypted room missing or wrong (session stopped)
-    this._listen(socketEvents.REJECTED, ({ reason }: RejectedMessage = {}) => {
+    // message refused by the server: room full (session stopped), drawing too big (changes not shared), change made
+    // without right to draw (sent again once allowed), key of an encrypted room missing or wrong (session stopped)
+    this._listen(socketEvents.REJECTED, ({ reason, upsert, remove }: RejectedMessage = {}) => {
       if (reason === 'full') {
         this.drawer.toast(this.drawer.t('toast.collaborationFull'), 'error');
         this.drawer.stopCollaboration();
-      } else if (reason === 'too-big') {
-        this._tellTooBig();
+      } else if (reason === 'too-big' || reason === 'right') {
+        if (reason === 'too-big') this._tellTooBig();
+        this._unsync(upsert, remove);
       } else if (reason === 'key') {
         this._stopWith('error.roomKey');
       }
@@ -269,9 +318,10 @@ export class Collaboration {
       // first users of the room: right of this user known now (view only by default)
       const joined = !this.members.length;
 
-      // joined again a server without drawing of the room (`full`, sent before users): whole drawing sent as before
+      // joined a server without drawing of the room (`full`, sent before users): whole drawing sent as before
       if (this.#rejoining) {
         this.#rejoining = false;
+        this.#restored = null;
         this.#synced.clear();
         this.#sentFiles.clear();
         this.send();
@@ -286,7 +336,11 @@ export class Collaboration {
         this.members.some((member) => member.id === userId && !member.canEdit)
       );
       if (this.canEdit) this.requested = false;
-      if (this.canEdit !== canEdit) this.drawer._onCollaborationRight(this.canEdit, joined);
+      if (this.canEdit !== canEdit) {
+        this.drawer._onCollaborationRight(this.canEdit, joined);
+        // changes kept while viewing (refused by the server)
+        if (this.canEdit) this.send();
+      }
       this.drawer.trigger(drawerEvents.collaborationChange);
     });
     this._listen(socketEvents.POINTER, (pointer: RemotePointer) => {
@@ -404,11 +458,17 @@ export class Collaboration {
    * @param change Change to send
    * @param sent Marks its content as known by the room, called just before it is sent
    * @param volatile Live preview: dropped rather than delayed when the connection is slow
+   * @param tooBig Called when it is not sent, too big for the server
    * @returns Promise while it is encrypted (sent unless the connection was lost meanwhile)
    */
-  private _emitChange(change: DrawingChange, sent: () => void, volatile = false): Promise<void> | void {
+  private _emitChange(
+    change: DrawingChange,
+    sent: () => void,
+    volatile = false,
+    tooBig?: () => void
+  ): Promise<void> | void {
     const emit = (message: DrawingChange | EncryptedChange) => {
-      if (!this._fits(message)) return;
+      if (!this._fits(message)) return tooBig?.();
       sent();
       (volatile ? this.socket.volatile : this.socket).emit(socketEvents.CHANGE, message);
     };
@@ -817,12 +877,19 @@ export class Collaboration {
     this.socket.disconnect();
     this.drawer.stage.off('.collaboration');
     for (const timer of Object.values(this.#timers)) clearTimeout(timer);
+    this._removeCursors();
+    // slide of the owner no longer seen alone
+    if (this.presentedView?.slide) this.drawer.slideshow.hideSlideArea();
+  }
+
+  /**
+   * Cursors and laser trails of other users removed
+   */
+  private _removeCursors() {
     for (const cursor of this.#cursors.values()) cursor.destroy();
     this.#cursors.clear();
     for (const laser of this.#lasers.values()) laser.destroy();
     this.#lasers.clear();
-    // slide of the owner no longer seen alone
-    if (this.presentedView?.slide) this.drawer.slideshow.hideSlideArea();
   }
 
   /**
@@ -838,50 +905,170 @@ export class Collaboration {
    * @returns Promise while the change is encrypted
    */
   private _send(): Promise<void> | void {
-    // sent once joined again (drawing of the room merged first): not marked synced meanwhile
-    if (!this.#connected || this.#rejoining || this.#rejoinDrawing) return;
+    // sent once joined (drawing of the room merged first): not marked synced meanwhile
+    if (!this.#connected || this.#rejoining || this.#rejoinPending) return;
+    // viewer: refused by the server, sent once allowed to draw
+    if (!this.canEdit) return this._keepSynced();
 
-    const current = new Map(this.drawer.getDrawingShapes().map((shape) => [shape.id(), serializeShape(shape)]));
-    const upsert = [...current].filter(([id, json]) => this.#synced.get(id) !== json).map(([, json]) => json);
+    const shapes = this.drawer.getDrawingShapes();
+    const current = new Map(shapes.map((shape) => [shape.id(), serializeShape(shape)]));
+    const synced = this.#synced;
+    // changed since last sync, except shapes too big for a message (tried again once changed)
+    const upserted = shapes.filter((shape) => {
+      const json = current.get(shape.id());
+
+      return synced.get(shape.id()) !== json && this.#tooBig.get(shape.id()) !== json;
+    });
     // also previews of shapes removed before their final change
-    const remove = [...new Set([...this.#synced.keys(), ...this.#sentLive])].filter((id) => !current.has(id));
+    const remove = [...new Set([...synced.keys(), ...this.#sentLive])].filter((id) => !current.has(id));
     const ids = [...current.keys()];
-    const added = ids.filter((id) => !this.#synced.has(id));
+    const added = ids.filter((id) => !synced.has(id));
     // stacking order of known shapes changed (reorder, undo...), or new shapes not on top (group, ungroup...):
     // new shapes are added on top by others
     const reordered =
-      ids.filter((id) => this.#synced.has(id)).join() !==
-        [...this.#synced.keys()].filter((id) => current.has(id)).join() ||
+      ids.filter((id) => synced.has(id)).join() !== [...synced.keys()].filter((id) => current.has(id)).join() ||
       added.join() !== ids.slice(ids.length - added.length).join();
     const background = this.drawer.background.fill() as string;
     // changed here, once the background of the room is known
     const recolored = this.#syncedBackground !== null && background !== this.#syncedBackground;
-    // image files of the changed shapes the room does not have yet
-    const upserted = this.drawer
-      .getDrawingShapes()
-      .filter((shape) => this.#synced.get(shape.id()) !== current.get(shape.id()));
-    const fileIds = getFileIds(upserted).filter((id) => !this.#sentFiles.has(id) && this.drawer.files.has(id));
-    const change: DrawingChange = {
-      upsert,
-      remove,
-      ...(reordered && { order: [...current.keys()] }),
-      ...(recolored && { background }),
-      ...(fileIds.length > 0 && { files: Object.fromEntries(fileIds.map((id) => [id, this.drawer.files.get(id)!])) }),
-    };
+    // image files no longer used: the room may forget them, sent again when used again
+    const used = new Set(getFileIds(shapes));
 
-    const changed = upsert.length > 0 || remove.length > 0 || reordered || recolored;
-    const sent = () => {
-      this.#synced = current;
-      for (const id of fileIds) this.#sentFiles.add(id);
-      if (recolored) this.#syncedBackground = background;
+    for (const id of this.#sentFiles) if (!used.has(id)) this.#sentFiles.delete(id);
+    for (const id of this.#tooBig.keys()) if (!current.has(id) && !used.has(id)) this.#tooBig.delete(id);
+
+    const parts = this._split(upserted, current, remove, reordered && ids, recolored ? background : undefined);
+    // stacking order sent (or unchanged): known in this order
+    let ordered = !reordered;
+    const mark = ({ change, ids }: ChangePart) => {
+      for (const id of ids) synced.set(id, current.get(id)!);
+      for (const id of change.remove) synced.delete(id);
+      for (const id of Object.keys(change.files ?? {})) this.#sentFiles.add(id);
+      if (change.background !== undefined) this.#syncedBackground = change.background;
+      if (change.order) ordered = true;
+    };
+    const finish = () => {
+      // in stacking order, removals not sent yet after
+      if (ordered) {
+        this.#synced = new Map([
+          ...ids.filter((id) => synced.has(id)).map((id): [string, string] => [id, synced.get(id)!]),
+          ...[...synced].filter(([id]) => !current.has(id)),
+        ]);
+      }
       // final state sent, previews useless
       this.#live.clear();
       this.#sentLive.clear();
+      if (parts.length) this.#syncChanged = true;
+      this._keepSynced();
+    };
+    // one after the other (encrypted ones once encrypted), a part too big skipped: shapes and files not marked synced
+    const emit = (index: number): Promise<void> | void => {
+      for (let i = index; i < parts.length; i++) {
+        const part = parts[i];
+        const result = this._emitChange(
+          part.change,
+          () => mark(part),
+          false,
+          () => {
+            // a shape or a file alone too big: not tried again until changed
+            if (part.ids.length + Object.keys(part.change.files ?? {}).length !== 1) return;
+
+            const id = part.ids[0] ?? Object.keys(part.change.files!)[0];
+
+            this.#tooBig.set(id, current.get(id) ?? '');
+          }
+        );
+
+        if (result) return result.then(() => emit(i + 1));
+      }
+      finish();
     };
 
-    if (!changed) return sent();
-    // too big for the server: not marked synced (kept by a merge after a reconnection), sent with a next change
-    return this._emitChange(change, sent);
+    return emit(0);
+  }
+
+  /**
+   * Change cut into messages small enough for the server (encrypted ones are bigger): shapes with the image files the
+   * room does not have yet, a shape and its files too big together apart; removals and background in the first one,
+   * stacking order in the last one
+   * @param shapes Shapes to send, in stacking order
+   * @param current JSON of the shapes of the drawing by id
+   * @param remove Ids of removed shapes
+   * @param order Ids of all shapes from bottom to top when stacking order changed, else false
+   * @param background Background color when changed
+   * @returns Parts to send in order, none when nothing changed
+   */
+  private _split(
+    shapes: DrawingShape[],
+    current: Map<string, string>,
+    remove: string[],
+    order: string[] | false,
+    background?: string
+  ): ChangePart[] {
+    if (!shapes.length && !remove.length && !order && background === undefined) return [];
+
+    const budget = Collaboration.maxMessageSize / (this.cipher ? 2 : 1.25);
+    const first: ChangePart = {
+      change: { upsert: [], remove, ...(background !== undefined && { background }) },
+      ids: [],
+    };
+    const parts = [first];
+    let size = JSON.stringify(first.change).length;
+    // part holding something to send: a new part for what does not fit
+    let filled = remove.length > 0 || background !== undefined;
+    const added = new Set<string>();
+    const filesSize = (files: [string, string][]) =>
+      files.reduce((sum, [fileId, data]) => sum + fileId.length + data.length + 8, 0);
+    /**
+     * Shape and image files added to the last part, or to a new one when they do not fit in it
+     * @param id Id of the shape, null for files alone
+     * @param jsonSize Length of the JSON of the shape in the message (escaped)
+     * @param files Image files sent with it, by id
+     */
+    const add = (id: string | null, jsonSize: number, files: [string, string][]) => {
+      const itemSize = jsonSize + filesSize(files);
+      let part = parts[parts.length - 1];
+
+      if (filled && size + itemSize > budget) {
+        part = { change: { upsert: [], remove: [] }, ids: [] };
+        parts.push(part);
+        size = 0;
+      }
+      if (id !== null) {
+        part.change.upsert.push(current.get(id)!);
+        part.ids.push(id);
+      }
+      if (files.length) part.change.files = { ...part.change.files, ...Object.fromEntries(files) };
+      size += itemSize;
+      filled = true;
+    };
+
+    for (const shape of shapes) {
+      const id = shape.id();
+      const jsonSize = JSON.stringify(current.get(id)).length;
+      // image files of the shape the room does not have yet, with the first shape using them
+      const files = getFileIds([shape])
+        .filter((fileId) => !this.#sentFiles.has(fileId) && !this.#tooBig.has(fileId) && !added.has(fileId))
+        .filter((fileId) => this.drawer.files.has(fileId))
+        .map((fileId): [string, string] => {
+          added.add(fileId);
+          return [fileId, this.drawer.files.get(fileId)!];
+        });
+
+      if (jsonSize + filesSize(files) > budget) {
+        for (const file of files) add(null, 0, [file]);
+        add(id, jsonSize, []);
+      } else {
+        add(id, jsonSize, files);
+      }
+    }
+    if (order) {
+      if (filled && size + JSON.stringify(order).length > budget)
+        parts.push({ change: { upsert: [], remove: [] }, ids: [] });
+      parts[parts.length - 1].change.order = order;
+    }
+
+    return parts;
   }
 
   /**
@@ -922,7 +1109,7 @@ export class Collaboration {
     }
 
     if (this.drawer._duringAction()) {
-      this.#pending.push(change);
+      this.#pending.push([change, false]);
       return;
     }
 
@@ -937,25 +1124,28 @@ export class Collaboration {
    */
   flush() {
     const pending = this.#pending;
-    const rejoinDrawing = this.#rejoinDrawing;
 
     this.#pending = [];
-    this.#rejoinDrawing = null;
-    for (const change of pending) this._apply(change);
-    // after changes received before the disconnection
-    if (rejoinDrawing) this._merge(rejoinDrawing);
+    this.#rejoinPending = false;
+    // in the order received: changes received after the drawing of the room are not reverted by its merge
+    for (const [change, rejoin] of pending) {
+      if (rejoin) this._merge(change);
+      else this._apply(change);
+    }
 
-    return pending.length > 0 || !!rejoinDrawing;
+    return pending.length > 0;
   }
 
   /**
-   * Joined again after a disconnection: drawing of the room merged with this one, after the current pointer action
+   * Room joined (first time, or again after a disconnection): drawing of the room merged with this one, after the
+   * current pointer action
    * @param change Whole drawing of the room (`full`)
    */
   private _rejoin(change: DrawingChange) {
     this.#rejoining = false;
     if (this.drawer._duringAction()) {
-      this.#rejoinDrawing = change;
+      this.#pending.push([change, true]);
+      this.#rejoinPending = true;
       return;
     }
 
@@ -965,14 +1155,20 @@ export class Collaboration {
   }
 
   /**
-   * Drawing of the room merged with this one after a disconnection: shapes added or changed here meanwhile are kept
+   * Drawing of the room merged with this one once joined: shapes added or changed here since the last sync are kept
    * (sent next), others take their state in the room, shapes removed by other users meanwhile are removed (unless
-   * changed here). A room without drawing (emptied, server restarted) gets the whole drawing again
+   * changed here). On first join, the shapes known by the room in a previous visit of this browser are known again
+   * (`#restored`), other shapes of the room take their state there (a copy of them is not newer), shapes only here are
+   * added to the room. A room without drawing (new, last user gone, server restarted: not `kept`) gets the whole
+   * drawing, with its image files; a room emptied by its users is merged as any other
    * @param change Whole drawing of the room (`full`)
    */
-  private _merge({ upsert, order, background, files }: DrawingChange) {
+  private _merge({ upsert, order, background, files, kept }: DrawingChange) {
     const room = new Map<string, string>();
+    const restored = this.#restored;
 
+    this.#restored = null;
+    this.#syncChanged = true;
     // files of the room, before its shapes
     this._receiveFiles(files);
     const color = this.drawer.background.fill() as string;
@@ -985,12 +1181,24 @@ export class Collaboration {
 
       if (state) room.set(state.attrs.id as string, json);
     }
-    if (!room.size) {
+    // servers of previous versions: an empty room has no drawing
+    if (!room.size && kept !== true) {
       this.#synced.clear();
+      this.#sentFiles.clear();
       return;
     }
 
     const current = new Map(this.drawer.getDrawingShapes().map((shape) => [shape.id(), serializeShape(shape)]));
+
+    if (restored) {
+      // known by the room and not changed since, or unknown but in the room
+      for (const [id, json] of current) {
+        const hash = restored.get(id);
+
+        if (hash === undefined ? room.has(id) : hash === hashText(json)) this.#synced.set(id, json);
+      }
+    }
+
     const synced = this.#synced;
     // since last sync: added or changed here, removed here
     const changed = new Set([...current].filter(([id, json]) => synced.get(id) !== json).map(([id]) => id));
@@ -1004,6 +1212,80 @@ export class Collaboration {
     // sent next: changes made here as new ones, removals of shapes still in the room
     for (const id of changed) this.#synced.delete(id);
     for (const id of removed) if (room.has(id)) this.#synced.set(id, room.get(id)!);
+  }
+
+  /**
+   * Change refused by the server (drawing too big, right to draw removed meanwhile): its shapes are not known by the
+   * room, sent again with a next change (with their image files)
+   * @param upsert Ids of its shapes added or updated (not trusted)
+   * @param remove Ids of its removed shapes (not trusted)
+   */
+  private _unsync(upsert: unknown, remove: unknown) {
+    const ids = (value: unknown) => (Array.isArray(value) ? value.filter((id) => typeof id === 'string') : []);
+    const shapes = new Map(this.drawer.getDrawingShapes().map((shape) => [shape.id(), shape]));
+    const refused = ids(upsert).flatMap((id) => shapes.get(id) ?? []);
+
+    for (const id of ids(upsert)) this.#synced.delete(id);
+    // removal sent again: shape known by the room
+    for (const id of ids(remove)) if (!shapes.has(id)) this.#synced.set(id, '');
+    for (const id of getFileIds(refused)) this.#sentFiles.delete(id);
+    this.#syncChanged = true;
+  }
+
+  /**
+   * Shapes known by the room kept in browser (hashes of their JSON), once changed: a page reloaded in the room knows
+   * which of its shapes the room has (`_merge`). Kept for the rooms used last
+   */
+  private _keepSynced() {
+    if (!this.#syncChanged) return;
+
+    this.#syncChanged = false;
+    try {
+      localStorage.setItem(
+        this._syncKey(this.room),
+        JSON.stringify([...this.#synced].map(([id, json]) => [id, hashText(json)]))
+      );
+    } catch {
+      // not kept (storage full or unavailable): the room is merged as by a new user next time
+    }
+  }
+
+  /**
+   * Shapes known by the room in a previous visit of this browser, see `_keepSynced`; the room is now the one used last
+   * @returns Hashes of their JSON by id, empty when none were kept
+   */
+  private _readSynced(): Map<string, string> {
+    const key = `${this.drawer.options.localStorageKey}-rooms`;
+
+    try {
+      const rooms = (JSON.parse(localStorage.getItem(key) ?? '[]') as string[]).filter((room) => room !== this.room);
+      const forgotten = rooms.splice(0, Math.max(0, rooms.length + 1 - keptRooms));
+
+      for (const room of forgotten) localStorage.removeItem(this._syncKey(room));
+      localStorage.setItem(key, JSON.stringify([...rooms, this.room]));
+
+      const shapes = JSON.parse(localStorage.getItem(this._syncKey(this.room)) ?? '[]');
+
+      return new Map(
+        Array.isArray(shapes)
+          ? shapes.filter(
+              (shape): shape is [string, string] =>
+                Array.isArray(shape) && typeof shape[0] === 'string' && typeof shape[1] === 'string'
+            )
+          : []
+      );
+    } catch {
+      return new Map();
+    }
+  }
+
+  /**
+   * Key of localStorage keeping the shapes known by a room
+   * @param room Id of the room
+   * @returns Key of the drawer for this room
+   */
+  private _syncKey(room: string) {
+    return `${this.drawer.options.localStorageKey}-room-${room}`;
   }
 
   /**
@@ -1025,6 +1307,7 @@ export class Collaboration {
   private _apply({ upsert, remove, order, background, full, files }: DrawingChange) {
     // files of images, before the images using them
     this._receiveFiles(files);
+    this.#syncChanged = true;
 
     const shapes = new Map(this.drawer.getDrawingShapes().map((shape) => [shape.id(), shape]));
     // shapes of other users: not changes of this user in history
@@ -1044,15 +1327,14 @@ export class Collaboration {
         continue;
       }
 
-      const { className } = state;
-      const attrs = state.attrs as ShapeConfig;
-      let shape = shapes.get(attrs.id as string);
+      let shape = shapes.get(state.attrs.id as string);
 
-      // groups replaced with their shapes, at same place, still selected
-      if (shape && (shape instanceof Group || className === 'Group')) {
+      // same nodes updated (groups and frames with their shapes): selection, text being edited, drags kept
+      if (shape && !this._update(shape, state)) {
+        // another class: replaced at same place, still selected
         const index = shape.zIndex();
         const selected = this.drawer.getSelectedShapes();
-        // created before the group is removed
+        // created before the shape is removed
         const node = Node.create(state) as DrawingShape;
 
         shape.destroy();
@@ -1063,21 +1345,7 @@ export class Collaboration {
             .getWidget<SelectWidget>('selection')
             ?.select([...selected.filter((node) => node.getLayer()), shape]);
         }
-      } else if (shape) {
-        // same node (kept in selection): attributes removed by other client are removed, not local ones (draggable,
-        // hit and scene functions, element of an image)
-        const node: Node = shape;
-        const removed = Object.keys(node.attrs).filter(
-          (key) =>
-            !(key in attrs) &&
-            key !== 'draggable' &&
-            typeof node.getAttr(key) !== 'function' &&
-            !(node.getAttr(key) instanceof HTMLImageElement)
-        );
-
-        for (const key of removed) node.setAttr(key, undefined);
-        shape.setAttrs(attrs);
-      } else {
+      } else if (!shape) {
         shape = this.drawer.addShape(Node.create(state) as DrawingShape);
       }
       // as serialized here, not to send it back
@@ -1096,13 +1364,65 @@ export class Collaboration {
       );
     }
 
-    // removed shapes are not selected anymore
+    // removed shapes are not selected anymore (also shapes of groups removed by an update)
     const transformer = this.drawer.getWidget<SelectWidget>('selection')?.transformer;
-    if (transformer && Array.isArray(remove) && remove.length)
+    if (transformer?.nodes().some((node) => !node.getLayer()))
       transformer.nodes(transformer.nodes().filter((node) => node.getLayer()));
     // undo and redo of this user keep them, stacking order of others too
     this.drawer.undoRedo.ignoreChanges(changed);
     this._applyBackground(background, full);
+  }
+
+  /**
+   * Node of the drawing updated to the state of another user, in place: groups and frames keep their nodes, matched by
+   * id (selection, text being edited, drags of their shapes kept); nodes new in the state are created, missing ones
+   * removed, in the order of the state
+   * @param node Node of the drawing with the id of the state
+   * @param state State of another user (checked)
+   * @returns false when the node is of another class: to replace
+   */
+  private _update(node: Node, state: ShapeState): boolean {
+    if (node.getClassName() !== state.className) return false;
+
+    // attributes removed by other client are removed, not local ones (draggable, hit and scene functions, element of
+    // an image); dragged alone or not here
+    const attrs = { ...state.attrs };
+
+    delete attrs.draggable;
+    const removed = Object.keys(node.attrs).filter(
+      (key) =>
+        !(key in attrs) &&
+        key !== 'draggable' &&
+        typeof node.getAttr(key) !== 'function' &&
+        !(node.getAttr(key) instanceof HTMLImageElement)
+    );
+
+    for (const key of removed) node.setAttr(key, undefined);
+    node.setAttrs(attrs);
+    if (!(node instanceof Container)) return true;
+
+    const children = new Map(node.getChildren().map((child) => [child.id(), child]));
+    const nodes = (state.children ?? []).map((childState) => {
+      const id = childState.attrs.id as string;
+      const child = children.get(id);
+
+      children.delete(id);
+      if (child && this._update(child, childState)) return child;
+      child?.destroy();
+
+      return Node.create(childState) as DrawingShape;
+    });
+
+    for (const child of children.values()) child.destroy();
+    nodes.forEach((child, index) => {
+      if (child.getParent() !== node) {
+        node.add(child);
+        this.drawer._setupAdded(child as DrawingShape);
+      }
+      child.zIndex(index);
+    });
+
+    return true;
   }
 
   /**

@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [8.0.2](https://github.com/fabienwnklr/free-drawing/compare/v8.0.1...v8.0.2) (2026-10-28)
+
+
+### Bug Fixes
+
+* **collaboration:** a page opened again in a room no longer sends its stale copy over the drawing of the room: it waits for the drawing of the room and merges it (changes of other users kept; shapes the room knew in a previous visit of this browser, kept in localStorage, removed when others removed them). A room emptied by its users stays empty after a reconnection, a room which lost its drawing gets it again with its image files
+* **collaboration:** text typed while another user changes it, its shape or its frame is kept and shared; changes received during a new text cancelled with Escape are applied
+* **collaboration:** groups and frames changed by other users are updated in place: a text being typed in a frame, a drag of its shapes and a shape of a frame selected are kept
+* **collaboration:** a change bigger than a message of the server is sent in several messages: a big drawing no longer blocks every later change (a shape or an image file too big alone is not sent until changed)
+* **collaboration:** changes refused by the server (drawing too big, right to draw removed meanwhile) are sent again later, changes made by a viewer are sent once allowed to draw (servers of this version)
+* **collaboration:** image files of encrypted rooms sent under the same id each time, files no shape uses released by the server when the drawing would be too big: a room no longer fills up with images and refuses every new shape
+* **collaboration:** changes received after the drawing of the room during a pointer action or a text edit are no longer reverted by its merge
+* **collaboration:** after a reconnection, a request to draw is asked again, cursors and lasers of users gone are removed, a presentation stopped meanwhile is no longer followed
+* **collaboration:** owner keys kept for the 20 rooms used last (not created last); the owner logged in on the server is the owner from another browser
+* **collaboration:** a double click on "Start" starts one session (a start overtaken by another room closes its connection)
+
 ## [8.0.1](https://github.com/fabienwnklr/free-drawing/compare/v8.0.0...v8.0.1) (2026-10-28)
 
 

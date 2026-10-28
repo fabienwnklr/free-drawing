@@ -75,10 +75,23 @@ export type DrawingChange = {
   live?: boolean;
   /** Whole drawing of the room, sent by the server to a joining user (also empty) */
   full?: boolean;
+  /**
+   * Whole drawing kept by the room since users sent it: an empty one was emptied by them; none for a room without
+   * drawing (new, last user gone, server restarted, servers of previous versions): joining users send theirs
+   */
+  kept?: boolean;
   /** Background color of the drawing, when changed (whole drawing: background of the room, none before a user sends it) */
   background?: string;
   /** Image files not sent yet, used by the shapes (whole drawing: files of the room) */
   files?: DrawingFiles;
+};
+
+/** Part of a change cut into messages small enough for the server */
+export type ChangePart = {
+  /** Message to send */
+  change: DrawingChange;
+  /** Ids of its shapes (`upsert`), marked synced once it is sent */
+  ids: string[];
 };
 
 /** Shape of an encrypted room: id in clear (the server keeps the drawing shape by shape), konva JSON encrypted */
@@ -87,6 +100,11 @@ export type EncryptedShape = {
   id: string;
   /** Konva JSON of the shape, encrypted (see `RoomCipher.encrypt`) */
   data: string;
+  /**
+   * Ids of the image files it uses, as sent in the room (`RoomCipher.fileId`): the server releases the files of no shape
+   * (none from previous versions)
+   */
+  files?: string[];
 };
 
 /**
@@ -154,8 +172,15 @@ export type RoomMessage = {
 export type RejectedMessage = {
   /** Event of the refused message (`JOIN`, `CHANGE`) */
   event?: unknown;
-  /** `full`: room full, `too-big`: drawing too big, `key`: key of the encrypted room missing or wrong */
+  /**
+   * `full`: room full, `too-big`: drawing too big, `right`: change of a user without right to draw, `key`: key of the
+   * encrypted room missing or wrong
+   */
   reason?: unknown;
+  /** Refused change: ids of its shapes added or updated (servers of previous versions: none) */
+  upsert?: unknown;
+  /** Refused change: ids of its removed shapes */
+  remove?: unknown;
 };
 
 /** Area of the drawing, in drawing coordinates: view presented by the owner (`VIEW`), see `Drawer.getViewArea` */

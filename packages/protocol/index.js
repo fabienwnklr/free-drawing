@@ -15,11 +15,13 @@ export const socketEvents = {
   /** Users of the room `{ id, name, owner, canEdit, invitedBy }` (sent by server) */
   USERS: 'USERS',
   /**
-   * Drawing change `{ upsert, remove, order, live, full, background, files }`: shapes added or updated, ids of removed
-   * shapes, stacking order, preview of shapes being drawn, whole drawing of the room (sent by server to a joining user,
-   * with its background once a user sent one), background color when changed, image files by id. Encrypted room:
-   * `upsert` is `{ id, data }` (encrypted JSON), `background` and `files` (under random ids) encrypted, not read by
-   * the server
+   * Drawing change `{ upsert, remove, order, live, full, kept, background, files }`: shapes added or updated, ids of
+   * removed shapes, stacking order, preview of shapes being drawn, whole drawing of the room (sent by server to a joining
+   * user, with its background once a user sent one; `kept` when users sent it since the room was created or dropped: an
+   * empty one was emptied by them), background color when changed, image files by id (released by the server when no
+   * shape uses them and the drawing would be too big). Encrypted room: `upsert` is `{ id, data, files }` (encrypted
+   * JSON, ids of the files it uses), `background` and `files` (under ids of the room: SHA-256 of the key and the id)
+   * encrypted, not read by the server
    */
   CHANGE: 'CHANGE',
   /**
@@ -37,14 +39,15 @@ export const socketEvents = {
    */
   ROOM: 'ROOM',
   /**
-   * Message of the user refused by server: `{ event, reason }`, reason `full` (room), `too-big` (drawing) or `key`
-   * (key of an encrypted room missing or wrong)
+   * Message of the user refused by server: `{ event, reason }`, reason `full` (room), `too-big` (drawing), `right`
+   * (change of a user without right to draw) or `key` (key of an encrypted room missing or wrong); a refused change
+   * gives the ids of its shapes `{ upsert, remove }` (sent again later)
    */
   REJECTED: 'REJECTED',
   /**
    * Area of the drawing shown by the owner presenting it: `{ x, y, width, height, slide }` (drawing coordinates, `slide`:
    * a frame of its slideshow, seen alone), null when the presentation stops; sent by the owner, relayed by server to the
-   * room and to users joining meanwhile; encrypted room: `{ data }` (encrypted area)
+   * room and to each user joining (null without presentation); encrypted room: `{ data }` (encrypted area)
    */
   VIEW: 'VIEW',
   /**

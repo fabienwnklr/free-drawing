@@ -26,8 +26,18 @@ type RoomData = {
   shapes: Map<string, string>;
   /** Image files of the drawing by id (data URLs, encrypted in an encrypted room), kept with it */
   files: Map<string, string>;
+  /**
+   * Ids of the image files used by each shape (null: unknown, encrypted shape of a previous version): files no shape
+   * uses are released when the drawing would be too big
+   */
+  shapeFiles: Map<string, string[] | null>;
   /** Size of the drawing: length of its shapes JSON and of its image files */
   size: number;
+  /**
+   * Drawing sent by users since the room was created or dropped: an empty one was emptied by them (users joining again
+   * remove its shapes), else users joining send theirs
+   */
+  kept: boolean;
   /** Background color of the drawing (encrypted in an encrypted room), none until a user sends it (dropped with the drawing) */
   background?: string;
   /**
@@ -81,11 +91,13 @@ type SavedRoom = {
 type CollaborationSocket = Socket<any, any, any, SocketData>;
 
 /** Node state of a shape in a change (konva `toObject`), not trusted */
-type ShapeJson = { attrs?: { id?: unknown } | null; className?: unknown; children?: unknown };
+type ShapeJson = { attrs?: { id?: unknown; fileId?: unknown } | null; className?: unknown; children?: unknown };
 
 /** Change of drawing checked as a whole: only its checked fields, shapes JSON by id (encrypted room: encrypted JSON) */
 type CheckedChange = {
   upsert: Map<string, string>;
+  /** Ids of the image files used by each shape of `upsert` (null: unknown, encrypted shape of a previous version) */
+  shapeFiles: Map<string, string[] | null>;
   /** Image files sent with the shapes using them */
   files: Map<string, string>;
   remove: string[];
@@ -220,6 +232,16 @@ const isShape = (state: ShapeJson, depth = 0): boolean => {
 };
 
 /**
+ * Image files used by a shape (checked by `isShape`): images of groups and frames too
+ * @param state Shape of a change
+ * @returns Ids of the files of its images
+ */
+const fileIdsOf = (state: ShapeJson): string[] => [
+  ...(isFileId(state.attrs?.fileId) ? [state.attrs.fileId] : []),
+  ...(Array.isArray(state.children) ? (state.children as ShapeJson[]).flatMap(fileIdsOf) : []),
+];
+
+/**
  * Change of a client checked as a whole before it is applied: ids, and JSON of drawing shapes with an id; in an
  * encrypted room, ids and encrypted data (shapes, files, background are not read)
  * @param change Message of the client (not trusted)
@@ -254,14 +276,17 @@ const checkChange = (change: unknown, encrypted: boolean): CheckedChange | null 
   }
 
   const shapes = new Map<string, string>();
+  const shapeFiles = new Map<string, string[] | null>();
 
   for (const json of upsert) {
-    // encrypted room: `{ id, data }`
+    // encrypted room: `{ id, data, files }`, ids of files as sent in the room (none from previous versions)
     if (encrypted) {
-      const { id, data } = (typeof json === 'object' && json !== null ? json : {}) as Record<string, unknown>;
+      const { id, data, files } = fieldsOf(json);
 
       if (!isShapeId(id) || !isEncrypted(data, maxMessageSize)) return null;
+      if (files !== undefined && (!Array.isArray(files) || files.length > 1000 || !files.every(isFileId))) return null;
       shapes.set(id, data);
+      shapeFiles.set(id, (files as string[] | undefined) ?? null);
       continue;
     }
 
@@ -274,10 +299,12 @@ const checkChange = (change: unknown, encrypted: boolean): CheckedChange | null 
     }
     if (!isShape(state) || !isShapeId(state.attrs?.id)) return null;
     shapes.set(state.attrs.id, json);
+    shapeFiles.set(state.attrs.id, fileIdsOf(state));
   }
 
   return {
     upsert: shapes,
+    shapeFiles,
     files: checkedFiles,
     // each id once: an id repeated would be counted again out of the size and shapes of the drawing (limits passed)
     remove: [...new Set(remove)],
@@ -370,7 +397,9 @@ const newRoom = (keyCheck?: string): RoomData => ({
   keyCheck,
   shapes: new Map(),
   files: new Map(),
+  shapeFiles: new Map(),
   size: 0,
+  kept: false,
   viewers: new Set(),
   names: new Map(),
   accounts: new Set(),
@@ -463,7 +492,9 @@ export async function attachCollaboration(
       rooms.set(id, {
         shapes: new Map(),
         files: new Map(),
+        shapeFiles: new Map(),
         size: 0,
+        kept: false,
         ownerKey: typeof saved.ownerKey === 'string' ? saved.ownerKey : undefined,
         ownerId: isId(saved.ownerId) ? saved.ownerId : undefined,
         viewers: new Set(saved.viewers),
@@ -540,6 +571,30 @@ export async function attachCollaboration(
     return false;
   };
 
+  // image files of a room no shape uses once a change is applied (removed, replaced), except the files of the change:
+  // released, their size given; none when the files of encrypted shapes of previous versions are unknown
+  const releaseFiles = (data: RoomData, change: CheckedChange) => {
+    const shapeFiles = new Map(data.shapeFiles);
+    const used = new Set(change.files.keys());
+    let released = 0;
+
+    for (const id of change.remove) shapeFiles.delete(id);
+    for (const [id, files] of change.shapeFiles) shapeFiles.set(id, files);
+    for (const files of shapeFiles.values()) {
+      if (!files) return 0;
+      for (const id of files) used.add(id);
+    }
+    for (const [id, file] of data.files) {
+      if (used.has(id)) continue;
+      data.files.delete(id);
+      released += file.length;
+    }
+    data.size -= released;
+    totalSize -= released;
+
+    return released;
+  };
+
   const leaveRoom = (socket: CollaborationSocket) => {
     const { room, owner, userId } = socket.data;
 
@@ -570,7 +625,9 @@ export async function attachCollaboration(
       totalSize -= data.size;
       data.shapes = new Map();
       data.files = new Map();
+      data.shapeFiles = new Map();
       data.size = 0;
+      data.kept = false;
       data.background = undefined;
       saveRoom(room, data);
     }
@@ -638,7 +695,8 @@ export async function attachCollaboration(
       // first secret given (room creation) makes its user owner, also when the room is empty later
       if (key) data.ownerKey ??= key;
 
-      const owner = !!key && data.ownerKey === key;
+      // also the account of the owner, logged in from another browser (secret kept by the first one)
+      const owner = (!!key && data.ownerKey === key) || (!!account && account.id === data.ownerId);
       // id of browser, unless it is the one of an account, of the owner (secret not given) or of another browser (other
       // secret: users of previous versions give none)
       const free =
@@ -677,18 +735,21 @@ export async function attachCollaboration(
       socket.emit(socketEvents.JOINED, { userId: socket.data.userId });
       socket.emit(socketEvents.ROOM, { newUsersCanEdit: data.newUsersCanEdit, encrypted: !!data.keyCheck });
 
-      // whole drawing of the room, also empty: a user joining again merges it with its changes made meanwhile
+      // whole drawing of the room, also empty: a user joining merges it with its drawing (`kept`: emptied by users, not
+      // dropped)
       socket.emit(socketEvents.CHANGE, {
         upsert: toUpsert(data.shapes, !!data.keyCheck),
         remove: [],
         order: [...data.shapes.keys()],
         full: true,
+        ...(data.kept && { kept: true }),
         ...(data.background && { background: data.background }),
         ...(data.files.size > 0 && { files: Object.fromEntries(data.files) }),
       });
       sendUsers(room);
-      // presentation going on: view of the owner followed at once
-      if (data.view) socket.emit(socketEvents.VIEW, data.view);
+      // presentation going on: view of the owner followed at once; none: a user joining again stops following one
+      // stopped meanwhile
+      socket.emit(socketEvents.VIEW, data.view);
       // owner: requests waiting for an answer
       if (owner) {
         for (const id of data.requests) socket.emit(socketEvents.REQUEST, { userId: id, name: data.names.get(id) });
@@ -793,8 +854,7 @@ export async function attachCollaboration(
       const { room } = socket.data;
       const data = room ? rooms.get(room) : undefined;
 
-      // users without right to draw: ignored
-      if (!room || !data || data.viewers.has(socket.data.userId)) return;
+      if (!room || !data) return;
 
       const change = checkChange(message, !!data.keyCheck);
 
@@ -802,6 +862,20 @@ export async function attachCollaboration(
         console.warn(`Invalid change (id: ${socket.id})`);
         return;
       }
+
+      // refused: its shapes told, the client sends them again later (once allowed to draw, smaller drawing)
+      const refuse = (reason: string) => {
+        if (change.live) return;
+        socket.emit(socketEvents.REJECTED, {
+          event: socketEvents.CHANGE,
+          reason,
+          upsert: [...change.upsert.keys()],
+          remove: change.remove,
+        });
+      };
+
+      // users without right to draw
+      if (data.viewers.has(socket.data.userId)) return refuse('right');
 
       // drawing once changed: removed shapes (not upserted again), then added or updated ones
       const { shapes } = data;
@@ -819,20 +893,25 @@ export async function attachCollaboration(
       const newFiles = [...change.files].filter(([id]) => !data.files.has(id));
 
       for (const [, file] of newFiles) size += file.length;
-      // a bigger drawing over the limits refused (smaller changes still allowed)
-      if (
-        (count > limits.shapes && count > shapes.size) ||
-        (size > data.size && (size > limits.drawingSize || totalSize + size - data.size > limits.totalSize))
-      ) {
-        if (!change.live) socket.emit(socketEvents.REJECTED, { event: socketEvents.CHANGE, reason: 'too-big' });
-        return;
-      }
 
-      for (const id of change.remove) shapes.delete(id);
+      const tooBig = () =>
+        size > data.size && (size > limits.drawingSize || totalSize + size - data.size > limits.totalSize);
+
+      // image files no shape uses once changed (removed, replaced) released first
+      if (tooBig()) size -= releaseFiles(data, change);
+      // a bigger drawing over the limits refused (smaller changes still allowed)
+      if ((count > limits.shapes && count > shapes.size) || tooBig()) return refuse('too-big');
+
+      for (const id of change.remove) {
+        shapes.delete(id);
+        data.shapeFiles.delete(id);
+      }
       for (const [id, json] of change.upsert) shapes.set(id, json);
+      for (const [id, files] of change.shapeFiles) data.shapeFiles.set(id, files);
       for (const [id, file] of newFiles) data.files.set(id, file);
       totalSize += size - data.size;
       data.size = size;
+      data.kept = true;
       if (change.background && !change.live) data.background = change.background;
       // drawing kept in stacking order (sent so to joining users), unknown shapes after
       if (change.order) {

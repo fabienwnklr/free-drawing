@@ -14,19 +14,19 @@ Audit of 2026-10-28 (library 8.0.0): items ordered by priority in each section.
 
 ### Collaboration
 
-- [ ] a page reloaded in a room (stored copy reopened) sends its stale drawing on first join: newer changes of others reverted, deleted shapes back, users diverge (`Collaboration.ts` connect: wait for `full` and merge)
-- [ ] text typed during an edit lost when another user changes the text, its shape or its frame meanwhile: pending changes applied by `flush()` after the typed text, which then equals `#synced` (`Text.ts` end of edit, `Drawer` change handler); a new text cancelled with Escape leaves them pending until the next change
-- [ ] live change of another user in a frame replaces the whole frame: text being typed in it lost, drag of its shapes stopped, selected shape of the frame replaced by the frame (`Collaboration._apply` replaces groups, frames included)
-- [ ] reconnecting to a room emptied by others (Clear canvas) sends the whole drawing again: deleted shapes come back for everyone (`Collaboration._merge`: `full` does not tell a dropped room from an emptied one)
-- [ ] drawing of a dropped room (server restart, last user disconnected) sent again without its image files (`#sentFiles` not cleared by `_merge`): blank images for later users
-- [ ] a drawing over `maxMessageSize` (10 MB, 7.5 MB encrypted) is never shared and blocks every later change of its user: the whole unsynced drawing retried in one message (`Collaboration._send` / `_fits`: split changes, files apart)
-- [ ] changes refused by the server (`too-big`, right removed while drawing) are marked synced: never sent again, users diverge (`Collaboration.ts`; server ignores CHANGE of viewers without answer)
-- [ ] image files of a room never released while it has users, and stored again under a new random id at each resend in encrypted rooms: the room reaches 20 MB and refuses every new shape (server `collaboration.ts`, `encryptChange`)
-- [ ] changes received after the `full` of a reconnection during a pointer action or a text edit reverted by the merge (`Collaboration.flush`: pending changes applied before `_merge`)
-- [ ] request to draw lost when the connection drops: the viewer stays on "Request sent" and can't ask again (`Collaboration.requestEdit`, server `leaveRoom`)
-- [ ] cursors and lasers of users who left during a disconnection stay on screen, a presentation stopped meanwhile is still followed (`Collaboration.ts`: reset on reconnection; server sends no `VIEW` null on join)
-- [ ] owner keys kept for the 20 rooms created last, not used last: a room used daily loses its owner after 20 other rooms; an owner logged in is not recognized from another browser (`Drawer._setOwnerKey`, server JOIN)
-- [ ] double click on "Start" starts two sessions, the first socket is never stopped (`Drawer.startCollaboration`: guard while starting)
+- [x] a page reloaded in a room (stored copy reopened) sends its stale drawing on first join: newer changes of others reverted, deleted shapes back, users diverge (`Collaboration.ts` connect: wait for `full` and merge)
+- [x] text typed during an edit lost when another user changes the text, its shape or its frame meanwhile: pending changes applied by `flush()` after the typed text, which then equals `#synced` (`Text.ts` end of edit, `Drawer` change handler); a new text cancelled with Escape leaves them pending until the next change
+- [x] live change of another user in a frame replaces the whole frame: text being typed in it lost, drag of its shapes stopped, selected shape of the frame replaced by the frame (`Collaboration._apply` replaces groups, frames included)
+- [x] reconnecting to a room emptied by others (Clear canvas) sends the whole drawing again: deleted shapes come back for everyone (`Collaboration._merge`: `full` does not tell a dropped room from an emptied one)
+- [x] drawing of a dropped room (server restart, last user disconnected) sent again without its image files (`#sentFiles` not cleared by `_merge`): blank images for later users
+- [x] a drawing over `maxMessageSize` (10 MB, 7.5 MB encrypted) is never shared and blocks every later change of its user: the whole unsynced drawing retried in one message (`Collaboration._send` / `_fits`: split changes, files apart)
+- [x] changes refused by the server (`too-big`, right removed while drawing) are marked synced: never sent again, users diverge (`Collaboration.ts`; server ignores CHANGE of viewers without answer)
+- [x] image files of a room never released while it has users, and stored again under a new random id at each resend in encrypted rooms: the room reaches 20 MB and refuses every new shape (server `collaboration.ts`, `encryptChange`)
+- [x] changes received after the `full` of a reconnection during a pointer action or a text edit reverted by the merge (`Collaboration.flush`: pending changes applied before `_merge`)
+- [x] request to draw lost when the connection drops: the viewer stays on "Request sent" and can't ask again (`Collaboration.requestEdit`, server `leaveRoom`)
+- [x] cursors and lasers of users who left during a disconnection stay on screen, a presentation stopped meanwhile is still followed (`Collaboration.ts`: reset on reconnection; server sends no `VIEW` null on join)
+- [x] owner keys kept for the 20 rooms created last, not used last: a room used daily loses its owner after 20 other rooms; an owner logged in is not recognized from another browser (`Drawer._setOwnerKey`, server JOIN)
+- [x] double click on "Start" starts two sessions, the first socket is never stopped (`Drawer.startCollaboration`: guard while starting)
 
 ### Core, files, persistence
 

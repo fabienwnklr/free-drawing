@@ -359,7 +359,16 @@ export class TextWidget extends BaseWidget {
     // titles of frames on one line: pasted line breaks become spaces
     const value = () => (title ? textarea.value.replace(/\s*\n\s*/g, ' ') : textarea.value);
     const minWidth = textarea.offsetWidth;
-    const removeTextarea = () => {
+    /**
+     * Edit ended
+     * @param text Text typed, none to keep the previous one (Escape)
+     */
+    const removeTextarea = (text?: string) => {
+      // changes of other users received during the edit applied first: the text typed comes after them (else they would
+      // replace it, and it would equal the drawing known by the room: not sent)
+      const received = !!this.drawer.collaboration?.flush();
+
+      if (text !== undefined) textNode.text(text);
       // keep focus on clicked element (e.g. font select of text overlay)
       const hasFocus = document.activeElement === textarea;
       textarea.parentNode?.removeChild(textarea);
@@ -384,6 +393,8 @@ export class TextWidget extends BaseWidget {
         selectWidget?.hideOverlay();
         // tool kept, as after a simple click of a shape tool
         if (byTool && this.drawer.activeWidget === this) this.showToolOverlay();
+        // changes received meanwhile: saved, in history
+        if (received) this.drawer.stage.fire('change');
         onEnd?.(null);
         return;
       }
@@ -410,8 +421,7 @@ export class TextWidget extends BaseWidget {
       // hide on enter (also of the numeric keypad)
       // but don't hide on shift + enter (new line, not in titles of frames)
       if (e.key === 'Enter' && !e.shiftKey) {
-        textNode.text(value());
-        removeTextarea();
+        removeTextarea(value());
       } else if (e.key === 'Enter' && title) {
         e.preventDefault();
       }
@@ -423,8 +433,7 @@ export class TextWidget extends BaseWidget {
 
     const handleOutsideClick = (e: Event) => {
       if (e.target !== textarea) {
-        textNode.text(value());
-        removeTextarea();
+        removeTextarea(value());
         // press on the canvas: the click of the tool adds no text, nor note (pointer down comes before konva mouse
         // down and touch start, see `initEvents`)
         this.pressEndedEdit =

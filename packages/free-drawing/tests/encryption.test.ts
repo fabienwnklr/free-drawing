@@ -112,4 +112,32 @@ describe('End-to-end encryption of collaboration', () => {
     // not a change
     expect(await decryptChange(cipher, null)).toEqual({ change: { upsert: [] }, failed: 0 });
   });
+
+  it('Image files under ids of the room: the same at each sending (kept once by the server), told with their shapes', async () => {
+    const cipher = await RoomCipher.create(await createRoomKey());
+    const image = (id: string, fileId: string) => JSON.stringify({ attrs: { id, fileId }, className: 'Image' });
+    const group = JSON.stringify({
+      attrs: { id: 'g1' },
+      className: 'Group',
+      children: [{ attrs: { id: 'i2', fileId: 'file-2' }, className: 'Image' }],
+    });
+    const change: DrawingChange = {
+      upsert: [image('i1', 'file-1'), group, rect('r1')],
+      remove: [],
+      files: { 'file-1': pngData, 'file-2': pngData },
+    };
+    const first = await encryptChange(cipher, change);
+    const again = await encryptChange(cipher, change);
+    const fileId = await cipher.fileId('file-1');
+
+    // SHA-256 of the key and the id, another one with another key
+    expect(fileId).toMatch(/^[\w-]{43}$/);
+    expect(await cipher.fileId('file-1')).toBe(fileId);
+    expect(await (await RoomCipher.create(await createRoomKey())).fileId('file-1')).not.toBe(fileId);
+    expect(Object.keys(first.files!)).toEqual([fileId, await cipher.fileId('file-2')]);
+    expect(Object.keys(again.files!)).toEqual(Object.keys(first.files!));
+    // files of each shape, also of the shapes of groups; none for other shapes
+    expect(first.upsert.map((shape) => shape.files)).toEqual([[fileId], [await cipher.fileId('file-2')], []]);
+    expect(await decryptChange(cipher, first)).toEqual({ change, failed: 0 });
+  });
 });

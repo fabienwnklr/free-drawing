@@ -1,7 +1,7 @@
 import { fromBase64Url, toBase64Url } from '@/utils/drawingFile';
 import { DrawerError } from '@/utils/errors';
-import { createId } from '@/utils/functions';
 import type { DecryptedChange, DrawingChange, EncryptedChange, EncryptedShape } from '@/@types/collaboration';
+import type { ShapeState } from '@/@types/file';
 
 /**
  * End-to-end encryption of live collaboration: the creator of a room makes its key (AES-GCM, 128 bits), given in the
@@ -151,6 +151,29 @@ export class RoomCipher {
   async decryptJson(data: unknown): Promise<unknown> {
     return JSON.parse(await this.decrypt(data));
   }
+
+  /**
+   * Id of an image file in the messages of the room: the same for the same file, so the server keeps it once, and the
+   * id of the file (hash of the image) can't be found from it without the key
+   * @param id Id of the file
+   * @returns SHA-256 of the key and the id, in base64url (43 characters)
+   */
+  async fileId(id: string): Promise<string> {
+    const hash = await getSubtle().digest('SHA-256', new TextEncoder().encode(`free-drawing file ${this.key} ${id}`));
+
+    return toBase64Url(new Uint8Array(hash));
+  }
+}
+
+/**
+ * Image files used by a shape state: images of groups and frames too
+ * @param state State of a shape (konva JSON)
+ * @returns Ids of the files of its images
+ */
+function fileIdsOf(state: ShapeState): string[] {
+  const { fileId } = state.attrs;
+
+  return [...(typeof fileId === 'string' ? [fileId] : []), ...(state.children ?? []).flatMap(fileIdsOf)];
 }
 
 /**
@@ -166,16 +189,23 @@ export async function encryptChange(
 ): Promise<EncryptedChange> {
   const [shapes, encryptedFiles, encryptedBackground] = await Promise.all([
     Promise.all(
-      upsert.map(
-        async (json): Promise<EncryptedShape> => ({
-          id: String(JSON.parse(json).attrs.id),
+      upsert.map(async (json): Promise<EncryptedShape> => {
+        const state = JSON.parse(json) as ShapeState;
+
+        return {
+          id: String(state.attrs.id),
           data: await cipher.encrypt(json),
-        })
-      )
+          // files it uses (also none): the server releases the files of no shape
+          files: await Promise.all(fileIdsOf(state).map((id) => cipher.fileId(id))),
+        };
+      })
     ),
-    // under random ids: the id of a file is the hash of the image
+    // under ids of the room: the id of a file is the hash of the image
     Promise.all(
-      Object.entries(files ?? {}).map(async ([id, data]) => [createId(), await cipher.encryptJson({ id, data })])
+      Object.entries(files ?? {}).map(async ([id, data]) => [
+        await cipher.fileId(id),
+        await cipher.encryptJson({ id, data }),
+      ])
     ),
     background === undefined ? undefined : cipher.encrypt(background),
   ]);

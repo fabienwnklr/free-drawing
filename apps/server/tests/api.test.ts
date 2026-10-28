@@ -436,14 +436,15 @@ describe('Collaboration', () => {
     return { socket, next };
   };
 
-  /** Client joined to a room: its id and users of the room */
+  /** Client joined to a room: its id, users of the room, view presented (sent last) */
   const joinRoom = async (message: object, server = url) => {
     const user = client(server);
     const joined = user.next<{ userId: string }>(socketEvents.JOINED);
     const users = user.next<User[]>(socketEvents.USERS);
+    const view = user.next(socketEvents.VIEW);
 
     user.socket.emit(socketEvents.JOIN, message);
-    return { ...user, userId: (await joined).userId, users: await users };
+    return { ...user, userId: (await joined).userId, users: await users, view: await view };
   };
 
   it('Owner is the user giving the secret: its id is not given to others, rights only changed by it', async () => {
@@ -646,9 +647,10 @@ describe('Collaboration', () => {
     const drawing = later.next<{ upsert: string[] }>(socketEvents.CHANGE);
 
     later.socket.emit(socketEvents.JOIN, { room: 'room-6', name: 'Later', userId: 'later-6' });
-    expect(await drawing).toEqual({ upsert: [rect('r1')], remove: [], order: ['r1'], full: true });
+    // kept by its users: an empty one was emptied by them
+    expect(await drawing).toEqual({ upsert: [rect('r1')], remove: [], order: ['r1'], full: true, kept: true });
 
-    // also empty: users joining again know the drawing of the room was lost
+    // also empty, not kept: users joining again know the drawing of the room was lost
     const empty = client();
     const nothing = empty.next(socketEvents.CHANGE);
 
@@ -700,6 +702,7 @@ describe('Collaboration', () => {
       remove: [],
       order: ['i1'],
       full: true,
+      kept: true,
       files: { f1: png },
     });
 
@@ -715,7 +718,8 @@ describe('Collaboration', () => {
         remove: [],
         files: { f2: `data:image/png;base64,${'A'.repeat(2_000)}` },
       });
-      expect(await tooBig).toEqual({ event: socketEvents.CHANGE, reason: 'too-big' });
+      // shapes of the change told: sent again later
+      expect(await tooBig).toEqual({ event: socketEvents.CHANGE, reason: 'too-big', upsert: ['i2'], remove: [] });
     } finally {
       Object.assign(limits, saved);
     }
@@ -744,8 +748,11 @@ describe('Collaboration', () => {
       await updated;
     };
 
-    // viewer (new users by default): shapes neither relayed nor kept
+    // viewer (new users by default): shapes neither relayed nor kept, refused with their ids (sent again once allowed)
+    const refused = guest.next(socketEvents.REJECTED);
+
     guest.socket.emit(socketEvents.CHANGE, { upsert: [rect('v1')], remove: [] });
+    expect(await refused).toEqual({ event: socketEvents.CHANGE, reason: 'right', upsert: ['v1'], remove: [] });
     expect(await drawing()).toEqual([]);
 
     // right given: relayed to the owner and kept
@@ -784,7 +791,7 @@ describe('Collaboration', () => {
     const drawing = later.next(socketEvents.CHANGE);
 
     later.socket.emit(socketEvents.JOIN, { room, name: 'Later', userId: 'later-bg' });
-    expect(await drawing).toEqual({ upsert: [], remove: [], order: [], full: true, background: '#f5faff' });
+    expect(await drawing).toEqual({ upsert: [], remove: [], order: [], full: true, kept: true, background: '#f5faff' });
   });
 
   it('Encrypted rooms: joined with the proof of their key only, drawing kept and relayed without being read', async () => {
@@ -857,6 +864,7 @@ describe('Collaboration', () => {
       remove: [],
       order: ['e1'],
       full: true,
+      kept: true,
       background: 'Y29sb3I',
       files,
     });
@@ -894,7 +902,12 @@ describe('Collaboration', () => {
       const relayed = guest.next<{ upsert: string[] }>(socketEvents.CHANGE);
 
       owner.socket.emit(socketEvents.CHANGE, { upsert: [rect('a'), rect('b'), rect('c')], remove: [] });
-      expect(await tooBig).toEqual({ event: socketEvents.CHANGE, reason: 'too-big' });
+      expect(await tooBig).toEqual({
+        event: socketEvents.CHANGE,
+        reason: 'too-big',
+        upsert: ['a', 'b', 'c'],
+        remove: [],
+      });
       owner.socket.emit(socketEvents.CHANGE, { upsert: [rect('a'), rect('b')], remove: [] });
       expect((await relayed).upsert).toEqual([rect('a'), rect('b')]);
 
@@ -908,7 +921,12 @@ describe('Collaboration', () => {
       const repeated = owner.next(socketEvents.REJECTED);
 
       owner.socket.emit(socketEvents.CHANGE, { upsert: [rect('d'), rect('e')], remove: ['b', 'b', 'b'] });
-      expect(await repeated).toEqual({ event: socketEvents.CHANGE, reason: 'too-big' });
+      expect(await repeated).toEqual({
+        event: socketEvents.CHANGE,
+        reason: 'too-big',
+        upsert: ['d', 'e'],
+        remove: ['b'],
+      });
 
       const once = guest.next(socketEvents.CHANGE);
 
@@ -1075,6 +1093,128 @@ describe('Collaboration', () => {
       Object.assign(limits, saved);
       await proxied.close();
     }
+  });
+
+  it('Drawing of a room dropped with its last user, presentation told to users joining', async () => {
+    const room = 'room-dropped';
+    const owner = await joinRoom({ room, name: 'Owner', userId: 'owner-d', ownerKey: 'secret d' });
+    const guest = await joinRoom({ room, name: 'Guest', userId: 'guest-d' });
+
+    // no presentation: users joining again stop following one
+    expect(guest.view).toBeNull();
+    owner.socket.emit(socketEvents.CHANGE, { upsert: [rect('d1')], remove: [] });
+    await guest.next(socketEvents.CHANGE);
+    owner.socket.close();
+    guest.socket.close();
+    await vi.waitFor(() => expect(server.io.sockets.adapter.rooms.has(room)).toBe(false));
+
+    // not kept: users joining send theirs
+    const back = client();
+    const drawing = back.next(socketEvents.CHANGE);
+
+    back.socket.emit(socketEvents.JOIN, { room, name: 'Owner', userId: 'owner-d', ownerKey: 'secret d' });
+    expect(await drawing).toEqual({ upsert: [], remove: [], order: [], full: true });
+  });
+
+  it('Image files no shape uses released when the drawing would be too big', async () => {
+    const saved = { ...limits };
+    const file = (size: number) => `data:image/png;base64,${'A'.repeat(size)}`;
+    const image = (id: string, fileId: string) =>
+      JSON.stringify({ attrs: { id, fileId, width: 10, height: 10 }, className: 'Image' });
+    const filesOf = async (room: string, keyCheck?: string) => {
+      const later = client();
+      const drawing = later.next<{ files?: object }>(socketEvents.CHANGE);
+
+      later.socket.emit(socketEvents.JOIN, { room, name: 'Later', ...(keyCheck && { keyCheck }) });
+      const { files } = await drawing;
+
+      later.socket.close();
+      return Object.keys(files ?? {});
+    };
+    /** Change of the owner, applied (relayed to the guest) or refused */
+    const send = async (user: Awaited<ReturnType<typeof joinRoom>>, guest: typeof user, change: object) => {
+      const answer = Promise.race([
+        guest.next(socketEvents.CHANGE).then(() => 'applied'),
+        user.next<{ reason: string }>(socketEvents.REJECTED).then(({ reason }) => reason),
+      ]);
+
+      user.socket.emit(socketEvents.CHANGE, change);
+      return answer;
+    };
+
+    Object.assign(limits, { drawingSize: 3_000 });
+    try {
+      const owner = await joinRoom({ room: 'room-files', name: 'Owner', userId: 'owner-f', ownerKey: 'secret f' });
+      const guest = await joinRoom({ room: 'room-files', name: 'Guest', userId: 'guest-f' });
+
+      expect(await send(owner, guest, { upsert: [image('i1', 'f1')], remove: [], files: { f1: file(2000) } })).toBe(
+        'applied'
+      );
+      // image removed: its file kept while there is room
+      expect(await send(owner, guest, { upsert: [], remove: ['i1'] })).toBe('applied');
+      expect(await filesOf('room-files')).toEqual(['f1']);
+      // too big with it: released
+      expect(await send(owner, guest, { upsert: [image('i2', 'f2')], remove: [], files: { f2: file(2000) } })).toBe(
+        'applied'
+      );
+      expect(await filesOf('room-files')).toEqual(['f2']);
+
+      // encrypted room: files of each shape told by the clients
+      const keyCheck = `${'f'.repeat(42)}0`;
+      const data = 'ZW5jcnlwdGVk';
+      const encryptedOwner = await joinRoom({ room: 'room-files-e', name: 'Owner', ownerKey: 'secret fe', keyCheck });
+      const encryptedGuest = await joinRoom({ room: 'room-files-e', name: 'Guest', keyCheck });
+      const encrypted = (change: object) => send(encryptedOwner, encryptedGuest, change);
+
+      expect(
+        await encrypted({ upsert: [{ id: 'e1', data, files: ['k1'] }], remove: [], files: { k1: 'Z'.repeat(2000) } })
+      ).toBe('applied');
+      expect(
+        await encrypted({
+          upsert: [{ id: 'e2', data, files: ['k2'] }],
+          remove: ['e1'],
+          files: { k2: 'Z'.repeat(2000) },
+        })
+      ).toBe('applied');
+      expect(await filesOf('room-files-e', keyCheck)).toEqual(['k2']);
+      // a shape of a previous version (files unknown): nothing released
+      expect(await encrypted({ upsert: [{ id: 'e3', data }], remove: ['e2'] })).toBe('applied');
+      expect(
+        await encrypted({ upsert: [{ id: 'e4', data, files: ['k4'] }], remove: [], files: { k4: 'Z'.repeat(2000) } })
+      ).toBe('too-big');
+    } finally {
+      Object.assign(limits, saved);
+    }
+  });
+
+  it('Owner logged in recognized by their account from another browser (secret kept by the first one)', async () => {
+    const { cookie } = await signUp('Owner');
+    const room = 'room-account';
+    const browser = () => {
+      const socket = connect(url, { forceNew: true, extraHeaders: { cookie: cookie.join('; ') } });
+
+      sockets.push(socket);
+      return socket;
+    };
+    const first = browser();
+    const created = new Promise((resolve) => first.once(socketEvents.USERS, resolve));
+
+    first.emit(socketEvents.JOIN, { room, name: 'Owner', ownerKey: 'secret of the first browser' });
+    await created;
+    first.close();
+
+    const guest = await joinRoom({ room, name: 'Guest', userId: 'guest-a' });
+    const other = browser();
+    const updated = new Promise<User[]>((resolve) =>
+      guest.socket.on(socketEvents.USERS, (users: User[]) => {
+        if (users.find((user) => user.id === 'guest-a')?.canEdit) resolve(users);
+      })
+    );
+
+    other.emit(socketEvents.JOIN, { room, name: 'Owner' });
+    await new Promise((resolve) => other.once(socketEvents.USERS, resolve));
+    other.emit(socketEvents.RIGHTS, { userId: 'guest-a', canEdit: true });
+    expect((await updated).find((user) => user.owner)).toMatchObject({ name: 'Owner' });
   });
 
   it('Rooms are kept after a restart, forgotten after a while without use', async () => {

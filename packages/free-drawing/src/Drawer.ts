@@ -180,6 +180,10 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
   readonly signal = this.#abort.signal;
   /** `destroy` called: not destroyed twice */
   #destroyed = false;
+  /** Sessions started so far: a start overtaken by a later one (another room) stops there, its socket closed */
+  #collaborationStarts = 0;
+  /** Start of a session in a new room, while it connects: asked again meanwhile (double click), the same session */
+  #startingRoom: Promise<string> | null = null;
   /** Reminder of a live session in header, with the `collaboration` option */
   collaborationIndicator: CollaborationIndicator | undefined;
   /** Element given to the constructor, holding the container of the drawer */
@@ -602,17 +606,47 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
    * @param name Name shown to other users, saved for next sessions
    * @param invitedBy Id of user who shared the link (see `getCollaborationLink`), shown to owner
    * @param key Key of an encrypted room (`key` of its link), none for a room in clear; a new room gets a new one
-   * @returns Link to join the room
+   * @returns Link to join the room; a new room asked again while it connects (double click) gives the same session
    * @throws {DrawerError} `error.roomKey` for a key cut or changed, `error.insecurePage` for an encrypted room on a page
-   * without Web Crypto (not https)
+   * without Web Crypto (not https); an error when another session was started meanwhile (this one is not)
    */
-  async startCollaboration(
+  startCollaboration(
     room?: string,
     name: string = this.getUserName(),
     invitedBy?: string,
     key?: string
   ): Promise<string> {
+    if (!room && this.#startingRoom) return this.#startingRoom;
+
+    const start = this._startCollaboration(room, name, invitedBy, key);
+
+    if (!room) {
+      const started = () => {
+        if (this.#startingRoom === start) this.#startingRoom = null;
+      };
+
+      this.#startingRoom = start;
+      start.then(started, started);
+    }
+
+    return start;
+  }
+
+  /**
+   * Session started, see `startCollaboration`: stops at each step once another start began meanwhile, so one socket
+   * only joins a room
+   * @param room Room id, new room when undefined
+   * @param name Name shown to other users
+   * @param invitedBy Id of user who shared the link
+   * @param key Key of an encrypted room
+   * @returns Link to join the room
+   */
+  private async _startCollaboration(room: string | undefined, name: string, invitedBy?: string, key?: string) {
     const { collaboration } = this.options;
+    const start = ++this.#collaborationStarts;
+    const overtaken = () => {
+      if (start !== this.#collaborationStarts) throw new Error('another collaboration session was started meanwhile');
+    };
 
     if (!collaboration) throw new Error('collaboration option is disabled');
 
@@ -621,6 +655,8 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
       key = typeof collaboration === 'object' && collaboration.encrypt === false ? undefined : await createRoomKey();
     // key checked first: a link cut or changed joins nothing
     const cipher = key === undefined ? undefined : await RoomCipher.create(key);
+
+    overtaken();
     // new room: this user is its owner (secret kept for next sessions); ids of rooms can't be guessed either
     const ownerKey = room ? this._getOwnerKey(room) : createSecret();
 
@@ -629,7 +665,16 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
 
     this.stopCollaboration();
     this.setUserName(name);
-    this.socket = await this._createSocket();
+
+    const socket = await this._createSocket();
+
+    try {
+      overtaken();
+    } catch (error) {
+      socket.disconnect();
+      throw error;
+    }
+    this.socket = socket;
     this.collaboration = new Collaboration(this, this.socket, {
       room,
       name,
@@ -821,7 +866,7 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
   }
 
   /**
-   * Keep secret of owner of a room in browser (20 last rooms), owner again when coming back to it
+   * Keep secret of owner of a room in browser (20 rooms used last), owner again when coming back to it
    * @param room Room id
    * @param ownerKey Secret proving to the server that this user owns the room
    */
@@ -829,10 +874,11 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
     const key = `${this.options.localStorageKey}-owner`;
 
     try {
-      const rooms = { ...JSON.parse(this._getStorageItem(key) ?? '{}'), [room]: ownerKey };
+      // room used now: last one (ids of rooms are not integer keys, kept in insertion order)
+      const rooms = Object.entries<string>(JSON.parse(this._getStorageItem(key) ?? '{}')).filter(([id]) => id !== room);
 
-      // last rooms only
-      localStorage.setItem(key, JSON.stringify(Object.fromEntries(Object.entries(rooms).slice(-20))));
+      // rooms used last only
+      localStorage.setItem(key, JSON.stringify(Object.fromEntries([...rooms, [room, ownerKey]].slice(-20))));
     } catch {
       // owner for this session only
     }
@@ -1080,6 +1126,16 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
     // heads of arrows, shadows of notes (drawing functions not saved)
     setupArrows(shape);
     setupNotes(shape);
+  }
+
+  /**
+   * Node of another user added to a group or a frame of the drawing (collaboration): set up as by `addShape`, dragged
+   * alone or with its group
+   * @param shape Shape or group just added to its parent
+   */
+  _setupAdded(shape: DrawingShape) {
+    this._setupShape(shape);
+    shape.draggable(this._isMovedAlone(shape));
   }
 
   /**
