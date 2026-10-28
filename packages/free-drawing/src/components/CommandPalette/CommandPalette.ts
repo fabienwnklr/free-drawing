@@ -43,6 +43,7 @@ import LanguageIcon from '@/icons/language.svg?raw';
 import SlidersIcon from '@/icons/sliders.svg?raw';
 import LockIcon from '@/icons/lock.svg?raw';
 import PresentIcon from '@/icons/present.svg?raw';
+import ReplayIcon from '@/icons/replay.svg?raw';
 import { isFrame } from '@/utils/frame';
 import { getTexts } from '@/utils/text';
 import UnlockIcon from '@/icons/unlock.svg?raw';
@@ -595,6 +596,13 @@ export class CommandPalette extends Modal {
               shortcut: 'Alt+Shift+P',
               run: () => drawer.slideshow.start(),
             },
+          drawer.getDrawingShapes().length > 0 && {
+            id: 'replay timelapse history how made play',
+            label: t('replay.start'),
+            icon: ReplayIcon,
+            shortcut: 'Alt+Shift+R',
+            run: () => drawer.replay.start(),
+          },
           libraryPanel && {
             id: 'library panel items',
             label: t('library.title'),

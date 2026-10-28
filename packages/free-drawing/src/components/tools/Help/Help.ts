@@ -136,6 +136,11 @@ export class Help extends Modal {
             { label: t('slideshow.stop'), keys: ['Escape'], after: t('slideshow.whilePresenting') },
           ]
         : []),
+      { label: t('replay.start'), keys: ['Alt+Shift+R'] },
+      { label: t('replay.playPause'), keys: ['Space'], after: t('replay.whileReplaying') },
+      { label: t('replay.step'), keys: ['Left', 'Right'], after: t('replay.whileReplaying') },
+      { label: t('replay.firstLast'), keys: ['Home', 'End'], after: t('replay.whileReplaying') },
+      { label: t('replay.stop'), keys: ['Escape'], after: t('replay.whileReplaying') },
     ];
 
     // commands of plugins

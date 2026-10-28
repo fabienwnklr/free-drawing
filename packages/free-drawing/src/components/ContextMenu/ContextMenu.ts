@@ -241,6 +241,11 @@ export class ContextMenu {
           visible: () => drawer.options.slideshow && !oneFrame() && drawer.getDrawingShapes().some(isFrame),
           run: () => drawer.slideshow.start(),
         },
+        {
+          $item: this._createItem('replay.start', 'Alt+Shift+R'),
+          visible: () => canvas() && hasShapes(),
+          run: () => drawer.replay.start(),
+        },
       ],
       [snapping, grid],
     ];
@@ -342,7 +347,7 @@ export class ContextMenu {
 
       e.preventDefault();
       // slides presented: no menu
-      if (this.drawer.slideshow.active) return;
+      if (this.drawer.slideshow.active || this.drawer.replay.active) return;
       this.#position = null;
       this.show();
 
@@ -353,7 +358,7 @@ export class ContextMenu {
 
     this.drawer.stage.on('contextmenu', (e) => {
       e.evt.preventDefault();
-      if (this.drawer.slideshow.active) return;
+      if (this.drawer.slideshow.active || this.drawer.replay.active) return;
       this.#position = this.drawer._getRelativePointerPos();
       this._selectAt(e);
       this.show();

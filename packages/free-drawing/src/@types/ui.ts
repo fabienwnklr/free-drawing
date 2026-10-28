@@ -1,4 +1,4 @@
-import type { ColorLike } from '@/@types/drawer';
+import type { ColorLike, DrawingShape } from '@/@types/drawer';
 import type { TranslationKey } from '@/@types/i18n';
 import type { I18n } from '@/i18n/I18n';
 import type { ConfirmModal } from '@/components/Modal/ConfirmModal';
@@ -253,4 +253,26 @@ export type SlideshowState = {
   tool: BaseWidget | null;
   /** Size of the stage (px), changed on the whole screen */
   size: { width: number; height: number };
+};
+
+/** Shape drawn again by the replay of a drawing (see `Replay`) */
+export type ReplayStep = {
+  /** Shape of the drawing */
+  shape: DrawingShape;
+  /** Its copy in the selection layer, shown by the replay */
+  copy: DrawingShape;
+  /** Time of its appearance at speed 1 (ms) */
+  duration: number;
+  /** Shows the copy at a progress of its appearance: 0 hidden, 1 as in the drawing */
+  apply: (progress: number) => void;
+};
+
+/** State of a drawer before its replay, given back once it stops */
+export type ReplayState = {
+  /** Position of the stage (px) */
+  position: Vector2d;
+  /** Zoom level */
+  scale: number;
+  /** Active tool, null without */
+  tool: BaseWidget | null;
 };

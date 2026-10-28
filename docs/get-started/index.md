@@ -145,6 +145,7 @@ drawer.off('drawer.change', callback);
 | `drawer.unsaved.change` | unsaved | Drawing has changes not saved yet (auto save off, save of `storage` in progress, failed save), or is saved again |
 | `drawer.plugin.change` | plugin | Plugin disabled (`forceDisabled`) or enabled again |
 | `drawer.slideshow.change` | index of the slide | Slideshow started, showing another slide, or stopped (-1) |
+| `drawer.replay.change` | index of the shape | Replay started, showing another shape, or stopped (-1) |
 
 Components trigger `drawer.dropdown.hide` (dropdown menu) and `drawer.toast.hide` (`drawer.toast()` result). Names of previous versions (`change`, `fd.options.change`...) still work, with a warning in console.
 
@@ -622,6 +623,22 @@ drawer.slideshow.next(); // previous(), goTo(index)
 drawer.slideshow.slides; // frames in reading order, shown one: drawer.slideshow.current
 drawer.slideshow.stop();
 drawer.on('drawer.slideshow.change', (index) => console.log(index)); // -1 once stopped
+```
+
+## Replay
+
+"Replay the drawing" (Alt + Shift + R, also in the menu, the context menu and the command palette, in read only too) shows how the drawing was made: its shapes appear again one after the other, in the order they were created.
+
+- Order: the time a shape was created is in its id (ids of the library). Shapes of other ids (files of other apps) come after the shape below them; a group comes at the time of its first shape, the shapes of a frame in it at their own time.
+- Appearance: outlines drawn, then their fill, brush and highlighter strokes traced, texts typed, other shapes (images, notes, groups) faded in.
+- The interface is hidden but a bar at the bottom: start again, play / pause, number of the shape, speed (1×, 2×, 4×), stop. Keys: Space plays or pauses, Left / Right show the previous / next shape, Home starts again, End shows the whole drawing, Escape stops. The view can be moved and zoomed meanwhile.
+- The drawing is not changed: copies of its shapes are shown above it, hidden on screen only; nothing is saved, added to history nor sent to the users of a session. Once stopped, the drawing, the view and the tool come back.
+- It shows the shapes as they are now (their last place, color, text): not their moves, changes nor the shapes removed.
+
+```js
+drawer.replay.start(); // false for an empty drawing
+drawer.replay.pause(); // play(), toggle(), setSpeed(2), goTo(index), stop()
+drawer.on('drawer.replay.change', (index) => console.log(index)); // -1 once stopped
 ```
 
 ## Library

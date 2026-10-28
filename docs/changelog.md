@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.52.0](https://github.com/fabienwnklr/free-drawing/compare/v7.51.0...v7.52.0) (2026-10-28)
+
+
+### Features
+
+* **replay:** "Replay the drawing" (Alt + Shift + R, menu, context menu, command palette, `drawer.replay`): its shapes appear again in the order they were created (time of their ids), outlines drawn, strokes traced, texts typed; bar to start again, play / pause, speed up (1×, 2×, 4×) and stop, keys to step; the drawing is not changed (copies shown above it), view and tool given back once stopped (`drawer.replay.change`)
+
 ## [7.51.0](https://github.com/fabienwnklr/free-drawing/compare/v7.50.0...v7.51.0) (2026-10-28)
 
 

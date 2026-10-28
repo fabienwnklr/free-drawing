@@ -121,6 +121,7 @@ describe('Context menu', () => {
       'Select all Ctrl+A',
       'Search texts Ctrl+F',
       'Zoom to fit Shift+1',
+      'Replay the drawing Alt+Shift+R',
       'Snap to object Alt+S',
       'Show grid Alt+G',
     ]);
@@ -136,6 +137,7 @@ describe('Context menu', () => {
       'Copy as SVG Shift+Alt+S',
       'Search texts Ctrl+F',
       'Zoom to fit Shift+1',
+      'Replay the drawing Alt+Shift+R',
       'Snap to object Alt+S',
       'Show grid Alt+G',
     ]);

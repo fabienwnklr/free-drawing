@@ -46,7 +46,8 @@ export class TextWidget extends BaseWidget {
     // the text of a shape clicked in its empty inside (no hit there)
     this.drawer.stage.on('dblclick.edit dbltap.edit', (e) => {
       // slides presented: nothing edited
-      if (this.drawer.readOnly || this.drawer.slideshow.active || this.drawer.spacePan.active) return;
+      if (this.drawer.readOnly || this.drawer.slideshow.active || this.drawer.replay.active) return;
+      if (this.drawer.spacePan.active) return;
 
       // texts with any tool, texts of shapes with the selection tool (not a double tap of a drawing tool)
       const textNode = this._isEditable(e.target)

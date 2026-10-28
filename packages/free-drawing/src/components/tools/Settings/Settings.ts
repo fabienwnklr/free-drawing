@@ -19,6 +19,7 @@ import LanguageIcon from '@/icons/language.svg?raw';
 import CommandIcon from '@/icons/command.svg?raw';
 import SlidersIcon from '@/icons/sliders.svg?raw';
 import PresentIcon from '@/icons/present.svg?raw';
+import ReplayIcon from '@/icons/replay.svg?raw';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import type { ColorLike } from '@/@types/drawer';
 import {
@@ -48,6 +49,8 @@ export class Settings extends Dropdown {
   $exportButton: HTMLButtonElement;
   /** Presents the frames as slides (`drawer.slideshow`) */
   $slideshowButton: HTMLButtonElement;
+  /** Replay of how the drawing was made (Alt+Shift+R) */
+  $replayButton: HTMLButtonElement;
   /** Item opening command palette (Ctrl+K), only with `commandPalette` option */
   $commandsButton: HTMLButtonElement;
   /** Item opening preferences dialog (Ctrl+,) */
@@ -120,6 +123,7 @@ export class Settings extends Dropdown {
     this.$exportButton = this._createItem(ExportIcon, 'menu.export', 'Ctrl+Shift+E');
     this.$exportButton.setAttribute('aria-haspopup', 'dialog');
     this.$slideshowButton = this._createItem(PresentIcon, 'slideshow.start', 'Alt+Shift+P');
+    this.$replayButton = this._createItem(ReplayIcon, 'replay.start', 'Alt+Shift+R');
 
     // asks confirmation
     this.$clearCanvasButton = this._createItem(TrashIcon, 'menu.clearCanvas');
@@ -210,6 +214,7 @@ export class Settings extends Dropdown {
         this.$copyLinkButton,
         this.$exportButton,
         ...(this.drawer.options.slideshow ? [this.$slideshowButton] : []),
+        this.$replayButton,
         // server given by collaboration option
         ...(this.drawer.options.collaboration ? [this.$collaborationButton] : []),
         this.getSeparator(),
@@ -340,6 +345,7 @@ export class Settings extends Dropdown {
     this.$copyLinkButton.addEventListener('click', () => this.drawer.copyLink());
     this.$exportButton.addEventListener('click', () => this.drawer.showExport());
     this.$slideshowButton.addEventListener('click', () => this.drawer.slideshow.start());
+    this.$replayButton.addEventListener('click', () => this.drawer.replay.start());
     this.$collaborationButton.addEventListener('click', () => this.drawer.showCollaboration());
     // read only: no item modifying drawing, background color included (part of the drawing, shared in collaboration)
     this.drawer.on(drawerEvents.readOnlyChange, (readOnly: boolean) => {

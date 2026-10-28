@@ -2,6 +2,12 @@
 
 Changes of `@fabwcie/create-free-drawing-plugin` (`npm create @fabwcie/free-drawing-plugin`). Each version is published by the release workflow of the library once it is not on npm yet.
 
+## 1.2.1 (2026-10-28)
+
+### Bug Fixes
+
+- Alt + Shift + R is refused for a command of a plugin: it replays the drawing (7.52.0)
+
 ## 1.2.0 (2026-10-28)
 
 ### Features

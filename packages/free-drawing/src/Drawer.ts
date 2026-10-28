@@ -60,6 +60,7 @@ import { Library } from '@/utils/library';
 import { LibraryPanel } from '@/components/LibraryPanel/LibraryPanel';
 import { SearchBar } from '@/components/SearchBar/SearchBar';
 import { Slideshow } from '@/components/Slideshow/Slideshow';
+import { Replay } from '@/components/Replay/Replay';
 import { ShapeNavigation } from '@/utils/shapeNavigation';
 import { fitTextWidth, getFontsToLoad, getTexts, loadFonts } from '@/utils/text';
 import {
@@ -240,6 +241,8 @@ export class Drawer extends MicroEvent {
   search!: SearchBar;
   /** Presentation of the frames as slides (Alt+Shift+P) */
   slideshow!: Slideshow;
+  /** Replay of how the drawing was made: its shapes again in the order they were created (Alt+Shift+R) */
+  replay!: Replay;
   /** Keyboard navigation between the shapes (Enter, Tab, Shift + Tab, Escape), described to screen readers */
   navigation!: ShapeNavigation;
   /** Button of header saving the drawing while auto save is off (`saveButton` option) */
@@ -462,6 +465,7 @@ export class Drawer extends MicroEvent {
     this.library = new Library(this);
     this.search = new SearchBar(this);
     this.slideshow = new Slideshow(this);
+    this.replay = new Replay(this);
     this.navigation = new ShapeNavigation(this);
     if (this.options.library) {
       this.libraryPanel = new LibraryPanel(this);

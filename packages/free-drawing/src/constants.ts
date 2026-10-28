@@ -383,6 +383,8 @@ export const drawerEvents = {
   pluginChange: 'drawer.plugin.change',
   /** Slideshow started, stopped or showing another slide (see `drawer.slideshow`), with the index of the slide shown */
   slideshowChange: 'drawer.slideshow.change',
+  /** Replay of the drawing started, stopped or showing another shape (see `drawer.replay`), with the index of the shape */
+  replayChange: 'drawer.replay.change',
 } as const;
 
 /**

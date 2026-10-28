@@ -117,6 +117,11 @@ export class HotKey {
         this.drawer.slideshow.handleKey(e);
         return;
       }
+      // replay: its keys only
+      if (this.drawer.replay.active) {
+        this.drawer.replay.handleKey(e);
+        return;
+      }
       if (this.drawer._duringAction()) return;
 
       // Ctrl on Windows / Linux, Cmd on Mac
@@ -231,6 +236,12 @@ export class HotKey {
         this.drawer.slideshow.start();
       }
 
+      // how the drawing was made (also in read only)
+      if (e.altKey && e.shiftKey && !mod && letter === 'r' && !inField) {
+        e.preventDefault();
+        this.drawer.replay.start();
+      }
+
       // Toolbar shortcut, the letter displayed on widget button (whatever caps lock)
       if (!mod && !e.altKey && !e.shiftKey) {
         const widget = Array.from(this.drawer.toolbar.widgets.values()).find((w) => w.shortcut === letter);
@@ -332,6 +343,7 @@ export class HotKey {
 
         if (!this.drawer.$drawerContainer.contains(document.activeElement)) return;
         if (this.drawer._duringAction() || this.drawer.readOnly || this.drawer.slideshow.active) return;
+        if (this.drawer.replay.active) return;
         // pasted in a field of the drawer (search, name, link, radius...): text of the field
         if (target.matches('input, textarea, select') || target.isContentEditable) return;
 
