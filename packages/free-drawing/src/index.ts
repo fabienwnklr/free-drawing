@@ -10,6 +10,7 @@ export type {
   ColorLike,
   CssColorNames,
   Direction,
+  DrawerEventMap,
   DrawerOptions,
   DrawerStorage,
   DrawerUser,

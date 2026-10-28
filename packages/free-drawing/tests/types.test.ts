@@ -16,6 +16,13 @@ import type {
 import { createFrame } from '@/utils/frame';
 import { createDrawer } from './helpers';
 
+// event of a plugin added to the events of the drawer (declaration merging), as a plugin does with the package
+declare module '@/index' {
+  interface DrawerEventMap {
+    'stamps.count': [count: number];
+  }
+}
+
 describe('Types of the public API', () => {
   document.body.innerHTML = `<div id="test"></div>`;
 
@@ -37,5 +44,26 @@ describe('Types of the public API', () => {
     expect(frame).toBeInstanceOf(Group);
     expect(confirm).toBeNull();
     toast.destroy();
+  });
+
+  it('Events typed: listeners get their arguments, unknown names and other listeners are errors, events of plugins added', () => {
+    const drawer = createDrawer();
+    const seen: unknown[] = [];
+
+    drawer.on('drawer.readonly.change', (readOnly) => seen.push(readOnly === true));
+    drawer.on('drawer.selection.change', (shapes) => seen.push(shapes.length));
+    drawer.on('stamps.count', (count) => seen.push(count + 1));
+    drawer.setReadOnly(true);
+    drawer.trigger('stamps.count', 2);
+    // selection cleared first by read only
+    expect(seen).toEqual([0, true, 3]);
+
+    // @ts-expect-error unknown event
+    drawer.on('drawer.unknown', () => {});
+    // @ts-expect-error listener of other arguments
+    drawer.on('drawer.readonly.change', (readOnly: string) => readOnly);
+    // @ts-expect-error arguments of another event
+    drawer.trigger('stamps.count', 'two');
+    drawer.off('drawer.unknown' as 'drawer.change');
   });
 });

@@ -149,6 +149,27 @@ drawer.off('drawer.change', callback);
 
 Components trigger `drawer.dropdown.hide` (dropdown menu) and `drawer.toast.hide` (`drawer.toast()` result). Names of previous versions (`change`, `fd.options.change`...) still work, with a warning in console.
 
+In TypeScript, events are typed by `DrawerEventMap`: the name is checked (an unknown one is an error, the editor suggests the others) and the listener gets the arguments of its event:
+
+```ts
+drawer.on('drawer.selection.change', (shapes) => console.log(shapes.length)); // shapes: DrawingShape[]
+drawer.on('drawer.selection.chnage', () => {}); // error: unknown event
+drawer.on('drawer.readonly.change', (readOnly: string) => {}); // error: readOnly is a boolean
+```
+
+Names start with `drawer.`: the events of plugins and apps triggered on the drawer use their own prefix (`stamps.count`), so they never mix with the ones of the library, and the events of the drawer are easy to find in code. A plugin adds its events to `DrawerEventMap` (declaration merging):
+
+```ts
+declare module '@fabwcie/free-drawing' {
+  interface DrawerEventMap {
+    'stamps.count': [count: number];
+  }
+}
+
+drawer.trigger('stamps.count', 3);
+drawer.on('stamps.count', (count) => console.log(count)); // count: number
+```
+
 ## Preferences
 
 "Preferences..." of settings menu (Ctrl / Cmd + ,, also in the command palette) opens a dialog: theme (light, dark or system), language, zen mode, grid and its style, action of the mouse wheel, snapping to objects, auto save, keep tool active, shape recognition and name in collaboration sessions. A field changed applies at once, to see it behind the dialog (theme, language, zen mode, grid...); "Save" keeps them (and applies the name), "Cancel", Escape or close give back the preferences shown before. They are saved in the browser (`<localStorageKey>-preferences`), also with the `storage` option. An app can save them with the account of its user (see "Use in an app").

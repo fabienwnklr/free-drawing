@@ -2,9 +2,11 @@ import type { AvailableTools, WidgetGroupOptions, WidgetsOptions } from '@/@type
 import type { Shape, ShapeConfig } from 'konva/lib/Shape';
 import type { Group } from 'konva/lib/Group';
 import type { CustomTranslations, Language } from '@/@types/i18n';
-import type { DrawingFile } from '@/@types/file';
+import type { DrawingFile, LibraryItem } from '@/@types/file';
 import type { CollaborationOptions } from '@/@types/collaboration';
 import type { PluginEntry, PluginOptions } from '@/@types/plugin';
+import type { Drawer } from '@/Drawer';
+import type { Plugin } from '@/plugins/Plugin';
 
 /**
  * Node of drawing: a shape or a group of drawing nodes
@@ -401,3 +403,48 @@ export type CssColorNames =
  * Color of shapes and background: any CSS color (rgb, rgba, hexadecimal, name) or transparent (no fill)
  */
 export type ColorLike = RGB | RGBA | HEX | CssColorNames | 'transparent';
+
+/**
+ * Events of the drawer (`drawer.on`, `off`, `trigger`) with the arguments of their listeners: in TypeScript, an unknown
+ * name or a listener of other arguments is an error. Names of previous versions still work (warned once). Plugins and
+ * apps add their own events (their own prefix) by declaration merging:
+ * `declare module '@fabwcie/free-drawing' { interface DrawerEventMap { 'stamps.change': [count: number] } }`
+ */
+export interface DrawerEventMap {
+  /** Drawing changed (shapes, background, undo / redo, changes of collaborators...) */
+  'drawer.change': [drawer: Drawer];
+  /** Drawing options changed (color, width, style, opacity, text style): the changed ones */
+  'drawer.options.change': [change: OptionsChange];
+  /** Read only mode changed */
+  'drawer.readonly.change': [readOnly: boolean];
+  /** Selection changed: the selected shapes */
+  'drawer.selection.change': [shapes: DrawingShape[]];
+  /** Collaboration started or stopped, users or rights changed */
+  'drawer.collaboration.change': [];
+  /** Light or dark theme shown */
+  'drawer.theme.change': [dark: boolean];
+  /** Language of the interface changed */
+  'drawer.language.change': [language: Language];
+  /** Preferences changed (one event for several changes) */
+  'drawer.preferences.change': [preferences: Preferences];
+  /** Drawing has changes not saved yet, or is saved again */
+  'drawer.unsaved.change': [unsaved: boolean];
+  /** Items of the library added, removed, renamed or imported */
+  'drawer.library.change': [items: LibraryItem[]];
+  /** Plugin disabled (`forceDisabled`) or enabled again */
+  'drawer.plugin.change': [plugin: Plugin];
+  /** Slideshow started, showing another slide, or stopped (-1) */
+  'drawer.slideshow.change': [index: number];
+  /** Replay started, showing another shape, or stopped (-1) */
+  'drawer.replay.change': [index: number];
+  /** @deprecated use `drawer.change` */
+  change: [drawer: Drawer];
+  /** @deprecated use `drawer.options.change` */
+  'fd.options.change': [change: OptionsChange];
+  /** @deprecated use `drawer.readonly.change` */
+  'fd.readonly.change': [readOnly: boolean];
+  /** @deprecated use `drawer.selection.change` */
+  'fd.selection.change': [shapes: DrawingShape[]];
+  /** @deprecated use `drawer.collaboration.change` */
+  'fd.collaboration.change': [];
+}

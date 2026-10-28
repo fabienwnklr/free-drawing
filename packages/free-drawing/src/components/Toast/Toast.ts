@@ -1,5 +1,6 @@
 import type { Drawer } from '@/Drawer';
 import '@/components/Toast/toast.scss';
+import type { ToastEventMap } from '@/@types/ui';
 import MicroEvent from '@/utils/MicroEvent';
 import type { AvailableTypes } from '@/@types/ui';
 import InfoIcon from '@/icons/info.svg?raw';
@@ -12,7 +13,7 @@ import { drawerEvents } from '@/constants';
  * Announced by screen readers once shown (live region kept in the page, urgent for problems: `drawer._announce`),
  * created for one message by `drawer.toast`.
  */
-export class Toast extends MicroEvent {
+export class Toast extends MicroEvent<ToastEventMap> {
   /** Element of the toast: icon and message */
   $toastContainer: HTMLDivElement;
   /** Time in ms before hiding the toast once shown (0: stays until hidden) */

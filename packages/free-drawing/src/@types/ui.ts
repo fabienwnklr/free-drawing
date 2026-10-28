@@ -276,3 +276,19 @@ export type ReplayState = {
   /** Active tool, null without */
   tool: BaseWidget | null;
 };
+
+/** Events of a dropdown menu with the arguments of their listeners */
+export type DropdownEventMap = {
+  /** Menu hidden */
+  'drawer.dropdown.hide': [];
+  /** @deprecated use `drawer.dropdown.hide` */
+  'fd.dropdown.hide': [];
+};
+
+/** Events of a toast with the arguments of their listeners */
+export type ToastEventMap = {
+  /** Toast hidden */
+  'drawer.toast.hide': [];
+  /** @deprecated use `drawer.toast.hide` */
+  'fd.toast.hide': [];
+};

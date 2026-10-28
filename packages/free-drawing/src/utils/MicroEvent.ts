@@ -1,5 +1,5 @@
 import { deprecatedEvents } from '@/constants';
-import type { Listener } from '@/@types/utils';
+import type { EmitterListener, EventArgs, EventName, Listener } from '@/@types/utils';
 
 /** Deprecated event names already warned about */
 const warned = new Set<string>();
@@ -34,10 +34,12 @@ function forEvents(events: string, callback: (event: string) => any) {
 }
 
 /**
- * Event emitter base class (`Drawer`, `Dropdown`, `Toast`, `Settings`): `on` / `off` / `trigger` listeners by event
- * name, names of previous versions mapped to current ones with a warning
+ * Event emitter base class (`Drawer`, `Dropdown`, `Toast`): `on` / `off` / `trigger` listeners by event name, names of
+ * previous versions mapped to current ones with a warning. Names and arguments of listeners typed by the events of the
+ * emitter (an unknown name is an error in TypeScript)
+ * @template Events events of the emitter with the arguments of their listeners (`DrawerEventMap` for the drawer)
  */
-export default class MicroEvent {
+export default class MicroEvent<Events extends object = Record<string, any[]>> {
   /** Listeners by event name, in order of registration */
   public _events: Record<string, Listener[]> = {};
 
@@ -47,24 +49,26 @@ export default class MicroEvent {
   }
 
   /**
-   * Listen to events
-   * @param events event name, or several separated by spaces
-   * @param fct listener, called on each trigger
+   * Listen to an event
+   * @template K name of the event
+   * @param events event name (several separated by spaces in JavaScript)
+   * @param fct listener, called on each trigger with the arguments of the event
    */
-  on(events: string, fct: Listener) {
+  on<K extends EventName<Events>>(events: K, fct: EmitterListener<Events, K>) {
     forEvents(events, (event) => {
       const event_array = this._events[event] || [];
-      event_array.push(fct);
+      event_array.push(fct as Listener);
       this._events[event] = event_array;
     });
   }
 
   /**
-   * Remove a listener of events: without listener all listeners of these events, without arguments all listeners
-   * @param events event name, or several separated by spaces
+   * Remove a listener of an event: without listener all listeners of this event, without arguments all listeners
+   * @template K name of the event
+   * @param events event name (several separated by spaces in JavaScript)
    * @param fct listener given to `on`
    */
-  off(events?: string, fct?: Listener) {
+  off<K extends EventName<Events>>(events?: K, fct?: EmitterListener<Events, K>) {
     if (events === undefined) {
       this._events = {};
       return;
@@ -79,7 +83,7 @@ export default class MicroEvent {
       const event_array = this._events[event];
       if (event_array === undefined) return;
 
-      const index = event_array.indexOf(fct);
+      const index = event_array.indexOf(fct as Listener);
       // indexOf returns -1 for unknown handler, splice(-1) would remove the last one
       if (index !== -1) event_array.splice(index, 1);
       this._events[event] = event_array;
@@ -87,12 +91,13 @@ export default class MicroEvent {
   }
 
   /**
-   * Call listeners of events, in order of registration. A listener may add or remove listeners: the ones added are
+   * Call listeners of an event, in order of registration. A listener may add or remove listeners: the ones added are
    * called from the next trigger, the ones removed (not called yet) are not called, the others are all called.
-   * @param events event name, or several separated by spaces
-   * @param args arguments given to listeners
+   * @template K name of the event
+   * @param events event name (several separated by spaces in JavaScript)
+   * @param args arguments given to listeners, as typed by the event
    */
-  trigger(events: string, ...args: any) {
+  trigger<K extends EventName<Events>>(events: K, ...args: EventArgs<Events, K>) {
     forEvents(events, (event) => {
       const event_array = this._events[event];
       if (event_array === undefined) return;

@@ -263,6 +263,18 @@ this.listenTo(this.$button, 'click', () => this.showCount());
 
 The [events](/get-started/#events) of the drawer are listed in the guide. `drawer.plugin.change` tells when a plugin is disabled or enabled again.
 
+A plugin can trigger its own events on the drawer, with its own prefix. In TypeScript, it adds them to the events of the drawer, so that the apps get their names and arguments checked:
+
+```ts
+declare module '@fabwcie/free-drawing' {
+  interface DrawerEventMap {
+    'stamps.count': [count: number];
+  }
+}
+
+this.drawer.trigger('stamps.count', this.count);
+```
+
 ## Enabled state
 
 `isEnabled` is false in read only, or while the plugin is disabled by `forceDisabled(reason)`: its tools and its commands modifying the drawing are disabled (commands with `readOnly` stay available), `drawer.plugin.change` is triggered. Several reasons can disable it, it is enabled again once `clearForceDisabled(reason)` cleared every one of them. Check `isEnabled` before modifying the drawing from your own events.

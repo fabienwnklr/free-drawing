@@ -22,3 +22,23 @@ export type TouchGestureStart = {
   /** Position of the view (stage) */
   position: Vector2d;
 };
+
+/**
+ * Names of the events of an emitter (`MicroEvent`)
+ * @template Events events of the emitter with the arguments of their listeners
+ */
+export type EventName<Events> = keyof Events & string;
+
+/**
+ * Arguments given to the listeners of an event of an emitter
+ * @template Events events of the emitter with the arguments of their listeners
+ * @template K name of the event
+ */
+export type EventArgs<Events, K extends keyof Events> = Events[K] extends unknown[] ? Events[K] : never;
+
+/**
+ * Listener of an event of an emitter
+ * @template Events events of the emitter with the arguments of their listeners
+ * @template K name of the event
+ */
+export type EmitterListener<Events, K extends keyof Events> = (...args: EventArgs<Events, K>) => unknown;

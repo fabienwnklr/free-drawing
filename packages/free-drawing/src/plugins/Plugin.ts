@@ -174,8 +174,8 @@ export abstract class Plugin {
       target.addEventListener(event, handler as EventListener);
       this.#listeners.push(() => target.removeEventListener(event, handler as EventListener));
     } else {
-      target.on(event, handler as never);
-      this.#listeners.push(() => target.off(event, handler as never));
+      target.on(event as never, handler as never);
+      this.#listeners.push(() => target.off(event as never, handler as never));
     }
   }
 

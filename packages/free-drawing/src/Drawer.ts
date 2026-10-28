@@ -9,6 +9,7 @@ import type { AvailableTools } from '@/@types/toolbar';
 import type {
   ColorLike,
   Direction,
+  DrawerEventMap,
   DrawerOptions,
   DrawerStorage,
   DrawerUser,
@@ -157,7 +158,7 @@ const selectionZoomMax = 2;
  *   height: 800,
  * });
  */
-export class Drawer extends MicroEvent {
+export class Drawer extends MicroEvent<DrawerEventMap> {
   /** Drawing can't be modified by user (see `setReadOnly`) */
   readOnly: boolean = false;
   /** Widgets disabled by read only mode, enabled again after it */

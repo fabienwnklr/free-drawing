@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.53.0](https://github.com/fabienwnklr/free-drawing/compare/v7.52.0...v7.53.0) (2026-10-28)
+
+
+### Features
+
+* **events:** events of the drawer typed (`DrawerEventMap`): in TypeScript an unknown name or a listener of other arguments is an error, listeners get the arguments of their event; plugins and apps add their own events by declaration merging (`declare module '@fabwcie/free-drawing' { interface DrawerEventMap { ... } }`). Nothing changes in JavaScript; in TypeScript, an event of an app not declared there is now an error
+
 ## [7.52.0](https://github.com/fabienwnklr/free-drawing/compare/v7.51.0...v7.52.0) (2026-10-28)
 
 

@@ -1,3 +1,4 @@
+import type { DropdownEventMap } from '@/@types/ui';
 import MicroEvent from '@/utils/MicroEvent';
 import { createButton, fitHeight, uniqueId } from '@/utils/dom';
 import '@/components/Dropdown/dropdown.scss';
@@ -7,7 +8,7 @@ import { drawerEvents } from '@/constants';
  * Disclosure menu: a button showing / hiding a menu below it, base of the settings menu.
  * Escape and a click out of the button hide the menu (`drawer.dropdown.hide` event).
  */
-export class Dropdown extends MicroEvent {
+export class Dropdown extends MicroEvent<DropdownEventMap> {
   /** Element holding the button and the menu, to add to the page */
   $dropdownContainer: HTMLDivElement;
   /** Button showing / hiding the menu (`aria-expanded`) */

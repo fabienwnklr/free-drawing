@@ -65,5 +65,5 @@ export type PluginListener = () => void;
 
 /** Object listened by a plugin (`Plugin.listenTo`): drawer (its events), konva node, or DOM element */
 export type ListenedTarget =
-  | { on: (event: string, handler: never) => unknown; off: (event: string, handler: never) => unknown }
+  | { on(event: never, handler: never): unknown; off(event: never, handler: never): unknown }
   | EventTarget;
