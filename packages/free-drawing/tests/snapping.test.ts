@@ -77,7 +77,7 @@ describe('Snapping while resizing', () => {
     expect(drawer.getSelectedShapes()).toEqual([b]);
   });
 
-  it('Guides: shapes of frames and the frame of the shape, not the view nor hidden shapes', () => {
+  it('Guides: shapes of frames and the frame of the shape, center of the view, not its edges nor hidden shapes', () => {
     const { drawer, selectWidget, a, b, bound, guides } = createRects();
     // C and B in a frame 120..700 x 380..600
     const c = drawer.addShape(new Rect({ name: shapeName.rect, x: 500, y: 420, width: 60, height: 60 }));
@@ -94,12 +94,21 @@ describe('Snapping while resizing', () => {
     selectWidget.select([a]);
     expect(bound('middle-right', { x: 498, y: 175 })).toEqual({ x: 500, y: 175 });
 
-    // view: no guide at its left side nor at its center
+    // view: no guide at its left side, one at its center (also moved and zoomed)
     const center = drawer.stage.width() / 2;
 
     expect(bound('middle-left', { x: 2, y: 175 })).toEqual({ x: 2, y: 175 });
-    expect(bound('middle-right', { x: center + 2, y: 175 })).toEqual({ x: center + 2, y: 175 });
     expect(guides()).toBe(0);
+    expect(bound('middle-right', { x: center + 2, y: 175 })).toEqual({ x: center, y: 175 });
+    drawer.stage.position({ x: -333, y: 71 });
+    drawer.setZoomLevel(0.1);
+    expect(bound('middle-right', { x: center - 3, y: 900 })).toEqual({ x: center, y: 900 });
+    // guide across the view
+    const [guide] = drawer.selectionLayer.find(`.${shapeName.guideLine}`);
+
+    expect(guide.getClientRect().height).toBeGreaterThanOrEqual(drawer.stage.height());
+    drawer.stage.position({ x: 0, y: 0 });
+    drawer.setZoomLevel(1);
 
     // hidden shape
     c.hide();

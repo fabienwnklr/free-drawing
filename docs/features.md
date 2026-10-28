@@ -30,7 +30,7 @@ The toolbar, its groups and the shortcuts are set with the [`widgets` and `widge
 ![Three cards selected: options panel, selection menu and handles](/features/selection.webp){.screenshot width=1180 height=480}
 
 - **Select** a shape with a click, add one with Shift + click, reach the shapes behind with Alt + click, or drag a rectangle selecting every shape it touches.
-- **Move, resize and rotate**: Shift keeps proportions, rotates by steps of 15° and moves along an axis. Shapes snap to other shapes and to the grid.
+- **Move, resize and rotate**: Shift keeps proportions, rotates by steps of 15° and moves along an axis. Shapes snap to other shapes, to the center of the view and to the grid.
 - **Options of mixed selections**: the panel shows the options of every kind of selected shape, and applies each one to the shapes it fits, with actions to duplicate, delete or link the selection.
 - **Selection menu** next to the shapes: duplicate, group, rotate, stacking order, lock and delete.
 - **Links**: attach a web page or an email address to a shape, edited above it, opened from its link icon.

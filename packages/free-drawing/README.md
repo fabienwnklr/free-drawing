@@ -188,6 +188,10 @@ drawer.setKeepTool(false);
 drawer.setShapeRecognition(true);
 ```
 
+### Snapping to objects
+
+"Snapping to objects" (settings menu, context menu, Alt + S, command palette, preference) snaps moved and resized shapes to the edges and centers of the other shapes (shapes of frames too, the frame of a shape), and to the center of the view, wherever it is moved and zoomed: to center a shape on the screen. Dashed guides across the view show what they snap to (5 px on screen). Not to the edges of the view: the drawing is infinite.
+
 ### Grid
 
 "Show grid" (settings menu, context menu, Alt + G, command palette) shows a grid the shapes snap to while they are moved, resized and rotated (snapping to objects and the grid exclude each other). Its style is a preference (preferences dialog, command palette: "Grid: Dots"..., which shows the grid too; `gridStyle` option):

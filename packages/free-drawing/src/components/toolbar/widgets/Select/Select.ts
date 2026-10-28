@@ -761,9 +761,9 @@ export class SelectWidget extends BaseWidget {
   }
 
   /**
-   * Positions a shape can snap to (absolute): edges and centers of visible drawing shapes, shapes of frames too, and
-   * the frame of a moved shape; not the view (infinite drawing), nor moved shapes, their shapes and their groups (moved
-   * with them)
+   * Positions a shape can snap to (absolute): edges and centers of visible drawing shapes, shapes of frames too, the
+   * frame of a moved shape, and the center of the view (not its edges: infinite drawing); not moved shapes, their
+   * shapes and their groups (moved with them)
    * @param skipShapes Moved shapes, not guides themselves
    * @returns Positions of vertical and horizontal guides
    */
@@ -785,6 +785,9 @@ export class SelectWidget extends BaseWidget {
       vertical.push(box.x, box.x + box.width, box.x + box.width / 2);
       horizontal.push(box.y, box.y + box.height, box.y + box.height / 2);
     }
+    // center of the view, wherever it is moved and zoomed
+    vertical.push(this.drawer.stage.width() / 2);
+    horizontal.push(this.drawer.stage.height() / 2);
 
     return { vertical, horizontal };
   }
@@ -948,7 +951,7 @@ export class SelectWidget extends BaseWidget {
   }
 
   /**
-   * Draw guides as dashed lines across the view, in selection layer
+   * Draw guides as dashed lines across the view whatever the zoom (width and dashes on screen), in selection layer
    * @param guides Guides of `_getGuides`
    */
   private _drawGuides(
@@ -959,35 +962,25 @@ export class SelectWidget extends BaseWidget {
       snap: string;
     }[]
   ) {
-    guides.forEach((lg) => {
-      if (lg.orientation === 'H') {
-        const line = new Line({
-          points: [-6000, 0, 6000, 0],
-          stroke: this.color,
-          strokeWidth: 1,
-          name: shapeName.guideLine,
-          dash: [4, 6],
-        });
-        this.drawer.selectionLayer.add(line);
-        line.absolutePosition({
-          x: 0,
-          y: lg.lineGuide,
-        });
-      } else if (lg.orientation === 'V') {
-        const line = new Line({
-          points: [0, -6000, 0, 6000],
-          stroke: this.color,
-          strokeWidth: 1,
-          name: shapeName.guideLine,
-          dash: [4, 6],
-        });
-        this.drawer.selectionLayer.add(line);
-        line.absolutePosition({
-          x: lg.lineGuide,
-          y: 0,
-        });
-      }
-    });
+    const { stage, selectionLayer } = this.drawer;
+    const scale = this.drawer.getZoomLevel();
+
+    for (const lg of guides) {
+      const vertical = lg.orientation === 'V';
+      // from an edge of the view to the other one, in coordinates of the layer
+      const line = new Line({
+        points: vertical ? [0, 0, 0, stage.height() / scale] : [0, 0, stage.width() / scale, 0],
+        stroke: this.color,
+        strokeWidth: 1,
+        strokeScaleEnabled: false,
+        name: shapeName.guideLine,
+        dash: [4, 6],
+        listening: false,
+      });
+
+      selectionLayer.add(line);
+      line.absolutePosition(vertical ? { x: lg.lineGuide, y: 0 } : { x: 0, y: lg.lineGuide });
+    }
   }
 
   /**

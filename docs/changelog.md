@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.50.0](https://github.com/fabienwnklr/free-drawing/compare/v7.49.0...v7.50.0) (2026-10-28)
+
+
+### Features
+
+* **snapping:** with snapping to objects, moved and resized shapes snap to the center of the view too (wherever it is moved and zoomed), to center a shape on the screen
+
+
+### Bug Fixes
+
+* **snapping:** guides cross the whole view whatever the zoom (zoomed out they stopped in the middle of it), with the same width and dashes on screen
+
 ## [7.49.0](https://github.com/fabienwnklr/free-drawing/compare/v7.48.0...v7.49.0) (2026-10-28)
 
 
