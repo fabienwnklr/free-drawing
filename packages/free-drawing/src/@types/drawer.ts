@@ -85,6 +85,8 @@ export type DrawerOptions = {
   shapeRecognition: boolean;
   /** Style of the grid: 'squares' (default), 'dots', 'lines' (ruled paper) or 'isometric' (user preference) */
   gridStyle: GridStyle;
+  /** Mouse wheel: 'zoom' (default, Ctrl / Cmd + wheel moves the view) or 'pan' (Ctrl / Cmd + wheel zooms), user preference */
+  wheelAction: WheelAction;
   /** Key of the drawing in localStorage and prefix of other saved data (tool, preferences...), unique for each drawer */
   localStorageKey: string;
   /** User of the app (e.g. logged in): id and name used in collaboration sessions instead of ones kept in browser */
@@ -146,7 +148,12 @@ export type Preferences = {
   shapeRecognition: boolean;
   /** Style of the grid */
   gridStyle: GridStyle;
+  /** Action of the mouse wheel */
+  wheelAction: WheelAction;
 };
+
+/** Action of the mouse wheel: zoom (Ctrl / Cmd + wheel moves the view), or move of the view (Ctrl / Cmd + wheel zooms) */
+export type WheelAction = 'zoom' | 'pan';
 
 /** Style of the grid: squares of dashed lines, dots at their crossings, lines of ruled paper, triangles of isometric paper */
 export type GridStyle = 'squares' | 'dots' | 'lines' | 'isometric';

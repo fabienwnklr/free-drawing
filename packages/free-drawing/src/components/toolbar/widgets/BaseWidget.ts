@@ -154,6 +154,8 @@ export abstract class BaseWidget {
 
       // two finger gesture (zoom, move of the view): touches ignored until every finger is lifted
       if (this.drawer.gestures?.active && e.type.startsWith('touch')) return;
+      // Space held: the view is moved
+      if (this.drawer.spacePan?.active) return;
       if (this.inAction && (e.type === 'mousedown' || e.type === 'touchstart')) return;
       if (this.inAction && e.type === 'touchend') {
         const touch = [...(evt.changedTouches ?? [])].find(({ identifier }) => identifier === this.#touchId);

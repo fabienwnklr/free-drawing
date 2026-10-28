@@ -1,10 +1,10 @@
 import '@/components/PreferencesModal/preferences-modal.scss';
 import type { Drawer } from '@/Drawer';
-import type { GridStyle, Preferences, Theme } from '@/@types/drawer';
+import type { GridStyle, Preferences, Theme, WheelAction } from '@/@types/drawer';
 import { Modal } from '@/components/Modal/Modal';
 import { languages } from '@/i18n/I18n';
 import type { Language, TranslationKey } from '@/@types/i18n';
-import { drawerEvents, gridStyles } from '@/constants';
+import { drawerEvents, gridStyles, wheelActions } from '@/constants';
 import { createButton, createSwitch, isComposing, uniqueId } from '@/utils/dom';
 import { formatShortcut } from '@/utils/shortcut';
 import type { Choice } from '@/@types/ui';
@@ -31,6 +31,8 @@ export class PreferencesModal extends Modal {
   $grid: HTMLInputElement;
   /** Style of the grid: squares, dots, lines, isometric */
   $gridStyle: HTMLSelectElement;
+  /** Action of the mouse wheel: zoom or move of the view */
+  $wheelAction: HTMLSelectElement;
   /** Switch of snapping to shapes, unchecks the grid when checked */
   $snapping: HTMLInputElement;
   /** Switch of auto save (else changes saved from the menu) */
@@ -87,6 +89,9 @@ export class PreferencesModal extends Modal {
     this.$gridStyle = document.createElement('select');
     this.$gridStyle.append(...gridStyles.map(({ value }) => new Option('', value)));
     $drawing.append(this._createField('grid.style', this.$gridStyle));
+    this.$wheelAction = document.createElement('select');
+    this.$wheelAction.append(...wheelActions.map(({ value }) => new Option('', value)));
+    $drawing.append(this._createField('preferences.wheel', this.$wheelAction));
     this.$snapping = this._createSwitch($drawing, 'context.snap', 'Alt+S');
     this.$grid.addEventListener('change', () => {
       if (this.$grid.checked) this.$snapping.checked = false;
@@ -134,6 +139,9 @@ export class PreferencesModal extends Modal {
       gridStyles.forEach(({ label }, i) => {
         this.$gridStyle.options[i].text = t(label);
       });
+      wheelActions.forEach(({ label }, i) => {
+        this.$wheelAction.options[i].text = t(label);
+      });
       if (this.$name) this.$name.placeholder = t('collab.anonymous');
       this.$cancelButton.textContent = t('confirm.cancel');
       this.$saveButton.textContent = t('preferences.save');
@@ -165,6 +173,7 @@ export class PreferencesModal extends Modal {
       zen: this.$zen.checked,
       grid: this.$grid.checked,
       gridStyle: this.$gridStyle.value as GridStyle,
+      wheelAction: this.$wheelAction.value as WheelAction,
       snapping: this.$snapping.checked,
       autoSave: this.$autoSave.checked,
       ...(this.$keepTool && { keepTool: this.$keepTool.checked }),
@@ -185,6 +194,7 @@ export class PreferencesModal extends Modal {
     this.$zen.checked = preferences.zen;
     this.$grid.checked = preferences.grid;
     this.$gridStyle.value = preferences.gridStyle;
+    this.$wheelAction.value = preferences.wheelAction;
     this.$snapping.checked = preferences.snapping;
     this.$autoSave.checked = preferences.autoSave;
     if (this.$keepTool) this.$keepTool.checked = preferences.keepTool;

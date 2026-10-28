@@ -109,7 +109,17 @@ export class Help extends Modal {
       },
       { label: t('menu.darkMode'), keys: ['Alt+Shift+D'] },
       { label: t('help.snap'), keys: ['Alt+S'] },
-      { label: t('help.zoom'), keys: ['Ctrl+Wheel'] },
+      // mouse wheel zooming or moving the view (preference)
+      ...(this.drawer.options.wheelAction === 'zoom'
+        ? [
+            { label: t('help.zoom'), keys: ['Wheel'] },
+            { label: t('wheel.pan'), keys: ['Ctrl+Wheel', 'Shift+Wheel'] },
+          ]
+        : [
+            { label: t('help.zoom'), keys: ['Ctrl+Wheel'] },
+            { label: t('wheel.pan'), keys: ['Wheel', 'Shift+Wheel'] },
+          ]),
+      { label: t('wheel.pan'), keys: ['Space'], after: t('help.spaceDrag') },
       ...(this.drawer.options.zoom
         ? [
             { label: t('zoom.fit'), keys: ['Shift+1'] },

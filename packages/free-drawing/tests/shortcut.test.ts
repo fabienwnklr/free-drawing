@@ -105,8 +105,8 @@ describe('Shortcuts shown', () => {
     expect(help).toContain('Select shape in a group ⌘+Click');
   });
 
-  it('Cmd + wheel zooms like Ctrl + wheel', () => {
-    const drawer = createDrawer();
+  it('Cmd + wheel zooms like Ctrl + wheel (wheel moving the view)', () => {
+    const drawer = createDrawer({ wheelAction: 'pan' });
 
     setPointer(drawer, 100, 100);
     drawer.stage.fire('wheel', { evt: { metaKey: true, deltaY: -100, preventDefault() {} } });

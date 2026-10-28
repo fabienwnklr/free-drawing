@@ -497,7 +497,7 @@ describe('Test drawer event', () => {
     expect(drawer.drawLayer.find('Text')).toHaveLength(1);
   });
 
-  it('Ctrl + wheel zoom keeps the point under cursor', () => {
+  it('Wheel zoom keeps the point under cursor', () => {
     const drawer = createDrawer();
     drawer.stage.scale({ x: 2, y: 2 });
     drawer.stage.position({ x: -300, y: -200 });
@@ -506,7 +506,7 @@ describe('Test drawer event', () => {
     const before = pointUnderCursor();
 
     setPointer(drawer, pointer.x, pointer.y);
-    drawer.stage.fire('wheel', { evt: { ctrlKey: true, deltaY: -100, preventDefault() {} } });
+    drawer.stage.fire('wheel', { evt: { deltaY: -100, preventDefault() {} } });
 
     expect(drawer.getZoomLevel()).toBeGreaterThan(2);
     expect(pointUnderCursor().x).toBeCloseTo(before.x);

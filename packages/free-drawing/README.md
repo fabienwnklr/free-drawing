@@ -81,7 +81,7 @@ The library needs no framework. React and Vue apps can use its `FreeDrawing` com
   edges: 'sharp', // corners of rectangles: 'sharp', 'round' (radius following their size) or radius (px), drawer.setEdges(12) for new and selected ones
   arrowType: 'straight', // path of arrows: 'straight' | 'curved' | 'elbow', drawer.setArrowType('elbow') for new and selected ones
   arrowheads: { start: 'none', end: 'triangle' }, // heads of arrow ends: 'none' | 'arrow' | 'triangle' | 'dot' | 'bar', drawer.setArrowheads({ start: 'dot' })
-  zoom: true, // enable/disable zoom (Ctrl + wheel, pinch, Shift + 1 / 2 / 0)
+  zoom: true, // enable/disable zoom (wheel, pinch, Shift + 1 / 2 / 0)
   zoomWidget: true, // enable/disable zoom ui widget
   positionWidget: true, // enable/disable position ui widget (x / y of view, button back to origin)
   selectionMenu: true, // enable/disable menu next to selected shapes (duplicate, rotate, bring forward, send backward, lock, delete)
@@ -99,6 +99,7 @@ The library needs no framework. React and Vue apps can use its `FreeDrawing` com
   keepTool: true, // drawing tool kept after drawing a shape, else selection tool activated, user preference (see Preferences)
   shapeRecognition: false, // brush strokes recognized as rectangles, ellipses, triangles, diamonds, lines or arrows, user preference (see Shape recognition)
   gridStyle: 'squares', // style of the grid: 'squares' | 'dots' | 'lines' (ruled paper) | 'isometric', user preference (see Grid)
+  wheelAction: 'zoom', // mouse wheel: 'zoom' (Ctrl / Cmd + wheel moves the view) | 'pan' (Ctrl / Cmd + wheel zooms), user preference (see Mouse wheel and Space)
   localStorageKey: 'free-drawing', // localStorage key used for store data, use a different key for each drawer of a page
   storage: null, // drawing saved somewhere else than localStorage (e.g. server of your app), see "Use in an app" below
   user: null, // user of your app ({ id, name }), used in collaboration sessions instead of id and name kept in browser
@@ -149,7 +150,7 @@ Components trigger `drawer.dropdown.hide` (dropdown menu) and `drawer.toast.hide
 
 ## Preferences
 
-"Preferences..." of settings menu (Ctrl / Cmd + ,, also in the command palette) opens a dialog: theme (light, dark or system), language, zen mode, grid and its style, snapping to objects, auto save, keep tool active, shape recognition and name in collaboration sessions. Changes are applied together with "Save" ("Cancel", Escape or close keep current preferences) and saved in the browser (`<localStorageKey>-preferences`), also with the `storage` option. An app can save them with the account of its user (see "Use in an app").
+"Preferences..." of settings menu (Ctrl / Cmd + ,, also in the command palette) opens a dialog: theme (light, dark or system), language, zen mode, grid and its style, action of the mouse wheel, snapping to objects, auto save, keep tool active, shape recognition and name in collaboration sessions. Changes are applied together with "Save" ("Cancel", Escape or close keep current preferences) and saved in the browser (`<localStorageKey>-preferences`), also with the `storage` option. An app can save them with the account of its user (see "Use in an app").
 
 ```js
 drawer.showPreferences();
@@ -204,6 +205,26 @@ drawer.setShapeRecognition(true);
 ```js
 drawer.setGridStyle('isometric');
 drawer.showGrid(); // hideGrid(), drawer.grid
+```
+
+### Mouse wheel and Space
+
+The mouse wheel zooms around the pointer (`wheelAction: 'zoom'`, default), or moves the view (`'pan'`): a preference (preferences dialog, command palette "Mouse wheel: Zoom" / "Mouse wheel: Move the view").
+
+| | `zoom` (default) | `pan` |
+| --- | --- | --- |
+| Wheel | Zoom around the pointer | Move the view up and down |
+| Ctrl / Cmd + wheel | Move the view up and down | Zoom around the pointer |
+| Shift + wheel | Move the view left and right | Move the view left and right |
+| Pinch of a trackpad | Zoom | Zoom |
+
+- A notch of a mouse wheel zooms by the `scaling` option (1.11), the small steps of a trackpad less: zooming follows the fingers. Browsers give the Ctrl key to the wheel events of a pinch: a pinch is told apart from Ctrl + wheel by the Ctrl key really pressed. With `zoom: false`, the wheel does not zoom, it still moves the view.
+- `'pan'` suits trackpads (two fingers move the view, a pinch zooms), `'zoom'` mice.
+- Space held, a drag moves the view whatever the tool (as the pan tool, H): the tool, its options and the selection stay as they were, the view is saved on release. Space is taken with the focus on the drawing, or on a button of the drawer with the pointer on the canvas (a tool just clicked); fields and the other buttons keep it.
+
+```js
+drawer.setWheelAction('pan');
+drawer.spacePan.active; // Space held
 ```
 
 ## Dark mode
@@ -271,12 +292,12 @@ drawer.setUser({ id: 'user-1', name: 'Ada' });
 drawer.setUser(null); // anonymous: id and name kept in browser
 ```
 
-Preferences are the interface settings of the user (theme, language, grid and its style, snapping to objects, zen mode, auto save, keep tool active, shape recognition), saved in the browser by the drawer, to save them with their account too:
+Preferences are the interface settings of the user (theme, language, grid and its style, action of the mouse wheel, snapping to objects, zen mode, auto save, keep tool active, shape recognition), saved in the browser by the drawer, to save them with their account too:
 
 ```js
 drawer.setPreferences(await api.getPreferences()); // given ones only
 drawer.on('drawer.preferences.change', (preferences) => api.savePreferences(preferences));
-drawer.getPreferences(); // { theme: 'light', language: 'auto', grid: false, snapping: false, zen: false, autoSave: true, keepTool: true, shapeRecognition: false, gridStyle: 'squares' }
+drawer.getPreferences(); // { theme: 'light', language: 'auto', grid: false, snapping: false, zen: false, autoSave: true, keepTool: true, shapeRecognition: false, gridStyle: 'squares', wheelAction: 'zoom' }
 ```
 
 `collaboration` option can also give data read by the server on connection (`socket.handshake.auth`), e.g. a token of the logged in user, or a function giving it on each connection:

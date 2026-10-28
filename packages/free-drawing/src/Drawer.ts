@@ -17,6 +17,7 @@ import type {
   ArrowType,
   Edges,
   GridStyle,
+  WheelAction,
   OptionsChange,
   Preferences,
   ShapeAlignment,
@@ -27,7 +28,17 @@ import type {
 } from '@/@types/drawer';
 import type { CollaborationOptions, CollaborationSocket, ViewArea } from '@/@types/collaboration';
 import { createId, deepMerge } from '@/utils/functions';
-import { defaultOptions, drawerEvents, gridStyles, shapeLabels, shapeName, viewMargin, zoomLimits } from '@/constants';
+import {
+  defaultOptions,
+  drawerEvents,
+  gridStyles,
+  shapeLabels,
+  shapeName,
+  viewMargin,
+  wheelActions,
+  zoomLimits,
+} from '@/constants';
+import { SpacePan } from '@/utils/SpacePan';
 import { drawGrid, gridRotationSnaps, gridShapeStyle, snapToGrid } from '@/utils/grid';
 import { hasFocusOutside, setPressed } from '@/utils/dom';
 import { announce, createLiveRegion } from '@/utils/liveRegion';
@@ -193,6 +204,8 @@ export class Drawer extends MicroEvent {
   arrowHandle!: ArrowHandle;
   /** Two finger gestures on the canvas: pinch zoom and move of the view (tools ignore touches while `active`) */
   gestures!: TouchGestures;
+  /** Space held: a drag moves the view whatever the tool (tools ignore the pointer while `active`) */
+  spacePan!: SpacePan;
   /** Shapes being dragged or transformed: frames they come from, end of drawing above the drawing (`drawAbove`) */
   #moving: { shapes: DrawingShape[]; from: Map<DrawingShape, Frame | null>; drawInFrames: () => void } | null = null;
   /** Toolbar of the footer: widgets (tools) and their groups */
@@ -338,6 +351,7 @@ export class Drawer extends MicroEvent {
     this.options.keepTool = preferences.keepTool ?? this.options.keepTool;
     this.options.shapeRecognition = preferences.shapeRecognition ?? this.options.shapeRecognition;
     this.options.gridStyle = preferences.gridStyle ?? this.options.gridStyle;
+    this.options.wheelAction = preferences.wheelAction ?? this.options.wheelAction;
     this.i18n = new I18n(
       this.#languageChoice === 'auto' ? getLanguage() : this.#languageChoice,
       this.options.translations
@@ -1099,12 +1113,13 @@ export class Drawer extends MicroEvent {
    */
   private _initEvents() {
     this._initHotKey();
-    this._initZoomWheel();
+    this._initWheel();
     this._initKeyboardFocus();
     this._initFrameMoves();
     this.shapeLinks = new ShapeLinks(this);
     this.arrowHandle = new ArrowHandle(this);
     this.gestures = new TouchGestures(this);
+    this.spacePan = new SpacePan(this);
 
     this.stage.on('dragmove', (e) => {
       // shapes drag events bubble to stage, only stage drag (pan) moves the view
@@ -1221,24 +1236,60 @@ export class Drawer extends MicroEvent {
   }
 
   /**
-   * Ctrl + wheel zooms around pointer (`zoom` option), by `scaling` option
+   * Mouse wheel (`wheelAction` preference): zoom around the pointer (`zoom` option, by `scaling` option for a notch
+   * of a mouse wheel, less for the small steps of a trackpad), Ctrl / Cmd + wheel moves the view (Shift + wheel:
+   * horizontally); or the other way round. A pinch of a trackpad (wheel with `ctrlKey`, Ctrl key not pressed) zooms
    */
-  private _initZoomWheel() {
-    if (this.options.zoom) {
-      this.stage.on('wheel', (e) => {
-        // Cmd of macOS too (trackpad pinch: ctrlKey)
-        if (!e.evt.ctrlKey && !e.evt.metaKey) return;
-        // stop default scrolling
-        e.evt.preventDefault();
+  private _initWheel() {
+    // Ctrl / Cmd key pressed: browsers give `ctrlKey` to the wheel events of a pinch too
+    let modifierDown = false;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Control' || e.key === 'Meta') modifierDown = e.type === 'keydown';
+    };
 
-        const oldScale = this.getZoomLevel();
-        // how to scale? Zoom in? Or zoom out?
-        const newScale = e.evt.deltaY > 0 ? oldScale / this.options.scaling : oldScale * this.options.scaling;
+    window.addEventListener('keydown', onKey, { signal: this.signal });
+    window.addEventListener('keyup', onKey, { signal: this.signal });
+    window.addEventListener('blur', () => (modifierDown = false), { signal: this.signal });
 
-        // keep point under cursor in place
-        this.setZoomLevel(newScale, this._getPointerPos());
-      });
-    }
+    this.stage.on('wheel', (e) => {
+      const evt = e.evt;
+      const pinch = evt.ctrlKey && !modifierDown;
+      const modifier = (evt.ctrlKey || evt.metaKey) && !pinch;
+      const zoom = pinch || (this.options.wheelAction === 'zoom' ? !modifier && !evt.shiftKey : modifier);
+      // in pixels: lines (Firefox) or pages
+      const unit = evt.deltaMode === 1 ? 33 : evt.deltaMode === 2 ? this.stage.height() : 1;
+
+      // not the page
+      evt.preventDefault();
+      if (!zoom) {
+        // Shift: horizontally, as the browser
+        const dx = (evt.shiftKey ? evt.deltaX || evt.deltaY : evt.deltaX) * unit;
+        const dy = evt.shiftKey ? 0 : evt.deltaY * unit;
+
+        this._setView({ x: this.stage.x() - dx, y: this.stage.y() - dy }, this.getZoomLevel());
+        return;
+      }
+      if (!this.options.zoom) return;
+
+      // a notch of a mouse wheel (100 px) zooms by `scaling`, small steps of a trackpad less
+      const notches = Math.max(-1, Math.min(1, (evt.deltaY * unit) / 100));
+
+      // point under the pointer kept in place
+      this.setZoomLevel(this.getZoomLevel() * this.options.scaling ** -notches, this._getPointerPos());
+    });
+  }
+
+  /**
+   * Action of the mouse wheel (preference): zoom (Ctrl / Cmd + wheel moves the view) or move of the view (Ctrl / Cmd +
+   * wheel zooms); a pinch of a trackpad always zooms
+   * @param wheelAction 'zoom' or 'pan'
+   */
+  setWheelAction(wheelAction: WheelAction) {
+    if (wheelAction === this.options.wheelAction) return;
+
+    this.options.wheelAction = wheelAction;
+    this.help.refresh();
+    this._preferencesChanged();
   }
 
   /**
@@ -2556,8 +2607,8 @@ export class Drawer extends MicroEvent {
 
   /**
    * Interface settings of user (e.g. saved by the app for its logged in user)
-   * @returns Current theme, language choice, grid and its style, snapping, zen mode, auto save, keep tool and shape
-   * recognition
+   * @returns Current theme, language choice, grid and its style, snapping, zen mode, auto save, keep tool, shape
+   * recognition and action of the mouse wheel
    */
   getPreferences(): Preferences {
     return {
@@ -2570,6 +2621,7 @@ export class Drawer extends MicroEvent {
       keepTool: this.options.keepTool,
       shapeRecognition: this.options.shapeRecognition,
       gridStyle: this.options.gridStyle,
+      wheelAction: this.options.wheelAction,
     };
   }
 
@@ -2578,11 +2630,13 @@ export class Drawer extends MicroEvent {
    * @param preferences Grid wins when grid and snapping are both true
    */
   setPreferences(preferences: Partial<Preferences>) {
-    const { theme, language, grid, snapping, zen, autoSave, keepTool, shapeRecognition, gridStyle } = preferences;
+    const { theme, language, grid, snapping, zen, autoSave, keepTool, shapeRecognition, gridStyle, wheelAction } =
+      preferences;
 
     if (autoSave !== undefined) this.setAutoSave(autoSave);
     if (keepTool !== undefined) this.setKeepTool(keepTool);
     if (shapeRecognition !== undefined) this.setShapeRecognition(shapeRecognition);
+    if (wheelAction !== undefined) this.setWheelAction(wheelAction);
     // before the grid: shown in its style
     if (gridStyle !== undefined) this.setGridStyle(gridStyle);
     if (theme !== undefined && theme !== this.theme) this.setTheme(theme);
@@ -2618,10 +2672,12 @@ export class Drawer extends MicroEvent {
     const theme = [saved.theme, this._getStorageItem(`${key}-theme`)].find(isTheme);
     const language = [saved.language, this._getStorageItem(`${key}-language`)].find(isLanguage);
     const gridStyle = gridStyles.find(({ value }) => value === saved.gridStyle)?.value;
+    const wheelAction = wheelActions.find(({ value }) => value === saved.wheelAction)?.value;
     const preferences: Partial<Preferences> = {
       ...(theme && { theme }),
       ...(language && { language }),
       ...(gridStyle && { gridStyle }),
+      ...(wheelAction && { wheelAction }),
     };
 
     (['grid', 'snapping', 'zen', 'autoSave', 'keepTool', 'shapeRecognition'] as const).forEach((name) => {

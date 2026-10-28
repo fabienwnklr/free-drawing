@@ -143,6 +143,12 @@ export class HotKey {
         return;
       }
 
+      // Space held: drags move the view
+      if (this.drawer.spacePan.handleKey(e)) {
+        e.preventDefault();
+        return;
+      }
+
       // shapes reached with the keyboard (Enter, Tab, Escape: focus on the drawer itself, not on its buttons)
       if (this.drawer.navigation.handleKey(e)) {
         e.preventDefault();

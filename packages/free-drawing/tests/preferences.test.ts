@@ -28,6 +28,7 @@ describe('Preferences', () => {
       keepTool: true,
       shapeRecognition: false,
       gridStyle: 'squares',
+      wheelAction: 'zoom',
     });
 
     const reloaded = createDrawer({ localStorageKey: drawer.options.localStorageKey, language: 'en' });
@@ -128,6 +129,7 @@ describe('Preferences', () => {
       keepTool: true,
       shapeRecognition: false,
       gridStyle: 'squares',
+      wheelAction: 'zoom',
     });
 
     // cancelled, closed with Escape: nothing applied, fields show preferences again

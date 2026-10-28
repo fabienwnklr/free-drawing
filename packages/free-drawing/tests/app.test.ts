@@ -163,6 +163,7 @@ describe('Integration in an app', () => {
       keepTool: true,
       shapeRecognition: false,
       gridStyle: 'squares',
+      wheelAction: 'zoom',
     });
     drawer.on('drawer.preferences.change', onChange);
 
@@ -179,6 +180,7 @@ describe('Integration in an app', () => {
       keepTool: true,
       shapeRecognition: false,
       gridStyle: 'squares',
+      wheelAction: 'zoom',
     });
     expect(drawer.isDarkMode()).toBe(true);
     expect(drawer.language).toBe('fr');
@@ -198,6 +200,7 @@ describe('Integration in an app', () => {
       keepTool: true,
       shapeRecognition: false,
       gridStyle: 'squares',
+      wheelAction: 'zoom',
     });
 
     // same values: no event

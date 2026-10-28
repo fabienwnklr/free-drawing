@@ -53,7 +53,7 @@ import FlipVerticalIcon from '@/icons/flip-vertical.svg?raw';
 import FitWidthIcon from '@/icons/fit-width.svg?raw';
 import PaintRollerIcon from '@/icons/paint-roller.svg?raw';
 import type { Command, CommandGroup } from '@/@types/ui';
-import { gridStyles, shapeAlignments, shapeDistributions, shapeOrders, shapeStacks } from '@/constants';
+import { gridStyles, shapeAlignments, shapeDistributions, shapeOrders, shapeStacks, wheelActions } from '@/constants';
 import { formatShortcut } from '@/utils/shortcut';
 
 /**
@@ -526,6 +526,13 @@ export class CommandPalette extends Modal {
             checked: drawer.grid,
             run: () => drawer.setting.toggleGrid(),
           },
+          ...wheelActions.map(({ value, label }) => ({
+            id: `mouse wheel ${value} scroll`,
+            label: t('wheel.command', { action: t(label) }),
+            icon: value === 'zoom' ? ZoomFitIcon : RecenterIcon,
+            checked: drawer.options.wheelAction === value,
+            run: () => drawer.setWheelAction(value),
+          })),
           // style chosen and grid shown
           ...gridStyles.map(({ value, label }) => ({
             id: `grid style paper ${value}`,

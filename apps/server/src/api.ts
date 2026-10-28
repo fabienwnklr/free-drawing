@@ -19,6 +19,9 @@ const themes = ['light', 'dark', 'system'];
 /** Styles of the grid (`GridStyle` of the library) */
 const gridStyles = ['squares', 'dots', 'lines', 'isometric'];
 
+/** Actions of the mouse wheel (`WheelAction` of the library) */
+const wheelActions = ['zoom', 'pan'];
+
 type Handler = (req: Request, res: Response, user: User) => Promise<unknown>;
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
@@ -43,7 +46,7 @@ function isDrawingFile(value: unknown) {
  * Known preferences of the library (`Preferences`) only, invalid values ignored
  */
 function toPreferences(value: Record<string, unknown>) {
-  const { theme, language, grid, snapping, zen, autoSave, keepTool, shapeRecognition, gridStyle } = value;
+  const { theme, language, grid, snapping, zen, autoSave, keepTool, shapeRecognition, gridStyle, wheelAction } = value;
 
   return {
     ...(typeof theme === 'string' && themes.includes(theme) && { theme }),
@@ -55,6 +58,7 @@ function toPreferences(value: Record<string, unknown>) {
     ...(typeof keepTool === 'boolean' && { keepTool }),
     ...(typeof shapeRecognition === 'boolean' && { shapeRecognition }),
     ...(typeof gridStyle === 'string' && gridStyles.includes(gridStyle) && { gridStyle }),
+    ...(typeof wheelAction === 'string' && wheelActions.includes(wheelAction) && { wheelAction }),
   };
 }
 

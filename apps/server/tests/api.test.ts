@@ -190,6 +190,7 @@ describe('Preferences', () => {
       keepTool: false,
       shapeRecognition: true,
       gridStyle: 'dots',
+      wheelAction: 'pan',
       other: 1,
     });
 
@@ -202,6 +203,7 @@ describe('Preferences', () => {
       keepTool: false,
       shapeRecognition: true,
       gridStyle: 'dots',
+      wheelAction: 'pan',
     });
     expect((await agent.get('/api/preferences')).body).toEqual({
       theme: 'dark',
@@ -212,6 +214,7 @@ describe('Preferences', () => {
       keepTool: false,
       shapeRecognition: true,
       gridStyle: 'dots',
+      wheelAction: 'pan',
     });
 
     // replaced

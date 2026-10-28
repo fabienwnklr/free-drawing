@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.48.0](https://github.com/fabienwnklr/free-drawing/compare/v7.47.0...v7.48.0) (2026-10-28)
+
+
+### Features
+
+* **view:** the mouse wheel zooms around the pointer, Ctrl / Cmd + wheel moves the view up and down, Shift + wheel left and right (`wheelAction` option and preference, preferences dialog, command palette, `setWheelAction`: `'pan'` moves the view with the wheel and zooms with Ctrl / Cmd + wheel, as before for zooming); a pinch of a trackpad zooms in both, by its small steps (a notch of a mouse wheel by the `scaling` option)
+* **view:** Space held, a drag moves the view whatever the tool, the tool and the selection kept (`drawer.spacePan`)
+
 ## [7.47.0](https://github.com/fabienwnklr/free-drawing/compare/v7.46.0...v7.47.0) (2026-10-28)
 
 
