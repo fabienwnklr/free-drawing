@@ -49,7 +49,7 @@ describe('Library', () => {
     const { rect, text, ellipse } = createShapes(drawer);
     const onChange = vi.fn();
 
-    drawer.on('drawer.library.change', onChange);
+    drawer.on('library.change', onChange);
     expect(drawer.library.add([])).toBeNull();
 
     // rectangle with its text: named by its text

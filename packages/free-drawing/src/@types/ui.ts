@@ -280,15 +280,19 @@ export type ReplayState = {
 /** Events of a dropdown menu with the arguments of their listeners */
 export type DropdownEventMap = {
   /** Menu hidden */
+  'dropdown.hide': [];
+  /** @deprecated use `dropdown.hide` */
   'drawer.dropdown.hide': [];
-  /** @deprecated use `drawer.dropdown.hide` */
+  /** @deprecated use `dropdown.hide` */
   'fd.dropdown.hide': [];
 };
 
 /** Events of a toast with the arguments of their listeners */
 export type ToastEventMap = {
   /** Toast hidden */
+  'toast.hide': [];
+  /** @deprecated use `toast.hide` */
   'drawer.toast.hide': [];
-  /** @deprecated use `drawer.toast.hide` */
+  /** @deprecated use `toast.hide` */
   'fd.toast.hide': [];
 };

@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file. Each commit
 
 ### Features
 
+* **events:** events named without prefix: `change`, `selection.change`, `readonly.change`, `options.change`, `preferences.change`... (`drawerEvents` gives them); names prefixed by `drawer.` still work, with a warning in console (once)
 * **events:** events of the drawer typed (`DrawerEventMap`): in TypeScript an unknown name or a listener of other arguments is an error, listeners get the arguments of their event; plugins and apps add their own events by declaration merging (`declare module '@fabwcie/free-drawing' { interface DrawerEventMap { ... } }`). Nothing changes in JavaScript; in TypeScript, an event of an app not declared there is now an error
 
 ## [7.52.0](https://github.com/fabienwnklr/free-drawing/compare/v7.51.0...v7.52.0) (2026-10-28)

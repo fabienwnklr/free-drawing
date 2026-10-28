@@ -76,7 +76,7 @@ describe('Preferences', () => {
     const $item = drawer.setting.$preferencesButton;
     const onChange = vi.fn();
 
-    drawer.on('drawer.preferences.change', onChange);
+    drawer.on('preferences.change', onChange);
     expect($item.getAttribute('aria-haspopup')).toBe('dialog');
     expect($item.getAttribute('aria-keyshortcuts')).toBe('Control+,');
     $item.click();

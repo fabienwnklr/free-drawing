@@ -221,7 +221,7 @@ export class TextOverlay extends BaseOverlay {
 
   /**
    * Update common fields, then text fields when text style changed
-   * @param change Changed options (from `drawer.options.change`) or values of the shape shown
+   * @param change Changed options (from `options.change`) or values of the shape shown
    */
   updateFields(change: OptionsChange) {
     super.updateFields(change);

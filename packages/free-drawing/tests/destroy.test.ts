@@ -81,7 +81,7 @@ describe('Destroy', () => {
     const paste = vi.fn();
 
     brush.setActive(true);
-    drawer.on('drawer.change', paste);
+    drawer.on('change', paste);
     await drawer.destroy();
 
     expect(watcher.destroyed).toBe(true);

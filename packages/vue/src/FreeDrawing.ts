@@ -24,7 +24,7 @@ export const FreeDrawing = defineComponent({
   emits: {
     /** Drawer ready: plugins initialized, drawing of the `storage` option loaded (`drawer.ready`) */
     ready: (drawer: Drawer) => !!drawer,
-    /** Drawing changed: shapes, background... (`drawer.change` event) */
+    /** Drawing changed: shapes, background... (`change` event) */
     change: (drawer: Drawer) => !!drawer,
   },
   setup(props, { emit, expose }) {

@@ -60,7 +60,7 @@ describe('Edges', () => {
     selectWidget.select([rect, ellipse]);
     expect(selectWidget.overlay.$edgesContainer.style.display).toBe('');
 
-    drawer.on('drawer.options.change', onOptions);
+    drawer.on('options.change', onOptions);
     drawer.setEdges('round');
     expect(onOptions).toHaveBeenCalledWith({ edges: 'round' });
     expect(rect.cornerRadius()).toBe(10);

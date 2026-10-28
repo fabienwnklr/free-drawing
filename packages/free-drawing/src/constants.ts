@@ -352,46 +352,48 @@ export const shapeLabels: Record<string, TranslationKey> = {
 };
 
 /**
- * Events of drawer (`drawer.on(event, callback)`) and of its components, named `drawer.<subject>.<action>`
+ * Events of drawer (`drawer.on(event, callback)`) and of its components, named `<subject>.<action>` (`change` for the
+ * drawing)
  */
 export const drawerEvents = {
   /** Drawing changed (shapes, background...), with drawer */
-  change: 'drawer.change',
+  change: 'change',
   /** Drawing options changed (setters, overlays...), with changed options */
-  optionsChange: 'drawer.options.change',
+  optionsChange: 'options.change',
   /** Read only mode changed, with read only state */
-  readOnlyChange: 'drawer.readonly.change',
+  readOnlyChange: 'readonly.change',
   /** Selected shapes changed, with selected shapes */
-  selectionChange: 'drawer.selection.change',
+  selectionChange: 'selection.change',
   /** Collaboration started or stopped, users or rights changed */
-  collaborationChange: 'drawer.collaboration.change',
+  collaborationChange: 'collaboration.change',
   /** Light or dark theme shown, with dark state */
-  themeChange: 'drawer.theme.change',
+  themeChange: 'theme.change',
   /** Language of interface changed, with language */
-  languageChange: 'drawer.language.change',
+  languageChange: 'language.change',
   /** Interface settings changed (theme, language, grid, snapping), with preferences: once for several ones */
-  preferencesChange: 'drawer.preferences.change',
+  preferencesChange: 'preferences.change',
   /** Drawing has changes not saved yet (without auto save) or is saved, with unsaved state */
-  unsavedChange: 'drawer.unsaved.change',
+  unsavedChange: 'unsaved.change',
   /** Items of the library added, removed, renamed or imported (see `drawer.library`), with the items */
-  libraryChange: 'drawer.library.change',
+  libraryChange: 'library.change',
   /** Dropdown menu hidden (event of dropdown) */
-  dropdownHide: 'drawer.dropdown.hide',
+  dropdownHide: 'dropdown.hide',
   /** Toast hidden (event of toast) */
-  toastHide: 'drawer.toast.hide',
+  toastHide: 'toast.hide',
   /** Plugin disabled or enabled again (`forceDisabled`), with the plugin */
-  pluginChange: 'drawer.plugin.change',
+  pluginChange: 'plugin.change',
   /** Slideshow started, stopped or showing another slide (see `drawer.slideshow`), with the index of the slide shown */
-  slideshowChange: 'drawer.slideshow.change',
+  slideshowChange: 'slideshow.change',
   /** Replay of the drawing started, stopped or showing another shape (see `drawer.replay`), with the index of the shape */
-  replayChange: 'drawer.replay.change',
+  replayChange: 'replay.change',
 } as const;
 
 /**
  * Event names of previous versions (deprecated), listened and triggered as current ones
  */
 export const deprecatedEvents: Record<string, string> = {
-  change: drawerEvents.change,
+  // names of the events prefixed by the drawer (7.0 to 7.52)
+  ...Object.fromEntries(Object.values(drawerEvents).map((name) => [`drawer.${name}`, name])),
   'fd.options.change': drawerEvents.optionsChange,
   'fd.readonly.change': drawerEvents.readOnlyChange,
   'fd.selection.change': drawerEvents.selectionChange,

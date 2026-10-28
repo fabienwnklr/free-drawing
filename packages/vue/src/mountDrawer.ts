@@ -18,7 +18,7 @@ export interface MountHandlers {
   created: (drawer: Drawer) => void;
   /** Drawer ready: plugins initialized, drawing of the `storage` option loaded (`drawer.ready`) */
   ready: (drawer: Drawer) => void;
-  /** Drawing changed: shapes, background... (`drawer.change` event) */
+  /** Drawing changed: shapes, background... (`change` event) */
   change: (drawer: Drawer) => void;
 }
 

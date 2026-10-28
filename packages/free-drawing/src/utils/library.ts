@@ -82,7 +82,7 @@ export function parseLibraryFile(json: string): LibraryItem[] {
 /**
  * Library of a drawer (`drawer.library`): shapes saved as items (`add`) inserted again in any drawing (`insert`),
  * kept in the browser (`<localStorageKey>-library`, shared by the drawings of the drawer), exported and imported as
- * `.freedrawinglib` files; `drawer.library.change` event on each change
+ * `.freedrawinglib` files; `library.change` event on each change
  */
 export class Library {
   /** Drawer whose shapes are saved and receiving the inserted ones */
@@ -375,7 +375,7 @@ export class Library {
   }
 
   /**
-   * Library changed: kept in the browser (toast when the storage is full), `drawer.library.change` event
+   * Library changed: kept in the browser (toast when the storage is full), `library.change` event
    */
   private _changed() {
     try {

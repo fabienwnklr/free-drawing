@@ -165,7 +165,7 @@ describe('Integration in an app', () => {
       gridStyle: 'squares',
       wheelAction: 'zoom',
     });
-    drawer.on('drawer.preferences.change', onChange);
+    drawer.on('preferences.change', onChange);
 
     drawer.setPreferences({ theme: 'dark', language: 'fr', grid: true });
     await Promise.resolve();

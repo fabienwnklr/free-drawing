@@ -35,7 +35,7 @@ describe('Images', () => {
     const drawer = createDrawer({ width: 1000, height: 800 });
     const changes = vi.fn();
 
-    drawer.on('drawer.change', changes);
+    drawer.on('change', changes);
     const image = (await drawer.addImage({ data: pngData, width: 400, height: 200 }, { x: 100, y: 100 }))!;
     const fileId = image.getAttr('fileId');
 

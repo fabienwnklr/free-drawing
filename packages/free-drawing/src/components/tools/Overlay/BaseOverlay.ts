@@ -34,7 +34,7 @@ import type { Choice, IconChoice } from '@/@types/ui';
 /**
  * Options panel of a tool or of the selection, common to all shapes: stroke and background colors, stroke width and
  * style, corners, opacity, stacking order and actions (duplicate, delete, link) of the selection. Buttons only call
- * drawer setters, fields follow `drawer.options.change`
+ * drawer setters, fields follow `options.change`
  */
 export class BaseOverlay {
   /** Panel element (region named by `label` option) in floating region, shown with `show` */
@@ -604,7 +604,7 @@ export class BaseOverlay {
 
   /**
    * Update fields state, only given keys are updated
-   * @param change Changed options (from `drawer.options.change`) or values of the shape shown
+   * @param change Changed options (from `options.change`) or values of the shape shown
    */
   updateFields(change: OptionsChange) {
     if (change.strokeColor !== undefined) {

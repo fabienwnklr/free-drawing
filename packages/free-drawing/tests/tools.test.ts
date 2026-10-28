@@ -621,7 +621,7 @@ describe('Pointer actions', () => {
     touch('touchstart', [finger(0, 100, 100)]);
     touch('touchmove', [finger(0, 140, 120)]);
     expect(drawer.getDrawingShapes()).toHaveLength(1);
-    drawer.on('drawer.change', live);
+    drawer.on('change', live);
 
     // second finger: square being drawn removed, no change
     touch('touchstart', [finger(0, 140, 120), finger(1, 240, 120)], [finger(1, 240, 120)]);
@@ -662,7 +662,7 @@ describe('Pointer actions', () => {
     touch('touchstart', [finger(0, 100, 100)]);
     touch('touchmove', [finger(0, 150, 120)]);
     expect(drawer.getDrawingShapes()).toHaveLength(1);
-    drawer.on('drawer.change', live);
+    drawer.on('change', live);
     touch('touchstart', [finger(0, 150, 120), finger(1, 300, 300)], [finger(1, 300, 300)]);
     expect(drawer.getDrawingShapes()).toHaveLength(0);
     touch('touchend', [], [finger(0, 150, 120), finger(1, 300, 300)]);

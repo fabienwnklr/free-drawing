@@ -24,7 +24,7 @@ describe('Dark mode', () => {
     expect($item.getAttribute('aria-pressed')).toBe('false');
     expect($item.getAttribute('aria-keyshortcuts')).toBe('Alt+Shift+D');
 
-    drawer.on('drawer.theme.change', onTheme);
+    drawer.on('theme.change', onTheme);
     $item.click();
     expect(drawer.isDarkMode()).toBe(true);
     expect(isDark(drawer)).toBe(true);

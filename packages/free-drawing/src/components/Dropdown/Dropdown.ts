@@ -6,7 +6,7 @@ import { drawerEvents } from '@/constants';
 
 /**
  * Disclosure menu: a button showing / hiding a menu below it, base of the settings menu.
- * Escape and a click out of the button hide the menu (`drawer.dropdown.hide` event).
+ * Escape and a click out of the button hide the menu (`dropdown.hide` event).
  */
 export class Dropdown extends MicroEvent<DropdownEventMap> {
   /** Element holding the button and the menu, to add to the page */
@@ -72,7 +72,7 @@ export class Dropdown extends MicroEvent<DropdownEventMap> {
   }
 
   /**
-   * Hides the menu and triggers `drawer.dropdown.hide`
+   * Hides the menu and triggers `dropdown.hide`
    */
   hide() {
     this._setShown(false);

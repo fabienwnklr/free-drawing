@@ -60,7 +60,7 @@ describe('Keep tool', () => {
     const $button = drawer.toolbar.$keepToolButton!;
     const onChange = vi.fn();
 
-    drawer.on('drawer.preferences.change', onChange);
+    drawer.on('preferences.change', onChange);
     $button.click();
     await Promise.resolve();
     expect(drawer.options.keepTool).toBe(false);

@@ -76,7 +76,7 @@ export class Toast extends MicroEvent<ToastEventMap> {
   }
 
   /**
-   * Shows the toast and reads its message, hidden after `timeout` (then `drawer.toast.hide` is triggered)
+   * Shows the toast and reads its message, hidden after `timeout` (then `toast.hide` is triggered)
    */
   show() {
     this.$toastContainer.classList.add('show');

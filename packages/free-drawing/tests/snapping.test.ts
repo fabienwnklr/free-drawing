@@ -148,7 +148,7 @@ describe('Snapping while moving', () => {
     const changes = vi.fn();
 
     drawer.stage.fire('change');
-    drawer.on('drawer.change', changes);
+    drawer.on('change', changes);
     selectWidget.setActive(true);
     selectWidget.select([a, b, c]);
     const entries = drawer.undoRedo.entries.length;

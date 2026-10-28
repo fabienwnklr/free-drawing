@@ -257,7 +257,7 @@ describe('Arrows: paths and heads', () => {
     const selectWidget = drawer.getWidget<SelectWidget>('selection')!;
     const onOptions = vi.fn();
 
-    drawer.on('drawer.options.change', onOptions);
+    drawer.on('options.change', onOptions);
     drawer.setArrowheads({ start: 'dot' });
     expect(onOptions).toHaveBeenCalledWith({ arrowheads: { start: 'dot', end: 'triangle' } });
     // defaults never mutated

@@ -79,7 +79,7 @@ describe('Languages', () => {
     const onLanguage = vi.fn();
     const $select = drawer.setting.$languageSelect;
 
-    drawer.on('drawer.language.change', onLanguage);
+    drawer.on('language.change', onLanguage);
     expect([...$select.options].map(($option) => $option.value)).toEqual(['auto', 'en', 'fr', 'es', 'de']);
     // names in their language
     expect([...$select.options].map(($option) => $option.text).slice(1)).toEqual([

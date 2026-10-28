@@ -76,7 +76,7 @@ describe('Widgets', () => {
     const drawer = createDrawer();
     const text = drawer.getWidget<TextWidget>('text')!.addTextNode('hello');
     const onChange = vi.fn();
-    drawer.on('drawer.change', onChange);
+    drawer.on('change', onChange);
 
     text.fire('dragend', {}, true);
 
@@ -105,7 +105,7 @@ describe('Widgets', () => {
     const brushOverlay = drawer.getWidget<BrushWidget>('brush')!.overlay;
     selectWidget.transformer.nodes([text]);
     const onChange = vi.fn();
-    drawer.on('drawer.change', onChange);
+    drawer.on('change', onChange);
 
     textOverlay.$strokeColorBtnContainer.querySelector<HTMLButtonElement>('[data-stroke-color="#e03131"]')!.click();
     expect(text.fill()).toBe('#e03131');

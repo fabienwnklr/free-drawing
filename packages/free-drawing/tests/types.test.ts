@@ -50,8 +50,8 @@ describe('Types of the public API', () => {
     const drawer = createDrawer();
     const seen: unknown[] = [];
 
-    drawer.on('drawer.readonly.change', (readOnly) => seen.push(readOnly === true));
-    drawer.on('drawer.selection.change', (shapes) => seen.push(shapes.length));
+    drawer.on('readonly.change', (readOnly) => seen.push(readOnly === true));
+    drawer.on('selection.change', (shapes) => seen.push(shapes.length));
     drawer.on('stamps.count', (count) => seen.push(count + 1));
     drawer.setReadOnly(true);
     drawer.trigger('stamps.count', 2);
@@ -61,9 +61,9 @@ describe('Types of the public API', () => {
     // @ts-expect-error unknown event
     drawer.on('drawer.unknown', () => {});
     // @ts-expect-error listener of other arguments
-    drawer.on('drawer.readonly.change', (readOnly: string) => readOnly);
+    drawer.on('readonly.change', (readOnly: string) => readOnly);
     // @ts-expect-error arguments of another event
     drawer.trigger('stamps.count', 'two');
-    drawer.off('drawer.unknown' as 'drawer.change');
+    drawer.off('drawer.unknown' as 'change');
   });
 });

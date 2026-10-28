@@ -257,7 +257,7 @@ export class StampsPlugin extends Plugin {
 
   /**
    * Plugin disabled while the drawing has the most stamps (`max` option), told once; enabled again below it. Its
-   * tools are disabled with it, `drawer.plugin.change` tells other plugins (`StampCounterPlugin`)
+   * tools are disabled with it, `plugin.change` tells other plugins (`StampCounterPlugin`)
    */
   private _checkLimit() {
     const { max } = this.options;

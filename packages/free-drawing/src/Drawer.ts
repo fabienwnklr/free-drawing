@@ -1117,7 +1117,7 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
 
   /**
    * Listen to shortcuts, zoom wheel, view moves, shape drags and transforms (frames, linked arrows, collaboration)
-   * and drawing changes (`change` of stage: save, history, `drawer.change` event)
+   * and drawing changes (`change` of stage: save, history, `change` event)
    */
   private _initEvents() {
     this._initHotKey();
@@ -1390,7 +1390,7 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
   }
 
   /**
-   * Drawing has changes not saved or is saved: `drawer.unsaved.change` event when it changes
+   * Drawing has changes not saved or is saved: `unsaved.change` event when it changes
    * @param unsaved True when drawing has changes not saved, false once saved
    */
   private _setUnsaved(unsaved: boolean) {
@@ -2638,7 +2638,7 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
   }
 
   /**
-   * Apply interface settings (given ones only), one `drawer.preferences.change` event
+   * Apply interface settings (given ones only), one `preferences.change` event
    * @param preferences Grid wins when grid and snapping are both true
    */
   setPreferences(preferences: Partial<Preferences>) {
@@ -2745,7 +2745,7 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
   }
 
   /**
-   * Show theme chosen (`drawer-dark` class on container), `drawer.theme.change` event
+   * Show theme chosen (`drawer-dark` class on container), `theme.change` event
    */
   private _applyTheme() {
     const dark = this.isDarkMode();

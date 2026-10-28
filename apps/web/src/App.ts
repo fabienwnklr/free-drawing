@@ -218,7 +218,7 @@ export class App {
 
   private _initEvents() {
     // also saved in browser by drawer
-    this.drawer.on('drawer.preferences.change', (preferences: Preferences) => {
+    this.drawer.on('preferences.change', (preferences: Preferences) => {
       if (this.user) api.savePreferences(preferences).catch(() => {});
       this.render();
     });
@@ -238,14 +238,14 @@ export class App {
       else this.drawer.saveNow();
     });
     // without auto save: changes not saved yet
-    this.drawer.on('drawer.unsaved.change', (unsaved: boolean) => {
+    this.drawer.on('unsaved.change', (unsaved: boolean) => {
       if (unsaved && !this.drawer.options.autoSave) this._setSaveState('unsaved');
       else if (!unsaved && this.#saveState === 'unsaved') this._setSaveState('');
     });
-    this.drawer.on('drawer.language.change', () => this.render());
-    this.drawer.on('drawer.theme.change', () => this.render());
+    this.drawer.on('language.change', () => this.render());
+    this.drawer.on('theme.change', () => this.render());
     // session started in this drawing: opened again by the room link (page reloaded)
-    this.drawer.on('drawer.collaboration.change', () => {
+    this.drawer.on('collaboration.change', () => {
       const room = this.drawer.collaboration?.room;
 
       if (room && this.drawing) local.setRoomDrawingId(room, this.drawing.id, !!this.user);

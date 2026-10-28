@@ -123,41 +123,41 @@ The library needs no framework. React and Vue apps can use its `FreeDrawing` com
 
 ## Events
 
-Events are named `drawer.<subject>.<action>`:
+Events are named `<subject>.<action>` (`change` for the drawing):
 
 ```js
-drawer.on('drawer.change', (drawer) => {
+drawer.on('change', (drawer) => {
   // drawing changed
 });
-drawer.off('drawer.change', callback);
+drawer.off('change', callback);
 ```
 
 | Event | Arguments | Description |
 | --- | --- | --- |
-| `drawer.change` | drawer | Drawing changed (shapes, background, undo / redo, changes of collaborators...) |
-| `drawer.options.change` | changed options | Drawing options changed (color, width, style, opacity, text style) |
-| `drawer.selection.change` | selected shapes | Selection changed |
-| `drawer.readonly.change` | read only state | Read only mode changed |
-| `drawer.collaboration.change` | | Collaboration started or stopped, users or rights changed |
-| `drawer.theme.change` | dark state | Light or dark theme shown |
-| `drawer.language.change` | language | Language of interface changed |
-| `drawer.preferences.change` | preferences | Theme, language, grid, snapping or another preference changed (one event for several changes) |
-| `drawer.unsaved.change` | unsaved | Drawing has changes not saved yet (auto save off, save of `storage` in progress, failed save), or is saved again |
-| `drawer.plugin.change` | plugin | Plugin disabled (`forceDisabled`) or enabled again |
-| `drawer.slideshow.change` | index of the slide | Slideshow started, showing another slide, or stopped (-1) |
-| `drawer.replay.change` | index of the shape | Replay started, showing another shape, or stopped (-1) |
+| `change` | drawer | Drawing changed (shapes, background, undo / redo, changes of collaborators...) |
+| `options.change` | changed options | Drawing options changed (color, width, style, opacity, text style) |
+| `selection.change` | selected shapes | Selection changed |
+| `readonly.change` | read only state | Read only mode changed |
+| `collaboration.change` | | Collaboration started or stopped, users or rights changed |
+| `theme.change` | dark state | Light or dark theme shown |
+| `language.change` | language | Language of interface changed |
+| `preferences.change` | preferences | Theme, language, grid, snapping or another preference changed (one event for several changes) |
+| `unsaved.change` | unsaved | Drawing has changes not saved yet (auto save off, save of `storage` in progress, failed save), or is saved again |
+| `plugin.change` | plugin | Plugin disabled (`forceDisabled`) or enabled again |
+| `slideshow.change` | index of the slide | Slideshow started, showing another slide, or stopped (-1) |
+| `replay.change` | index of the shape | Replay started, showing another shape, or stopped (-1) |
 
-Components trigger `drawer.dropdown.hide` (dropdown menu) and `drawer.toast.hide` (`drawer.toast()` result). Names of previous versions (`change`, `fd.options.change`...) still work, with a warning in console.
+Components trigger `dropdown.hide` (dropdown menu) and `toast.hide` (`drawer.toast()` result). Names of previous versions (`drawer.change`, `drawer.selection.change`... of 7.0 to 7.52, `fd.options.change`...) still work, with a warning in console.
 
 In TypeScript, events are typed by `DrawerEventMap`: the name is checked (an unknown one is an error, the editor suggests the others) and the listener gets the arguments of its event:
 
 ```ts
-drawer.on('drawer.selection.change', (shapes) => console.log(shapes.length)); // shapes: DrawingShape[]
+drawer.on('selection.change', (shapes) => console.log(shapes.length)); // shapes: DrawingShape[]
 drawer.on('drawer.selection.chnage', () => {}); // error: unknown event
-drawer.on('drawer.readonly.change', (readOnly: string) => {}); // error: readOnly is a boolean
+drawer.on('readonly.change', (readOnly: string) => {}); // error: readOnly is a boolean
 ```
 
-Names start with `drawer.`: the events of plugins and apps triggered on the drawer use their own prefix (`stamps.count`), so they never mix with the ones of the library, and the events of the drawer are easy to find in code. A plugin adds its events to `DrawerEventMap` (declaration merging):
+The events of plugins and apps triggered on the drawer start with their own prefix (`stamps.count`): they never mix with the ones of the library. A plugin adds its events to `DrawerEventMap` (declaration merging):
 
 ```ts
 declare module '@fabwcie/free-drawing' {
@@ -322,7 +322,7 @@ Preferences are the interface settings of the user (theme, language, grid and it
 
 ```js
 drawer.setPreferences(await api.getPreferences()); // given ones only
-drawer.on('drawer.preferences.change', (preferences) => api.savePreferences(preferences));
+drawer.on('preferences.change', (preferences) => api.savePreferences(preferences));
 drawer.getPreferences(); // { theme: 'light', language: 'auto', grid: false, snapping: false, zen: false, autoSave: true, keepTool: true, shapeRecognition: false, gridStyle: 'squares', wheelAction: 'zoom' }
 ```
 
@@ -478,7 +478,7 @@ drawer.plugins.get(Stamps); // also by name: drawer.plugins.get('Stamps'), drawe
 - Steps: constructor (before the toolbar: `addWidget`, `addTranslations`), `init()` (drawer created: `addCommand`, `listenTo`...), `afterInit()` (every plugin initialized), `destroy()` (`drawer.plugins.destroy()`, listeners of `listenTo` removed: call `super.destroy()` when overriding it). Required plugins are created and initialized first. A plugin missing, two plugins of the same name or plugins requiring each other throw an error when the drawer is created; an error of `init` is logged, other plugins are still initialized.
 - Tools are placed at their place in the `widgets` and `widgetGroups` options (e.g. `widgets: ['selection', 'stamp', 'brush']`), else at the end of the toolbar. Their title is the text of `tools.<id>`, their shortcut is shown in help and command palette. `ShapeWidget` is the base of tools drawing in the dragged box: `drawShape(start, end)` gives the shape of such a tool as drawn by a drag (not added: `drawer.addShape`). A second finger on a touch screen cancels the pointer action of a tool (`cancelAction()`): `onCancel()` removes what it was drawing (done by `ShapeWidget`).
 - Commands are available unless their `isAvailable()` returns false. Commands with `readOnly: true` do not modify the drawing: also available in read only and while their plugin is disabled. Shortcuts of plugins run before the ones of the library: avoid the ones listed in help. Written `Ctrl+Shift+M` (Ctrl is also Cmd), they are shown ⇧⌘M on Apple devices: `formatShortcut(shortcut, drawer.i18n.t)` and `ariaShortcut(shortcut)` do the same for the interface of a plugin.
-- `isEnabled` is false in read only, or while the plugin is disabled by `forceDisabled(reason)` (until `clearForceDisabled(reason)` for every reason): its tools and commands modifying the drawing are disabled, `drawer.plugin.change` is triggered.
+- `isEnabled` is false in read only, or while the plugin is disabled by `forceDisabled(reason)` (until `clearForceDisabled(reason)` for every reason): its tools and commands modifying the drawing are disabled, `plugin.change` is triggered.
 - Texts: `this.t(key, params)`, in the language of the drawer; the `translations` option can replace them.
 - Options: the app gives them with the class of the plugin, `plugins: [[Stamps, { max: 20 }]]` (a plugin required by another one too: given this way, it is created once, before it), the plugin reads them with its defaults: `options = this.getOptions({ max: 0 })` gives `{ max: 20 }`. The `pluginOptions` option of previous versions (options by plugin name, `pluginOptions: { Stamps: { max: 20 } }`) still works, with a warning: options given with the class replace its ones.
 - Drawer API useful to plugins: `addShape`, `stage.fire('change')`, `placeInFrames`, `getPointerPosition()` (pointer in drawing coordinates), `getSelectedShapes()`, `getWidget<SelectWidget>('selection')?.select(shapes)`, `layout.add(region, element)`, `toast(message)`.
@@ -643,7 +643,7 @@ drawer.slideshow.start(frame, { fullscreen: false }); // from a frame, in the dr
 drawer.slideshow.next(); // previous(), goTo(index)
 drawer.slideshow.slides; // frames in reading order, shown one: drawer.slideshow.current
 drawer.slideshow.stop();
-drawer.on('drawer.slideshow.change', (index) => console.log(index)); // -1 once stopped
+drawer.on('slideshow.change', (index) => console.log(index)); // -1 once stopped
 ```
 
 ## Replay
@@ -659,7 +659,7 @@ drawer.on('drawer.slideshow.change', (index) => console.log(index)); // -1 once 
 ```js
 drawer.replay.start(); // false for an empty drawing
 drawer.replay.pause(); // play(), toggle(), setSpeed(2), goTo(index), stop()
-drawer.on('drawer.replay.change', (index) => console.log(index)); // -1 once stopped
+drawer.on('replay.change', (index) => console.log(index)); // -1 once stopped
 ```
 
 ## Library
@@ -674,7 +674,7 @@ drawer.library.remove(item.id);
 drawer.library.items; // oldest first
 drawer.library.toFile(); // content of a .freedrawinglib file, see also exportFile() and importFile()
 drawer.library.setItems(items); // library of an app (account, server)
-drawer.on('drawer.library.change', (items) => {});
+drawer.on('library.change', (items) => {});
 ```
 
 Drawing shapes are konva shapes or groups (`DrawingShape` type): `getDrawingShapes()` and `getSelectedShapes()` may return groups, their shapes are their children.

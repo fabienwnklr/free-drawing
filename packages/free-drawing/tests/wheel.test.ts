@@ -106,7 +106,7 @@ describe('Mouse wheel and Space', () => {
     const change = vi.fn();
 
     brush.setActive(true);
-    drawer.on('drawer.change', change);
+    drawer.on('change', change);
     expect(keydown(drawer, { key: ' ' })).toBe(false);
     expect(drawer.spacePan.active).toBe(true);
     expect([drawer.stage.draggable(), drawer.drawLayer.listening()]).toEqual([true, false]);

@@ -75,9 +75,9 @@ export class Settings extends Dropdown {
   $githubButton: HTMLButtonElement;
   /** Toggle item of zen mode (Alt+Z) */
   $zenModeButton: HTMLButtonElement;
-  /** Toggle item of dark mode (Alt+Shift+D), follows `drawer.theme.change` */
+  /** Toggle item of dark mode (Alt+Shift+D), follows `theme.change` */
   $darkModeButton: HTMLButtonElement;
-  /** Language choice: auto (browser language) or a language, follows `drawer.language.change` */
+  /** Language choice: auto (browser language) or a language, follows `language.change` */
   $languageSelect: HTMLSelectElement;
   /** Item removing drawing saved in localStorage, after confirmation */
   $clearStorageButton: HTMLButtonElement;

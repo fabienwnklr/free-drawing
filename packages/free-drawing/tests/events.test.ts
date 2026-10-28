@@ -314,7 +314,7 @@ describe('Test drawer event', () => {
     line.opacity(0.5);
 
     drawer.getWidget<EraserWidget>('eraser')!.setActive(true);
-    drawer.on('drawer.change', onChange);
+    drawer.on('change', onChange);
     // no hit canvas in jsdom
     vi.spyOn(drawer.drawLayer, 'getIntersection').mockReturnValue(line);
     for (const button of [1, 2]) {
@@ -532,7 +532,7 @@ describe('Test drawer event', () => {
       brushWidget.setActive(true);
     }
     const onChange = vi.fn();
-    drawer.on('drawer.change', onChange);
+    drawer.on('change', onChange);
 
     selectWidget.transformer.fire('transformend');
 
@@ -590,27 +590,27 @@ describe('Test drawer event', () => {
     const onOptions = vi.fn();
     const text = drawer.getWidget<TextWidget>('text')!.addTextNode('hello');
 
-    drawer.on('drawer.selection.change', onSelection);
-    drawer.on('drawer.readonly.change', onReadOnly);
+    drawer.on('selection.change', onSelection);
+    drawer.on('readonly.change', onReadOnly);
     drawer.getWidget<SelectWidget>('selection')!.select([text]);
     drawer.setReadOnly(true);
     expect(onSelection).toHaveBeenCalledWith([text]);
     expect(onReadOnly).toHaveBeenCalledWith(true);
     expect(deprecations()).toEqual([]);
 
-    drawer.on('change', onChange);
+    drawer.on('drawer.change', onChange);
     drawer.on('fd.options.change', onOptions);
     drawer.stage.fire('change');
     drawer.setStrokeWidth(8);
     expect(onChange).toHaveBeenCalledWith(drawer);
     expect(onOptions).toHaveBeenCalledWith(expect.objectContaining({ strokeWidth: 8 }));
     expect(deprecations()).toEqual([
-      'free-drawing: "change" event is deprecated, use "drawer.change"',
-      'free-drawing: "fd.options.change" event is deprecated, use "drawer.options.change"',
+      'free-drawing: "drawer.change" event is deprecated, use "change"',
+      'free-drawing: "fd.options.change" event is deprecated, use "options.change"',
     ]);
 
     // removed with previous name too, warned once
-    drawer.off('change', onChange);
+    drawer.off('drawer.change', onChange);
     drawer.stage.fire('change');
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(deprecations().length).toBe(2);

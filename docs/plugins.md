@@ -253,7 +253,7 @@ Attributes of shapes are saved with them (`shape.setAttr('rating', 4)`), and fou
 `listenTo` listens until the plugin is destroyed:
 
 ```js
-// events of the drawer (drawer.change, drawer.selection.change, drawer.readonly.change, drawer.language.change...)
+// events of the drawer (change, selection.change, readonly.change, language.change...)
 this.listenTo(this.drawer, drawerEvents.change, () => this.update());
 // events of Konva nodes: stage, layers, shapes
 this.listenTo(this.drawer.drawLayer, 'dblclick dbltap', (e) => this.onDoubleClick(e));
@@ -261,7 +261,7 @@ this.listenTo(this.drawer.drawLayer, 'dblclick dbltap', (e) => this.onDoubleClic
 this.listenTo(this.$button, 'click', () => this.showCount());
 ```
 
-The [events](/get-started/#events) of the drawer are listed in the guide. `drawer.plugin.change` tells when a plugin is disabled or enabled again.
+The [events](/get-started/#events) of the drawer are listed in the guide. `plugin.change` tells when a plugin is disabled or enabled again.
 
 A plugin can trigger its own events on the drawer, with its own prefix. In TypeScript, it adds them to the events of the drawer, so that the apps get their names and arguments checked:
 
@@ -277,7 +277,7 @@ this.drawer.trigger('stamps.count', this.count);
 
 ## Enabled state
 
-`isEnabled` is false in read only, or while the plugin is disabled by `forceDisabled(reason)`: its tools and its commands modifying the drawing are disabled (commands with `readOnly` stay available), `drawer.plugin.change` is triggered. Several reasons can disable it, it is enabled again once `clearForceDisabled(reason)` cleared every one of them. Check `isEnabled` before modifying the drawing from your own events.
+`isEnabled` is false in read only, or while the plugin is disabled by `forceDisabled(reason)`: its tools and its commands modifying the drawing are disabled (commands with `readOnly` stay available), `plugin.change` is triggered. Several reasons can disable it, it is enabled again once `clearForceDisabled(reason)` cleared every one of them. Check `isEnabled` before modifying the drawing from your own events.
 
 ```js
 if (stamps.length >= max) this.forceDisabled('limit');

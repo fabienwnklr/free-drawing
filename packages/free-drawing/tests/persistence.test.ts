@@ -48,7 +48,7 @@ describe('Persistence and performance', () => {
       throw new DOMException('full', 'QuotaExceededError');
     });
     const onChange = vi.fn();
-    drawer.on('drawer.change', onChange);
+    drawer.on('change', onChange);
     const length = drawer.undoRedo.entries.length;
 
     drawer.getWidget<TextWidget>('text')!.addTextNode('hello');

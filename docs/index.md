@@ -123,7 +123,7 @@ const drawer = new Drawer(document.getElementById('drawer'), {
 });
 
 // drawing changed: keep it anywhere as JSON
-drawer.on('drawer.change', () => console.log(drawer.getDrawingFile()));
+drawer.on('change', () => console.log(drawer.getDrawingFile()));
 ```
 
 ```tsx [React]

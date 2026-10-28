@@ -26,7 +26,7 @@ describe('Auto save', () => {
     const drawer = createDrawer({ autoSave: true });
     const onUnsaved = vi.fn();
 
-    drawer.on('drawer.unsaved.change', onUnsaved);
+    drawer.on('unsaved.change', onUnsaved);
     addRect(drawer);
     expect(savedStage(drawer)).toContain('drawer-rect');
     expect(drawer.hasUnsavedChanges()).toBe(false);
@@ -39,7 +39,7 @@ describe('Auto save', () => {
     const onUnsaved = vi.fn();
     const toast = vi.spyOn(drawer, 'toast');
 
-    drawer.on('drawer.unsaved.change', onUnsaved);
+    drawer.on('unsaved.change', onUnsaved);
     drawer.setPreferences({ autoSave: false });
     expect(drawer.getPreferences().autoSave).toBe(false);
 

@@ -180,7 +180,7 @@ export abstract class Plugin {
   }
 
   /**
-   * Enabled state changed: widgets of the plugin disabled or enabled, `drawer.plugin.change` triggered
+   * Enabled state changed: widgets of the plugin disabled or enabled, `plugin.change` triggered
    */
   private _changed() {
     this._updateWidgets();

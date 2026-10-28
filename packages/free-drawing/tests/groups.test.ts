@@ -131,7 +131,7 @@ describe('Groups', () => {
     const onChange = vi.fn();
 
     drawer.groupShapes([rect, ellipse]);
-    drawer.on('drawer.change', onChange);
+    drawer.on('change', onChange);
     drawer.getWidget<EraserWidget>('eraser')!.setActive(true);
     // no hit canvas in jsdom
     vi.spyOn(drawer.drawLayer, 'getIntersection').mockReturnValue(rect);
