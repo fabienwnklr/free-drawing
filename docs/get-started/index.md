@@ -450,6 +450,29 @@ drawer.deleteShapes([shape]);
 drawer.fitTextWidth(); // texts of selection (also of groups), true if one changed
 ```
 
+### Keyboard navigation
+
+The shapes are reached with the keyboard, the focus on the drawing itself (not on a button of the drawer): a screen reader reads each shape reached.
+
+| Key | Action |
+| --- | --- |
+| Enter | Select the first shape (nothing selected), the first shape of the selected group or frame, else edit the text of the selected shape (as a double click) |
+| Tab / Shift + Tab | Select the next / previous shape among the shapes of the same drawing, frame or group, in reading order (rows from top to bottom, left to right), around at the end |
+| Shift + Enter | Select the group or frame of the selected shape |
+| Escape | Clear the selection: Tab goes to the interface of the drawer again |
+
+- Without selection, Tab keeps its role: it goes from the drawing to the buttons of the drawer.
+- The selection tool is activated; the shape is shown in the view when it is not in it (zoom kept, else zoomed out). Texts of shapes and labels of arrows are reached with their shape.
+- Its description is read by screen readers: name given to it (title of a frame), type, text, number of shapes inside (group, frame), shapes linked by an arrow, link, locked, frame or group holding it and its number among its shapes, for example "Rectangle, text: Start, 1 of 3" or "Arrow, from Start, to Goal, 2 of 3". The keys are described with the name of the drawer (`aria-describedby`), in the language of the drawer.
+- In read only, nothing is selected: the shape reached is outlined, shown and described.
+
+```js
+drawer.navigation.next(); // next shape (-1: previous one), first one without selection
+drawer.navigation.enter(); // first shape of the selected group or frame
+drawer.navigation.exit(); // its group or frame
+drawer.navigation.describe(shape); // description read by screen readers
+```
+
 ## Context menu
 
 A right click on a shape selects it (with the selection tool) and shows actions on the selection, with their shortcuts:

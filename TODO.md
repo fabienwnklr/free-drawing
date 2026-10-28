@@ -136,7 +136,7 @@
     }
 }
 - [x] explain why use konva as peer dependencies
-- [ ] keyboard navigation between shapes, with a description read by screen readers
+- [x] keyboard navigation between shapes, with a description read by screen readers
 - [ ] shape recognition: a freehand stroke turned into a rectangle, an ellipse or an arrow (need to be enable/disable)
 - [ ] page backgrounds: lined, dotted, isometric paper
 - [ ] import of `.excalidraw` and `.tldr` files

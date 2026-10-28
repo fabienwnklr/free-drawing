@@ -26,7 +26,7 @@ import type {
 } from '@/@types/drawer';
 import type { CollaborationOptions, CollaborationSocket, ViewArea } from '@/@types/collaboration';
 import { createId, deepMerge } from '@/utils/functions';
-import { defaultOptions, drawerEvents, gridSize, shapeLabels, shapeName, zoomLimits } from '@/constants';
+import { defaultOptions, drawerEvents, gridSize, shapeLabels, shapeName, viewMargin, zoomLimits } from '@/constants';
 import { hasFocusOutside, setPressed } from '@/utils/dom';
 import { announce, createLiveRegion } from '@/utils/liveRegion';
 import { DrawerError, getErrorText } from '@/utils/errors';
@@ -46,6 +46,7 @@ import { Library } from '@/utils/library';
 import { LibraryPanel } from '@/components/LibraryPanel/LibraryPanel';
 import { SearchBar } from '@/components/SearchBar/SearchBar';
 import { Slideshow } from '@/components/Slideshow/Slideshow';
+import { ShapeNavigation } from '@/utils/shapeNavigation';
 import { fitTextWidth, getFontsToLoad, getTexts, loadFonts } from '@/utils/text';
 import {
   decodeLinkData,
@@ -223,6 +224,8 @@ export class Drawer extends MicroEvent {
   search!: SearchBar;
   /** Presentation of the frames as slides (Alt+Shift+P) */
   slideshow!: Slideshow;
+  /** Keyboard navigation between the shapes (Enter, Tab, Shift + Tab, Escape), described to screen readers */
+  navigation!: ShapeNavigation;
   /** Button of header saving the drawing while auto save is off (`saveButton` option) */
   saveButton: SaveButton | undefined;
   /** Theme chosen ('system': device one), see `setTheme` */
@@ -440,6 +443,7 @@ export class Drawer extends MicroEvent {
     this.library = new Library(this);
     this.search = new SearchBar(this);
     this.slideshow = new Slideshow(this);
+    this.navigation = new ShapeNavigation(this);
     if (this.options.library) {
       this.libraryPanel = new LibraryPanel(this);
     }
@@ -918,6 +922,23 @@ export class Drawer extends MicroEvent {
       { x: this.stage.width() / 2 - (x + width / 2) * scale, y: this.stage.height() / 2 - (y + height / 2) * scale },
       scale
     );
+  }
+
+  /**
+   * Move the view to an area of the drawing that is not entirely in it (with a margin): current zoom kept when the area
+   * fits, else zoomed out. Texts found by the search, shapes reached with the keyboard
+   * @param area Area of the drawing, in drawing coordinates
+   */
+  _showInView(area: ViewArea) {
+    const view = this.getViewArea();
+    const margin = viewMargin / this.getZoomLevel();
+    const inView =
+      area.x >= view.x + margin &&
+      area.y >= view.y + margin &&
+      area.x + area.width <= view.x + view.width - margin &&
+      area.y + area.height <= view.y + view.height - margin;
+
+    if (!inView) this.showArea(area, this.getZoomLevel(), viewMargin);
   }
 
   /**

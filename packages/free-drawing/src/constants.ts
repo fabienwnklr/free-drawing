@@ -250,6 +250,9 @@ export const fillShapes = [shapeName.rect, shapeName.ellipse, ...pathShapes];
  */
 export const edgesShapes = [shapeName.rect];
 
+/** Space kept around an area the view moves to (text found, shape reached with the keyboard), on screen in px */
+export const viewMargin = 64;
+
 /**
  * Type names of drawing shapes (layers panel), keys of their translation
  */

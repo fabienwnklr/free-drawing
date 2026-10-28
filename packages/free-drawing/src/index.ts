@@ -155,6 +155,7 @@ export type { CollaborationPanel } from '@/components/CollaborationPanel/Collabo
 export type { CollaborationMembers } from '@/components/CollaborationMembers/CollaborationMembers';
 export type { SearchBar } from '@/components/SearchBar/SearchBar';
 export type { Slideshow } from '@/components/Slideshow/Slideshow';
+export type { ShapeNavigation } from '@/utils/shapeNavigation';
 export type { RoomCipher } from '@/utils/encryption';
 export { drawerEvents, shapeName } from '@/constants';
 export { createButton, setLabel, setPressed } from '@/utils/dom';

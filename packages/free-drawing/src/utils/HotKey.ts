@@ -143,6 +143,12 @@ export class HotKey {
         return;
       }
 
+      // shapes reached with the keyboard (Enter, Tab, Escape: focus on the drawer itself, not on its buttons)
+      if (this.drawer.navigation.handleKey(e)) {
+        e.preventDefault();
+        return;
+      }
+
       if (edit && (e.key === 'Backspace' || e.key === 'Delete')) {
         if (mod) {
           // asks confirmation, selection is kept if canceled

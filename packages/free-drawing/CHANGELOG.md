@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.45.0](https://github.com/fabienwnklr/free-drawing/compare/v7.44.0...v7.45.0) (2026-10-28)
+
+
+### Features
+
+* **accessibility:** keyboard navigation between shapes, the focus on the drawing: Enter selects the first shape, Tab / Shift + Tab the next / previous one in reading order (shapes of the same drawing, frame or group), Enter the shapes of a group or frame or edits the text of a shape, Shift + Enter its group or frame, Escape clears the selection; each shape reached is shown and described to screen readers (name, type, text, shapes inside, linked shapes, link, locked, its number), outlined in read only; keys described with the name of the drawer, in help (`drawer.navigation`)
+
 ## [7.44.0](https://github.com/fabienwnklr/free-drawing/compare/v7.43.0...v7.44.0) (2026-10-28)
 
 

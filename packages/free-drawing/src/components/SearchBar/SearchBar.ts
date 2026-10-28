@@ -18,9 +18,6 @@ export const searchHighlightsName = 'drawer-search-highlights';
 /** Space around a text found and its highlight, on screen in px */
 const highlightPadding = 4;
 
-/** Space kept around the text shown when the view moves to it, on screen in px */
-const viewMargin = 64;
-
 /**
  * Search of the texts of the drawing (Ctrl+F): bar at the top of the drawer, texts found highlighted (the current one
  * outlined), Enter / Shift + Enter or its buttons go from one to the next, the view moves to show the current one;
@@ -193,17 +190,8 @@ export class SearchBar {
   private _showCurrent() {
     const { drawer } = this;
     const text = this.results[this.index];
-    const box = text.getClientRect({ relativeTo: drawer.drawLayer });
-    const view = drawer.getViewArea();
-    const margin = viewMargin / drawer.getZoomLevel();
-    const inView =
-      box.x >= view.x + margin &&
-      box.y >= view.y + margin &&
-      box.x + box.width <= view.x + view.width - margin &&
-      box.y + box.height <= view.y + view.height - margin;
 
-    // current zoom kept when it fits
-    if (!inView) drawer.showArea(box, drawer.getZoomLevel(), viewMargin);
+    drawer._showInView(text.getClientRect({ relativeTo: drawer.drawLayer }));
     this._updateCount();
     this._highlight();
     drawer._announce(this.$count.textContent ?? '');
