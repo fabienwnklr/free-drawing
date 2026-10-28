@@ -27,7 +27,7 @@ The toolbar, its groups and the shortcuts are set with the [`widgets` and `widge
 
 ## Selection and editing
 
-![Three cards selected: options panel, selection menu and handles](/features/selection.webp){.screenshot width=1180 height=480}
+![Three cards selected: options panel, selection menu and handles](/features/selection.webp){.screenshot width=1180 height=620}
 
 - **Select** a shape with a click, add one with Shift + click, reach the shapes behind with Alt + click, or drag a rectangle selecting every shape it touches.
 - **Move, resize and rotate**: Shift keeps proportions, rotates by steps of 15° and moves along an axis. Shapes snap to other shapes, to the center of the view and to the grid.
@@ -58,7 +58,7 @@ More in [Layers](/get-started/#layers), [Slideshow](/get-started/#slideshow), [R
 
 ## Menus, shortcuts and command palette
 
-![Context menu of a shape: each action with its shortcut](/features/context-menu.webp){.screenshot width=720 height=690}
+![Context menu of a shape: each action with its shortcut](/features/context-menu.webp){.screenshot width=720 height=700}
 
 - **Context menu**: a right click shows the actions of the selection or of the drawing, each with its shortcut.
 - **Command palette** (Ctrl / Cmd + K): search any tool or command by its name, in the current language.
@@ -70,7 +70,7 @@ More in [Layers](/get-started/#layers), [Slideshow](/get-started/#slideshow), [R
 
 ## Live collaboration
 
-![Cursor and laser of another user on the drawing](/features/collaboration.webp){.screenshot width=1000 height=450}
+![Cursor and laser of another user on the drawing, people connected in the header](/features/collaboration.webp){.screenshot width=1092 height=500}
 
 - **Sessions**: start one from the menu and share its link or QR code, everyone draws on the same drawing in real time.
 - **End-to-end encrypted**: the key is in the link, never sent to the server, which relays and keeps the drawing without being able to read it.
@@ -81,11 +81,11 @@ More in [Layers](/get-started/#layers), [Slideshow](/get-started/#slideshow), [R
 - **Reliable**: changes made while the connection is lost are merged with the ones of the others when it comes back.
 - **Server included**: the repository has a Node server (socket.io, accounts, SQLite), or use your own following the [protocol](/get-started/#collaboration). More in [End-to-end encryption](/get-started/#end-to-end-encryption).
 
-![Dialog of the owner: link, participants with their rights and QR code](/features/collaboration-dialog.webp){.screenshot width=480 height=630}
+![Dialog of the owner: end-to-end encrypted link, participants with their rights and QR code](/features/collaboration-dialog.webp){.screenshot width=480 height=630}
 
 ## Files, links and export
 
-![Export dialog with its preview](/features/export.webp){.screenshot width=680 height=470}
+![Export dialog with its preview](/features/export.webp){.screenshot width=680 height=510}
 
 - **Files**: save and open `.freedrawing` files (Ctrl + Shift + S, Ctrl + O). Only drawing shapes are read: files can come from anyone.
 - **Drawings of Excalidraw and tldraw**: open a `.excalidraw` or `.tldr` file, its shapes become shapes of the library (arrows still linked, texts in their shapes, frames, groups, images), ready to be changed.
