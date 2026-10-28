@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [7.49.0](https://github.com/fabienwnklr/free-drawing/compare/v7.48.0...v7.49.0) (2026-10-28)
+
+
+### Features
+
+* **preferences:** a field of the preferences dialog applies at once, to see it behind the dialog (theme, language, zen mode, grid and its style...); Save keeps them, Cancel, Escape or close give back the preferences shown before (also when the drawer is destroyed meanwhile)
+
 ## [7.48.0](https://github.com/fabienwnklr/free-drawing/compare/v7.47.0...v7.48.0) (2026-10-28)
 
 

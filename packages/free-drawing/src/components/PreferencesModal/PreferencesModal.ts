@@ -17,8 +17,9 @@ const themes: Choice<Theme>[] = [
 
 /**
  * Preferences of user (theme, language, zen mode, grid, snapping, auto save, name in collaboration sessions):
- * applied together with Save (Cancel, Escape or close keep current ones), saved in browser by drawer
- * (and by the app of a logged in user)
+ * applied as soon as a field changes, to see them (name in collaboration sessions: by Save), kept by Save; Cancel,
+ * Escape or close give back the preferences shown before. Saved in browser by drawer (and by the app of a logged in
+ * user)
  */
 export class PreferencesModal extends Modal {
   /** Radio buttons of the theme: light, dark, system */
@@ -43,12 +44,14 @@ export class PreferencesModal extends Modal {
   $shapeRecognition: HTMLInputElement | null = null;
   /** Name in collaboration sessions, with `collaboration` option */
   $name: HTMLInputElement | null = null;
-  /** Cancel button: hides the dialog, fields not applied */
+  /** Cancel button: hides the dialog, preferences shown before given back */
   $cancelButton: HTMLButtonElement;
-  /** Save button: applies fields and hides the dialog */
+  /** Save button: keeps the preferences of the fields, applies the name and hides the dialog */
   $saveButton: HTMLButtonElement;
   /** Fields changed since shown: not replaced by preferences changed elsewhere */
   #changed = false;
+  /** Preferences when the dialog was shown, given back when it is hidden without Save; null while hidden */
+  #initial: Preferences | null = null;
 
   /**
    * Build the dialog: sections of fields (name with `collaboration` option), Cancel and Save buttons
@@ -123,7 +126,12 @@ export class PreferencesModal extends Modal {
       this.$modalBody.append($collaboration);
     }
     this.$modalBody.addEventListener('input', () => (this.#changed = true));
-    this.$modalBody.addEventListener('change', () => (this.#changed = true));
+    // applied at once to see them (name: by Save); grid and snapping already exclude each other (listeners of the
+    // fields, before this one)
+    this.$modalBody.addEventListener('change', (e) => {
+      this.#changed = true;
+      if (e.target !== this.$name) this._apply();
+    });
 
     // cancel first, save on the right
     this.$cancelButton = createButton('drawer-button', 'drawer-button-neutral');
@@ -153,18 +161,41 @@ export class PreferencesModal extends Modal {
   }
 
   /**
-   * Shows the dialog with fields filled from current preferences
+   * Shows the dialog with fields filled from current preferences (given back unless saved)
    */
   show() {
     this.#changed = false;
+    this.#initial = this.drawer.getPreferences();
     this.update();
     super.show();
   }
 
   /**
-   * Fields applied together (one preferences change), dialog closed
+   * Preferences of the fields kept, name applied, dialog closed
    */
   save() {
+    this._apply();
+    if (this.$name) this.drawer.setUserName(this.$name.value);
+    // kept
+    this.#initial = null;
+    this.hide();
+  }
+
+  /**
+   * Hides the dialog: without Save, the preferences shown before are given back
+   */
+  hide() {
+    const initial = this.#initial;
+
+    this.#initial = null;
+    if (initial && this.#changed) this.drawer.setPreferences(initial);
+    super.hide();
+  }
+
+  /**
+   * Preferences of the fields applied (one preferences change)
+   */
+  private _apply() {
     const theme = this.$themes.find(($radio) => $radio.checked)?.value as Theme | undefined;
 
     this.drawer.setPreferences({
@@ -179,8 +210,6 @@ export class PreferencesModal extends Modal {
       ...(this.$keepTool && { keepTool: this.$keepTool.checked }),
       ...(this.$shapeRecognition && { shapeRecognition: this.$shapeRecognition.checked }),
     });
-    if (this.$name) this.drawer.setUserName(this.$name.value);
-    this.hide();
   }
 
   /**

@@ -150,7 +150,7 @@ Components trigger `drawer.dropdown.hide` (dropdown menu) and `drawer.toast.hide
 
 ## Preferences
 
-"Preferences..." of settings menu (Ctrl / Cmd + ,, also in the command palette) opens a dialog: theme (light, dark or system), language, zen mode, grid and its style, action of the mouse wheel, snapping to objects, auto save, keep tool active, shape recognition and name in collaboration sessions. Changes are applied together with "Save" ("Cancel", Escape or close keep current preferences) and saved in the browser (`<localStorageKey>-preferences`), also with the `storage` option. An app can save them with the account of its user (see "Use in an app").
+"Preferences..." of settings menu (Ctrl / Cmd + ,, also in the command palette) opens a dialog: theme (light, dark or system), language, zen mode, grid and its style, action of the mouse wheel, snapping to objects, auto save, keep tool active, shape recognition and name in collaboration sessions. A field changed applies at once, to see it behind the dialog (theme, language, zen mode, grid...); "Save" keeps them (and applies the name), "Cancel", Escape or close give back the preferences shown before. They are saved in the browser (`<localStorageKey>-preferences`), also with the `storage` option. An app can save them with the account of its user (see "Use in an app").
 
 ```js
 drawer.showPreferences();

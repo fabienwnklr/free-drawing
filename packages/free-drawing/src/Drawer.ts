@@ -661,6 +661,8 @@ export class Drawer extends MicroEvent {
     if (this.#destroyed) return;
 
     this.#destroyed = true;
+    // preferences of the dialog not saved: the ones shown before given back
+    if (this.preferencesModal?.isVisible()) this.preferencesModal.hide();
     await this.plugins.destroy();
     this.activeWidget?.setActive(false);
     this.stopCollaboration();

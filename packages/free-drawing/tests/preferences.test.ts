@@ -71,7 +71,7 @@ describe('Preferences', () => {
     });
   });
 
-  it('Dialog from menu, shortcut and command palette, fields applied together with Save', async () => {
+  it('Dialog from menu, shortcut and command palette, fields applied at once, kept by Save, given back else', async () => {
     const drawer = createDrawer({ language: 'en', collaboration: true });
     const $item = drawer.setting.$preferencesButton;
     const onChange = vi.fn();
@@ -95,30 +95,37 @@ describe('Preferences', () => {
     expect($zenShortcut.getAttribute('aria-hidden')).toBe('true');
     expect(modal.$zen.hasAttribute('aria-keyshortcuts')).toBe(false);
 
-    // fields changed: nothing applied yet
+    // fields changed: applied at once, to see them (name: by Save)
     modal.$themes[1].click();
     modal.$language.value = 'fr';
-    modal.$language.dispatchEvent(new Event('change'));
+    modal.$language.dispatchEvent(new Event('change', { bubbles: true }));
     modal.$grid.click();
+    expect(drawer.grid).toBe(true);
     // grid and snapping exclude each other
     modal.$snapping.click();
     expect(modal.$grid.checked).toBe(false);
     modal.$zen.click();
     modal.$name!.value = 'Ada';
-    modal.$name!.dispatchEvent(new Event('input'));
-    expect([drawer.theme, drawer.language, drawer.grid, drawer.getUserName()]).toEqual(['light', 'en', false, '']);
+    modal.$name!.dispatchEvent(new Event('input', { bubbles: true }));
+    expect([drawer.theme, drawer.language, drawer.grid, drawer.getPreferences().zen, drawer.getUserName()]).toEqual([
+      'dark',
+      'fr',
+      false,
+      true,
+      '',
+    ]);
+    await Promise.resolve();
+    expect(onChange).toHaveBeenCalled();
     // not replaced by a change elsewhere
     drawer.setPreferences({ zen: false });
     await Promise.resolve();
     expect(modal.$zen.checked).toBe(true);
 
-    // saved: all applied, one event
-    onChange.mockClear();
+    // saved: preferences of the fields kept, name applied
     modal.$saveButton.click();
     await Promise.resolve();
     expect(modal.isVisible()).toBe(false);
     expect([drawer.theme, drawer.language, drawer.getUserName()]).toEqual(['dark', 'fr', 'Ada']);
-    expect(onChange).toHaveBeenCalledTimes(1);
     expect(saved(drawer)).toEqual({
       theme: 'dark',
       language: 'fr',
@@ -132,18 +139,23 @@ describe('Preferences', () => {
       wheelAction: 'zoom',
     });
 
-    // cancelled, closed with Escape: nothing applied, fields show preferences again
+    // cancelled, closed with Escape: shown at once, then the preferences shown before given back
     drawer.showPreferences();
     expect(modal.$modal.querySelector('.drawer-modal-title')!.textContent).toBe('Préférences');
     modal.$themes[0].click();
+    modal.$language.value = 'en';
+    modal.$language.dispatchEvent(new Event('change', { bubbles: true }));
+    expect([drawer.theme, drawer.language]).toEqual(['light', 'en']);
     modal.$cancelButton.click();
-    expect(drawer.theme).toBe('dark');
+    expect([drawer.theme, drawer.language]).toEqual(['dark', 'fr']);
     drawer.showPreferences();
     expect(modal.$themes.find(($radio) => $radio.checked)!.value).toBe('dark');
     modal.$zen.click();
+    expect(drawer.getPreferences().zen).toBe(false);
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     expect(modal.isVisible()).toBe(false);
     expect(drawer.getPreferences().zen).toBe(true);
+    expect(saved(drawer).zen).toBe(true);
 
     // Enter in name field saves
     drawer.showPreferences();
@@ -161,6 +173,16 @@ describe('Preferences', () => {
     drawer.commandPalette!.$input.value = 'préférences';
     drawer.commandPalette!.$input.dispatchEvent(new Event('input'));
     expect(drawer.commandPalette!.$list.querySelector('[role="option"]')!.textContent).toContain('Préférences');
+  });
+
+  it('Drawer destroyed while the dialog shows preferences not saved: the ones shown before given back', async () => {
+    const drawer = createDrawer({ language: 'en' });
+
+    drawer.showPreferences();
+    drawer.preferencesModal!.$grid.click();
+    expect(drawer.grid).toBe(true);
+    await drawer.destroy();
+    expect(saved(drawer).grid).toBe(false);
   });
 
   it('No name field without collaboration', () => {

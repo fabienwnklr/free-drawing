@@ -92,8 +92,9 @@ describe('Keep tool', () => {
 
     expect(modal.$keepTool!.checked).toBe(true);
     expect(modal.$keepTool!.closest('label')!.textContent).toContain('Keep tool active');
+    // applied at once, kept by Save
     modal.$keepTool!.click();
-    expect(drawer.options.keepTool).toBe(true);
+    expect(drawer.options.keepTool).toBe(false);
     modal.$saveButton.click();
     expect(drawer.options.keepTool).toBe(false);
 
