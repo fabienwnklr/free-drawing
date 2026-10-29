@@ -98,6 +98,47 @@ describe('Accounts', () => {
     await agent.post('/api/auth/sign-in/email').set('Origin', config.baseURL).send({ email, password });
     expect((await agent.get('/api/me')).body.email).toBe(email);
   });
+
+  it('Bodies of requests to accounts are limited', async () => {
+    const res = await request(server.app)
+      .post('/api/auth/sign-up/email')
+      .set('Origin', config.baseURL)
+      .send({ email: `user${++count}@example.com`, password, name: 'x'.repeat(20_000) });
+
+    expect(res.status).toBe(413);
+    expect(res.body).toEqual({ error: 'request entity too large' });
+  });
+
+  it('Checks of the password of a logged in user are rate limited (production): 3 per 10 s, as sign in', async () => {
+    const production = await createServer({ ...config, dev: false });
+
+    try {
+      const agent = request.agent(production.app);
+      /** Statuses of 4 checks of a wrong password by a route */
+      const tries = async (path: string) => {
+        const statuses: number[] = [];
+
+        for (let i = 0; i < 4; i++) {
+          const res = await agent.post(path).set('Origin', config.baseURL).send({ password: 'wrong password' });
+
+          statuses.push(res.status);
+        }
+        return statuses;
+      };
+
+      await agent
+        .post('/api/auth/sign-up/email')
+        .set('Origin', config.baseURL)
+        .send({ email: `user${++count}@example.com`, password, name: 'Rate' });
+      // wrong passwords logged by Better Auth
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+      expect(await tries('/api/auth/delete-user')).toEqual([400, 400, 400, 429]);
+      expect(await tries('/api/auth/verify-password')).toEqual([400, 400, 400, 429]);
+      expect((await agent.get('/api/me')).status).toBe(200);
+    } finally {
+      await production.close();
+    }
+  });
 });
 
 describe('Account', () => {
@@ -296,6 +337,33 @@ describe('Drawings', () => {
       expect([res.status, res.body.code]).toEqual([403, 'DRAWINGS_TOO_BIG']);
       expect((await agent.put(`/api/drawings/${id}`).send({ content: { ...drawing, shapes: [] } })).status).toBe(200);
       expect((await agent.get(`/api/drawings/${id}`)).body.content.shapes).toEqual([]);
+    } finally {
+      Object.assign(drawingsLimits, saved);
+    }
+  });
+
+  it('Limits of an account hold for requests sent at once', async () => {
+    const { agent } = await signUp();
+    const saved = { ...drawingsLimits };
+    const statuses = (requests: Promise<{ status: number }>[]) =>
+      Promise.all(requests).then((responses) => responses.map((res) => res.status).sort());
+
+    Object.assign(drawingsLimits, { count: 3 });
+    try {
+      expect(await statuses(Array.from({ length: 5 }, () => agent.post('/api/drawings').send({})))).toEqual([
+        201, 201, 201, 403, 403,
+      ]);
+
+      // two drawings growing at once: room for one only
+      const ids: string[] = (await agent.get('/api/drawings')).body.map(({ id }: { id: string }) => id);
+      const small = (await agent.get(`/api/drawings/${ids[0]}`)).body.content;
+      const big = { ...drawing, shapes: [{ className: 'Rect', attrs: { id: 'r1', label: 'x'.repeat(2000) } }] };
+      const growth = JSON.stringify(big).length - JSON.stringify(small).length;
+
+      Object.assign(drawingsLimits, { count: 10, size: 3 * JSON.stringify(small).length + growth + 10 });
+      expect(
+        await statuses(ids.slice(0, 2).map((id) => agent.put(`/api/drawings/${id}`).send({ content: big })))
+      ).toEqual([200, 403]);
     } finally {
       Object.assign(drawingsLimits, saved);
     }
@@ -997,13 +1065,55 @@ describe('Collaboration', () => {
     expect(back.userId).toBe('editor-k');
     expect(back.users.find((user) => user.id === 'editor-k')?.canEdit).toBe(true);
 
-    // secrets not kept, their hashes only
+    // secrets not kept, their hashes only (ids of connections of the impostors: given to nobody)
     await vi.waitFor(async () => {
       const saved = await server.db.selectFrom('room').where('id', '=', room).selectAll().executeTakeFirstOrThrow();
 
-      expect(JSON.parse(saved.content).userKeys.map(([id]: string[]) => id)).toEqual(['owner-k', 'editor-k']);
+      expect(JSON.parse(saved.content).userKeys).toEqual([
+        ['owner-k', expect.any(String)],
+        ['editor-k', expect.any(String)],
+        [impostor.userId, ''],
+        [other.userId, ''],
+      ]);
       expect(saved.content).not.toContain('editor browser');
     });
+  });
+
+  it('Ids of accounts and of connections are never given to another user', async () => {
+    const { agent, cookie } = await signUp('Grace');
+    const { id } = (await agent.get('/api/me')).body;
+    const room = 'room-ids';
+    const owner = await joinRoom({ room, name: 'Owner', userId: 'owner-i', userKey: 'owner browser i', ownerKey: 'i' });
+
+    // id of an account (users of other rooms, `by` of links): not given, also before the account comes in the room
+    const impostor = await joinRoom({ room, name: 'Impostor', userId: id, userKey: 'impostor browser' });
+
+    expect(impostor.userId).not.toBe(id);
+    expect((await join({ room, name: '', userId: 'grace-i' }, cookie)).userId).toBe(id);
+
+    // id refused: id of the connection, not given to a user who saw it
+    const refused = await joinRoom({ room, name: 'Refused', userId: 'not an id!', userKey: 'refused browser' });
+    const updated = owner.next<User[]>(socketEvents.USERS);
+
+    owner.socket.emit(socketEvents.RIGHTS, { userId: refused.userId, canEdit: true });
+    expect((await updated).find((user) => user.id === refused.userId)?.canEdit).toBe(true);
+
+    const copycat = await joinRoom({ room, name: 'Copycat', userId: refused.userId, userKey: 'copycat browser' });
+
+    expect(copycat.userId).not.toBe(refused.userId);
+    expect(copycat.users.find((user) => user.id === copycat.userId)?.canEdit).toBe(false);
+  });
+
+  it('Messages sent with a join are handled once joined', async () => {
+    const room = 'room-order';
+    const owner = await joinRoom({ room, name: 'Owner', userId: 'owner-o', ownerKey: 'o' });
+    const viewer = client();
+    const request = owner.next(socketEvents.REQUEST);
+
+    // id checked in the database first: the request waits for the join
+    viewer.socket.emit(socketEvents.JOIN, { room, name: 'Viewer', userId: 'viewer-o', userKey: 'viewer browser o' });
+    viewer.socket.emit(socketEvents.REQUEST);
+    expect(await request).toEqual({ userId: 'viewer-o', name: 'Viewer' });
   });
 
   it('A room remembering too many users forgets the ones with the right of new users', async () => {
@@ -1089,6 +1199,48 @@ describe('Collaboration', () => {
       Object.assign(limits, { rooms: 3 });
       expect(await joinFrom('203.0.113.3', 'room-p4')).toBe('full');
       expect(await joinFrom('203.0.113.3', 'room-p3')).toBe('joined');
+    } finally {
+      Object.assign(limits, saved);
+      await proxied.close();
+    }
+  });
+
+  it('Rooms of a client beyond its limit, then rooms of one client on a full server are forgotten first', async () => {
+    const proxied = await createServer({ ...config, trustProxy: 'loopback' });
+    const saved = { ...limits };
+
+    await new Promise<void>((resolve) => proxied.httpServer.listen(0, resolve));
+    const proxiedUrl = `http://localhost:${(proxied.httpServer.address() as AddressInfo).port}`;
+    /** Room joined from an address and left: answer of the server (joined, or reason of refusal) */
+    const visit = async (address: string, room: string) => {
+      const socket = connect(proxiedUrl, { forceNew: true, extraHeaders: { 'x-forwarded-for': address } });
+      const answer = await new Promise<string>((resolve) => {
+        socket.once(socketEvents.REJECTED, ({ reason }: { reason: string }) => resolve(reason));
+        socket.once(socketEvents.JOINED, () => resolve('joined'));
+        socket.emit(socketEvents.JOIN, { room, name: 'User', ownerKey: room });
+      });
+
+      socket.close();
+      await vi.waitFor(() => expect(proxied.io.sockets.adapter.rooms.has(room)).toBe(false));
+      return answer;
+    };
+    /** Rooms kept in the database */
+    const kept = async () =>
+      (await proxied.db.selectFrom('room').select('id').orderBy('id').execute()).map(({ id }) => id);
+
+    Object.assign(limits, { roomsPerClient: 2, rooms: 4 });
+    try {
+      // its own empty room used least recently forgotten
+      expect(await visit('203.0.113.20', 'a1')).toBe('joined');
+      expect(await visit('203.0.113.20', 'a2')).toBe('joined');
+      expect(await visit('203.0.113.20', 'a3')).toBe('joined');
+      // room of two clients, of one client
+      expect(await visit('203.0.113.21', 'b1')).toBe('joined');
+      expect(await visit('203.0.113.22', 'b1')).toBe('joined');
+      expect(await visit('203.0.113.23', 'c1')).toBe('joined');
+      // full server: room of one client used least recently forgotten, not the room of two clients
+      expect(await visit('203.0.113.24', 'd1')).toBe('joined');
+      await vi.waitFor(async () => expect(await kept()).toEqual(['a3', 'b1', 'c1', 'd1']));
     } finally {
       Object.assign(limits, saved);
       await proxied.close();

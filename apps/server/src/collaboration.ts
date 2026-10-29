@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto';
+import { createHash, createHmac } from 'node:crypto';
 import type { IncomingMessage } from 'node:http';
 import type { Kysely } from 'kysely';
 import type { Server, Socket } from 'socket.io';
@@ -11,6 +11,8 @@ type SocketData = {
   account: User | null;
   /** Client of the connection for limits: address, or network of an IPv6 address (`clientOf`) */
   client: string;
+  /** Key of the client kept by rooms (`clients` of a room): HMAC of `client`, not the address */
+  clientKey: string;
   room?: string;
   name: string;
   userId: string;
@@ -56,9 +58,15 @@ type RoomData = {
   accounts: Set<string>;
   /**
    * Hashes of the secrets of the browsers of anonymous users (`hashKey`), by id: an id is given to the browser giving the
-   * same secret only, not to a user who saw it (users of the room, `by` of links)
+   * same secret only, not to a user who saw it (users of the room, `by` of links). Empty for the id of a connection
+   * (user whose id was refused): given to nobody else
    */
   userKeys: Map<string, string>;
+  /**
+   * Keys of the first two clients who joined the room (`clientKey`), the first one created it: rooms of one client are
+   * forgotten first when the server keeps too many rooms. None for a room of a previous version (never forgotten for it)
+   */
+  clients?: string[];
   /** Users coming for the first time can draw (owner setting), else they view only */
   newUsersCanEdit: boolean;
   /** Area shown by the owner presenting the drawing (encrypted in an encrypted room), sent to users joining meanwhile, not saved */
@@ -84,6 +92,8 @@ type SavedRoom = {
   accounts: string[];
   /** None in rooms saved by previous versions */
   userKeys?: [string, string][];
+  /** None in rooms saved by previous versions */
+  clients?: string[];
   newUsersCanEdit: boolean;
   keyCheck?: string;
 };
@@ -123,7 +133,15 @@ export const limits = {
   knownUsers: 1_000,
   /** Rooms created by a client per hour (users behind the same address share it) */
   newRooms: 50,
-  /** Rooms kept by the server, with or without users (new ones refused beyond) */
+  /**
+   * Rooms kept for the client that created them (`roomLifetime`): beyond, its empty room used least recently is
+   * forgotten (a client never fills the server, also with the 256 networks of 64 bits of an IPv6 network of 56 bits)
+   */
+  roomsPerClient: 30,
+  /**
+   * Rooms kept by the server, with or without users: beyond, the empty room of one client used least recently is
+   * forgotten (rooms of several clients are kept), new rooms are refused when there is none
+   */
   rooms: 10_000,
 };
 
@@ -404,6 +422,7 @@ const newRoom = (keyCheck?: string): RoomData => ({
   names: new Map(),
   accounts: new Set(),
   userKeys: new Map(),
+  clients: [],
   newUsersCanEdit: false,
   view: null,
   requests: new Set(),
@@ -457,6 +476,7 @@ export async function attachCollaboration(
       names: [...data.names],
       accounts: [...data.accounts],
       userKeys: [...data.userKeys],
+      clients: data.clients,
       newUsersCanEdit: data.newUsersCanEdit,
       keyCheck: data.keyCheck,
     };
@@ -501,6 +521,7 @@ export async function attachCollaboration(
         names: new Map(saved.names),
         accounts: new Set(saved.accounts),
         userKeys: new Map(saved.userKeys ?? []),
+        clients: Array.isArray(saved.clients) ? saved.clients.slice(0, 2) : undefined,
         newUsersCanEdit: saved.newUsersCanEdit !== false,
         keyCheck: isKeyCheck(saved.keyCheck) ? saved.keyCheck : undefined,
         view: null,
@@ -519,6 +540,41 @@ export async function attachCollaboration(
   // do not keep the process running
   forgetTimer.unref();
   newRoomsTimer.unref();
+
+  // key of a client kept by rooms: HMAC of its address with the secret of the server, not the address
+  const keyOf = (client: string) =>
+    createHmac('sha256', auth.options.secret).update(client).digest('base64url').slice(0, 22);
+
+  // id of an account: never given to an anonymous user, also in a room its account did not join yet (ids of users are
+  // seen in rooms and links)
+  const isAccount = async (id: string) =>
+    !!(await db.selectFrom('user').select('id').where('id', '=', id).executeTakeFirst());
+
+  // room forgotten: its id is free again (owner, rights and settings lost; nobody becomes owner without its secret)
+  const forgetRoom = (room: string) => {
+    rooms.delete(room);
+    write(() => db.deleteFrom('room').where('id', '=', room).execute());
+  };
+
+  // place for a room created by a client (key): beyond `roomsPerClient` rooms it created, its empty room used least
+  // recently is forgotten; on a server keeping `limits.rooms`, the empty room of one client used least recently (rooms
+  // of several clients are not taken by a client creating many); false when there is none to forget
+  const makeRoom = (key: string) => {
+    const empty = [...rooms]
+      .filter(([room]) => !io.sockets.adapter.rooms.get(room)?.size)
+      .sort(([, a], [, b]) => a.usedAt - b.usedAt);
+    const forgetFirst = (match: (data: RoomData) => boolean) => {
+      const found = empty.find(([room, data]) => rooms.has(room) && match(data));
+
+      if (found) forgetRoom(found[0]);
+      return !!found;
+    };
+    const created = (data: RoomData) => data.clients?.[0] === key;
+
+    if ([...rooms.values()].filter(created).length >= limits.roomsPerClient && !forgetFirst(created)) return false;
+
+    return rooms.size < limits.rooms || forgetFirst((data) => !!data.clients && data.clients.length < 2);
+  };
 
   // users of a room with their rights, sent to them when someone joins, leaves, changes name or rights
   const sendUsers = (room: string) => {
@@ -636,6 +692,7 @@ export async function attachCollaboration(
   // client of the connection (limits), account of session cookie, anonymous without it (or if session can't be read)
   io.use(async (socket: CollaborationSocket, next) => {
     socket.data.client = clientOf(addressOf(socket.request));
+    socket.data.clientKey = keyOf(socket.data.client);
     try {
       socket.data.account = await getUser(auth, socket.request.headers);
     } catch {
@@ -653,31 +710,52 @@ export async function attachCollaboration(
     // join refused: room full, too many rooms created
     const refuseJoin = () => socket.emit(socketEvents.REJECTED, { event: socketEvents.JOIN, reason: 'full' });
 
-    // listener of a message: an error (message of an unexpected shape) is logged, socket.io runs listeners in
-    // `process.nextTick` where it would stop the server with every room
-    const on = (event: string, listener: (message: unknown) => void) =>
+    // last message still handled (join checking an id in the database): the next ones wait for it
+    let handling: Promise<unknown> | undefined;
+
+    // listener of a message, run in the order of messages (a request to draw sent with a join: once joined). An error
+    // (message of an unexpected shape) is logged: socket.io runs listeners in `process.nextTick`, where it would stop the
+    // server with every room
+    const on = (event: string, listener: (message: unknown) => unknown) =>
       socket.on(event, (message: unknown) => {
-        try {
-          listener(message);
-        } catch (error) {
+        const warn = (error: unknown) =>
           console.warn(`Message ignored (${event}, id: ${socket.id}): ${(error as Error).message}`);
-        }
+        const run = () => {
+          try {
+            const result = listener(message);
+
+            return result instanceof Promise ? result.catch(warn) : undefined;
+          } catch (error) {
+            warn(error);
+          }
+        };
+        const done = handling ? handling.then(run) : run();
+
+        if (!done) return;
+        handling = done;
+        void done.then(() => {
+          if (handling === done) handling = undefined;
+        });
       });
 
-    on(socketEvents.JOIN, (message) => {
+    on(socketEvents.JOIN, async (message) => {
       const { room, name, userId, userKey, ownerKey, invitedBy, keyCheck } = fieldsOf(message);
 
       if (!isId(room)) return;
 
-      const { account, client } = socket.data;
+      const { account, client, clientKey } = socket.data;
       const check = isKeyCheck(keyCheck) ? keyCheck : undefined;
+      // id of an account given by an anonymous user
+      const ofAccount = !account && isId(userId) && (await isAccount(userId));
 
+      // disconnected meanwhile
+      if (!socket.connected) return;
       leaveRoom(socket);
       if ((io.sockets.adapter.rooms.get(room)?.size ?? 0) >= limits.users) return refuseJoin();
       if (!rooms.has(room)) {
         const created = newRooms.get(client) ?? 0;
 
-        if (created >= limits.newRooms || rooms.size >= limits.rooms) return refuseJoin();
+        if (created >= limits.newRooms || !makeRoom(clientKey)) return refuseJoin();
         newRooms.set(client, created + 1);
         // encrypted by the user creating it (key of its links)
         rooms.set(room, newRoom(check));
@@ -698,9 +776,10 @@ export async function attachCollaboration(
       // also the account of the owner, logged in from another browser (secret kept by the first one)
       const owner = (!!key && data.ownerKey === key) || (!!account && account.id === data.ownerId);
       // id of browser, unless it is the one of an account, of the owner (secret not given) or of another browser (other
-      // secret: users of previous versions give none)
+      // secret: users of previous versions give none; id of a connection: nobody)
       const free =
         isId(userId) &&
+        !ofAccount &&
         !data.accounts.has(userId) &&
         (owner || userId !== data.ownerId) &&
         (!data.userKeys.has(userId) || data.userKeys.get(userId) === browserKey);
@@ -719,6 +798,10 @@ export async function attachCollaboration(
       if (account) data.accounts.add(account.id);
       // id bound to the secret of this browser
       else if (id === userId && browserKey && !data.userKeys.has(id)) data.userKeys.set(id, browserKey);
+      // id of this connection (seen in pointers and users of the room): given to nobody else
+      else if (id === socket.id) data.userKeys.set(id, '');
+      // first clients of the room
+      if (data.clients && data.clients.length < 2 && !data.clients.includes(clientKey)) data.clients.push(clientKey);
 
       if (owner) {
         data.ownerId = socket.data.userId;

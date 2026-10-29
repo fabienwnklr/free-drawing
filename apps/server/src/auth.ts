@@ -26,6 +26,13 @@ const passwordToDelete = createAuthMiddleware(async (ctx) => {
 });
 
 /**
+ * Rate limit of the routes checking the password of a logged in user, as the ones of sign in and change of password in
+ * Better Auth (else 100 requests per 10 s): a stolen session cookie does not give the password, nor the deletion of the
+ * account with its drawings
+ */
+const passwordRule = { window: 10, max: 3 };
+
+/**
  * Options of Better Auth: database of the app, accounts with email and password
  * @param config Settings of the server (base URL, secret, trusted origins)
  * @param db Database of the app
@@ -46,6 +53,11 @@ function getOptions(config: ServerConfig, db: Kysely<Database>) {
       deleteUser: { enabled: true },
     },
     hooks: { before: passwordToDelete },
+    // per address (`clientIpHeader`), in production
+    rateLimit: {
+      enabled: !config.dev,
+      customRules: { '/delete-user': passwordRule, '/verify-password': passwordRule },
+    },
     // not X-Forwarded-For: sent by any client, a new rate limit for each value
     advanced: { ipAddress: { ipAddressHeaders: [clientIpHeader] } },
   } satisfies BetterAuthOptions;

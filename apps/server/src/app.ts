@@ -8,7 +8,7 @@ import { toNodeHandler } from 'better-auth/node';
 import type { ServerConfig } from './config';
 import { createDatabase, migrateApp } from './db';
 import { clientIpHeader, createAuth } from './auth';
-import { createApi } from './api';
+import { createApi, onError } from './api';
 import { attachCollaboration } from './collaboration';
 
 // web app (apps/web): its vite config in development, its build in production
@@ -32,6 +32,16 @@ function cors(origins: string[]): RequestHandler {
     next();
   };
 }
+
+/** Size of the body of a request to accounts at most (names, emails, passwords) */
+const authBodyLimit = '16kb';
+
+/**
+ * Body of a request to accounts read within `authBodyLimit` (413 beyond, also for a body sent without its length) and
+ * given to Better Auth as text: Better Auth reads a whole body, whatever its size. Empty bodies are left unread (no
+ * body for Better Auth)
+ */
+const authBody = express.text({ type: (req) => req.headers['content-length'] !== '0', limit: authBodyLimit });
 
 /**
  * Address of the client given to Better Auth in `clientIpHeader` (rate limits, sessions), replacing any value sent by
@@ -92,8 +102,9 @@ export async function createServer(config: ServerConfig) {
   // address of clients (req.ip): of the connection, or given by trusted proxies
   app.set('trust proxy', config.trustProxy ?? false);
   app.use('/api', cors(config.trustedOrigins));
-  // before body parsers: Better Auth reads the body itself, with the address of the client in its header
-  app.all('/api/auth/*', clientIp, toNodeHandler(auth));
+  // before the body parser of the API: Better Auth reads the body itself (limited by `authBody`), with the address of
+  // the client in its header
+  app.all('/api/auth/*', clientIp, authBody, toNodeHandler(auth), onError);
   app.use('/api', createApi(auth, db));
 
   const httpServer = createHttpServer(app);

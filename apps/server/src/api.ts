@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import express, { type ErrorRequestHandler, type Request, type RequestHandler, type Response } from 'express';
-import { type Kysely, sql } from 'kysely';
+import { type Kysely, type Transaction, sql } from 'kysely';
 import { type Auth, type User, getUser } from './auth';
 import type { Database } from './db';
 
@@ -66,6 +66,18 @@ function toPreferences(value: Record<string, unknown>) {
 const toName = (name: unknown) => (typeof name === 'string' ? name.trim().slice(0, 100) : '');
 
 /**
+ * Errors of requests as JSON: client errors (body too large, invalid JSON) with their message, others logged
+ */
+export const onError: ErrorRequestHandler = (error, _req, res, next) => {
+  if (res.headersSent) return next(error);
+
+  const status = typeof error?.status === 'number' && error.status < 500 ? error.status : 500;
+
+  if (status === 500) console.error(error);
+  res.status(status).json({ error: status === 500 ? 'server error' : error.message });
+};
+
+/**
  * API of logged in users (session cookie): `/me`, `/preferences`, `/drawings` (their own only, `drawingsLimits`)
  */
 export function createApi(auth: Auth, db: Kysely<Database>) {
@@ -84,12 +96,13 @@ export function createApi(auth: Auth, db: Kysely<Database>) {
         next(error);
       }
     };
-  const findDrawing = (id: string, user: User) =>
-    db.selectFrom('drawing').selectAll().where('id', '=', id).where('userId', '=', user.id).executeTakeFirst();
+  const findDrawing = (id: string, user: User, executor: Kysely<Database> = db) =>
+    executor.selectFrom('drawing').selectAll().where('id', '=', id).where('userId', '=', user.id).executeTakeFirst();
   const summary = ({ id, name, createdAt, updatedAt }: Database['drawing']) => ({ id, name, createdAt, updatedAt });
-  // drawings of the user: count, size of their JSON
-  const usage = async (user: User) => {
-    const row = await db
+  // drawings of the user: count, size of their JSON, read in the transaction writing a drawing (requests of the user at
+  // the same time wait for it: they can't all pass the limits)
+  const usage = async (trx: Transaction<Database>, user: User) => {
+    const row = await trx
       .selectFrom('drawing')
       .select([sql<number>`count(*)`.as('count'), sql<number>`coalesce(sum(length(content)), 0)`.as('size')])
       .where('userId', '=', user.id)
@@ -162,12 +175,16 @@ export function createApi(auth: Auth, db: Kysely<Database>) {
         createdAt: now,
         updatedAt: now,
       };
-      const { count, size } = await usage(user);
+      const refusal = await db.transaction().execute(async (trx) => {
+        const { count, size } = await usage(trx, user);
 
-      if (count >= drawingsLimits.count) return res.status(403).json(tooMany);
-      if (size + drawing.content.length > drawingsLimits.size) return res.status(403).json(tooBig);
+        if (count >= drawingsLimits.count) return tooMany;
+        if (size + drawing.content.length > drawingsLimits.size) return tooBig;
 
-      await db.insertInto('drawing').values(drawing).execute();
+        await trx.insertInto('drawing').values(drawing).execute();
+      });
+
+      if (refusal) return res.status(403).json(refusal);
       res.status(201).json(summary(drawing));
     })
   );
@@ -190,27 +207,29 @@ export function createApi(auth: Auth, db: Kysely<Database>) {
       if (content !== undefined && !isDrawingFile(content))
         return res.status(400).json({ error: 'not a drawing file' });
 
-      const drawing = await findDrawing(req.params.id, user);
-
-      if (!drawing) return res.status(404).json({ error: 'drawing not found' });
-
       const changes = {
         ...(name !== undefined && { name: toName(name) }),
         ...(content !== undefined && { content: JSON.stringify(content) }),
         updatedAt: new Date().toISOString(),
       };
+      const result = await db.transaction().execute(async (trx) => {
+        const drawing = await findDrawing(req.params.id, user, trx);
 
-      // bigger drawing: within the size of the account (smaller ones always saved)
-      if (changes.content && changes.content.length > drawing.content.length) {
-        const { size } = await usage(user);
+        if (!drawing) return { status: 404, body: { error: 'drawing not found' } };
+        // bigger drawing: within the size of the account (smaller ones always saved)
+        if (changes.content && changes.content.length > drawing.content.length) {
+          const { size } = await usage(trx, user);
 
-        if (size - drawing.content.length + changes.content.length > drawingsLimits.size) {
-          return res.status(403).json(tooBig);
+          if (size - drawing.content.length + changes.content.length > drawingsLimits.size) {
+            return { status: 403, body: tooBig };
+          }
         }
-      }
 
-      await db.updateTable('drawing').set(changes).where('id', '=', drawing.id).execute();
-      res.json(summary({ ...drawing, ...changes }));
+        await trx.updateTable('drawing').set(changes).where('id', '=', drawing.id).execute();
+        return { status: 200, body: summary({ ...drawing, ...changes }) };
+      });
+
+      res.status(result.status).json(result.body);
     })
   );
 
@@ -228,17 +247,6 @@ export function createApi(auth: Auth, db: Kysely<Database>) {
   );
 
   router.use((_req, res) => res.status(404).json({ error: 'not found' }));
-
-  // body too large, invalid JSON: client errors, others logged
-  const onError: ErrorRequestHandler = (error, _req, res, next) => {
-    if (res.headersSent) return next(error);
-
-    const status = typeof error?.status === 'number' && error.status < 500 ? error.status : 500;
-
-    if (status === 500) console.error(error);
-    res.status(status).json({ error: status === 500 ? 'server error' : error.message });
-  };
-
   router.use(onError);
 
   return router;

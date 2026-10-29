@@ -4,11 +4,11 @@ Audit of 2026-10-29 (library 8.1.0): items ordered by priority in each section.
 
 ## Security (collaboration, server)
 
-- [ ] request bodies of `/api/auth/*` have no size limit: a few anonymous requests of several GB exhaust the memory of the server (better-call reads the whole body; `app.ts`, limit before `toNodeHandler`)
-- [ ] `/delete-user` out of the strict rate limit of Better Auth (100 per 10 s): with a stolen cookie, the password guessed and the account deleted with its drawings (`auth.ts` `rateLimit.customRules`)
-- [ ] anonymous user taking an account id before the account joins the room (ids public: `USERS`, `by` of links), or the socket id given to ids refused by `isId`: rights given to the victim shared (server `collaboration.ts`, ids of accounts apart, fallback ids bound to `userKey`)
-- [ ] room creation blocked for everyone: 10,000 rooms kept 30 days, 50 per client and hour, clients by /64 (a /56 has 256): evict empty rooms used by one client, cap rooms kept per client (server `limits`)
-- [ ] limits of accounts passed by parallel requests: `usage()` read before any write (`api.ts` POST / PUT drawings, one transaction)
+- [x] request bodies of `/api/auth/*` have no size limit: a few anonymous requests of several GB exhaust the memory of the server (better-call reads the whole body; `app.ts`, limit before `toNodeHandler`)
+- [x] `/delete-user` out of the strict rate limit of Better Auth (100 per 10 s): with a stolen cookie, the password guessed and the account deleted with its drawings (`auth.ts` `rateLimit.customRules`)
+- [x] anonymous user taking an account id before the account joins the room (ids public: `USERS`, `by` of links), or the socket id given to ids refused by `isId`: rights given to the victim shared (server `collaboration.ts`, ids of accounts apart, fallback ids bound to `userKey`)
+- [x] room creation blocked for everyone: 10,000 rooms kept 30 days, 50 per client and hour, clients by /64 (a /56 has 256): evict empty rooms used by one client, cap rooms kept per client (server `limits`)
+- [x] limits of accounts passed by parallel requests: `usage()` read before any write (`api.ts` POST / PUT drawings, one transaction)
 
 ## Bugs
 

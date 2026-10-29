@@ -8,6 +8,10 @@ import { NodeSqliteDialect } from '@better-auth/kysely-adapter/node-sqlite-diale
  * Tables of the app (tables of users and sessions belong to Better Auth: `user`, `session`, `account`, `verification`)
  */
 export type Database = {
+  /** Accounts (table of Better Auth): columns read by the app only */
+  user: {
+    id: string;
+  };
   drawing: {
     id: string;
     userId: string;
