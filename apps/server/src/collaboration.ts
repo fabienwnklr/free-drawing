@@ -21,6 +21,11 @@ type SocketData = {
   owner?: boolean;
   /** Messages allowed now by event (token bucket, see `rates`) and time they were counted */
   buckets?: Record<string, { tokens: number; at: number }>;
+  /**
+   * Shapes added to the drawing of the room by live previews of this socket (being drawn): removed for everyone when it
+   * leaves or loses the right to draw before their final change
+   */
+  live?: Set<string>;
 };
 
 type RoomData = {
@@ -627,28 +632,38 @@ export async function attachCollaboration(
     return false;
   };
 
-  // image files of a room no shape uses once a change is applied (removed, replaced), except the files of the change:
-  // released, their size given; none when the files of encrypted shapes of previous versions are unknown
-  const releaseFiles = (data: RoomData, change: CheckedChange) => {
+  // ids of the image files of a room no shape uses once a change is applied (removed, replaced), except the files of
+  // the change: released if it is applied; none when the files of encrypted shapes of previous versions are unknown
+  const unusedFiles = (data: RoomData, change: CheckedChange) => {
     const shapeFiles = new Map(data.shapeFiles);
     const used = new Set(change.files.keys());
-    let released = 0;
 
     for (const id of change.remove) shapeFiles.delete(id);
     for (const [id, files] of change.shapeFiles) shapeFiles.set(id, files);
     for (const files of shapeFiles.values()) {
-      if (!files) return 0;
+      if (!files) return [];
       for (const id of files) used.add(id);
     }
-    for (const [id, file] of data.files) {
-      if (used.has(id)) continue;
-      data.files.delete(id);
-      released += file.length;
-    }
-    data.size -= released;
-    totalSize -= released;
 
-    return released;
+    return [...data.files.keys()].filter((id) => !used.has(id));
+  };
+
+  // previews of shapes being drawn by a socket (`live`) removed for everyone: it left the room or lost the right to
+  // draw before their final change (a discarded preview would stay)
+  const dropLive = (socket: CollaborationSocket, room: string) => {
+    const data = rooms.get(room);
+    const ids = [...(socket.data.live ?? [])].filter((id) => data?.shapes.has(id));
+
+    socket.data.live = undefined;
+    if (!data || !ids.length) return;
+
+    for (const id of ids) {
+      data.size -= data.shapes.get(id)!.length;
+      totalSize -= data.shapes.get(id)!.length;
+      data.shapes.delete(id);
+      data.shapeFiles.delete(id);
+    }
+    io.to(room).emit(socketEvents.CHANGE, { upsert: [], remove: ids });
   };
 
   const leaveRoom = (socket: CollaborationSocket) => {
@@ -657,8 +672,9 @@ export async function attachCollaboration(
     if (!room) return;
     socket.leave(room);
     socket.data.room = undefined;
-    // cursor removed
+    // cursor removed, shapes it was drawing too
     io.to(room).emit(socketEvents.LEAVE, socket.id);
+    dropLive(socket, room);
 
     const data = rooms.get(room);
 
@@ -713,16 +729,16 @@ export async function attachCollaboration(
     // last message still handled (join checking an id in the database): the next ones wait for it
     let handling: Promise<unknown> | undefined;
 
-    // listener of a message, run in the order of messages (a request to draw sent with a join: once joined). An error
-    // (message of an unexpected shape) is logged: socket.io runs listeners in `process.nextTick`, where it would stop the
-    // server with every room
-    const on = (event: string, listener: (message: unknown) => unknown) =>
-      socket.on(event, (message: unknown) => {
+    // listener of a message (with the acknowledgement asked by the client), run in the order of messages (a request to
+    // draw sent with a join: once joined). An error (message of an unexpected shape) is logged: socket.io runs listeners
+    // in `process.nextTick`, where it would stop the server with every room
+    const on = (event: string, listener: (message: unknown, ack: unknown) => unknown) =>
+      socket.on(event, (message: unknown, ack: unknown) => {
         const warn = (error: unknown) =>
           console.warn(`Message ignored (${event}, id: ${socket.id}): ${(error as Error).message}`);
         const run = () => {
           try {
-            const result = listener(message);
+            const result = listener(message, ack);
 
             return result instanceof Promise ? result.catch(warn) : undefined;
           } catch (error) {
@@ -867,6 +883,12 @@ export async function attachCollaboration(
         data.requests.delete(userId);
       } else {
         data.viewers.add(userId);
+        // shapes it was drawing: their final change will be refused
+        for (const id of socketsOf(room, (other) => other.userId === userId)) {
+          const other = io.sockets.sockets.get(id) as CollaborationSocket | undefined;
+
+          if (other) dropLive(other, room);
+        }
       }
       saveRoom(room, data);
       sendUsers(room);
@@ -933,7 +955,13 @@ export async function attachCollaboration(
 
     // { upsert: shapes JSON (encrypted room: { id, data }), remove: ids, order: ids from bottom to top when stacking
     // order changed, live }
-    on(socketEvents.CHANGE, (message) => {
+    // change received (applied or refused): acknowledged, the client sends again the changes lost with a connection
+    on(socketEvents.CHANGE, (message, ack) => {
+      receiveChange(message);
+      if (typeof ack === 'function') ack();
+    });
+
+    const receiveChange = (message: unknown) => {
       const { room } = socket.data;
       const data = room ? rooms.get(room) : undefined;
 
@@ -979,12 +1007,22 @@ export async function attachCollaboration(
 
       const tooBig = () =>
         size > data.size && (size > limits.drawingSize || totalSize + size - data.size > limits.totalSize);
+      // image files no shape uses once changed (removed, replaced): released with the change
+      const released = tooBig() ? unusedFiles(data, change) : [];
 
-      // image files no shape uses once changed (removed, replaced) released first
-      if (tooBig()) size -= releaseFiles(data, change);
-      // a bigger drawing over the limits refused (smaller changes still allowed)
+      for (const id of released) size -= data.files.get(id)!.length;
+      // a bigger drawing over the limits refused (smaller changes still allowed), its files kept
       if ((count > limits.shapes && count > shapes.size) || tooBig()) return refuse('too-big');
 
+      // previews of shapes new to the room, until their final change
+      const live = (socket.data.live ??= new Set());
+
+      for (const id of change.upsert.keys()) {
+        if (!change.live) live.delete(id);
+        else if (!shapes.has(id)) live.add(id);
+      }
+      for (const id of change.remove) live.delete(id);
+      for (const id of released) data.files.delete(id);
       for (const id of change.remove) {
         shapes.delete(id);
         data.shapeFiles.delete(id);
@@ -1016,7 +1054,7 @@ export async function attachCollaboration(
       };
 
       (change.live ? socket.to(room).volatile : socket.to(room)).emit(socketEvents.CHANGE, relayed);
-    });
+    };
 
     // pointer position in drawing (null out of drawer, laser while pressed), not kept; encrypted in an encrypted room
     on(socketEvents.POINTER, (pointer) => {

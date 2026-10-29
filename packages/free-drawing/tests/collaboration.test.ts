@@ -43,6 +43,8 @@ type FakeSocket = CollaborationSocket & {
   userId?: string;
   invitedBy?: string;
   owner?: boolean;
+  /** Connection lost unseen: messages lost (no acknowledgement), until `receive('disconnect')` */
+  lost?: boolean;
 };
 
 /**
@@ -100,7 +102,8 @@ const createServer = () => {
         for (const s of inRoom(socket.room)) s.receive('LEAVE', socket.id);
         sendUsers(socket.room);
       }),
-      emit: vi.fn((event: string, data: unknown) => {
+      emit: vi.fn((event: string, data: unknown, ack?: () => void) => {
+        if (socket.lost) return;
         if (event === 'JOIN') {
           const { room, name, userId, ownerKey, invitedBy, keyCheck } = data as {
             room: string;
@@ -224,6 +227,7 @@ const createServer = () => {
             );
 
             if (!change.live) socket.receive('REJECTED', { event, reason: 'right', upsert, remove: change.remove });
+            ack?.();
             return;
           }
 
@@ -244,6 +248,8 @@ const createServer = () => {
           for (const s of inRoom(socket.room).filter((s) => s !== socket)) {
             s.receive(event, change);
           }
+          // received: not sent again after a lost connection
+          ack?.();
         }
       }),
     } as unknown as FakeSocket;
@@ -1282,6 +1288,153 @@ describe('Collaboration', () => {
     bobSocket.receive('connect');
     expect(texts(bob)).toEqual(['B2', 'C', 'D2']);
     expect(texts(alice)).toEqual(['B2', 'C', 'D2']);
+  });
+
+  it('Changes lost with a connection lost unseen are sent again once joined, acknowledged ones are not', () => {
+    const connect = createServer();
+    const alice = createDrawer();
+    const bob = createDrawer();
+    const texts = (drawer: Drawer) =>
+      drawer
+        .getDrawingShapes()
+        .map((shape) => shape.attrs.text as string)
+        .sort();
+
+    connect(alice, 'room', 'Alice', { userId: 'alice', ownerKey: 'secret' });
+    const bobSocket = connect(bob, 'room', 'Bob', { userId: 'bob' });
+    const a = addText(bob, 'A');
+    const b = addText(bob, 'B');
+
+    // connection lost unseen: changes sent, never received
+    bobSocket.lost = true;
+    a.text('A2');
+    bob.stage.fire('change');
+    b.destroy();
+    bob.stage.fire('change');
+    addText(bob, 'C');
+    bob.setBgColor('#fff3bf');
+    expect(texts(alice)).toEqual(['A', 'B']);
+
+    // seen lost, joined again: kept here, sent again
+    bobSocket.room = undefined;
+    bobSocket.receive('disconnect');
+    bobSocket.lost = false;
+    bobSocket.emit.mockClear();
+    bobSocket.receive('connect');
+    expect(texts(bob)).toEqual(['A2', 'C']);
+    expect(texts(alice)).toEqual(['A2', 'C']);
+    expect(alice.background.fill()).toBe('#fff3bf');
+
+    // received before the connection was lost: not sent again
+    const sent = bobSocket.emit.mock.calls
+      .filter(([event]) => event === 'CHANGE')
+      .flatMap(([, change]) => (change as DrawingChange).upsert as string[])
+      .map((json) => JSON.parse(json).attrs.text);
+
+    expect(sent.sort()).toEqual(['A2', 'C']);
+  });
+
+  it('Removal of a shape not sent yet is kept when a stacking order is received before it', () => {
+    const connect = createServer();
+    const alice = createDrawer();
+    const bob = createDrawer();
+
+    connect(alice, 'room', 'Alice', { userId: 'alice', ownerKey: 'secret' });
+    connect(bob, 'room', 'Bob', { userId: 'bob' });
+    const a = addText(alice, 'A');
+
+    addText(alice, 'B');
+    // bob viewer: removal kept until allowed to draw
+    alice.collaboration!.setRight('bob', false);
+    byId(bob, a.id())!.destroy();
+    bob.stage.fire('change');
+    expect(byId(alice, a.id())).toBeDefined();
+
+    // stacking order changed by alice
+    a.moveToTop();
+    alice.stage.fire('change');
+
+    alice.collaboration!.setRight('bob', true);
+    expect(byId(alice, a.id())).toBeUndefined();
+    expect(alice.getDrawingShapes().map((shape) => shape.attrs.text)).toEqual(['B']);
+  });
+
+  it('Changes received during a pointer action applied once the tool finished it: erased shapes recorded as they were', async () => {
+    const connect = createServer();
+    const alice = createDrawer();
+    const bob = createDrawer();
+
+    connect(alice, 'room', 'Alice', { userId: 'alice', ownerKey: 'secret' });
+    connect(bob, 'room', 'Bob', { userId: 'bob' });
+    const rect = alice.addShape(new Rect({ x: 0, y: 0, width: 100, height: 100, stroke: '#000' }));
+
+    alice.stage.fire('change');
+    alice.getWidget<BaseWidget>('eraser')!.setActive(true);
+    // no hit canvas in jsdom
+    vi.spyOn(alice.drawLayer, 'getIntersection').mockReturnValue(rect as Shape);
+    fireMouse(alice, 'mousedown', 10, 10);
+    expect(rect.opacity()).toBeLessThan(1);
+    // during the action: applied after it
+    addText(bob, 'B');
+    expect(alice.getDrawingShapes()).toHaveLength(1);
+    fireMouse(alice, 'mouseup', 10, 10);
+    await Promise.resolve();
+
+    expect(alice.getDrawingShapes().map((shape) => shape.attrs.text)).toEqual(['B']);
+    expect(bob.getDrawingShapes().map((shape) => shape.attrs.text)).toEqual(['B']);
+    // undo of the eraser: shape as it was before the action, the text of bob kept
+    alice.undoRedo.undo();
+    expect(byId(alice, rect.id())?.opacity()).toBe(1);
+    expect(byId(bob, rect.id())?.opacity()).toBe(1);
+    expect(alice.getDrawingShapes()).toHaveLength(2);
+
+    // a click of a shape tool with a change received meanwhile: nothing drawn, nothing sent
+    alice.getWidget<BaseWidget>('square')!.setActive(true);
+    fireMouse(alice, 'mousedown', 300, 300);
+    addText(bob, 'C');
+    fireMouse(alice, 'mouseup', 300, 300);
+    await Promise.resolve();
+    expect(alice.getDrawingShapes()).toHaveLength(3);
+    expect(bob.getDrawingShapes()).toHaveLength(3);
+  });
+
+  it('Preview of a shape discarded while disconnected removed from the room once joined again', async () => {
+    const connect = createServer();
+    const alice = createDrawer();
+    const bob = createDrawer();
+    const aliceSocket = connect(alice, 'room', 'Alice', { userId: 'alice', ownerKey: 'secret' });
+
+    connect(bob, 'room', 'Bob', { userId: 'bob' });
+    const square = alice.getWidget<BaseWidget>('square')!;
+
+    square.setActive(true);
+    fireMouse(alice, 'mousedown', 10, 10);
+    fireMouse(alice, 'mousemove', 100, 100);
+    await wait();
+    expect(bob.getDrawingShapes()).toHaveLength(1);
+
+    // connection lost while drawing, drawing cancelled
+    aliceSocket.room = undefined;
+    aliceSocket.receive('disconnect');
+    square.cancelAction();
+    expect(alice.getDrawingShapes()).toHaveLength(0);
+
+    aliceSocket.receive('connect');
+    expect(alice.getDrawingShapes()).toHaveLength(0);
+    expect(bob.getDrawingShapes()).toHaveLength(0);
+    expect(connect.rooms.get('room')!.shapes.size).toBe(0);
+  });
+
+  it('Same user in two tabs: one member', () => {
+    const connect = createServer();
+    const alice = createDrawer();
+
+    connect(alice, 'room', 'Alice', { userId: 'alice', ownerKey: 'secret' });
+    connect(createDrawer(), 'room', 'Bob', { userId: 'bob' });
+    connect(createDrawer(), 'room', 'Bob', { userId: 'bob' });
+
+    expect(alice.collaboration!.members.map((member) => member.id)).toEqual(['alice', 'bob']);
+    expect(alice.collaboration!.users).toEqual(['Alice', 'Bob']);
   });
 
   it('Reconnection to a room without drawing gives it again, merged after a pointer action', () => {

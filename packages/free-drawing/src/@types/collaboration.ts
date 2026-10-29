@@ -94,6 +94,25 @@ export type ChangePart = {
   ids: string[];
 };
 
+/**
+ * Part of a change sent, not acknowledged by the server yet: what it made known by the room, unsynced when the
+ * connection is lost (sent again once joined)
+ */
+export type UnconfirmedPart = {
+  /** Ids of its shapes added or updated */
+  upsert: string[];
+  /** Ids of its removed shapes */
+  remove: string[];
+  /** Ids of its image files */
+  files: string[];
+  /** Background color sent */
+  background: boolean;
+  /** Stacking order sent */
+  order: boolean;
+  /** Time it was sent (ms) */
+  at: number;
+};
+
 /** Shape of an encrypted room: id in clear (the server keeps the drawing shape by shape), konva JSON encrypted */
 export type EncryptedShape = {
   /** Id of the shape */

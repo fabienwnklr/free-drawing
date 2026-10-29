@@ -14,12 +14,12 @@ Audit of 2026-10-29 (library 8.1.0): items ordered by priority in each section.
 
 ### Collaboration
 
-- [ ] changes marked synced when emitted: after a connection lost unseen (ping timeout), shapes drawn meanwhile are removed and changes reverted by `_merge` on reconnection (acks of `CHANGE`, `Collaboration._send` / `_merge`)
-- [ ] removal never sent when a received `order` rebuilds `#synced` before it (encrypted rooms: `send` queued behind decryptions; removals of `_unsync`): the shape stays for everyone and comes back (`Collaboration._apply`)
-- [ ] end of a pointer action with received changes pending fires `change` before the tool finishes: erased shapes recorded at 20 % opacity (undo gives them back faded), zero size shape of a click kept by others, arrow recorded before linked and frame before filled (two undos) (`Drawer._onActionEnd`, `BaseWidget.endAction` called first by tools)
-- [ ] live previews kept for everyone: removal of a viewer refused (right removed while drawing: `cancelAction` → `discardLive`), discard skipped while disconnected then the preview of the room merged back (server: live ids of each socket removed on discard, loss of right, leave)
-- [ ] change refused as too big after `releaseFiles` already deleted files of the room: images of remaining shapes empty for everyone (server: release once accepted)
-- [ ] same user in two tabs: one row in members, count 2 (`CollaborationMembers` rows by `data-member`)
+- [x] changes marked synced when emitted: after a connection lost unseen (ping timeout), shapes drawn meanwhile are removed and changes reverted by `_merge` on reconnection (acks of `CHANGE`, `Collaboration._send` / `_merge`)
+- [x] removal never sent when a received `order` rebuilds `#synced` before it (encrypted rooms: `send` queued behind decryptions; removals of `_unsync`): the shape stays for everyone and comes back (`Collaboration._apply`)
+- [x] end of a pointer action with received changes pending fires `change` before the tool finishes: erased shapes recorded at 20 % opacity (undo gives them back faded), zero size shape of a click kept by others, arrow recorded before linked and frame before filled (two undos) (`Drawer._onActionEnd`, `BaseWidget.endAction` called first by tools)
+- [x] live previews kept for everyone: removal of a viewer refused (right removed while drawing: `cancelAction` → `discardLive`), discard skipped while disconnected then the preview of the room merged back (server: live ids of each socket removed on discard, loss of right, leave)
+- [x] change refused as too big after `releaseFiles` already deleted files of the room: images of remaining shapes empty for everyone (server: release once accepted)
+- [x] same user in two tabs: one row in members, count 2 (`CollaborationMembers` rows by `data-member`)
 
 ### Core, files, persistence
 

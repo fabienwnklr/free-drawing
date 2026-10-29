@@ -1093,10 +1093,15 @@ describe('Collaboration', () => {
 
     // id refused: id of the connection, not given to a user who saw it
     const refused = await joinRoom({ room, name: 'Refused', userId: 'not an id!', userKey: 'refused browser' });
-    const updated = owner.next<User[]>(socketEvents.USERS);
+    // users of the room once the right is given (the ones of the join may come before)
+    const updated = new Promise<void>((resolve) =>
+      owner.socket.on(socketEvents.USERS, (users: User[]) => {
+        if (users.find((user) => user.id === refused.userId)?.canEdit) resolve();
+      })
+    );
 
     owner.socket.emit(socketEvents.RIGHTS, { userId: refused.userId, canEdit: true });
-    expect((await updated).find((user) => user.id === refused.userId)?.canEdit).toBe(true);
+    await updated;
 
     const copycat = await joinRoom({ room, name: 'Copycat', userId: refused.userId, userKey: 'copycat browser' });
 
@@ -1268,6 +1273,67 @@ describe('Collaboration', () => {
     expect(await drawing).toEqual({ upsert: [], remove: [], order: [], full: true });
   });
 
+  it('Changes acknowledged; previews of shapes being drawn removed when their author leaves or loses the right', async () => {
+    const room = 'room-live';
+    const owner = await joinRoom({ room, name: 'Owner', userId: 'owner-l', ownerKey: 'secret l' });
+
+    owner.socket.emit(socketEvents.ROOM, { newUsersCanEdit: true });
+    await owner.next(socketEvents.ROOM);
+
+    // received: applied or refused
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    await owner.socket.timeout(2000).emitWithAck(socketEvents.CHANGE, { upsert: [rect('e1')], remove: [] });
+    await owner.socket.timeout(2000).emitWithAck(socketEvents.CHANGE, { upsert: ['{ not json'] });
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('Invalid change'));
+
+    const drawingOf = async () => {
+      const later = client();
+      const drawing = later.next<{ upsert: string[] }>(socketEvents.CHANGE);
+
+      later.socket.emit(socketEvents.JOIN, { room, name: 'Later' });
+      const ids = (await drawing).upsert.map((json) => JSON.parse(json).attrs.id);
+
+      later.socket.close();
+      return ids;
+    };
+    /** Live preview of a guest received by the owner */
+    const preview = async (user: Awaited<ReturnType<typeof joinRoom>>, ...ids: string[]) => {
+      const received = owner.next(socketEvents.CHANGE);
+
+      user.socket.emit(socketEvents.CHANGE, { upsert: ids.map(rect), remove: [], live: true });
+      await received;
+    };
+
+    // a new shape and a shape of the room moved: only the new one removed when its author leaves
+    const guest = await joinRoom({ room, name: 'Guest', userId: 'guest-l' });
+
+    await preview(guest, 'p1', 'e1');
+    // final change of a shape: kept
+    const final = owner.next(socketEvents.CHANGE);
+
+    guest.socket.emit(socketEvents.CHANGE, { upsert: [rect('p2')], remove: [] });
+    await final;
+    await preview(guest, 'p2');
+
+    const removed = owner.next(socketEvents.CHANGE);
+
+    guest.socket.close();
+    expect(await removed).toEqual({ upsert: [], remove: ['p1'] });
+    expect((await drawingOf()).sort()).toEqual(['e1', 'p2']);
+
+    // right removed while drawing: its previews removed (their final change is refused)
+    const drawer = await joinRoom({ room, name: 'Drawer', userId: 'drawer-l' });
+
+    await preview(drawer, 'p3');
+
+    const dropped = owner.next(socketEvents.CHANGE);
+
+    owner.socket.emit(socketEvents.RIGHTS, { userId: 'drawer-l', canEdit: false });
+    expect(await dropped).toEqual({ upsert: [], remove: ['p3'] });
+    expect((await drawingOf()).sort()).toEqual(['e1', 'p2']);
+  });
+
   it('Image files no shape uses released when the drawing would be too big', async () => {
     const saved = { ...limits };
     const file = (size: number) => `data:image/png;base64,${'A'.repeat(size)}`;
@@ -1309,6 +1375,11 @@ describe('Collaboration', () => {
       expect(await send(owner, guest, { upsert: [image('i2', 'f2')], remove: [], files: { f2: file(2000) } })).toBe(
         'applied'
       );
+      expect(await filesOf('room-files')).toEqual(['f2']);
+      // refused even with them released: files kept for the shapes of the room
+      expect(
+        await send(owner, guest, { upsert: [image('i3', 'f3')], remove: ['i2'], files: { f3: file(3500) } })
+      ).toBe('too-big');
       expect(await filesOf('room-files')).toEqual(['f2']);
 
       // encrypted room: files of each shape told by the clients

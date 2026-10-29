@@ -990,10 +990,15 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
   }
 
   /**
-   * Pointer action of a widget ended: changes of collaborators received meanwhile are applied
+   * Pointer action of a widget ended: changes of collaborators received meanwhile are applied once the tool finished it
+   * (tools end their action first, then erase shapes, link an arrow, fill a frame...): its change applies them first,
+   * else they are applied here, after it (not recorded with the shapes as they were during the action)
    */
   _onActionEnd() {
-    if (this.collaboration?.flush()) this.stage.fire('change');
+    queueMicrotask(() => {
+      if (this.#destroyed || this._duringAction()) return;
+      if (this.collaboration?.flush()) this.stage.fire('change');
+    });
   }
 
   /**

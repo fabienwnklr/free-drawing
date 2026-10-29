@@ -19,7 +19,8 @@ export declare const socketEvents: {
    * removed shapes, stacking order, preview of shapes being drawn, whole drawing of the room (sent by server to a joining
    * user, with its background once a user sent one; `kept` when users sent it since the room was created or dropped: an
    * empty one was emptied by them), background color when changed, image files by id (released by the server when no
-   * shape uses them and the drawing would be too big). Encrypted room: `upsert` is `{ id, data, files }` (encrypted
+   * shape uses them and the drawing would be too big). Acknowledged by the server once received (applied or refused):
+   * a change sent while the connection was lost unseen is sent again once joined. Encrypted room: `upsert` is `{ id, data, files }` (encrypted
    * JSON, ids of the files it uses), `background` and `files` (under ids of the room: SHA-256 of the key and the id)
    * encrypted, not read by the server
    */

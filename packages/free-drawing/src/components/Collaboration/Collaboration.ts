@@ -28,6 +28,7 @@ import type {
   CollaborationMember,
   CollaborationSession,
   ChangePart,
+  UnconfirmedPart,
   PointerPosition,
   JoinedMessage,
   RoomMessage,
@@ -44,6 +45,13 @@ const cursorColors = ['#e03131', '#2f9e44', '#1971c2', '#f08c00', '#9c36b5', '#0
 
 /** Rooms whose shapes are kept in browser (`_keepSynced`): the ones used last */
 const keptRooms = 5;
+
+/**
+ * Time a lost connection takes to be seen at most (ms): ping interval and timeout of socket.io servers (45 s by
+ * default), and a margin. Changes sent then and not acknowledged may be lost (servers of previous versions acknowledge
+ * none)
+ */
+const lossWindow = 60_000;
 
 /**
  * Hash of a text (cyrb53, 53 bits): a shape known again without keeping its JSON
@@ -192,6 +200,10 @@ export class Collaboration {
   #rejoining = false;
   /** Drawing of the room received again during a pointer action of this client, merged when it ends: nothing sent before */
   #rejoinPending = false;
+  /** Parts of changes sent on this connection, not acknowledged by the server yet */
+  #unconfirmed = new Set<UnconfirmedPart>();
+  /** Stacking order sent and lost with the connection: the one of this user kept by the merge, sent again */
+  #orderLost = false;
   /** Shapes being drawn or moved, sent at next live message */
   #live = new Set<DrawingShape>();
   /** Ids of shapes sent as live previews since the last final change: removed for everyone if they are discarded */
@@ -274,6 +286,7 @@ export class Collaboration {
     this.socket.on('disconnect', () => {
       this.#connection++;
       this.#connected = false;
+      this._unconfirm();
     });
     // server identifies this user (logged in account), before sending users of the room
     this._listen(socketEvents.JOINED, ({ userId }: JoinedMessage = {}) => {
@@ -327,9 +340,12 @@ export class Collaboration {
         this.send();
       }
 
-      this.members = users.map((user) =>
-        typeof user === 'string' ? { id: '', name: user, owner: false, canEdit: true } : user
-      );
+      const ids = new Set<string>();
+
+      this.members = users
+        .map((user) => (typeof user === 'string' ? { id: '', name: user, owner: false, canEdit: true } : user))
+        // a user in several tabs once
+        .filter(({ id }) => !id || (!ids.has(id) && !!ids.add(id)));
       this.users = this.members.map((member) => member.name);
       // requests answered: users gone or allowed to draw since
       this.requests = this.requests.filter(({ userId }) =>
@@ -459,18 +475,24 @@ export class Collaboration {
    * @param sent Marks its content as known by the room, called just before it is sent
    * @param volatile Live preview: dropped rather than delayed when the connection is slow
    * @param tooBig Called when it is not sent, too big for the server
+   * @param acknowledged Called once the server received it (servers of previous versions: never)
    * @returns Promise while it is encrypted (sent unless the connection was lost meanwhile)
    */
   private _emitChange(
     change: DrawingChange,
     sent: () => void,
     volatile = false,
-    tooBig?: () => void
+    tooBig?: () => void,
+    acknowledged?: () => void
   ): Promise<void> | void {
     const emit = (message: DrawingChange | EncryptedChange) => {
       if (!this._fits(message)) return tooBig?.();
       sent();
-      (volatile ? this.socket.volatile : this.socket).emit(socketEvents.CHANGE, message);
+
+      const socket = volatile ? this.socket.volatile : this.socket;
+
+      if (acknowledged) socket.emit(socketEvents.CHANGE, message, acknowledged);
+      else socket.emit(socketEvents.CHANGE, message);
     };
 
     if (!this.cipher) return emit(change);
@@ -576,9 +598,9 @@ export class Collaboration {
     const id = shape.id();
 
     this.#live.delete(shape);
-    // after a preview being encrypted
+    // after a preview being encrypted; disconnected: removed once joined again (`_merge`, `_send`)
     this._inOrder(() => {
-      if (this.#sentLive.delete(id) && this.#connected) {
+      if (this.#connected && this.#sentLive.delete(id)) {
         this.socket.emit(socketEvents.CHANGE, { upsert: [], remove: [id] } satisfies DrawingChange);
       }
     });
@@ -916,6 +938,10 @@ export class Collaboration {
     const shapes = this.drawer.getDrawingShapes();
     // found once per change (also read by history)
     const current = this.drawer._shapeStates();
+    const since = Date.now() - lossWindow;
+
+    // received by servers of previous versions (no acknowledgement) once a lost connection would have been seen
+    for (const part of this.#unconfirmed) if (part.at < since) this.#unconfirmed.delete(part);
     const synced = this.#synced;
     // changed since last sync, except shapes too big for a message (tried again once changed)
     const upserted = shapes.filter((shape) => {
@@ -970,18 +996,33 @@ export class Collaboration {
     const emit = (index: number): Promise<void> | void => {
       for (let i = index; i < parts.length; i++) {
         const part = parts[i];
+        const { change } = part;
+        // known by the room once acknowledged: unsynced if the connection is lost before
+        const unconfirmed: UnconfirmedPart = {
+          upsert: part.ids,
+          remove: change.remove,
+          files: Object.keys(change.files ?? {}),
+          background: change.background !== undefined,
+          order: !!change.order,
+          at: 0,
+        };
         const result = this._emitChange(
-          part.change,
-          () => mark(part),
+          change,
+          () => {
+            mark(part);
+            unconfirmed.at = Date.now();
+            this.#unconfirmed.add(unconfirmed);
+          },
           false,
           () => {
             // a shape or a file alone too big: not tried again until changed
-            if (part.ids.length + Object.keys(part.change.files ?? {}).length !== 1) return;
+            if (part.ids.length + unconfirmed.files.length !== 1) return;
 
-            const id = part.ids[0] ?? Object.keys(part.change.files!)[0];
+            const id = part.ids[0] ?? unconfirmed.files[0];
 
             this.#tooBig.set(id, current.get(id) ?? '');
-          }
+          },
+          () => this.#unconfirmed.delete(unconfirmed)
         );
 
         if (result) return result.then(() => emit(i + 1));
@@ -1122,7 +1163,8 @@ export class Collaboration {
       return;
     }
 
-    if (this.drawer._duringAction()) {
+    // also after changes still waiting (action just ended: applied once the tool finished, see `Drawer._onActionEnd`)
+    if (this.drawer._duringAction() || this.#pending.length) {
       this.#pending.push([change, false]);
       return;
     }
@@ -1157,7 +1199,7 @@ export class Collaboration {
    */
   private _rejoin(change: DrawingChange) {
     this.#rejoining = false;
-    if (this.drawer._duringAction()) {
+    if (this.drawer._duringAction() || this.#pending.length) {
       this.#pending.push([change, true]);
       this.#rejoinPending = true;
       return;
@@ -1214,23 +1256,36 @@ export class Collaboration {
     }
 
     const synced = this.#synced;
-    // since last sync: added or changed here, removed here
+    // since last sync: added or changed here, removed here (also previews discarded while disconnected)
     const changed = new Set([...current].filter(([id, json]) => synced.get(id) !== json).map(([id]) => id));
-    const removed = [...synced.keys()].filter((id) => !current.has(id));
+    const removed = [...new Set([...synced.keys(), ...this.#sentLive])].filter((id) => !current.has(id));
+    // stacking order of this user lost with the connection: kept, sent next
+    const orderLost = this.#orderLost;
 
+    this.#orderLost = false;
     this._apply({
       upsert: [...room].filter(([id]) => !changed.has(id) && !removed.includes(id)).map(([, json]) => json),
       remove: [...current.keys()].filter((id) => !room.has(id) && !changed.has(id)),
-      ...(Array.isArray(order) && { order }),
+      ...(Array.isArray(order) && !orderLost && { order }),
     });
+    // known in the order of the room
+    if (orderLost && Array.isArray(order)) {
+      const known = this.#synced;
+
+      this.#synced = new Map([
+        ...order.filter((id) => known.has(id)).map((id): [string, string] => [id, known.get(id)!]),
+        ...[...known].filter(([id]) => !order.includes(id)),
+      ]);
+    }
     // sent next: changes made here as new ones, removals of shapes still in the room
     for (const id of changed) this.#synced.delete(id);
     for (const id of removed) if (room.has(id)) this.#synced.set(id, room.get(id)!);
   }
 
   /**
-   * Change refused by the server (drawing too big, right to draw removed meanwhile): its shapes are not known by the
-   * room, sent again with a next change (with their image files)
+   * Change refused by the server (drawing too big, right to draw removed meanwhile) or lost with the connection: its
+   * shapes are not known by the room, sent again with a next change (with their image files), or their removal when they
+   * were removed since (the room may have an older state)
    * @param upsert Ids of its shapes added or updated (not trusted)
    * @param remove Ids of its removed shapes (not trusted)
    */
@@ -1239,11 +1294,33 @@ export class Collaboration {
     const shapes = new Map(this.drawer.getDrawingShapes().map((shape) => [shape.id(), shape]));
     const refused = ids(upsert).flatMap((id) => shapes.get(id) ?? []);
 
-    for (const id of ids(upsert)) this.#synced.delete(id);
+    for (const id of ids(upsert)) {
+      if (shapes.has(id)) this.#synced.delete(id);
+      else this.#synced.set(id, '');
+    }
     // removal sent again: shape known by the room
     for (const id of ids(remove)) if (!shapes.has(id)) this.#synced.set(id, '');
     for (const id of getFileIds(refused)) this.#sentFiles.delete(id);
     this.#syncChanged = true;
+  }
+
+  /**
+   * Connection lost: parts of changes sent while it was lost unseen (not acknowledged, sent in the time a lost
+   * connection takes to be seen) are unsynced, sent again once joined: the merge with the drawing of the room keeps
+   * them (else shapes drawn meanwhile would be removed, changes reverted)
+   */
+  private _unconfirm() {
+    const since = Date.now() - lossWindow;
+
+    for (const part of this.#unconfirmed) {
+      if (part.at < since) continue;
+      this._unsync(part.upsert, part.remove);
+      for (const id of part.files) this.#sentFiles.delete(id);
+      // background of this user kept by the merge (not the one known by the room), sent again
+      if (part.background) this.#syncedBackground = '';
+      if (part.order) this.#orderLost = true;
+    }
+    this.#unconfirmed.clear();
   }
 
   /**
@@ -1369,13 +1446,16 @@ export class Collaboration {
 
     if (Array.isArray(order)) {
       applyOrder(this.drawer.getDrawingShapes(), order);
-      // known in this order, not to send it back
-      this.#synced = new Map(
-        this.drawer
-          .getDrawingShapes()
-          .filter((shape) => this.#synced.has(shape.id()))
-          .map((shape) => [shape.id(), this.#synced.get(shape.id())!])
-      );
+
+      const synced = this.#synced;
+      const drawn = this.drawer.getDrawingShapes().map((shape) => shape.id());
+      const ids = new Set(drawn);
+
+      // known in this order, not to send it back; shapes removed here, removal not sent yet, kept (sent next)
+      this.#synced = new Map([
+        ...drawn.filter((id) => synced.has(id)).map((id): [string, string] => [id, synced.get(id)!]),
+        ...[...synced].filter(([id]) => !ids.has(id)),
+      ]);
     }
 
     // removed shapes are not selected anymore (also shapes of groups removed by an update)

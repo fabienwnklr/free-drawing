@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [8.1.1](https://github.com/fabienwnklr/free-drawing/compare/v8.1.0...v8.1.1) (2026-10-29)
+
+
+### Bug Fixes
+
+* **collaboration:** changes sent while the connection was lost unseen (until socket.io notices it) are sent again once joined: the servers acknowledge each change, so shapes drawn meanwhile are no longer removed nor changes reverted by the drawing of the room (servers of previous versions acknowledge none: changes of the last minute are sent again)
+* **collaboration:** the removal of a shape is sent even when a stacking order of another user is received before it (encrypted rooms, viewer allowed to draw again): the shape no longer stays for everyone
+* **collaboration:** changes of other users received during a drawing, erasing or selection are applied once the tool finished it: erased shapes are recorded as they were (undo no longer gives them back faded), the click of a shape tool sends no empty shape, an arrow is recorded once linked and a frame once filled
+* **collaboration:** the preview of a shape cancelled while disconnected is removed from the room once joined again (it came back for everyone)
+* **collaboration:** a user in several tabs is one member of the session (one row, counted once)
+
 ## [8.1.0](https://github.com/fabienwnklr/free-drawing/compare/v8.0.6...v8.1.0) (2026-10-29)
 
 
