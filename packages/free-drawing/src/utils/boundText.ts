@@ -4,6 +4,7 @@ import { Shape } from 'konva/lib/Shape';
 import { Arrow } from 'konva/lib/shapes/Arrow';
 import { Text } from 'konva/lib/shapes/Text';
 import type { Vector2d } from 'konva/lib/types';
+import type { Transform } from 'konva/lib/Util';
 import { pathShapes, shapeName } from '@/constants';
 import { getOutlineDistance } from '@/utils/binding';
 import { isNote, notePadding } from '@/utils/note';
@@ -121,9 +122,21 @@ function middleOf(points: number[]): Vector2d {
 const round = (n: number) => Math.round(n * 100) / 100;
 
 /**
+ * Transform mirroring what it draws (shape or group flipped once)
+ * @param transform Transform of a node
+ * @returns True when its determinant is negative
+ */
+const isMirrored = (transform: Transform) => {
+  const [a, b, c, d] = transform.getMatrix();
+
+  return a * d - b * c < 0;
+};
+
+/**
  * Place a text in its shape: centered in it, as wide as its inside (inner rectangle of ellipses, 70 % of path shapes)
- * and turned with it, never scaled (a resize of the shape changes its width, not its letters); label of an arrow:
- * centered on its middle, as wide as its lines, halo of the background color. Hidden with its shape
+ * and turned with it, never scaled (a resize of the shape changes its width, not its letters), readable in a flipped
+ * shape or group; label of an arrow: centered on its middle, as wide as its lines, halo of the background color. Hidden
+ * with its shape
  * @param text Text of the shape
  * @param container Its shape
  * @param background Background color of the drawing (halo of arrow labels)
@@ -169,16 +182,37 @@ export function placeBoundText(text: Text, container: Shape, background: string)
     center = toParent.point({ x: box.x + box.width / 2, y: box.y + box.height / 2 });
   }
 
-  const angle = arrow ? 0 : rotation;
+  // text of a flipped group: mirrored again, readable
+  const flip = isMirrored(parent.getAbsoluteTransform()) ? -1 : 1;
+  let angle = arrow ? 0 : rotation;
+
+  // flipped shape (also twice: as turned by 180 degrees, unlike a turned one) or group: of the two angles along the
+  // shape, the one reading from left to right on screen (a flipped shape is decomposed as turned by 180 degrees)
+  const flipped = container.scaleX() < 0 || container.scaleY() < 0 || isMirrored(toParent);
+
+  if (flip < 0 || (!arrow && flipped)) {
+    const transform = parent.getAbsoluteTransform();
+    const origin = transform.point({ x: 0, y: 0 });
+    const end = transform.point({
+      x: flip * Math.cos((angle * Math.PI) / 180),
+      y: flip * Math.sin((angle * Math.PI) / 180),
+    });
+
+    if (Math.abs(Math.atan2(end.y - origin.y, end.x - origin.x)) > Math.PI / 2 + 1e-9) {
+      angle += angle > 0 ? -180 : 180;
+    }
+  }
+
   const radians = (angle * Math.PI) / 180;
   // top left corner of the text box, its center on the center of the shape
-  const [halfWidth, halfHeight] = [text.width() / 2, text.height() / 2];
+  const [halfWidth, halfHeight] = [(flip * text.width()) / 2, text.height() / 2];
 
   text.setAttrs({
     x: round(center.x - halfWidth * Math.cos(radians) + halfHeight * Math.sin(radians)),
     y: round(center.y - halfWidth * Math.sin(radians) - halfHeight * Math.cos(radians)),
-    rotation: round(angle),
-    scaleX: 1,
+    // no -0 (a flipped shape turned by -180 degrees)
+    rotation: round(angle) || 0,
+    scaleX: flip,
     scaleY: 1,
     skewX: 0,
     skewY: 0,

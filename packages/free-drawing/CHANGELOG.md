@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [8.1.3](https://github.com/fabienwnklr/free-drawing/compare/v8.1.2...v8.1.3) (2026-10-29)
+
+
+### Bug Fixes
+
+* **texts:** the text of a flipped shape is no longer upside down, nor mirrored in a flipped group
+* **texts:** an existing text emptied and validated is removed as a change (saved, in history, shared at once)
+* **frames:** the text of a shape enters or leaves a frame with its shape, above it (typing in a shape over a frame, frame drawn or resized around the text only, align, distribute and stack): no longer hidden under its shape or cut by another frame
+* **layers:** hiding or locking a shape hides or locks its text too (and a text its shape)
+* **slideshow:** the slideshow and the replay stopped after read only started leave the pan tool active (none before), the tool of the user before them comes back once read only ends (not the laser of the slideshow)
+
 ## [8.1.2](https://github.com/fabienwnklr/free-drawing/compare/v8.1.1...v8.1.2) (2026-10-29)
 
 

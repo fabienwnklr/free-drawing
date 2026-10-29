@@ -266,7 +266,7 @@ export class Replay {
     this.$bar.hidden = true;
     drawer.$drawerContainer.classList.remove('is-presenting');
     drawer._setView(state.position, state.scale);
-    this._activate(state.tool && !state.tool.isDisabled ? state.tool : null);
+    drawer._restoreTool(state.tool);
     if (!hasFocusOutside(drawer.$drawerContainer)) drawer.focus();
     drawer.trigger(drawerEvents.replayChange, -1);
   }

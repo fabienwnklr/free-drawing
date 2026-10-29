@@ -226,7 +226,7 @@ export class Slideshow {
       drawer.setSize(state.size.width, state.size.height);
     }
     drawer._setView(state.position, state.scale);
-    this._activate(state.tool && !state.tool.isDisabled ? state.tool : null);
+    drawer._restoreTool(state.tool);
     if (this.#presenting) {
       this.#presenting = false;
       drawer.collaboration?.present(false);

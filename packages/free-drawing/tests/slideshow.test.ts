@@ -4,6 +4,7 @@ import type { Drawer } from '@/Drawer';
 import { drawerEvents, shapeName } from '@/constants';
 import { slideMaskName } from '@/components/Slideshow/Slideshow';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
+import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import { createFrame, type Frame } from '@/utils/frame';
 import { inReadingOrder } from '@/utils/slides';
 import { createDrawer, keydown } from './helpers';
@@ -153,6 +154,19 @@ describe('Slideshow', () => {
     frames[2].destroy();
     drawer.stage.fire('change');
     expect(slideshow.active).toBe(false);
+  });
+
+  it('Read only started during the slideshow: pan once it stops, the tool of the user once read only ends', () => {
+    const drawer = createDrawer();
+
+    addFrames(drawer);
+    drawer.getWidget<BaseWidget>('brush')!.setActive(true);
+    drawer.slideshow.start(undefined, { fullscreen: false });
+    drawer.setReadOnly(true);
+    drawer.slideshow.stop();
+    expect(drawer.activeTool).toBe('pan');
+    drawer.setReadOnly(false);
+    expect(drawer.activeTool).toBe('brush');
   });
 
   it('Read only drawers present too; commands of the menu, context menu, palette and help', () => {

@@ -9,6 +9,7 @@ import { replayName } from '@/components/Replay/Replay';
 import { createFrame } from '@/utils/frame';
 import { creationTime, inCreationOrder, outlineLength, partialStroke } from '@/utils/replay';
 import { createDrawer, keydown } from './helpers';
+import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 
 /**
  * Id of the library created at a time
@@ -87,6 +88,19 @@ describe('Replay of the drawing', () => {
     expect(outlineLength(new Line({ points: [0, 0, 3, 4, 3, 10] }))).toBe(11);
     expect(partialStroke([0, 0, 1, 0, 2, 0, 3, 0, 3, 1, 2, 1, 1, 1, 0, 1], 0.5)).toEqual([0, 0, 1, 0, 1, 1, 0, 1]);
     expect(partialStroke([0, 0, 1, 1], 0.5)).toEqual([0, 0, 1, 1]);
+  });
+
+  it('Read only started during the replay: pan once it stops, the tool of the user once read only ends', () => {
+    const drawer = createDrawer();
+
+    addShapes(drawer);
+    drawer.getWidget<BaseWidget>('brush')!.setActive(true);
+    expect(drawer.replay.start()).toBe(true);
+    drawer.setReadOnly(true);
+    drawer.replay.stop();
+    expect(drawer.activeTool).toBe('pan');
+    drawer.setReadOnly(false);
+    expect(drawer.activeTool).toBe('brush');
   });
 
   it('Shapes appear again in the order they were created, the drawing unchanged; interface and view given back', () => {

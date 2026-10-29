@@ -13,6 +13,7 @@ import { findBindingTarget } from '@/utils/binding';
 import { getBoundText, updateBoundTexts } from '@/utils/boundText';
 import { parseDrawingFile } from '@/utils/drawingFile';
 import { renderSvg } from '@/utils/export';
+import { createFrame, getFrameContent, type Frame } from '@/utils/frame';
 import { createDrawer, fireMouse, setPointer } from './helpers';
 
 /** Rectangle 100..300 x 100..200, without background */
@@ -124,6 +125,73 @@ describe('Texts of shapes', () => {
     write('Changed');
     expect(drawer.drawLayer.find('Text')).toHaveLength(1);
     expect(getBoundText(rect, drawer.drawLayer)?.text()).toBe('Changed');
+  });
+
+  it('Text of a flipped shape readable: not upside down, not mirrored in a flipped group', () => {
+    const drawer = createDrawer();
+    const rect = createRect(drawer);
+    const text = drawer.addShape(
+      new Text({ name: shapeName.text, text: 'Hi', align: 'center', containerId: rect.id() })
+    ) as Text;
+    const centers = () =>
+      [text, rect].map((node) => {
+        const box = node.getClientRect({ relativeTo: drawer.drawLayer });
+
+        return [Math.round(box.x + box.width / 2), Math.round(box.y + box.height / 2)];
+      });
+    const mirrored = () => {
+      const [a, b, c, d] = text.getAbsoluteTransform().getMatrix();
+
+      return a * d - b * c < 0;
+    };
+
+    drawer.stage.fire('change');
+    drawer.flipShapes('horizontal', [rect, text]);
+    expect([text.rotation(), text.scaleX(), mirrored()]).toEqual([0, 1, false]);
+    expect(centers()[0]).toEqual(centers()[1]);
+    drawer.flipShapes('vertical', [rect, text]);
+    expect([text.rotation(), mirrored()]).toEqual([0, false]);
+
+    // group flipped: text mirrored again, also after a move of the group
+    const group = drawer.groupShapes([rect, text])!;
+
+    drawer.flipShapes('horizontal', [group]);
+    expect(mirrored()).toBe(false);
+    group.x(group.x() + 50);
+    drawer.stage.fire('change');
+    expect(mirrored()).toBe(false);
+    expect(centers()[0]).toEqual(centers()[1]);
+  });
+
+  it('Text of a shape placed in frames with its shape, above it', () => {
+    const drawer = createDrawer();
+    const frame = drawer.addShape(createFrame({ x: 0, y: 0, width: 400, height: 300, label: 'F' })) as Frame;
+    // center out of the frame
+    const rect = drawer.addShape(
+      new Rect({ name: shapeName.rect, x: 350, y: 100, width: 200, height: 100, stroke: '#000' })
+    ) as Rect;
+    const text = drawer.addShape(new Text({ name: shapeName.text, text: 'Hi', containerId: rect.id() })) as Text;
+    const content = getFrameContent(frame);
+
+    drawer.stage.fire('change');
+    // text alone over the frame (typed in the shape, aligned...): with its shape
+    text.x(100);
+    drawer.placeInFrames([text]);
+    expect(text.getParent()).toBe(drawer.drawLayer);
+
+    // shape moved into the frame: its text with it, above it
+    rect.x(50);
+    drawer.placeInFrames([rect]);
+    expect([rect.getParent(), text.getParent()]).toEqual([content, content]);
+    expect(text.zIndex()).toBe(rect.zIndex() + 1);
+
+    // frame fitted around the text only: none taken
+    rect.x(350);
+    drawer.placeInFrames([rect]);
+    expect([rect.getParent(), text.getParent()]).toEqual([drawer.drawLayer, drawer.drawLayer]);
+    text.position({ x: 20, y: 20 });
+    drawer.fitFrame(frame);
+    expect(text.getParent()).toBe(drawer.drawLayer);
   });
 
   it('Text follows its shape: moved, turned, resized without being scaled; inner box of ellipses', () => {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Rect } from 'konva/lib/shapes/Rect';
 import { Line } from 'konva/lib/shapes/Line';
+import { Text } from 'konva/lib/shapes/Text';
 import type { Drawer } from '@/Drawer';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
@@ -156,6 +157,27 @@ describe('Layers panel', () => {
     drawer.setShapeLabel(restored, 'Frame');
     expect(drawer.setShapeLabel(restored, '')).toBe(true);
     expect(drawer.getShapeLabel(restored)).toBe('Rectangle');
+  });
+
+  it('Texts of shapes hidden and locked with their shapes', () => {
+    const drawer = createDrawer();
+    const rect = drawer.addShape(new Rect({ name: shapeName.rect, width: 100, height: 50, stroke: '#000' }));
+    const text = drawer.addShape(new Text({ name: shapeName.text, text: 'T', containerId: rect.id() }));
+
+    drawer.stage.fire('change');
+    expect(drawer.setShapesHidden(true, [rect])).toBe(true);
+    expect([rect.visible(), text.visible()]).toEqual([false, false]);
+    drawer.stage.fire('change');
+    expect(text.visible()).toBe(false);
+    // shown from its text
+    drawer.setShapesHidden(false, [text]);
+    expect([rect.visible(), text.visible()]).toEqual([true, true]);
+
+    drawer.setShapesLocked(true, [rect]);
+    expect([rect.listening(), text.listening()]).toEqual([false, false]);
+    // shapes put back by undo
+    drawer.undoRedo.undo();
+    expect(drawer.getDrawingShapes().map((shape) => shape.listening())).toEqual([true, true]);
   });
 
   it('Hidden shapes are not selectable, locked ones alone (to be unlocked), states saved and undone', () => {

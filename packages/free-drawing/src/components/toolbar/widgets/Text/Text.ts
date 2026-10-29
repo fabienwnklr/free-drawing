@@ -405,6 +405,8 @@ export class TextWidget extends BaseWidget {
    * @param onEnd Called once the edit ended, with the text (null when left empty: removed)
    */
   private _initEventsTextarea(textNode: Text, textarea: HTMLTextAreaElement, onEnd?: (textNode: Text | null) => void) {
+    // text of the drawing (a new one is empty): its removal is a change
+    const existing = textNode.text() !== '';
     const byTool = this.#byTool;
 
     this.#byTool = false;
@@ -454,8 +456,8 @@ export class TextWidget extends BaseWidget {
         selectWidget?.hideOverlay();
         // tool kept, as after a simple click of a shape tool
         if (byTool && this.drawer.activeWidget === this) this.showToolOverlay();
-        // changes received meanwhile: saved, in history
-        if (received) this.drawer.stage.fire('change');
+        // text of the drawing removed, changes received meanwhile: saved, in history, shared
+        if (existing || received) this.drawer.stage.fire('change');
         onEnd?.(null);
         return;
       }

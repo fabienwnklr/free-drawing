@@ -34,11 +34,11 @@ Audit of 2026-10-29 (library 8.1.0): items ordered by priority in each section.
 
 ### Tools and interaction
 
-- [ ] horizontal flip of a shape with a text: text upside down (`decompose` gives rotation -180), mirrored in a flipped group (`placeBoundText`)
-- [ ] existing text emptied and validated: removed without `change` (not saved, not in history, not shared until the next change) (`TextWidget` `removeTextarea`)
-- [ ] text of a shape placed in frames apart from its shape: typing in a shape over a frame, frame drawn or resized around the text only (`fitFrame`), align / distribute / stack: text hidden under its shape or clipped in another frame (keep each text in the parent of its shape, above it)
-- [ ] slideshow or replay stopped after read only started: pan deactivated, no tool; laser given back when read only ends (`Slideshow.stop`, `Replay.stop`: `_leaveDisabledTool`)
-- [ ] layers panel: hiding a shape leaves its text visible (shown again by `placeBoundText`, no history), locking it leaves its text selectable and editable (hide and lock the text with its shape)
+- [x] horizontal flip of a shape with a text: text upside down (`decompose` gives rotation -180), mirrored in a flipped group (`placeBoundText`)
+- [x] existing text emptied and validated: removed without `change` (not saved, not in history, not shared until the next change) (`TextWidget` `removeTextarea`)
+- [x] text of a shape placed in frames apart from its shape: typing in a shape over a frame, frame drawn or resized around the text only (`fitFrame`), align / distribute / stack: text hidden under its shape or clipped in another frame (keep each text in the parent of its shape, above it)
+- [x] slideshow or replay stopped after read only started: pan deactivated, no tool; laser given back when read only ends (`Slideshow.stop`, `Replay.stop`: `_leaveDisabledTool`)
+- [x] layers panel: hiding a shape leaves its text visible (shown again by `placeBoundText`, no history), locking it leaves its text selectable and editable (hide and lock the text with its shape)
 
 ### Interface, accessibility
 

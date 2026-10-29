@@ -186,6 +186,36 @@ describe('Test drawer event', () => {
     expect(selectWidget.transformer.visible()).toBe(true);
   });
 
+  it('Existing text emptied and validated: removed by a change (saved, undone), not a new text cancelled', () => {
+    const drawer = createDrawer();
+    const textWidget = drawer.getWidget<TextWidget>('text')!;
+    const text = textWidget.addTextNode('hello');
+    const change = vi.fn();
+    const validate = (value: string, key = 'Enter') => {
+      const textarea = drawer.$drawerContainer.querySelector('textarea')!;
+
+      textarea.value = value;
+      textarea.dispatchEvent(new KeyboardEvent('keydown', { key, code: key }));
+    };
+
+    drawer.stage.fire('change');
+    drawer.on('change', change);
+    textWidget.editTextNode(text);
+    validate('');
+    expect(text.getLayer()).toBeFalsy();
+    expect(change).toHaveBeenCalledTimes(1);
+    drawer.undoRedo.undo();
+    expect(drawer.getDrawingShapes().map((shape) => shape.attrs.text)).toEqual(['hello']);
+
+    // new text cancelled: nothing changed
+    const empty = textWidget.addTextNode();
+
+    change.mockClear();
+    textWidget.editTextNode(empty);
+    validate('', 'Escape');
+    expect(change).not.toHaveBeenCalled();
+  });
+
   it('Escape on existing text keeps its content', () => {
     const drawer = createDrawer();
     const textWidget = drawer.getWidget<TextWidget>('text')!;

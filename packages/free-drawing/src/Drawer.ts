@@ -52,7 +52,14 @@ import { rectContains, setupHit } from '@/utils/hit';
 import { I18n, getLanguage, isLanguage, toLanguageChoice } from '@/i18n/I18n';
 import type { Language, TranslationParams, TranslationKey } from '@/@types/i18n';
 import { bindingAttrs, unbindMoved, updateBindings } from '@/utils/binding';
-import { getBoundText, updateBoundTexts, withoutBoundTexts } from '@/utils/boundText';
+import {
+  getBoundText,
+  getContainer,
+  isBoundText,
+  updateBoundTexts,
+  withBoundTexts,
+  withoutBoundTexts,
+} from '@/utils/boundText';
 import { setupArrows } from '@/utils/arrow';
 import { setupNotes } from '@/utils/note';
 import { getShapesStyle } from '@/utils/style';
@@ -639,6 +646,28 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
 
     this.undoRedo.manageButtons();
     this.trigger(drawerEvents.readOnlyChange, readOnly);
+  }
+
+  /**
+   * Tool of the user given back once the slideshow or the replay stops: activated; disabled by read only started
+   * meanwhile: activated once read only ends, pan meanwhile (not the tool of the slideshow); disabled by its plugin:
+   * another one
+   * @param tool Tool active before, null for none
+   */
+  _restoreTool(tool: BaseWidget | null) {
+    if (!tool) {
+      this.activeWidget?.setActive(false);
+    } else if (!tool.isDisabled) {
+      tool.setActive(true);
+    } else if (this.#readOnlyWidgets.includes(tool)) {
+      const pan = this.getWidget<BaseWidget>('pan');
+
+      this.#toolBeforeReadOnly = tool;
+      if (pan && !pan.isDisabled) pan.setActive(true);
+      else this.activeWidget?.setActive(false);
+    } else {
+      this._leaveDisabledTool();
+    }
   }
 
   /**
@@ -2398,6 +2427,9 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
     const left = new Set<Frame>();
 
     for (const shape of shapes.filter((shape) => this._isPlaceable(shape))) {
+      // text of a shape: with its shape
+      if (isBoundText(shape) && getContainer(shape, this.drawLayer)) continue;
+
       const from = getShapeFrame(shape);
       const frame = findFrameAt(shape, frames);
 
@@ -2406,8 +2438,27 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
       if (frame) entered.add(frame);
       if (from) left.add(from);
     }
+    this._placeBoundTexts(shapes);
 
     return { entered: [...entered], left: [...left] };
+  }
+
+  /**
+   * Texts of shapes in the parent of their shape (drawing or frame), above it: a frame takes or gives back a shape with
+   * its text, never one without the other (the text would be hidden under its shape, or cut by another frame)
+   * @param shapes Shapes placed in frames, texts of shapes among them
+   */
+  private _placeBoundTexts(shapes: DrawingShape[]) {
+    for (const shape of shapes) {
+      const text = isBoundText(shape) ? shape : getBoundText(shape, this.drawLayer);
+      const container = text && getContainer(text, this.drawLayer);
+      const parent = container?.getParent();
+
+      if (!text || !container || !parent || text.getParent() === parent) continue;
+      if (!isShapesContainer(parent, this.drawLayer) || !this._isPlaceable(text)) continue;
+      moveShapeTo(text, parent);
+      text.zIndex(container.zIndex() + 1);
+    }
   }
 
   /**
@@ -2528,15 +2579,18 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
    */
   fitFrame(frame: Frame) {
     const box = frame.getClientRect();
-    const left = getFrameShapes(frame).filter((shape) => findFrameAt(shape, [frame]) !== frame);
+    // texts of shapes: with their shapes
+    const free = (shape: DrawingShape) => !isBoundText(shape) || !getContainer(shape, this.drawLayer);
+    const left = getFrameShapes(frame).filter((shape) => free(shape) && findFrameAt(shape, [frame]) !== frame);
 
     for (const shape of left) moveShapeTo(shape, this.drawLayer);
     // shapes of drawing now inside, after the ones moved out
     const inside = this.getDrawingShapes().filter(
-      (shape) => !isFrame(shape) && rectContains(box, shape.getClientRect())
+      (shape) => !isFrame(shape) && free(shape) && rectContains(box, shape.getClientRect())
     );
 
     for (const shape of inside) moveShapeTo(shape, getFrameContent(frame));
+    this._placeBoundTexts([...left, ...inside]);
   }
 
   /**
@@ -2588,27 +2642,28 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
   }
 
   /**
-   * Lock shapes (selected ones by default): not moved, transformed nor erased on canvas, only selected to be unlocked
+   * Lock shapes (selected ones by default), with their texts (texts with their shapes): not moved, transformed nor erased on
+   * canvas, only selected to be unlocked
    * @param locked True locks shapes, false unlocks them
    * @param shapes Shapes to lock or unlock, selected shapes by default
    * @returns true if a shape changed (change saved)
    */
   setShapesLocked(locked: boolean, shapes: DrawingShape[] = this.getSelectedShapes()): boolean {
     return this._setShapesState(
-      shapes.filter((shape) => shape.listening() === locked),
+      withBoundTexts(shapes, this.drawLayer).filter((shape) => shape.listening() === locked),
       (shape) => shape.listening(!locked)
     );
   }
 
   /**
-   * Hide shapes (selected ones by default): not drawn, selected nor exported
+   * Hide shapes (selected ones by default), with their texts (texts with their shapes): not drawn, selected nor exported
    * @param hidden True hides shapes, false shows them
    * @param shapes Shapes to hide or show, selected shapes by default
    * @returns true if a shape changed (change saved)
    */
   setShapesHidden(hidden: boolean, shapes: DrawingShape[] = this.getSelectedShapes()): boolean {
     return this._setShapesState(
-      shapes.filter((shape) => shape.visible() === hidden),
+      withBoundTexts(shapes, this.drawLayer).filter((shape) => shape.visible() === hidden),
       (shape) => shape.visible(!hidden)
     );
   }
