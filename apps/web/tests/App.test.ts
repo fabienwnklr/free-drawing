@@ -114,6 +114,40 @@ describe('Drawings of the app', () => {
     expect(await shapesOf(app.drawing!.id)).toEqual(['drawn']);
   });
 
+  it('A drawing saved in another tab is loaded again; saved over it, the changes of this tab are kept in a copy', async () => {
+    const drawing = await localDrawings.createDrawing({ name: 'Plan', content: fileWith('a') });
+    // save of the other tab, then its storage event in this one
+    const saveInOtherTab = (id: string, version: number) =>
+      localDrawings.updateDrawing(drawing.id, { content: fileWith(id), version });
+    const storageEvent = () =>
+      window.dispatchEvent(new StorageEvent('storage', { key: 'free-drawing-web-drawings', storageArea: localStorage }));
+
+    local.setLastLocalDrawingId(drawing.id);
+
+    const app = createApp();
+
+    await app.drawer.ready;
+    await saveInOtherTab('b', 1);
+    storageEvent();
+    await vi.waitFor(() => expect(app.drawer.getDrawingShapes().map((shape) => shape.id())).toEqual(['b']));
+    expect(app.drawing!.version).toBe(2);
+
+    // changed here once the other tab saved it again (before its event): not loaded over these changes, kept in a copy
+    // open here
+    await saveInOtherTab('c', 2);
+    app.drawer.addShape(new Rect({ id: 'mine', name: 'drawer-rect', width: 10, height: 10 }));
+    app.drawer.stage.fire('change');
+    storageEvent();
+    await app.drawer.save();
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(app.drawer.getDrawingShapes().map((shape) => shape.id())).toEqual(['b', 'mine']);
+    expect(await shapesOf(drawing.id)).toEqual(['c']);
+    expect(app.drawing).toMatchObject({ name: 'Plan (conflicted copy)', version: 2 });
+    expect(await shapesOf(app.drawing!.id)).toEqual(['b', 'mine']);
+    expect(local.lastLocalDrawingId()).toBe(app.drawing!.id);
+    expect(toasts(app).some((text) => text.includes('changed in another tab'))).toBe(true);
+  });
+
   it('A drawing link opens in a new drawing: the last drawing is not saved over', async () => {
     const last = await localDrawings.createDrawing({ name: 'Last', content: fileWith('last') });
     const other = new Drawer(document.body.appendChild(document.createElement('div')), {
@@ -196,6 +230,57 @@ describe('Account of the app', () => {
     expect(app.user).toBeNull();
     expect(await shapesOf(app.drawing!.id)).toEqual(['a', 'drawn']);
     expect(app.drawer.getDrawingShapes().map((shape) => shape.id())).toEqual(['a', 'drawn']);
+  });
+
+  it('Drawing saved on another device: loaded again when the page is shown, saved over it in a copy', async () => {
+    // drawing of the server, saved with its version (409 for another one), copies created
+    const stored = { ...drawing, version: 1, content: fileWith('a') };
+    const copies: DrawingSummary[] = [];
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string, init?: RequestInit) => {
+        const method = init?.method ?? 'GET';
+        const body = init?.body ? JSON.parse(init.body as string) : {};
+        const summary = () => ({ ...drawing, version: stored.version });
+
+        if (path === '/api/me') return respond(200, user);
+        if (path === '/api/preferences') return respond(200, {});
+        if (path === '/api/drawings' && method === 'POST') {
+          copies.push({ ...drawing, id: `copy-${copies.length}`, name: body.name, version: 1 });
+          return respond(201, copies.at(-1));
+        }
+        if (path === '/api/drawings') return respond(200, [summary(), ...copies]);
+        if (path === '/api/drawings/d1' && method === 'GET') return respond(200, stored);
+        if (path === '/api/drawings/d1') {
+          if (body.version !== stored.version) return respond(409, { code: 'DRAWING_CHANGED' });
+          Object.assign(stored, { content: body.content, version: stored.version + 1 });
+          return respond(200, summary());
+        }
+        return respond(200, { ...copies[0], version: 2 });
+      })
+    );
+
+    const app = createApp(true);
+    const show = () => document.dispatchEvent(new Event('visibilitychange'));
+
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
+    await app.drawer.ready;
+    await vi.waitFor(() => expect(app.user).toEqual(user));
+
+    Object.assign(stored, { content: fileWith('b'), version: 2 });
+    show();
+    await vi.waitFor(() => expect(app.drawer.getDrawingShapes().map((shape) => shape.id())).toEqual(['b']));
+    expect(app.drawing!.version).toBe(2);
+
+    // saved again on the other device: changes of this page kept in a copy of the account
+    Object.assign(stored, { content: fileWith('c'), version: 3 });
+    app.drawer.addShape(new Rect({ id: 'mine', name: 'drawer-rect', width: 10, height: 10 }));
+    app.drawer.stage.fire('change');
+    await app.drawer.save();
+    expect(stored.content).toEqual(fileWith('c'));
+    expect(app.drawing).toMatchObject({ id: 'copy-0', name: 'Plan (conflicted copy)' });
+    expect(app.drawer.getDrawingShapes().map((shape) => shape.id())).toEqual(['b', 'mine']);
   });
 
   it('Preferences changed before the ones of the account are read: not saved over them', async () => {

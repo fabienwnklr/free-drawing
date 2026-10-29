@@ -8,6 +8,7 @@ import { BaseOverlay } from '@/components/tools/Overlay/BaseOverlay';
 import type { OverlayOptions, FontStyleChoice } from '@/@types/toolbar';
 import { dataAttributes } from '@/constants';
 import { setPressed } from '@/utils/dom';
+import { cssFontFamily } from '@/utils/text';
 import AlignLeftIcon from '@/icons/align-left.svg?raw';
 import AlignCenterIcon from '@/icons/align-center.svg?raw';
 import AlignRightIcon from '@/icons/align-right.svg?raw';
@@ -105,7 +106,7 @@ export class TextOverlay extends BaseOverlay {
       $option.value = fontFamily;
       $option.textContent = fontFamily;
       // preview font in list
-      $option.style.fontFamily = fontFamily;
+      $option.style.fontFamily = cssFontFamily(fontFamily);
       this.$fontFamilySelect.append($option);
     });
 
@@ -238,7 +239,7 @@ export class TextOverlay extends BaseOverlay {
 
     if (fontFamily !== undefined) {
       this.$fontFamilySelect.value = fontFamily;
-      this.$fontFamilySelect.style.fontFamily = fontFamily;
+      this.$fontFamilySelect.style.fontFamily = cssFontFamily(fontFamily);
     }
 
     if (fontSize !== undefined) {

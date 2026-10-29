@@ -45,6 +45,12 @@ type FakeSocket = CollaborationSocket & {
   owner?: boolean;
   /** Connection lost unseen: messages lost (no acknowledgement), until `receive('disconnect')` */
   lost?: boolean;
+  /** Messages slowed down by the network: received by the server once released, after messages of other users */
+  held?: [event: string, data: unknown, ack?: () => void][];
+  /** Messages held received by the server */
+  release: () => void;
+  /** Server of previous versions: changes never acknowledged */
+  noAck?: boolean;
 };
 
 /**
@@ -102,8 +108,19 @@ const createServer = () => {
         for (const s of inRoom(socket.room)) s.receive('LEAVE', socket.id);
         sendUsers(socket.room);
       }),
+      release: () => {
+        const held = socket.held ?? [];
+
+        socket.held = undefined;
+        for (const [event, data, ack] of held) socket.emit(event, data, ack);
+      },
       emit: vi.fn((event: string, data: unknown, ack?: () => void) => {
         if (socket.lost) return;
+        if (socket.held) {
+          socket.held.push([event, data, ack]);
+          return;
+        }
+        if (socket.noAck) ack = undefined;
         if (event === 'JOIN') {
           const { room, name, userId, ownerKey, invitedBy, keyCheck } = data as {
             room: string;
@@ -231,6 +248,9 @@ const createServer = () => {
             return;
           }
 
+          // received: not sent again after a lost connection; acknowledged before changes sent by others in reaction to
+          // it (the server applies, relays and acknowledges a change at once)
+          ack?.();
           if (change.background && !change.live) roomData.background = change.background;
           roomData.kept = true;
           roomData.files ??= new Map();
@@ -248,8 +268,6 @@ const createServer = () => {
           for (const s of inRoom(socket.room).filter((s) => s !== socket)) {
             s.receive(event, change);
           }
-          // received: not sent again after a lost connection
-          ack?.();
         }
       }),
     } as unknown as FakeSocket;
@@ -1235,12 +1253,14 @@ describe('Collaboration', () => {
     const bobSocket = connect(bob, 'room', 'Bob', { userId: 'bob' });
 
     connect(alice, 'room', 'Alice', { userId: 'alice', ownerKey: 'secret' });
-    // refused by the server (its drawing too big): known again as not sent
+    // refused by the server (its drawing too big), acknowledged: known again as not sent
+    bobSocket.held = [];
     const text = addText(bob, 'B');
+    const [[, , ack]] = bobSocket.held;
 
-    connect.rooms.get('room')!.shapes.delete(text.id());
-    for (const shape of alice.getDrawingShapes()) shape.destroy();
+    bobSocket.held = undefined;
     bobSocket.receive('REJECTED', { event: 'CHANGE', reason: 'too-big', upsert: [text.id()], remove: [] });
+    ack?.();
     addText(bob, 'C');
     expect(alice.getDrawingShapes().map((shape) => shape.attrs.text)).toEqual(['B', 'C']);
 
@@ -1403,6 +1423,113 @@ describe('Collaboration', () => {
     alice.collaboration!.setRight('bob', true);
     expect(byId(alice, a.id())).toBeUndefined();
     expect(alice.getDrawingShapes().map((shape) => shape.attrs.text)).toEqual(['B']);
+  });
+
+  it('One shape changed by two users within a round trip: everyone keeps the version the server applied last', () => {
+    const connect = createServer();
+    const alice = createDrawer();
+    const bob = createDrawer();
+    const textOf = (drawer: Drawer, id: string) => byId(drawer, id)?.getAttr('text');
+
+    connect(alice, 'room', 'Alice', { userId: 'alice', ownerKey: 'secret' });
+    const bobSocket = connect(bob, 'room', 'Bob', { userId: 'bob' });
+    const text = addText(alice, 'A');
+
+    // a change of bob acknowledged: server of this version
+    addText(bob, 'B');
+
+    // change of bob slowed down by the network: the one of alice reaches the server first
+    bobSocket.held = [];
+    byId(bob, text.id())!.setAttr('text', 'Bob');
+    bob.stage.fire('change');
+    text.text('Alice');
+    alice.stage.fire('change');
+    // applied by the server before the change of bob: not over it
+    expect(textOf(bob, text.id())).toBe('Bob');
+
+    bobSocket.release();
+    expect(textOf(alice, text.id())).toBe('Bob');
+    expect(textOf(bob, text.id())).toBe('Bob');
+
+    const carol = createDrawer();
+
+    connect(carol);
+    expect(textOf(carol, text.id())).toBe('Bob');
+
+    // acknowledged: next changes of others applied
+    text.text('Later');
+    alice.stage.fire('change');
+    expect(textOf(bob, text.id())).toBe('Later');
+
+    // removed by alice while bob moves it: put back by the change of bob, applied after
+    bobSocket.held = [];
+    byId(bob, text.id())!.x(40);
+    bob.stage.fire('change');
+    text.destroy();
+    alice.stage.fire('change');
+    expect(byId(bob, text.id())).toBeDefined();
+    bobSocket.release();
+    expect(byId(alice, text.id())!.x()).toBe(40);
+    expect(byId(carol, text.id())!.x()).toBe(40);
+  });
+
+  it('Server of previous versions, acknowledging nothing: changes of others applied as they come', () => {
+    const connect = createServer();
+    const alice = createDrawer();
+    const bob = createDrawer();
+
+    connect(alice, 'room', 'Alice', { userId: 'alice', ownerKey: 'secret' });
+    const bobSocket = connect(bob, 'room', 'Bob', { userId: 'bob' });
+
+    bobSocket.noAck = true;
+    const text = addText(alice, 'A');
+
+    addText(bob, 'B');
+    byId(bob, text.id())!.setAttr('text', 'Bob');
+    bob.stage.fire('change');
+    text.text('Alice');
+    alice.stage.fire('change');
+    expect(byId(bob, text.id())!.getAttr('text')).toBe('Alice');
+  });
+
+  it('A shape moved here while another user changes it keeps the move: sent after, applied last by the server', () => {
+    const connect = createServer();
+    const alice = createDrawer();
+    const bob = createDrawer();
+
+    connect(alice, 'room', 'Alice', { userId: 'alice', ownerKey: 'secret' });
+    connect(bob, 'room', 'Bob', { userId: 'bob' });
+    const text = addText(alice, 'A');
+    const other = addText(alice, 'B');
+    const moved = byId(bob, text.id())!;
+    const selection = bob.getWidget<SelectWidget>('selection')!;
+    const x = moved.x();
+
+    // bob drags it
+    selection.setActive(true);
+    selection.select([moved]);
+    bob.stage.setPointersPositions(new MouseEvent('mousedown', { clientX: 60, clientY: 10 }));
+    moved.startDrag();
+    window.dispatchEvent(new MouseEvent('mousemove', { clientX: 110, clientY: 10 }));
+    expect(moved.x()).not.toBe(x);
+
+    // changed by alice meanwhile (preview, final change): not over the move; another shape changed by alice is
+    const preview = text.clone({ text: 'Preview', x: 0 }) as Text;
+
+    bob.collaboration!.receive({ upsert: [JSON.stringify(preview.toObject())], remove: [], live: true });
+    text.text('Alice');
+    alice.stage.fire('change');
+    other.text('B2');
+    alice.stage.fire('change');
+    expect(moved.getAttr('text')).toBe('A');
+    expect(moved.x()).not.toBe(x);
+    expect(byId(bob, other.id())!.getAttr('text')).toBe('B2');
+
+    // move sent once dropped: the last change for everyone
+    window.dispatchEvent(new MouseEvent('mouseup', { clientX: 110, clientY: 10 }));
+    expect(text.x()).toBe(moved.x());
+    expect(text.text()).toBe('A');
+    expect(moved.x()).not.toBe(x);
   });
 
   it('Changes received during a pointer action applied once the tool finished it: erased shapes recorded as they were', async () => {
@@ -2159,6 +2286,42 @@ describe('Encrypted collaboration', () => {
     bobSocket.receive('connect');
     await vi.waitFor(() => expect(texts(bob)).toEqual(['B', 'C']));
     await vi.waitFor(() => expect(texts(alice)).toEqual(['B', 'C']));
+  });
+
+  it('One shape changed by two users within a round trip: acknowledgements handled in order with the changes being decrypted', async () => {
+    const connect = createServer();
+    const cipher = await RoomCipher.create(await createRoomKey());
+    const alice = createDrawer();
+    const bob = createDrawer();
+
+    connect(alice, 'room-o', 'Alice', { userId: 'alice', ownerKey: 'secret', cipher });
+    const bobSocket = connect(bob, 'room-o', 'Bob', { userId: 'bob', cipher });
+    const text = addText(alice, 'A');
+
+    addText(bob, 'B');
+    await vi.waitFor(() => expect(texts(alice)).toEqual(['A', 'B']));
+    await vi.waitFor(() => expect(texts(bob)).toEqual(['A', 'B']));
+
+    // change of bob slowed down by the network
+    bobSocket.held = [];
+    byId(bob, text.id())!.setAttr('text', 'Bob');
+    bob.stage.fire('change');
+    await vi.waitFor(() => expect(bobSocket.held).toHaveLength(1));
+
+    // received by the server once the one of alice reached bob: its acknowledgement comes while that one is decrypted
+    const { receive } = bobSocket;
+
+    bobSocket.receive = (event, data) => {
+      receive(event, data);
+      if (event !== 'CHANGE') return;
+      bobSocket.receive = receive;
+      bobSocket.release();
+    };
+    text.text('Alice');
+    alice.stage.fire('change');
+    await vi.waitFor(() => expect(texts(alice)).toEqual(['B', 'Bob']));
+    await tick();
+    expect(texts(bob)).toEqual(['B', 'Bob']);
   });
 
   it('Links of encrypted rooms carry their key, joined with it; rooms in clear with the option', async () => {

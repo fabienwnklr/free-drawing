@@ -78,6 +78,8 @@
 
     &[aria-selected='true'] {
       background-color: $hover-bg;
+
+      @include forced-selected;
     }
   }
 

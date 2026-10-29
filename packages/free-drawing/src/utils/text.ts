@@ -1,8 +1,56 @@
 import { Container } from 'konva/lib/Container';
+import type { Node } from 'konva/lib/Node';
 import { Text } from 'konva/lib/shapes/Text';
 import type { DrawingShape } from '@/@types/drawer';
 import { getShapes } from '@/utils/hit';
 import { getFrameOfTitle, isFrame } from '@/utils/frame';
+
+/**
+ * Family of the Ubuntu font of the library (`@font-face` of its style sheet): its own name, so the `Ubuntu` font of the
+ * page (installed, with its other weights) is left to it
+ */
+export const libraryUbuntu = 'free-drawing-ubuntu';
+
+/**
+ * Font family of a text as the browser reads it: `Ubuntu` of drawings (texts, titles of frames) is the font of the
+ * library, then an installed Ubuntu; other families as they are, names with spaces quoted (as konva does)
+ * @param fontFamily font family of a text (CSS list)
+ * @returns CSS list of font families
+ */
+export function cssFontFamily(fontFamily: string): string {
+  return fontFamily
+    .split(',')
+    .map((family) => family.trim())
+    .flatMap((family) =>
+      family.replace(/["']/g, '').toLowerCase() === 'ubuntu' ? [libraryUbuntu, 'Ubuntu'] : [family]
+    )
+    .map((family) => (family.includes(' ') && !/["']/.test(family) ? `"${family}"` : family))
+    .join(', ');
+}
+
+/**
+ * Font of the canvas for a text: style, variant, size and family read by the browser (see `cssFontFamily`)
+ * @returns CSS font of the text
+ */
+function contextFont(this: Text): string {
+  return `${this.fontStyle()} ${this.fontVariant()} ${this.fontSize()}px ${cssFontFamily(this.fontFamily())}`;
+}
+
+/**
+ * Texts of a node drawn and measured with the font of the library for `Ubuntu` (see `cssFontFamily`): their font family
+ * is kept (saves, files, style of the selection). Konva clones do not keep it: copies of shapes are set up too
+ * @param node drawing shape, group, frame, copy of one
+ */
+export function setupFonts(node: Node) {
+  const texts = node instanceof Text ? [node] : node instanceof Container ? node.find<Text>('Text') : [];
+
+  for (const text of texts) {
+    if (text._getContextFont === contextFont) continue;
+    text._getContextFont = contextFont;
+    // lines measured again with it
+    text._setTextData();
+  }
+}
 
 /**
  * Texts of shapes and of their groups (not shapes of frames, nor titles of frames)
@@ -26,7 +74,10 @@ export function getContentWidth(text: Text): number {
   // measured by a text of the same style with automatic width
   delete attrs.width;
 
-  return Math.max(1, Math.ceil(new Text(attrs).width()));
+  const measured = new Text(attrs);
+
+  setupFonts(measured);
+  return Math.max(1, Math.ceil(measured.width()));
 }
 
 /**

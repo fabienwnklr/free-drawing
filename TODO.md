@@ -60,7 +60,7 @@ Audit of 2026-10-29 (library 8.1.0): items ordered by priority in each section.
 
 ## Improvements
 
-- [ ] web app: two tabs or devices on the same drawing overwrite each other: version of the drawing sent with `PUT` (409 when changed), `storage` events for the drawing of the browser
-- [ ] collaboration: two users changing one shape within a round trip keep different versions (relayed to others only, last write wins): order of the server echoed or acknowledged for shapes changed here
-- [ ] forced colors (Windows high contrast): swatches all alike, selected swatch and active tool not shown (`forced-color-adjust`, outlines of `.active` under `@media (forced-colors: active)`)
-- [ ] `@font-face 'Ubuntu'` global: a page whose fonts reach `Ubuntu` gets its regular face only (bold and italic synthesized): private family name
+- [x] web app: two tabs or devices on the same drawing overwrite each other: version of the drawing sent with `PUT` (409 when changed), `storage` events for the drawing of the browser
+- [x] collaboration: two users changing one shape within a round trip keep different versions (relayed to others only, last write wins): order of the server echoed or acknowledged for shapes changed here
+- [x] forced colors (Windows high contrast): swatches all alike, selected swatch and active tool not shown (`forced-color-adjust`, outlines of `.active` under `@media (forced-colors: active)`)
+- [x] `@font-face 'Ubuntu'` global: a page whose fonts reach `Ubuntu` gets its regular face only (bold and italic synthesized): private family name

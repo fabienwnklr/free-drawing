@@ -202,6 +202,11 @@ export class Collaboration {
   #rejoinPending = false;
   /** Parts of changes sent on this connection, not acknowledged by the server yet */
   #unconfirmed = new Set<UnconfirmedPart>();
+  /**
+   * Server acknowledges changes (servers of previous versions: none): a change of another user received before the
+   * acknowledgement of a change of this user was applied before it by the server
+   */
+  #acknowledging = false;
   /** Stacking order sent and lost with the connection: the one of this user kept by the merge, sent again */
   #orderLost = false;
   /** Shapes being drawn or moved, sent at next live message */
@@ -1022,7 +1027,12 @@ export class Collaboration {
 
             this.#tooBig.set(id, current.get(id) ?? '');
           },
-          () => this.#unconfirmed.delete(unconfirmed)
+          // in order with the changes received (being decrypted): the ones received before were applied before it
+          () =>
+            this._inOrder(() => {
+              this.#acknowledging = true;
+              this.#unconfirmed.delete(unconfirmed);
+            })
         );
 
         if (result) return result.then(() => emit(i + 1));
@@ -1157,9 +1167,10 @@ export class Collaboration {
    * @param change Change received from the server (live previews are applied at once)
    */
   receive(change: DrawingChange) {
+    change = this._withoutUnconfirmed(change);
     // preview of other users drawing: shown at once, not saved nor added to history (final change follows)
     if (change.live) {
-      this._apply(change);
+      this._applyReceived(change);
       return;
     }
 
@@ -1169,7 +1180,7 @@ export class Collaboration {
       return;
     }
 
-    this._apply(change);
+    this._applyReceived(change);
     // saved and added to history, not sent back (synced)
     this.drawer.stage.fire('change');
   }
@@ -1186,10 +1197,75 @@ export class Collaboration {
     // in the order received: changes received after the drawing of the room are not reverted by its merge
     for (const [change, rejoin] of pending) {
       if (rejoin) this._merge(change);
-      else this._apply(change);
+      else this._applyReceived(change);
     }
 
     return pending.length > 0;
+  }
+
+  /**
+   * Change of another user received before the server acknowledged changes of this user: the server applied it before
+   * them, their shapes (added, changed, removed), background and stacking order are left out of it (else this user would
+   * keep the version of the other user, the room and the other users the one of this user). Servers of previous
+   * versions acknowledge nothing: changes applied as they are
+   * @param change Change received from the server
+   * @returns The change without the parts changed by the changes not acknowledged
+   */
+  private _withoutUnconfirmed(change: DrawingChange): DrawingChange {
+    if (!this.#acknowledging || !this.#unconfirmed.size) return change;
+
+    const ids = new Set<string>();
+    let background = false;
+    let order = false;
+
+    for (const part of this.#unconfirmed) {
+      for (const id of [...part.upsert, ...part.remove]) ids.add(id);
+      background ||= part.background;
+      order ||= part.order;
+    }
+
+    const { upsert, remove, ...rest } = change;
+
+    return {
+      ...rest,
+      upsert: (Array.isArray(upsert) ? upsert : []).filter(
+        (json) => !ids.has(parseShapeState(json)?.attrs.id as string)
+      ),
+      remove: (Array.isArray(remove) ? remove : []).filter((id) => !ids.has(id)),
+      ...(background && { background: undefined }),
+      ...(order && { order: undefined }),
+    };
+  }
+
+  /**
+   * Change of another user applied, but to the shapes and background this user changed and did not send yet (end of a
+   * pointer action, encryption of a change): sent next, the server applies them after it. A viewer sends nothing: the
+   * whole change is applied
+   * @param change Change received from the server
+   */
+  private _applyReceived(change: DrawingChange) {
+    if (!this.canEdit) {
+      this._apply(change);
+      return;
+    }
+
+    const synced = this.#synced;
+    const shapes = new Map(this.drawer.getDrawingShapes().map((shape) => [shape.id(), shape]));
+    // changed or removed here since the last sync (shapes too big for a message: not sent)
+    const unsent = (id: string) => {
+      const shape = shapes.get(id);
+
+      if (!shape) return synced.has(id);
+
+      const json = serializeShape(shape);
+
+      return synced.get(id) !== json && this.#tooBig.get(id) !== json;
+    };
+    const color = this.drawer.background.fill() as string;
+    const recolored =
+      this.#syncedBackground !== null && color !== this.#syncedBackground && checkBackground(color) !== null;
+
+    this._apply(recolored ? { ...change, background: undefined } : change, unsent);
   }
 
   /**
@@ -1394,8 +1470,12 @@ export class Collaboration {
    * Apply a change of another client: shapes removed, updated (groups replaced, selection kept) or added, stacking
    * order applied. Shapes are recorded as synced, so the change is not sent back. Only drawing shapes are created, as
    * from files: other nodes (stage, layers...) and invalid shapes are ignored
+   * @param change Change received (or drawing of the room merged)
+   * @param kept Tells the shapes kept as they are here (changed here, sent next): neither updated nor removed
    */
-  private _apply({ upsert, remove, order, background, full, files }: DrawingChange) {
+  private _apply(change: DrawingChange, kept?: (id: string) => boolean) {
+    const { upsert, remove, order, background, full, files } = change;
+
     // files of images, before the images using them
     this._receiveFiles(files);
     this.#syncChanged = true;
@@ -1405,6 +1485,7 @@ export class Collaboration {
     const changed: string[] = [];
 
     for (const id of Array.isArray(remove) ? remove : []) {
+      if (kept?.(id)) continue;
       shapes.get(id)?.destroy();
       this.#synced.delete(id);
       changed.push(id);
@@ -1417,6 +1498,7 @@ export class Collaboration {
         console.warn('Shape of another user ignored: not a drawing shape');
         continue;
       }
+      if (kept?.(state.attrs.id as string)) continue;
 
       let shape = shapes.get(state.attrs.id as string);
 

@@ -955,7 +955,9 @@ export async function attachCollaboration(
 
     // { upsert: shapes JSON (encrypted room: { id, data }), remove: ids, order: ids from bottom to top when stacking
     // order changed, live }
-    // change received (applied or refused): acknowledged, the client sends again the changes lost with a connection
+    // change received (applied or refused): acknowledged, the client sends again the changes lost with a connection;
+    // applied, relayed and acknowledged at once: changes of others a client receives before the acknowledgement were
+    // applied before its own (it keeps its own over them, as the room)
     on(socketEvents.CHANGE, (message, ack) => {
       receiveChange(message);
       if (typeof ack === 'function') ack();

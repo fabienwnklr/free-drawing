@@ -18,6 +18,7 @@ import { createButton, hasFocusOutside, isComposing, setLabel } from '@/utils/do
 import { frameParts, getFrameContent, getFramePart, isFrame, withFrameShapes, type Frame } from '@/utils/frame';
 import { keyLetter } from '@/utils/HotKey';
 import { inCreationOrder, outlineLength, partialStroke } from '@/utils/replay';
+import { setupFonts } from '@/utils/text';
 import { formatShortcut } from '@/utils/shortcut';
 
 /** Name of the group of the copies of the shapes replayed, in the selection layer */
@@ -329,6 +330,9 @@ export class Replay {
     const frames = new Map<Frame, Frame>();
     const copyOf = (shape: DrawingShape) => {
       const copy = shape.clone() as DrawingShape;
+
+      // font of the library for Ubuntu (not kept by clones)
+      setupFonts(copy);
 
       // never found for a shape of the drawing (ids searched in the stage)
       for (const node of [copy, ...('find' in copy ? copy.find(() => true) : [])]) node.id('');

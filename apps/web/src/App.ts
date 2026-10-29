@@ -1,4 +1,4 @@
-import { Drawer, ariaShortcut, type DrawerStorage, type Preferences } from '@fabwcie/free-drawing';
+import { Drawer, ariaShortcut, type DrawerStorage, type DrawingFile, type Preferences } from '@fabwcie/free-drawing';
 import { ExtraShapesPlugin, HighlighterPlugin } from '@fabwcie/free-drawing-extra-tools';
 import { ApiError, type DrawingSummary, type DrawingsStore, type User, api } from './api';
 import { local, localDrawings } from './local';
@@ -149,9 +149,23 @@ export class App {
 
         this._setSaveState('saving');
         try {
-          const saved = await store.updateDrawing(drawing.id, { content: file });
+          // over the version loaded or saved here: refused once another tab or device saved it, changes kept in a copy;
+          // in a live collaboration session, its content is the drawing of the room (the same in every tab): saved over
+          // any version
+          const version = this.drawer.collaboration ? undefined : drawing.version;
+          const saved = await store
+            .updateDrawing(drawing.id, { content: file, version })
+            .catch((error: unknown) =>
+              error instanceof ApiError && error.status === 409
+                ? this._saveCopy(drawing, file, store)
+                : Promise.reject(error)
+            );
 
-          if (this.drawing?.id === saved.id) this.drawing = saved;
+          if (this.drawing?.id === drawing.id) {
+            this.drawing = saved;
+            // copy opened next time
+            if (saved.id !== drawing.id) this._remember(saved);
+          }
           this._setSaveState('saved');
         } catch (error) {
           // session of the account ended elsewhere: signed in again from the account button, changes kept unsaved
@@ -162,6 +176,47 @@ export class App {
         }
       },
     };
+  }
+
+  /**
+   * Drawing saved in another tab or on another device since it was loaded or saved here: the changes of this page are
+   * kept in a copy, open in its place (the drawing keeps the other version), told in a toast
+   * @param drawing Drawing open
+   * @param content Its content in this page
+   * @param store Drawings of the drawing (account or browser)
+   * @returns The copy
+   */
+  private async _saveCopy(drawing: DrawingSummary, content: DrawingFile, store: DrawingsStore) {
+    const { t } = this.texts;
+    const copy = await store.createDrawing({ name: t('conflictCopy', { name: drawing.name || t('untitled') }), content });
+
+    this.drawer.toast(t('keptInCopy'), 'warning');
+    return copy;
+  }
+
+  /**
+   * Drawing open saved elsewhere (another tab of this browser, another device): its new name shown, its content loaded
+   * again unless it has changes here (their save keeps them in a copy) or a live collaboration session (its drawing is
+   * the one of the room)
+   */
+  private async _followChanges() {
+    const { drawing, store } = this;
+
+    if (drawing?.version === undefined) return;
+
+    const summary = (await store.listDrawings().catch(() => [])).find(({ id }) => id === drawing.id);
+
+    if (!summary || this.drawing?.id !== drawing.id) return;
+    if (summary.name !== this.drawing.name) {
+      this.drawing = { ...this.drawing, name: summary.name };
+      this.render();
+    }
+    if ((summary.version ?? 0) <= (this.drawing.version ?? 0)) return;
+    // stroke or text being typed: its change saved (in a copy) once it ends, not lost
+    await this.drawer._afterAction();
+    if (this.drawing?.id === drawing.id && !this.drawer.hasUnsavedChanges() && !this.drawer.collaboration) {
+      await this.drawer.loadFromStorage().catch(() => {});
+    }
   }
 
   /**
@@ -310,6 +365,13 @@ export class App {
       if (room && this.drawing) local.setRoomDrawingId(room, this.drawing.id, !!this.user);
     });
     window.addEventListener('resize', () => this.drawer.setSize(this.$main.clientWidth, this.$main.clientHeight));
+    // drawing saved by another tab of this browser; by another device: checked when the page is shown again
+    window.addEventListener('storage', (e) => {
+      if (!this.user && e.storageArea === localStorage && local.isDrawingsKey(e.key)) this._followChanges();
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && this.user && !this.sessionEnded) this._followChanges();
+    });
 
     this.$name.addEventListener('change', () => this.rename(this.$name.value));
     // Enter validates name, Escape restores it (not when they end a composition: Chinese, Japanese, Korean...; Safari
@@ -476,7 +538,8 @@ export class App {
     try {
       const renamed = await this.store.updateDrawing(drawing.id, { name });
 
-      if (this.drawing?.id === renamed.id) this.drawing = renamed;
+      // version of the content of this page kept (a newer one saved elsewhere is not saved over)
+      if (this.drawing?.id === renamed.id) this.drawing = { ...renamed, version: this.drawing.version };
     } catch (error) {
       this.drawer.toast(this.texts.error(error as Error), 'error');
     }

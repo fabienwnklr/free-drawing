@@ -109,7 +109,7 @@ Extra tools (shapes, highlighter) as plugins: [`@fabwcie/free-drawing-extra-tool
   opacity: 1, // opacity of draw
   textStyle: {
     // style of new text
-    fontFamily: 'Ubuntu',
+    fontFamily: 'Ubuntu', // font of the library (named free-drawing-ubuntu in its style sheet: the Ubuntu font of the page is left to it)
     fontSize: 16,
     fontStyle: 'normal', // 'normal' | 'bold' | 'italic' | 'italic bold'
     textDecoration: '', // '' | 'underline' | 'line-through' | 'underline line-through'
@@ -273,6 +273,8 @@ drawer.setTheme('dark'); // 'light' | 'dark' | 'system'
 drawer.toggleDarkMode();
 drawer.isDarkMode();
 ```
+
+In the forced colors mode of the system (Windows high contrast), color swatches keep their colors (the selected one in a ring of the highlight color of the system), the current tool, pressed buttons and selected items take the highlight colors of the system.
 
 ## Languages
 
@@ -836,6 +838,8 @@ drawer.collaboration?.requestEdit(); // viewer: asks the owner for the right to 
 ```
 
 Users see the cursor of each other user with their name, and shapes while they are drawn or moved (sent every 50 ms at most, final state sent at the end).
+
+Two users changing one shape at the same time end with the same version, the one the server applied last: a change of another user is not applied to a shape changed here whose change the server has not acknowledged yet, nor to a shape being changed here (moved, text being typed), whose change is sent after it.
 
 During a session, a reminder in the header (also in zen mode: the drawing is shared) shows a live dot, the number of people connected and the requests to draw waiting for the owner: it opens the panel of the session, and its red stop button stops the session (owner) or leaves it once confirmed, as "Stop session" / "Leave session" of the command palette. The panel shows the right of the user (a viewer asks the owner to draw, once until answered), the participants with their rights (switches for the owner), the requests to accept or refuse, "Present my view" for the owner and "Link and settings..." opening the dialog.
 

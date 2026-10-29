@@ -71,7 +71,7 @@ import { SearchBar } from '@/components/SearchBar/SearchBar';
 import { Slideshow } from '@/components/Slideshow/Slideshow';
 import { Replay } from '@/components/Replay/Replay';
 import { ShapeNavigation } from '@/utils/shapeNavigation';
-import { fitTextWidth, getFontsToLoad, getTexts, loadFonts } from '@/utils/text';
+import { fitTextWidth, getFontsToLoad, getTexts, loadFonts, setupFonts } from '@/utils/text';
 import {
   decodeLinkData,
   drawingFileExtension,
@@ -1292,6 +1292,8 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
     // heads of arrows, shadows of notes (drawing functions not saved)
     setupArrows(shape);
     setupNotes(shape);
+    // font of the library for Ubuntu
+    setupFonts(shape);
   }
 
   /**

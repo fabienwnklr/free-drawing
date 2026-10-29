@@ -20,6 +20,8 @@ export type Database = {
     content: string;
     createdAt: string;
     updatedAt: string;
+    /** Version of its content, increased by each save of it: a save of an older version is refused */
+    version: number;
   };
   preferences: {
     userId: string;
@@ -108,6 +110,14 @@ const migrations: Record<string, Migration> = {
         .addColumn('updatedAt', 'text', (col) => col.notNull())
         .execute();
       await db.schema.createIndex('room_updatedAt').on('room').column('updatedAt').execute();
+    },
+  },
+  '003-drawing-version': {
+    async up(db) {
+      await db.schema
+        .alterTable('drawing')
+        .addColumn('version', 'integer', (col) => col.notNull().defaultTo(1))
+        .execute();
     },
   },
 };

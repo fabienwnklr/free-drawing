@@ -3,8 +3,11 @@ import type { DrawingFile, Preferences } from '@fabwcie/free-drawing';
 /** User logged in */
 export type User = { id: string; name: string; email: string };
 
-/** Drawing of the user, without its content */
-export type DrawingSummary = { id: string; name: string; createdAt: string; updatedAt: string };
+/**
+ * Drawing of the user, without its content: `version` of its content, increased by each save of it (none from servers of
+ * previous versions)
+ */
+export type DrawingSummary = { id: string; name: string; createdAt: string; updatedAt: string; version?: number };
 
 /** Drawings of a user: of their account on server (`api`), or of the browser (`localDrawings`) */
 export type DrawingsStore = {
@@ -12,7 +15,11 @@ export type DrawingsStore = {
   listDrawings(): Promise<DrawingSummary[]>;
   createDrawing(drawing: { name?: string; content?: DrawingFile }): Promise<DrawingSummary>;
   getDrawing(id: string): Promise<DrawingSummary & { content: DrawingFile }>;
-  updateDrawing(id: string, changes: { name?: string; content?: DrawingFile }): Promise<DrawingSummary>;
+  /**
+   * Name and / or content changed: a content given with the `version` it changed is refused (ApiError 409) when the
+   * drawing was saved since (another tab, another device)
+   */
+  updateDrawing(id: string, changes: { name?: string; content?: DrawingFile; version?: number }): Promise<DrawingSummary>;
   deleteDrawing(id: string): Promise<unknown>;
 };
 
@@ -70,7 +77,7 @@ export const api = {
   createDrawing: (drawing: { name?: string; content?: DrawingFile }) =>
     request<DrawingSummary>('/api/drawings', 'POST', drawing),
   getDrawing: (id: string) => request<DrawingSummary & { content: DrawingFile }>(drawingPath(id)),
-  updateDrawing: (id: string, changes: { name?: string; content?: DrawingFile }) =>
+  updateDrawing: (id: string, changes: { name?: string; content?: DrawingFile; version?: number }) =>
     request<DrawingSummary>(drawingPath(id), 'PUT', changes),
   deleteDrawing: (id: string) => request<null>(drawingPath(id), 'DELETE'),
 };

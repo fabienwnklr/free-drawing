@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [8.2.0](https://github.com/fabienwnklr/free-drawing/compare/v8.1.4...v8.2.0) (2026-10-29)
+
+
+### Features
+
+* **a11y:** forced colors mode (Windows high contrast): color swatches keep their colors (the selected one in a ring of the highlight color of the system), the current tool, pressed buttons, the command chosen in the command palette and the selected rows of the layers panel take the highlight colors of the system (they looked like the others)
+
+
+### Bug Fixes
+
+* **collaboration:** two users changing one shape at the same time (within the time a message takes to reach the server and come back) no longer keep different versions: everyone keeps the one the server applied last. A change of another user is not applied to a shape whose change the server has not acknowledged yet, nor to a shape being moved here (or a text being typed), whose change is sent after it
+* **texts:** the font of the library is named `free-drawing-ubuntu` in its style sheet: a page using its own `Ubuntu` font (installed, or of its style sheet) keeps its bold and italic faces (it got the regular face of the library only). Texts keep `Ubuntu` as font family in drawings, drawn with the font of the library (exported SVG files name it before `Ubuntu`)
+
 ## [8.1.4](https://github.com/fabienwnklr/free-drawing/compare/v8.1.3...v8.1.4) (2026-10-29)
 
 

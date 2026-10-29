@@ -102,6 +102,7 @@ More in [Files and links](/get-started/#files-and-links), [Drawings of Excalidra
 - **Themes**: light, dark or the one of the device. The dark mode keeps the colors of the shapes recognizable.
 - **Languages**: English, French, Spanish and German, chosen from the browser, and any text can be replaced with the `translations` option.
 - **Keyboard and screen readers**: every action has a shortcut, menus and panels are reached with Tab and arrow keys, buttons have names and states. The shapes too: Enter selects the first one, Tab / Shift + Tab the next and previous ones in reading order, Enter the shapes of a group or frame, and each shape reached is described to screen readers (type, name, text, linked shapes...): see [keyboard navigation](/get-started/#keyboard-navigation).
+- **High contrast**: in the forced colors mode of Windows, color swatches keep their colors and the current tool, pressed buttons and selected items take the highlight colors of the system.
 - **Focus**: the zen mode hides the interface, a grid can be shown with snapping: squares, dots, ruled lines or isometric paper (shapes snap to its triangles): see [grid](/get-started/#grid).
 
 More in [Dark mode](/get-started/#dark-mode) and [Languages](/get-started/#languages).

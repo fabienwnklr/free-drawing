@@ -11,6 +11,7 @@ import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { shapeName } from '@/constants';
 import { TextOverlay } from '@/components/tools/Overlay/TextOverlay/TextOverlay';
 import { isComposing, placeInView } from '@/utils/dom';
+import { cssFontFamily } from '@/utils/text';
 
 /**
  * Text tool: a click adds a text (or edits the text clicked, or the text of the shape clicked) in a textarea placed over
@@ -79,7 +80,9 @@ export class TextWidget extends BaseWidget {
     const fontFamilies = new Set([this.drawer.options.textStyle.fontFamily, ...texts().map((t) => t.fontFamily())]);
 
     try {
-      await Promise.all([...fontFamilies].map((fontFamily) => document.fonts.load(`16px "${fontFamily}"`)));
+      await Promise.all(
+        [...fontFamilies].map((fontFamily) => document.fonts.load(`16px ${cssFontFamily(fontFamily)}`))
+      );
     } catch {
       // font unavailable, fallback font is kept
       return;
@@ -371,7 +374,7 @@ export class TextWidget extends BaseWidget {
     textarea.style.resize = 'none';
     textarea.style.zIndex = '999';
     textarea.style.lineHeight = textNode.lineHeight().toString();
-    textarea.style.fontFamily = textNode.fontFamily();
+    textarea.style.fontFamily = cssFontFamily(textNode.fontFamily());
     textarea.style.fontStyle = textNode.fontStyle().includes('italic') ? 'italic' : 'normal';
     textarea.style.fontWeight = textNode.fontStyle().includes('bold') ? 'bold' : 'normal';
     textarea.style.textDecoration = textNode.textDecoration();
@@ -426,7 +429,9 @@ export class TextWidget extends BaseWidget {
       this.#editedText = null;
       this.#textarea = null;
       // changes of other users received during the edit applied first: the text typed comes after them (else they would
-      // replace it, and it would equal the drawing known by the room: not sent)
+      // replace it, and it would equal the drawing known by the room: not sent); text shown again before, as it was (a
+      // hidden text would be a change of this user not sent yet, kept over them)
+      textNode.show();
       const received = !!this.drawer.collaboration?.flush();
 
       if (text !== undefined) textNode.text(text);

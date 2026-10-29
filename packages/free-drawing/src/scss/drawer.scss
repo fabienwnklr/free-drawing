@@ -7,8 +7,9 @@
   --drawer-pointer-events: all;
 }
 
+// own name (`libraryUbuntu` of utils/text, `Ubuntu` of drawings): the Ubuntu font of the page keeps its weights
 @font-face {
-  font-family: 'Ubuntu';
+  font-family: 'free-drawing-ubuntu';
   src: url('../fonts/Ubuntu-Regular.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
@@ -133,6 +134,9 @@
     &.active {
       background-color: $primary-active;
       color: $on-primary;
+
+      // current tool, pressed toggles
+      @include forced-selected;
     }
 
     &.disabled {
@@ -147,6 +151,8 @@
   .drawer-button-neutral.active {
     background-color: $hover-bg;
     color: $primary-text;
+
+    @include forced-selected;
   }
 
   .drawer-button-primary {

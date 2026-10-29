@@ -18,6 +18,7 @@ import { getShapes } from '@/utils/hit';
 import { frameParts, getFrameTitle, isFrame } from '@/utils/frame';
 import { parseLink } from '@/utils/link';
 import { DrawerError } from '@/utils/errors';
+import { cssFontFamily, setupFonts } from '@/utils/text';
 import type { DrawingShape } from '@/@types/drawer';
 import type { ImageOptions } from '@/@types/file';
 import type { IRect } from 'konva/lib/types';
@@ -141,6 +142,8 @@ export function renderCanvas(shapes: DrawingShape[], box: IRect, options: ImageO
   shapes.forEach((shape) => {
     const clone = shape.clone({ draggable: false }) as DrawingShape;
 
+    // font of the library for Ubuntu (not kept by clones)
+    setupFonts(clone);
     // title of frames not exported
     if (clone instanceof Group) {
       for (const frame of [clone, ...clone.find(isFrame)]) if (isFrame(frame)) getFrameTitle(frame).hide();
@@ -342,6 +345,9 @@ function shapeElement(shape: Node, dark: boolean | undefined, matrix: number[]):
     const lineHeight = shape.lineHeight() * fontSize;
     const style = shape.fontStyle();
     const decoration = shape.textDecoration();
+
+    // measured with the font of the library for Ubuntu (shapes of an offscreen layer: previews of the library)
+    setupFonts(shape);
     // baseline as konva draws it: font box centered in line height
     const { fontBoundingBoxAscent: ascent, fontBoundingBoxDescent: descent } = shape.measureSize('M');
     const baseline = padding + lineHeight / 2 + (ascent - descent) / 2;
@@ -372,7 +378,8 @@ function shapeElement(shape: Node, dark: boolean | undefined, matrix: number[]):
     // halo of arrow labels: stroke of the background color under the letters
     const halo = shape.fillAfterStrokeEnabled() && shape.strokeEnabled() ? colorOf(shape.stroke(), dark) : undefined;
     const font = attrs({
-      'font-family': `${shape.fontFamily()}, sans-serif`,
+      // font of the library in the page (previews), an installed Ubuntu elsewhere
+      'font-family': `${cssFontFamily(shape.fontFamily())}, sans-serif`,
       'font-size': fontSize,
       'font-style': style.includes('italic') ? 'italic' : undefined,
       'font-weight': style.includes('bold') ? 'bold' : undefined,

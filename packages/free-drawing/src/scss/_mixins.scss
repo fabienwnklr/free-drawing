@@ -91,6 +91,31 @@
   }
 
   @include focus-ring;
+
+  // forced colors (Windows high contrast): colors kept as the drawing shows them, ring and focus of system colors
+  @media (forced-colors: active) {
+    forced-color-adjust: none;
+    border-color: CanvasText;
+
+    &.active {
+      border-color: Canvas;
+      box-shadow: 0 0 0 2px Highlight;
+    }
+
+    &:focus-visible {
+      outline-color: CanvasText;
+    }
+  }
+}
+
+// Selected or current item in forced colors (Windows high contrast): background and text of system colors, else
+// it would look like the others
+@mixin forced-selected {
+  @media (forced-colors: active) {
+    forced-color-adjust: none;
+    background-color: Highlight;
+    color: HighlightText;
+  }
 }
 
 // Section of tool options: title then buttons

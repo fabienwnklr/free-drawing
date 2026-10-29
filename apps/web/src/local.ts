@@ -1,5 +1,5 @@
 import type { DrawingFile } from '@fabwcie/free-drawing';
-import type { DrawingSummary, DrawingsStore } from './api';
+import { ApiError, type DrawingSummary, type DrawingsStore } from './api';
 
 const keys = {
   /** Drawings of browser: summaries (content of each one in `content` + id) */
@@ -80,6 +80,8 @@ export const local = {
   },
   /** No drawing of browser created yet (first visit since drawings of browser) */
   isFirstVisit: () => read(keys.drawings) === null,
+  /** Key of the list of drawings of browser, changed by the saves of other tabs (`storage` event) */
+  isDrawingsKey: (key: string | null) => key === keys.drawings,
   lastLocalDrawingId: () => read(keys.lastLocalDrawing),
   setLastLocalDrawingId: (id: string) => write(keys.lastLocalDrawing, id),
   lastDrawingId: () => read(keys.lastDrawing),
@@ -111,12 +113,12 @@ function roomDrawings(account: boolean): Record<string, string> {
   }
 }
 
-/** Drawings of browser, last updated first */
+/** Drawings of browser, last updated first (first version for the ones of previous versions) */
 const summaries = (): DrawingSummary[] => {
   try {
     const list = JSON.parse(read(keys.drawings) ?? '[]');
 
-    return Array.isArray(list) ? list : [];
+    return Array.isArray(list) ? list.map((summary) => ({ version: 1, ...summary })) : [];
   } catch {
     return [];
   }
@@ -145,7 +147,7 @@ export const localDrawings: DrawingsStore = {
   listDrawings: async () => summaries(),
   async createDrawing({ name, content = emptyDrawing() }) {
     const now = new Date().toISOString();
-    const drawing = { id: newId(), name: drawingName(name), createdAt: now, updatedAt: now };
+    const drawing = { id: newId(), name: drawingName(name), createdAt: now, updatedAt: now, version: 1 };
 
     localStorage.setItem(keys.content + drawing.id, JSON.stringify(content));
     saveSummaries([drawing, ...summaries()]);
@@ -163,10 +165,18 @@ export const localDrawings: DrawingsStore = {
     }
     return { ...drawing, content };
   },
-  async updateDrawing(id, { name, content }) {
+  async updateDrawing(id, { name, content, version }) {
+    const saved = find(id);
+
+    // content of another version, saved since by another tab: refused, as by the server
+    if (content && version !== undefined && version !== saved.version) {
+      throw new ApiError('drawing changed elsewhere', 409, 'DRAWING_CHANGED');
+    }
+
     const drawing = {
-      ...find(id),
+      ...saved,
       ...(name !== undefined && { name: drawingName(name) }),
+      ...(content && { version: (saved.version ?? 1) + 1 }),
       updatedAt: new Date().toISOString(),
     };
 

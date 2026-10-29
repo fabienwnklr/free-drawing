@@ -14,6 +14,9 @@ export const drawingsLimits = { count: 500, size: 100_000_000 };
 const tooMany = { error: 'too many drawings', code: 'TOO_MANY_DRAWINGS' };
 const tooBig = { error: 'drawings of the account too big', code: 'DRAWINGS_TOO_BIG' };
 
+/** Refusal of a content saved over another version (changed since in another tab or on another device) */
+const changed = { error: 'drawing changed elsewhere', code: 'DRAWING_CHANGED' };
+
 const themes = ['light', 'dark', 'system'];
 
 /** Styles of the grid (`GridStyle` of the library) */
@@ -78,7 +81,8 @@ export const onError: ErrorRequestHandler = (error, _req, res, next) => {
 };
 
 /**
- * API of logged in users (session cookie): `/me`, `/preferences`, `/drawings` (their own only, `drawingsLimits`)
+ * API of logged in users (session cookie): `/me`, `/preferences`, `/drawings` (their own only, `drawingsLimits`;
+ * `version` of their content: a content sent with an older version is refused)
  */
 export function createApi(auth: Auth, db: Kysely<Database>) {
   const router = express.Router();
@@ -98,7 +102,13 @@ export function createApi(auth: Auth, db: Kysely<Database>) {
     };
   const findDrawing = (id: string, user: User, executor: Kysely<Database> = db) =>
     executor.selectFrom('drawing').selectAll().where('id', '=', id).where('userId', '=', user.id).executeTakeFirst();
-  const summary = ({ id, name, createdAt, updatedAt }: Database['drawing']) => ({ id, name, createdAt, updatedAt });
+  const summary = ({ id, name, createdAt, updatedAt, version }: Database['drawing']) => ({
+    id,
+    name,
+    createdAt,
+    updatedAt,
+    version,
+  });
   // drawings of the user: count, size of their JSON, read in the transaction writing a drawing (requests of the user at
   // the same time wait for it: they can't all pass the limits)
   const usage = async (trx: Transaction<Database>, user: User) => {
@@ -149,7 +159,7 @@ export function createApi(auth: Auth, db: Kysely<Database>) {
     withUser(async (_req, res, user) => {
       const rows = await db
         .selectFrom('drawing')
-        .select(['id', 'name', 'createdAt', 'updatedAt'])
+        .select(['id', 'name', 'createdAt', 'updatedAt', 'version'])
         .where('userId', '=', user.id)
         .orderBy('updatedAt', 'desc')
         .execute();
@@ -174,6 +184,7 @@ export function createApi(auth: Auth, db: Kysely<Database>) {
         content: JSON.stringify(content ?? { type: 'free-drawing', version: 1, background: '#fff', shapes: [] }),
         createdAt: now,
         updatedAt: now,
+        version: 1,
       };
       const refusal = await db.transaction().execute(async (trx) => {
         const { count, size } = await usage(trx, user);
@@ -202,7 +213,7 @@ export function createApi(auth: Auth, db: Kysely<Database>) {
   router.put(
     '/drawings/:id',
     withUser(async (req, res, user) => {
-      const { name, content } = getBody(req);
+      const { name, content, version } = getBody(req);
 
       if (content !== undefined && !isDrawingFile(content))
         return res.status(400).json({ error: 'not a drawing file' });
@@ -216,6 +227,11 @@ export function createApi(auth: Auth, db: Kysely<Database>) {
         const drawing = await findDrawing(req.params.id, user, trx);
 
         if (!drawing) return { status: 404, body: { error: 'drawing not found' } };
+        // content of the version the client loaded or saved last (none: saved over any version, clients of previous
+        // versions): refused when it changed since, the client keeps its changes apart (a copy)
+        if (changes.content && typeof version === 'number' && version !== drawing.version) {
+          return { status: 409, body: { ...changed, version: drawing.version } };
+        }
         // bigger drawing: within the size of the account (smaller ones always saved)
         if (changes.content && changes.content.length > drawing.content.length) {
           const { size } = await usage(trx, user);
@@ -225,8 +241,11 @@ export function createApi(auth: Auth, db: Kysely<Database>) {
           }
         }
 
-        await trx.updateTable('drawing').set(changes).where('id', '=', drawing.id).execute();
-        return { status: 200, body: summary({ ...drawing, ...changes }) };
+        // new version of its content (a name alone keeps it)
+        const saved = { ...changes, ...(changes.content && { version: drawing.version + 1 }) };
+
+        await trx.updateTable('drawing').set(saved).where('id', '=', drawing.id).execute();
+        return { status: 200, body: summary({ ...drawing, ...saved }) };
       });
 
       res.status(result.status).json(result.body);

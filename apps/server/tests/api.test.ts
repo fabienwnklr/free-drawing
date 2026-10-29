@@ -291,6 +291,37 @@ describe('Drawings', () => {
     expect((await agent.delete(`/api/drawings/${id}`)).status).toBe(404);
   });
 
+  it('Contents saved with their version: a content saved over another version (another tab or device) is refused', async () => {
+    const { agent } = await signUp();
+    const created = (await agent.post('/api/drawings').send({ name: 'Plan', content: drawing })).body;
+    const path = `/api/drawings/${created.id}`;
+    const content = (background: string) => ({ ...drawing, background });
+
+    expect(created.version).toBe(1);
+    // saved in a tab: next version
+    const saved = await agent.put(path).send({ content: content('#111'), version: 1 });
+
+    expect(saved.status).toBe(200);
+    expect(saved.body.version).toBe(2);
+    expect((await agent.get('/api/drawings')).body[0].version).toBe(2);
+
+    // another tab saving the version it loaded: refused, content kept
+    const refused = await agent.put(path).send({ content: content('#222'), version: 1 });
+
+    expect(refused.status).toBe(409);
+    expect(refused.body).toMatchObject({ code: 'DRAWING_CHANGED', version: 2 });
+    expect((await agent.get(path)).body).toMatchObject({ version: 2, content: content('#111') });
+
+    // renamed with an older version: a name alone keeps the version
+    expect((await agent.put(path).send({ name: 'Renamed', version: 1 })).body).toMatchObject({
+      name: 'Renamed',
+      version: 2,
+    });
+    // clients of previous versions (no version): saved over any version
+    expect((await agent.put(path).send({ content: content('#333') })).body.version).toBe(3);
+    expect((await agent.get(path)).body).toMatchObject({ version: 3, content: content('#333') });
+  });
+
   it('Empty drawing by default, last updated first', async () => {
     const { agent } = await signUp();
     const first = (await agent.post('/api/drawings').send({})).body;
@@ -1332,6 +1363,45 @@ describe('Collaboration', () => {
     owner.socket.emit(socketEvents.RIGHTS, { userId: 'drawer-l', canEdit: false });
     expect(await dropped).toEqual({ upsert: [], remove: ['p3'] });
     expect((await drawingOf()).sort()).toEqual(['e1', 'p2']);
+  });
+
+  it('Changes applied, relayed and acknowledged at once: a client gets the changes applied before its own first', async () => {
+    const room = 'room-concurrent';
+    const owner = await joinRoom({ room, name: 'Owner', userId: 'owner-c', ownerKey: 'secret c' });
+
+    owner.socket.emit(socketEvents.ROOM, { newUsersCanEdit: true });
+    await owner.next(socketEvents.ROOM);
+
+    const guest = await joinRoom({ room, name: 'Guest', userId: 'guest-c' });
+    const shape = (label: string) => JSON.stringify({ attrs: { id: 'shared', width: 10, label }, className: 'Rect' });
+    const kept = async () => {
+      const later = client();
+      const drawing = later.next<{ upsert: string[] }>(socketEvents.CHANGE);
+
+      later.socket.emit(socketEvents.JOIN, { room, name: 'Later' });
+      const [json] = (await drawing).upsert;
+
+      later.socket.close();
+      return JSON.parse(json).attrs.label;
+    };
+
+    // one shape changed by both at once: the guest keeps its change when the one of the owner reaches it before its
+    // acknowledgement (applied before it), as the room
+    for (const round of [1, 2, 3, 4, 5]) {
+      const events: string[] = [];
+      const relayed = new Promise<void>((resolve) =>
+        guest.socket.once(socketEvents.CHANGE, () => resolve(void events.push('relayed')))
+      );
+      const acknowledged = new Promise<void>((resolve) =>
+        guest.socket.emit(socketEvents.CHANGE, { upsert: [shape(`guest ${round}`)], remove: [] }, () =>
+          resolve(void events.push('acknowledged'))
+        )
+      );
+
+      owner.socket.emit(socketEvents.CHANGE, { upsert: [shape(`owner ${round}`)], remove: [] });
+      await Promise.all([relayed, acknowledged]);
+      expect(await kept()).toBe(events[0] === 'relayed' ? `guest ${round}` : `owner ${round}`);
+    }
   });
 
   it('Image files no shape uses released when the drawing would be too big', async () => {

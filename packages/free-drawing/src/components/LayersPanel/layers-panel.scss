@@ -122,6 +122,8 @@
 
     &.is-selected {
       background-color: $hover-bg;
+
+      @include forced-selected;
     }
 
     &.is-dragged {
