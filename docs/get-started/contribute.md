@@ -36,14 +36,14 @@ You can use the [**📚 Cookbooks**](https://github.com/fabienwnklr/free-drawing
 
 ## Creating pull requests
 
-It is never a good experience to have your pull request declined after investing a lot of time and effort in writing the code. Therefore, we highly recommend you to [kick off a discussion]() before starting any new work on your side.
+It is never a good experience to have your pull request declined after investing a lot of time and effort in writing the code. Therefore, we highly recommend you to [kick off a discussion](https://github.com/fabienwnklr/free-drawing/discussions) before starting any new work on your side.
 
 Just start a discussion and explain what are you planning to contribute?
 
 - **Are you trying to create a PR to fix a bug**: PRs for bugs are mostly accepted once the bug has been confirmed.
 - **Are you planning to add a new feature**: Please thoroughly explain why this feature is required and share links to the learning material we can read to educate ourselves.
 
-  For example: If you are adding support for snapshot testing to Japa or AdonisJS. Then share the links I can use to learn more about snapshot testing in general.
+  For example: if you are adding a new tool or an export format, share what it is used for and how other drawing apps handle it.
 
 > Note: You should also be available to open additional PRs for documenting the contributed feature or improvement.
 
@@ -52,12 +52,12 @@ Just start a discussion and explain what are you planning to contribute?
 1. Start by cloning the repo on your local machine.
 
    ```sh
-   git clone <REPO_URL>
+   git clone https://github.com/fabienwnklr/free-drawing.git
    ```
 
-2. Install dependencies on your local. Please do not update any dependencies along with a feature request. If you find stale dependencies, create a separate PR to update them.
+2. Install dependencies on your local, with Node.js 24. Please do not update any dependencies along with a feature request. If you find stale dependencies, create a separate PR to update them.
 
-   We use `npm` for managing dependencies, therefore do not use `yarn` or any other tool.
+   The repository is made of [Yarn 1 workspaces](https://classic.yarnpkg.com/en/docs/workspaces) (the library, its components, the plugin generator, the server, the web app and the docs, one `yarn.lock` at the root): use `yarn`, not `npm` or another tool.
 
    ```sh
    yarn install
@@ -73,35 +73,40 @@ Just start a discussion and explain what are you planning to contribute?
 
 Following is the list of tools in use.
 
-| Tool                   | Usage                                                                                                                                                                                                                                                                                                          |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| TypeScript             | All of the repos are authored in TypeScript. The compiled JavaScript and Type-definitions are published on npm.                                                                                                                                                                                                |
-| TS Node                | We use [ts-node](https://typestrong.org/ts-node/) to run tests or scripts without compiling TypeScript. The main goal of ts-node is to have a faster feedback loop during development                                                                                                                          |
-| ViteJS                 | [ViteJS](https://vitejs.dev/) is a build tool that aims to provide a faster and leaner development experience for modern web projects                                                                                                                                                                          |
-| Vitest                 | [Vitest](https://vitest.dev/) is a next generation testing framework powered by Vite.                                                                                                                                                                                                                          |
-| Versioning             | Each commit updates `packages/free-drawing/CHANGELOG.md` and bumps the version in `packages/free-drawing/package.json` ([semver](https://semver.org/): major for breaking changes, minor for features, patch otherwise), then is tagged `vX.Y.Z`. `yarn release` publishes the current version.                                                        |
-| ESLint                 | ESLint helps us enforce a consistent coding style across all the repos with multiple contributors. All our ESLint rules are published under the [eslint-plugin-adonis](https://github.com/adonisjs-community/eslint-plugin-adonis) package.                                                                    |
-| Prettier               | We use prettier to format the codebase for consistent visual output. If you are confused about why we are using ESLint and Prettier both, then please read [Prettier vs. Linters](https://prettier.io/docs/en/comparison.html) doc on the Prettier website.                                                    |
-| Conventional Changelog | All of the commits across all the repos uses [commitlint](https://github.com/conventional-changelog/commitlint/#what-is-commitlint) to enforce consistent commit messages.                                                                                                                                     |
-| Husky                  | We use [husky](https://typicode.github.io/husky/#/) to enforce commit conventions when committing the code. Husky is a git hooks system written in Node                                                                                                                                                        |
-| VitePress              | We use [VitePress](https://vitepress.dev/) to build a static web site for documentation                                                                                                                                                                                                                        |
+| Tool                   | Usage                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| TypeScript             | All of the repos are authored in TypeScript. The compiled JavaScript and Type-definitions are published on npm.                                                                                                                                                                                                                                                                                                                   |
+| tsx                    | The server (`apps/server`) is run with [tsx](https://tsx.is/), without compiling TypeScript.                                                                                                                                                                                                                                                                                                                                      |
+| ViteJS                 | [ViteJS](https://vitejs.dev/) is a build tool that aims to provide a faster and leaner development experience for modern web projects                                                                                                                                                                                                                                                                                             |
+| Vitest                 | [Vitest](https://vitest.dev/) is a next generation testing framework powered by Vite.                                                                                                                                                                                                                                                                                                                                             |
+| Versioning             | Each commit changing the library for its users updates `packages/free-drawing/CHANGELOG.md` and bumps the version in `packages/free-drawing/package.json` ([semver](https://semver.org/): major for breaking changes, minor for features, patch otherwise), then is tagged `vX.Y.Z`. The components, the extra tools and the plugin generator have their own changelog and version. `yarn release` publishes the current version. |
+| ESLint                 | ESLint (`typescript-eslint`, JSDoc rules of `eslint-plugin-jsdoc`: every declaration documented) checks the sources and tests of the library, see `packages/free-drawing/eslint.config.js`.                                                                                                                                                                                                                                       |
+| Prettier               | We use prettier to format the codebase for consistent visual output. If you are confused about why we are using ESLint and Prettier both, then please read [Prettier vs. Linters](https://prettier.io/docs/en/comparison.html) doc on the Prettier website.                                                                                                                                                                       |
+| Conventional Changelog | All of the commits across all the repos uses [commitlint](https://github.com/conventional-changelog/commitlint/#what-is-commitlint) to enforce consistent commit messages.                                                                                                                                                                                                                                                        |
+| Husky                  | We use [husky](https://typicode.github.io/husky/#/) to enforce commit conventions when committing the code. Husky is a git hooks system written in Node                                                                                                                                                                                                                                                                           |
+| VitePress              | We use [VitePress](https://vitepress.dev/) to build a static web site for documentation                                                                                                                                                                                                                                                                                                                                           |
 
 ## Commands
 
-| Command            | Description                                                                                                            |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------- |
-| `yarn test`        | Run project tests using `vitest`                                                                                       |
-| `yarn build`       | Compile the TypeScript project to JavaScript. The compiled output is written inside the `packages/free-drawing/dist` directory |
-| `yarn release`     | Push commits and version tags: the release workflow creates the GitHub release and publishes the version on npm         |
-| `yarn lint`        | Lint the codebase using ESlint                                                                                         |
-| `yarn format`      | Format the codebase using Prettier                                                                                     |
-| `yarn sync-labels` | Sync the labels defined inside the `.github/labels.json` file with Github. This command is for the project admin only. |
+Run them at the root of the repository.
+
+| Command          | Description                                                                                                                       |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `yarn dev`       | Demo with vite (no accounts nor collaboration)                                                                                    |
+| `yarn serve`     | Server on `http://localhost:3000`: demo with accounts and live collaboration                                                      |
+| `yarn test`      | Tests of every package (`vitest`), then of the server                                                                             |
+| `yarn typecheck` | Type check of every package, the server and the web app                                                                           |
+| `yarn lint`      | ESLint and Prettier check of the library, Prettier check of the other packages                                                    |
+| `yarn format`    | Format the codebase using Prettier                                                                                                |
+| `yarn build`     | Build the library in `packages/free-drawing/dist`, then the components and the extra tools                                        |
+| `yarn docs`      | Documentation site (VitePress), `yarn doc:typedoc` first for the API pages                                                        |
+| `yarn release`   | Push commits and version tags: the release workflow creates the GitHub release and publishes the version on npm (maintainer only) |
 
 ## Coding style
 
-All of my projects are written in TypeScript.
+The packages are written in TypeScript (strict), the plugin generator in JavaScript checked by TypeScript. Files of the library are imported with the `@/` alias, every declaration has a JSDoc comment and every text of the interface is translated (`src/i18n`).
 
-Also, make sure to run the following commands before pushing the code.
+Also, make sure to run the following commands before pushing the code (the `pre-push` hook runs `lint` and `test`).
 
 ```sh
 # Formats using prettier

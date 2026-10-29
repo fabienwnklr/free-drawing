@@ -39,9 +39,9 @@ import '@fabwcie/free-drawing/style.css';
 A plain HTML page loads the library from a CDN with an [import map](https://developer.mozilla.org/docs/Web/HTML/Element/script/type/importmap) ([esm.sh](https://esm.sh/) resolves Konva and the other modules of the library), then the element:
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fabwcie/free-drawing@7/dist/style.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fabwcie/free-drawing@8/dist/style.css" />
 <script type="importmap">
-  { "imports": { "@fabwcie/free-drawing": "https://esm.sh/@fabwcie/free-drawing@7" } }
+  { "imports": { "@fabwcie/free-drawing": "https://esm.sh/@fabwcie/free-drawing@8" } }
 </script>
 <script type="module" src="https://cdn.jsdelivr.net/npm/@fabwcie/free-drawing-element@1/dist/index.js"></script>
 

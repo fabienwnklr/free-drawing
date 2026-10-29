@@ -43,3 +43,8 @@ jobs:
       # library (npm package) and web app (static site)
       - name: Build
         run: yarn build && yarn build:static
+
+      # plugins of the generator (npm create @fabwcie/free-drawing-plugin) type checked, tested and built with the
+      # built library: a change of the plugin API must not break them
+      - name: Generated plugins
+        run: yarn workspace @fabwcie/create-free-drawing-plugin check:generated

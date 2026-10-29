@@ -24,12 +24,14 @@ const drawer = new Drawer(document.getElementById('drawer'), {
 
 With the components of the library, give them in their options: `options` property of `FreeDrawing` (React, Vue) or of `<free-drawing>`, `{ plugins: [ExtraShapesPlugin, HighlighterPlugin] }`.
 
-The tools take their place in the "More tools" group of the toolbar (default `widgetGroups` option), after the triangle and the diamond of the library. Place them elsewhere with the `widgets` and `widgetGroups` options, as the tools of the library:
+The tools take their place in the "More tools" group of the toolbar (default `widgetGroups` option), after the triangle and the diamond of the library. Place them elsewhere with the `widgets` and `widgetGroups` options, as the tools of the library: a tool of a group stays in its group wherever `widgets` puts it, so give the groups too (`widgetGroups: []` for none).
 
 ```js
 new Drawer($el, {
   plugins: [ExtraShapesPlugin, HighlighterPlugin],
+  // highlighter in the toolbar, after the brush; heart and star in a group of their own
   widgets: ['selection', 'pan', 'brush', 'highlighter', 'eraser', 'text', 'square', 'circle', 'heart', 'star'],
+  widgetGroups: [{ widgets: ['heart', 'star'], icon: 'heart' }],
 });
 ```
 

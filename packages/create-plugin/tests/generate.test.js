@@ -128,6 +128,8 @@ describe('Generated plugin', () => {
     expect(addExtensions("import { a } from './icons';\nimport b from './x.css';", `${findTemplate()}/src`)).toBe(
       "import { a } from './icons.js';\nimport b from './x.css';"
     );
+    // in the repository: the template itself, not a copy left by `prepack`
+    expect(findTemplate().replaceAll('\\', '/')).toMatch(/packages\/plugin-template$/);
   });
 
   it('Versions of dependencies: the ones the library is tested with', () => {

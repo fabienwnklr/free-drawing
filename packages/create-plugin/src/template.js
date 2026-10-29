@@ -13,11 +13,12 @@ import { packageFiles, readme } from './generate.js';
 const here = dirname(fileURLToPath(import.meta.url));
 
 /**
- * Folder of the complete template: copied in the published package (`prepack`), else the one of the repository
+ * Folder of the complete template: the one of the repository, else its copy in the published package (`prepack`;
+ * in the repository, a copy left by an earlier `npm pack` may be older than the template)
  * @returns {string} folder holding `src` and `tests` of the template
  */
 export function findTemplate() {
-  const folder = [join(here, '../template'), join(here, '../../plugin-template')].find((dir) =>
+  const folder = [join(here, '../../plugin-template'), join(here, '../template')].find((dir) =>
     existsSync(join(dir, 'src'))
   );
 

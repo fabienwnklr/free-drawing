@@ -1,7 +1,7 @@
 {
   "name": "@fabwcie/free-drawing",
   "author": "Winkler Fabien <fabienwinkler@outlook.fr>",
-  "description": "Infinite canvas",
+  "description": "Infinite canvas whiteboard: shapes, freehand drawing, texts, sticky notes, frames, exports and live collaboration (TypeScript, Konva)",
   "contributors": [],
   "private": false,
   "version": "8.1.0",
@@ -28,6 +28,14 @@
     "directory": "packages/free-drawing"
   },
   "keywords": [
+    "whiteboard",
+    "infinite-canvas",
+    "canvas",
+    "drawing",
+    "sketch",
+    "diagram",
+    "collaboration",
+    "konva",
     "typescript"
   ],
   "files": [

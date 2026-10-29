@@ -26,6 +26,7 @@ Infinite canvas drawing library ([TypeScript](https://www.typescriptlang.org/) +
 | [packages/react](packages/react) | React component, published on npm as [`@fabwcie/free-drawing-react`](https://www.npmjs.com/package/@fabwcie/free-drawing-react) ([README](packages/react/README.md)) |
 | [packages/vue](packages/vue) | Vue component, published on npm as [`@fabwcie/free-drawing-vue`](https://www.npmjs.com/package/@fabwcie/free-drawing-vue) ([README](packages/vue/README.md)) |
 | [packages/element](packages/element) | Web component `<free-drawing>` (Angular, Svelte, plain HTML...), published on npm as [`@fabwcie/free-drawing-element`](https://www.npmjs.com/package/@fabwcie/free-drawing-element) ([README](packages/element/README.md)) |
+| [packages/extra-tools](packages/extra-tools) | Tools of the library until its version 7 as plugins (heart, cloud, star, hexagon, block arrow, speech bubble, check box, highlighter), published on npm as [`@fabwcie/free-drawing-extra-tools`](https://www.npmjs.com/package/@fabwcie/free-drawing-extra-tools) ([README](packages/extra-tools/README.md)) |
 | [packages/create-plugin](packages/create-plugin) | Plugin generator: `npm create @fabwcie/free-drawing-plugin` ([README](packages/create-plugin/README.md)) |
 | [packages/plugin-template](packages/plugin-template) | Complete plugin to copy, tested with the library ([README](packages/plugin-template/README.md)) |
 | [packages/protocol](packages/protocol) | Messages of live collaboration, shared by the library and the server |
@@ -39,14 +40,14 @@ Packages are [yarn workspaces](https://classic.yarnpkg.com/en/docs/workspaces): 
 | --- | --- |
 | `yarn dev` | Demo with vite (no collaboration server) |
 | `yarn serve` | Demo with live collaboration on `http://localhost:3000` |
-| `yarn test` | Tests of the library, the plugin template, the plugin generator, the components and the server |
-| `yarn typecheck` | Type check of the library, the plugin template, the plugin generator, the components, the server and the web app |
+| `yarn test` | Tests of the library, the plugin template, the plugin generator, the components, the extra tools and the server |
+| `yarn typecheck` | Type check of the library, the plugin template, the plugin generator, the components, the extra tools, the server and the web app |
 | `yarn lint` | ESLint on the library, Prettier check of the packages |
-| `yarn build` | Library build in `packages/free-drawing/dist`, then the components (`packages/react/dist`, `packages/vue/dist`, `packages/element/dist`) |
+| `yarn build` | Library build in `packages/free-drawing/dist`, then the components (`packages/react/dist`, `packages/vue/dist`, `packages/element/dist`) and the extra tools (`packages/extra-tools/dist`) |
 | `yarn build:static` | Web app in `apps/web/dist` (static demo site, or served by the server in production) |
 | `yarn docs` | Documentation site (VitePress) on `http://localhost:5173`, `yarn docs:build` to build it |
 | `yarn doc:typedoc` | API pages of the documentation, from the JSDoc of the library (TypeDoc) |
-| `yarn doc:changelog` / `yarn doc:get-started` | Copy the changelog and README of the library, READMEs of the components and CONTRIBUTING into the documentation |
+| `yarn doc:changelog` / `yarn doc:get-started` | Copy the changelog and README of the library, READMEs of the components and of the extra tools and CONTRIBUTING into the documentation |
 | `yarn release` | Push with tags: the release workflow creates the GitHub release and publishes the library (and new versions of the other public packages) on npm |
 
 ## Contribute

@@ -94,10 +94,10 @@ Audit of 2026-10-28 (library 8.0.0): items ordered by priority in each section.
 
 ## Docs and tooling
 
-- [ ] CI: run `check:generated` of the generator after the build (a change of the plugin API breaks generated plugins unseen)
-- [ ] Netlify: demo not deployed for changes of `packages/extra-tools`, docs not rebuilt for READMEs of the components and extra tools (`ignore` of `netlify.toml`)
-- [ ] element README "Without bundler" loads the library 7 (`@7` of jsdelivr / esm.sh)
-- [ ] extra tools README: its `widgets` example keeps the tools in "More tools" (needs `widgetGroups`)
-- [ ] CONTRIBUTING says npm (Yarn 1 workspaces), lists `yarn sync-labels` and `.github/labels.json` (missing); root README without `packages/extra-tools`
-- [ ] generator: a stale `template/` (ignored, left by `prepack`) used before `packages/plugin-template` by local tests (`template.js`)
-- [ ] npm description and keywords of the library ("Infinite canvas", `typescript`): whiteboard, canvas, drawing, konva
+- [x] CI: run `check:generated` of the generator after the build (a change of the plugin API breaks generated plugins unseen)
+- [x] Netlify: demo not deployed for changes of `packages/extra-tools`, docs not rebuilt for READMEs of the components and extra tools (`ignore` of `netlify.toml`)
+- [x] element README "Without bundler" loads the library 7 (`@7` of jsdelivr / esm.sh)
+- [x] extra tools README: its `widgets` example keeps the tools in "More tools" (needs `widgetGroups`)
+- [x] CONTRIBUTING says npm (Yarn 1 workspaces), lists `yarn sync-labels` and `.github/labels.json` (missing); root README without `packages/extra-tools`
+- [x] generator: a stale `template/` (ignored, left by `prepack`) used before `packages/plugin-template` by local tests (`template.js`)
+- [x] npm description and keywords of the library ("Infinite canvas", `typescript`): whiteboard, canvas, drawing, konva

@@ -6,7 +6,7 @@
   command = "yarn build:static"
   publish = "apps/web/dist"
   # no build when nothing of the demo changed
-  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- apps/web packages/free-drawing/src packages/free-drawing/package.json packages/protocol package.json yarn.lock"
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- apps/web packages/free-drawing/src packages/free-drawing/package.json packages/extra-tools/src packages/extra-tools/package.json packages/protocol package.json yarn.lock"
 
 [build.environment]
   NODE_VERSION = "22"
