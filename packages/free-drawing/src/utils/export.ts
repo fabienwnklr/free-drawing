@@ -15,7 +15,7 @@ import { arrowheadSvg } from '@/utils/arrow';
 import { isNote, noteShadowFilter } from '@/utils/note';
 import { normalizeColor } from '@/utils/color';
 import { getShapes } from '@/utils/hit';
-import { frameParts } from '@/utils/frame';
+import { frameParts, getFrameTitle, isFrame } from '@/utils/frame';
 import { parseLink } from '@/utils/link';
 import { DrawerError } from '@/utils/errors';
 import type { DrawingShape } from '@/@types/drawer';
@@ -143,7 +143,7 @@ export function renderCanvas(shapes: DrawingShape[], box: IRect, options: ImageO
 
     // title of frames not exported
     if (clone instanceof Group) {
-      for (const title of clone.find(`.${frameParts.title}`)) title.hide();
+      for (const frame of [clone, ...clone.find(isFrame)]) if (isFrame(frame)) getFrameTitle(frame).hide();
     }
     // shape of a group exported alone
     if (shape.getParent() !== shape.getLayer()) {
@@ -259,7 +259,9 @@ function shapeElement(shape: Node, dark: boolean | undefined, matrix: number[]):
 
   if (shape instanceof Group) {
     // title of frames not exported
-    const children = shape.getChildren().filter((child) => child.visible() && !child.hasName(frameParts.title));
+    const children = shape
+      .getChildren()
+      .filter((child) => child.visible() && !(isFrame(shape) && child.hasName(frameParts.title)));
     // shapes of frames cut at their edges
     const clip = shape.clipWidth() && shape.clipHeight() ? `drawer-clip-${shape._id}` : '';
     const clipRect = attrs({ width: shape.clipWidth(), height: shape.clipHeight() });

@@ -9,6 +9,8 @@ import type { EraserWidget } from '@/components/toolbar/widgets/Eraser/Eraser';
 import { shapeName } from '@/constants';
 import { parseDrawingFile } from '@/utils/drawingFile';
 import { DD } from 'konva/lib/DragAndDrop';
+import { Node } from 'konva/lib/Node';
+import { getStateInDrawing } from '@/components/tools/UndoRedo/History';
 import type { Text } from 'konva/lib/shapes/Text';
 import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import { createDrawer, fireMouse, keydown, setPointer } from './helpers';
@@ -43,6 +45,39 @@ const click = (drawer: Drawer, shape: Shape<ShapeConfig>, x: number, y: number, 
   shape.fire('mousedown', { evt: { button: 0, preventDefault() {}, ...evt } }, true);
   fireMouse(drawer, 'mouseup', x, y, evt);
 };
+
+describe('Shapes of groups copied alone', () => {
+  document.body.innerHTML = `<div id="test"></div>`;
+
+  it('Shape with offsets copied alone: copy at its place in the drawing', () => {
+    const drawer = createDrawer();
+    const rect = new Rect({ name: shapeName.rect, x: 50, y: 50, width: 40, height: 20, stroke: '#000' });
+
+    rect.setAttrs({ offsetX: 20, offsetY: 10, rotation: 30 });
+    drawer.addShape(
+      new Group({ name: shapeName.group, x: 100, y: 100, rotation: 15 }).add(
+        rect,
+        new Rect({ name: shapeName.rect, width: 10, height: 10 })
+      )
+    );
+
+    const box = rect.getClientRect({ relativeTo: drawer.drawLayer });
+    const [copy] = drawer.duplicateShapes([rect]);
+    const copyBox = copy.getClientRect({ relativeTo: drawer.drawLayer });
+    const offset = 20 / drawer.getZoomLevel();
+
+    expect(copyBox.x).toBeCloseTo(box.x + offset);
+    expect(copyBox.y).toBeCloseTo(box.y + offset);
+
+    // state in the drawing (files of a selection, library)
+    const node = drawer.drawLayer.add(Node.create(getStateInDrawing(rect)));
+    const stateBox = node.getChildren().at(-1)!.getClientRect({ relativeTo: drawer.drawLayer });
+
+    expect(stateBox.x).toBeCloseTo(box.x);
+    expect(stateBox.y).toBeCloseTo(box.y);
+    node.getChildren().at(-1)!.destroy();
+  });
+});
 
 describe('Groups', () => {
   document.body.innerHTML = `<div id="test"></div>`;

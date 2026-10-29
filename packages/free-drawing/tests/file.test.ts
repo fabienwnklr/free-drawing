@@ -21,6 +21,41 @@ beforeAll(() => {
 
 const wait = (ms = 50) => new Promise((resolve) => setTimeout(resolve, ms));
 
+describe('Names of shapes of files', () => {
+  it('Names of the drawer and of other kinds of shapes dropped, parts of frames kept', () => {
+    const frame = JSON.parse(
+      JSON.stringify(createFrame({ x: 0, y: 0, width: 100, height: 100, label: 'F' }).toObject())
+    );
+
+    // shape of the frame named as a part of frames
+    frame.children[2].children = [
+      { className: 'Rect', attrs: { id: 'inner', name: 'drawer-rect drawer-frame-title' } },
+    ];
+
+    const { shapes } = parseDrawingFile(
+      JSON.stringify({
+        type: 'free-drawing',
+        version: 1,
+        background: '#fff',
+        shapes: [
+          { className: 'Rect', attrs: { id: 'a', name: 'selection drawer-rect' } },
+          { className: 'Rect', attrs: { id: 'b', name: 'drawer-text drawer-background' } },
+          { className: 'Text', attrs: { id: 'c', name: 'drawer-text custom', text: 'T' } },
+          frame,
+        ],
+      })
+    );
+
+    expect(shapes.slice(0, 3).map(({ attrs }) => attrs.name)).toEqual(['drawer-rect', '', 'drawer-text custom']);
+    expect(shapes[3].children!.map(({ attrs }) => attrs.name)).toEqual([
+      'drawer-frame-box',
+      'drawer-frame-title',
+      'drawer-frame-content',
+    ]);
+    expect(shapes[3].children![2].children![0].attrs.name).toBe('drawer-rect');
+  });
+});
+
 describe('Drawing files and links', () => {
   document.body.innerHTML = `<div id="test"></div>`;
 

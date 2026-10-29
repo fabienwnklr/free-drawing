@@ -94,7 +94,17 @@ export function createFrame({ x, y, width, height, label }: IRect & { label: str
  * @returns content group of the frame
  */
 export function getFrameContent(frame: Frame): Group {
-  return frame.findOne<Group>(`.${frameParts.content}`)!;
+  return getFramePart<Group>(frame, frameParts.content);
+}
+
+/**
+ * Part of a frame: its child of this name, not a shape of its content named so
+ * @param frame frame created by `createFrame` (or loaded), or a copy of it
+ * @param name name of the part (`frameParts`)
+ * @returns the part
+ */
+export function getFramePart<T extends Node>(frame: Group, name: string): T {
+  return frame.getChildren().find((child) => child.hasName(name)) as unknown as T;
 }
 
 /**
@@ -103,7 +113,7 @@ export function getFrameContent(frame: Frame): Group {
  * @returns title text node of the frame
  */
 export function getFrameTitle(frame: Frame): Text {
-  return frame.findOne<Text>(`.${frameParts.title}`)!;
+  return getFramePart<Text>(frame, frameParts.title);
 }
 
 /**
@@ -123,7 +133,7 @@ export function getFrameShapes(frame: Frame): DrawingShape[] {
  */
 export function setFrameSize(frame: Frame, width: number, height: number) {
   frame.size({ width, height });
-  frame.findOne(`.${frameParts.box}`)!.size({ width, height });
+  getFramePart(frame, frameParts.box).size({ width, height });
   getFrameContent(frame).clip({ x: 0, y: 0, width, height });
   getFrameTitle(frame).y(-titleSize - 6);
 }

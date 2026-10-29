@@ -6,6 +6,7 @@ import { Konva } from 'konva/lib/Global';
 import type { Node } from 'konva/lib/Node';
 import { parseLink } from '@/utils/link';
 import { frameParts } from '@/utils/frame';
+import { pathShapes, shapeName } from '@/constants';
 import { parseFiles } from '@/utils/image';
 import { createId } from '@/utils/functions';
 
@@ -20,7 +21,7 @@ const maxBackgroundLength = 100;
  * long one too, with the links of arrows and texts to it; shapes without id get one when added
  * @param shapes States of the shapes of the file (changed)
  */
-function fixIds(shapes: ShapeState[]) {
+export function fixIds(shapes: ShapeState[]) {
   const states: ShapeState[] = [];
   const visit = (state: ShapeState) => {
     states.push(state);
@@ -230,6 +231,59 @@ const parseAttrs = (attrs: object, className: string): Record<string, unknown> =
       .map(([key, value]) => [key, key === 'link' ? parseLink(value) : value])
   );
 
+/** Names of the parts of frames: given to the children of a frame only */
+const framePartNames: string[] = Object.values(frameParts);
+
+/**
+ * Names of nodes of the drawer found by name (layers, background, nodes of the selection layer) and of the parts of
+ * frames: not given to drawing shapes (a shape named `selection` would be found as the selection layer)
+ */
+const reservedNames = new Set([
+  'background',
+  'grid',
+  'draw',
+  'selection',
+  shapeName.background,
+  shapeName.selection,
+  shapeName.guideLine,
+  shapeName.gridLine,
+  ...framePartNames,
+]);
+
+/** Classes of the shapes named by the library: the name of a shape of another class is dropped (read as this kind) */
+const namedClasses: Record<string, string[]> = {
+  [shapeName.line]: ['Line'],
+  [shapeName.highlighter]: ['Line'],
+  [shapeName.straightLine]: ['Line', 'Arrow'],
+  [shapeName.rect]: ['Rect'],
+  [shapeName.note]: ['Rect'],
+  [shapeName.ellipse]: ['Ellipse'],
+  [shapeName.arrow]: ['Arrow'],
+  ...Object.fromEntries(pathShapes.map((name) => [name, ['Path']])),
+  [shapeName.text]: ['Text'],
+  [shapeName.image]: ['Image'],
+  [shapeName.group]: ['Group'],
+  [shapeName.frame]: ['Frame'],
+};
+
+/**
+ * Name of a shape of a file: reserved names and names of other kinds of shapes dropped
+ * @param name Names of the shape, separated by spaces
+ * @param className Class of the shape
+ * @param framePart Child of a frame: names of the parts of frames kept
+ * @returns Names kept, separated by spaces
+ */
+const parseName = (name: string, className: string, framePart: boolean) =>
+  name
+    .split(' ')
+    .filter(
+      (word) =>
+        word &&
+        (!reservedNames.has(word) || (framePart && framePartNames.includes(word))) &&
+        (namedClasses[word]?.includes(className) ?? true)
+    )
+    .join(' ');
+
 /**
  * Frame with only its parts, as created by `createFrame`: box, title, group of its shapes
  * @param frame Frame state, its attributes and children parsed
@@ -252,19 +306,28 @@ function parseFrame(frame: ShapeState): ShapeState | null {
 /**
  * Drawing shape or group of a file, null for other nodes
  * @param shape node state read from the file (not trusted)
+ * @param framePart Child of a frame: may be one of its parts
  * @returns state with only `attrs`, `className` and valid children (groups and frames), null for other classes,
- * without attributes or frames without their parts
+ * without attributes or frames without their parts; names reserved by the drawer dropped
  */
-export function parseShape(shape: ShapeState): ShapeState | null {
+export function parseShape(shape: ShapeState, framePart = false): ShapeState | null {
   if (typeof shape?.attrs !== 'object' || shape.attrs === null) return null;
 
   const { className } = shape;
+  const attrsOf = () => {
+    const attrs = parseAttrs(shape.attrs, className);
+
+    if (typeof attrs.name === 'string') attrs.name = parseName(attrs.name, className, framePart);
+    return attrs;
+  };
 
   // groups, frames
   if (groupClasses.includes(className)) {
-    const children = Array.isArray(shape.children) ? shape.children.map(parseShape) : [];
+    const children = Array.isArray(shape.children)
+      ? shape.children.map((child) => parseShape(child, className === 'Frame'))
+      : [];
     const state = {
-      attrs: parseAttrs(shape.attrs, className),
+      attrs: attrsOf(),
       className,
       children: children.filter((child): child is ShapeState => !!child),
     };
@@ -273,7 +336,7 @@ export function parseShape(shape: ShapeState): ShapeState | null {
   }
 
   // no children (konva would add them)
-  return shapeClasses.includes(className) ? { attrs: parseAttrs(shape.attrs, className), className } : null;
+  return shapeClasses.includes(className) ? { attrs: attrsOf(), className } : null;
 }
 
 /**
@@ -312,7 +375,9 @@ export function parseDrawingFile(json: string): DrawingFile {
 
   // valid image files only
   const files = parseFiles(data.files);
-  const shapes = data.shapes.map(parseShape).filter((shape: ShapeState | null): shape is ShapeState => !!shape);
+  const shapes = data.shapes
+    .map((shape: ShapeState) => parseShape(shape))
+    .filter((shape: ShapeState | null): shape is ShapeState => !!shape);
   const { background } = data;
 
   fixIds(shapes);

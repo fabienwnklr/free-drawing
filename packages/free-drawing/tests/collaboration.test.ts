@@ -6,7 +6,7 @@ import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { Collaboration } from '@/components/Collaboration/Collaboration';
 import type { CollaborationSocket, DrawingChange, EncryptedShape } from '@/@types/collaboration';
 import { RoomCipher, createRoomKey } from '@/utils/encryption';
-import { createFrame } from '@/utils/frame';
+import { createFrame, getFrameShapes, type Frame } from '@/utils/frame';
 import { slideMaskName } from '@/components/Slideshow/Slideshow';
 import { createDrawer, fireMouse, keydown, setPointer } from './helpers';
 import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
@@ -1288,6 +1288,47 @@ describe('Collaboration', () => {
     bobSocket.receive('connect');
     expect(texts(bob)).toEqual(['B2', 'C', 'D2']);
     expect(texts(alice)).toEqual(['B2', 'C', 'D2']);
+  });
+
+  it('Undo of a change in a frame keeps the shapes added in it by others, does not put back the ones they took out', () => {
+    const connect = createServer();
+    const alice = createDrawer();
+    const bob = createDrawer();
+
+    connect(alice, 'room', 'Alice', { userId: 'alice', ownerKey: 'secret' });
+    connect(bob, 'room', 'Bob', { userId: 'bob' });
+    const frame = alice.addShape(createFrame({ x: 0, y: 0, width: 400, height: 300, label: 'Intro' }));
+    const rect = alice.addShape(new Rect({ name: 'drawer-rect', x: 10, y: 10, width: 50, height: 50 }));
+    const other = alice.addShape(new Rect({ name: 'drawer-rect', x: 100, y: 10, width: 50, height: 50 }));
+
+    alice.placeInFrames([rect, other]);
+    alice.stage.fire('change');
+    // shape of alice moved in the frame
+    rect.x(200);
+    alice.stage.fire('change');
+
+    // bob adds a shape in the frame, takes the other one out of it
+    const added = bob.addShape(new Rect({ name: 'drawer-rect', x: 300, y: 200, width: 20, height: 20 }));
+
+    bob.placeInFrames([added]);
+    bob.stage.fire('change');
+
+    const otherOfBob = bob.drawLayer.findOne<Rect>(`#${other.id()}`)!;
+
+    otherOfBob.x(1000);
+    bob.placeInFrames([otherOfBob]);
+    bob.stage.fire('change');
+
+    const shapesOf = (drawer: Drawer) =>
+      getFrameShapes(drawer.drawLayer.findOne<Frame>(`#${frame.id()}`)!).map((shape) => shape.id());
+
+    expect(shapesOf(alice)).toEqual([rect.id(), added.id()]);
+    alice.undoRedo.undo();
+    expect(alice.drawLayer.findOne<Rect>(`#${rect.id()}`)!.x()).toBe(10);
+    expect(shapesOf(alice)).toEqual([rect.id(), added.id()]);
+    expect(alice.drawLayer.find(`#${other.id()}`)).toHaveLength(1);
+    expect(shapesOf(bob)).toEqual([rect.id(), added.id()]);
+    expect(bob.drawLayer.findOne<Rect>(`#${rect.id()}`)!.x()).toBe(10);
   });
 
   it('Changes lost with a connection lost unseen are sent again once joined, acknowledged ones are not', () => {

@@ -3,6 +3,7 @@ import { Rect } from 'konva/lib/shapes/Rect';
 import { Ellipse } from 'konva/lib/shapes/Ellipse';
 import { Arrow } from 'konva/lib/shapes/Arrow';
 import { Text } from 'konva/lib/shapes/Text';
+import { Group } from 'konva/lib/Group';
 import type { Drawer } from '@/Drawer';
 import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
@@ -40,6 +41,30 @@ const doubleClick = (drawer: Drawer, target: Rect | Arrow | null, x = 0, y = 0) 
   setPointer(drawer, x, y);
   (target ?? drawer.stage).fire('dblclick', { evt: { button: 0 } }, true);
 };
+
+describe('Copies', () => {
+  document.body.innerHTML = `<div id="test"></div>`;
+
+  it('Copy of a group added: its texts in its shapes, its arrows linked to them, not to the originals', () => {
+    const drawer = createDrawer();
+    const group = drawer.addShape(
+      new Group({ name: shapeName.group }).add(
+        new Rect({ id: 'r', name: shapeName.rect, width: 100, height: 50, stroke: '#000' }),
+        new Ellipse({ id: 'e', name: shapeName.ellipse, x: 300, y: 25, radiusX: 50, radiusY: 25, stroke: '#000' }),
+        new Text({ id: 't', name: shapeName.text, text: 'T', containerId: 'r' }),
+        new Arrow({ id: 'a', name: shapeName.arrow, points: [100, 25, 250, 25], startBinding: 'r', endBinding: 'e' })
+      )
+    );
+    const copy = drawer.addShape(group.clone() as Group);
+    const [rect, ellipse, text, arrow] = copy.getChildren();
+
+    expect(rect.id()).not.toBe('r');
+    expect(text.attrs.containerId).toBe(rect.id());
+    expect([arrow.attrs.startBinding, arrow.attrs.endBinding]).toEqual([rect.id(), ellipse.id()]);
+    // original unchanged
+    expect(group.getChildren()[2].attrs.containerId).toBe('r');
+  });
+});
 
 describe('Texts of shapes', () => {
   document.body.innerHTML = `<div id="test"></div>`;

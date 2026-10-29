@@ -69,6 +69,7 @@ import {
   decodeLinkData,
   drawingFileExtension,
   encodeLinkData,
+  fixIds,
   maxShapeIdLength,
   parseDrawingFile,
   pickBlob,
@@ -159,6 +160,16 @@ const fitMargin = 64;
 
 /** Highest zoom of `zoomToSelection`: a small shape fills the view without being enlarged too much (200 %) */
 const selectionZoomMax = 2;
+
+/**
+ * Layer of the stage of a drawer, among its children: a drawing shape may have its name (saves of previous versions)
+ * @param stage Stage of a drawer
+ * @param name Name of the layer: `background`, `grid`, `draw` or `selection`
+ * @returns The layer, undefined when missing
+ */
+function getLayer(stage: Stage, name: string): Layer | undefined {
+  return stage.getChildren().find((layer) => layer.hasName(name));
+}
 
 /**
  * Infinite canvas drawing board created in an element: Konva stage of the drawing, toolbar and interface, public API.
@@ -322,6 +333,13 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
   #preferences = '';
   /** Changes not saved yet, see `hasUnsavedChanges` */
   #unsaved = false;
+  /**
+   * Drawing saved by another tab during a pointer action or a text edit of this one: shown once it ends, unless this tab
+   * changed the drawing meanwhile (its save wins)
+   */
+  #otherTabDrawing: string | null = null;
+  /** Work waiting for the end of the pointer action or text edit (`_afterAction`) */
+  #afterAction: (() => void)[] = [];
   /** Key of links to drawings (`#<key>=...`): `id` option given by the app, else `drawing` */
   #linkKey = 'drawing';
   /** Preferences check planned in a microtask (see `_preferencesChanged`) */
@@ -398,14 +416,14 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
       this.stage = stageSaved;
       this.stage.width(width);
       this.stage.height(height);
-      this.bgLayer = this.stage.findOne('.background') as Layer;
-      this.drawLayer = this.stage.findOne('.draw') as Layer;
-      this.selectionLayer = this.stage.findOne('.selection') as Layer;
+      this.bgLayer = getLayer(this.stage, 'background')!;
+      this.drawLayer = getLayer(this.stage, 'draw')!;
+      this.selectionLayer = getLayer(this.stage, 'selection')!;
       // not interactive, saved as listening by previous versions
       this.bgLayer.listening(false);
       // grid layer only contains grid, it is rebuilt: previous versions saved lines and a clip
       // (view at save time) which hid grid outside of it after pan
-      const savedGridLayer = this.stage.findOne('.grid') as Layer;
+      const savedGridLayer = getLayer(this.stage, 'grid')!;
       this.grid = savedGridLayer.children.length > 0;
       savedGridLayer.destroy();
       this.gridLayer = new Layer({ name: 'grid', listening: false });
@@ -420,7 +438,7 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
         // ids: saves of previous versions
         this._setupShape(shape as DrawingShape);
       });
-      this.background = this.bgLayer.findOne(`.${shapeName.background}`) as Rect;
+      this.background = this.bgLayer.getChildren().find((node) => node.hasName(shapeName.background)) as Rect;
       activeTool =
         (this._getStorageItem(`${this.options.localStorageKey}-tool`) as AvailableTools | null) ?? activeTool;
       saved = true;
@@ -998,7 +1016,24 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
     queueMicrotask(() => {
       if (this.#destroyed || this._duringAction()) return;
       if (this.collaboration?.flush()) this.stage.fire('change');
+
+      const saved = this.#otherTabDrawing;
+      const waiting = this.#afterAction;
+
+      this.#otherTabDrawing = null;
+      this.#afterAction = [];
+      if (saved && !this.#unsaved) this._showSaved(saved);
+      for (const run of waiting) run();
     });
+  }
+
+  /**
+   * End of the pointer action or text edit in progress (a stroke, a text being typed): work changing the drawing waits
+   * for it (else it would cancel the stroke, save the text hidden...)
+   * @returns Resolved once it ended, at once without action
+   */
+  _afterAction(): Promise<void> {
+    return this._duringAction() ? new Promise((resolve) => this.#afterAction.push(resolve)) : Promise.resolve();
   }
 
   /**
@@ -1159,12 +1194,25 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
    */
   addShape<T extends DrawingShape>(shape: T): T {
     const used = new Set(this.drawLayer.find(() => true).map((node) => node.id()));
+    const nodes: Node[] = [shape, ...(shape instanceof Group ? shape.find(() => true) : [])];
+    const renamed = new Map<string, string>();
 
-    for (const node of [shape, ...(shape instanceof Group ? shape.find(() => true) : [])]) {
+    for (const node of nodes) {
       const id = node.id();
 
-      if (id && (id.length > maxShapeIdLength || used.has(id))) node.id(createId());
+      if (id && (id.length > maxShapeIdLength || used.has(id))) {
+        node.id(createId());
+        renamed.set(id, node.id());
+      }
       used.add(node.id());
+    }
+    // a copy: its texts of shapes and arrows linked to its own shapes, not to the originals
+    for (const node of renamed.size ? nodes : []) {
+      for (const attr of [...bindingAttrs, 'containerId']) {
+        const target = renamed.get(node.getAttr(attr));
+
+        if (target) node.setAttr(attr, target);
+      }
     }
 
     return this._addShape(shape);
@@ -1348,6 +1396,8 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
     transformer?.on('transformstart.binding', () => unbindMoved(transformer.nodes()));
     transformer?.on('transform.binding', follow);
     this.stage.on('change', () => {
+      // drawing of another tab saved during an action of this one: this change saved over it
+      this.#otherTabDrawing = null;
       // collaborators changes received during a pointer action, then this one
       this.collaboration?.flush();
       // arrows on their linked shapes, texts in their shapes, before saving
@@ -1598,11 +1648,12 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
     this.#saving = (async () => {
       // result of the last save
       let saved = false;
+      const load = this.#storageLoads;
 
       do {
         this.#saveAgain = false;
-        // destroyed during the save: its stage is empty
-        if (this.#destroyed) break;
+        // destroyed during the save: its stage is empty; another drawing being loaded: the app stores it in its place
+        if (this.#destroyed || load !== this.#storageLoads) break;
         try {
           await storage.save(this.getDrawingFile());
           saved = true;
@@ -1613,8 +1664,8 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
         }
       } while (this.#saveAgain);
       this.#saving = null;
-      // last drawing saved, else changes stay unsaved
-      if (saved) this._onSaved();
+      // last drawing saved, else changes stay unsaved (another drawing loaded: its state)
+      if (saved && load === this.#storageLoads) this._onSaved();
     })();
 
     return this.#saving;
@@ -1709,10 +1760,25 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
     if (!json) return null;
 
     try {
-      const stage = Node.create(json, this.$drawerContainer);
-      const required = ['.background', '.grid', '.draw', '.selection', `.${shapeName.background}`];
+      const data = JSON.parse(json);
+      const draw = (data?.children as ShapeState[] | undefined)?.find((layer) =>
+        String(layer?.attrs?.name ?? '')
+          .split(' ')
+          .includes('draw')
+      );
 
-      if (stage instanceof Stage && required.every((selector) => stage.findOne(selector))) {
+      // ids of saves of previous versions unique and short enough, as of drawing files
+      if (Array.isArray(draw?.children)) fixIds(draw.children);
+
+      const stage = Node.create(data, this.$drawerContainer);
+      const valid =
+        stage instanceof Stage &&
+        ['grid', 'draw', 'selection'].every((name) => getLayer(stage, name)) &&
+        !!getLayer(stage, 'background')
+          ?.getChildren()
+          .some((node) => node.hasName(shapeName.background));
+
+      if (valid) {
         // image files saved with it, before its shapes are set up
         try {
           this._storeFiles(JSON.parse(this._getStorageItem(`${this.options.localStorageKey}-files`) ?? '{}'));
@@ -1753,7 +1819,9 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
             // invalid JSON
           }
         } else if (e.key === key && !this.#unsaved) {
-          this._showSaved(e.newValue);
+          // during a stroke or a text edit: shown once it ends (nodes being drawn or edited kept)
+          if (this._duringAction()) this.#otherTabDrawing = e.newValue;
+          else this._showSaved(e.newValue);
         }
       },
       { signal: this.signal }
@@ -1873,6 +1941,8 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
    * @returns Image added, null when the file is not an image (error shown)
    */
   async addImage(source: Blob | DrawingImage, position?: Vector2d): Promise<Image | null> {
+    // paste or insertion: refused once read only started meanwhile
+    const readOnly = this.readOnly;
     let image: DrawingImage;
 
     try {
@@ -1888,8 +1958,10 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
 
     const fileId = await getFileId(image.data);
 
-    // removed meanwhile
-    if (this.#destroyed) return null;
+    // stroke or text edit started meanwhile: added once it ended
+    await this._afterAction();
+    // removed meanwhile, read only started
+    if (this.#destroyed || (this.readOnly && !readOnly)) return null;
     const view = this.getViewArea();
     const center = position ?? { x: view.x + view.width / 2, y: view.y + view.height / 2 };
     const scale = Math.min(1, (0.6 * Math.min(view.width, view.height)) / Math.max(image.width, image.height));
@@ -2117,7 +2189,8 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
       if (shape.getParent() !== this.drawLayer) {
         const transform = this.drawLayer.getAbsoluteTransform().copy().invert().multiply(shape.getAbsoluteTransform());
 
-        copy.setAttrs(transform.decompose());
+        // offsets in the transform already
+        copy.setAttrs({ ...transform.decompose(), offsetX: 0, offsetY: 0 });
       }
       copy.move({ x: offset, y: offset });
       return copy;

@@ -15,7 +15,7 @@ import PauseIcon from '@/icons/pause.svg?raw';
 import PlayIcon from '@/icons/play.svg?raw';
 import ReplayIcon from '@/icons/replay.svg?raw';
 import { createButton, hasFocusOutside, isComposing, setLabel } from '@/utils/dom';
-import { frameParts, getFrameContent, isFrame, withFrameShapes, type Frame } from '@/utils/frame';
+import { frameParts, getFrameContent, getFramePart, isFrame, withFrameShapes, type Frame } from '@/utils/frame';
 import { keyLetter } from '@/utils/HotKey';
 import { inCreationOrder, outlineLength, partialStroke } from '@/utils/replay';
 import { formatShortcut } from '@/utils/shortcut';
@@ -381,7 +381,7 @@ export class Replay {
     });
 
     if (isFrame(copy)) {
-      const parts = [copy.findOne(`.${frameParts.box}`), copy.findOne(`.${frameParts.title}`)];
+      const parts = [getFramePart(copy, frameParts.box), getFramePart(copy, frameParts.title)];
 
       return {
         shape,

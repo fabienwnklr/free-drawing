@@ -1,7 +1,9 @@
 import { describe, expect, it, beforeAll, afterEach, vi } from 'vitest';
 import { Line } from 'konva/lib/shapes/Line';
 import { Rect } from 'konva/lib/shapes/Rect';
+import { Text } from 'konva/lib/shapes/Text';
 import type { Drawer } from '@/Drawer';
+import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import { historyLimit, shapeName } from '@/constants';
 import { createDrawer, fireMouse } from './helpers';
@@ -38,6 +40,50 @@ describe('Persistence and performance', () => {
     }
     expect(warn).toHaveBeenCalledWith(`[free-drawing] invalid saved data "${localStorageKey}" ignored`);
     warn.mockRestore();
+  });
+
+  it('Shapes saved with the name of a layer: the drawer is created again, its layers found among the stage children', () => {
+    const localStorageKey = `test-${Math.random()}`;
+    const first = createDrawer({ localStorageKey });
+
+    // added by code, or read from files by previous versions
+    first.addShape(new Rect({ name: 'selection', width: 10, height: 10 }));
+    first.addShape(new Rect({ name: 'grid draw', width: 10, height: 10 }));
+    first.save();
+
+    const second = createDrawer({ localStorageKey });
+
+    expect(second.stage.children.map((layer) => layer.name().trim())).toEqual([
+      'background',
+      'grid',
+      'draw',
+      'selection',
+    ]);
+    expect(second.getDrawingShapes()).toHaveLength(2);
+  });
+
+  it('Saves of previous versions: repeated and long ids replaced, links follow a long id', () => {
+    const localStorageKey = `test-${Math.random()}`;
+    const first = createDrawer({ localStorageKey });
+    const long = 'x'.repeat(300);
+    const a = first.addShape(new Rect({ name: shapeName.rect, width: 10, height: 10 }));
+    const b = first.addShape(new Rect({ name: shapeName.rect, width: 10, height: 10 }));
+    const c = first.addShape(new Rect({ name: shapeName.rect, width: 10, height: 10 }));
+    const text = first.addShape(new Text({ name: shapeName.text, text: 'T' }));
+
+    // as saved by previous versions
+    b.id(a.id());
+    c.id(long);
+    text.setAttr('containerId', long);
+    first.save();
+
+    const second = createDrawer({ localStorageKey });
+    const ids = second.getDrawingShapes().map((shape) => shape.id());
+
+    expect(ids[0]).toBe(a.id());
+    expect(new Set(ids).size).toBe(4);
+    expect(ids.every((id) => id.length <= 200)).toBe(true);
+    expect(second.getDrawingShapes()[3].attrs.containerId).toBe(ids[2]);
   });
 
   it('Unavailable storage does not break drawer', () => {
@@ -179,6 +225,33 @@ describe('Other tabs of the browser', () => {
     expect(manual.hasUnsavedChanges()).toBe(true);
     storedByOtherTab(manual.options.localStorageKey, json);
     expect(manual.getDrawingShapes().map((shape) => shape.id())).not.toContain(rect.id());
+  });
+
+  it('Drawing of another tab shown once a pointer action ends, not over a change made by it', async () => {
+    const drawer = createDrawer({ autoSave: true });
+    const key = drawer.options.localStorageKey;
+    const { json, rect } = savedDrawing();
+    const ids = () => drawer.getDrawingShapes().map((shape) => shape.id());
+
+    // stroke being drawn: kept, saved over the other drawing
+    drawer.getWidget<BaseWidget>('brush')!.setActive(true);
+    fireMouse(drawer, 'mousedown', 10, 10);
+    fireMouse(drawer, 'mousemove', 30, 30);
+    storedByOtherTab(key, json);
+    fireMouse(drawer, 'mousemove', 50, 50);
+    fireMouse(drawer, 'mouseup', 50, 50);
+    await Promise.resolve();
+    expect(ids()).toHaveLength(1);
+    expect(ids()).not.toContain(rect.id());
+
+    // selection rectangle, no change: shown once it ends
+    drawer.getWidget<BaseWidget>('selection')!.setActive(true);
+    fireMouse(drawer, 'mousedown', 600, 600);
+    storedByOtherTab(key, json);
+    expect(ids()).not.toContain(rect.id());
+    fireMouse(drawer, 'mouseup', 600, 600);
+    await Promise.resolve();
+    expect(ids()).toEqual([rect.id()]);
   });
 
   it('Library and image files of another tab taken', () => {

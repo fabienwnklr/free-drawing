@@ -164,6 +164,35 @@ describe('Integration in an app', () => {
     expect(storage.save).toHaveBeenCalledTimes(saves);
   });
 
+  it('Save running when another drawing is loaded: changes made meanwhile not saved into the other one', async () => {
+    const ends: (() => void)[] = [];
+    const targets: string[] = [];
+    let target = 'first';
+    const storage: DrawerStorage = {
+      load: vi.fn(async () => fileWith(target)),
+      save: vi.fn(() => {
+        targets.push(target);
+        return new Promise<void>((resolve) => ends.push(resolve));
+      }),
+    };
+    const drawer = createDrawer({ autoSave: true, storage });
+
+    await drawer.ready;
+    addText(drawer, 'a');
+    // during the save
+    addText(drawer, 'b');
+    // the app opens another drawing
+    target = 'second';
+    const load = drawer.loadFromStorage();
+
+    ends[0]();
+    await load;
+    await flush();
+    expect(targets).toEqual(['first']);
+    expect(texts(drawer)).toEqual(['second']);
+    expect(drawer.hasUnsavedChanges()).toBe(false);
+  });
+
   it('Toast message is shown as text (error messages of a server)', () => {
     const { $toastContainer } = createDrawer().toast('<img src=x onerror=alert(1)>', 'error', 0);
 

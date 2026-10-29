@@ -23,14 +23,14 @@ Audit of 2026-10-29 (library 8.1.0): items ordered by priority in each section.
 
 ### Core, files, persistence
 
-- [ ] reserved names in files, links, other users: a shape named `selection` saved in localStorage is found by `findOne('.selection')` before the layer, the drawer is never created again; a frame part name breaks `getFrameContent` after the drawing was emptied (`Drawer` constructor: layers among the children of the stage, frame parts among its children, `parseAttrs` drops reserved names)
-- [ ] undo / redo of a change in a frame or group puts back the whole frame or group: shapes added in it by other users (or another tab) removed, duplicates when one left it (`History`: top nodes, `ignoreChanges` does not update recorded entries)
-- [ ] drawing of another tab shown during a pointer action or a text edit: the stroke or the typed text written to destroyed nodes, lost (`Drawer._showSaved`: wait for the end of the action / edit)
-- [ ] save loop of `storage` goes on after `loadFromStorage` started: the previous drawing saved into the new target of the app (`Drawer._saveToStorage`: stop when `#storageLoads` changed)
-- [ ] `addShape` of a copy (group with a shape and its text, arrows): new ids, `containerId` and bindings still point at the originals: text placed in the original shape (`Drawer.addShape`, remap as `duplicateShapes`)
-- [ ] saves of previous versions keep duplicate or too long ids (only empty ones filled): undo removes the wrong shape, collaboration servers refuse them forever (`_loadSavedStage` without `fixIds`)
-- [ ] shape of a group or frame copied alone (Ctrl + D, library, export with drawing): offsets applied twice, copy moved (`getStateInDrawing`: offsets reset with the decomposed transform)
-- [ ] `addImage` once decoded: added in read only, cancels a stroke started meanwhile, saves the text being edited hidden (`Drawer.addImage`)
+- [x] reserved names in files, links, other users: a shape named `selection` saved in localStorage is found by `findOne('.selection')` before the layer, the drawer is never created again; a frame part name breaks `getFrameContent` after the drawing was emptied (`Drawer` constructor: layers among the children of the stage, frame parts among its children, `parseAttrs` drops reserved names)
+- [x] undo / redo of a change in a frame or group puts back the whole frame or group: shapes added in it by other users (or another tab) removed, duplicates when one left it (`History`: top nodes, `ignoreChanges` does not update recorded entries)
+- [x] drawing of another tab shown during a pointer action or a text edit: the stroke or the typed text written to destroyed nodes, lost (`Drawer._showSaved`: wait for the end of the action / edit)
+- [x] save loop of `storage` goes on after `loadFromStorage` started: the previous drawing saved into the new target of the app (`Drawer._saveToStorage`: stop when `#storageLoads` changed)
+- [x] `addShape` of a copy (group with a shape and its text, arrows): new ids, `containerId` and bindings still point at the originals: text placed in the original shape (`Drawer.addShape`, remap as `duplicateShapes`)
+- [x] saves of previous versions keep duplicate or too long ids (only empty ones filled): undo removes the wrong shape, collaboration servers refuse them forever (`_loadSavedStage` without `fixIds`)
+- [x] shape of a group or frame copied alone (Ctrl + D, library, export with drawing): offsets applied twice, copy moved (`getStateInDrawing`: offsets reset with the decomposed transform)
+- [x] `addImage` once decoded: added in read only, cancels a stroke started meanwhile, saves the text being edited hidden (`Drawer.addImage`)
 
 ### Tools and interaction
 

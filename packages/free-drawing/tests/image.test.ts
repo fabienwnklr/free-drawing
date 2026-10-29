@@ -7,7 +7,7 @@ import { shapeName } from '@/constants';
 import { getImagesToLoad, isImageData, parseFiles } from '@/utils/image';
 import { parseDrawingFile } from '@/utils/drawingFile';
 import { renderSvg } from '@/utils/export';
-import { createDrawer } from './helpers';
+import { createDrawer, fireMouse } from './helpers';
 
 /** Image file of 1 x 1 pixel */
 const pngData =
@@ -18,6 +18,31 @@ const elementOf = (image: Image) => image.image() as HTMLImageElement | undefine
 
 describe('Images', () => {
   document.body.innerHTML = `<div id="test"></div>`;
+
+  it('Image added once a stroke drawn meanwhile ends, not once read only started', async () => {
+    const drawer = createDrawer();
+
+    drawer.getWidget<BaseWidget>('brush')!.setActive(true);
+    fireMouse(drawer, 'mousedown', 10, 10);
+    fireMouse(drawer, 'mousemove', 50, 50);
+
+    const adding = drawer.addImage({ data: pngData, width: 10, height: 10 });
+
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    // stroke not cancelled by the selection of the image
+    expect(drawer.activeTool).toBe('brush');
+    expect(drawer.getDrawingShapes().map((shape) => shape.getClassName())).toEqual(['Line']);
+    fireMouse(drawer, 'mouseup', 50, 50);
+    expect(await adding).not.toBeNull();
+    expect(drawer.getDrawingShapes().map((shape) => shape.getClassName())).toEqual(['Line', 'Image']);
+
+    // read only started meanwhile (viewer of a collaboration session)
+    const late = drawer.addImage({ data: pngData, width: 10, height: 10 });
+
+    drawer.setReadOnly(true);
+    expect(await late).toBeNull();
+    drawer.setReadOnly(false);
+  });
 
   it('Exports of images still loading wait for them: not drawn empty', async () => {
     const drawer = createDrawer();

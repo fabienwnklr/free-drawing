@@ -4,7 +4,7 @@
   "description": "Infinite canvas whiteboard: shapes, freehand drawing, texts, sticky notes, frames, exports and live collaboration (TypeScript, Konva)",
   "contributors": [],
   "private": false,
-  "version": "8.1.1",
+  "version": "8.1.2",
   "type": "module",
   "main": "./dist/drawer.umd.cjs",
   "module": "./dist/drawer.js",

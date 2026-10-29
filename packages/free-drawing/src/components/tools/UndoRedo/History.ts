@@ -30,7 +30,8 @@ export function getStateInDrawing(shape: DrawingShape): ShapeState {
   if (layer && shape.getParent() !== layer) {
     const transform = layer.getAbsoluteTransform().copy().invert().multiply(shape.getAbsoluteTransform());
 
-    state.attrs = { ...state.attrs, ...transform.decompose() };
+    // offsets in the transform already
+    state.attrs = { ...state.attrs, ...transform.decompose(), offsetX: 0, offsetY: 0 };
   }
   return state;
 }
@@ -52,6 +53,72 @@ function toState({ attrs, className, children }: ShapeState): ShapeState {
  */
 export function serializeShape(shape: DrawingShape): string {
   return JSON.stringify(getShapeState(shape));
+}
+
+/**
+ * State of a shape, group or frame where a change of this user is undone or redone over the changes of other users made
+ * since (collaboration, another tab): its nodes take their state of `target` where the change set them, nodes added in
+ * it by others are kept, nodes removed from it by others not put back, attributes changed by others kept where the
+ * change did not set them
+ * @param target State to restore: before the change to undo it, after it to redo it
+ * @param base State on the other side of the change
+ * @param current State now
+ * @returns State to create
+ */
+function mergeState(target: ShapeState, base: ShapeState, current: ShapeState): ShapeState {
+  const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+  const idOf = (state: ShapeState) => state.attrs.id as string | undefined;
+  const attrs = same(base.attrs, target.attrs) ? current.attrs : target.attrs;
+
+  if (current.className !== target.className) return target;
+  if (!target.children || !base.children || !current.children) return { ...target, attrs };
+  // nodes without id (saves of previous versions): not matched
+  if ([target, base, current].some(({ children }) => children!.some((child) => !idOf(child)))) return target;
+
+  const targets = new Map(target.children.map((child) => [idOf(child)!, child]));
+  const bases = new Map(base.children.map((child) => [idOf(child)!, child]));
+  const children: ShapeState[] = [];
+
+  for (const child of current.children) {
+    const id = idOf(child)!;
+    const before = bases.get(id);
+    const after = targets.get(id);
+
+    // added by the change: removed; changed by it: merged; added by others: kept
+    if (before && !after) continue;
+    children.push(before && after ? mergeState(after, before, child) : child);
+  }
+
+  const ids = () => children.map(idOf);
+
+  // removed by the change: put back above the nearest node below them in the target
+  for (const [index, child] of target.children.entries()) {
+    const id = idOf(child)!;
+
+    if (bases.has(id) || ids().includes(id)) continue;
+
+    const placed = new Set(ids());
+    const below = target.children
+      .slice(0, index)
+      .map(idOf)
+      .reverse()
+      .find((other) => placed.has(other));
+
+    children.splice(below === undefined ? 0 : ids().indexOf(below) + 1, 0, child);
+  }
+
+  // stacking order set by the change: its nodes in this order, at the places they take
+  const common = (states: ShapeState[]) => states.map(idOf).filter((id) => targets.has(id!) && bases.has(id!));
+
+  if (common(target.children).join() !== common(base.children).join()) {
+    const order = common(target.children).filter((id) => ids().includes(id));
+    const slots = children.flatMap((child, index) => (order.includes(idOf(child)) ? [index] : []));
+    const moved = order.map((id) => children.find((child) => idOf(child) === id)!);
+
+    for (const [index, slot] of slots.entries()) children[slot] = moved[index];
+  }
+
+  return { attrs, className: target.className, children };
 }
 
 /**
@@ -346,9 +413,15 @@ export class History {
 
       // replaced at its place, or put back
       const index = shape?.zIndex();
+      const now = shape && serializeShape(shape);
+      // changed by others since (shapes added in a group or frame, removed from it...): their changes kept
+      const restoredState =
+        now && change[other] !== null && now !== change[other]
+          ? mergeState(JSON.parse(state), JSON.parse(change[other]), JSON.parse(now))
+          : JSON.parse(state);
 
       shape?.destroy();
-      const node = this.drawer._addShape(Node.create(JSON.parse(state)) as DrawingShape);
+      const node = this.drawer._addShape(Node.create(restoredState) as DrawingShape);
 
       if (index === undefined) restored.add(change.id);
       else node.zIndex(index);

@@ -434,6 +434,8 @@ export class TextWidget extends BaseWidget {
       window.removeEventListener('pointerdown', handleOutsideClick, true);
       window.removeEventListener('click', handleOutsideClick, true);
       this.isEditing = false;
+      // work waiting for the end of the edit (drawing of another tab, image added)
+      this.drawer._onActionEnd();
       if (hasFocus) this.drawer.focus();
 
       const selectWidget = this.drawer.toolbar.getWidget<SelectWidget>('selection');

@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [8.1.2](https://github.com/fabienwnklr/free-drawing/compare/v8.1.1...v8.1.2) (2026-10-29)
+
+
+### Bug Fixes
+
+* **persistence:** a shape named like a layer of the drawer (`selection`, `draw`...) no longer prevents the drawer from being created again from its save: layers are found among the children of the stage, parts of frames among the children of their frame; files, links and changes of other users drop the names of the drawer and the names of other kinds of shapes (a rectangle named as a text)
+* **persistence:** saves of previous versions get unique ids, short enough for collaboration servers, as drawing files (links of texts and arrows follow a long id)
+* **history:** undo and redo of a change in a group or a frame keep the changes of other users (collaboration, other tabs) made in it since: shapes they added stay, shapes they took out are not put back (no copy)
+* **persistence:** the drawing saved by another tab during a stroke or a text edit is shown once it ends, unless this tab changed the drawing meanwhile (the stroke or the text is no longer lost)
+* **persistence:** a save of the `storage` option still running when another drawing is loaded (`loadFromStorage`) no longer saves the changes made meanwhile into the new drawing of the app
+* **shapes:** `addShape` of a copy (group with texts of shapes or linked arrows) links its texts and arrows to its own shapes, not to the originals
+* **shapes:** a shape of a group or frame with offsets copied alone (duplicate, library, drawing of a selection) keeps its place
+* **images:** an image pasted or inserted is added once a stroke or a text edit started meanwhile ends (the stroke is no longer cancelled, the text no longer saved hidden), not once read only started meanwhile
+
 ## [8.1.1](https://github.com/fabienwnklr/free-drawing/compare/v8.1.0...v8.1.1) (2026-10-29)
 
 
