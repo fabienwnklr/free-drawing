@@ -2,6 +2,12 @@
 
 Changes of `@fabwcie/free-drawing-element`. Each version is published by the release workflow of the library once it is not on npm yet.
 
+## 1.1.1 (2026-10-29)
+
+### Bug Fixes
+
+- A `theme` or a `language` given in `options` no longer replaces at each mount the one the user chose (saved in the browser): only the attributes and properties of the component are given to the drawer over it
+
 ## 1.1.0 (2026-10-28)
 
 ### Features

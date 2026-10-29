@@ -109,6 +109,18 @@ describe('FreeDrawing (Vue)', () => {
     expect(drawer.i18n.language).toBe('es');
   });
 
+  it('theme and language of the options leave the ones chosen by the user (saved in the browser)', async () => {
+    const given = options();
+
+    localStorage.setItem(`${given.localStorageKey}-preferences`, JSON.stringify({ theme: 'light', language: 'de' }));
+
+    const { board } = await mount({ options: { ...given, theme: 'dark', language: 'es' } });
+    const drawer = board.value!.drawer!;
+
+    expect(drawer.isDarkMode()).toBe(false);
+    expect(drawer.i18n.language).toBe('de');
+  });
+
   it('only the settings changed are given again; drawer not created: error event', async () => {
     const props = reactive<TestProps>({ options: options(), readOnly: false, theme: 'light', language: 'fr' });
     const { board } = await mount(props);

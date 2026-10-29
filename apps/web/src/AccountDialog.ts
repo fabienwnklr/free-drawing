@@ -61,11 +61,17 @@ export class AccountDialog {
     this.$dialog.querySelector('[data-close]')!.addEventListener('click', () => this.$dialog.close());
   }
 
-  show(mode: 'signIn' | 'signUp' = 'signIn') {
+  /**
+   * Dialog shown, its form empty
+   * @param mode Sign in or create an account
+   * @param email Email given (account whose session ended): its password asked
+   */
+  show(mode: 'signIn' | 'signUp' = 'signIn', email?: string) {
     this.$form.reset();
     this.setMode(mode);
+    if (email) this.$email.value = email;
     this.$dialog.showModal();
-    (mode === 'signUp' ? this.$name : this.$email).focus();
+    (mode === 'signUp' ? this.$name : email ? this.$password : this.$email).focus();
   }
 
   setMode(mode: 'signIn' | 'signUp') {

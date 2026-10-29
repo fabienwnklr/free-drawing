@@ -1,6 +1,6 @@
 import { defineComponent, h, onBeforeUnmount, onMounted, ref, shallowRef, watch, type PropType } from 'vue';
 import type { Drawer, DrawerOptions, DrawerUser, Language, Theme } from '@fabwcie/free-drawing';
-import { applySettings, mountDrawer, withSettings } from './mountDrawer.js';
+import { applySettings, mountDrawer } from './mountDrawer.js';
 
 /**
  * Drawing board of free-drawing in a `div`: the drawer is created once mounted (library loaded then, never on a
@@ -43,7 +43,7 @@ export const FreeDrawing = defineComponent({
         host.value!,
         () => {
           const { options, readOnly, theme, language, user } = props;
-          return withSettings(options, { readOnly, theme, language, user });
+          return { options, settings: { readOnly, theme, language, user } };
         },
         {
           created: (created) => {

@@ -1,5 +1,5 @@
 import type { Drawer, DrawerOptions, DrawerUser, Language, Theme } from '@fabwcie/free-drawing';
-import { applySettings, mountDrawer, withSettings } from './mountDrawer.js';
+import { applySettings, mountDrawer } from './mountDrawer.js';
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -169,13 +169,10 @@ export class FreeDrawingElement extends Base {
 
     this.#unmount = mountDrawer(
       this,
-      () =>
-        withSettings(this.#options ?? this._readOptions(), {
-          readOnly: this.#readOnly,
-          theme: this.#theme,
-          language: this.#language,
-          user: this.#user,
-        }),
+      () => ({
+        options: this.#options ?? this._readOptions(),
+        settings: { readOnly: this.#readOnly, theme: this.#theme, language: this.#language, user: this.#user },
+      }),
       {
         created: (drawer) => {
           this.#drawer = drawer;

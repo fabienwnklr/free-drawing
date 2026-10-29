@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from 'vite';
 import { fileURLToPath } from 'node:url';
 
@@ -13,5 +14,14 @@ export default defineConfig({
       '@fabwcie/free-drawing': `${lib}/index.ts`,
       '@': lib,
     },
+  },
+  test: {
+    // app in a DOM, canvas of the drawer mocked (jsdom has no canvas), as the library
+    environment: 'jsdom',
+    pool: 'forks',
+    maxWorkers: 1,
+    isolate: false,
+    setupFiles: ['../../packages/free-drawing/vitest.setup.ts'],
+    server: { deps: { inline: ['jest-canvas-mock'] } },
   },
 });

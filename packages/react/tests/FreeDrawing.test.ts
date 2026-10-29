@@ -177,6 +177,23 @@ describe('FreeDrawing (React)', () => {
     expect(ref.current!.i18n.language).toBe('es');
   });
 
+  it('theme and language of the options leave the ones chosen by the user (saved in the browser)', async () => {
+    const ref = createRef<Drawer>();
+    const base = props();
+
+    localStorage.setItem(
+      `${base.options!.localStorageKey}-preferences`,
+      JSON.stringify({ theme: 'light', language: 'de' })
+    );
+    await render(
+      createElement(FreeDrawing, { ...base, options: { ...base.options, theme: 'dark', language: 'es' }, ref }),
+      ref
+    );
+
+    expect(ref.current!.isDarkMode()).toBe(false);
+    expect(ref.current!.i18n.language).toBe('de');
+  });
+
   it('change event calls the last onChange', async () => {
     const ref = createRef<Drawer>();
     const first = vi.fn();

@@ -114,7 +114,7 @@ Svelte sets `options` and `user` as properties (objects), as the element is defi
 |             | `user`     | `DrawerUser \| null`                     | User of the app: id and name in collaboration sessions (`drawer.setUser`), given again only when it changes                                                                                               |
 |             | `drawer`   | `Drawer \| null`                         | Drawer of the element (read only), `null` until it is created and once the element left the page                                                                                                          |
 
-`read-only`, `theme`, `language` and `user` are followed once the drawer is created; when they are not given, the drawer keeps its own settings (its options, menus of its interface, preferences saved in the browser). Only a setting that changed is given again: a language chosen in the menu is kept when the theme changes, a viewer of a collaboration session stays read only. Properties set by a framework before the element is defined are kept.
+`read-only`, `theme`, `language` and `user` are followed once the drawer is created; when they are not given, the drawer keeps its own settings (its options, menus of its interface, preferences saved in the browser). A `theme` or a `language` of `options` is a default: the one chosen by the user (saved in the browser) wins over it. Only a setting that changed is given again: a language chosen in the menu is kept when the theme changes, a viewer of a collaboration session stays read only. Properties set by a framework before the element is defined are kept.
 
 ## Events
 

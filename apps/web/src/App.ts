@@ -1,6 +1,6 @@
 import { Drawer, ariaShortcut, type DrawerStorage, type Preferences } from '@fabwcie/free-drawing';
 import { ExtraShapesPlugin, HighlighterPlugin } from '@fabwcie/free-drawing-extra-tools';
-import { type DrawingSummary, type DrawingsStore, type User, api } from './api';
+import { ApiError, type DrawingSummary, type DrawingsStore, type User, api } from './api';
 import { local, localDrawings } from './local';
 import { Texts } from './texts';
 import { AccountDialog } from './AccountDialog';
@@ -47,9 +47,13 @@ export class App {
   readonly accountDialog: AccountDialog;
   readonly drawingsDialog: DrawingsDialog;
   readonly profileDialog: ProfileDialog;
+  /** Session of the account ended elsewhere (signed out, password changed, expired): signed in again to save */
+  sessionEnded = false;
   #saveState: SaveState = '';
-  /** Session read and drawing chosen: drawing is loaded after it */
-  readonly #started: Promise<void>;
+  /** Session read and drawing chosen (`_start`): drawing is loaded after it; null after a failure, started again */
+  #started: Promise<void> | null = null;
+  /** Preferences of the account read: changes of preferences saved in the account after them only, never over them */
+  #accountPreferences = false;
 
   constructor($root: HTMLElement, { server, collaboration }: { server: boolean; collaboration: boolean }) {
     this.server = server;
@@ -80,7 +84,8 @@ export class App {
     this.$drawingsButton = $root.querySelector('[data-drawings]')!;
     this.$accountButton = $root.querySelector('[data-account]')!;
 
-    this.#started = this._restoreSession();
+    // failure told by the load of the drawing
+    this._start().catch(() => {});
     this.drawer = new Drawer(this.$main as HTMLDivElement, {
       width: this.$main.clientWidth,
       height: this.$main.clientHeight,
@@ -118,14 +123,23 @@ export class App {
   private _createStorage(): DrawerStorage {
     return {
       load: async () => {
-        await this.#started;
+        try {
+          await this._start();
 
-        const { content, ...drawing } = await this.store.getDrawing(this.drawing!.id);
+          const { id } = this.drawing!;
+          const { content, ...drawing } = await this.store.getDrawing(id);
 
-        this.drawing = drawing;
-        this._remember(drawing);
-        this.render();
-        return content;
+          // another drawing opened meanwhile (the drawer applies its load only): not set back
+          if (this.drawing?.id === id) {
+            this.drawing = drawing;
+            this._remember(drawing);
+            this.render();
+          }
+          return content;
+        } catch (error) {
+          // shown by the drawer, reason explained (too many drawings...)
+          throw this._explained(error as Error);
+        }
       },
       save: async (file) => {
         const { drawing, store } = this;
@@ -140,15 +154,40 @@ export class App {
           if (this.drawing?.id === saved.id) this.drawing = saved;
           this._setSaveState('saved');
         } catch (error) {
-          // shown by drawer once, reason explained (drawings of the account too big); other errors as they are, so the
-          // drawer translates the ones of the browser by their name (storage full)
-          const reason = this.texts.reason(error as Error);
-
+          // session of the account ended elsewhere: signed in again from the account button, changes kept unsaved
+          if (this.user && error instanceof ApiError && error.status === 401) this.sessionEnded = true;
           this._setSaveState('error');
-          throw reason === (error as Error).message ? error : new Error(reason);
+          // shown by drawer once
+          throw this._explained(error as Error);
         }
       },
     };
+  }
+
+  /**
+   * Error of a load or a save of the drawing given to the drawer: known errors of the server explained (drawings of the
+   * account too big, session ended...), others as they are, so the drawer translates the ones of the browser by their
+   * name (storage full)
+   * @param error Error of the store
+   * @returns The error, or an error with the reason explained
+   */
+  private _explained(error: Error): Error {
+    const reason = this.texts.reason(error);
+
+    return reason === error.message ? error : new Error(reason);
+  }
+
+  /**
+   * Session read and drawing chosen (`_restoreSession`), once: started again by the next load after a failure (network,
+   * drawing of a room not created, storage full)
+   * @returns Resolved once the drawing to open is known
+   */
+  private _start(): Promise<void> {
+    this.#started ??= this._restoreSession().catch((error: unknown) => {
+      this.#started = null;
+      throw error;
+    });
+    return this.#started;
   }
 
   /**
@@ -162,10 +201,17 @@ export class App {
         // drawings of browser
       }
     }
-    const room = window.location.hash.match(/^#room=([\w-]+)/)?.[1];
+    const { hash } = window.location;
+    const room = hash.match(/^#room=([\w-]+)/)?.[1];
 
-    // a room link fills its own drawing (last one kept), the same one each time it is opened
-    this.drawing = room ? await this._roomDrawing(room) : await this._lastDrawing();
+    // drawing opened meanwhile (start failed before): kept; a room link fills its own drawing (last one kept), the same
+    // one each time it is opened; a drawing link (`#drawing=`, `#drawer-<n>=` of previous versions) a new one: not
+    // saved over the last drawing
+    this.drawing ??= room
+      ? await this._roomDrawing(room)
+      : /^#(drawing|drawer-\d+)=/.test(hash)
+      ? await this.store.createDrawing({})
+      : await this._lastDrawing();
   }
 
   /**
@@ -217,20 +263,22 @@ export class App {
    * Preferences of account, the current ones on first login
    */
   private async _loadPreferences() {
+    this.#accountPreferences = false;
     try {
       const preferences = await api.getPreferences();
 
       if (Object.keys(preferences).length) this.drawer.setPreferences(preferences);
       else await api.savePreferences(this.drawer.getPreferences());
+      this.#accountPreferences = true;
     } catch {
-      // current preferences kept
+      // current preferences kept, not saved in the account (they would replace its own)
     }
   }
 
   private _initEvents() {
-    // also saved in browser by drawer
+    // also saved in browser by drawer; in the account once its own preferences are read
     this.drawer.on('preferences.change', (preferences: Preferences) => {
-      if (this.user) api.savePreferences(preferences).catch(() => {});
+      if (this.user && this.#accountPreferences && !this.sessionEnded) api.savePreferences(preferences).catch(() => {});
       this.render();
     });
     // pending changes saved when turned on
@@ -275,24 +323,40 @@ export class App {
       }
     });
     this.$drawingsButton.addEventListener('click', () => this.drawingsDialog.show());
-    this.$accountButton.addEventListener('click', () =>
-      this.user ? this.profileDialog.show() : this.accountDialog.show()
-    );
+    // session ended elsewhere: signed in again (email of the account given)
+    this.$accountButton.addEventListener('click', () => {
+      if (!this.user) this.accountDialog.show();
+      else if (this.sessionEnded) this.accountDialog.show('signIn', this.user.email);
+      else this.profileDialog.show();
+    });
   }
 
   /**
    * Logged in from account dialog: drawing of account opened (the one drawn before for a new account), its preferences
    */
   async login(user: User) {
-    // drawing of browser kept there
-    await this.drawer.save();
+    const ended = this.sessionEnded;
+
+    // same account signed in again after its session ended: its drawing kept, its changes saved now
+    if (ended && user.id === this.user?.id) {
+      this.sessionEnded = false;
+      this.setUser(user);
+      await this.drawer.save();
+      return;
+    }
+    // drawing of browser kept there; changes of an account whose session ended: in a drawing of the browser
+    if (ended) await this._keepUnsaved();
+    else await this.drawer.save();
 
     // drawing of the account known before the drawings of the account are used: saves meanwhile still go to the browser
     // (a failure keeps the drawings of the browser)
     const drawings = await api.listDrawings();
-    const drawing = drawings[0] ?? (await api.createDrawing({ content: this.drawer.getDrawingFile() }));
+    // a new account gets the drawing of the browser, not the one of another account
+    const drawing = drawings[0] ?? (await api.createDrawing(ended ? {} : { content: this.drawer.getDrawingFile() }));
 
+    this.sessionEnded = false;
     this.user = user;
+    this.#accountPreferences = false;
     this.drawer.setUser({ id: user.id, name: user.name });
     await this._open(drawing);
     // once loaded: grid and snapping preferences fire changes, saved in this drawing
@@ -336,8 +400,32 @@ export class App {
 
   async logout() {
     await this.drawer.save();
+
+    // not saved (session ended elsewhere, server unavailable): kept in a drawing of this browser, opened next
+    const kept = await this._keepUnsaved();
+
     await api.signOut().catch(() => {});
-    await this._leaveAccount();
+    await this._leaveAccount(kept);
+  }
+
+  /**
+   * Changes of the drawing of the account not saved (its session ended, server unavailable): kept in a new drawing of
+   * this browser, told in a toast
+   * @returns Drawing of the browser keeping them, null without changes not saved (or when it can't be kept)
+   */
+  private async _keepUnsaved(): Promise<DrawingSummary | null> {
+    if (!this.user || !this.drawer.hasUnsavedChanges()) return null;
+    try {
+      const drawing = await localDrawings.createDrawing({
+        name: this.drawing?.name,
+        content: this.drawer.getDrawingFile(),
+      });
+
+      this.drawer.toast(this.texts.t('keptInBrowser'), 'warning');
+      return drawing;
+    } catch {
+      return null;
+    }
   }
 
   /**
@@ -351,16 +439,19 @@ export class App {
   }
 
   /**
-   * Drawing of browser shown again: drawing of account is not kept in browser
+   * Drawing of browser shown again: drawing of account is not kept in browser (unless its changes could not be saved)
+   * @param drawing Drawing of the browser to open, the last one by default
    */
-  private async _leaveAccount() {
+  private async _leaveAccount(drawing: DrawingSummary | null = null) {
     this._leaveSession();
     this.user = null;
+    this.sessionEnded = false;
+    this.#accountPreferences = false;
     // not saved meanwhile
     this.drawing = null;
     this.drawer.setUser(null);
     this._setSaveState('');
-    this.drawing = await this._lastDrawing();
+    this.drawing = drawing ?? (await this._lastDrawing());
     await this.drawer.loadFromStorage();
     this.render();
   }
@@ -387,7 +478,7 @@ export class App {
 
       if (this.drawing?.id === renamed.id) this.drawing = renamed;
     } catch (error) {
-      this.drawer.toast(this.texts.t('error', { error: (error as Error).message }), 'error');
+      this.drawer.toast(this.texts.error(error as Error), 'error');
     }
     this.render();
   }
@@ -424,7 +515,9 @@ export class App {
     this.$drawingsButton.querySelector('[data-label]')!.textContent = t('myDrawings');
     // static site: no accounts
     this.$accountButton.hidden = !this.server;
-    this.$accountButton.querySelector('[data-label]')!.textContent = t(this.user ? 'account' : 'signIn');
+    this.$accountButton.querySelector('[data-label]')!.textContent = t(
+      this.user && !this.sessionEnded ? 'account' : 'signIn'
+    );
     this.accountDialog?.render();
     this.profileDialog?.render();
     this.drawingsDialog?.render();

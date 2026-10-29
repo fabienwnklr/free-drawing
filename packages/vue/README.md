@@ -54,7 +54,7 @@ function onChange(drawer: Drawer) {
 | `change` | `Drawer`  | Drawing changed: shapes, background...                                                         |
 | `error`  | `unknown` | Drawer not created: library not loaded (network), invalid options (also logged in the console) |
 
-`class`, `style` and other attributes go to the `div` of the component. `read-only`, `theme`, `language` and `user` follow their props once the drawer is created; when they are not given, the drawer keeps its own settings (menus of its interface, preferences saved in the browser). Only a setting that changed is given again: a language chosen in the menu is kept when the theme changes, a viewer of a collaboration session stays read only.
+`class`, `style` and other attributes go to the `div` of the component. `read-only`, `theme`, `language` and `user` follow their props once the drawer is created; when they are not given, the drawer keeps its own settings (menus of its interface, preferences saved in the browser). A `theme` or a `language` of `options` is a default: the one chosen by the user (saved in the browser) wins over it. Only a setting that changed is given again: a language chosen in the menu is kept when the theme changes, a viewer of a collaboration session stays read only.
 
 ## Size
 

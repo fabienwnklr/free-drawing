@@ -1,7 +1,7 @@
 {
   "name": "@fabwcie/free-drawing-element",
   "description": "Web component <free-drawing> of free-drawing, infinite canvas drawing board: any page, Angular, Svelte...",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "type": "module",
   "license": "MIT",
   "author": "Winkler Fabien <fabienwinkler@outlook.fr>",

@@ -12,7 +12,7 @@ import {
   type HTMLAttributes,
 } from 'react';
 import type { Drawer, DrawerOptions } from '@fabwcie/free-drawing';
-import { applySettings, mountDrawer, withSettings, type DrawerSettings } from './mountDrawer.js';
+import { applySettings, mountDrawer, type DrawerSettings } from './mountDrawer.js';
 
 /** Properties of `FreeDrawing`: options and settings of the drawer, its events, attributes of its element */
 export interface FreeDrawingProps extends DrawerSettings, Omit<HTMLAttributes<HTMLDivElement>, 'onChange' | 'onError'> {
@@ -52,7 +52,7 @@ export const FreeDrawing = forwardRef<Drawer | null, FreeDrawingProps>(function 
       host.current!,
       () => {
         const { options, readOnly, theme, language, user } = props.current;
-        return withSettings(options, { readOnly, theme, language, user });
+        return { options, settings: { readOnly, theme, language, user } };
       },
       {
         created: setDrawer,

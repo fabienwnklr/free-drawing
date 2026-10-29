@@ -50,6 +50,12 @@ const en = {
   errorTooManyDrawings: 'Too many drawings: delete some to create a new one',
   errorDrawingsTooBig: 'Drawings of your account are too big: delete some to save this one',
   error: 'Something went wrong: {error}',
+  sessionEnded: 'Your session ended: sign in again to save this drawing',
+  keptInBrowser: 'Changes not saved in your account: kept in a drawing of this browser',
+  errorTooManyRequests: 'Too many attempts: wait a moment and try again',
+  errorNotFound: 'Not found: it may have been deleted',
+  errorPasswordTooLong: 'Password too long',
+  errorTooBig: 'Too big to be saved',
 };
 
 type Key = keyof typeof en;
@@ -103,6 +109,12 @@ const fr: Record<Key, string> = {
   errorTooManyDrawings: 'Trop de dessins : supprimez-en pour en créer un nouveau',
   errorDrawingsTooBig: 'Les dessins de votre compte sont trop volumineux : supprimez-en pour enregistrer celui-ci',
   error: 'Une erreur est survenue : {error}',
+  sessionEnded: 'Votre session est terminée : reconnectez-vous pour enregistrer ce dessin',
+  keptInBrowser: 'Modifications non enregistrées dans votre compte : gardées dans un dessin de ce navigateur',
+  errorTooManyRequests: 'Trop de tentatives : patientez un moment et réessayez',
+  errorNotFound: 'Introuvable : il a peut-être été supprimé',
+  errorPasswordTooLong: 'Mot de passe trop long',
+  errorTooBig: 'Trop volumineux pour être enregistré',
 };
 
 const es: Record<Key, string> = {
@@ -154,6 +166,12 @@ const es: Record<Key, string> = {
   errorTooManyDrawings: 'Demasiados dibujos: elimina algunos para crear uno nuevo',
   errorDrawingsTooBig: 'Los dibujos de tu cuenta son demasiado grandes: elimina algunos para guardar este',
   error: 'Se produjo un error: {error}',
+  sessionEnded: 'Tu sesión ha terminado: vuelve a iniciar sesión para guardar este dibujo',
+  keptInBrowser: 'Cambios no guardados en tu cuenta: conservados en un dibujo de este navegador',
+  errorTooManyRequests: 'Demasiados intentos: espera un momento y vuelve a intentarlo',
+  errorNotFound: 'No encontrado: puede que se haya eliminado',
+  errorPasswordTooLong: 'Contraseña demasiado larga',
+  errorTooBig: 'Demasiado grande para guardarse',
 };
 
 const de: Record<Key, string> = {
@@ -206,6 +224,12 @@ const de: Record<Key, string> = {
   errorTooManyDrawings: 'Zu viele Zeichnungen: löschen Sie einige, um eine neue zu erstellen',
   errorDrawingsTooBig: 'Die Zeichnungen Ihres Kontos sind zu groß: löschen Sie einige, um diese zu speichern',
   error: 'Ein Fehler ist aufgetreten: {error}',
+  sessionEnded: 'Ihre Sitzung ist abgelaufen: melden Sie sich erneut an, um diese Zeichnung zu speichern',
+  keptInBrowser: 'Änderungen nicht in Ihrem Konto gespeichert: in einer Zeichnung dieses Browsers behalten',
+  errorTooManyRequests: 'Zu viele Versuche: warten Sie einen Moment und versuchen Sie es erneut',
+  errorNotFound: 'Nicht gefunden: möglicherweise wurde es gelöscht',
+  errorPasswordTooLong: 'Passwort zu lang',
+  errorTooBig: 'Zu groß zum Speichern',
 };
 
 const texts: Record<Language, Record<Key, string>> = { en, fr, es, de };
@@ -219,17 +243,24 @@ export class Texts {
   t = (key: Key, params: Record<string, string> = {}): string =>
     (texts[this.drawer.language] ?? en)[key].replace(/\{(\w+)\}/g, (match, name) => params[name] ?? match);
 
-  /** Known error of the server (Better Auth, limits of drawings) explained, null for others */
+  /** Known error of the server (Better Auth, limits of drawings, statuses) explained, null for others */
   private _known(error: Error): string | null {
     const code = error instanceof ApiError ? error.code ?? '' : '';
+    const status = error instanceof ApiError ? error.status : 0;
 
     if (code.includes('INVALID_EMAIL_OR_PASSWORD')) return this.t('errorCredentials');
     if (code.includes('USER_ALREADY_EXISTS')) return this.t('errorEmailTaken');
     if (code.includes('PASSWORD_TOO_SHORT')) return this.t('errorPassword');
+    if (code.includes('PASSWORD_TOO_LONG')) return this.t('errorPasswordTooLong');
     if (code === 'INVALID_PASSWORD') return this.t('errorCurrentPassword');
     if (code.includes('INVALID_EMAIL')) return this.t('errorEmail');
     if (code === 'TOO_MANY_DRAWINGS') return this.t('errorTooManyDrawings');
     if (code === 'DRAWINGS_TOO_BIG') return this.t('errorDrawingsTooBig');
+    // session ended (signed out elsewhere, password changed, expired), drawing deleted, body too big, rate limits
+    if (status === 401) return this.t('sessionEnded');
+    if (status === 404) return this.t('errorNotFound');
+    if (status === 413) return this.t('errorTooBig');
+    if (status === 429) return this.t('errorTooManyRequests');
     return null;
   }
 

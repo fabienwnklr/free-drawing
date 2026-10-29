@@ -50,13 +50,13 @@ Audit of 2026-10-29 (library 8.1.0): items ordered by priority in each section.
 
 ### Web app, components
 
-- [ ] components: `theme`, `language`, `readOnly` of `options` applied as settings on mount: the language and theme chosen by the user and saved in the browser replaced at each mount (`mountDrawer`: settings of props / attributes only, not of the merged options)
-- [ ] web app: a slow load ending after the user opened another drawing sets `drawing` back: autosave writes the shown drawing into the other one (`App` storage `load`: drawing id checked after the request)
-- [ ] web app: a failed start (403 creating the drawing of a room, network error, storage full) rejects `#started` forever: no drawing loads nor saves until reload (`App._restoreSession`)
-- [ ] web app: a `#drawing=` link replaces the last drawing and is saved over it (room links get their own drawing) (`App._restoreSession`)
-- [ ] web app: session ended elsewhere (password changed, expired): saves fail with an English toast, no way to sign in again, "Sign out" drops the unsaved changes of the account (`App` save, `logout`)
-- [ ] web app: account preferences replaced by the ones of the browser when changed before they are loaded (start, login) (`App` `preferences.change`)
-- [ ] web app: errors of the server untranslated (429 of rate limits, 401, 404, `PASSWORD_TOO_LONG`) (`texts.ts` `_known`)
+- [x] components: `theme`, `language`, `readOnly` of `options` applied as settings on mount: the language and theme chosen by the user and saved in the browser replaced at each mount (`mountDrawer`: settings of props / attributes only, not of the merged options)
+- [x] web app: a slow load ending after the user opened another drawing sets `drawing` back: autosave writes the shown drawing into the other one (`App` storage `load`: drawing id checked after the request)
+- [x] web app: a failed start (403 creating the drawing of a room, network error, storage full) rejects `#started` forever: no drawing loads nor saves until reload (`App._restoreSession`)
+- [x] web app: a `#drawing=` link replaces the last drawing and is saved over it (room links get their own drawing) (`App._restoreSession`)
+- [x] web app: session ended elsewhere (password changed, expired): saves fail with an English toast, no way to sign in again, "Sign out" drops the unsaved changes of the account (`App` save, `logout`)
+- [x] web app: account preferences replaced by the ones of the browser when changed before they are loaded (start, login) (`App` `preferences.change`)
+- [x] web app: errors of the server untranslated (429 of rate limits, 401, 404, `PASSWORD_TOO_LONG`) (`texts.ts` `_known`)
 
 ## Improvements
 

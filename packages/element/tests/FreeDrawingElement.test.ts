@@ -135,6 +135,20 @@ describe('<free-drawing>', () => {
     expect(drawer.i18n.language).toBe('es');
   });
 
+  it('theme and language of the options leave the ones chosen by the user (saved in the browser)', async () => {
+    const element = create({ theme: 'dark', language: 'es' });
+
+    localStorage.setItem(
+      `${element.options!.localStorageKey}-preferences`,
+      JSON.stringify({ theme: 'light', language: 'de' })
+    );
+
+    const drawer = await connect(element);
+
+    expect(drawer.isDarkMode()).toBe(false);
+    expect(drawer.i18n.language).toBe('de');
+  });
+
   it('drawer kept when the element is moved, destroyed once it leaves the page', async () => {
     const element = create();
     const drawer = await connect(element);

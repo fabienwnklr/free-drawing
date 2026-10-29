@@ -17,5 +17,5 @@
       "@/*": ["../../packages/free-drawing/src/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src", "tests"]
 }

@@ -12,6 +12,14 @@ export interface DrawerSettings {
   user?: DrawerUser | null;
 }
 
+/** Options and settings of a component, read once the library is loaded */
+export interface MountOptions {
+  /** Options of the drawer: their theme and language leave the ones the user chose (saved in the browser) */
+  options?: Partial<DrawerOptions>;
+  /** Settings of the component (props, attributes): given to the drawer over its options and the browser */
+  settings: DrawerSettings;
+}
+
 /** Calls of a drawer mounted by a component */
 export interface MountHandlers {
   /** Drawer created (settings applied), before it is ready */
@@ -68,11 +76,7 @@ export function applySettings(drawer: Drawer, settings: DrawerSettings) {
  * @param handlers Calls of the drawer: created, ready, drawing changed
  * @returns Function destroying the drawer, or cancelling its creation
  */
-export function mountDrawer(
-  host: HTMLElement,
-  getOptions: () => Partial<DrawerOptions> & DrawerSettings,
-  handlers: MountHandlers
-): () => void {
+export function mountDrawer(host: HTMLElement, getOptions: () => MountOptions, handlers: MountHandlers): () => void {
   // own element: a drawer being destroyed (asynchronous) empties its element, not the one of the next drawer
   const $el = document.createElement('div');
   let drawer: Drawer | null = null;
@@ -84,9 +88,10 @@ export function mountDrawer(
     .then(({ Drawer, drawerEvents }) => {
       if (unmounted) return;
 
+      const { options: given, settings } = getOptions();
       // undefined settings left to the drawer
       const options: Partial<DrawerOptions> = Object.fromEntries(
-        Object.entries(getOptions()).filter(([, value]) => value !== undefined)
+        Object.entries(withSettings(given, settings)).filter(([, value]) => value !== undefined)
       );
       const sized = !!(options.width || options.height);
       const created = new Drawer($el, {
@@ -97,7 +102,8 @@ export function mountDrawer(
       });
 
       drawer = created;
-      applySettings(created, options);
+      // settings of the component only: a theme or a language of the options leaves the one chosen by the user
+      applySettings(created, settings);
       if (!sized && typeof ResizeObserver !== 'undefined') {
         observer = new ResizeObserver(() => {
           if (host.clientWidth && host.clientHeight) created.setSize(host.clientWidth, host.clientHeight);
