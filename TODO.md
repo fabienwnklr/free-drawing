@@ -1,66 +1,67 @@
 # TODO
 
-Audit of 2026-10-29 (library 8.1.0): items ordered by priority in each section.
+Audit of 2026-10-29 (library 8.2.0): items ordered by priority in each section.
 
-## Security (collaboration, server)
+## Security
 
-- [x] request bodies of `/api/auth/*` have no size limit: a few anonymous requests of several GB exhaust the memory of the server (better-call reads the whole body; `app.ts`, limit before `toNodeHandler`)
-- [x] `/delete-user` out of the strict rate limit of Better Auth (100 per 10 s): with a stolen cookie, the password guessed and the account deleted with its drawings (`auth.ts` `rateLimit.customRules`)
-- [x] anonymous user taking an account id before the account joins the room (ids public: `USERS`, `by` of links), or the socket id given to ids refused by `isId`: rights given to the victim shared (server `collaboration.ts`, ids of accounts apart, fallback ids bound to `userKey`)
-- [x] room creation blocked for everyone: 10,000 rooms kept 30 days, 50 per client and hour, clients by /64 (a /56 has 256): evict empty rooms used by one client, cap rooms kept per client (server `limits`)
-- [x] limits of accounts passed by parallel requests: `usage()` read before any write (`api.ts` POST / PUT drawings, one transaction)
+- [ ] server in development mode unless `NODE_ENV=production` (`start` sets none): public secret of development (sessions forged), listening on every interface, vite `/@fs/` serving any file of the repository to the network, the database included (sessions, hashes of passwords) (`config.ts`: development only with `NODE_ENV=development`; `index.ts`: localhost by default, `HOST`; `app.ts`: `server.fs.deny` of data)
+- [ ] svg export injection: `fill` of an arrow written as it is by `arrowheadSvg` (any string accepted by `parseAttrs`: files, links, collaboration, library, `strokeColor` of Excalidraw) puts a script in the exported svg (`utils/arrow.ts` through `attrs()`, colors checked by `attrChecks`)
+- [ ] email of an account changed without its password (`/change-email` applied at once, no reset of passwords): a session left open or a stolen cookie takes the account (`auth.ts` hook as `passwordToDelete`, field of `ProfileDialog`)
+- [ ] bodies of the API (20 MB) read before the session is checked, no rate limit on `/api`: slow anonymous uploads hold the memory of the server (`api.ts`: session first, small limit out of drawings)
+- [ ] links and embedded drawings decompressed without limit: a link of a few MB inflating to GB crashes the tab (`utils/drawingFile.ts`: stream read by chunks up to a size)
 
 ## Bugs
 
 ### Collaboration
 
-- [x] changes marked synced when emitted: after a connection lost unseen (ping timeout), shapes drawn meanwhile are removed and changes reverted by `_merge` on reconnection (acks of `CHANGE`, `Collaboration._send` / `_merge`)
-- [x] removal never sent when a received `order` rebuilds `#synced` before it (encrypted rooms: `send` queued behind decryptions; removals of `_unsync`): the shape stays for everyone and comes back (`Collaboration._apply`)
-- [x] end of a pointer action with received changes pending fires `change` before the tool finishes: erased shapes recorded at 20 % opacity (undo gives them back faded), zero size shape of a click kept by others, arrow recorded before linked and frame before filled (two undos) (`Drawer._onActionEnd`, `BaseWidget.endAction` called first by tools)
-- [x] live previews kept for everyone: removal of a viewer refused (right removed while drawing: `cancelAction` → `discardLive`), discard skipped while disconnected then the preview of the room merged back (server: live ids of each socket removed on discard, loss of right, leave)
-- [x] change refused as too big after `releaseFiles` already deleted files of the room: images of remaining shapes empty for everyone (server: release once accepted)
-- [x] same user in two tabs: one row in members, count 2 (`CollaborationMembers` rows by `data-member`)
+- [ ] regression of 8.2: a frame or group changed here (shape of a frame dragged, stroke ending in it) skips the whole change of others, then is sent: shapes they drew in it removed for everyone (`_applyReceived` by top node: children merged three way, as `mergeState`)
+- [ ] room emptied, then refilled by a stale copy (computer asleep joining first): users joining later take its old shapes, shapes created since are removed (`_merge` of a room not `kept`: generation of the drawing of the room)
+- [ ] live previews and discards sent while joining again mark the room `kept`: users joining meanwhile lose every shape the room knew (`sendLive` / `discardLive` waiting for the merge, server: `kept` by final changes only)
+- [ ] change refused (`REJECTED` right, too big) once the parts of others were left out for it: version of this user kept, sent over theirs once allowed; a refused shape is "not sent" and ignores others until then (`_unsync`, `_withoutUnconfirmed`: parts left out applied on refusal)
+- [ ] change received during a drag or a transform: drag recorded in two history entries (undo stops halfway), shape sent in the middle of the drag (`receive`, history during konva drags)
+- [ ] change dropped by the rate limit of the server: neither acknowledged nor refused, lost for the room, its shapes ignore others for 60 s (server `socket.use`: refused)
 
-### Core, files, persistence
+### Persistence and data
 
-- [x] reserved names in files, links, other users: a shape named `selection` saved in localStorage is found by `findOne('.selection')` before the layer, the drawer is never created again; a frame part name breaks `getFrameContent` after the drawing was emptied (`Drawer` constructor: layers among the children of the stage, frame parts among its children, `parseAttrs` drops reserved names)
-- [x] undo / redo of a change in a frame or group puts back the whole frame or group: shapes added in it by other users (or another tab) removed, duplicates when one left it (`History`: top nodes, `ignoreChanges` does not update recorded entries)
-- [x] drawing of another tab shown during a pointer action or a text edit: the stroke or the typed text written to destroyed nodes, lost (`Drawer._showSaved`: wait for the end of the action / edit)
-- [x] save loop of `storage` goes on after `loadFromStorage` started: the previous drawing saved into the new target of the app (`Drawer._saveToStorage`: stop when `#storageLoads` changed)
-- [x] `addShape` of a copy (group with a shape and its text, arrows): new ids, `containerId` and bindings still point at the originals: text placed in the original shape (`Drawer.addShape`, remap as `duplicateShapes`)
-- [x] saves of previous versions keep duplicate or too long ids (only empty ones filled): undo removes the wrong shape, collaboration servers refuse them forever (`_loadSavedStage` without `fixIds`)
-- [x] shape of a group or frame copied alone (Ctrl + D, library, export with drawing): offsets applied twice, copy moved (`getStateInDrawing`: offsets reset with the decomposed transform)
-- [x] `addImage` once decoded: added in read only, cancels a stroke started meanwhile, saves the text being edited hidden (`Drawer.addImage`)
+- [ ] save while Space is held stores the stage draggable and its layers not listening: once reloaded, nothing selected nor erased, the view moves while drawing (`SpacePan`, `_loadSavedStage`: state of the stage and layers reset)
+- [ ] changes made during `loadFromStorage` (drawing changed elsewhere loaded again by the web app, slow download) dropped without warning; a save asked during the save loop of the previous drawing never runs (`Drawer.loadFromStorage`, `_saveToStorage`)
+- [ ] pasted text wrapped (regression of 8.2): `_createText` measures its lines before `setupFonts`, with a fallback font (`TextWidget._createText`)
+- [ ] svg export invalid with control characters (U+000B, line breaks of Word or PowerPoint): file unreadable, its drawing lost, previews of the library broken (`escapeXml`)
+- [ ] `_readSvgFiles` fires `change` during a stroke or a text edit (shapes being erased recorded faded) (`_afterAction`, as `addImage`)
+- [ ] links replace `history.state` with null: state of the router of the host app lost (React Router, Next.js) (`Drawer.ts` `replaceState`)
 
-### Tools and interaction
+### Tools and interface
 
-- [x] horizontal flip of a shape with a text: text upside down (`decompose` gives rotation -180), mirrored in a flipped group (`placeBoundText`)
-- [x] existing text emptied and validated: removed without `change` (not saved, not in history, not shared until the next change) (`TextWidget` `removeTextarea`)
-- [x] text of a shape placed in frames apart from its shape: typing in a shape over a frame, frame drawn or resized around the text only (`fitFrame`), align / distribute / stack: text hidden under its shape or clipped in another frame (keep each text in the parent of its shape, above it)
-- [x] slideshow or replay stopped after read only started: pan deactivated, no tool; laser given back when read only ends (`Slideshow.stop`, `Replay.stop`: `_leaveDisabledTool`)
-- [x] layers panel: hiding a shape leaves its text visible (shown again by `placeBoundText`, no history), locking it leaves its text selectable and editable (hide and lock the text with its shape)
+- [ ] pinch with the text or note tool creates texts and notes (konva `tap` of each finger); an edit opened twice leaves a field and an empty hidden text (`onStage`: `tap` / `dbltap` ignored during gestures; `editTextNode` ends the edit open)
+- [ ] snapping toggled fires `change`, also unchanged: the preferences dialog marks the drawing unsaved, saves `storage`, adds history entries during a drag (`SelectWidget.toggleSnapping`)
+- [ ] snapping turned off during a drag: guides left, stops and box of that drag used by the next drags (`_removeSnapEvents`)
+- [ ] settings menu and collaboration panel not closed by a tap or a stroke on the canvas (no `click` once tools prevent the default of `touchstart`) (`Dropdown`, `CollaborationPanel`: capture `pointerdown`, as `GroupWidget`)
+- [ ] reorder of the layers panel moves a shape without its text: text hidden under a note or a filled shape (`LayersPanel.moveShape`, Alt + Up / Down)
+- [ ] keys of the library panel, settings menu and context menu reach `HotKey`: Delete removes the selection, letters change the tool (`LibraryPanel`, `Dropdown`, `ContextMenu`: propagation stopped)
+- [ ] Space on a button of the drawer focused by keyboard, pointer on the canvas: pans instead of pressing it (`SpacePan`)
+- [ ] text field: Ctrl / Cmd + S opens "Save page" (the web app saves the text hidden), no accessible name, Tab leaves the edit open with shortcuts disabled (`HotKey`, `TextWidget.editTextNode`)
+- [ ] active tool activated again (S, its button) clears the selection (`BaseWidget.setActive`)
+- [ ] `destroy` does not stop the replay: its animation frames run until it ends
 
-### Interface, accessibility
+### Web app, server
 
-- [x] collaboration dialog: Start and Stop hide themselves with the focus: focus falls to the page in an `aria-modal` dialog (`CollaborationModal.update`)
-- [x] library panel: focus given to a disabled button (last item removed with nothing selected, read only started), lost to the page (`LibraryPanel.update`)
-- [x] layers panel: focus kept on a disabled row action when read only starts, lost to the page (`LayersPanel.update`)
-- [x] options panels of tools do not scroll: sections out of the panel and under the footer in a drawer shorter than about 640 px (`overlay.scss`: `overflow-y: auto` on `.drawer-overlay-container`)
-- [x] `docs/plugins.md` lists N as a free shortcut: taken by the note tool (the generator reserves it)
+- [ ] drawing opened or created after a failed save (storage full, drawings too big, 413, drawing deleted elsewhere: 404 at each save): unsaved changes dropped (`openDrawing`, `newDrawing`, `login`: kept in a copy; 404 as 409)
+- [ ] another account signed in from another tab: this tab saves, creates and lists in it while showing the first one, preferences of the other account overwritten (401 only: user checked on `visibilitychange`, id of the user sent)
+- [ ] session cookie never extended by `/api/me`: users signed out 7 days after signing in (`getSession` with `returnHeaders`, `set-cookie` forwarded)
+- [ ] errors of "My drawings", of the account dialog and of the drawings of the browser untranslated (`message` instead of `texts.error`, `Error('drawing not found')`); `sessionEnded` set by saves only, never cleared by a later success
 
-### Web app, components
+### Packages, docs
 
-- [x] components: `theme`, `language`, `readOnly` of `options` applied as settings on mount: the language and theme chosen by the user and saved in the browser replaced at each mount (`mountDrawer`: settings of props / attributes only, not of the merged options)
-- [x] web app: a slow load ending after the user opened another drawing sets `drawing` back: autosave writes the shown drawing into the other one (`App` storage `load`: drawing id checked after the request)
-- [x] web app: a failed start (403 creating the drawing of a room, network error, storage full) rejects `#started` forever: no drawing loads nor saves until reload (`App._restoreSession`)
-- [x] web app: a `#drawing=` link replaces the last drawing and is saved over it (room links get their own drawing) (`App._restoreSession`)
-- [x] web app: session ended elsewhere (password changed, expired): saves fail with an English toast, no way to sign in again, "Sign out" drops the unsaved changes of the account (`App` save, `logout`)
-- [x] web app: account preferences replaced by the ones of the browser when changed before they are loaded (start, login) (`App` `preferences.change`)
-- [x] web app: errors of the server untranslated (429 of rate limits, 401, 404, `PASSWORD_TOO_LONG`) (`texts.ts` `_known`)
+- [ ] library not importable on a server: `window.innerWidth` read by `defaultOptions` when loaded (examples of the READMEs of the components and extra tools crash in SSR) (`constants.ts`, test importing it in Node)
+- [ ] drawer of a component following the window instead of its host (host of the size of the window or hidden when mounted, then resized: drawer bigger than its host) (`DrawerLayout._followWindow`, `mountDrawer`)
+- [ ] types of the public API not exported: `Replay`, `SpacePan`, `GridStyle`, `WheelAction`, `FreehandSettings`, `ReplayStep` (`index.ts`, check of `index.d.ts`)
+- [ ] quick starts of the docs and README of the web component give `theme="system" language="auto"` as props / attributes: choice of the user replaced at each load (in `options`)
+- [ ] components, extra tools and generated plugins export the `import` condition only: Jest (`require`) can't resolve them (`default`)
+- [ ] generator accepts names reserved by files (`Background`, `Grid`, `Draw`, `Selection`): shape names dropped by `parseName` (`checkName`)
+- [ ] docs: `library.change` missing from the events table, M listed as a tool of the library in plugins.md, `typedoc.json` excluding a missing `src/vite.env.d.ts`
 
 ## Improvements
 
-- [x] web app: two tabs or devices on the same drawing overwrite each other: version of the drawing sent with `PUT` (409 when changed), `storage` events for the drawing of the browser
-- [x] collaboration: two users changing one shape within a round trip keep different versions (relayed to others only, last write wins): order of the server echoed or acknowledged for shapes changed here
-- [x] forced colors (Windows high contrast): swatches all alike, selected swatch and active tool not shown (`forced-color-adjust`, outlines of `.active` under `@media (forced-colors: active)`)
-- [x] `@font-face 'Ubuntu'` global: a page whose fonts reach `Ubuntu` gets its regular face only (bold and italic synthesized): private family name
+- [ ] big drawings (1000 notes: one change 131 ms, select all 306 ms, duplicate 3.5 s; `updateBoundTexts` / `updateBindings` on each move of a drag): maps of ids per operation, links of moved shapes only during drags (`boundText`, `withBoundTexts`, `addShape`, `unbindMoved`)
+- [ ] first change of a session not protected (server acknowledging known once one acknowledgement came): told by the server in `ROOM` or `JOINED`
+- [ ] release: `npm-packages` needs `release` only: a component published while the library publish failed (`release.yml`)
