@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [8.1.4](https://github.com/fabienwnklr/free-drawing/compare/v8.1.3...v8.1.4) (2026-10-29)
+
+
+### Bug Fixes
+
+* **a11y:** collaboration dialog: the focus goes to the link of the session once "Start" is pressed, back to "Start" once the session is stopped (it fell to the page behind the dialog)
+* **a11y:** library panel: the focus never goes to a disabled button (last item removed with nothing selected, insertion disabled in read only, add button disabled with the focus)
+* **a11y:** layers panel: an action of a row disabled with the focus (read only started) gives the focus to the name of its row
+* **tools:** options panels of tools scroll in a short drawer: their sections no longer go out of the panel, under the toolbar
+
 ## [8.1.3](https://github.com/fabienwnklr/free-drawing/compare/v8.1.2...v8.1.3) (2026-10-29)
 
 

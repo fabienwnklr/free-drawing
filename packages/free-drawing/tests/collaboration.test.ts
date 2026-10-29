@@ -576,6 +576,7 @@ describe('Collaboration', () => {
 
     modal.$name.value = 'Alice';
     modal.$name.dispatchEvent(new Event('change'));
+    modal.$startButton.focus();
     modal.$startButton.click();
     // key of the room made, then connected
     await vi.waitFor(() => expect(window.location.hash).toContain('#room='));
@@ -591,17 +592,21 @@ describe('Collaboration', () => {
     );
     await vi.waitFor(() => expect(modal.$users.textContent).toBe('Connected (1)'));
     expect(modal.$link.value).toBe(drawer.getCollaborationLink());
+    // Start hidden by its click: focus on the link, not on the page behind the dialog
+    expect(document.activeElement).toBe(modal.$link);
     // creator of the room is its owner
     expect(modal.$members.textContent).toBe('Alice (you)Owner');
     // QR code generator loaded with a dynamic import
     await vi.waitFor(() => expect(modal.$qrCode.querySelector('svg')).not.toBeNull());
     expect(drawer.setting.$collaborationButton.textContent).toContain('On (1)');
 
+    modal.$stopButton.focus();
     modal.$stopButton.click();
     expect(drawer.collaboration).toBeNull();
     expect(socket.disconnect).toHaveBeenCalled();
     expect(window.location.hash).toBe('');
     expect(modal.$session.hidden).toBe(true);
+    expect(document.activeElement).toBe(modal.$startButton);
   });
 
   it('User id given by server (logged in account) recognizes this user: owner, links', async () => {

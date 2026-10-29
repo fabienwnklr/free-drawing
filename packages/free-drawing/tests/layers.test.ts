@@ -247,6 +247,15 @@ describe('Layers panel', () => {
     expect(document.activeElement).toBe(part(drawer, 0, 'name'));
   });
 
+  it('Read only started with the focus on an action of a row: focus on the name of the row, not on the page', () => {
+    // without pan tool (else read only activates it, the drawer takes the focus)
+    const { drawer } = createLayers({ widgets: ['selection', 'brush', 'text'] });
+
+    part(drawer, 0, 'delete').focus();
+    drawer.setReadOnly(true);
+    expect(document.activeElement).toBe(part(drawer, 0, 'name'));
+  });
+
   it('Only current row is reached with Tab, read only mode disables actions', () => {
     const { drawer } = createLayers();
     const tabbable = () =>

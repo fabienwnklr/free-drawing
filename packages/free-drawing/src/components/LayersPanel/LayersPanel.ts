@@ -302,11 +302,12 @@ export class LayersPanel {
 
     if (!$focusedItem) return;
 
-    // same control of same shape, else row at same place (shape removed)
+    // same control of same shape (not disabled: read only started), else its name, else row at same place (shape
+    // removed)
     const $item = $items.find(($el) => $el.dataset.id === $focusedItem.dataset.id);
-    const $target = $item
-      ? $item.querySelector<HTMLElement>(`[data-part="${$focused?.dataset.part}"]`)
-      : $items[Math.min(focusedIndex, $items.length - 1)]?.querySelector<HTMLElement>('[data-part="name"]');
+    const $part = $item?.querySelector<HTMLElement>(`[data-part="${$focused?.dataset.part}"]`);
+    const $row = $item ?? $items[Math.min(focusedIndex, $items.length - 1)];
+    const $target = $part && !isUnreachable($part) ? $part : $row?.querySelector<HTMLElement>('[data-part="name"]');
 
     ($target ?? this.$closeButton).focus();
   }

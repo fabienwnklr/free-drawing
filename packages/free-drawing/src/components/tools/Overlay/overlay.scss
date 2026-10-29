@@ -16,6 +16,9 @@
   width: fit-content;
   min-width: 100px;
   max-height: 70%;
+  // sections of a short drawer: scrolled in the panel, not out of it (under the footer)
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: $space-2;
   user-select: none;
   // ignored during a pointer action: pointer up over it reaches canvas

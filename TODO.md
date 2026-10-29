@@ -42,11 +42,11 @@ Audit of 2026-10-29 (library 8.1.0): items ordered by priority in each section.
 
 ### Interface, accessibility
 
-- [ ] collaboration dialog: Start and Stop hide themselves with the focus: focus falls to the page in an `aria-modal` dialog (`CollaborationModal.update`)
-- [ ] library panel: focus given to a disabled button (last item removed with nothing selected, read only started), lost to the page (`LibraryPanel.update`)
-- [ ] layers panel: focus kept on a disabled row action when read only starts, lost to the page (`LayersPanel.update`)
-- [ ] options panels of tools do not scroll: sections out of the panel and under the footer in a drawer shorter than about 640 px (`overlay.scss`: `overflow-y: auto` on `.drawer-overlay-container`)
-- [ ] `docs/plugins.md` lists N as a free shortcut: taken by the note tool (the generator reserves it)
+- [x] collaboration dialog: Start and Stop hide themselves with the focus: focus falls to the page in an `aria-modal` dialog (`CollaborationModal.update`)
+- [x] library panel: focus given to a disabled button (last item removed with nothing selected, read only started), lost to the page (`LibraryPanel.update`)
+- [x] layers panel: focus kept on a disabled row action when read only starts, lost to the page (`LayersPanel.update`)
+- [x] options panels of tools do not scroll: sections out of the panel and under the footer in a drawer shorter than about 640 px (`overlay.scss`: `overflow-y: auto` on `.drawer-overlay-container`)
+- [x] `docs/plugins.md` lists N as a free shortcut: taken by the note tool (the generator reserves it)
 
 ### Web app, components
 

@@ -308,6 +308,8 @@ export class CollaborationModal extends Modal {
     this.$joinButton.hidden = !joining;
     this.$cancelButton.hidden = !joining;
     this.$stopButton.hidden = !owner;
+    // Start or Stop hidden by its own click: on the link of the session, or on Start again
+    this.keepFocus(this.$link, this.$startButton);
 
     if (!owner) return;
 

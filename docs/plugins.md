@@ -179,7 +179,7 @@ new Drawer($el, { plugins: [StampsPlugin], widgets: ['selection', 'stamp', 'brus
 ```
 
 ::: tip Shortcut letters
-The tools of the library use A, B, C, D, E, F, H, K, L, M, Q, R, S and T: choose another letter. The `widgets` option of the app can change the title and the shortcut of any tool, also of plugins.
+The tools of the library use A, B, C, D, E, F, H, K, L, M, N, Q, R, S and T: choose another letter. The `widgets` option of the app can change the title and the shortcut of any tool, also of plugins.
 :::
 
 ## Commands

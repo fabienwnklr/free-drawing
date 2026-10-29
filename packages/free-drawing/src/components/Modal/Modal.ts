@@ -4,7 +4,7 @@ import { stringToNode } from '@/utils/functions';
 import type { Drawer } from '@/Drawer';
 import type { ModalOptions } from '@/@types/ui';
 import CloseIcon from '@/icons/close.svg?raw';
-import { hasFocusOutside, isComposing, uniqueId } from '@/utils/dom';
+import { hasFocusOutside, isComposing, isUnreachable, uniqueId } from '@/utils/dom';
 import { createLiveRegion } from '@/utils/liveRegion';
 
 const focusableSelector =
@@ -185,6 +185,19 @@ export class Modal {
       event.preventDefault();
       (event.shiftKey ? $last : $first).focus();
     }
+  }
+
+  /**
+   * Focus kept in the dialog when an update hid or disabled its focused element (its own button: start, stop...): on
+   * the first reachable of the given elements, else on the first element of the dialog, never on the page behind it
+   * @param $preferred Elements to focus, in order of preference
+   */
+  protected keepFocus(...$preferred: HTMLElement[]) {
+    const $active = document.activeElement;
+    const lost = !$active || $active === document.body || (this.$modal.contains($active) && isUnreachable($active));
+
+    if (!this.isVisible() || !lost) return;
+    ($preferred.find(($el) => this.$modal.contains($el) && !isUnreachable($el)) ?? this._getFocusables()[0])?.focus();
   }
 
   /**

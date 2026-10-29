@@ -169,4 +169,37 @@ describe('Library', () => {
     expect(text.attrs.containerId).toBe(rect.id());
     panel.toggle(false);
   });
+
+  it('Panel: focus never on a disabled button (read only started, last item removed, selection cleared)', () => {
+    // without pan tool (else read only activates it, the drawer takes the focus)
+    const drawer = createDrawer({ widgets: ['selection', 'brush', 'text'] });
+    const panel = drawer.libraryPanel!;
+    const { rect } = createShapes(drawer);
+    const selectWidget = drawer.getWidget<SelectWidget>('selection')!;
+
+    panel.toggle(true);
+    selectWidget.setActive(true);
+    selectWidget.select([rect]);
+    panel.$addButton.click();
+
+    // insertion disabled: remove button of its row
+    panel.$list.querySelector<HTMLButtonElement>('.drawer-library-insert')!.focus();
+    drawer.setReadOnly(true);
+    expect(document.activeElement).toBe(panel.$list.querySelector('.drawer-library-remove'));
+    drawer.setReadOnly(false);
+
+    // last item removed, add button disabled (nothing selected): import button
+    const $remove = panel.$list.querySelector<HTMLButtonElement>('.drawer-library-remove')!;
+
+    $remove.focus();
+    $remove.click();
+    expect(document.activeElement).toBe(panel.$importButton);
+
+    // add button disabled with the focus
+    selectWidget.select([rect]);
+    panel.$addButton.focus();
+    selectWidget.clearSelection();
+    expect(document.activeElement).toBe(panel.$importButton);
+    panel.toggle(false);
+  });
 });

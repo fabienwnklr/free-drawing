@@ -176,20 +176,39 @@ export class LibraryPanel {
     this.$list.replaceChildren(...items.map((item) => this._createItem(item)));
     this.$empty.hidden = items.length > 0;
     this.$hint.hidden = !items.length;
-    if (focused >= 0) {
-      const buttons = this.$list.querySelectorAll('button');
-
-      (buttons[Math.min(focused, buttons.length - 1)] ?? this.$addButton).focus();
-    }
     this._updateButtons();
+    if (focused >= 0) {
+      const $buttons = [...this.$list.querySelectorAll('button')];
+      const index = Math.min(focused, $buttons.length - 1);
+
+      // same place, else the nearest enabled button (insertion disabled in read only)
+      this._focusEnabled([...$buttons.slice(index), ...$buttons.slice(0, Math.max(0, index)).reverse()]);
+    }
   }
 
   /**
    * Add button enabled with a selection, export button with items
    */
   private _updateButtons() {
+    const $active = document.activeElement;
+
     this.$addButton.disabled = !this.drawer.getSelectedShapes().length;
     this.$exportButton.disabled = !this.drawer.library.items.length;
+    // disabled with the focus (selection cleared, last item removed): another button of the panel
+    if (($active === this.$addButton || $active === this.$exportButton) && ($active as HTMLButtonElement).disabled) {
+      this._focusEnabled([]);
+    }
+  }
+
+  /**
+   * Focus on the first enabled button, else on an enabled button of the panel: never on a disabled one (the focus would
+   * fall to the page)
+   * @param $buttons Buttons to focus, in order of preference
+   */
+  private _focusEnabled($buttons: HTMLButtonElement[]) {
+    [...$buttons, this.$addButton, this.$importButton, this.$exportButton, this.$closeButton]
+      .find(($btn) => !$btn.disabled)
+      ?.focus();
   }
 
   /**
