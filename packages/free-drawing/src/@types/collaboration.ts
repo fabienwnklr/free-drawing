@@ -200,6 +200,8 @@ export type RemotePointer = {
 export type JoinedMessage = {
   /** Id given to this user (account of a logged in user) */
   userId?: unknown;
+  /** Server acknowledging changes (servers of previous versions: missing) */
+  acknowledges?: unknown;
 };
 
 /** Settings of the room (`ROOM`, sent by the server on join and change), checked on reception */

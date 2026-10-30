@@ -208,8 +208,9 @@ export class Collaboration {
   /** Parts of changes sent on this connection, not acknowledged by the server yet */
   #unconfirmed = new Set<UnconfirmedPart>();
   /**
-   * Server acknowledges changes (servers of previous versions: none): a change of another user received before the
-   * acknowledgement of a change of this user was applied before it by the server
+   * Server acknowledges changes (told by `JOINED`, or an acknowledgement received; servers of previous versions: none): a
+   * change of another user received before the acknowledgement of a change of this user was applied before it by the
+   * server
    */
   #acknowledging = false;
   /** Stacking order sent and lost with the connection: the one of this user kept by the merge, sent again */
@@ -309,9 +310,11 @@ export class Collaboration {
       this.#connected = false;
       this._unconfirm();
     });
-    // server identifies this user (logged in account), before sending users of the room
-    this._listen(socketEvents.JOINED, ({ userId }: JoinedMessage = {}) => {
+    // server identifies this user (logged in account), before sending users of the room; tells it acknowledges changes:
+    // the first change of this user is protected too (before any acknowledgement)
+    this._listen(socketEvents.JOINED, ({ userId, acknowledges }: JoinedMessage = {}) => {
       if (typeof userId === 'string' && userId) this.userId = userId;
+      if (acknowledges === true) this.#acknowledging = true;
     });
     // settings of the room (servers of previous versions: none)
     this._listen(socketEvents.ROOM, ({ newUsersCanEdit, encrypted }: RoomMessage = {}) => {

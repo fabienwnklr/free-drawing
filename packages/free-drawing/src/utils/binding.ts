@@ -517,17 +517,33 @@ export function rerouteArrow(arrow: Arrow, layer: Container, find?: (id: string)
 }
 
 /**
+ * Ids of nodes moved together (drag, transform) and of their shapes (groups, frames): what follows them while they
+ * move (`updateBindings`, `updateBoundTexts`)
+ * @param moved Nodes moved
+ * @returns Their ids and the ids of their descendants
+ */
+export function getMovedIds(moved: Node[]): Set<string> {
+  const nodes = moved.flatMap((node) => [node, ...('find' in node ? (node as Container).find(() => true) : [])]);
+
+  return new Set(nodes.map((node) => node.id()).filter(Boolean));
+}
+
+/**
  * Arrows follow their linked shapes, links to removed shapes are removed
  * @param layer Draw layer
+ * @param moved Ids of the nodes moved (drag, transform: `getMovedIds`): only the arrows moved or linked to them, whose
+ * ids are added to it (their labels follow them), every arrow by default
  * @returns true if an arrow changed
  */
-export function updateBindings(layer: Container): boolean {
+export function updateBindings(layer: Container, moved?: Set<string>): boolean {
   const nodes = layer.find((node: Node) => !!node.id());
   const byId = new Map(nodes.map((node) => [node.id(), node]));
   let changed = false;
 
   nodes.forEach((arrow) => {
     if (!(arrow instanceof Arrow) || ![...bindingAttrs, ...anchorAttrs].some((attr) => arrow.getAttr(attr))) return;
+    if (moved && !moved.has(arrow.id()) && !bindingAttrs.some((attr) => moved.has(arrow.getAttr(attr)))) return;
+    moved?.add(arrow.id());
 
     // links of removed shapes, sides without link
     bindingAttrs.forEach((attr, i) => {
@@ -553,7 +569,8 @@ export function updateBindings(layer: Container): boolean {
  * @param moved Nodes moved together
  */
 export function unbindMoved(moved: Node[]) {
-  const isMoved = (node: Node) => moved.some((m) => m === node || m.isAncestorOf(node));
+  // linked shape moved too: one of them or a shape of one of them
+  const movedIds = getMovedIds(moved);
 
   moved.forEach((node) => {
     const arrows = node instanceof Arrow ? [node] : 'find' in node ? (node as Container).find<Arrow>('Arrow') : [];
@@ -561,9 +578,8 @@ export function unbindMoved(moved: Node[]) {
     arrows.forEach((arrow) => {
       bindingAttrs.forEach((attr, i) => {
         const id = arrow.getAttr(attr);
-        const target = id && arrow.getLayer()?.findOne((n: Node) => n.id() === id);
 
-        if (id && (!target || !isMoved(target))) arrow.setAttrs({ [attr]: undefined, [anchorAttrs[i]]: undefined });
+        if (id && !movedIds.has(id)) arrow.setAttrs({ [attr]: undefined, [anchorAttrs[i]]: undefined });
       });
     });
   });

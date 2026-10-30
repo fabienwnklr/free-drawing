@@ -160,9 +160,11 @@ jobs:
   # packages with their own version and changelog (packages/<package>): published with a release of the library once
   # their version is not on npm yet, nor lower than the last published one. The first version of a package is published
   # by hand (its trusted publisher is set on an existing package): nothing is published before. Trusted publisher of each
-  # package on npmjs.com: GitHub Actions, this repository, workflow release.yml, no environment, allowing `npm publish`
+  # package on npmjs.com: GitHub Actions, this repository, workflow release.yml, no environment, allowing `npm publish`.
+  # After the library (`npm` job: published, or nothing to publish): a failed publish of the library publishes no package,
+  # whose new version may need it; "Re-run failed jobs" runs both again
   npm-packages:
-    needs: release
+    needs: [release, npm]
     if: inputs.tag != 'all'
     runs-on: ubuntu-latest
     permissions:

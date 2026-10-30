@@ -169,7 +169,7 @@ const createServer = () => {
           else if (!roomData.names.has(socket.userId!) && !roomData.newUsersCanEdit)
             roomData.viewers.add(socket.userId!);
           roomData.names.set(socket.userId!, name);
-          socket.receive('JOINED', { userId: socket.userId });
+          socket.receive('JOINED', { userId: socket.userId, ...(!socket.noAck && { acknowledges: true }) });
           socket.receive('ROOM', { newUsersCanEdit: roomData.newUsersCanEdit, encrypted: !!roomData.keyCheck });
           socket.receive('CHANGE', {
             upsert: [...roomData.shapes.values()],
@@ -1667,15 +1667,38 @@ describe('Collaboration', () => {
     }
   });
 
-  it('Server of previous versions, acknowledging nothing: changes of others applied as they come', () => {
+  it('First change of a session kept over changes of others received before its acknowledgement (told on join)', () => {
     const connect = createServer();
     const alice = createDrawer();
     const bob = createDrawer();
 
     connect(alice, 'room', 'Alice', { userId: 'alice', ownerKey: 'secret' });
     const bobSocket = connect(bob, 'room', 'Bob', { userId: 'bob' });
+    const text = addText(alice, 'A');
 
+    // first change of bob slowed down by the network: the one of alice reaches the server first
+    bobSocket.held = [];
+    byId(bob, text.id())!.setAttr('text', 'Bob');
+    bob.stage.fire('change');
+    text.text('Alice');
+    alice.stage.fire('change');
+    expect(byId(bob, text.id())!.getAttr('text')).toBe('Bob');
+
+    bobSocket.release();
+    expect(text.text()).toBe('Bob');
+  });
+
+  it('Server of previous versions, acknowledging nothing: changes of others applied as they come', () => {
+    const connect = createServer();
+    const alice = createDrawer();
+    const bob = createDrawer();
+    const bobSocket = connect.createSocket();
+
+    connect(alice, 'room', 'Alice', { userId: 'alice', ownerKey: 'secret' });
+    // nothing told on join
     bobSocket.noAck = true;
+    bob.collaboration = new Collaboration(bob, bobSocket, { room: 'room', name: 'Bob', userId: 'bob' });
+    bobSocket.receive('connect');
     const text = addText(alice, 'A');
 
     addText(bob, 'B');

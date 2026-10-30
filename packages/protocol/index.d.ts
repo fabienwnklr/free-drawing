@@ -8,7 +8,10 @@ export declare const socketEvents: {
    * (SHA-256 of the key, base64url): the room is encrypted by the user creating it, joined with the same proof only
    */
   readonly JOIN: 'JOIN';
-  /** Room joined, sent by server to the joining user: `{ userId }` id it gives the user (e.g. of logged in account) */
+  /**
+   * Room joined, sent by server to the joining user: `{ userId, acknowledges }` id it gives the user (e.g. of logged in
+   * account), `acknowledges` true: changes acknowledged (servers of previous versions: none, or without telling it)
+   */
   readonly JOINED: 'JOINED';
   /** Name of user changed */
   readonly NAME: 'NAME';

@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [8.3.1](https://github.com/fabienwnklr/free-drawing/compare/v8.3.0...v8.3.1) (2026-10-30)
+
+
+### Performance Improvements
+
+* **big drawings:** shapes with texts and arrows are looked up once per operation instead of once per shape, the texts of a big selection are placed with one measure of the selection box, and a drag moves only the texts and arrows of the dragged shapes (the rest of the drawing is placed once dropped): with 1000 notes, a change takes 24 ms instead of 66 ms, selecting everything 90 ms instead of 380 ms, a move of a drag 4 ms instead of 60 ms, duplicating everything 0.3 s instead of 4 s
+
+
+### Bug Fixes
+
+* **collaboration:** the first change of a session is kept over the changes of others received before the server acknowledged it, as the next ones (the server tells it acknowledges changes when the user joins; it was protected only after a first acknowledgement)
+
 ## [8.3.0](https://github.com/fabienwnklr/free-drawing/compare/v8.2.5...v8.3.0) (2026-10-30)
 
 

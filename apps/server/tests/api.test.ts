@@ -656,18 +656,23 @@ describe('Collaboration', () => {
   /** Client joined to a room: its id, users of the room, view presented (sent last) */
   const joinRoom = async (message: object, server = url) => {
     const user = client(server);
-    const joined = user.next<{ userId: string }>(socketEvents.JOINED);
+    const joined = user.next<{ userId: string; acknowledges?: boolean }>(socketEvents.JOINED);
     const users = user.next<User[]>(socketEvents.USERS);
     const view = user.next(socketEvents.VIEW);
 
     user.socket.emit(socketEvents.JOIN, message);
-    return { ...user, userId: (await joined).userId, users: await users, view: await view };
+    const { userId, acknowledges } = await joined;
+
+    return { ...user, userId, acknowledges, users: await users, view: await view };
   };
 
   it('Owner is the user giving the secret: its id is not given to others, rights only changed by it', async () => {
     const owner = await joinRoom({ room: 'room-2', name: 'Owner', userId: 'owner-1', ownerKey: 'secret' });
     const guest = await joinRoom({ room: 'room-2', name: 'Guest', userId: 'guest-2' });
     const impostor = await joinRoom({ room: 'room-2', name: 'Impostor', userId: 'owner-1' });
+
+    // changes acknowledged: told on join (first change of a user protected)
+    expect(owner.acknowledges).toBe(true);
 
     expect(owner.userId).toBe('owner-1');
     expect(impostor.userId).not.toBe('owner-1');

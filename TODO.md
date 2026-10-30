@@ -62,6 +62,6 @@ Audit of 2026-10-29 (library 8.2.0): items ordered by priority in each section.
 
 ## Improvements
 
-- [ ] big drawings (1000 notes: one change 131 ms, select all 306 ms, duplicate 3.5 s; `updateBoundTexts` / `updateBindings` on each move of a drag): maps of ids per operation, links of moved shapes only during drags (`boundText`, `withBoundTexts`, `addShape`, `unbindMoved`)
-- [ ] first change of a session not protected (server acknowledging known once one acknowledgement came): told by the server in `ROOM` or `JOINED`
-- [ ] release: `npm-packages` needs `release` only: a component published while the library publish failed (`release.yml`)
+- [x] big drawings (1000 notes: one change 131 ms, select all 306 ms, duplicate 3.5 s; `updateBoundTexts` / `updateBindings` on each move of a drag): maps of ids per operation, links of moved shapes only during drags (`boundText`, `withBoundTexts`, `addShape`, `unbindMoved`)
+- [x] first change of a session not protected (server acknowledging known once one acknowledgement came): told by the server in `ROOM` or `JOINED`
+- [x] release: `npm-packages` needs `release` only: a component published while the library publish failed (`release.yml`)

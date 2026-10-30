@@ -1,4 +1,5 @@
 import type { Node } from 'konva/lib/Node';
+import type { Text } from 'konva/lib/shapes/Text';
 import type { IRect, Vector2d } from 'konva/lib/types';
 import type { Frame } from '@/utils/frame';
 
@@ -33,6 +34,17 @@ export type BoundEnd = {
   shape: Node;
   /** Side whose middle the end is fixed to, else end on outline */
   anchor?: Anchor;
+};
+
+/**
+ * Nodes of a layer found in one walk (see `indexLayer` of utils/boundText): lookups of an operation on many shapes,
+ * instead of a search of the layer for each one
+ */
+export type LayerIndex = {
+  /** Nodes by id (the first one in the layer, as `findOne`) */
+  byId: Map<string, Node>;
+  /** Texts of shapes by the id of their shape (`containerId`) */
+  texts: Map<string, Text>;
 };
 
 /** Boxes of the shapes linked to the start and the end of an arrow (undefined: free end) */

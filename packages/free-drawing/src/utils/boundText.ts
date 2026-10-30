@@ -5,6 +5,7 @@ import { Arrow } from 'konva/lib/shapes/Arrow';
 import { Text } from 'konva/lib/shapes/Text';
 import type { Vector2d } from 'konva/lib/types';
 import type { Transform } from 'konva/lib/Util';
+import type { LayerIndex } from '@/@types/shapes';
 import { pathShapes, shapeName } from '@/constants';
 import { getOutlineDistance } from '@/utils/binding';
 import { isNote, notePadding } from '@/utils/note';
@@ -38,14 +39,35 @@ export const isContainer = (node: Node): node is Shape =>
 export const isBoundText = (node: Node): node is Text => node instanceof Text && !!node.getAttr('containerId');
 
 /**
+ * Nodes of a layer by id and texts of shapes by the id of their shape, found in one walk: for an operation looking up
+ * many shapes (a search of the layer for each one would take the square of the number of shapes)
+ * @param layer Draw layer
+ * @returns Index of the layer as it is now
+ */
+export function indexLayer(layer: Container): LayerIndex {
+  const byId = new Map<string, Node>();
+  const texts = new Map<string, Text>();
+
+  for (const node of layer.find(() => true)) {
+    const id = node.id();
+
+    // first one in the layer, as `findOne`
+    if (id && !byId.has(id)) byId.set(id, node);
+    if (isBoundText(node) && !texts.has(node.getAttr('containerId'))) texts.set(node.getAttr('containerId'), node);
+  }
+  return { byId, texts };
+}
+
+/**
  * Shape holding a text
  * @param text Text of a shape
  * @param layer Draw layer
+ * @param index Index of the layer (`indexLayer`), else the layer is searched
  * @returns Its shape, null when removed
  */
-export function getContainer(text: Node, layer: Container): Shape | null {
+export function getContainer(text: Node, layer: Container, index?: LayerIndex): Shape | null {
   const id = text.getAttr('containerId');
-  const node = id ? layer.findOne((n: Node) => n.id() === id) : undefined;
+  const node = !id ? undefined : index ? index.byId.get(id) : layer.findOne((n: Node) => n.id() === id);
 
   return node && isContainer(node) ? node : null;
 }
@@ -54,12 +76,15 @@ export function getContainer(text: Node, layer: Container): Shape | null {
  * Text of a shape
  * @param container Rectangle, ellipse, path shape or arrow
  * @param layer Draw layer
+ * @param index Index of the layer (`indexLayer`), else the layer is searched
  * @returns Its text, null without text
  */
-export function getBoundText(container: Node, layer: Container): Text | null {
+export function getBoundText(container: Node, layer: Container, index?: LayerIndex): Text | null {
   const id = container.id();
 
-  return (id && layer.findOne<Text>((n: Node) => n instanceof Text && n.getAttr('containerId') === id)) || null;
+  if (!id) return null;
+  if (index) return index.texts.get(id) ?? null;
+  return layer.findOne<Text>((n: Node) => n instanceof Text && n.getAttr('containerId') === id) ?? null;
 }
 
 /**
@@ -69,7 +94,10 @@ export function getBoundText(container: Node, layer: Container): Text | null {
  * @returns Shapes and their partners, each one once, in their order
  */
 export function withBoundTexts<T extends Node>(nodes: T[], layer: Container): T[] {
-  const partners = nodes.map((node) => (isBoundText(node) ? getContainer(node, layer) : getBoundText(node, layer)));
+  const index = indexLayer(layer);
+  const partners = nodes.map((node) =>
+    isBoundText(node) ? getContainer(node, layer, index) : getBoundText(node, layer, index)
+  );
 
   return [...new Set([...nodes, ...partners.filter((node): node is NonNullable<typeof node> => !!node)])] as T[];
 }
@@ -227,13 +255,19 @@ export function placeBoundText(text: Text, container: Shape, background: string)
  * longer bound to it (a free text)
  * @param layer Draw layer
  * @param background Background color of the drawing (halo of arrow labels)
+ * @param moved Ids of the nodes moved (drag, transform: see `getMovedIds` of utils/binding): only their texts and the
+ * texts moved, every text by default
  * @returns True when a text changed
  */
-export function updateBoundTexts(layer: Container, background: string): boolean {
+export function updateBoundTexts(layer: Container, background: string, moved?: Set<string>): boolean {
+  const index = indexLayer(layer);
   let changed = false;
 
+  // every one (also a second text of a shape)
   for (const text of layer.find<Text>(isBoundText)) {
-    const container = getContainer(text, layer);
+    if (moved && !moved.has(text.id()) && !moved.has(text.getAttr('containerId'))) continue;
+
+    const container = getContainer(text, layer, index);
 
     if (container) {
       changed = placeBoundText(text, container, background) || changed;

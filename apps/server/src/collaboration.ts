@@ -945,8 +945,9 @@ export async function attachCollaboration(
       data.names.delete(socket.data.userId);
       data.names.set(socket.data.userId, socket.data.name);
       saveRoom(room, data);
-      // user recognizes itself in users of the room (owner, rights), settings of the room
-      socket.emit(socketEvents.JOINED, { userId: socket.data.userId });
+      // user recognizes itself in users of the room (owner, rights), settings of the room; changes acknowledged: the
+      // first change of the user is kept over the ones of others received before its acknowledgement
+      socket.emit(socketEvents.JOINED, { userId: socket.data.userId, acknowledges: true });
       socket.emit(socketEvents.ROOM, { newUsersCanEdit: data.newUsersCanEdit, encrypted: !!data.keyCheck });
 
       // whole drawing of the room, also empty: a user joining merges it with its drawing (`kept`: emptied by users, not

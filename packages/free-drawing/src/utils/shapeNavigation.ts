@@ -8,7 +8,7 @@ import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
 import { drawerEvents, shapeLabels, shapeName } from '@/constants';
 import type { Drawer } from '@/Drawer';
-import { getBoundText, getContainer, isContainer } from '@/utils/boundText';
+import { getBoundText, getContainer, indexLayer, isContainer } from '@/utils/boundText';
 import { isComposing, uniqueId } from '@/utils/dom';
 import { getFrameContent, getShapeFrame, isFrame } from '@/utils/frame';
 import { getSlideTitle, inReadingOrder } from '@/utils/slides';
@@ -65,8 +65,10 @@ export class ShapeNavigation {
     if (!selectWidget) return this.#current;
 
     const nodes = selectWidget.transformer.nodes() as DrawingShape[];
+    const layer = this.drawer.drawLayer;
+    const index = nodes.length > 1 ? indexLayer(layer) : undefined;
 
-    return nodes.find((node) => !getContainer(node, this.drawer.drawLayer)) ?? nodes[0] ?? null;
+    return nodes.find((node) => !getContainer(node, layer, index)) ?? nodes[0] ?? null;
   }
 
   /**
@@ -87,8 +89,9 @@ export class ShapeNavigation {
    */
   getShapes(parent: Container = this.drawer.drawLayer): DrawingShape[] {
     const layer = this.drawer.drawLayer;
+    const index = indexLayer(layer);
     const shapes = (parent.getChildren() as DrawingShape[]).filter(
-      (shape) => shape.isVisible() && !getContainer(shape, layer)
+      (shape) => shape.isVisible() && !getContainer(shape, layer, index)
     );
 
     return inReadingOrder(shapes, (shape) => shape.getClientRect({ relativeTo: layer }));

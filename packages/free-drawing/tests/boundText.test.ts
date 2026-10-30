@@ -1,8 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { Rect } from 'konva/lib/shapes/Rect';
 import { Ellipse } from 'konva/lib/shapes/Ellipse';
 import { Arrow } from 'konva/lib/shapes/Arrow';
 import { Text } from 'konva/lib/shapes/Text';
+import { Container } from 'konva/lib/Container';
 import { Group } from 'konva/lib/Group';
 import type { Drawer } from '@/Drawer';
 import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
@@ -347,5 +348,106 @@ describe('Texts of shapes', () => {
     drawer.undoRedo.redo();
     drawer.stage.fire('change');
     expect(centerOf(text)).toEqual(placed);
+  });
+});
+
+describe('Big drawings', () => {
+  document.body.innerHTML = `<div id="test"></div>`;
+
+  /** Rectangles with a text each, side by side */
+  const createTexts = (drawer: Drawer, count: number) => {
+    const rects = Array.from(
+      { length: count },
+      (_, i) =>
+        drawer.addShape(
+          new Rect({ name: shapeName.rect, x: i * 300, y: 0, width: 200, height: 100, stroke: '#000' })
+        ) as Rect
+    );
+    const texts = rects.map(
+      (rect) => drawer.addShape(new Text({ name: shapeName.text, text: 'T', containerId: rect.id() })) as Text
+    );
+
+    drawer.stage.fire('change');
+    return { rects, texts };
+  };
+
+  it('Shapes and their texts looked up once per operation, not once per shape (select all, change, copy, removal)', () => {
+    const drawer = createDrawer();
+    const selectWidget = drawer.getWidget<SelectWidget>('selection')!;
+
+    createTexts(drawer, 30);
+
+    const findOne = vi.spyOn(Container.prototype, 'findOne');
+    const find = vi.spyOn(drawer.drawLayer, 'find');
+
+    try {
+      selectWidget.selectAll();
+      expect(drawer.getSelectedShapes()).toHaveLength(60);
+      drawer.stage.fire('change');
+
+      const copies = drawer.duplicateShapes();
+
+      expect(copies).toHaveLength(60);
+      // texts in the copies of their shapes
+      const ids = new Set(copies.map((copy) => copy.id()));
+
+      expect(copies.filter((copy) => ids.has(copy.attrs.containerId))).toHaveLength(30);
+      drawer.deleteShapes(copies);
+      expect(drawer.getDrawingShapes()).toHaveLength(60);
+      expect(findOne.mock.calls.length).toBeLessThan(30);
+      expect(find.mock.calls.length).toBeLessThan(30);
+    } finally {
+      findOne.mockRestore();
+      find.mockRestore();
+    }
+  });
+
+  it('Texts of selected shapes placed together: the box of the selection measured once', () => {
+    const drawer = createDrawer();
+    const selectWidget = drawer.getWidget<SelectWidget>('selection')!;
+    const { rects, texts } = createTexts(drawer, 20);
+
+    selectWidget.selectAll();
+    for (const rect of rects) rect.y(50);
+
+    const update = vi.spyOn(selectWidget.transformer, '_update');
+
+    try {
+      drawer.stage.fire('change');
+      expect(texts.every((text) => Math.round(text.y() + text.height() / 2) === 100)).toBe(true);
+      expect(update.mock.calls.length).toBeLessThanOrEqual(1);
+    } finally {
+      update.mockRestore();
+    }
+  });
+
+  it('Shapes dragged: only their texts and arrows follow them, the rest of the drawing placed once dropped', () => {
+    const drawer = createDrawer();
+    const {
+      rects: [rect, other],
+      texts: [text, otherText],
+    } = createTexts(drawer, 2);
+    const arrow = drawer.addShape(
+      new Arrow({ name: shapeName.arrow, points: [0, 300, 100, 300], stroke: '#000', endBinding: rect.id() })
+    ) as Arrow;
+    const label = drawer.addShape(new Text({ name: shapeName.text, text: 'L', containerId: arrow.id() })) as Text;
+
+    drawer.stage.fire('change');
+
+    const placed = centerOf(otherText);
+    const labelPlace = centerOf(label);
+
+    // text of a shape not moved out of its place (code), the other shape dragged
+    otherText.x(otherText.x() + 50);
+    rect.y(rect.y() + 200);
+    rect.fire('dragmove', {}, true);
+    expect(centerOf(text)).toEqual({ x: 100, y: 250 });
+    expect(centerOf(label)).not.toEqual(labelPlace);
+    expect(centerOf(otherText)).toEqual({ ...placed, x: placed.x + 50 });
+
+    // dropped: the whole drawing
+    drawer.stage.fire('change');
+    expect(centerOf(otherText)).toEqual(placed);
+    expect(other.id()).toBe(otherText.getAttr('containerId'));
   });
 });

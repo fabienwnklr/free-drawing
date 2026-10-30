@@ -53,10 +53,11 @@ import { alignShapes, distributeShapes, moveBy, stackShapes } from '@/utils/alig
 import { rectContains, setupHit } from '@/utils/hit';
 import { I18n, getLanguage, isLanguage, toLanguageChoice } from '@/i18n/I18n';
 import type { Language, TranslationParams, TranslationKey } from '@/@types/i18n';
-import { bindingAttrs, unbindMoved, updateBindings } from '@/utils/binding';
+import { bindingAttrs, getMovedIds, unbindMoved, updateBindings } from '@/utils/binding';
 import {
   getBoundText,
   getContainer,
+  indexLayer,
   isBoundText,
   updateBoundTexts,
   withBoundTexts,
@@ -127,7 +128,7 @@ import { FrameHighlight } from '@/utils/frameHighlight';
 import { parseLink } from '@/utils/link';
 import { ShapeLinks } from '@/utils/shapeLinks';
 import { ArrowHandle } from '@/utils/arrowHandle';
-import type { FrameChanges } from '@/@types/shapes';
+import type { FrameChanges, LayerIndex } from '@/@types/shapes';
 
 import { Zoom } from '@/components/tools/Zoom/Zoom';
 import { Position } from '@/components/tools/Position/Position';
@@ -1232,8 +1233,11 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
    * @returns added shape
    */
   addShape<T extends DrawingShape>(shape: T): T {
-    const used = new Set(this.drawLayer.find(() => true).map((node) => node.id()));
     const nodes: Node[] = [shape, ...(shape instanceof Group ? shape.find(() => true) : [])];
+    // ids of the drawing, only for a shape with ids (shapes of tools and copies have none: many added at once)
+    const used = new Set(
+      nodes.some((node) => node.id()) ? this.drawLayer.find(() => true).map((node) => node.id()) : []
+    );
     const renamed = new Map<string, string>();
 
     for (const node of nodes) {
@@ -1421,29 +1425,32 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
     // arrows linked to shapes follow them, unlinked when moved without them
     const transformer = this.getWidget<SelectWidget>('selection')?.transformer;
 
-    this.drawLayer.on('dragstart.binding', (e) => {
+    // dragged node and the selected ones moved with it
+    const dragged = (target: Node) => {
       const selected = this.getSelectedShapes();
 
-      unbindMoved(selected.includes(e.target as DrawingShape) ? selected : [e.target]);
-    });
-    // texts of shapes too
-    const follow = () => {
-      updateBindings(this.drawLayer);
-      updateBoundTexts(this.drawLayer, this.background.fill() as string);
+      return selected.includes(target as DrawingShape) ? selected : [target];
     };
 
+    this.drawLayer.on('dragstart.binding', (e) => unbindMoved(dragged(e.target)));
+    // texts of shapes too: only the ones of the moved shapes and of their arrows (the whole drawing placed by the change
+    // of the end of the move)
+    const follow = (moved: Node[]) => this._placeLinked(getMovedIds(moved));
+
     // once per move of the pointer, not for each shape of a big selection
-    this.drawLayer.on('dragmove.binding', this._oncePerMove(follow));
+    this.drawLayer.on(
+      'dragmove.binding',
+      this._oncePerMove((target) => follow(dragged(target)))
+    );
     transformer?.on('transformstart.binding', () => unbindMoved(transformer.nodes()));
-    transformer?.on('transform.binding', follow);
+    transformer?.on('transform.binding', () => follow(transformer.nodes()));
     this.stage.on('change', () => {
       // drawing of another tab saved during an action of this one: this change saved over it
       this.#otherTabDrawing = null;
       // collaborators changes received during a pointer action, then this one
       this.collaboration?.flush();
       // arrows on their linked shapes, texts in their shapes, before saving
-      updateBindings(this.drawLayer);
-      updateBoundTexts(this.drawLayer, this.background.fill() as string);
+      this._placeLinked();
       // drawing as it is now, serialized once for collaboration and history
       this.#inChange = true;
       this.#shapeStates = null;
@@ -2339,9 +2346,10 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
    * @returns true if a shape was removed (change saved)
    */
   deleteShapes(shapes: DrawingShape[] = this.getSelectedShapes()): boolean {
+    const index = indexLayer(this.drawLayer);
     // texts of the shapes too
     const removed = [
-      ...new Set(shapes.flatMap((shape) => [shape, getBoundText(shape, this.drawLayer) ?? []].flat())),
+      ...new Set(shapes.flatMap((shape) => [shape, getBoundText(shape, this.drawLayer, index) ?? []].flat())),
     ].filter((shape) => shape.getLayer()) as DrawingShape[];
     const selectWidget = this.getWidget<SelectWidget>('selection');
 
@@ -2511,10 +2519,12 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
     const frames = this.getDrawingShapes().filter(isFrame);
     const entered = new Set<Frame>();
     const left = new Set<Frame>();
+    // ids unchanged by the moves to frames
+    const index = indexLayer(this.drawLayer);
 
     for (const shape of shapes.filter((shape) => this._isPlaceable(shape))) {
       // text of a shape: with its shape
-      if (isBoundText(shape) && getContainer(shape, this.drawLayer)) continue;
+      if (isBoundText(shape) && getContainer(shape, this.drawLayer, index)) continue;
 
       const from = getShapeFrame(shape);
       const frame = findFrameAt(shape, frames);
@@ -2524,7 +2534,7 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
       if (frame) entered.add(frame);
       if (from) left.add(from);
     }
-    this._placeBoundTexts(shapes);
+    this._placeBoundTexts(shapes, index);
 
     return { entered: [...entered], left: [...left] };
   }
@@ -2533,11 +2543,12 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
    * Texts of shapes in the parent of their shape (drawing or frame), above it: a frame takes or gives back a shape with
    * its text, never one without the other (the text would be hidden under its shape, or cut by another frame)
    * @param shapes Shapes placed in frames, texts of shapes among them
+   * @param index Index of the draw layer (`indexLayer` of utils/boundText)
    */
-  private _placeBoundTexts(shapes: DrawingShape[]) {
+  private _placeBoundTexts(shapes: DrawingShape[], index: LayerIndex) {
     for (const shape of shapes) {
-      const text = isBoundText(shape) ? shape : getBoundText(shape, this.drawLayer);
-      const container = text && getContainer(text, this.drawLayer);
+      const text = isBoundText(shape) ? shape : getBoundText(shape, this.drawLayer, index);
+      const container = text && getContainer(text, this.drawLayer, index);
       const parent = container?.getParent();
 
       if (!text || !container || !parent || text.getParent() === parent) continue;
@@ -2579,6 +2590,19 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
     );
     transformer?.on('transformstart.frames', () => this._startMove(transformer.nodes() as DrawingShape[]));
     transformer?.on('transform.frames', () => this._updateMove());
+  }
+
+  /**
+   * Arrows on their linked shapes, then texts in their shapes (labels on their arrows): selected ones measured once by
+   * the transformer of the selection at the end (konva batch of updates), not after each one
+   * @param moved Ids of the nodes moved (drag, transform: `getMovedIds` of utils/binding): only what follows them,
+   * the whole drawing by default
+   */
+  _placeLinked(moved?: Set<string>) {
+    Node._updateBatch(() => {
+      updateBindings(this.drawLayer, moved);
+      updateBoundTexts(this.drawLayer, this.background.fill() as string, moved);
+    });
   }
 
   /**
@@ -2665,8 +2689,9 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
    */
   fitFrame(frame: Frame) {
     const box = frame.getClientRect();
+    const index = indexLayer(this.drawLayer);
     // texts of shapes: with their shapes
-    const free = (shape: DrawingShape) => !isBoundText(shape) || !getContainer(shape, this.drawLayer);
+    const free = (shape: DrawingShape) => !isBoundText(shape) || !getContainer(shape, this.drawLayer, index);
     const left = getFrameShapes(frame).filter((shape) => free(shape) && findFrameAt(shape, [frame]) !== frame);
 
     for (const shape of left) moveShapeTo(shape, this.drawLayer);
@@ -2676,7 +2701,7 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
     );
 
     for (const shape of inside) moveShapeTo(shape, getFrameContent(frame));
-    this._placeBoundTexts([...left, ...inside]);
+    this._placeBoundTexts([...left, ...inside], index);
   }
 
   /**

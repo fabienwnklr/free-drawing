@@ -375,9 +375,8 @@ export class SelectWidget extends BaseWidget {
     // shapes with their texts (and texts with their shapes): moved, styled and removed together
     shapes = withBoundTexts(shapes, this.drawer.drawLayer);
     // shapes of a selected frame are selected with it
-    const visible = shapes.filter(
-      (shape) => shape.isVisible() && !shapes.some((other) => isFrame(other) && other.isAncestorOf(shape))
-    );
+    const frames = shapes.filter(isFrame);
+    const visible = shapes.filter((shape) => shape.isVisible() && !frames.some((frame) => frame.isAncestorOf(shape)));
     const unlocked = visible.filter((shape) => shape.isListening());
     const selectable = unlocked.length ? unlocked : [...new Set(visible.map(getLockedNode))];
     const locked = !unlocked.length;

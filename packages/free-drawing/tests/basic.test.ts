@@ -48,4 +48,10 @@ describe('Packages of the repository', () => {
       expect(exports['.']).toMatchObject({ import: './dist/index.js', default: './dist/index.js' });
     }
   });
+
+  it('Packages published after the library by the release workflow, not when its publish failed', () => {
+    const workflow = readFileSync(join('..', '..', '.github', 'workflows', 'release.yml'), 'utf8');
+
+    expect(workflow.match(/^ {2}npm-packages:\r?\n {4}needs: ([^\r\n]+)/m)?.[1]).toBe('[release, npm]');
+  });
 });
