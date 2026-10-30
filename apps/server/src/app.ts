@@ -8,7 +8,7 @@ import { toNodeHandler } from 'better-auth/node';
 import type { ServerConfig } from './config';
 import { createDatabase, migrateApp } from './db';
 import { clientIpHeader, createAuth } from './auth';
-import { createApi, onError } from './api';
+import { createApi, onError, userHeader } from './api';
 import { attachCollaboration } from './collaboration';
 
 // web app (apps/web): its vite config in development, its build in production
@@ -25,7 +25,7 @@ function cors(origins: string[]): RequestHandler {
       res.setHeader('Access-Control-Allow-Origin', origin);
       res.setHeader('Access-Control-Allow-Credentials', 'true');
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+      res.setHeader('Access-Control-Allow-Headers', `Content-Type, ${userHeader}`);
       res.setHeader('Vary', 'Origin');
       if (req.method === 'OPTIONS') return res.status(204).end();
     }

@@ -10,7 +10,7 @@ import { dirname, join as joinPath } from 'node:path';
 import { socketEvents } from '@free-drawing/protocol';
 import { createServer } from '../src/app';
 import { type ServerConfig, getConfig } from '../src/config';
-import { drawingsLimits } from '../src/api';
+import { drawingsLimits, userHeader } from '../src/api';
 import { clientOf, limits, roomLifetime } from '../src/collaboration';
 
 /** Folder of these tests */
@@ -129,6 +129,40 @@ describe('Accounts', () => {
     expect((await request(server.app).get('/api/me')).status).toBe(401);
     expect((await request(server.app).get('/api/drawings')).status).toBe(401);
     expect((await request(server.app).put('/api/preferences').send({})).status).toBe(401);
+  });
+
+  it('Session extended by the API once a day: its cookie sent again (users not signed out 7 days after signing in)', async () => {
+    const { agent } = await signUp();
+    const db = server.db as unknown as Kysely<Record<string, Record<string, unknown>>>;
+    const [session] = await db.selectFrom('session').selectAll().orderBy('createdAt', 'desc').limit(1).execute();
+    const soon = new Date(Date.now() + 60 * 60 * 1000);
+
+    // one hour left: refreshed by the next request
+    await db
+      .updateTable('session')
+      .set({ expiresAt: typeof session.expiresAt === 'number' ? soon.getTime() : soon.toISOString() })
+      .where('id', '=', session.id as string)
+      .execute();
+
+    const me = await agent.get('/api/me');
+    const cookies = ([] as string[]).concat(me.headers['set-cookie'] ?? []);
+
+    expect(me.status).toBe(200);
+    expect(cookies.some((cookie) => cookie.includes('session_token') && cookie.includes('Max-Age=604800'))).toBe(true);
+  });
+
+  it('Requests made for another account (signed in since from another tab) refused as a session ended', async () => {
+    const { agent } = await signUp();
+    const { id } = (await agent.get('/api/me')).body;
+    const other = await agent.put('/api/preferences').set(userHeader, 'another-account').send({ theme: 'dark' });
+
+    expect([other.status, other.body.code]).toEqual([401, 'OTHER_ACCOUNT']);
+    expect((await agent.get('/api/preferences')).body).toEqual({});
+    expect((await agent.get('/api/me').set(userHeader, id)).status).toBe(200);
+    // apps of other origins send it
+    const preflight = await request(server.app).options('/api/me').set('Origin', 'http://app.example');
+
+    expect(preflight.headers['access-control-allow-headers']).toContain(userHeader);
   });
 
   it('Bodies of the API read once the session is known, within the size of each route', async () => {

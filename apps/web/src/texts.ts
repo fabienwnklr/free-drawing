@@ -1,4 +1,5 @@
 import type { Drawer, Language } from '@fabwcie/free-drawing';
+import { getErrorText } from '@/utils/errors';
 import { ApiError } from './api';
 
 const en = {
@@ -51,8 +52,12 @@ const en = {
   errorDrawingsTooBig: 'Drawings of your account are too big: delete some to save this one',
   error: 'Something went wrong: {error}',
   sessionEnded: 'Your session ended: sign in again to save this drawing',
+  errorOtherAccount: 'Signed in with another account in another tab: sign in again to save this drawing',
   keptInBrowser: 'Changes not saved in your account: kept in a drawing of this browser',
   conflictCopy: '{name} (conflicted copy)',
+  keptAfterDeletion: 'This drawing was deleted elsewhere: your changes are kept in a new drawing',
+  keptUnsaved: 'Changes not saved: kept in a copy of the drawing',
+  changesNotKept: "Changes can't be saved anywhere: download the drawing before opening another one",
   keptInCopy: 'This drawing was changed in another tab or on another device: your changes are kept in a copy',
   errorTooManyRequests: 'Too many attempts: wait a moment and try again',
   errorNotFound: 'Not found: it may have been deleted',
@@ -112,8 +117,13 @@ const fr: Record<Key, string> = {
   errorDrawingsTooBig: 'Les dessins de votre compte sont trop volumineux : supprimez-en pour enregistrer celui-ci',
   error: 'Une erreur est survenue : {error}',
   sessionEnded: 'Votre session est terminée : reconnectez-vous pour enregistrer ce dessin',
+  errorOtherAccount: 'Connecté avec un autre compte dans un autre onglet : reconnectez-vous pour enregistrer ce dessin',
   keptInBrowser: 'Modifications non enregistrées dans votre compte : gardées dans un dessin de ce navigateur',
   conflictCopy: '{name} (copie en conflit)',
+  keptAfterDeletion: 'Ce dessin a été supprimé ailleurs : vos modifications sont gardées dans un nouveau dessin',
+  keptUnsaved: 'Modifications non enregistrées : gardées dans une copie du dessin',
+  changesNotKept:
+    "Les modifications ne peuvent être enregistrées nulle part : téléchargez le dessin avant d'en ouvrir un autre",
   keptInCopy:
     'Ce dessin a été modifié dans un autre onglet ou sur un autre appareil : vos modifications sont gardées dans une copie',
   errorTooManyRequests: 'Trop de tentatives : patientez un moment et réessayez',
@@ -172,8 +182,13 @@ const es: Record<Key, string> = {
   errorDrawingsTooBig: 'Los dibujos de tu cuenta son demasiado grandes: elimina algunos para guardar este',
   error: 'Se produjo un error: {error}',
   sessionEnded: 'Tu sesión ha terminado: vuelve a iniciar sesión para guardar este dibujo',
+  errorOtherAccount:
+    'Sesión iniciada con otra cuenta en otra pestaña: vuelve a iniciar sesión para guardar este dibujo',
   keptInBrowser: 'Cambios no guardados en tu cuenta: conservados en un dibujo de este navegador',
   conflictCopy: '{name} (copia en conflicto)',
+  keptAfterDeletion: 'Este dibujo se eliminó en otro lugar: tus cambios se conservan en un dibujo nuevo',
+  keptUnsaved: 'Cambios no guardados: conservados en una copia del dibujo',
+  changesNotKept: 'Los cambios no se pueden guardar en ningún lugar: descarga el dibujo antes de abrir otro',
   keptInCopy: 'Este dibujo se modificó en otra pestaña o en otro dispositivo: tus cambios se conservan en una copia',
   errorTooManyRequests: 'Demasiados intentos: espera un momento y vuelve a intentarlo',
   errorNotFound: 'No encontrado: puede que se haya eliminado',
@@ -232,8 +247,15 @@ const de: Record<Key, string> = {
   errorDrawingsTooBig: 'Die Zeichnungen Ihres Kontos sind zu groß: löschen Sie einige, um diese zu speichern',
   error: 'Ein Fehler ist aufgetreten: {error}',
   sessionEnded: 'Ihre Sitzung ist abgelaufen: melden Sie sich erneut an, um diese Zeichnung zu speichern',
+  errorOtherAccount:
+    'In einem anderen Tab mit einem anderen Konto angemeldet: melden Sie sich erneut an, um diese Zeichnung zu speichern',
   keptInBrowser: 'Änderungen nicht in Ihrem Konto gespeichert: in einer Zeichnung dieses Browsers behalten',
   conflictCopy: '{name} (Konfliktkopie)',
+  keptAfterDeletion:
+    'Diese Zeichnung wurde anderswo gelöscht: Ihre Änderungen sind in einer neuen Zeichnung gespeichert',
+  keptUnsaved: 'Nicht gespeicherte Änderungen: in einer Kopie der Zeichnung behalten',
+  changesNotKept:
+    'Die Änderungen können nirgends gespeichert werden: laden Sie die Zeichnung herunter, bevor Sie eine andere öffnen',
   keptInCopy:
     'Diese Zeichnung wurde in einem anderen Tab oder auf einem anderen Gerät geändert: Ihre Änderungen sind in einer Kopie gespeichert',
   errorTooManyRequests: 'Zu viele Versuche: warten Sie einen Moment und versuchen Sie es erneut',
@@ -267,6 +289,7 @@ export class Texts {
     if (code === 'TOO_MANY_DRAWINGS') return this.t('errorTooManyDrawings');
     if (code === 'DRAWINGS_TOO_BIG') return this.t('errorDrawingsTooBig');
     // session ended (signed out elsewhere, password changed, expired), drawing deleted, body too big, rate limits
+    if (code === 'OTHER_ACCOUNT') return this.t('errorOtherAccount');
     if (status === 401) return this.t('sessionEnded');
     if (status === 404) return this.t('errorNotFound');
     if (status === 413) return this.t('errorTooBig');
@@ -274,11 +297,16 @@ export class Texts {
     return null;
   }
 
-  /** Error of the server, known errors explained */
-  error = (error: Error): string => this._known(error) ?? this.t('error', { error: error.message });
+  /** Detail of another error: errors of the browser translated by the drawer (storage full...), else its message */
+  private _detail(error: Error): string {
+    return getErrorText(error, (key, params) => this.drawer.t(key, params));
+  }
 
-  /** Reason of an error of the server: known errors explained, else its message */
-  reason = (error: Error): string => this._known(error) ?? error.message;
+  /** Error of the server, known errors explained */
+  error = (error: Error): string => this._known(error) ?? this.t('error', { error: this._detail(error) });
+
+  /** Reason of an error of the server: known errors explained, else its detail */
+  reason = (error: Error): string => this._known(error) ?? this._detail(error);
 
   /** Date and time of an ISO date */
   date = (iso: string): string =>

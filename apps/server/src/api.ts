@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import express, { type ErrorRequestHandler, type Request, type RequestHandler, type Response } from 'express';
 import { type Kysely, type Transaction, sql } from 'kysely';
-import { type Auth, type User, getUser } from './auth';
+import { type Auth, type User, getRequestUser } from './auth';
 import type { Database } from './db';
 
 /** Size of a drawing at most (JSON, image files included) */
@@ -16,6 +16,15 @@ export const drawingsLimits = { count: 500, size: 100_000_000 };
 /** Refusal of a drawing beyond the limits of the account (`drawingsLimits`) */
 const tooMany = { error: 'too many drawings', code: 'TOO_MANY_DRAWINGS' };
 const tooBig = { error: 'drawings of the account too big', code: 'DRAWINGS_TOO_BIG' };
+
+/**
+ * Header of the account an app makes its requests for: a session of another account (signed in from another tab) is
+ * refused, nothing is read nor written in it
+ */
+export const userHeader = 'x-free-drawing-user';
+
+/** Refusal of a request made for another account than the one of the session */
+const otherAccount = { error: 'signed in with another account', code: 'OTHER_ACCOUNT' };
 
 /** Refusal of a content saved over another version (changed since in another tab or on another device) */
 const changed = { error: 'drawing changed elsewhere', code: 'DRAWING_CHANGED' };
@@ -94,12 +103,18 @@ export function createApi(auth: Auth, db: Kysely<Database>) {
   const drawingBody = express.json({ limit: maxDrawingSize });
   const smallBody = express.json({ limit: maxBodySize });
 
-  // logged in user of the request (`res.locals.user`), before its body
+  // logged in user of the request (`res.locals.user`), before its body; session extended: its cookie sent again
   router.use(async (req, res, next) => {
     try {
-      const user = await getUser(auth, req.headers);
+      const { user, cookies } = await getRequestUser(auth, req.headers);
 
+      for (const cookie of cookies) res.append('Set-Cookie', cookie);
       if (!user) return res.status(401).json({ error: 'not logged in' });
+
+      const expected = req.headers[userHeader];
+
+      // made for another account (signed in since from another tab of the app): as a session ended
+      if (typeof expected === 'string' && expected && expected !== user.id) return res.status(401).json(otherAccount);
       res.locals.user = user;
       next();
     } catch (error) {

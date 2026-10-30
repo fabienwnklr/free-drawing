@@ -40,13 +40,24 @@ export class ApiError extends Error {
 }
 
 /**
+ * Account the requests are made for (`api.setUser`): the server refuses them (401 `OTHER_ACCOUNT`) when the session is
+ * of another account (signed in since from another tab), nothing is read nor written in it
+ */
+let expectedUser: string | null = null;
+
+/**
  * Request to the server of this page (session cookie sent), JSON body and response
  */
 async function request<T>(path: string, method = 'GET', body?: unknown): Promise<T> {
+  const headers = {
+    ...(body !== undefined && { 'Content-Type': 'application/json' }),
+    ...(expectedUser && { 'X-Free-Drawing-User': expectedUser }),
+  };
   const res = await fetch(path, {
     method,
     credentials: 'same-origin',
-    ...(body !== undefined && { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
+    headers,
+    ...(body !== undefined && { body: JSON.stringify(body) }),
   });
   const data = res.status === 204 ? null : await res.json().catch(() => null);
 
@@ -60,7 +71,11 @@ const drawingPath = (id: string) => `/api/drawings/${encodeURIComponent(id)}`;
  * Accounts (`/api/auth`, Better Auth) and API of logged in users (see apps/server)
  */
 export const api = {
-  /** User of the session, ApiError 401 when not logged in */
+  /** Account the next requests are made for, null without account (see `expectedUser`) */
+  setUser: (id: string | null) => {
+    expectedUser = id;
+  },
+  /** User of the session, ApiError 401 when not logged in (or logged in with another account) */
   me: () => request<User>('/api/me'),
   signIn: (email: string, password: string) => request('/api/auth/sign-in/email', 'POST', { email, password }),
   signUp: (name: string, email: string, password: string) =>

@@ -150,6 +150,57 @@ describe('Drawings of the app', () => {
     expect(toasts(app).some((text) => text.includes('changed in another tab'))).toBe(true);
   });
 
+  it('Changes not saved (storage full) kept in a copy before another drawing is opened; nowhere: the drawing stays open', async () => {
+    const first = await localDrawings.createDrawing({ name: 'First', content: fileWith('a') });
+    const second = await localDrawings.createDrawing({ name: 'Second', content: fileWith('b') });
+    const full = () => Promise.reject(new DOMException('full', 'QuotaExceededError'));
+
+    local.setLastLocalDrawingId(first.id);
+
+    const app = createApp();
+
+    await app.drawer.ready;
+    vi.spyOn(localDrawings, 'updateDrawing').mockImplementation(full);
+    app.drawer.addShape(new Rect({ id: 'mine', name: 'drawer-rect', width: 10, height: 10 }));
+    app.drawer.stage.fire('change');
+    await app.openDrawing(second);
+    expect(app.drawing!.id).toBe(second.id);
+
+    const copy = (await localDrawings.listDrawings()).find(({ name }) => name === 'First (conflicted copy)');
+
+    expect(await shapesOf(copy!.id)).toEqual(['a', 'mine']);
+    expect(toasts(app).some((text) => text.includes('kept in a copy of the drawing'))).toBe(true);
+
+    // a copy can't be created either: the drawing stays open with its changes
+    vi.spyOn(localDrawings, 'createDrawing').mockImplementation(full);
+    app.drawer.addShape(new Rect({ id: 'other', name: 'drawer-rect', width: 10, height: 10 }));
+    app.drawer.stage.fire('change');
+    await app.openDrawing(first);
+    expect(app.drawing!.id).toBe(second.id);
+    expect(app.drawer.getDrawingShapes().map((shape) => shape.id())).toEqual(['b', 'other']);
+    expect(toasts(app).some((text) => text.includes("can't be saved anywhere"))).toBe(true);
+  });
+
+  it('A drawing deleted elsewhere: its changes kept in a new drawing of its name, open in its place', async () => {
+    const drawing = await localDrawings.createDrawing({ name: 'Plan', content: fileWith('a') });
+
+    local.setLastLocalDrawingId(drawing.id);
+
+    const app = createApp();
+
+    await app.drawer.ready;
+    // deleted in another tab
+    await localDrawings.deleteDrawing(drawing.id);
+    app.drawer.addShape(new Rect({ id: 'mine', name: 'drawer-rect', width: 10, height: 10 }));
+    app.drawer.stage.fire('change');
+    await app.drawer.save();
+    expect(app.drawing).toMatchObject({ name: 'Plan' });
+    expect(app.drawing!.id).not.toBe(drawing.id);
+    expect(await shapesOf(app.drawing!.id)).toEqual(['a', 'mine']);
+    expect(app.drawer.hasUnsavedChanges()).toBe(false);
+    expect(toasts(app).some((text) => text.includes('deleted elsewhere'))).toBe(true);
+  });
+
   it('A drawing link opens in a new drawing: the last drawing is not saved over', async () => {
     const last = await localDrawings.createDrawing({ name: 'Last', content: fileWith('last') });
     const other = new Drawer(document.body.appendChild(document.createElement('div')), {
@@ -234,6 +285,27 @@ describe('Account of the app', () => {
     expect(app.drawer.getDrawingShapes().map((shape) => shape.id())).toEqual(['a', 'drawn']);
   });
 
+  it('Session ended, then signed in again with this account in another tab: changes saved once the page is shown', async () => {
+    const server = stubServer();
+    const app = createApp(true);
+
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
+    await app.drawer.ready;
+    await vi.waitFor(() => expect(app.user).toEqual(user));
+    server.signedIn = false;
+    app.drawer.addShape(new Rect({ id: 'drawn', name: 'drawer-rect', width: 10, height: 10 }));
+    app.drawer.stage.fire('change');
+    await app.drawer.save();
+    expect(app.sessionEnded).toBe(true);
+
+    server.signedIn = true;
+    server.calls.length = 0;
+    document.dispatchEvent(new Event('visibilitychange'));
+    await vi.waitFor(() => expect(app.drawer.hasUnsavedChanges()).toBe(false));
+    expect(app.sessionEnded).toBe(false);
+    expect(server.calls).toContain('PUT /api/drawings/d1');
+  });
+
   it('Drawing saved on another device: loaded again when the page is shown, saved over it in a copy', async () => {
     // drawing of the server, saved with its version (409 for another one), copies created
     const stored = { ...drawing, version: 1, content: fileWith('a') };
@@ -283,6 +355,45 @@ describe('Account of the app', () => {
     expect(stored.content).toEqual(fileWith('c'));
     expect(app.drawing).toMatchObject({ id: 'copy-0', name: 'Plan (conflicted copy)' });
     expect(app.drawer.getDrawingShapes().map((shape) => shape.id())).toEqual(['b', 'mine']);
+  });
+
+  it('Another account signed in from another tab: requests made for this account refused, told when the page is shown', async () => {
+    // account of the session cookie
+    let session: User = user;
+    const expected: (string | undefined)[] = [];
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string, init?: RequestInit) => {
+        const id = (init?.headers as Record<string, string> | undefined)?.['X-Free-Drawing-User'];
+
+        expected.push(id);
+        if (id && id !== session.id)
+          return respond(401, { error: 'signed in with another account', code: 'OTHER_ACCOUNT' });
+        if (path === '/api/me') return respond(200, session);
+        if (path === '/api/preferences') return respond(200, {});
+        if (path === '/api/drawings') return respond(200, [drawing]);
+        if (path === '/api/drawings/d1') return respond(200, { ...drawing, content: fileWith('a') });
+        return respond(404, { error: 'not found' });
+      })
+    );
+
+    const app = createApp(true);
+
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
+    await app.drawer.ready;
+    await vi.waitFor(() => expect(app.user).toEqual(user));
+    expect(expected).toContain(user.id);
+
+    session = { id: 'u2', name: 'Bob', email: 'bob@example.com' };
+    document.dispatchEvent(new Event('visibilitychange'));
+    await vi.waitFor(() => expect(app.sessionEnded).toBe(true));
+    expect(toasts(app).some((text) => text.includes('another account in another tab'))).toBe(true);
+    // not saved in the other account
+    app.drawer.addShape(new Rect({ id: 'mine', name: 'drawer-rect', width: 10, height: 10 }));
+    app.drawer.stage.fire('change');
+    await app.drawer.save();
+    expect(app.drawer.hasUnsavedChanges()).toBe(true);
   });
 
   it('Email changed with the password of the account, asked once the email is changed', async () => {
@@ -344,6 +455,21 @@ describe('Account of the app', () => {
 
     answer({ gridStyle: 'lines' });
     await vi.waitFor(() => expect(app.drawer.getPreferences().gridStyle).toBe('lines'));
+  });
+});
+
+describe('Errors of the app', () => {
+  it('Errors of My drawings and of the drawings of the browser explained in the language of the drawer', async () => {
+    const app = createApp();
+
+    await app.drawer.ready;
+    vi.spyOn(localDrawings, 'listDrawings').mockRejectedValue(
+      new DOMException('The quota has been exceeded.', 'QuotaExceededError')
+    );
+    await app.drawingsDialog.show();
+    expect(toasts(app).some((text) => text.includes('browser storage full'))).toBe(true);
+    // drawing of the browser missing: as on the server
+    await expect(localDrawings.getDrawing('missing')).rejects.toMatchObject({ status: 404 });
   });
 });
 

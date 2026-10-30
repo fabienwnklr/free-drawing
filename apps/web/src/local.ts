@@ -131,7 +131,8 @@ const saveSummaries = (list: DrawingSummary[]) =>
 const find = (id: string) => {
   const drawing = summaries().find((summary) => summary.id === id);
 
-  if (!drawing) throw new Error('drawing not found');
+  // as the server: explained by the texts of the app, its changes kept in a new drawing by a save
+  if (!drawing) throw new ApiError('drawing not found', 404);
   return drawing;
 };
 

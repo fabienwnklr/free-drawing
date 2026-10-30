@@ -45,10 +45,10 @@ Audit of 2026-10-29 (library 8.2.0): items ordered by priority in each section.
 
 ### Web app, server
 
-- [ ] drawing opened or created after a failed save (storage full, drawings too big, 413, drawing deleted elsewhere: 404 at each save): unsaved changes dropped (`openDrawing`, `newDrawing`, `login`: kept in a copy; 404 as 409)
-- [ ] another account signed in from another tab: this tab saves, creates and lists in it while showing the first one, preferences of the other account overwritten (401 only: user checked on `visibilitychange`, id of the user sent)
-- [ ] session cookie never extended by `/api/me`: users signed out 7 days after signing in (`getSession` with `returnHeaders`, `set-cookie` forwarded)
-- [ ] errors of "My drawings", of the account dialog and of the drawings of the browser untranslated (`message` instead of `texts.error`, `Error('drawing not found')`); `sessionEnded` set by saves only, never cleared by a later success
+- [x] drawing opened or created after a failed save (storage full, drawings too big, 413, drawing deleted elsewhere: 404 at each save): unsaved changes dropped (`openDrawing`, `newDrawing`, `login`: kept in a copy; 404 as 409)
+- [x] another account signed in from another tab: this tab saves, creates and lists in it while showing the first one, preferences of the other account overwritten (401 only: user checked on `visibilitychange`, id of the user sent)
+- [x] session cookie never extended by `/api/me`: users signed out 7 days after signing in (`getSession` with `returnHeaders`, `set-cookie` forwarded)
+- [x] errors of "My drawings", of the account dialog and of the drawings of the browser untranslated (`message` instead of `texts.error`, `Error('drawing not found')`); `sessionEnded` set by saves only, never cleared by a later success
 
 ### Packages, docs
 

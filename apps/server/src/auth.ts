@@ -109,3 +109,22 @@ export async function getUser(auth: Auth, headers: IncomingHttpHeaders) {
 }
 
 export type User = NonNullable<Awaited<ReturnType<typeof getUser>>>;
+
+/**
+ * User of a request of the API and the cookies to send back: Better Auth extends a session once a day (`updateAge`),
+ * its cookie with it (else browsers drop it 7 days after the sign in)
+ * @param auth Better Auth of the server
+ * @param headers Headers of the request (session cookie)
+ * @returns User, null when not logged in, and the `Set-Cookie` values of the response
+ */
+export async function getRequestUser(auth: Auth, headers: IncomingHttpHeaders) {
+  const { headers: responseHeaders, response: session } = await auth.api.getSession({
+    headers: fromNodeHeaders(headers),
+    returnHeaders: true,
+  });
+  const user: User | null = session
+    ? { id: session.user.id, name: session.user.name, email: session.user.email }
+    : null;
+
+  return { user, cookies: responseHeaders.getSetCookie() };
+}

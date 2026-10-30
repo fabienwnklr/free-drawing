@@ -59,7 +59,7 @@ export class DrawingsDialog {
     try {
       this.drawings = await this.app.store.listDrawings();
     } catch (error) {
-      this.app.drawer.toast(this.app.texts.t('error', { error: (error as Error).message }), 'error');
+      this.app.drawer.toast(this.app.texts.error(error as Error), 'error');
       return;
     }
     this.render();
@@ -130,7 +130,7 @@ export class DrawingsDialog {
         this.drawings = await this.app.store.listDrawings();
       }
     } catch (error) {
-      this.app.drawer.toast(t('error', { error: (error as Error).message }), 'error');
+      this.app.drawer.toast(this.app.texts.error(error as Error), 'error');
     }
     this.render();
     this.$new.focus();

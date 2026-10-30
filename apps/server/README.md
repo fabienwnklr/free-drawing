@@ -38,7 +38,7 @@ Accounts (Better Auth, under `/api/auth`): `POST /sign-up/email` (`{ email, pass
 
 Account of the logged in user: `POST /update-user` (`{ name }`), `POST /change-email` (`{ newEmail, password }`: used at once since no email is sent, so the password of the account is always needed, `PASSWORD_REQUIRED` without it, `INVALID_PASSWORD` for a wrong one; an email of another account is not taken, without error so emails are not revealed: read `/api/me` again), `POST /change-password` (`{ currentPassword, newPassword, revokeOtherSessions }`), `POST /delete-user` (`{ password }`: the account is removed with its drawings and preferences; the password is always needed, `PASSWORD_REQUIRED` without it, also while the session is fresh).
 
-API of logged in users (401 without session, before the body of the request is read; bodies of 20 MB at most for drawings, 16 KB for preferences, 413 beyond):
+API of logged in users (401 without session, before the body of the request is read; bodies of 20 MB at most for drawings, 16 KB for preferences, 413 beyond). A request sent with the header `X-Free-Drawing-User` (id of the account an app makes it for) is refused with 401 and the code `OTHER_ACCOUNT` when the session is of another account, signed in since from another tab: nothing is read nor written in it. Sessions last 7 days from their last extension: Better Auth extends them once a day, the API sends their cookie again then:
 
 | Route | Purpose |
 | --- | --- |

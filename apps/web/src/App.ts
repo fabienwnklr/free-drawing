@@ -27,8 +27,8 @@ export class App {
   readonly texts: Texts;
   /** Served by the server of free-drawing: accounts */
   readonly server: boolean;
-  /** Logged in user */
-  user: User | null = null;
+  /** Logged in user, see `user` */
+  #user: User | null = null;
   /** Drawing open: of account on server (logged in user), else of browser */
   drawing: DrawingSummary | null = null;
   readonly $bar: HTMLElement;
@@ -149,15 +149,15 @@ export class App {
 
         this._setSaveState('saving');
         try {
-          // over the version loaded or saved here: refused once another tab or device saved it, changes kept in a copy;
-          // in a live collaboration session, its content is the drawing of the room (the same in every tab): saved over
-          // any version
+          // over the version loaded or saved here: refused once another tab or device saved it, changes kept in a copy
+          // (also when deleted elsewhere); in a live collaboration session, its content is the drawing of the room (the
+          // same in every tab): saved over any version
           const version = this.drawer.collaboration ? undefined : drawing.version;
           const saved = await store
             .updateDrawing(drawing.id, { content: file, version })
             .catch((error: unknown) =>
-              error instanceof ApiError && error.status === 409
-                ? this._saveCopy(drawing, file, store)
+              error instanceof ApiError && (error.status === 409 || error.status === 404)
+                ? this._saveCopy(drawing, file, store, error.status === 404)
                 : Promise.reject(error)
             );
 
@@ -180,18 +180,47 @@ export class App {
 
   /**
    * Drawing saved in another tab or on another device since it was loaded or saved here: the changes of this page are
-   * kept in a copy, open in its place (the drawing keeps the other version), told in a toast
+   * kept in a copy, open in its place (the drawing keeps the other version), told in a toast; deleted elsewhere: in a new
+   * drawing of its name
    * @param drawing Drawing open
    * @param content Its content in this page
    * @param store Drawings of the drawing (account or browser)
+   * @param deleted Drawing deleted elsewhere (404)
    * @returns The copy
    */
-  private async _saveCopy(drawing: DrawingSummary, content: DrawingFile, store: DrawingsStore) {
+  private async _saveCopy(drawing: DrawingSummary, content: DrawingFile, store: DrawingsStore, deleted = false) {
     const { t } = this.texts;
-    const copy = await store.createDrawing({ name: t('conflictCopy', { name: drawing.name || t('untitled') }), content });
+    const name = deleted ? drawing.name : t('conflictCopy', { name: drawing.name || t('untitled') });
+    const copy = await store.createDrawing({ name, content });
 
-    this.drawer.toast(t('keptInCopy'), 'warning');
+    this.drawer.toast(t(deleted ? 'keptAfterDeletion' : 'keptInCopy'), 'warning');
     return copy;
+  }
+
+  /**
+   * Changes of the drawing open not saved before another one is opened (save failed: storage full, drawings too big,
+   * server unavailable): kept in a copy, in the first store where it fits, told in a toast
+   * @param stores Drawings where the copy is tried, in order
+   * @returns false when it can't be kept anywhere (told): the drawing stays open
+   */
+  private async _keepChanges(stores: DrawingsStore[]): Promise<boolean> {
+    if (!this.drawer.hasUnsavedChanges()) return true;
+
+    const { t } = this.texts;
+    const name = t('conflictCopy', { name: this.drawing?.name || t('untitled') });
+    const content = this.drawer.getDrawingFile();
+
+    for (const store of stores) {
+      try {
+        await store.createDrawing({ name, content });
+        this.drawer.toast(t('keptUnsaved'), 'warning');
+        return true;
+      } catch {
+        // full, too big, unavailable: next one
+      }
+    }
+    this.drawer.toast(t('changesNotKept'), 'error');
+    return false;
   }
 
   /**
@@ -370,7 +399,7 @@ export class App {
       if (!this.user && e.storageArea === localStorage && local.isDrawingsKey(e.key)) this._followChanges();
     });
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible' && this.user && !this.sessionEnded) this._followChanges();
+      if (document.visibilityState === 'visible' && this.user) this._checkAccount();
     });
 
     this.$name.addEventListener('change', () => this.rename(this.$name.value));
@@ -406,12 +435,19 @@ export class App {
       await this.drawer.save();
       return;
     }
-    // drawing of browser kept there; changes of an account whose session ended: in a drawing of the browser
-    if (ended) await this._keepUnsaved();
-    else await this.drawer.save();
+    // drawing of browser kept there (not saved: in a copy, of the browser or else of the account); changes of an
+    // account whose session ended: in a drawing of the browser
+    if (ended) {
+      await this._keepUnsaved();
+    } else {
+      await this.drawer.save();
+      await this._keepChanges([localDrawings, api]);
+    }
 
     // drawing of the account known before the drawings of the account are used: saves meanwhile still go to the browser
-    // (a failure keeps the drawings of the browser)
+    // (a failure keeps the drawings of the browser); requests made for this account
+    api.setUser(user.id);
+
     const drawings = await api.listDrawings();
     // a new account gets the drawing of the browser, not the one of another account
     const drawing = drawings[0] ?? (await api.createDrawing(ended ? {} : { content: this.drawer.getDrawingFile() }));
@@ -449,6 +485,51 @@ export class App {
     this._remember(drawing);
     this._setSaveState('');
     await loaded.catch(() => {});
+  }
+
+  /**
+   * Logged in user
+   * @returns The user, null without account
+   */
+  get user(): User | null {
+    return this.#user;
+  }
+
+  /**
+   * Logged in user: requests of the app made for its account (another account signed in from another tab: refused)
+   * @param user The user, null without account
+   */
+  set user(user: User | null) {
+    this.#user = user;
+    api.setUser(user?.id ?? null);
+  }
+
+  /**
+   * Account checked when the page is shown again: signed out, or in with another account from another tab, told as a
+   * session ended (nothing saved in the other account); signed in again with it (another tab): changes saved, session
+   * going on; its new name shown; then drawing saved elsewhere followed
+   */
+  private async _checkAccount() {
+    const { user } = this;
+
+    try {
+      const me = await api.me();
+
+      if (this.user !== user || !user) return;
+      if (me.name !== user.name || me.email !== user.email) this.setUser({ ...user, ...me });
+      if (this.sessionEnded) {
+        this.sessionEnded = false;
+        this.render();
+        await this.drawer.save();
+        return;
+      }
+      await this._followChanges();
+    } catch (error) {
+      if (this.user !== user || !(error instanceof ApiError) || error.status !== 401 || this.sessionEnded) return;
+      this.sessionEnded = true;
+      this.drawer.toast(this.texts.reason(error), 'warning');
+      this.render();
+    }
   }
 
   /**
@@ -519,16 +600,31 @@ export class App {
   }
 
   /**
-   * Open a drawing of account or browser, changes of current one saved before
+   * Open a drawing of account or browser, changes of current one saved before (not saved: kept in a copy, of the
+   * account or of the browser; nowhere: the current one stays open)
    */
   async openDrawing(drawing: DrawingSummary) {
-    await this.drawer.save();
+    if (!(await this._saveBeforeLeaving())) return;
     await this._open(drawing);
     this.render();
   }
 
+  /**
+   * New drawing opened, changes of the current one saved before (see `openDrawing`)
+   */
   async newDrawing() {
-    await this.openDrawing(await this.store.createDrawing({}));
+    if (!(await this._saveBeforeLeaving())) return;
+    await this._open(await this.store.createDrawing({}));
+    this.render();
+  }
+
+  /**
+   * Drawing open saved before another one is opened, its changes kept in a copy when they can't be saved
+   * @returns false when they can't be kept anywhere: the drawing stays open
+   */
+  private async _saveBeforeLeaving(): Promise<boolean> {
+    await this.drawer.save();
+    return this._keepChanges(this.user ? [this.store, localDrawings] : [this.store]);
   }
 
   async rename(name: string) {

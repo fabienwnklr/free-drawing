@@ -101,8 +101,6 @@ export class AccountDialog {
   }
 
   async submit() {
-    const { t } = this.app.texts;
-
     this.$submit.disabled = true;
     this.$error.textContent = '';
     try {
@@ -115,7 +113,7 @@ export class AccountDialog {
       await this.app.login(user);
     } catch (error) {
       this.$error.textContent = this.app.texts.error(error as Error);
-      if (!this.$dialog.open) this.app.drawer.toast(t('error', { error: (error as Error).message }), 'error');
+      if (!this.$dialog.open) this.app.drawer.toast(this.app.texts.error(error as Error), 'error');
     } finally {
       this.$submit.disabled = false;
     }
