@@ -8,6 +8,7 @@ import type { CollaborationSocket, DrawingChange, EncryptedShape } from '@/@type
 import { RoomCipher, createRoomKey } from '@/utils/encryption';
 import { createFrame, getFrameShapes, type Frame } from '@/utils/frame';
 import { slideMaskName } from '@/components/Slideshow/Slideshow';
+import { mergeState } from '@/components/tools/UndoRedo/History';
 import { createDrawer, fireMouse, keydown, setPointer } from './helpers';
 import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import type { Group } from 'konva/lib/Group';
@@ -1354,6 +1355,100 @@ describe('Collaboration', () => {
     expect(alice.drawLayer.find(`#${other.id()}`)).toHaveLength(1);
     expect(shapesOf(bob)).toEqual([rect.id(), added.id()]);
     expect(bob.drawLayer.findOne<Rect>(`#${rect.id()}`)!.x()).toBe(10);
+  });
+
+  it('A frame or a group changed by two users at once keeps the changes of both, also changed while disconnected', async () => {
+    const connect = createServer();
+    const alice = createDrawer();
+    const bob = createDrawer();
+    const carol = createDrawer();
+
+    connect(alice, 'room', 'Alice', { userId: 'alice', ownerKey: 'secret' });
+    const bobSocket = connect(bob, 'room', 'Bob', { userId: 'bob' });
+
+    connect(carol, 'room', 'Carol', { userId: 'carol' });
+    const frame = alice.addShape(createFrame({ x: 0, y: 0, width: 400, height: 300, label: 'Intro' }));
+
+    alice.stage.fire('change');
+    const frameOf = (drawer: Drawer) => drawer.drawLayer.findOne<Frame>(`#${frame.id()}`)!;
+    const shapesOf = (drawer: Drawer) =>
+      getFrameShapes(frameOf(drawer))
+        .map((shape) => shape.id())
+        .sort();
+    const addInFrame = (drawer: Drawer, x: number) => {
+      const rect = drawer.addShape(new Rect({ name: 'drawer-rect', x, y: 10, width: 20, height: 20 }));
+
+      drawer.placeInFrames([rect]);
+      drawer.stage.fire('change');
+      return rect.id();
+    };
+
+    // bob draws in the frame while alice adds a shape in it: both kept, for everyone
+    bob.getWidget<BaseWidget>('square')!.setActive(true);
+    fireMouse(bob, 'mousedown', 100, 100);
+    fireMouse(bob, 'mousemove', 150, 150);
+    const ofAlice = addInFrame(alice, 10);
+
+    fireMouse(bob, 'mouseup', 150, 150);
+    await Promise.resolve();
+    const ofBob = shapesOf(bob).find((id) => id !== ofAlice)!;
+
+    expect(shapesOf(bob)).toEqual([ofAlice, ofBob].sort());
+    expect(shapesOf(alice)).toEqual(shapesOf(bob));
+    expect(shapesOf(carol)).toEqual(shapesOf(bob));
+    // undo of bob: his shape only
+    bob.undoRedo.undo();
+    expect(shapesOf(bob)).toEqual([ofAlice]);
+    expect(shapesOf(alice)).toEqual([ofAlice]);
+    bob.undoRedo.redo();
+    expect(shapesOf(alice)).toEqual([ofAlice, ofBob].sort());
+
+    // shape of a group moved by bob while alice changes another one (change of bob slowed down: applied after the one
+    // of alice by the server): both kept
+    const first = alice.addShape(new Rect({ name: 'drawer-rect', x: 500, width: 10, height: 10, fill: '#000000' }));
+    const second = alice.addShape(new Rect({ name: 'drawer-rect', x: 600, width: 10, height: 10, fill: '#000000' }));
+
+    alice.stage.fire('change');
+    const group = alice.groupShapes([first, second])!;
+    const childOf = (drawer: Drawer, id: string) => drawer.drawLayer.findOne<Rect>(`#${id}`)!;
+
+    bobSocket.held = [];
+    childOf(bob, first.id()).x(550);
+    bob.stage.fire('change');
+    second.fill('#ff0000');
+    alice.stage.fire('change');
+    expect(childOf(bob, second.id()).fill()).toBe('#ff0000');
+    expect(childOf(bob, first.id()).x()).toBe(550);
+    bobSocket.release();
+    for (const drawer of [alice, bob, carol]) {
+      expect([childOf(drawer, first.id()).x(), childOf(drawer, second.id()).fill()]).toEqual([550, '#ff0000']);
+    }
+    expect(group.getChildren()).toHaveLength(2);
+
+    // bob draws in the frame while disconnected, alice too: both kept once joined again
+    bobSocket.room = undefined;
+    bobSocket.receive('disconnect');
+    const whileAway = addInFrame(bob, 200);
+    const meanwhile = addInFrame(alice, 300);
+
+    bobSocket.receive('connect');
+    for (const drawer of [alice, bob, carol]) {
+      expect(shapesOf(drawer)).toEqual([ofAlice, ofBob, whileAway, meanwhile].sort());
+    }
+  });
+
+  it('Merge of two changes of a group: attributes compared whatever the order of their keys (JSON of other users)', () => {
+    const child = (attrs: Record<string, unknown>) => ({ attrs, className: 'Rect' });
+    const group = (...children: ReturnType<typeof child>[]) => ({ attrs: { id: 'g' }, className: 'Group', children });
+    const base = group(child({ id: 'a', x: 0, fill: '#000' }), child({ id: 'b', x: 0, fill: '#000' }));
+    // a moved here, b of base in the order of the keys of another drawer
+    const mine = group(child({ id: 'a', x: 50, fill: '#000' }), child({ fill: '#000', x: 0, id: 'b' }));
+    const theirs = group(child({ id: 'a', x: 0, fill: '#000' }), child({ id: 'b', x: 0, fill: '#f00' }));
+
+    expect(mergeState(mine, base, theirs).children!.map((state) => state.attrs)).toEqual([
+      { id: 'a', x: 50, fill: '#000' },
+      { id: 'b', x: 0, fill: '#f00' },
+    ]);
   });
 
   it('Changes lost with a connection lost unseen are sent again once joined, acknowledged ones are not', () => {

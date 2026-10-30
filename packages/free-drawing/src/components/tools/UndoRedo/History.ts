@@ -4,6 +4,7 @@ import { Node } from 'konva/lib/Node';
 import type { ColorLike, DrawingShape } from '@/@types/drawer';
 import { historyLimit } from '@/constants';
 import type { HistoryChange, HistoryEntry, ShapeState } from '@/@types/file';
+import type { ShapeMerge } from '@/@types/collaboration';
 import { applyOrder } from '@/utils/order';
 import { updateBindings } from '@/utils/binding';
 import { updateBoundTexts } from '@/utils/boundText';
@@ -57,16 +58,19 @@ export function serializeShape(shape: DrawingShape): string {
 
 /**
  * State of a shape, group or frame where a change of this user is undone or redone over the changes of other users made
- * since (collaboration, another tab): its nodes take their state of `target` where the change set them, nodes added in
- * it by others are kept, nodes removed from it by others not put back, attributes changed by others kept where the
- * change did not set them
- * @param target State to restore: before the change to undo it, after it to redo it
+ * since (collaboration, another tab), or where changes of two users are merged (collaboration): its nodes take their
+ * state of `target` where the change set them, nodes added in it by others are kept, nodes removed from it by others not
+ * put back, attributes changed by others kept where the change did not set them
+ * @param target State to restore: before the change to undo it, after it to redo it (merge: state of this user)
  * @param base State on the other side of the change
- * @param current State now
+ * @param current State now (merge: state of the other user)
  * @returns State to create
  */
-function mergeState(target: ShapeState, base: ShapeState, current: ShapeState): ShapeState {
-  const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+export function mergeState(target: ShapeState, base: ShapeState, current: ShapeState): ShapeState {
+  // whatever the order of their keys (JSON of other users)
+  const same = (a: ShapeState['attrs'], b: ShapeState['attrs']) =>
+    Object.keys(a).length === Object.keys(b).length &&
+    Object.keys(a).every((key) => key in b && JSON.stringify(a[key]) === JSON.stringify(b[key]));
   const idOf = (state: ShapeState) => state.attrs.id as string | undefined;
   const attrs = same(base.attrs, target.attrs) ? current.attrs : target.attrs;
 
@@ -231,6 +235,24 @@ export class History {
 
         return [id, changed.has(id) && shape ? serializeShape(shape) : known.get(id)!];
       })
+    );
+  }
+
+  /**
+   * Group or frame changed by another user while this user changed it (collaboration: both changes merged): the change
+   * of the other user is applied to its known state, so the next change of this user records only its own modifications
+   * (a change already recorded: known as it is now)
+   * @param merge States of the merge
+   */
+  ignoreMerged({ state, local, base, theirs }: ShapeMerge) {
+    const id = state.attrs.id as string;
+    const known = this.#known.get(id);
+    const shape = this.drawer.getDrawingShapes().find((node) => node.id() === id);
+
+    if (known === undefined || !shape) return;
+    this.#known.set(
+      id,
+      known === local ? serializeShape(shape) : JSON.stringify(mergeState(theirs, base, JSON.parse(known)))
     );
   }
 

@@ -1,6 +1,6 @@
 import type { Socket } from 'socket.io-client';
 import type { Vector2d } from 'konva/lib/types';
-import type { DrawingFiles } from '@/@types/file';
+import type { DrawingFiles, ShapeState } from '@/@types/file';
 import type { RoomCipher } from '@/utils/encryption';
 
 /**
@@ -111,6 +111,22 @@ export type UnconfirmedPart = {
   order: boolean;
   /** Time it was sent (ms) */
   at: number;
+  /** JSON known by the room before it of its shapes, by id: groups and frames changed meanwhile by others are merged */
+  before: Map<string, string>;
+};
+
+/** Group or frame changed here and by another user (collaboration): changes of both merged, see `mergeState` */
+export type ShapeMerge = {
+  /** State applied: the change of this user over the one of the other user */
+  state: ShapeState;
+  /** JSON known by the room once applied: the merge is sent next unless the room has it */
+  synced: string;
+  /** JSON of the shape here before the merge */
+  local: string;
+  /** State known by the room before both changes */
+  base: ShapeState;
+  /** State of the other user (checked) */
+  theirs: ShapeState;
 };
 
 /** Shape of an encrypted room: id in clear (the server keeps the drawing shape by shape), konva JSON encrypted */

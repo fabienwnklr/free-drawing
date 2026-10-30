@@ -9,7 +9,7 @@ import { Line } from 'konva/lib/shapes/Line';
 import { Label, Tag } from 'konva/lib/shapes/Label';
 import { Text } from 'konva/lib/shapes/Text';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
-import { serializeShape } from '@/components/tools/UndoRedo/History';
+import { mergeState, serializeShape } from '@/components/tools/UndoRedo/History';
 import { drawerEvents } from '@/constants';
 import { maxMessageSize, socketEvents } from '@free-drawing/protocol';
 import { applyOrder } from '@/utils/order';
@@ -29,6 +29,7 @@ import type {
   CollaborationSession,
   ChangePart,
   UnconfirmedPart,
+  ShapeMerge,
   PointerPosition,
   JoinedMessage,
   RoomMessage,
@@ -189,9 +190,10 @@ export class Collaboration {
   #tooBigAt = 0;
   /**
    * Changes received during a pointer action of this client, applied in order when it ends: the drawing of the room
-   * received again after a reconnection (`rejoin`) is merged at its place
+   * received again after a reconnection (`rejoin`) is merged at its place; groups and frames changed by changes of this
+   * user not acknowledged when they came are merged from their state known by the room before them (`bases`)
    */
-  #pending: [change: DrawingChange, rejoin: boolean][] = [];
+  #pending: [change: DrawingChange, rejoin: boolean, bases?: Map<string, string>][] = [];
   /** Connected to the server: changes made while disconnected are sent once joined again */
   #connected = false;
   /** Joined the room before: a reconnection merges the drawing of the room with changes made meanwhile */
@@ -1010,10 +1012,13 @@ export class Collaboration {
           background: change.background !== undefined,
           order: !!change.order,
           at: 0,
+          before: new Map(),
         };
         const result = this._emitChange(
           change,
           () => {
+            // known by the room before: groups and frames changed meanwhile by others are merged from it
+            for (const id of part.ids) if (synced.get(id)) unconfirmed.before.set(id, synced.get(id)!);
             mark(part);
             unconfirmed.at = Date.now();
             this.#unconfirmed.add(unconfirmed);
@@ -1167,20 +1172,21 @@ export class Collaboration {
    * @param change Change received from the server (live previews are applied at once)
    */
   receive(change: DrawingChange) {
-    change = this._withoutUnconfirmed(change);
+    const [received, bases] = this._withoutUnconfirmed(change);
+
     // preview of other users drawing: shown at once, not saved nor added to history (final change follows)
-    if (change.live) {
-      this._applyReceived(change);
+    if (received.live) {
+      this._applyReceived(received, bases);
       return;
     }
 
     // also after changes still waiting (action just ended: applied once the tool finished, see `Drawer._onActionEnd`)
     if (this.drawer._duringAction() || this.#pending.length) {
-      this.#pending.push([change, false]);
+      this.#pending.push([received, false, bases]);
       return;
     }
 
-    this._applyReceived(change);
+    this._applyReceived(received, bases);
     // saved and added to history, not sent back (synced)
     this.drawer.stage.fire('change');
   }
@@ -1195,9 +1201,9 @@ export class Collaboration {
     this.#pending = [];
     this.#rejoinPending = false;
     // in the order received: changes received after the drawing of the room are not reverted by its merge
-    for (const [change, rejoin] of pending) {
+    for (const [change, rejoin, bases] of pending) {
       if (rejoin) this._merge(change);
-      else this._applyReceived(change);
+      else this._applyReceived(change, bases);
     }
 
     return pending.length > 0;
@@ -1206,46 +1212,64 @@ export class Collaboration {
   /**
    * Change of another user received before the server acknowledged changes of this user: the server applied it before
    * them, their shapes (added, changed, removed), background and stacking order are left out of it (else this user would
-   * keep the version of the other user, the room and the other users the one of this user). Servers of previous
-   * versions acknowledge nothing: changes applied as they are
+   * keep the version of the other user, the room and the other users the one of this user). Groups and frames they
+   * changed are kept with the state the room had before them: merged by `_applyReceived` (shapes the other user added
+   * in them kept), others left out there. Servers of previous versions acknowledge nothing: changes applied as they are
    * @param change Change received from the server
-   * @returns The change without the parts changed by the changes not acknowledged
+   * @returns The change without the parts changed by the changes not acknowledged, and the JSON known by the room before
+   * them of the shapes kept in it, by id
    */
-  private _withoutUnconfirmed(change: DrawingChange): DrawingChange {
-    if (!this.#acknowledging || !this.#unconfirmed.size) return change;
+  private _withoutUnconfirmed(change: DrawingChange): [DrawingChange, Map<string, string>] {
+    const bases = new Map<string, string>();
+
+    if (!this.#acknowledging || !this.#unconfirmed.size) return [change, bases];
 
     const ids = new Set<string>();
+    const before = new Map<string, string>();
     let background = false;
     let order = false;
 
     for (const part of this.#unconfirmed) {
       for (const id of [...part.upsert, ...part.remove]) ids.add(id);
+      // before the first change of this user
+      for (const [id, json] of part.before) if (!before.has(id)) before.set(id, json);
       background ||= part.background;
       order ||= part.order;
     }
 
     const { upsert, remove, ...rest } = change;
+    const kept = (Array.isArray(upsert) ? upsert : []).filter((json) => {
+      const id = parseShapeState(json)?.attrs.id as string;
 
-    return {
-      ...rest,
-      upsert: (Array.isArray(upsert) ? upsert : []).filter(
-        (json) => !ids.has(parseShapeState(json)?.attrs.id as string)
-      ),
-      remove: (Array.isArray(remove) ? remove : []).filter((id) => !ids.has(id)),
-      ...(background && { background: undefined }),
-      ...(order && { order: undefined }),
-    };
+      if (!ids.has(id)) return true;
+      if (before.has(id)) bases.set(id, before.get(id)!);
+      return before.has(id);
+    });
+
+    return [
+      {
+        ...rest,
+        upsert: kept,
+        remove: (Array.isArray(remove) ? remove : []).filter((id) => !ids.has(id)),
+        ...(background && { background: undefined }),
+        ...(order && { order: undefined }),
+      },
+      bases,
+    ];
   }
 
   /**
    * Change of another user applied, but to the shapes and background this user changed and did not send yet (end of a
-   * pointer action, encryption of a change): sent next, the server applies them after it. A viewer sends nothing: the
-   * whole change is applied
+   * pointer action, encryption of a change): sent next, the server applies them after it. Groups and frames changed by
+   * both users are merged (`_mergeOf`: shapes added in them by each one kept), also the ones of changes of this user not
+   * acknowledged when it came; the merge is sent next. A viewer sends nothing: the whole change is applied
    * @param change Change received from the server
+   * @param bases JSON known by the room before the changes of this user not acknowledged when it came, of the shapes they
+   * changed (see `_withoutUnconfirmed`)
    */
-  private _applyReceived(change: DrawingChange) {
+  private _applyReceived(change: DrawingChange, bases = new Map<string, string>()) {
     if (!this.canEdit) {
-      this._apply(change);
+      this._apply(change, (id) => bases.has(id));
       return;
     }
 
@@ -1264,8 +1288,41 @@ export class Collaboration {
     const color = this.drawer.background.fill() as string;
     const recolored =
       this.#syncedBackground !== null && color !== this.#syncedBackground && checkBackground(color) !== null;
+    // room: the change of the other user, or the changes of this user applied after it
+    const merge = (shape: DrawingShape, state: ShapeState, json: string) => {
+      const id = shape.id();
+      const base = bases.get(id) ?? synced.get(id);
 
-    this._apply(recolored ? { ...change, background: undefined } : change, unsent);
+      return base ? this._mergeOf(shape, base, state, bases.has(id) ? synced.get(id) ?? '' : json) : null;
+    };
+
+    this._apply(recolored ? { ...change, background: undefined } : change, (id) => bases.has(id) || unsent(id), merge);
+  }
+
+  /**
+   * Group or frame changed here and by another user: the change of this user applied over the one of the other user
+   * (`mergeState`: shapes added in it by each one kept, attributes and shapes changed here kept)
+   * @param shape Group or frame of the drawing
+   * @param base JSON known by the room before both changes
+   * @param theirs State of the other user (checked)
+   * @param synced JSON known by the room once the merge is applied
+   * @returns The merge, null for another kind of shape (kept as it is here)
+   */
+  private _mergeOf(shape: DrawingShape, base: string, theirs: ShapeState, synced: string): ShapeMerge | null {
+    if (!(shape instanceof Container) || shape.getClassName() !== theirs.className || !theirs.children) return null;
+
+    let state: ShapeState;
+
+    try {
+      state = JSON.parse(base);
+    } catch {
+      return null;
+    }
+    if (state?.className !== theirs.className || !Array.isArray(state.children)) return null;
+
+    const local = serializeShape(shape);
+
+    return { state: mergeState(JSON.parse(local), state, theirs), synced, local, base: state, theirs };
   }
 
   /**
@@ -1337,13 +1394,25 @@ export class Collaboration {
     const removed = [...new Set([...synced.keys(), ...this.#sentLive])].filter((id) => !current.has(id));
     // stacking order of this user lost with the connection: kept, sent next
     const orderLost = this.#orderLost;
+    // groups and frames changed here and in the room: merged, sent next
+    const merged = new Set<string>();
 
     this.#orderLost = false;
-    this._apply({
-      upsert: [...room].filter(([id]) => !changed.has(id) && !removed.includes(id)).map(([, json]) => json),
-      remove: [...current.keys()].filter((id) => !room.has(id) && !changed.has(id)),
-      ...(Array.isArray(order) && !orderLost && { order }),
-    });
+    this._apply(
+      {
+        upsert: [...room].filter(([id]) => !removed.includes(id)).map(([, json]) => json),
+        remove: [...current.keys()].filter((id) => !room.has(id) && !changed.has(id)),
+        ...(Array.isArray(order) && !orderLost && { order }),
+      },
+      (id) => changed.has(id),
+      (shape, state, json) => {
+        const base = synced.get(shape.id());
+        const merge = base ? this._mergeOf(shape, base, state, json) : null;
+
+        if (merge) merged.add(shape.id());
+        return merge;
+      }
+    );
     // known in the order of the room
     if (orderLost && Array.isArray(order)) {
       const known = this.#synced;
@@ -1354,7 +1423,7 @@ export class Collaboration {
       ]);
     }
     // sent next: changes made here as new ones, removals of shapes still in the room
-    for (const id of changed) this.#synced.delete(id);
+    for (const id of changed) if (!merged.has(id)) this.#synced.delete(id);
     for (const id of removed) if (room.has(id)) this.#synced.set(id, room.get(id)!);
   }
 
@@ -1472,8 +1541,13 @@ export class Collaboration {
    * from files: other nodes (stage, layers...) and invalid shapes are ignored
    * @param change Change received (or drawing of the room merged)
    * @param kept Tells the shapes kept as they are here (changed here, sent next): neither updated nor removed
+   * @param merge Merge of a group or frame kept with the state received (null: kept as it is), see `_mergeOf`
    */
-  private _apply(change: DrawingChange, kept?: (id: string) => boolean) {
+  private _apply(
+    change: DrawingChange,
+    kept?: (id: string) => boolean,
+    merge?: (shape: DrawingShape, state: ShapeState, json: string) => ShapeMerge | null
+  ) {
     const { upsert, remove, order, background, full, files } = change;
 
     // files of images, before the images using them
@@ -1483,6 +1557,8 @@ export class Collaboration {
     const shapes = new Map(this.drawer.getDrawingShapes().map((shape) => [shape.id(), shape]));
     // shapes of other users: not changes of this user in history
     const changed: string[] = [];
+    // groups and frames changed here too: changes of this user kept in history
+    const merges: ShapeMerge[] = [];
 
     for (const id of Array.isArray(remove) ? remove : []) {
       if (kept?.(id)) continue;
@@ -1498,12 +1574,15 @@ export class Collaboration {
         console.warn('Shape of another user ignored: not a drawing shape');
         continue;
       }
-      if (kept?.(state.attrs.id as string)) continue;
-
       let shape = shapes.get(state.attrs.id as string);
+      // changed here too: merged (group or frame of the same class), else kept as it is
+      const merged = kept?.(state.attrs.id as string)
+        ? (shape && merge?.(shape, state, json as string)) || null
+        : undefined;
 
+      if (merged === null) continue;
       // same nodes updated (groups and frames with their shapes): selection, text being edited, drags kept
-      if (shape && !this._update(shape, state)) {
+      if (shape && !this._update(shape, merged?.state ?? state)) {
         // another class: replaced at same place, still selected
         const index = shape.zIndex();
         const selected = this.drawer.getSelectedShapes();
@@ -1520,6 +1599,12 @@ export class Collaboration {
         }
       } else if (!shape) {
         shape = this.drawer._addShape(Node.create(state) as DrawingShape);
+      }
+      if (merged) {
+        // sent next: the room has the state received, or the changes of this user applied after it
+        this.#synced.set(shape.id(), merged.synced);
+        merges.push(merged);
+        continue;
       }
       // as serialized here, not to send it back
       this.#synced.set(shape.id(), serializeShape(shape));
@@ -1546,6 +1631,8 @@ export class Collaboration {
       transformer.nodes(transformer.nodes().filter((node) => node.getLayer()));
     // undo and redo of this user keep them, stacking order of others too
     this.drawer.undoRedo.ignoreChanges(changed);
+    for (const merged of merges) this.drawer.undoRedo.ignoreMerged(merged);
+
     this._applyBackground(background, full);
   }
 

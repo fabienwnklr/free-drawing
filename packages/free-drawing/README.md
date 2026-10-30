@@ -839,7 +839,7 @@ drawer.collaboration?.requestEdit(); // viewer: asks the owner for the right to 
 
 Users see the cursor of each other user with their name, and shapes while they are drawn or moved (sent every 50 ms at most, final state sent at the end).
 
-Two users changing one shape at the same time end with the same version, the one the server applied last: a change of another user is not applied to a shape changed here whose change the server has not acknowledged yet, nor to a shape being changed here (moved, text being typed), whose change is sent after it.
+Two users changing one shape at the same time end with the same version, the one the server applied last: a change of another user is not applied to a shape changed here whose change the server has not acknowledged yet, nor to a shape being changed here (moved, text being typed), whose change is sent after it. A frame or a group changed by both users keeps the changes of each one: shapes added in it by each user, shapes and attributes changed by each one (the change of this user over the one of the other user), also for changes made while disconnected.
 
 During a session, a reminder in the header (also in zen mode: the drawing is shared) shows a live dot, the number of people connected and the requests to draw waiting for the owner: it opens the panel of the session, and its red stop button stops the session (owner) or leaves it once confirmed, as "Stop session" / "Leave session" of the command palette. The panel shows the right of the user (a viewer asks the owner to draw, once until answered), the participants with their rights (switches for the owner), the requests to accept or refuse, "Present my view" for the owner and "Link and settings..." opening the dialog.
 

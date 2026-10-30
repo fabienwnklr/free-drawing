@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [8.2.1](https://github.com/fabienwnklr/free-drawing/compare/v8.2.0...v8.2.1) (2026-10-30)
+
+
+### Bug Fixes
+
+* **collaboration:** a frame or a group changed by two users at the same time keeps the changes of both. Shapes another user drew in a frame while this user drew in it, moved one of its shapes or changed it while disconnected are no longer removed for everyone (since 8.2.0, before it the two users could keep different versions); shapes of a group changed by each user keep the change of each one
+* **texts:** a pasted text is as wide as its longest line in the font of the library: its lines no longer wrap (measured with a fallback font since 8.2.0)
+
 ## [8.2.0](https://github.com/fabienwnklr/free-drawing/compare/v8.1.4...v8.2.0) (2026-10-29)
 
 

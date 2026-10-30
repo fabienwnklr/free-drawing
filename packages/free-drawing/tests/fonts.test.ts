@@ -67,4 +67,25 @@ describe('Font of the library', () => {
     // svg: an installed Ubuntu out of the page
     expect(renderSvg([text], box)).toContain('font-family="free-drawing-ubuntu, Ubuntu, sans-serif"');
   });
+
+  it('Pasted text as wide as its longest line in the font of the library: lines not wrapped', () => {
+    const drawer = createDrawer();
+    // the font of the library wider than a fallback one (jsdom: same width whatever the font)
+    const charWidth = (text: Text) => (text._getContextFont().includes('free-drawing-ubuntu') ? 10 : 6);
+    const { measureSize } = Text.prototype;
+    const lineWidth = vi
+      .spyOn(Text.prototype as unknown as { _getTextWidth: (text: string) => number }, '_getTextWidth')
+      .mockImplementation(function (this: Text, line: string) {
+        return line.length * charWidth(this);
+      });
+    const size = vi.spyOn(Text.prototype, 'measureSize').mockImplementation(function (this: Text, line: string) {
+      return { ...measureSize.call(this, line), width: line.length * charWidth(this) };
+    });
+    const text = drawer.getWidget<TextWidget>('text')!.addTextNode('hello world\nhi');
+
+    lineWidth.mockRestore();
+    size.mockRestore();
+    expect(text.width()).toBe(110);
+    expect(text.textArr.map(({ text }) => text)).toEqual(['hello world', 'hi']);
+  });
 });

@@ -11,7 +11,7 @@ import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { shapeName } from '@/constants';
 import { TextOverlay } from '@/components/tools/Overlay/TextOverlay/TextOverlay';
 import { isComposing, placeInView } from '@/utils/dom';
-import { cssFontFamily } from '@/utils/text';
+import { cssFontFamily, getContentWidth } from '@/utils/text';
 
 /**
  * Text tool: a click adds a text (or edits the text clicked, or the text of the shape clicked) in a textarea placed over
@@ -189,11 +189,8 @@ export class TextWidget extends BaseWidget {
       width: textStyle.fontSize * 6,
     });
 
-    if (text) {
-      // fit width to the widest line (not the one with most characters)
-      const widths = text.split('\n').map((line) => textNode.measureSize(line).width);
-      textNode.width(Math.ceil(Math.max(...widths)));
-    }
+    // fit width to the widest line (not the one with most characters), in the font of the library
+    if (text) textNode.width(getContentWidth(textNode));
 
     this.drawer.addShape(textNode);
     this.drawer.placeInFrames([textNode]);
