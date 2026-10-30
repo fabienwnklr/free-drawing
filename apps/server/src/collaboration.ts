@@ -103,6 +103,20 @@ type SavedRoom = {
   keyCheck?: string;
 };
 
+/**
+ * Drawing of a room saved in database when its last user left (`roomDrawing` table), given back to the next user joining
+ * it: users joining again merge their copy with it, a stale copy (page left open, computer asleep) does not replace it
+ */
+type SavedDrawing = {
+  /** Shapes JSON by id (encrypted room: encrypted JSON), in stacking order */
+  shapes: [string, string][];
+  /** Image files by id */
+  files: [string, string][];
+  /** Ids of the image files of each shape (null: unknown) */
+  shapeFiles: [string, string[] | null][];
+  background?: string;
+};
+
 type CollaborationSocket = Socket<any, any, any, SocketData>;
 
 /** Node state of a shape in a change (konva `toObject`), not trusted */
@@ -129,6 +143,8 @@ export const limits = {
   drawingSize: 20_000_000,
   /** Size of the drawings of all rooms */
   totalSize: 500_000_000,
+  /** Size of the drawings of empty rooms saved in database (JSON): beyond, the ones saved first are dropped */
+  savedSize: 1_000_000_000,
   /** Users connected to a room at once */
   users: 50,
   /**
@@ -439,8 +455,9 @@ const newRoom = (keyCheck?: string): RoomData => ({
  * Logged in users are identified by their account (id given by client ignored), others by the id of their browser,
  * bound to the secret of their browser (`userKeys`), which can't be the one of an account or of the owner: owner is the
  * user who gives the secret of the room.
- * Owner, rights and settings of rooms are saved in database (not drawings): kept while a room is empty and after a
- * restart, so nobody takes an empty room over; rooms unused for `roomLifetime` are forgotten.
+ * Owner, rights and settings of rooms are saved in database: kept while a room is empty and after a restart, so nobody
+ * takes an empty room over; rooms unused for `roomLifetime` are forgotten. The drawing of a room is saved when its last
+ * user leaves (also when the server stops), given back to the next user joining it.
  * Messages are checked as a whole and limited (`rates`, `limits`): a change making a drawing too big or a join of a
  * full room is refused (`REJECTED` sent to the client), only checked fields are relayed.
  * Encrypted rooms (end to end, created with the proof of a key: `keyCheck`) are joined with the same proof only: their
@@ -499,6 +516,90 @@ export async function attachCollaboration(
     );
   };
 
+  // query run after the writes in progress: a drawing saved by a user leaving is read back by a user joining at once
+  const afterWrites = <T>(query: () => Promise<T>): Promise<T> => {
+    const result = writes.then(query);
+
+    writes = result.then(
+      () => undefined,
+      () => undefined
+    );
+    return result;
+  };
+
+  // drawing of a room whose last user left saved (sent by its users: none for a room without drawing), within the size
+  // of saved drawings: the ones saved first dropped
+  const saveDrawing = (room: string, data: RoomData) => {
+    const saved: SavedDrawing = {
+      shapes: [...data.shapes],
+      files: [...data.files],
+      shapeFiles: [...data.shapeFiles],
+      background: data.background,
+    };
+    const content = JSON.stringify(saved);
+    const size = content.length;
+    const savedAt = new Date().toISOString();
+
+    if (size > limits.savedSize) return;
+    write(() =>
+      db.transaction().execute(async (trx) => {
+        const others = await trx
+          .selectFrom('roomDrawing')
+          .select(['room', 'size'])
+          .where('room', '!=', room)
+          .orderBy('savedAt', 'desc')
+          .execute();
+        let total = size;
+        const dropped = others.filter((other) => (total += other.size) > limits.savedSize).map((other) => other.room);
+
+        if (dropped.length) await trx.deleteFrom('roomDrawing').where('room', 'in', dropped).execute();
+        await trx
+          .insertInto('roomDrawing')
+          .values({ room, content, size, savedAt })
+          .onConflict((oc) => oc.column('room').doUpdateSet({ content, size, savedAt }))
+          .execute();
+      })
+    );
+  };
+
+  // rooms whose saved drawing is being read: users joining at once wait for the same read
+  const restoring = new Map<string, Promise<void>>();
+
+  // saved drawing of a room without users given back to it (in memory again, no longer saved: a restart without stop
+  // does not give back an older one), unless the drawings of the server would be too big
+  const restoreDrawing = (room: string, data: RoomData): Promise<void> => {
+    const read = async () => {
+      const row = await afterWrites(() =>
+        db.selectFrom('roomDrawing').select(['content']).where('room', '=', room).executeTakeFirst()
+      ).catch((error) => console.warn(`Drawing of a room not read: ${(error as Error).message}`));
+
+      restoring.delete(room);
+      if (!row || data.kept) return;
+
+      try {
+        const saved = JSON.parse(row.content) as SavedDrawing;
+        const shapes = new Map(saved.shapes);
+        const files = new Map(saved.files);
+        const size = [...shapes.values(), ...files.values()].reduce((sum, value) => sum + value.length, 0);
+
+        if (totalSize + size > limits.totalSize) return;
+        Object.assign(data, { shapes, files, shapeFiles: new Map(saved.shapeFiles), size, kept: true });
+        data.background = typeof saved.background === 'string' ? saved.background : undefined;
+        totalSize += size;
+      } catch {
+        console.warn(`Invalid saved drawing: ${room}`);
+      }
+      write(() => db.deleteFrom('roomDrawing').where('room', '=', room).execute());
+    };
+    let restore = restoring.get(room);
+
+    if (!restore) {
+      restore = read();
+      restoring.set(room, restore);
+    }
+    return restore;
+  };
+
   // rooms unused for too long forgotten (not the ones with users)
   const forgetOldRooms = () => {
     const before = Date.now() - roomLifetime;
@@ -509,7 +610,7 @@ export async function attachCollaboration(
     write(() => db.deleteFrom('room').where('updatedAt', '<', new Date(before).toISOString()).execute());
   };
 
-  // rooms of previous runs, without drawing (users send theirs when they join again)
+  // rooms of previous runs, their drawing given back when a user joins (`restoreDrawing`)
   for (const { id, content, updatedAt } of await db.selectFrom('room').selectAll().execute()) {
     try {
       const saved = JSON.parse(content) as SavedRoom;
@@ -692,8 +793,10 @@ export async function attachCollaboration(
       return;
     }
 
-    // last user gone: drawing removed (users send theirs when they join again), owner, rights and settings kept
+    // last user gone: drawing saved and removed from memory (given back to the next user joining), owner, rights and
+    // settings kept
     if (data) {
+      if (data.kept) saveDrawing(room, data);
       totalSize -= data.size;
       data.shapes = new Map();
       data.files = new Map();
@@ -788,6 +891,13 @@ export async function attachCollaboration(
       if (data.keyCheck !== check) {
         return socket.emit(socketEvents.REJECTED, { event: socketEvents.JOIN, reason: 'key' });
       }
+      // room without users: its drawing saved when the last one left given back, before this user gets it
+      if (!io.sockets.adapter.rooms.get(room)?.size) {
+        await restoreDrawing(room, data);
+        // disconnected or forgotten meanwhile
+        if (!socket.connected || rooms.get(room) !== data) return;
+      }
+
       const key = isSecret(ownerKey) ? hashKey(ownerKey) : undefined;
       const browserKey = isSecret(userKey) ? hashKey(userKey) : undefined;
 

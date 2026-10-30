@@ -29,13 +29,23 @@ export type Database = {
     content: string;
     updatedAt: string;
   };
-  /** Collaboration rooms: owner, rights and settings, kept while the room is empty (not its drawing) */
+  /** Collaboration rooms: owner, rights and settings, kept while the room is empty (its drawing in `roomDrawing`) */
   room: {
     id: string;
     /** State JSON (`SavedRoom` of `collaboration.ts`) */
     content: string;
     /** Last use (user joining, rights or settings changed), rooms unused for a while are removed */
     updatedAt: string;
+  };
+  /** Drawing of an empty room, saved when its last user left, given back to the next user joining it (then removed) */
+  roomDrawing: {
+    /** Id of the room, removed with it */
+    room: string;
+    /** Drawing JSON (`SavedDrawing` of `collaboration.ts`; encrypted shapes, files and background of an encrypted room) */
+    content: string;
+    /** Length of its JSON, within `limits.savedSize` for all rooms */
+    size: number;
+    savedAt: string;
   };
 };
 
@@ -118,6 +128,18 @@ const migrations: Record<string, Migration> = {
         .alterTable('drawing')
         .addColumn('version', 'integer', (col) => col.notNull().defaultTo(1))
         .execute();
+    },
+  },
+  '004-room-drawings': {
+    async up(db) {
+      await db.schema
+        .createTable('roomDrawing')
+        .addColumn('room', 'text', (col) => col.primaryKey().references('room.id').onDelete('cascade'))
+        .addColumn('content', 'text', (col) => col.notNull())
+        .addColumn('size', 'integer', (col) => col.notNull())
+        .addColumn('savedAt', 'text', (col) => col.notNull())
+        .execute();
+      await db.schema.createIndex('roomDrawing_savedAt').on('roomDrawing').column('savedAt').execute();
     },
   },
 };

@@ -1391,10 +1391,14 @@ describe('Collaboration', () => {
     }
   });
 
-  it('Drawing of a room dropped with its last user, presentation told to users joining', async () => {
+  it('Drawing of a room saved when its last user leaves, given back to the next user joining; presentation told to users joining', async () => {
     const room = 'room-dropped';
     const owner = await joinRoom({ room, name: 'Owner', userId: 'owner-d', ownerKey: 'secret d' });
     const guest = await joinRoom({ room, name: 'Guest', userId: 'guest-d' });
+    const savedRooms = async (ids: string[]) =>
+      (await server.db.selectFrom('roomDrawing').select('room').where('room', 'in', ids).execute()).map(
+        (row) => row.room
+      );
 
     // no presentation: users joining again stop following one
     expect(guest.view).toBeNull();
@@ -1404,21 +1408,60 @@ describe('Collaboration', () => {
     guest.socket.close();
     await vi.waitFor(() => expect(server.io.sockets.adapter.rooms.has(room)).toBe(false));
 
-    // not kept: users joining send theirs
+    // given back: a stale copy of a user joining (page left open) does not replace it
     const back = client();
     const drawing = back.next(socketEvents.CHANGE);
 
     back.socket.emit(socketEvents.JOIN, { room, name: 'Owner', userId: 'owner-d', ownerKey: 'secret d' });
-    expect(await drawing).toEqual({ upsert: [], remove: [], order: [], full: true, kept: false });
+    expect(await drawing).toEqual({ upsert: [rect('d1')], remove: [], order: ['d1'], full: true, kept: true });
+    // in memory again, no longer saved; saved again when its last user leaves
+    expect(await savedRooms([room])).toEqual([]);
+    back.socket.close();
+    await vi.waitFor(async () => expect(await savedRooms([room])).toEqual([room]));
 
-    // previews of a shape being drawn are not a drawing of the room: still not kept
-    back.socket.emit(socketEvents.CHANGE, { upsert: [rect('d2')], remove: [], live: true });
+    // room never drawn in: no drawing; previews of a shape being drawn are not one, nothing saved
+    const first = await joinRoom({ room: 'room-not-drawn', name: 'First', userId: 'first-d', ownerKey: 'secret n' });
+
+    first.socket.emit(socketEvents.CHANGE, { upsert: [rect('d2')], remove: [], live: true });
 
     const later = client();
     const preview = later.next(socketEvents.CHANGE);
 
-    later.socket.emit(socketEvents.JOIN, { room, name: 'Guest', userId: 'guest-d' });
+    later.socket.emit(socketEvents.JOIN, { room: 'room-not-drawn', name: 'Later', userId: 'later-d' });
     expect(await preview).toEqual({ upsert: [rect('d2')], remove: [], order: ['d2'], full: true, kept: false });
+    first.socket.close();
+    later.socket.close();
+    await vi.waitFor(() => expect(server.io.sockets.adapter.rooms.has('room-not-drawn')).toBe(false));
+    expect(await savedRooms(['room-not-drawn'])).toEqual([]);
+  });
+
+  it('Saved drawings of empty rooms within their size: the ones saved first dropped', async () => {
+    const { savedSize } = limits;
+    const rooms = ['room-saved-1', 'room-saved-2'];
+    const savedRooms = async () =>
+      (await server.db.selectFrom('roomDrawing').select('room').where('room', 'in', rooms).execute()).map(
+        (row) => row.room
+      );
+    // drawing of a room saved by its user leaving
+    const draw = async (room: string) => {
+      const user = await joinRoom({ room, name: 'Owner', userId: `owner-${room}`, ownerKey: `secret ${room}` });
+
+      await new Promise((resolve) =>
+        user.socket.emit(socketEvents.CHANGE, { upsert: [rect(`shape-${room}`)], remove: [] }, resolve)
+      );
+      user.socket.close();
+      await vi.waitFor(async () => expect(await savedRooms()).toContain(room));
+    };
+
+    // one of them
+    limits.savedSize = 200;
+    try {
+      await draw(rooms[0]);
+      await draw(rooms[1]);
+      expect(await savedRooms()).toEqual([rooms[1]]);
+    } finally {
+      limits.savedSize = savedSize;
+    }
   });
 
   it('Changes acknowledged; previews of shapes being drawn removed when their author leaves or loses the right', async () => {
@@ -1644,17 +1687,28 @@ describe('Collaboration', () => {
       );
       const old = new Date(Date.now() - roomLifetime - 60_000).toISOString();
 
+      await new Promise((resolve) =>
+        owner.socket.emit(socketEvents.CHANGE, { upsert: [rect('shape-5')], remove: [] }, resolve)
+      );
       // room unused for too long
       await first.db
         .insertInto('room')
         .values({ id: 'room-old', content: JSON.stringify({ ownerKey: 'hash', names: [] }), updatedAt: old })
         .execute();
-      owner.socket.close();
+      // stopped with users: drawings of their rooms saved
       await first.close();
+      owner.socket.close();
 
       const second = await start();
 
       try {
+        const reader = client(second.url);
+        const drawing = reader.next(socketEvents.CHANGE);
+
+        reader.socket.emit(socketEvents.JOIN, { room: 'room-5', name: 'Reader', userId: 'reader-5' });
+        expect(await drawing).toMatchObject({ upsert: [rect('shape-5')], kept: true });
+        reader.socket.close();
+
         const intruder = await joinRoom(
           { room: 'room-5', name: 'Intruder', userId: 'owner-5', ownerKey: 'other secret' },
           second.url
