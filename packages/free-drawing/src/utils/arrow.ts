@@ -299,7 +299,7 @@ export function getHandlePoint(arrow: Arrow): Vector2d | null {
  * Head of an end of an arrow in an svg export, as drawn (see `drawHead`)
  * @param arrow Exported arrow
  * @param atStart Head of the start, else of the end
- * @param fill Color of filled heads
+ * @param fill Attribute of the color of filled heads (` fill="..."`, escaped: colors of files, links and other users)
  * @param stroke Attributes of the stroke of the arrow (without dash)
  * @returns Svg element of the head, empty without head
  */
@@ -313,7 +313,7 @@ export function arrowheadSvg(arrow: Arrow, atStart: boolean, fill: string, strok
   const [length, width] = [round(arrow.pointerLength()), round(arrow.pointerWidth())];
   const angle = round((arrow._getPointerAngle(atStart) * 180) / Math.PI);
   const transform = `translate(${round(points[index])} ${round(points[index + 1])}) rotate(${angle})`;
-  const paint = filledHeads.includes(head) ? `fill="${fill}"` : 'fill="none"';
+  const paint = filledHeads.includes(head) ? fill : ' fill="none"';
   const shape =
     head === 'triangle'
       ? `<path d="M0 0L${-length} ${width / 2}L${-length} ${-width / 2}Z"`
@@ -323,5 +323,5 @@ export function arrowheadSvg(arrow: Arrow, atStart: boolean, fill: string, strok
       ? `<circle cx="${round(-width / 3)}" cy="0" r="${round(width / 3)}"`
       : `<path d="M0 ${width / 2}L0 ${-width / 2}"`;
 
-  return `${shape} transform="${transform}" ${paint}${stroke}/>`;
+  return `${shape} transform="${transform}"${paint}${stroke}/>`;
 }

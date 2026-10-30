@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Rect } from 'konva/lib/shapes/Rect';
 import { shapeName } from '@/constants';
-import { parseDrawingFile } from '@/utils/drawingFile';
+import { decodeLinkData, encodeLinkData, linkDataLimits, parseDrawingFile } from '@/utils/drawingFile';
 import { embedDrawingInPng, embedDrawingInSvg, readDrawingFile } from '@/utils/embeddedDrawing';
 import { createDrawer } from './helpers';
 
@@ -104,6 +104,27 @@ describe('Drawing kept in exported images', () => {
     await expect(
       readDrawingFile(new Blob(['<svg><metadata id="free-drawing">zbroken</metadata></svg>']))
     ).rejects.toMatchObject(error);
+  });
+
+  it('Link or image holding a huge drawing (crafted: compressed a lot) refused by its size, not decompressed whole', async () => {
+    const { size } = linkDataLimits;
+    const error = { name: 'DrawerError', key: 'error.drawingTooBig' };
+
+    linkDataLimits.size = 10_000;
+    try {
+      const huge = await encodeLinkData('x'.repeat(20_000));
+
+      // a few bytes
+      expect(huge.length).toBeLessThan(200);
+      await expect(decodeLinkData(huge)).rejects.toMatchObject(error);
+      await expect(
+        readDrawingFile(new Blob([`<svg><metadata id="free-drawing">${huge}</metadata></svg>`]))
+      ).rejects.toMatchObject(error);
+      // within the size
+      expect(await decodeLinkData(await encodeLinkData('x'.repeat(5_000)))).toHaveLength(5_000);
+    } finally {
+      linkDataLimits.size = size;
+    }
   });
 
   it('SVG export of the drawer keeps its exported shapes with the option, opened again as a drawing', async () => {

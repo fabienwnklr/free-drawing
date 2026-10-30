@@ -41,6 +41,7 @@ export const de: Translations = {
   'error.notDrawingFile': 'keine Zeichnungsdatei',
   'error.notImage': 'kein Bild eines unterstützten Formats (PNG, JPEG, WebP, GIF, SVG)',
   'error.damagedLink': 'unvollständiger oder beschädigter Link',
+  'error.drawingTooBig': 'Zeichnung zu groß zum Öffnen',
   'error.imageNotCreated': 'Bild vom Browser nicht erstellt',
   'error.serverUnreachable': 'Server nicht erreichbar',
   'error.notAllowed': 'Berechtigung vom Browser verweigert',

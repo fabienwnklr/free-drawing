@@ -42,6 +42,7 @@ export const fr: Translations = {
   'error.notDrawingFile': "ce n'est pas un fichier de dessin",
   'error.notImage': "ce n'est pas une image d'un format accepté (PNG, JPEG, WebP, GIF, SVG)",
   'error.damagedLink': 'lien incomplet ou abîmé',
+  'error.drawingTooBig': 'dessin trop grand pour être ouvert',
   'error.imageNotCreated': 'image non créée par le navigateur',
   'error.serverUnreachable': 'serveur injoignable',
   'error.notAllowed': 'autorisation refusée par le navigateur',

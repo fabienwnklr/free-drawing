@@ -196,12 +196,14 @@ describe('Drawing files and links', () => {
           { className: 'Rect', attrs: { id: 'pattern', fillPatternImage: 'x', width: 10, height: 10 } },
           // properties of konva set by methods, data of plugins kept
           { className: 'Rect', attrs: { id: 'data', zIndex: 3, attrs: { x: 1 }, stamp: { kind: 'star' } } },
+          // colors: no markup (svg exports), usual length
+          { className: 'Rect', attrs: { id: 'colored', fill: '#000"/><script>', stroke: 'x'.repeat(101), width: 10 } },
         ],
       })
     );
 
     const shapes = new Map(drawer.getDrawingShapes().map((shape) => [shape.id(), shape.attrs]));
-    expect([...shapes.keys()]).toEqual(['path', 'group', 'named', 'dashed', 'pattern', 'data']);
+    expect([...shapes.keys()]).toEqual(['path', 'group', 'named', 'dashed', 'pattern', 'data', 'colored']);
     expect(shapes.get('path')!.data).toBeUndefined();
     expect(shapes.get('named')!.name).toBeUndefined();
     expect(shapes.get('dashed')!.dash).toBeUndefined();
@@ -210,6 +212,7 @@ describe('Drawing files and links', () => {
     // `attrs` would have set x
     expect(shapes.get('data')!.x).toBeUndefined();
     expect(shapes.get('data')!.zIndex).toBeUndefined();
+    expect([shapes.get('colored')!.fill, shapes.get('colored')!.stroke]).toEqual([undefined, undefined]);
     expect(() => drawer.drawLayer.draw()).not.toThrow();
 
     // error while creating a shape: drawing kept
@@ -220,7 +223,7 @@ describe('Drawing files and links', () => {
       drawer.loadDrawing(JSON.stringify({ ...drawer.getDrawingFile(), shapes: [rect.toObject()] }))
     ).toThrow();
     create.mockRestore();
-    expect(drawer.getDrawingShapes()).toHaveLength(6);
+    expect(drawer.getDrawingShapes()).toHaveLength(7);
   });
 
   it('File of every kind of shape is read back unchanged', () => {

@@ -33,6 +33,9 @@ export class ProfileDialog {
         <h3 id="${id}-profile"></h3>
         <label><span></span><input name="name" autocomplete="name" maxlength="40" required /></label>
         <label><span></span><input name="email" type="email" autocomplete="email" required /></label>
+        <label data-email-password hidden>
+          <span></span><input name="password" type="password" autocomplete="current-password" />
+        </label>
         <p class="app-error" role="alert"></p>
         <p class="app-success" role="status"></p>
         <button type="submit" class="app-button app-button-primary"></button>
@@ -70,6 +73,7 @@ export class ProfileDialog {
     document.body.append(this.$dialog);
 
     this._onSubmit(this.$profile, () => this._saveProfile());
+    this._field(this.$profile, 'email').addEventListener('input', () => this._updateEmailPassword());
     this._onSubmit(this.$password, () => this._changePassword());
     this._onSubmit(this.$delete, () => this._deleteAccount());
     this.$signOut.addEventListener('click', () => {
@@ -90,6 +94,7 @@ export class ProfileDialog {
     });
     this._field(this.$profile, 'name').value = user.name;
     this._field(this.$profile, 'email').value = user.email;
+    this._updateEmailPassword();
     this.render();
     this.$dialog.showModal();
     this._field(this.$profile, 'name').focus();
@@ -106,7 +111,7 @@ export class ProfileDialog {
     text('h2', t('account'));
     this.$dialog.querySelector('[data-close]')!.setAttribute('aria-label', t('close'));
     text('[data-profile] h3', t('profile'));
-    labels(this.$profile, [t('name'), t('email')]);
+    labels(this.$profile, [t('name'), t('email'), t('currentPassword')]);
     text('[data-profile] [type=submit]', t('save'));
     text('[data-password] h3', t('changePassword'));
     labels(this.$password, [t('currentPassword'), t('newPassword')]);
@@ -120,6 +125,19 @@ export class ProfileDialog {
     for (const $input of this.$dialog.querySelectorAll<HTMLInputElement>('[name=username]')) {
       $input.value = this.app.user?.email ?? '';
     }
+  }
+
+  /**
+   * Password of the account asked (required) while the email differs from the one of the account: the server changes
+   * an email with the password only
+   */
+  private _updateEmailPassword() {
+    const $password = this._field(this.$profile, 'password');
+    const changed = this._field(this.$profile, 'email').value.trim().toLowerCase() !== this.app.user?.email;
+
+    $password.closest('label')!.hidden = !changed;
+    $password.required = changed;
+    if (!changed) $password.value = '';
   }
 
   private _field(form: HTMLFormElement, name: string) {
@@ -165,11 +183,12 @@ export class ProfileDialog {
     const email = this._field(this.$profile, 'email').value.trim().toLowerCase();
 
     if (name !== user.name) await api.updateUser(name);
-    if (email !== user.email) await api.changeEmail(email);
+    if (email !== user.email) await api.changeEmail(email, this._field(this.$profile, 'password').value);
 
     const updated = await api.me();
 
     this.app.setUser(updated);
+    this._updateEmailPassword();
     // email of another account: not changed, not told by server
     if (updated.email !== email) throw new ApiError(t('errorEmailTaken'), 400, 'USER_ALREADY_EXISTS');
     return t('profileSaved');

@@ -367,11 +367,13 @@ describe('Arrows: paths and heads', () => {
       ) as Arrow;
     const triangleBar = arrow('bar', 'triangle', 0);
     const openDot = arrow('arrow', 'dot', 50);
+    // attribute of the color, escaped by the export
+    const fill = ` fill="${stroke}"`;
 
-    expect(arrowheadSvg(triangleBar, true, stroke, '')).toMatch(/^<path d="M0 \S+L0 \S+" transform="translate\(0 0\)/);
-    expect(arrowheadSvg(openDot, false, stroke, '')).toMatch(/^<circle .*translate\(100 50\).* fill="#e03131"/);
-    expect(arrowheadSvg(openDot, true, stroke, '')).toContain('fill="none"');
-    expect(arrowheadSvg(new Arrow({ points: [0, 0, 10, 0], pointerAtEnding: false }), false, stroke, '')).toBe('');
+    expect(arrowheadSvg(triangleBar, true, fill, '')).toMatch(/^<path d="M0 \S+L0 \S+" transform="translate\(0 0\)/);
+    expect(arrowheadSvg(openDot, false, fill, '')).toMatch(/^<circle .*translate\(100 50\).* fill="#e03131"/);
+    expect(arrowheadSvg(openDot, true, fill, '')).toContain('fill="none"');
+    expect(arrowheadSvg(new Arrow({ points: [0, 0, 10, 0], pointerAtEnding: false }), false, fill, '')).toBe('');
 
     const shapes = drawer.getExportShapes(false);
     const svg = renderSvg(shapes, getExportBox(shapes, drawer.drawLayer)!, { background: '#fff' });

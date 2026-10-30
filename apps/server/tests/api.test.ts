@@ -3,11 +3,13 @@ import request from 'supertest';
 import type { Kysely } from 'kysely';
 import { io as connect, type Socket } from 'socket.io-client';
 import type { AddressInfo } from 'node:net';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 import { join as joinPath } from 'node:path';
 import { socketEvents } from '@free-drawing/protocol';
-import { createServer } from '../src/app';
+import { resolveConfig } from 'vite';
+import { createServer, viteDeny } from '../src/app';
 import { type ServerConfig, getConfig } from '../src/config';
 import { drawingsLimits } from '../src/api';
 import { clientOf, limits, roomLifetime } from '../src/collaboration';
@@ -63,8 +65,59 @@ describe('Settings', () => {
     expect(
       getConfig({ NODE_ENV: 'production', BETTER_AUTH_SECRET: secret, BASE_URL: 'https://draw.example' })
     ).toMatchObject({ dev: false, baseURL: 'https://draw.example', trustProxy: false });
-    expect(getConfig({ TRUST_PROXY: '1' }).trustProxy).toBe(1);
-    expect(getConfig({ TRUST_PROXY: 'loopback, 10.0.0.0/8' }).trustProxy).toBe('loopback, 10.0.0.0/8');
+    const dev = { NODE_ENV: 'development' };
+
+    expect(getConfig({ ...dev, TRUST_PROXY: '1' }).trustProxy).toBe(1);
+    expect(getConfig({ ...dev, TRUST_PROXY: 'loopback, 10.0.0.0/8' }).trustProxy).toBe('loopback, 10.0.0.0/8');
+  });
+
+  it('Production unless NODE_ENV is development (yarn serve): development listens to localhost only', () => {
+    const secret = 'x'.repeat(32);
+
+    // no development secret without NODE_ENV
+    expect(() => getConfig({})).toThrow('BETTER_AUTH_SECRET');
+    expect(() => getConfig({ NODE_ENV: 'test' })).toThrow('BETTER_AUTH_SECRET');
+    expect(getConfig({ NODE_ENV: 'development' })).toMatchObject({ dev: true, host: 'localhost' });
+    expect(getConfig({ NODE_ENV: 'development', HOST: '0.0.0.0' }).host).toBe('0.0.0.0');
+    // every interface
+    expect(getConfig({ BETTER_AUTH_SECRET: secret, BASE_URL: 'https://draw.example' }).host).toBeUndefined();
+    expect(getConfig({ BETTER_AUTH_SECRET: secret, BASE_URL: 'https://draw.example', HOST: '127.0.0.1' }).host).toBe(
+      '127.0.0.1'
+    );
+  });
+
+  it('Development server: files of the repository served by vite, never databases nor secrets', async () => {
+    // folders of the dependencies vite optimizes when it starts: the ones of this test removed (interrupted)
+    const viteCache = fileURLToPath(new URL('../../web/node_modules/.vite/', import.meta.url));
+    const cached = () => (existsSync(viteCache) ? readdirSync(viteCache) : []);
+    const before = new Set(cached());
+    const dev = await createServer({ ...config, web: true });
+    const data = fileURLToPath(new URL('../data/', import.meta.url));
+    const database = joinPath(data, `vite-${process.pid}.db`);
+    // file asked by its path (`/@fs/` of vite)
+    const served = (path: string) => request(dev.app).get(`/@fs/${path.replace(/\\/g, '/').replace(/^\//, '')}`);
+
+    mkdirSync(data, { recursive: true });
+    writeFileSync(database, 'sessions');
+    writeFileSync(`${database}-wal`, 'sessions');
+    try {
+      expect((await served(fileURLToPath(new URL('../package.json', import.meta.url)))).status).toBe(200);
+      expect((await served(database)).status).toBe(403);
+      expect((await served(`${database}-wal`)).status).toBe(403);
+
+      // defaults of vite kept (a list given replaces them)
+      const { server: defaults } = await resolveConfig({ configFile: false }, 'serve');
+
+      expect(viteDeny).toEqual(expect.arrayContaining(defaults.fs.deny));
+    } finally {
+      rmSync(database, { force: true });
+      rmSync(`${database}-wal`, { force: true });
+      await dev.close();
+      for (const name of cached()) {
+        if (!before.has(name) && name.startsWith('deps_temp'))
+          rmSync(viteCache + name, { recursive: true, force: true });
+      }
+    }
   });
 });
 
@@ -73,6 +126,24 @@ describe('Accounts', () => {
     expect((await request(server.app).get('/api/me')).status).toBe(401);
     expect((await request(server.app).get('/api/drawings')).status).toBe(401);
     expect((await request(server.app).put('/api/preferences').send({})).status).toBe(401);
+  });
+
+  it('Bodies of the API read once the session is known, within the size of each route', async () => {
+    // anonymous: refused before its body is read (not parsed: no 400 for invalid JSON, nor 413 for a big one)
+    const anonymous = await request(server.app)
+      .post('/api/drawings')
+      .set('Content-Type', 'application/json')
+      .send('{ not json');
+
+    expect(anonymous.status).toBe(401);
+
+    const { agent } = await signUp();
+    const big = { content: { ...drawing, data: 'x'.repeat(21_000_000) } };
+
+    expect((await agent.post('/api/drawings').send(big)).status).toBe(413);
+    // preferences: a few values
+    expect((await agent.put('/api/preferences').send({ theme: 'dark', other: 'x'.repeat(20_000) })).status).toBe(413);
+    expect((await agent.put('/api/preferences').send({ theme: 'dark' })).body).toEqual({ theme: 'dark' });
   });
 
   it('Sign up, sign out, sign in', async () => {
@@ -109,10 +180,13 @@ describe('Accounts', () => {
     expect(res.body).toEqual({ error: 'request entity too large' });
   });
 
-  it('Checks of the password of a logged in user are rate limited (production): 3 per 10 s, as sign in', async () => {
+  it('Checks of the password of a logged in user are rate limited (production): 3 per 10 s, as sign in (deletion, email)', async () => {
     const production = await createServer({ ...config, dev: false });
 
     try {
+      // errors without their stack (Express is in development without NODE_ENV)
+      expect(production.app.get('env')).toBe('production');
+
       const agent = request.agent(production.app);
       /** Statuses of 4 checks of a wrong password by a route */
       const tries = async (path: string) => {
@@ -134,6 +208,7 @@ describe('Accounts', () => {
       vi.spyOn(console, 'warn').mockImplementation(() => {});
       expect(await tries('/api/auth/delete-user')).toEqual([400, 400, 400, 429]);
       expect(await tries('/api/auth/verify-password')).toEqual([400, 400, 400, 429]);
+      expect(await tries('/api/auth/change-email')).toEqual([400, 400, 400, 429]);
       expect((await agent.get('/api/me')).status).toBe(200);
     } finally {
       await production.close();
@@ -152,12 +227,18 @@ describe('Account', () => {
 
     const newEmail = `new${++count}@example.com`;
 
-    expect((await post('/change-email', { newEmail })).status).toBe(200);
+    // with the password of the account only (a session left open or a stolen cookie does not take the account)
+    expect((await post('/change-email', { newEmail })).body.code).toBe('PASSWORD_REQUIRED');
+    // wrong password logged by Better Auth
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect((await post('/change-email', { newEmail, password: 'wrong password' })).body.code).toBe('INVALID_PASSWORD');
+    expect((await agent.get('/api/me')).body.email).toBe(email);
+    expect((await post('/change-email', { newEmail, password })).status).toBe(200);
     expect((await agent.get('/api/me')).body.email).toBe(newEmail);
     // email of another account: not changed (not told, like Better Auth)
     const other = await signUp();
 
-    expect((await post('/change-email', { newEmail: other.email })).status).toBe(200);
+    expect((await post('/change-email', { newEmail: other.email, password })).status).toBe(200);
     expect((await agent.get('/api/me')).body.email).toBe(newEmail);
 
     // wrong current password, then other sessions signed out
@@ -1447,9 +1528,9 @@ describe('Collaboration', () => {
       );
       expect(await filesOf('room-files')).toEqual(['f2']);
       // refused even with them released: files kept for the shapes of the room
-      expect(
-        await send(owner, guest, { upsert: [image('i3', 'f3')], remove: ['i2'], files: { f3: file(3500) } })
-      ).toBe('too-big');
+      expect(await send(owner, guest, { upsert: [image('i3', 'f3')], remove: ['i2'], files: { f3: file(3500) } })).toBe(
+        'too-big'
+      );
       expect(await filesOf('room-files')).toEqual(['f2']);
 
       // encrypted room: files of each shape told by the clients

@@ -120,7 +120,9 @@ describe('Drawings of the app', () => {
     const saveInOtherTab = (id: string, version: number) =>
       localDrawings.updateDrawing(drawing.id, { content: fileWith(id), version });
     const storageEvent = () =>
-      window.dispatchEvent(new StorageEvent('storage', { key: 'free-drawing-web-drawings', storageArea: localStorage }));
+      window.dispatchEvent(
+        new StorageEvent('storage', { key: 'free-drawing-web-drawings', storageArea: localStorage })
+      );
 
     local.setLastLocalDrawingId(drawing.id);
 
@@ -281,6 +283,50 @@ describe('Account of the app', () => {
     expect(stored.content).toEqual(fileWith('c'));
     expect(app.drawing).toMatchObject({ id: 'copy-0', name: 'Plan (conflicted copy)' });
     expect(app.drawer.getDrawingShapes().map((shape) => shape.id())).toEqual(['b', 'mine']);
+  });
+
+  it('Email changed with the password of the account, asked once the email is changed', async () => {
+    const account = { ...user };
+    let sent: unknown;
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string, init?: RequestInit) => {
+        if (path === '/api/me') return respond(200, account);
+        if (path === '/api/preferences') return respond(200, {});
+        if (path === '/api/drawings') return respond(200, [drawing]);
+        if (path === '/api/drawings/d1') return respond(200, { ...drawing, content: fileWith('a') });
+        if (path === '/api/auth/change-email') {
+          sent = JSON.parse(init!.body as string);
+          account.email = (sent as { newEmail: string }).newEmail;
+          return respond(200, { status: true });
+        }
+        return respond(404, { error: 'not found' });
+      })
+    );
+
+    const app = createApp(true);
+    const dialog = app.profileDialog;
+    const field = (name: string) => dialog.$profile.elements.namedItem(name) as HTMLInputElement;
+    const passwordShown = () => !field('password').closest('label')!.hidden;
+
+    await app.drawer.ready;
+    await vi.waitFor(() => expect(app.user).toEqual(user));
+    dialog.show();
+    expect([passwordShown(), field('password').required]).toEqual([false, false]);
+
+    field('email').value = 'ada@new.example';
+    field('email').dispatchEvent(new Event('input'));
+    expect([passwordShown(), field('password').required]).toEqual([true, true]);
+    expect(field('password').closest('label')!.textContent).toContain('Current password');
+
+    field('password').value = 'secret password';
+    dialog.$profile.dispatchEvent(new Event('submit', { cancelable: true }));
+    // saved: email of the account, password no longer asked
+    await vi.waitFor(() => expect([passwordShown(), field('password').value]).toEqual([false, '']));
+    expect(sent).toEqual({ newEmail: 'ada@new.example', password: 'secret password' });
+    expect(app.user!.email).toBe('ada@new.example');
+    dialog.$dialog.close();
   });
 
   it('Preferences changed before the ones of the account are read: not saved over them', async () => {

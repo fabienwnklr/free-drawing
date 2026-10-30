@@ -5,7 +5,12 @@ import { fileURLToPath } from 'node:url';
  */
 export type ServerConfig = {
   port: number;
-  /** Development: web app served by vite middleware, default secret allowed */
+  /**
+   * Address listened to: `localhost` in development (vite serves the files of the repository), every interface in
+   * production
+   */
+  host?: string;
+  /** Development (`NODE_ENV=development`, `yarn serve`): web app served by vite middleware, default secret allowed */
   dev: boolean;
   /** Web app served (apps/web): vite middleware in development, its build in production */
   web: boolean;
@@ -41,14 +46,16 @@ function parseTrustProxy(value = ''): boolean | number | string {
 }
 
 /**
- * Settings of environment: PORT (3000), NODE_ENV, DATABASE_PATH (data/free-drawing.db),
- * BASE_URL (http://localhost:<port>, required in production), BETTER_AUTH_SECRET (required in production),
- * TRUSTED_ORIGINS (comma separated),
- * TRUST_PROXY (proxies giving the address of clients, see `parseTrustProxy`)
+ * Settings of environment: PORT (3000), HOST (localhost in development, every interface in production), NODE_ENV
+ * (`development`, else production), DATABASE_PATH (data/free-drawing.db), BASE_URL (http://localhost:<port>, required in
+ * production), BETTER_AUTH_SECRET (required in production), TRUSTED_ORIGINS (comma separated), TRUST_PROXY (proxies
+ * giving the address of clients, see `parseTrustProxy`)
  */
 export function getConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
-  const dev = env.NODE_ENV !== 'production';
+  // production unless asked: a server started without NODE_ENV has no public secret nor files of the repository served
+  const dev = env.NODE_ENV === 'development';
   const port = Number(env.PORT) || 3000;
+  const host = env.HOST?.trim() || (dev ? 'localhost' : undefined);
   const secret = env.BETTER_AUTH_SECRET ?? (dev ? devSecret : '');
 
   if (secret.length < 32) throw new Error('BETTER_AUTH_SECRET of 32 characters at least is required in production');
@@ -57,6 +64,7 @@ export function getConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
 
   return {
     port,
+    ...(host && { host }),
     dev,
     web: true,
     databasePath: env.DATABASE_PATH ?? fileURLToPath(new URL('../data/free-drawing.db', import.meta.url)),

@@ -7,6 +7,9 @@ import type { Database } from './db';
 /** Size of a drawing at most (JSON, image files included) */
 export const maxDrawingSize = '20mb';
 
+/** Size of other bodies at most (preferences) */
+const maxBodySize = '16kb';
+
 /** Drawings of an account at most: count, and size of their JSON (disk of the server), tests lower them */
 export const drawingsLimits = { count: 500, size: 100_000_000 };
 
@@ -82,20 +85,34 @@ export const onError: ErrorRequestHandler = (error, _req, res, next) => {
 
 /**
  * API of logged in users (session cookie): `/me`, `/preferences`, `/drawings` (their own only, `drawingsLimits`;
- * `version` of their content: a content sent with an older version is refused)
+ * `version` of their content: a content sent with an older version is refused). The session is checked before a body
+ * is read: anonymous requests never hold the memory of the server
  */
 export function createApi(auth: Auth, db: Kysely<Database>) {
   const router = express.Router();
+  // bodies read by the routes taking one, within their size
+  const drawingBody = express.json({ limit: maxDrawingSize });
+  const smallBody = express.json({ limit: maxBodySize });
+
+  // logged in user of the request (`res.locals.user`), before its body
+  router.use(async (req, res, next) => {
+    try {
+      const user = await getUser(auth, req.headers);
+
+      if (!user) return res.status(401).json({ error: 'not logged in' });
+      res.locals.user = user;
+      next();
+    } catch (error) {
+      next(error);
+    }
+  });
 
   // logged in user, errors to error handler (express 4 does not catch async errors)
   const withUser =
     (handler: Handler): RequestHandler =>
     async (req, res, next) => {
       try {
-        const user = await getUser(auth, req.headers);
-
-        if (!user) return res.status(401).json({ error: 'not logged in' });
-        await handler(req, res, user);
+        await handler(req, res, res.locals.user as User);
       } catch (error) {
         next(error);
       }
@@ -121,8 +138,6 @@ export function createApi(auth: Auth, db: Kysely<Database>) {
     return { count: Number(row.count), size: Number(row.size) };
   };
 
-  router.use(express.json({ limit: maxDrawingSize }));
-
   router.get(
     '/me',
     withUser(async (_req, res, user) => res.json(user))
@@ -139,6 +154,7 @@ export function createApi(auth: Auth, db: Kysely<Database>) {
 
   router.put(
     '/preferences',
+    smallBody,
     withUser(async (req, res, user) => {
       if (!isObject(req.body)) return res.status(400).json({ error: 'preferences object expected' });
 
@@ -170,6 +186,7 @@ export function createApi(auth: Auth, db: Kysely<Database>) {
 
   router.post(
     '/drawings',
+    drawingBody,
     withUser(async (req, res, user) => {
       const { name, content } = getBody(req);
 
@@ -212,6 +229,7 @@ export function createApi(auth: Auth, db: Kysely<Database>) {
 
   router.put(
     '/drawings/:id',
+    drawingBody,
     withUser(async (req, res, user) => {
       const { name, content, version } = getBody(req);
 

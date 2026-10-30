@@ -19,7 +19,10 @@ export type DrawingsStore = {
    * Name and / or content changed: a content given with the `version` it changed is refused (ApiError 409) when the
    * drawing was saved since (another tab, another device)
    */
-  updateDrawing(id: string, changes: { name?: string; content?: DrawingFile; version?: number }): Promise<DrawingSummary>;
+  updateDrawing(
+    id: string,
+    changes: { name?: string; content?: DrawingFile; version?: number }
+  ): Promise<DrawingSummary>;
   deleteDrawing(id: string): Promise<unknown>;
 };
 
@@ -64,8 +67,9 @@ export const api = {
     request('/api/auth/sign-up/email', 'POST', { name, email, password }),
   signOut: () => request('/api/auth/sign-out', 'POST', {}),
   updateUser: (name: string) => request('/api/auth/update-user', 'POST', { name }),
-  /** Not changed (no error) when an account uses this email */
-  changeEmail: (newEmail: string) => request('/api/auth/change-email', 'POST', { newEmail }),
+  /** With the password of the account; not changed (no error) when an account uses this email */
+  changeEmail: (newEmail: string, password: string) =>
+    request('/api/auth/change-email', 'POST', { newEmail, password }),
   /** Other sessions signed out */
   changePassword: (currentPassword: string, newPassword: string) =>
     request('/api/auth/change-password', 'POST', { currentPassword, newPassword, revokeOtherSessions: true }),

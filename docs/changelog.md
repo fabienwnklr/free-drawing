@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [8.2.2](https://github.com/fabienwnklr/free-drawing/compare/v8.2.1...v8.2.2) (2026-10-30)
+
+
+### Bug Fixes
+
+* **security:** the color of the heads of an arrow is escaped in exported SVG files: a drawing file, a link or a shape of another user of a collaboration session could put markup (a script) in them through it. Colors of shapes read from files, links and other users (`fill`, `stroke`, `shadowColor`) are also refused with characters of markup or beyond 100 characters
+* **security:** links and images holding a drawing (`#drawing=` links, exported PNG and SVG files) are decompressed by chunks up to 50 MB: a short crafted link inflating to gigabytes crashed the tab. Beyond, the drawing is refused with a new error text (`error.drawingTooBig`)
+
 ## [8.2.1](https://github.com/fabienwnklr/free-drawing/compare/v8.2.0...v8.2.1) (2026-10-30)
 
 

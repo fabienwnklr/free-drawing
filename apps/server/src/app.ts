@@ -54,8 +54,25 @@ const clientIp: RequestHandler = (req, _res, next) => {
 };
 
 /**
+ * Files vite never serves: its defaults (environment, keys, settings of package managers, git: a list given replaces
+ * them), databases of the server
+ */
+export const viteDeny = [
+  '.env',
+  '.env.*',
+  '*.{crt,pem,key,p12,pfx,cer,der}',
+  '.npmrc',
+  '.yarnrc.yml',
+  '**/.git/**',
+  '**/*.db',
+  '**/*.db-*',
+  '**/apps/server/data/**',
+];
+
+/**
  * Web app (apps/web) with metas of this server: accounts and drawings API, live collaboration.
  * Vite middleware in development (hot reload), its build in production.
+ * @returns Vite server of development (closed with the server), null in production
  */
 async function serveWeb(app: Express, httpServer: HttpServer, dev: boolean) {
   const vite = dev
@@ -63,8 +80,9 @@ async function serveWeb(app: Express, httpServer: HttpServer, dev: boolean) {
         await import('vite')
       ).createServer({
         root: webRoot,
-        // hot reload through this server: no other port (several servers can run)
-        server: { middlewareMode: true, hmr: { server: httpServer } },
+        // hot reload through this server: no other port (several servers can run); files of the repository served
+        // (`/@fs/`) but secrets and databases (sessions, hashes of passwords)
+        server: { middlewareMode: true, hmr: { server: httpServer }, fs: { deny: viteDeny } },
       })
     : null;
   const page = webRoot + (dev ? 'index.html' : 'dist/index.html');
@@ -83,6 +101,8 @@ async function serveWeb(app: Express, httpServer: HttpServer, dev: boolean) {
     }
   });
   app.use(vite ? vite.middlewares : express.static(`${webRoot}dist`, { index: false }));
+
+  return vite;
 }
 
 /**
@@ -99,6 +119,8 @@ export async function createServer(config: ServerConfig) {
   const app = express();
 
   app.disable('x-powered-by');
+  // errors of production without their stack (Express reads NODE_ENV, development without it)
+  app.set('env', config.dev ? 'development' : 'production');
   // address of clients (req.ip): of the connection, or given by trusted proxies
   app.set('trust proxy', config.trustProxy ?? false);
   app.use('/api', cors(config.trustedOrigins));
@@ -109,7 +131,7 @@ export async function createServer(config: ServerConfig) {
 
   const httpServer = createHttpServer(app);
 
-  if (config.web) await serveWeb(app, httpServer, config.dev);
+  const vite = config.web ? await serveWeb(app, httpServer, config.dev) : null;
 
   const origins = [new URL(config.baseURL).origin, ...config.trustedOrigins];
   const io = new Server(httpServer, {
@@ -137,6 +159,7 @@ export async function createServer(config: ServerConfig) {
     /** Stop server and close database (after writes of rooms) */
     async close() {
       io.close();
+      await vite?.close();
       await collaboration.close();
       await db.destroy();
     },

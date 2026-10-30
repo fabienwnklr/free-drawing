@@ -12,30 +12,33 @@ Server of free-drawing: accounts, drawings and preferences of users, live collab
 At the root of the repository:
 
 ```sh
-yarn serve                              # development: http://localhost:3000, demo reloaded on changes
+yarn serve                              # development (NODE_ENV=development): http://localhost:3000, demo reloaded on changes
 yarn workspace @free-drawing/server test
-yarn workspace @free-drawing/server start   # production (NODE_ENV=production)
+yarn workspace @free-drawing/server start   # production, unless NODE_ENV=development
 ```
+
+The server runs in production unless `NODE_ENV` is `development` (set by `yarn serve`): a server started without it has no public secret, and does not serve the files of the repository. In development, the web app is served by vite (hot reload), which serves the files of the repository to the browser (`/@fs/`), never secrets nor databases (`viteDeny` of `src/app.ts`), and the server listens to `localhost` only.
 
 | Environment variable | Default | Purpose |
 | --- | --- | --- |
 | `PORT` | `3000` | Port of the server |
-| `NODE_ENV` | | `production`: web app served from its build (`yarn build:static`), secret required |
+| `HOST` | `localhost` in development, every interface in production | Address listened to (e.g. `0.0.0.0`, `127.0.0.1` behind a reverse proxy of the same machine) |
+| `NODE_ENV` | production | `development`: web app served by vite (hot reload), development secret allowed, `localhost`; else production: web app served from its build (`yarn build:static`), secret and public URL required |
 | `DATABASE_PATH` | `apps/server/data/free-drawing.db` | SQLite database file |
 | `BASE_URL` | `http://localhost:<port>` | Public URL of the server (cookies, auth, origin of sockets), required in production (`https`: Secure cookies) |
 | `BETTER_AUTH_SECRET` | development secret | Secret signing sessions, 32 characters at least, required in production |
 | `TRUSTED_ORIGINS` | | Other origins of apps calling the API (comma separated): CORS with cookies |
 | `TRUST_PROXY` | | Proxies in front of the server (Express `trust proxy`: number of proxies, `true`, or addresses and subnets, comma separated): their `X-Forwarded-For` gives the address of clients. Without it, the address of the connection |
 
-Better Auth limits sign in, sign up and account changes per address of client (in production; 3 requests per 10 s for sign in, sign up, changes of email and password and the routes checking the password of a logged in user: `/delete-user`, `/verify-password`): the address of the connection, or the one given by the proxies of `TRUST_PROXY`, never an `X-Forwarded-For` sent by the client itself (a new limit for each value). Behind a reverse proxy, set `TRUST_PROXY` (e.g. `1` or `loopback`), else every client has the address of the proxy and shares its limits.
+Better Auth limits sign in, sign up and account changes per address of client (in production; 3 requests per 10 s for sign in, sign up, changes of email and password and the routes checking the password of a logged in user: `/delete-user`, `/verify-password`, `/change-email`): the address of the connection, or the one given by the proxies of `TRUST_PROXY`, never an `X-Forwarded-For` sent by the client itself (a new limit for each value). Behind a reverse proxy, set `TRUST_PROXY` (e.g. `1` or `loopback`), else every client has the address of the proxy and shares its limits.
 
 ## API
 
 Accounts (Better Auth, under `/api/auth`): `POST /sign-up/email` (`{ email, password, name }`), `POST /sign-in/email` (`{ email, password }`), `POST /sign-out`, `GET /get-session`. Requests of browsers send the session cookie. Their bodies are limited to 16 KB (413 beyond).
 
-Account of the logged in user: `POST /update-user` (`{ name }`), `POST /change-email` (`{ newEmail }`, used at once since no email is sent; an email of another account is not taken, without error so emails are not revealed: read `/api/me` again), `POST /change-password` (`{ currentPassword, newPassword, revokeOtherSessions }`), `POST /delete-user` (`{ password }`: the account is removed with its drawings and preferences; the password is always needed, `PASSWORD_REQUIRED` without it, also while the session is fresh).
+Account of the logged in user: `POST /update-user` (`{ name }`), `POST /change-email` (`{ newEmail, password }`: used at once since no email is sent, so the password of the account is always needed, `PASSWORD_REQUIRED` without it, `INVALID_PASSWORD` for a wrong one; an email of another account is not taken, without error so emails are not revealed: read `/api/me` again), `POST /change-password` (`{ currentPassword, newPassword, revokeOtherSessions }`), `POST /delete-user` (`{ password }`: the account is removed with its drawings and preferences; the password is always needed, `PASSWORD_REQUIRED` without it, also while the session is fresh).
 
-API of logged in users (401 without session):
+API of logged in users (401 without session, before the body of the request is read; bodies of 20 MB at most for drawings, 16 KB for preferences, 413 beyond):
 
 | Route | Purpose |
 | --- | --- |

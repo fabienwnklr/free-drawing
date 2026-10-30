@@ -4,11 +4,11 @@ Audit of 2026-10-29 (library 8.2.0): items ordered by priority in each section.
 
 ## Security
 
-- [ ] server in development mode unless `NODE_ENV=production` (`start` sets none): public secret of development (sessions forged), listening on every interface, vite `/@fs/` serving any file of the repository to the network, the database included (sessions, hashes of passwords) (`config.ts`: development only with `NODE_ENV=development`; `index.ts`: localhost by default, `HOST`; `app.ts`: `server.fs.deny` of data)
-- [ ] svg export injection: `fill` of an arrow written as it is by `arrowheadSvg` (any string accepted by `parseAttrs`: files, links, collaboration, library, `strokeColor` of Excalidraw) puts a script in the exported svg (`utils/arrow.ts` through `attrs()`, colors checked by `attrChecks`)
-- [ ] email of an account changed without its password (`/change-email` applied at once, no reset of passwords): a session left open or a stolen cookie takes the account (`auth.ts` hook as `passwordToDelete`, field of `ProfileDialog`)
-- [ ] bodies of the API (20 MB) read before the session is checked, no rate limit on `/api`: slow anonymous uploads hold the memory of the server (`api.ts`: session first, small limit out of drawings)
-- [ ] links and embedded drawings decompressed without limit: a link of a few MB inflating to GB crashes the tab (`utils/drawingFile.ts`: stream read by chunks up to a size)
+- [x] server in development mode unless `NODE_ENV=production` (`start` sets none): public secret of development (sessions forged), listening on every interface, vite `/@fs/` serving any file of the repository to the network, the database included (sessions, hashes of passwords) (`config.ts`: development only with `NODE_ENV=development`; `index.ts`: localhost by default, `HOST`; `app.ts`: `server.fs.deny` of data)
+- [x] svg export injection: `fill` of an arrow written as it is by `arrowheadSvg` (any string accepted by `parseAttrs`: files, links, collaboration, library, `strokeColor` of Excalidraw) puts a script in the exported svg (`utils/arrow.ts` through `attrs()`, colors checked by `attrChecks`)
+- [x] email of an account changed without its password (`/change-email` applied at once, no reset of passwords): a session left open or a stolen cookie takes the account (`auth.ts` hook as `passwordToDelete`, field of `ProfileDialog`)
+- [x] bodies of the API (20 MB) read before the session is checked, no rate limit on `/api`: slow anonymous uploads hold the memory of the server (`api.ts`: session first, small limit out of drawings)
+- [x] links and embedded drawings decompressed without limit: a link of a few MB inflating to GB crashes the tab (`utils/drawingFile.ts`: stream read by chunks up to a size)
 
 ## Bugs
 

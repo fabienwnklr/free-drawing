@@ -81,6 +81,20 @@ describe('Export', () => {
     expect(dark).toContain('stroke="#ededed"');
   });
 
+  it('Colors escaped in svg: a color of a file, a link or another user puts no markup in an export', () => {
+    const drawer = createDrawer();
+    const fill = '#000" onload="alert(1)"/><script>alert(2)</script><path d="';
+    const arrow = drawer.addShape(new Arrow({ points: [0, 0, 100, 50], stroke: '#000', fill }));
+    const svg = renderSvg([arrow], getExportBox([arrow], drawer.drawLayer)!);
+    const doc = new DOMParser().parseFromString(svg, 'image/svg+xml');
+
+    expect(doc.querySelector('parsererror')).toBeNull();
+    expect(doc.querySelector('script')).toBeNull();
+    expect(doc.querySelector('[onload]')).toBeNull();
+    // head drawn with the color as it is
+    expect(doc.querySelector('path[transform]')!.getAttribute('fill')).toBe(fill);
+  });
+
   it('Selected shapes are exported when there is a selection, else whole drawing', () => {
     const { drawer, rect, ellipse } = drawerWithShapes();
 

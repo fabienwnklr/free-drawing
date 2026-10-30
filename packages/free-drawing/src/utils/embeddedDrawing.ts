@@ -111,7 +111,7 @@ function readPngData(bytes: Uint8Array): string | null {
  * JSON of a drawing file chosen to be opened: a drawing file, or a PNG or SVG image keeping its drawing
  * @param file File chosen by the user
  * @returns JSON of the drawing file (checked when loaded)
- * @throws {DrawerError} image without drawing, or its drawing damaged
+ * @throws {DrawerError} image without drawing, or its drawing damaged or too big
  */
 export async function readDrawingFile(file: Blob): Promise<string> {
   const bytes = new Uint8Array(await file.arrayBuffer());
@@ -130,6 +130,7 @@ export async function readDrawingFile(file: Blob): Promise<string> {
   try {
     return await decodeLinkData(data);
   } catch (error) {
+    if (error instanceof DrawerError && error.key === 'error.drawingTooBig') throw error;
     throw new DrawerError('error.noDrawingInImage', 'damaged drawing in image', { cause: error });
   }
 }

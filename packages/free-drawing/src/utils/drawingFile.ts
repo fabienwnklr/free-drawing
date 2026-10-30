@@ -89,6 +89,13 @@ const isBoolean: AttrCheck = (value) => typeof value === 'boolean';
  */
 const isNumbers: AttrCheck = (value) => Array.isArray(value) && value.every(isNumber);
 
+/**
+ * Color attribute: a css color of a usual length, without characters of markup (svg exports)
+ * @param value Value read
+ * @returns True for a string of 100 characters at most without `<`, `>`, `"` nor `&`
+ */
+const isColor: AttrCheck = (value) => typeof value === 'string' && value.length <= 100 && !/[<>"&]/.test(value);
+
 /** Attributes of drawing shapes read by konva or the library, with the check of their value */
 const attrChecks: Record<string, AttrCheck> = {
   ...Object.fromEntries(
@@ -138,8 +145,6 @@ const attrChecks: Record<string, AttrCheck> = {
       'id',
       'name',
       'label',
-      'fill',
-      'stroke',
       'data',
       'text',
       'fontFamily',
@@ -153,7 +158,6 @@ const attrChecks: Record<string, AttrCheck> = {
       'lineCap',
       'lineJoin',
       'globalCompositeOperation',
-      'shadowColor',
       'startBinding',
       'endBinding',
       'startAnchor',
@@ -188,6 +192,9 @@ const attrChecks: Record<string, AttrCheck> = {
       'ellipsis',
     ].map((key) => [key, isBoolean])
   ),
+  fill: isColor,
+  stroke: isColor,
+  shadowColor: isColor,
   points: isNumbers,
   dash: isNumbers,
   // radius of every corner, or of each one
@@ -423,13 +430,49 @@ export function fromBase64Url(data: string): Uint8Array<ArrayBuffer> {
 }
 
 /**
- * Bytes compressed or decompressed by a stream
- * @param bytes data to transform
- * @param stream compression (`deflate-raw`) or decompression stream
- * @returns transformed bytes
+ * Size of the text of link data at most (bytes, decompressed): a short link or an image may hold a huge text (crafted),
+ * which would crash the page. Above the drawings of servers (20 MB), tests lower it
  */
-async function transform(bytes: Uint8Array<ArrayBuffer>, stream: CompressionStream | DecompressionStream) {
+export const linkDataLimits = { size: 50_000_000 };
+
+/**
+ * Bytes compressed by a stream
+ * @param bytes data to compress
+ * @param stream compression stream (`deflate-raw`)
+ * @returns compressed bytes
+ */
+async function compress(bytes: Uint8Array<ArrayBuffer>, stream: CompressionStream) {
   return new Uint8Array(await new Response(new Response(bytes).body!.pipeThrough(stream)).arrayBuffer());
+}
+
+/**
+ * Bytes decompressed (`deflate-raw`) chunk by chunk, within `linkDataLimits`
+ * @param bytes compressed data
+ * @returns decompressed bytes
+ * @throws {DrawerError} `error.drawingTooBig` beyond the size (decompression stopped)
+ */
+async function decompress(bytes: Uint8Array<ArrayBuffer>): Promise<Uint8Array<ArrayBuffer>> {
+  const reader = new Response(bytes).body!.pipeThrough(new DecompressionStream('deflate-raw')).getReader();
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+
+  for (let read = await reader.read(); !read.done; read = await reader.read()) {
+    size += read.value.length;
+    if (size > linkDataLimits.size) {
+      await reader.cancel();
+      throw new DrawerError('error.drawingTooBig', 'drawing too big to open');
+    }
+    chunks.push(read.value);
+  }
+
+  const result = new Uint8Array(size);
+  let offset = 0;
+
+  for (const chunk of chunks) {
+    result.set(chunk, offset);
+    offset += chunk.length;
+  }
+  return result;
 }
 
 /**
@@ -442,22 +485,22 @@ export async function encodeLinkData(text: string): Promise<string> {
 
   if (typeof CompressionStream === 'undefined') return `j${toBase64Url(bytes)}`;
 
-  return `z${toBase64Url(await transform(bytes, new CompressionStream('deflate-raw')))}`;
+  return `z${toBase64Url(await compress(bytes, new CompressionStream('deflate-raw')))}`;
 }
 
 /**
  * Text of link data (see `encodeLinkData`)
  * @param data data of a link hash, with its `z` or `j` prefix
  * @returns decoded text (JSON of a drawing file)
+ * @throws {DrawerError} `error.damagedLink` for damaged data, `error.drawingTooBig` beyond `linkDataLimits`
  */
 export async function decodeLinkData(data: string): Promise<string> {
   try {
     const bytes = fromBase64Url(data.slice(1));
 
-    return new TextDecoder().decode(
-      data[0] === 'z' ? await transform(bytes, new DecompressionStream('deflate-raw')) : bytes
-    );
+    return new TextDecoder().decode(data[0] === 'z' ? await decompress(bytes) : bytes);
   } catch (error) {
+    if (error instanceof DrawerError) throw error;
     // cut or changed link
     throw new DrawerError('error.damagedLink', 'damaged link data', { cause: error });
   }

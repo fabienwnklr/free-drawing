@@ -1,7 +1,7 @@
 import type { IncomingHttpHeaders } from 'node:http';
 import type { Kysely } from 'kysely';
 import { type BetterAuthOptions, betterAuth } from 'better-auth';
-import { APIError, createAuthMiddleware } from 'better-auth/api';
+import { APIError, createAuthMiddleware, getSessionFromCtx } from 'better-auth/api';
 import { fromNodeHeaders } from 'better-auth/node';
 import { getMigrations } from 'better-auth/db/migration';
 import type { ServerConfig } from './config';
@@ -14,14 +14,33 @@ import type { Database } from './db';
 export const clientIpHeader = 'x-free-drawing-client-ip';
 
 /**
- * Deletion of an account always needs its password: Better Auth deletes it without password while the session is
- * fresh (signed in less than a day ago), e.g. from a session left open or a stolen cookie
+ * Deletion and change of email of an account always need its password, e.g. from a session left open or a stolen
+ * cookie: Better Auth deletes an account without password while the session is fresh (signed in less than a day ago),
+ * and changes its email at once (no email sent), which would give the account to the new email (password reset)
  */
-const passwordToDelete = createAuthMiddleware(async (ctx) => {
-  const { password } = (ctx.body ?? {}) as { password?: unknown };
+const passwordChecks = createAuthMiddleware(async (ctx) => {
+  if (ctx.path !== '/delete-user' && ctx.path !== '/change-email') return;
 
-  if (ctx.path === '/delete-user' && (typeof password !== 'string' || !password)) {
+  const { password } = (ctx.body ?? {}) as { password?: unknown };
+  // Better Auth answers without session
+  const session = await getSessionFromCtx(ctx);
+
+  if (!session) return;
+  if (typeof password !== 'string' || !password) {
     throw new APIError('BAD_REQUEST', { code: 'PASSWORD_REQUIRED', message: 'Password required' });
+  }
+  // checked by Better Auth for a deletion
+  if (ctx.path !== '/change-email') return;
+
+  const account = await ctx.context.internalAdapter.findCredentialAccount(session.user.id);
+  const valid =
+    password.length <= ctx.context.password.config.maxPasswordLength &&
+    !!account?.password &&
+    (await ctx.context.password.verify({ hash: account.password, password }));
+
+  if (!valid) {
+    ctx.context.logger.warn('Invalid password');
+    throw new APIError('BAD_REQUEST', { code: 'INVALID_PASSWORD', message: 'Invalid password' });
   }
 });
 
@@ -47,12 +66,13 @@ function getOptions(config: ServerConfig, db: Kysely<Database>) {
     trustedOrigins: config.trustedOrigins,
     emailAndPassword: { enabled: true, minPasswordLength: 8 },
     user: {
-      // no email sent (no verification): the new email is used at once, unless an account uses it
+      // no email sent (no verification): the new email is used at once (with the password: `passwordChecks`), unless
+      // an account uses it
       changeEmail: { enabled: true, updateEmailWithoutVerification: true },
-      // with password (`passwordToDelete`), drawings and preferences removed with the user (foreign keys)
+      // with password (`passwordChecks`), drawings and preferences removed with the user (foreign keys)
       deleteUser: { enabled: true },
     },
-    hooks: { before: passwordToDelete },
+    hooks: { before: passwordChecks },
     // per address (`clientIpHeader`), in production
     rateLimit: {
       enabled: !config.dev,

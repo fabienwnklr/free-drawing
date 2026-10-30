@@ -326,7 +326,9 @@ function shapeElement(shape: Node, dark: boolean | undefined, matrix: number[]):
 
   if (shape instanceof Arrow) {
     // heads of both ends, as drawn (open, triangle, dot, bar)
-    const heads = [true, false].map((atStart) => arrowheadSvg(shape, atStart, fill, strokeAttrs(false))).join('');
+    const heads = [true, false]
+      .map((atStart) => arrowheadSvg(shape, atStart, attrs({ fill }), strokeAttrs(false)))
+      .join('');
 
     return `<g${group}><path${attrs({ d: linePath(shape), fill: 'none' })}${strokeAttrs()}/>${heads}</g>`;
   }

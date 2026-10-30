@@ -40,6 +40,7 @@ export const en = {
   'error.notDrawingFile': 'not a drawing file',
   'error.notImage': 'not an image of a supported format (PNG, JPEG, WebP, GIF, SVG)',
   'error.damagedLink': 'incomplete or damaged link',
+  'error.drawingTooBig': 'drawing too big to open',
   'error.imageNotCreated': 'image not created by the browser',
   'error.serverUnreachable': 'server unreachable',
   'error.notAllowed': 'permission denied by the browser',
