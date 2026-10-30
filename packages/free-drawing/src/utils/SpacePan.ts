@@ -16,6 +16,8 @@ export class SpacePan {
   #moved = false;
   /** Draw and selection layers listening before */
   #listening: boolean[] = [];
+  /** Last button of the drawer pressed with the pointer (tool clicked): Space on it moves the view while it is focused */
+  #pressedButton: Element | null = null;
 
   /**
    * Released with Space, or once the page loses focus (Space released out of it)
@@ -30,6 +32,12 @@ export class SpacePan {
       this.stop();
     });
     window.addEventListener('blur', () => this.stop(), { signal: drawer.signal });
+    // button clicked: Space moves the view, not on a button reached by keyboard (Space presses it)
+    drawer.$drawerContainer.addEventListener(
+      'pointerdown',
+      (e) => (this.#pressedButton = (e.target as Element).closest?.('button') ?? null),
+      { capture: true }
+    );
     this._initMiddleButton();
   }
 
@@ -97,9 +105,11 @@ export class SpacePan {
 
     const { drawer } = this;
     const target = e.target as HTMLElement;
-    // drawing focused, or a button of the drawer (tool clicked) with the pointer on the canvas: fields keep Space
+    // drawing focused, or a button of the drawer clicked (tool chosen) with the pointer on the canvas: fields and buttons
+    // reached by keyboard keep Space
     const onDrawing =
-      target === drawer.$drawerContainer || (target instanceof HTMLButtonElement && drawer._hasPointer());
+      target === drawer.$drawerContainer ||
+      (target instanceof HTMLButtonElement && target === this.#pressedButton && drawer._hasPointer());
 
     if (!onDrawing || drawer._duringAction()) return false;
     this.start();

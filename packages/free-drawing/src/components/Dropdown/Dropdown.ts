@@ -110,6 +110,8 @@ export class Dropdown extends MicroEvent<DropdownEventMap> {
 
     // Escape closes menu, focus goes back to its button
     this.$dropdownContainer.addEventListener('keydown', (event) => {
+      // keys of the menu run no shortcut of the drawer (Delete, letters of tools...)
+      if (this.$menu.contains(event.target as Node)) event.stopPropagation();
       if (event.key !== 'Escape' || !this.isShown()) return;
 
       event.stopPropagation();
@@ -129,6 +131,14 @@ export class Dropdown extends MicroEvent<DropdownEventMap> {
         }
       },
       { signal: this.#signal }
+    );
+    // a press out of it: a tap or a stroke on the canvas gives no click (tools prevent the default of touch start)
+    document.addEventListener(
+      'pointerdown',
+      (event) => {
+        if (this.isShown() && !this.$dropdownContainer.contains(event.target as Node)) this.hide();
+      },
+      { capture: true, signal: this.#signal }
     );
     // drawer or window resized while shown
     window.addEventListener(

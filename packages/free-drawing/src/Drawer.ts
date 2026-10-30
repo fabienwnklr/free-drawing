@@ -820,6 +820,8 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
     this.#destroyed = true;
     // preferences of the dialog not saved: the ones shown before given back
     if (this.preferencesModal?.isVisible()) this.preferencesModal.hide();
+    // its animation frames would run until its end
+    this.replay.stop();
     await this.plugins.destroy();
     this.activeWidget?.setActive(false);
     this.stopCollaboration();

@@ -811,11 +811,16 @@ export class SelectWidget extends BaseWidget {
   }
 
   /**
-   * Turn snapping off: drag listeners of snapping (`.snap`) removed
+   * Turn snapping off: drag listeners of snapping (`.snap`) removed; during a drag, its guides removed and its stops
+   * forgotten (the next drag finds its own)
    */
   private _removeSnapEvents() {
     this.snapping = false;
     this.drawer.drawLayer.off('.snap');
+    this._clearGuides();
+    this.#dragStops = null;
+    this.#dragBox = null;
+    this.#dragStarts.clear();
   }
 
   /**
@@ -1219,19 +1224,20 @@ export class SelectWidget extends BaseWidget {
 
   /**
    * Turn snapping to objects on (grid hidden: one snapping at a time) or off, update context menu button, save
-   * preferences and fire change. Use `drawer.setting.toggleSnapping()` to toggle it.
+   * preferences; nothing when unchanged. Not a change of the drawing (not saved with it, a drag in progress not cut in
+   * history). Use `drawer.setting.toggleSnapping()` to toggle it.
    * @param active Turn snapping on (default) or off
    */
   toggleSnapping(active: boolean = true) {
-    if (active && !this.snapping) {
+    if (active === this.snapping) return;
+    if (active) {
       if (this.drawer.grid) this.drawer.hideGrid();
       setPressed(this.drawer.contextMenu.$snappingBtn, true);
       this._initSnapEvents();
-    } else if (!active && this.snapping) {
+    } else {
       this._removeSnapEvents();
       setPressed(this.drawer.contextMenu.$snappingBtn, false);
     }
     this.drawer._preferencesChanged();
-    this.drawer.stage.fire('change');
   }
 }

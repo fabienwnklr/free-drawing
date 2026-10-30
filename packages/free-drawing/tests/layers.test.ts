@@ -159,6 +159,22 @@ describe('Layers panel', () => {
     expect(drawer.getShapeLabel(restored)).toBe('Rectangle');
   });
 
+  it('Rows reordered: a shape and its text move together, its text above it', () => {
+    const drawer = createDrawer();
+    const panel = drawer.layersPanel!;
+    const note = drawer.addShape(new Rect({ id: 'note', name: shapeName.rect, width: 100, height: 100, fill: '#ff0' }));
+    const text = drawer.addShape(new Text({ id: 'text', name: shapeName.text, text: 'T', containerId: 'note' }));
+    const other = drawer.addShape(new Rect({ id: 'other', name: shapeName.rect, width: 50, height: 50, fill: '#0f0' }));
+    const order = () => drawer.getDrawingShapes().map((shape) => shape.id());
+
+    // shape moved on top (row index 0): its text above it
+    panel.moveShape(note, 0);
+    expect(order()).toEqual([other.id(), 'note', 'text']);
+    // text moved at the bottom: its shape below it
+    panel.moveShape(text, 2);
+    expect(order()).toEqual(['note', 'text', other.id()]);
+  });
+
   it('Texts of shapes hidden and locked with their shapes', () => {
     const drawer = createDrawer();
     const rect = drawer.addShape(new Rect({ name: shapeName.rect, width: 100, height: 50, stroke: '#000' }));

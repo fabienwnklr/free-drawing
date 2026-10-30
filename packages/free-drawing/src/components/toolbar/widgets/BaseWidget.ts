@@ -41,6 +41,8 @@ export abstract class BaseWidget {
   #actionListeners: AbortController | null = null;
   /** Finger of the touch action in progress (`Touch.identifier`), null for a mouse or an unknown finger */
   #touchId: number | null = null;
+  /** Activated (events listened, button pressed), until deactivated */
+  #active = false;
   /** Show `overlay` while widget is active (false when overlay depends on something else, e.g. selection) */
   protected showOverlayOnActive: boolean = true;
   /** Stage cursor while widget is active */
@@ -154,8 +156,9 @@ export abstract class BaseWidget {
     this.drawer.stage.on(namespaced, (e) => {
       const evt = e.evt as TouchEvent;
 
-      // two finger gesture (zoom, move of the view): touches ignored until every finger is lifted
-      if (this.drawer.gestures?.active && e.type.startsWith('touch')) return;
+      // two finger gesture (zoom, move of the view): touches ignored until every finger is lifted, also the taps konva
+      // fires for each finger (a text, a note added)
+      if (this.drawer.gestures?.active && (e.type.startsWith('touch') || e.type.endsWith('tap'))) return;
       // Space held, middle button (pressed, released, moved while pressed): the view is moved
       if (this.drawer.spacePan?.active) return;
       if ((evt as unknown as MouseEvent).button === 1 || ((evt as unknown as MouseEvent).buttons ?? 0) & 4) return;
@@ -350,11 +353,17 @@ export abstract class BaseWidget {
   setActive(active: boolean) {
     if (active) {
       if (this.disabled) return;
+      // chosen again (shortcut, button): kept as it is, its selection too
+      if (this.#active) {
+        this.drawer._takeFocus();
+        return;
+      }
 
       if (this.drawer.activeWidget) {
         this.drawer.activeWidget.setActive(false);
       }
       this.drawer.toolbar.setActiveWidget(this);
+      this.#active = true;
       setPressed(this.$button, true);
       this.initEvents();
       this.updateCursor();
@@ -368,6 +377,7 @@ export abstract class BaseWidget {
       // pointer action stopped by tool change (read only, right removed, API): what it was drawing removed, also for
       // other users (live preview), shortcuts and UI usable again
       if (this.inAction) this.cancelAction();
+      this.#active = false;
       this.removeEvents();
       if (this.showOverlayOnActive) this.overlay?.hide();
       this.onDesactive();

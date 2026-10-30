@@ -27,6 +27,32 @@ const createRects = () => {
   return { drawer, selectWidget, transformer, a, b, bound, guides };
 };
 
+describe('Snapping setting', () => {
+  it('Snapping is not the drawing: toggled without change of the drawing, nothing done when unchanged', async () => {
+    const drawer = createDrawer();
+    const selection = drawer.getWidget<SelectWidget>('selection')!;
+    const change = vi.fn();
+    const preferences = vi.fn();
+
+    selection.toggleSnapping(false);
+    await Promise.resolve();
+    drawer.on('change', change);
+    drawer.on('preferences.change', preferences);
+    // unchanged (preferences dialog applying every field)
+    drawer.setPreferences({ snapping: false });
+    selection.toggleSnapping(false);
+    await Promise.resolve();
+    expect(preferences).not.toHaveBeenCalled();
+
+    selection.toggleSnapping(true);
+    await Promise.resolve();
+    expect(selection.snapping).toBe(true);
+    expect(preferences).toHaveBeenCalledTimes(1);
+    expect(change).not.toHaveBeenCalled();
+    expect(drawer.hasUnsavedChanges()).toBe(false);
+  });
+});
+
 describe('Snapping while resizing', () => {
   document.body.innerHTML = `<div id="test"></div>`;
 
@@ -141,6 +167,32 @@ describe('Snapping while moving', () => {
     // box of A and B: 298..598, right side snapped to 600
     dragBy(drawer, a, { x: 200, y: 100 }, 198);
     expect([a.x(), b.x()]).toEqual([300, 350]);
+  });
+
+  it('Snapping turned off during a drag: guides removed, the next drag finds its own guides', () => {
+    const { drawer, selectWidget, b, guides } = createRects();
+    // its left side is a guide (600)
+    const c = drawer.addShape(new Rect({ name: shapeName.rect, x: 600, y: 700, width: 100, height: 100 }));
+
+    selectWidget.setActive(true);
+    selectWidget.toggleSnapping(true);
+    selectWidget.select([b]);
+    drawer.stage.setPointersPositions(new MouseEvent('mousedown', { clientX: 200, clientY: 450 }));
+    b.startDrag();
+    window.dispatchEvent(new MouseEvent('mousemove', { clientX: 349, clientY: 450 }));
+    window.dispatchEvent(new MouseEvent('mousemove', { clientX: 498, clientY: 450 }));
+    // right side 598 snapped to 600
+    expect(b.x()).toBe(450);
+    expect(guides()).toBeGreaterThan(0);
+    selectWidget.toggleSnapping(false);
+    expect(guides()).toBe(0);
+    window.dispatchEvent(new MouseEvent('mouseup', { clientX: 498, clientY: 450 }));
+
+    // guide moved, snapping on again: right side 998 snapped to its new place
+    c.x(1000);
+    selectWidget.toggleSnapping(true);
+    dragBy(drawer, b, { x: 500, y: 450 }, 398);
+    expect(b.x()).toBe(850);
   });
 
   it('One change per drag: saved, in history and shared once, whatever the number of shapes moved', () => {

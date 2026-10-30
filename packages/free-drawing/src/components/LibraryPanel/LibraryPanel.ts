@@ -110,10 +110,9 @@ export class LibraryPanel {
       'horizontal'
     );
     this.$panel.addEventListener('keydown', (e) => {
-      if (e.key !== 'Escape') return;
-
+      // keys of the panel run no shortcut of the drawer (Delete, letters of tools...)
       e.stopPropagation();
-      this._close();
+      if (e.key === 'Escape') this._close();
     });
 
     // item dragged from the panel, dropped on the drawing: inserted there

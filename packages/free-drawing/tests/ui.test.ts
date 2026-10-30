@@ -141,6 +141,36 @@ describe('User interface', () => {
     expect(drawer.background.fill()).toBe('#abcdef');
     expect($input.classList.contains('active')).toBe(true);
     expect($transparent.getAttribute('aria-pressed')).toBe('false');
+
+    // a tap or a stroke on the canvas (no click: tools prevent the default of touch start) closes it
+    drawer.stage.content.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true }));
+    expect(setting.isShown()).toBe(false);
+  });
+
+  it('Keys typed in the settings menu, the context menu and the library panel run no shortcut of the drawer', () => {
+    const drawer = createDrawer();
+    const text = drawer.getWidget<TextWidget>('text')!.addTextNode('kept');
+    const selectWidget = drawer.getWidget<SelectWidget>('selection')!;
+    const press = ($target: HTMLElement, key: string) =>
+      $target.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+
+    selectWidget.select([text]);
+    drawer.setting.show();
+    drawer.contextMenu.show();
+    drawer.libraryPanel!.toggle(true);
+    for (const $target of [
+      drawer.setting.$menu.querySelector<HTMLElement>('button')!,
+      drawer.contextMenu.$menu.querySelector<HTMLElement>('button')!,
+      drawer.libraryPanel!.$importButton,
+    ]) {
+      press($target, 'Delete');
+      press($target, 'r');
+    }
+    expect(drawer.getDrawingShapes()).toEqual([text]);
+    expect(drawer.activeTool).toBe('selection');
+    drawer.setting.hide();
+    drawer.contextMenu.hide();
+    drawer.libraryPanel!.toggle(false);
   });
 
   it('Arrow keys move is saved once, on key release', () => {

@@ -123,17 +123,16 @@ export class CollaborationPanel {
       this.hide();
       this.$opener.focus();
     });
-    // a click out of the panel and of its button closes it (path of the click: its button may be removed, e.g. request
-    // answered)
-    document.addEventListener(
-      'click',
-      (e) => {
-        const path = e.composedPath();
+    // a click or a press out of the panel and of its button closes it (path of the click: its button may be removed,
+    // e.g. request answered; a tap or a stroke on the canvas gives no click: tools prevent the default of touch start)
+    const closeOutside = (e: Event) => {
+      const path = e.composedPath();
 
-        if (this.isShown() && !path.includes(this.$panel) && !path.includes(this.$opener)) this.hide();
-      },
-      { signal: drawer.signal }
-    );
+      if (this.isShown() && !path.includes(this.$panel) && !path.includes(this.$opener)) this.hide();
+    };
+
+    document.addEventListener('click', closeOutside, { signal: drawer.signal });
+    document.addEventListener('pointerdown', closeOutside, { capture: true, signal: drawer.signal });
     window.addEventListener(
       'resize',
       () => {

@@ -256,7 +256,7 @@ The mouse wheel zooms around the pointer (`wheelAction: 'zoom'`, default), or mo
 
 - A notch of a mouse wheel zooms by the `scaling` option (1.11), the small steps of a trackpad less: zooming follows the fingers. Browsers give the Ctrl key to the wheel events of a pinch: a pinch is told apart from Ctrl + wheel by the Ctrl key really pressed. With `zoom: false`, the wheel does not zoom, it still moves the view.
 - `'pan'` suits trackpads (two fingers move the view, a pinch zooms), `'zoom'` mice.
-- Space held, a drag moves the view whatever the tool (as the pan tool, H): the tool, its options and the selection stay as they were, the view is saved on release. Space is taken with the focus on the drawing, or on a button of the drawer with the pointer on the canvas (a tool just clicked); fields and the other buttons keep it.
+- Space held, a drag moves the view whatever the tool (as the pan tool, H): the tool, its options and the selection stay as they were, the view is saved on release. Space is taken with the focus on the drawing, or on a button of the drawer clicked with the pointer still on the canvas (a tool just clicked); fields and buttons reached with the keyboard keep it.
 - A drag with the middle button (wheel pressed) moves the view too, whatever the tool, without the autoscroll of the browser.
 
 ```js
@@ -396,7 +396,7 @@ Brush options (freehand stroke, see [perfect-freehand](https://github.com/stever
 
 Eraser (E): a click erases the shape under pointer, a drag erases every shape it crosses, faded until the pointer is released (changing tool meanwhile keeps them). A shape of a group erases its group, a shape of a frame is erased alone, locked shapes are kept. Right and middle buttons do not erase.
 
-Text (T): a click adds a text, or edits the text (or name of a frame) clicked. Enter or a press elsewhere validates it (Shift + Enter adds a line, Escape cancels, an empty text is removed), then the tool is kept (`keepTool`, pin of the toolbar) or the selection tool comes back with the text selected. A double click edits any text, whatever the tool.
+Text (T): a click adds a text, or edits the text (or name of a frame) clicked. Enter, Tab or a press elsewhere validates it (Shift + Enter adds a line, Escape cancels, an empty text is removed; Ctrl / Cmd + S validates it and saves the drawing), one text edited at a time, then the tool is kept (`keepTool`, pin of the toolbar) or the selection tool comes back with the text selected. A double click edits any text, whatever the tool.
 
 Note (N): a click adds a sticky note there (a square of a light color, yellow by default, its color chosen in the panel of the tool) and writes in it at once, a click on a note writes in it; validated, the tool is kept (`keepTool`) or the selection tool comes back with the note selected. A note is a rectangle (named `drawer-rect drawer-note`) drawn with a shadow (also in exports): its text is centered in it, the note grows with it (never shorter), it is resized, colored (background), moved and linked by arrows as rectangles. `drawer.getWidget('note').addNote({ x, y })` adds one centered on a point.
 
@@ -619,7 +619,7 @@ drawer.pasteStyle({ strokeColor: '#e03131', strokeWidth: 8 });
 
 ## Layers
 
-The layers button of header (Alt+L) shows the list of shapes, top one first. A row selects its shape, Ctrl / Cmd + click (or Ctrl + Space) adds or removes it, Shift + click (or Shift + arrows) selects the rows from the last one selected (shortcuts shown under the list), a double click (or F2) renames it, its handle (or Alt + Up / Down) moves it in stacking order, its buttons hide, lock or delete it. Hidden shapes are not drawn nor exported, locked shapes can't be moved, transformed nor erased on canvas: a click (or their row) selects them alone, with a dashed box, to unlock them (button of selection menu, context menu, Ctrl+Shift+L). Names, hidden and locked states are saved with shapes.
+The layers button of header (Alt+L) shows the list of shapes, top one first. A row selects its shape, Ctrl / Cmd + click (or Ctrl + Space) adds or removes it, Shift + click (or Shift + arrows) selects the rows from the last one selected (shortcuts shown under the list), a double click (or F2) renames it, its handle (or Alt + Up / Down) moves it in stacking order (a shape and its text together, its text above it), its buttons hide, lock or delete it. Hidden shapes are not drawn nor exported, locked shapes can't be moved, transformed nor erased on canvas: a click (or their row) selects them alone, with a dashed box, to unlock them (button of selection menu, context menu, Ctrl+Shift+L). Names, hidden and locked states are saved with shapes.
 
 ```js
 drawer.layersPanel?.toggle(); // show / hide panel

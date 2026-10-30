@@ -342,10 +342,11 @@ export class ContextMenu {
     this.$menu.addEventListener('contextmenu', (e) => e.preventDefault());
     arrowNavigation(this.$menu, () => this._getItems(), 'vertical');
     this.$menu.addEventListener('keydown', (e) => {
+      // keys of the menu run no shortcut of the drawer (Delete, letters of tools...)
+      e.stopPropagation();
       if (e.key !== 'Escape' && e.key !== 'Tab') return;
 
       e.preventDefault();
-      e.stopPropagation();
       this.hide();
     });
 

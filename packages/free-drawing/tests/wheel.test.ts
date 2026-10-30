@@ -154,6 +154,24 @@ describe('Mouse wheel and Space', () => {
     expect(drawer.stage.draggable()).toBe(true);
   });
 
+  it('Space on a button of the drawer, pointer on the canvas: view moved once the button was clicked, pressed when reached by keyboard', () => {
+    const drawer = createDrawer();
+    const $button = drawer.toolbar.getButton(drawer.getWidget('brush')!);
+    const space = () =>
+      $button.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true }));
+
+    vi.spyOn(drawer, '_hasPointer').mockReturnValue(true);
+    // reached by keyboard: pressed (default of the button kept)
+    expect(space()).toBe(true);
+    expect(drawer.spacePan.active).toBe(false);
+    // clicked (tool chosen with the mouse): view moved
+    $button.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true }));
+    expect(space()).toBe(false);
+    expect(drawer.spacePan.active).toBe(true);
+    drawer.$drawerContainer.dispatchEvent(new KeyboardEvent('keyup', { key: ' ', cancelable: true }));
+    expect(drawer.spacePan.active).toBe(false);
+  });
+
   it('Space kept by fields, and by buttons of the drawer with the pointer out of the canvas', () => {
     const drawer = createDrawer();
     const $input = document.createElement('input');

@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [8.2.5](https://github.com/fabienwnklr/free-drawing/compare/v8.2.4...v8.2.5) (2026-10-30)
+
+
+### Bug Fixes
+
+* **touch:** a pinch with the text or note tool no longer adds a text or a note for each finger (taps of the fingers of a two finger gesture ignored, also their double tap); a text edited while another one is ends the edit of the first one (one field at a time, no hidden empty text left)
+* **text:** the field of a text being edited has an accessible name (Text, or Name for the title of a frame); Tab validates the edit (shortcuts of the drawer were disabled after it), Ctrl / Cmd + S validates it and saves the drawing instead of saving the page
+* **snapping:** turning snapping on or off is no longer a change of the drawing (it marked it unsaved, saved the drawing of an app, cut a drag in progress in history), nothing done when unchanged; turned off during a drag, its guides are removed and the next drag finds its own guides
+* **menus:** the settings menu and the panel of a collaboration session close on a tap or a stroke on the canvas; keys typed in the settings menu, the context menu and the library panel no longer run shortcuts of the drawer (Delete removed the selection, letters changed the tool)
+* **layers:** a shape moved in the layers panel (handle, Alt + Up / Down) moves with its text, its text above it (it stayed under a note or a filled shape)
+* **keyboard:** Space on a button of the drawer reached with the keyboard presses it, also with the pointer on the canvas (it moved the view); a tool chosen again (shortcut, button) keeps the selection
+* **replay:** `destroy` stops a replay playing (its animation frames ran until its end)
+
 ## [8.2.4](https://github.com/fabienwnklr/free-drawing/compare/v8.2.3...v8.2.4) (2026-10-30)
 
 

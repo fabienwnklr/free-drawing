@@ -32,16 +32,16 @@ Audit of 2026-10-29 (library 8.2.0): items ordered by priority in each section.
 
 ### Tools and interface
 
-- [ ] pinch with the text or note tool creates texts and notes (konva `tap` of each finger); an edit opened twice leaves a field and an empty hidden text (`onStage`: `tap` / `dbltap` ignored during gestures; `editTextNode` ends the edit open)
-- [ ] snapping toggled fires `change`, also unchanged: the preferences dialog marks the drawing unsaved, saves `storage`, adds history entries during a drag (`SelectWidget.toggleSnapping`)
-- [ ] snapping turned off during a drag: guides left, stops and box of that drag used by the next drags (`_removeSnapEvents`)
-- [ ] settings menu and collaboration panel not closed by a tap or a stroke on the canvas (no `click` once tools prevent the default of `touchstart`) (`Dropdown`, `CollaborationPanel`: capture `pointerdown`, as `GroupWidget`)
-- [ ] reorder of the layers panel moves a shape without its text: text hidden under a note or a filled shape (`LayersPanel.moveShape`, Alt + Up / Down)
-- [ ] keys of the library panel, settings menu and context menu reach `HotKey`: Delete removes the selection, letters change the tool (`LibraryPanel`, `Dropdown`, `ContextMenu`: propagation stopped)
-- [ ] Space on a button of the drawer focused by keyboard, pointer on the canvas: pans instead of pressing it (`SpacePan`)
-- [ ] text field: Ctrl / Cmd + S opens "Save page" (the web app saves the text hidden), no accessible name, Tab leaves the edit open with shortcuts disabled (`HotKey`, `TextWidget.editTextNode`)
-- [ ] active tool activated again (S, its button) clears the selection (`BaseWidget.setActive`)
-- [ ] `destroy` does not stop the replay: its animation frames run until it ends
+- [x] pinch with the text or note tool creates texts and notes (konva `tap` of each finger); an edit opened twice leaves a field and an empty hidden text (`onStage`: `tap` / `dbltap` ignored during gestures; `editTextNode` ends the edit open)
+- [x] snapping toggled fires `change`, also unchanged: the preferences dialog marks the drawing unsaved, saves `storage`, adds history entries during a drag (`SelectWidget.toggleSnapping`)
+- [x] snapping turned off during a drag: guides left, stops and box of that drag used by the next drags (`_removeSnapEvents`)
+- [x] settings menu and collaboration panel not closed by a tap or a stroke on the canvas (no `click` once tools prevent the default of `touchstart`) (`Dropdown`, `CollaborationPanel`: capture `pointerdown`, as `GroupWidget`)
+- [x] reorder of the layers panel moves a shape without its text: text hidden under a note or a filled shape (`LayersPanel.moveShape`, Alt + Up / Down)
+- [x] keys of the library panel, settings menu and context menu reach `HotKey`: Delete removes the selection, letters change the tool (`LibraryPanel`, `Dropdown`, `ContextMenu`: propagation stopped)
+- [x] Space on a button of the drawer focused by keyboard, pointer on the canvas: pans instead of pressing it (`SpacePan`)
+- [x] text field: Ctrl / Cmd + S opens "Save page" (the web app saves the text hidden), no accessible name, Tab leaves the edit open with shortcuts disabled (`HotKey`, `TextWidget.editTextNode`)
+- [x] active tool activated again (S, its button) clears the selection (`BaseWidget.setActive`)
+- [x] `destroy` does not stop the replay: its animation frames run until it ends
 
 ### Web app, server
 

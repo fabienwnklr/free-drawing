@@ -12,6 +12,7 @@ import { shapeName } from '@/constants';
 import { TextOverlay } from '@/components/tools/Overlay/TextOverlay/TextOverlay';
 import { isComposing, placeInView } from '@/utils/dom';
 import { cssFontFamily, getContentWidth } from '@/utils/text';
+import { keyLetter } from '@/utils/HotKey';
 
 /**
  * Text tool: a click adds a text (or edits the text clicked, or the text of the shape clicked) in a textarea placed over
@@ -33,6 +34,8 @@ export class TextWidget extends BaseWidget {
   #skipClick = false;
   /** Ends the edit in progress (the text typed, none: previous one kept), null without edit */
   #endEdit: ((text?: string) => void) | null = null;
+  /** Ends the edit in progress with the text typed (as a press elsewhere), null without edit */
+  #validateEdit: (() => void) | null = null;
   /** Text edited, placed again with its field when the view moves (`followView`) */
   #editedText: Text | null = null;
   /** Field of the text edited */
@@ -54,7 +57,8 @@ export class TextWidget extends BaseWidget {
     this.drawer.stage.on('dblclick.edit dbltap.edit', (e) => {
       // slides presented: nothing edited
       if (this.drawer.readOnly || this.drawer.slideshow.active || this.drawer.replay.active) return;
-      if (this.drawer.spacePan.active) return;
+      // view moved: Space held, two finger gesture (its taps)
+      if (this.drawer.spacePan.active || this.drawer.gestures?.active) return;
 
       // texts with any tool, texts of shapes with the selection tool (not a double tap of a drawing tool)
       const textNode = this._isEditable(e.target)
@@ -266,6 +270,13 @@ export class TextWidget extends BaseWidget {
    * @param onEnd Called once the edit ended, with the text (null when left empty: removed)
    */
   editTextNode(textNode: Text, onEnd?: (textNode: Text | null) => void) {
+    // edited already: its field kept
+    if (textNode === this.#editedText && this.#textarea) {
+      this.#textarea.focus();
+      return;
+    }
+    // another text edited (two taps, API): its edit ended with the text typed, one field at a time
+    this.#validateEdit?.();
     textNode.hide();
     const selectWidget = this.drawer.toolbar.getWidget<SelectWidget>('selection');
     selectWidget?.transformer.hide();
@@ -358,6 +369,8 @@ export class TextWidget extends BaseWidget {
     const textarea = document.createElement('textarea');
     // colors of drawing in dark mode
     textarea.classList.add('drawer-text-editor');
+    // named for screen readers: text, or name of a frame
+    textarea.setAttribute('aria-label', this.drawer.t(getFrameOfTitle(textNode) ? 'layers.name' : 'tools.text'));
     this.drawer.layout.add('floating', textarea);
 
     textarea.value = textNode.text();
@@ -423,6 +436,7 @@ export class TextWidget extends BaseWidget {
       // ended once (Enter then a press, read only)
       if (this.#endEdit !== removeTextarea) return;
       this.#endEdit = null;
+      this.#validateEdit = null;
       this.#editedText = null;
       this.#textarea = null;
       // changes of other users received during the edit applied first: the text typed comes after them (else they would
@@ -473,6 +487,7 @@ export class TextWidget extends BaseWidget {
     };
 
     this.#endEdit = removeTextarea;
+    this.#validateEdit = () => removeTextarea(value());
     // title wider than the field: field widened, not wrapped into the frame
     textarea.addEventListener('input', () => {
       if (!title) return;
@@ -495,6 +510,13 @@ export class TextWidget extends BaseWidget {
       if (e.key === 'Escape') {
         removeTextarea();
       }
+      // Tab leaves the field: edit ended (shortcuts of the drawer back), focus on the drawer
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        removeTextarea(value());
+      }
+      // Ctrl / Cmd + S: edit ended, then the drawing saved by the shortcut of the drawer (not the page)
+      if ((e.ctrlKey || e.metaKey) && !e.altKey && keyLetter(e) === 's') removeTextarea(value());
     });
 
     const handleOutsideClick = (e: Event) => {

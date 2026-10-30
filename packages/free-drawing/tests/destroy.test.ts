@@ -3,6 +3,8 @@ import { stages } from 'konva/lib/Stage';
 import { Plugin } from '@/plugins/Plugin';
 import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
+import { Rect } from 'konva/lib/shapes/Rect';
+import { shapeName } from '@/constants';
 import { createDrawer } from './helpers';
 
 const tick = () => new Promise((resolve) => setTimeout(resolve));
@@ -71,6 +73,19 @@ describe('Destroy', () => {
     expect([...signals]).toEqual([drawer.signal]);
     await drawer.destroy();
     expect(drawer.signal.aborted).toBe(true);
+  });
+
+  it('Replay playing when destroyed: stopped, no animation frame left', async () => {
+    const drawer = createDrawer();
+    const frames = vi.spyOn(window, 'cancelAnimationFrame');
+
+    drawer.addShape(new Rect({ name: shapeName.rect, width: 10, height: 10 }));
+    expect(drawer.replay.start()).toBe(true);
+    expect(drawer.replay.playing).toBe(true);
+    await drawer.destroy();
+    expect([drawer.replay.active, drawer.replay.playing]).toEqual([false, false]);
+    expect(frames).toHaveBeenCalled();
+    frames.mockRestore();
   });
 
   it('Destroyed: plugins destroyed, tool deactivated, stage destroyed, element emptied, page events ignored', async () => {

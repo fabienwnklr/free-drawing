@@ -45,6 +45,7 @@ import BubbleIcon from '@/icons/bubble.svg?raw';
 import CheckboxIcon from '@/icons/checkbox.svg?raw';
 import FrameIcon from '@/icons/frame.svg?raw';
 import { getFrameShapes, isFrame } from '@/utils/frame';
+import { getBoundText, getContainer, isBoundText } from '@/utils/boundText';
 import HighlighterIcon from '@/icons/highlighter.svg?raw';
 import NoteIcon from '@/icons/note.svg?raw';
 
@@ -662,7 +663,8 @@ export class LayersPanel {
   }
 
   /**
-   * Move a shape to a place of its group (or drawing): 0 is top
+   * Move a shape to a place of its group (or drawing): 0 is top. A shape and its text move together, its text just
+   * above it (else hidden under a note or a filled shape)
    * @param shape Shape moved among the shapes of its parent
    * @param index Place from the top (row order), clamped to the shapes of the parent
    * @returns true if it moved (change saved)
@@ -674,6 +676,19 @@ export class LayersPanel {
     if (!shape.getLayer() || shape.zIndex() === zIndex) return false;
 
     shape.zIndex(zIndex);
+
+    const { drawLayer } = this.drawer;
+    const text = isBoundText(shape) ? shape : getBoundText(shape, drawLayer);
+    const container = text && getContainer(text, drawLayer);
+
+    if (text && container && text.getParent() === container.getParent()) {
+      // the other one of the pair placed next to the one moved
+      if (shape === text) {
+        container.zIndex(container.zIndex() < text.zIndex() ? text.zIndex() - 1 : text.zIndex());
+      } else {
+        text.zIndex(text.zIndex() < container.zIndex() ? container.zIndex() : container.zIndex() + 1);
+      }
+    }
     this.drawer.stage.fire('change');
 
     return true;

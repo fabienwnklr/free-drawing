@@ -4,7 +4,7 @@ import { Line } from 'konva/lib/shapes/Line';
 import { Shape } from 'konva/lib/Shape';
 import { Rect } from 'konva/lib/shapes/Rect';
 import { Node } from 'konva/lib/Node';
-import { Frame, getFrameShapes, getFrameTitle, isFrame } from '@/utils/frame';
+import { Frame, createFrame as newFrame, getFrameShapes, getFrameTitle, isFrame } from '@/utils/frame';
 import { frameHighlightName } from '@/utils/frameHighlight';
 import type { DrawingShape } from '@/@types/drawer';
 import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
@@ -635,6 +635,91 @@ describe('Pointer actions', () => {
     expect(square.opacity()).toBe(0.8);
     expect(drawer.getDrawingShapes()).toEqual([square]);
     expect(live).not.toHaveBeenCalled();
+  });
+
+  it('Two fingers on the canvas with the text or note tool: nothing added (taps of the fingers ignored)', () => {
+    for (const tool of ['text', 'note']) {
+      const drawer = createDrawer({ keepTool: true });
+      const touch = (type: string, fingers: ReturnType<typeof finger>[], changed = fingers) =>
+        fireTouch(drawer, type, fingers, changed);
+
+      drawer.getWidget<BaseWidget>(tool)!.setActive(true);
+      touch('touchstart', [finger(0, 100, 100)]);
+      touch('touchstart', [finger(0, 100, 100), finger(1, 200, 100)], [finger(1, 200, 100)]);
+      touch('touchend', [finger(1, 200, 100)], [finger(0, 100, 100)]);
+      touch('touchend', [], [finger(1, 200, 100)]);
+      expect(drawer.getDrawingShapes()).toHaveLength(0);
+      expect(document.querySelector('.drawer-text-editor')).toBeNull();
+    }
+  });
+
+  it('A text edited while another one is: the first edit ends with its text, one field', () => {
+    const drawer = createDrawer();
+    const textWidget = drawer.getWidget<TextWidget>('text')!;
+    const first = textWidget.addTextNode('first');
+    const second = textWidget.addTextNode('second');
+    const editors = () => document.querySelectorAll<HTMLTextAreaElement>('.drawer-text-editor');
+
+    textWidget.editTextNode(first);
+    editors()[0].value = 'first typed';
+    textWidget.editTextNode(second);
+    expect(editors()).toHaveLength(1);
+    expect([first.visible(), first.text()]).toEqual([true, 'first typed']);
+    expect(second.visible()).toBe(false);
+    // the same text again: its field kept
+    editors()[0].value = 'second typed';
+    textWidget.editTextNode(second);
+    expect(editors()).toHaveLength(1);
+    expect(editors()[0].value).toBe('second typed');
+    editors()[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+    expect(second.text()).toBe('second typed');
+    expect(editors()).toHaveLength(0);
+  });
+
+  it('Active tool chosen again (shortcut, button): selection kept', () => {
+    const drawer = createDrawer();
+    const selection = drawer.getWidget<SelectWidget>('selection')!;
+    const rect = drawer.addShape(new Rect({ name: shapeName.rect, width: 50, height: 50 }));
+
+    selection.setActive(true);
+    selection.select([rect]);
+    keydown(drawer, { key: 's', code: 'KeyS' });
+    drawer.toolbar.getButton(selection).click();
+    expect(drawer.getSelectedShapes()).toEqual([rect]);
+    expect(drawer.activeTool).toBe('selection');
+  });
+
+  it('Field of a text edit: named, Tab ends the edit, Ctrl + S ends it and saves the drawing (not the page)', () => {
+    const drawer = createDrawer({ language: 'en' });
+    const textWidget = drawer.getWidget<TextWidget>('text')!;
+    const text = textWidget.addTextNode('a');
+    const editor = () => document.querySelector<HTMLTextAreaElement>('.drawer-text-editor')!;
+    const press = (init: KeyboardEventInit) => {
+      const event = new KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...init });
+
+      editor().dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+
+    textWidget.editTextNode(text);
+    expect(editor().getAttribute('aria-label')).toBe('Text');
+    // Tab: edit ended, shortcuts of the drawer back
+    editor().value = 'typed';
+    expect(press({ key: 'Tab' })).toBe(true);
+    expect([text.text(), textWidget.isEditing, drawer._duringAction()]).toEqual(['typed', false, false]);
+
+    textWidget.editTextNode(text);
+    editor().value = 'saved';
+    expect(press({ key: 's', ctrlKey: true })).toBe(true);
+    expect([text.text(), textWidget.isEditing]).toEqual(['saved', false]);
+    expect(localStorage.getItem(drawer.options.localStorageKey)).toContain('"text":"saved"');
+
+    // title of a frame: its name
+    const frame = drawer.addShape(newFrame({ x: 0, y: 0, width: 100, height: 100, label: 'Plan' }));
+
+    textWidget.editTextNode(getFrameTitle(frame));
+    expect(editor().getAttribute('aria-label')).toBe('Name');
+    press({ key: 'Escape' });
   });
 
   it('Two fingers on the canvas with zoom option off: view moved, zoom kept', () => {

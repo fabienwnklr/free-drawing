@@ -785,7 +785,12 @@ describe('Collaboration', () => {
     expect(indicator.$count.textContent).toBe('2');
     expect(guest.collaborationIndicator!.$stopButton.getAttribute('aria-label')).toBe('Leave session');
 
-    // panel of the session, link and settings in the dialog
+    // panel of the session, closed by a tap or a stroke on the canvas (no click: tools prevent the default of touch start)
+    indicator.$button.click();
+    expect(indicator.panel.isShown()).toBe(true);
+    document.body.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true }));
+    expect(indicator.panel.isShown()).toBe(false);
+    // link and settings in the dialog
     indicator.$button.click();
     expect(indicator.panel.isShown()).toBe(true);
     expect(indicator.$button.getAttribute('aria-expanded')).toBe('true');
