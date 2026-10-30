@@ -2,7 +2,7 @@ import type { AvailableTools, WidgetGroupOptions, WidgetsOptions } from '@/@type
 import type { Shape, ShapeConfig } from 'konva/lib/Shape';
 import type { Group } from 'konva/lib/Group';
 import type { CustomTranslations, Language } from '@/@types/i18n';
-import type { DrawingFile, LibraryItem } from '@/@types/file';
+import type { DrawingFile, DrawingFiles, LibraryItem } from '@/@types/file';
 import type { CollaborationOptions } from '@/@types/collaboration';
 import type { PluginEntry, PluginOptions } from '@/@types/plugin';
 import type { Drawer } from '@/Drawer';
@@ -115,6 +115,26 @@ export type DrawerUser = {
   id: string;
   /** Name shown to other users, user can change it for current visit */
   name?: string;
+};
+
+/** Drawing when a load of `storage` starts (`Drawer.loadFromStorage`): changes made during the load found from it */
+export type DrawingSnapshot = {
+  /** JSON of each shape by id, bottom first */
+  shapes: Map<string, string>;
+  /** Background color */
+  background: ColorLike;
+};
+
+/** Changes of the drawing made during a load of `storage`, applied again over the loaded drawing */
+export type ChangesDuringLoad = {
+  /** JSON of the shapes added or changed, bottom first */
+  changed: string[];
+  /** Ids of the shapes removed */
+  removed: string[];
+  /** Background color, when changed */
+  background?: ColorLike;
+  /** Image files of the shapes added or changed */
+  files: DrawingFiles;
 };
 
 /**

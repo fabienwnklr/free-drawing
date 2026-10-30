@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [8.2.4](https://github.com/fabienwnklr/free-drawing/compare/v8.2.3...v8.2.4) (2026-10-30)
+
+
+### Bug Fixes
+
+* **persistence:** a drawing saved in the browser while Space was held (moving the view) is loaded again with its shapes selectable and erasable, the view no longer moved by drags of the tools
+* **storage:** changes made while the drawing of the `storage` option loads (drawing loaded again, slow download) are kept over the loaded drawing, as one change, instead of being dropped; a loaded drawing replaces the drawing once the stroke or text edit in progress ended (the shape being drawn was removed). Changes of a drawing loaded while the save of the previous one ran are saved once it ends (they stayed unsaved)
+* **export:** exported SVG files no longer hold characters XML forbids (line breaks of Word or PowerPoint, other controls, lone surrogates): such files could not be opened, previews of the library were broken. A pasted text takes the line breaks of Windows, Word and PowerPoint as lines
+* **images:** SVG images of drawings of other apps are added once the stroke or text edit in progress ended (shapes being erased were recorded faded)
+* **links:** opening a link, joining or leaving a room keep the state of the history of the page (routers of apps, React Router, Next.js, keep theirs there): it was replaced by null
+
 ## [8.2.3](https://github.com/fabienwnklr/free-drawing/compare/v8.2.2...v8.2.3) (2026-10-30)
 
 

@@ -90,6 +90,15 @@ export function uniqueId(prefix: string) {
 }
 
 /**
+ * Address of the page replaced (room joined, link opened or left), state of its history kept: the router of the host
+ * app (React Router, Next.js...) keeps its own there
+ * @param url New address of the page
+ */
+export function replaceUrl(url: string) {
+  window.history.replaceState(window.history.state, '', url);
+}
+
+/**
  * Accessible name of an element (icon button...), also shown as tooltip
  * @param $el element to name
  * @param label translated name, set as `aria-label` and `title`

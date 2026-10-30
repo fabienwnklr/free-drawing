@@ -62,6 +62,21 @@ describe('Persistence and performance', () => {
     expect(second.getDrawingShapes()).toHaveLength(2);
   });
 
+  it('Saved while Space is held: loaded again with shapes reached, the view not moved by drags of tools', () => {
+    const localStorageKey = `test-${Math.random()}`;
+    const first = createDrawer({ localStorageKey });
+
+    first.addShape(new Rect({ name: 'drawer-rect', width: 10, height: 10 }));
+    first.spacePan.start();
+    first.save();
+    first.spacePan.stop();
+
+    const second = createDrawer({ localStorageKey, tool: 'brush' });
+
+    expect(second.stage.draggable()).toBe(false);
+    expect([second.drawLayer.listening(), second.selectionLayer.listening()]).toEqual([true, true]);
+  });
+
   it('Saves of previous versions: repeated and long ids replaced, links follow a long id', () => {
     const localStorageKey = `test-${Math.random()}`;
     const first = createDrawer({ localStorageKey });

@@ -1,7 +1,7 @@
 import '@/components/CollaborationModal/collaboration-modal.scss';
 import type { Drawer } from '@/Drawer';
 import { Modal } from '@/components/Modal/Modal';
-import { createButton, createSwitch, isComposing, uniqueId } from '@/utils/dom';
+import { createButton, createSwitch, isComposing, replaceUrl, uniqueId } from '@/utils/dom';
 import { drawerEvents } from '@/constants';
 import type { TranslationKey } from '@/@types/i18n';
 import { DrawerError, getErrorText } from '@/utils/errors';
@@ -236,7 +236,7 @@ export class CollaborationModal extends Modal {
   cancelJoin() {
     this.joinRoom = null;
     this.joinKey = undefined;
-    window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    replaceUrl(window.location.pathname + window.location.search);
     this.hide();
   }
 

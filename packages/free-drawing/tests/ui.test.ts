@@ -178,6 +178,18 @@ describe('User interface', () => {
     expect((drawer.getDrawingShapeByName('text')[0] as unknown as { text(): string })?.text()).toBe('pasted text');
   });
 
+  it('Pasted text: line breaks of Windows, Word and PowerPoint as lines of the text', () => {
+    const drawer = createDrawer();
+    const paste = new Event('paste', { bubbles: true });
+
+    Object.defineProperty(paste, 'clipboardData', { value: { getData: () => 'one\r\ntwo\u000bthree\rfour' } });
+    drawer.$drawerContainer.dispatchEvent(paste);
+
+    const text = drawer.getDrawingShapeByName('text')[0] as unknown as { text(): string };
+
+    expect(text.text()).toBe('one\ntwo\nthree\nfour');
+  });
+
   it('Paste in a field of the drawer: pasted in the field, nothing added to the drawing', () => {
     const drawer = createDrawer();
     const paste = ($field: HTMLElement) => {

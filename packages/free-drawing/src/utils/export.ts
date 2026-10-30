@@ -176,12 +176,37 @@ export function renderCanvas(shapes: DrawingShape[], box: IRect, options: ImageO
 const num = (n: number) => String(Math.round(n * 100) / 100);
 
 /**
+ * Text without the characters XML 1.0 forbids: controls but tab and line breaks (vertical tab of the line breaks of
+ * Word or PowerPoint...), lone surrogates, U+FFFE and U+FFFF; an svg holding one can't be read
+ * @param text text of a shape or attribute value
+ * @returns text without them (pairs of surrogates kept)
+ */
+function withoutForbiddenXml(text: string): string {
+  let result = '';
+
+  for (let i = 0; i < text.length; i++) {
+    const code = text.charCodeAt(i);
+    const next = text.charCodeAt(i + 1);
+
+    // character out of the basic plane: both halves kept
+    if (code >= 0xd800 && code <= 0xdbff && next >= 0xdc00 && next <= 0xdfff) {
+      result += text[i] + text[++i];
+      continue;
+    }
+    if (code < 0x20 && code !== 0x9 && code !== 0xa && code !== 0xd) continue;
+    if ((code >= 0xd800 && code <= 0xdfff) || code === 0xfffe || code === 0xffff) continue;
+    result += text[i];
+  }
+  return result;
+}
+
+/**
  * Text escaped for xml content and attribute values
  * @param text text of a shape or attribute value
- * @returns text with `&`, `<`, `>` and `"` as entities
+ * @returns text with `&`, `<`, `>` and `"` as entities, without the characters XML forbids
  */
 const escapeXml = (text: string) =>
-  text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  withoutForbiddenXml(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 /**
  * Svg attributes (` name="value"`), undefined and empty values left out

@@ -13,6 +13,8 @@ import type {
   DrawerEventMap,
   DrawerOptions,
   DrawerStorage,
+  DrawingSnapshot,
+  ChangesDuringLoad,
   DrawerUser,
   DrawingShape,
   Arrowheads,
@@ -42,7 +44,7 @@ import {
 } from '@/constants';
 import { SpacePan } from '@/utils/SpacePan';
 import { drawGrid, gridRotationSnaps, gridShapeStyle, snapToGrid } from '@/utils/grid';
-import { hasFocusOutside, setPressed } from '@/utils/dom';
+import { hasFocusOutside, replaceUrl, setPressed } from '@/utils/dom';
 import { announce, createLiveRegion } from '@/utils/liveRegion';
 import { DrawerError, getErrorText } from '@/utils/errors';
 import { getStrokeStyle } from '@/utils/stroke';
@@ -328,6 +330,8 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
   #saving: Promise<void> | null = null;
   /** Drawing changed during a save in storage: saved again once it ends */
   #saveAgain = false;
+  /** Load of `storage` whose drawing asked the next save (`#storageLoads`): saved even once the save of another ends */
+  #saveAgainFor = 0;
   /** Style copied from shapes by `copyStyle`, pasted by `pasteStyle`; null before a copy */
   #copiedStyle: OptionsChange | null = null;
   /** Resolved once drawing of `storage` option is loaded (rejected if it can't be) and plugins are initialized */
@@ -428,6 +432,10 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
       this.selectionLayer = getLayer(this.stage, 'selection')!;
       // not interactive, saved as listening by previous versions
       this.bgLayer.listening(false);
+      // saved while Space was held (`SpacePan`): view moved by the pan tool only, shapes reached
+      this.stage.draggable(false);
+      this.drawLayer.listening(true);
+      this.selectionLayer.listening(true);
       // grid layer only contains grid, it is rebuilt: previous versions saved lines and a clip
       // (view at save time) which hid grid outside of it after pan
       const savedGridLayer = getLayer(this.stage, 'grid')!;
@@ -793,7 +801,7 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
     const link = this.getCollaborationLink(room);
 
     // reloading page joins the room again, page url shared by this user is known as shared by them
-    window.history.replaceState(null, '', link);
+    replaceUrl(link);
     this.trigger(drawerEvents.collaborationChange);
 
     return link;
@@ -850,7 +858,7 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
     // right to draw back
     this._setReadOnly(this.options.readOnly);
     if (window.location.hash.startsWith('#room=')) {
-      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      replaceUrl(window.location.pathname + window.location.search);
     }
     this.trigger(drawerEvents.collaborationChange);
   }
@@ -1686,6 +1694,7 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
   private _saveToStorage(storage: DrawerStorage): Promise<void> {
     if (this.#saving) {
       this.#saveAgain = true;
+      this.#saveAgainFor = this.#storageLoads;
       return this.#saving;
     }
 
@@ -1695,9 +1704,9 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
       const load = this.#storageLoads;
 
       do {
-        this.#saveAgain = false;
         // destroyed during the save: its stage is empty; another drawing being loaded: the app stores it in its place
         if (this.#destroyed || load !== this.#storageLoads) break;
+        this.#saveAgain = false;
         try {
           await storage.save(this.getDrawingFile());
           saved = true;
@@ -1710,6 +1719,10 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
       this.#saving = null;
       // last drawing saved, else changes stay unsaved (another drawing loaded: its state)
       if (saved && load === this.#storageLoads) this._onSaved();
+      // changes of the drawing loaded since, made during the save of the previous one: saved now
+      if (this.#saveAgain && this.#saveAgainFor === this.#storageLoads && !this.#destroyed) {
+        await this._saveToStorage(storage);
+      }
     })();
 
     return this.#saving;
@@ -1738,7 +1751,8 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
   /**
    * Load drawing of `storage` option (on init, again after login...): it replaces drawing (kept if nothing is
    * stored), history starts from it, changes are saved in storage once it is loaded. Only the last load started is
-   * applied (an app switching drawings quickly)
+   * applied (an app switching drawings quickly), once the stroke or text edit in progress ended; changes made during
+   * the load (slow download) are kept over the loaded drawing, as one change
    * @returns Rejected if drawing can't be loaded (shown in a toast): changes are not saved
    */
   async loadFromStorage(): Promise<void> {
@@ -1749,28 +1763,35 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
     const load = ++this.#storageLoads;
     // a later load started: this one is outdated, nothing applied nor told
     const outdated = () => this.#destroyed || load !== this.#storageLoads;
+    // drawing when the load starts: changes made meanwhile found from it
+    const start: DrawingSnapshot = { shapes: this._shapeStates(), background: this.background.fill() as ColorLike };
 
     this.#storageLoaded = false;
     this.$drawerContainer.setAttribute('aria-busy', 'true');
     try {
       const file = await storage.load();
 
+      // not during a stroke or a text edit: the shape being drawn would be removed
+      if (file) await this._afterAction();
       // removed meanwhile, or another drawing loaded: nothing loaded nor saved
       if (outdated()) return;
       if (file) {
+        const kept = this._changesSince(start);
+
         this.loadDrawing(file);
         this.undoRedo.reset();
         this.undoRedo.manageButtons();
         // history starts here: files of the previous drawing forgotten
         this._pruneFiles();
-      }
-      this.#storageLoaded = true;
-      if (file) {
+        this.#storageLoaded = true;
         // drawing as stored
         this._setUnsaved(false);
-      } else if (this.#unsaved && this.options.autoSave) {
+        // changed during the load: changes kept over it (saved, undone at once)
+        if (kept) this._applyChanges(kept);
+      } else {
+        this.#storageLoaded = true;
         // nothing stored: drawing kept, its changes saved now
-        this.save();
+        if (this.#unsaved && this.options.autoSave) this.save();
       }
     } catch (error) {
       if (outdated()) return;
@@ -1779,6 +1800,54 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
     } finally {
       if (load === this.#storageLoads) this.$drawerContainer.removeAttribute('aria-busy');
     }
+  }
+
+  /**
+   * Changes of the drawing since a load started: shapes added, changed and removed, background
+   * @param start Drawing when the load started
+   * @returns Changes with the image files of their shapes, null without change
+   */
+  private _changesSince(start: DrawingSnapshot): ChangesDuringLoad | null {
+    const current = this._shapeStates();
+    const changed = [...current].filter(([id, json]) => start.shapes.get(id) !== json);
+    const removed = [...start.shapes.keys()].filter((id) => !current.has(id));
+    const background = this.background.fill() as ColorLike;
+
+    if (!changed.length && !removed.length && background === start.background) return null;
+
+    const ids = new Set(changed.map(([id]) => id));
+
+    return {
+      changed: changed.map(([, json]) => json),
+      removed,
+      ...(background !== start.background && { background }),
+      files: this._getFiles(this.getDrawingShapes().filter((shape) => ids.has(shape.id()))),
+    };
+  }
+
+  /**
+   * Changes made during a load applied again over the loaded drawing: shapes changed in their place (added ones on
+   * top), removed ones removed, background, then one change (saved, in history)
+   * @param changes Changes found by `_changesSince`
+   */
+  private _applyChanges({ changed, removed, background, files }: ChangesDuringLoad) {
+    const shapes = new Map(this.getDrawingShapes().map((shape) => [shape.id(), shape]));
+
+    this.addFiles(files);
+    for (const id of removed) shapes.get(id)?.destroy();
+    for (const json of changed) {
+      const state = JSON.parse(json) as ShapeState;
+      const old = shapes.get(state.attrs.id as string);
+      const index = old?.zIndex();
+
+      old?.destroy();
+
+      const node = this._addShape(Node.create(state) as DrawingShape);
+
+      if (index !== undefined) node.zIndex(index);
+    }
+    if (background !== undefined) this._setBackground(background);
+    this.stage.fire('change');
   }
 
   /**
@@ -2913,7 +2982,7 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
 
   /**
    * SVG images of a drawing of another app read as images of drawings (PNG, WebP: drawing files and collaboration
-   * servers keep these only), shown once read, then saved and shared
+   * servers keep these only), shown once read and once the stroke or text edit in progress ended, then saved and shared
    * @param files SVG files by id (`getSvgFiles`), unread ones left empty
    */
   private async _readSvgFiles(files: [string, Blob][]) {
@@ -2927,6 +2996,8 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
       })
     );
 
+    // not during a stroke or a text edit (shapes being erased would be recorded faded, a text saved hidden)
+    await this._afterAction();
     if (this.#destroyed || !read.flat().length) return;
     this.addFiles(Object.fromEntries(read.flat()));
     this.stage.fire('change');
@@ -3007,7 +3078,7 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
     if (!prefix || !hash.startsWith(prefix)) return;
 
     // taken before decoding (asynchronous): not opened by another drawer of the page
-    window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    replaceUrl(window.location.pathname + window.location.search);
     try {
       const file = await decodeLinkData(hash.slice(prefix.length));
 

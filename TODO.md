@@ -23,12 +23,12 @@ Audit of 2026-10-29 (library 8.2.0): items ordered by priority in each section.
 
 ### Persistence and data
 
-- [ ] save while Space is held stores the stage draggable and its layers not listening: once reloaded, nothing selected nor erased, the view moves while drawing (`SpacePan`, `_loadSavedStage`: state of the stage and layers reset)
-- [ ] changes made during `loadFromStorage` (drawing changed elsewhere loaded again by the web app, slow download) dropped without warning; a save asked during the save loop of the previous drawing never runs (`Drawer.loadFromStorage`, `_saveToStorage`)
+- [x] save while Space is held stores the stage draggable and its layers not listening: once reloaded, nothing selected nor erased, the view moves while drawing (`SpacePan`, `_loadSavedStage`: state of the stage and layers reset)
+- [x] changes made during `loadFromStorage` (drawing changed elsewhere loaded again by the web app, slow download) dropped without warning; a save asked during the save loop of the previous drawing never runs (`Drawer.loadFromStorage`, `_saveToStorage`)
 - [x] pasted text wrapped (regression of 8.2): `_createText` measures its lines before `setupFonts`, with a fallback font (`TextWidget._createText`)
-- [ ] svg export invalid with control characters (U+000B, line breaks of Word or PowerPoint): file unreadable, its drawing lost, previews of the library broken (`escapeXml`)
-- [ ] `_readSvgFiles` fires `change` during a stroke or a text edit (shapes being erased recorded faded) (`_afterAction`, as `addImage`)
-- [ ] links replace `history.state` with null: state of the router of the host app lost (React Router, Next.js) (`Drawer.ts` `replaceState`)
+- [x] svg export invalid with control characters (U+000B, line breaks of Word or PowerPoint): file unreadable, its drawing lost, previews of the library broken (`escapeXml`)
+- [x] `_readSvgFiles` fires `change` during a stroke or a text edit (shapes being erased recorded faded) (`_afterAction`, as `addImage`)
+- [x] links replace `history.state` with null: state of the router of the host app lost (React Router, Next.js) (`Drawer.ts` `replaceState`)
 
 ### Tools and interface
 

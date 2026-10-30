@@ -275,13 +275,16 @@ describe('Drawing files and links', () => {
 
     expect(link).toContain('#drawer-link=');
 
-    window.location.hash = new URL(link).hash;
+    // state of the router of the host app
+    window.history.replaceState({ route: 'app' }, '', new URL(link).hash);
     const drawer = createDrawer({ id: 'drawer-link' });
 
     // link decoded asynchronously (slower while every test file runs)
     await vi.waitFor(() => expect(drawer.getDrawingShapes().map((s) => s.attrs.text)).toEqual(['from link']));
-    // link drawing loaded once, not on next page load
+    // link drawing loaded once, not on next page load; state of the app kept
     expect(window.location.hash).toBe('');
+    expect(window.history.state).toEqual({ route: 'app' });
+    window.history.replaceState(null, '');
   });
 
   it('Link of a drawer without id opened by any drawer without id (remounted by an app), also links of previous versions', async () => {

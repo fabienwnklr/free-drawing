@@ -8,7 +8,8 @@ import type { DrawingShape } from '@/@types/drawer';
 import { shapeName } from '@/constants';
 import { getFrameShapes, isFrame, type Frame } from '@/utils/frame';
 import { fromOtherApp } from '@/utils/foreignDrawing';
-import { createDrawer } from './helpers';
+import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
+import { createDrawer, fireMouse } from './helpers';
 
 /** PNG of one pixel */
 const png =
@@ -463,11 +464,22 @@ describe('Drawings of other apps', () => {
         files: { svg1: { mimeType: 'image/svg+xml', id: 'svg1', dataURL: `data:image/svg+xml;base64,${btoa(svg)}` } },
       };
 
+      // changes fired during a stroke
+      const duringStroke: boolean[] = [];
+
+      drawer.on('change', () => duringStroke.push(drawer._duringAction()));
       drawer.loadDrawing(JSON.stringify(file));
       const fileId = drawer.getDrawingShapes()[0].attrs.fileId as string;
 
       expect(drawer.files.has(fileId)).toBe(false);
+      // a stroke started while it is read: shown once the stroke ends, nothing recorded during it
+      drawer.getWidget<BaseWidget>('brush')!.setActive(true);
+      fireMouse(drawer, 'mousedown', 100, 100);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      fireMouse(drawer, 'mousemove', 150, 150);
+      fireMouse(drawer, 'mouseup', 150, 150);
       await vi.waitFor(() => expect(drawer.files.get(fileId)).toMatch(/^data:image\/(png|webp|jpeg);base64,/));
+      expect(duringStroke).not.toContain(true);
       expect(drawer.getDrawingFile().files).toEqual({ [fileId]: drawer.files.get(fileId) });
     } finally {
       image.decode = decode;

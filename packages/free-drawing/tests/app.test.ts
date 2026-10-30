@@ -1,8 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
+import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
 import type { DrawerStorage } from '@/@types/drawer';
 import type { DrawingFile } from '@/@types/file';
-import { createDrawer } from './helpers';
+import { createDrawer, fireMouse } from './helpers';
 
 const { io } = vi.hoisted(() => ({ io: vi.fn(() => ({})) }));
 
@@ -191,6 +192,75 @@ describe('Integration in an app', () => {
     expect(targets).toEqual(['first']);
     expect(texts(drawer)).toEqual(['second']);
     expect(drawer.hasUnsavedChanges()).toBe(false);
+  });
+
+  it('Save of the previous drawing running once another one is loaded: changes of the loaded one saved after it', async () => {
+    const ends: (() => void)[] = [];
+    const targets: string[] = [];
+    let target = 'first';
+    const storage: DrawerStorage = {
+      load: vi.fn(async () => fileWith(target)),
+      save: vi.fn(() => {
+        targets.push(target);
+        return new Promise<void>((resolve) => ends.push(resolve));
+      }),
+    };
+    const drawer = createDrawer({ autoSave: true, storage });
+
+    await drawer.ready;
+    addText(drawer, 'a');
+    target = 'second';
+    await drawer.loadFromStorage();
+    // changed during the save of the first drawing
+    addText(drawer, 'b');
+    ends[0]();
+    await flush();
+    expect(targets).toEqual(['first', 'second']);
+    expect(vi.mocked(storage.save).mock.calls[1][0].shapes.map((shape) => shape.attrs.text)).toEqual(['second', 'b']);
+    ends[1]();
+    await flush();
+    expect(drawer.hasUnsavedChanges()).toBe(false);
+  });
+
+  it('Changes made while a drawing is loading kept over the loaded drawing (one change), a stroke ended first', async () => {
+    let load: (file: DrawingFile | null) => void = () => {};
+    const storage: DrawerStorage = {
+      load: () => new Promise((resolve) => (load = resolve)),
+      save: vi.fn(async () => {}),
+    };
+    const drawer = createDrawer({ autoSave: true, storage });
+
+    load(fileWith('stored'));
+    await drawer.ready;
+
+    // loaded again (changed elsewhere), slow download
+    const reload = drawer.loadFromStorage();
+
+    addText(drawer, 'meanwhile');
+    load(fileWith('stored', 'elsewhere'));
+    await reload;
+    expect(texts(drawer)).toEqual(['stored', 'elsewhere', 'meanwhile']);
+    await flush();
+    expect(vi.mocked(storage.save).mock.lastCall![0].shapes).toHaveLength(3);
+    expect(drawer.hasUnsavedChanges()).toBe(false);
+    drawer.undoRedo.undo();
+    expect(texts(drawer)).toEqual(['stored', 'elsewhere']);
+
+    // loaded during a stroke: applied once it ends, the stroke kept
+    const again = drawer.loadFromStorage();
+
+    drawer.getWidget<BaseWidget>('brush')!.setActive(true);
+    fireMouse(drawer, 'mousedown', 10, 10);
+    load(fileWith('third'));
+    await flush();
+    expect(texts(drawer)).toEqual(['stored', 'elsewhere', undefined]);
+    fireMouse(drawer, 'mousemove', 50, 50);
+    fireMouse(drawer, 'mouseup', 50, 50);
+    await again;
+    expect(drawer.getDrawingShapes().map((shape) => shape.attrs.text ?? shape.getClassName())).toEqual([
+      'third',
+      'Line',
+    ]);
   });
 
   it('Toast message is shown as text (error messages of a server)', () => {

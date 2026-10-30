@@ -95,6 +95,17 @@ describe('Export', () => {
     expect(doc.querySelector('path[transform]')!.getAttribute('fill')).toBe(fill);
   });
 
+  it('Svg valid with characters XML forbids (line breaks of Word or PowerPoint, controls, lone surrogates)', () => {
+    const drawer = createDrawer();
+    const text = drawer.getWidget<TextWidget>('text')!.addTextNode('a\u000bb\u0001c\ud800d\u0008😀');
+    const svg = renderSvg([text], getExportBox([text], drawer.drawLayer)!);
+    const doc = new DOMParser().parseFromString(svg, 'image/svg+xml');
+
+    expect(doc.querySelector('parsererror')).toBeNull();
+    // emoji (pair of surrogates) kept
+    expect(doc.querySelector('text')!.textContent).toBe('abcd😀');
+  });
+
   it('Selected shapes are exported when there is a selection, else whole drawing', () => {
     const { drawer, rect, ellipse } = drawerWithShapes();
 

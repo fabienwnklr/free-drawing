@@ -366,7 +366,8 @@ export class HotKey {
           return;
         }
 
-        const text = e.clipboardData?.getData('text');
+        // line breaks of Windows, Word and PowerPoint (vertical tab) as lines (konva breaks lines on \n only)
+        const text = e.clipboardData?.getData('text').replace(/\r\n?/g, '\n').split('\v').join('\n');
 
         if (text) {
           e.preventDefault();
