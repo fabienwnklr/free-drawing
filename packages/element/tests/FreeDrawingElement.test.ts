@@ -63,6 +63,8 @@ describe('<free-drawing>', () => {
     expect(element.querySelector('canvas')).not.toBeNull();
     expect(element.firstElementChild).toBe(drawer.$el);
     expect(drawer.options.localStorageKey).toBe(`element-${count}`);
+    // its host followed, not the window (of the size of the window or hidden when mounted)
+    expect(drawer.options.followWindow).toBe(false);
     await vi.waitFor(() => expect(ready).toHaveBeenCalledWith(drawer));
     // block of the page, any style of the app wins
     expect(document.head.textContent).toContain(

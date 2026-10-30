@@ -118,8 +118,9 @@ import { Drawer } from '@fabwcie/free-drawing';
 import '@fabwcie/free-drawing/style.css';
 
 const drawer = new Drawer(document.getElementById('drawer'), {
-  theme: 'system', // light, dark or the one of the device
-  language: 'auto', // language of the browser
+  // light, dark or the one of the device, language of the browser: the ones chosen by the user in its menu kept
+  theme: 'system',
+  language: 'auto',
 });
 
 // drawing changed: keep it anywhere as JSON
@@ -134,8 +135,8 @@ export function Board() {
   return (
     <FreeDrawing
       style={{ height: 600 }}
-      theme="system" // light, dark or the one of the device
-      language="auto" // language of the browser
+      // light, dark or the one of the device, language of the browser: the ones chosen by the user in its menu kept
+      options={{ theme: 'system', language: 'auto' }}
       // drawing changed: keep it anywhere as JSON
       onChange={(drawer) => console.log(drawer.getDrawingFile())}
     />
@@ -154,7 +155,8 @@ const onChange = (drawer: Drawer) => console.log(drawer.getDrawingFile());
 </script>
 
 <template>
-  <FreeDrawing style="height: 600px" theme="system" language="auto" @change="onChange" />
+  <!-- the theme and language chosen by the user in its menu kept -->
+  <FreeDrawing style="height: 600px" :options="{ theme: 'system', language: 'auto' }" @change="onChange" />
 </template>
 ```
 
@@ -169,7 +171,8 @@ const onChange = (drawer: Drawer) => console.log(drawer.getDrawingFile());
   board.addEventListener('drawerchange', (event) => console.log(event.detail.getDrawingFile()));
 </script>
 
-<free-drawing theme="system" language="auto" style="height: 600px"></free-drawing>
+<!-- the theme and language chosen by the user in its menu kept -->
+<free-drawing options='{ "theme": "system", "language": "auto" }' style="height: 600px"></free-drawing>
 ```
 
 :::

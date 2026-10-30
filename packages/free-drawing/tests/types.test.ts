@@ -5,13 +5,18 @@ import type {
   ConfirmModal,
   DrawerLayout,
   Frame,
+  GridStyle,
   History,
   I18n,
   MicroEvent,
+  Replay,
+  ReplayStep,
+  SpacePan,
   Toast,
   Toolbar,
   TouchGestures,
   UndoRedo,
+  WheelAction,
 } from '@/index';
 import { createFrame } from '@/utils/frame';
 import { createDrawer } from './helpers';
@@ -39,8 +44,15 @@ describe('Types of the public API', () => {
     const toast: Toast = drawer.toast('Saved', 'info', 0);
     const frame: Frame = createFrame({ x: 0, y: 0, width: 100, height: 100, label: 'Frame' });
     const confirm: ConfirmModal | null = drawer.clearConfirmModal;
+    const replay: Replay = drawer.replay;
+    const steps: ReplayStep[] = replay.steps;
+    const spacePan: SpacePan = drawer.spacePan;
+    const preferences: [GridStyle, WheelAction] = [drawer.options.gridStyle, drawer.options.wheelAction];
 
-    expect([events, layout, i18n, toolbar, gestures, undoRedo, history, toast]).not.toContain(undefined);
+    expect([events, layout, i18n, toolbar, gestures, undoRedo, history, toast, replay, steps, spacePan]).not.toContain(
+      undefined
+    );
+    expect(preferences).toEqual(['squares', 'zoom']);
     expect(frame).toBeInstanceOf(Group);
     expect(confirm).toBeNull();
     toast.destroy();

@@ -19,6 +19,7 @@ export type {
   Arrowhead,
   Arrowheads,
   Edges,
+  GridStyle,
   HEX,
   OptionsChange,
   Preferences,
@@ -29,6 +30,7 @@ export type {
   StrokeStyle,
   TextStyle,
   Theme,
+  WheelAction,
 } from '@/@types/drawer';
 export type {
   AccessRequest,
@@ -38,6 +40,7 @@ export type {
   CollaborationSocket,
   DrawingChange,
   PresentedView,
+  ShapeMerge,
   EncryptedChange,
   EncryptedMessage,
   EncryptedShape,
@@ -63,16 +66,20 @@ export type {
   Command,
   ConfirmModalOptions,
   ContextMenuItemOptions,
+  DropdownEventMap,
   LayoutItemOptions,
   LayoutRegion,
   ModalOptions,
+  ReplayStep,
   SlideshowOptions,
+  ToastEventMap,
 } from '@/@types/ui';
-export type { Listener } from '@/@types/utils';
+export type { EmitterListener, EventArgs, EventName, Listener } from '@/@types/utils';
 export type { FrameChanges } from '@/@types/shapes';
 export type {
   AvailableTools,
   BrushWidgetOptions,
+  FreehandSettings,
   GroupWidgetOptions,
   OverlayOptions,
   PluginToolName,
@@ -160,6 +167,11 @@ export type { CollaborationPanel } from '@/components/CollaborationPanel/Collabo
 export type { CollaborationMembers } from '@/components/CollaborationMembers/CollaborationMembers';
 export type { SearchBar } from '@/components/SearchBar/SearchBar';
 export type { Slideshow } from '@/components/Slideshow/Slideshow';
+export type { Replay } from '@/components/Replay/Replay';
+export type { SpacePan } from '@/utils/SpacePan';
+// texts of the library and languages, types of `TranslationKey` and `Language` (`typeof`)
+export type { en } from '@/i18n/en';
+export type { languages } from '@/i18n/I18n';
 export type { ShapeNavigation } from '@/utils/shapeNavigation';
 export type { RoomCipher } from '@/utils/encryption';
 export { drawerEvents, pathShapeData, shapeName } from '@/constants';

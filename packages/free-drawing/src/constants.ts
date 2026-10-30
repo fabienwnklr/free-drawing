@@ -74,8 +74,9 @@ export const extraTools: Record<string, string> = {
 export const defaultOptions: DrawerOptions = {
   id: `drawer-${Date.now()}`,
   tool: 'brush',
-  width: window.innerWidth,
-  height: window.innerHeight,
+  // size of the window, read when a drawer is created (not when the library is loaded: none on a server)
+  width: 0,
+  height: 0,
   strokeWidth: 5,
   strokeStyle: 'solid',
   edges: 'sharp',

@@ -78,7 +78,8 @@ export function packageFiles(answers) {
     main: './dist/index.js',
     types: './dist/index.d.ts',
     exports: {
-      '.': { types: './dist/index.d.ts', import: './dist/index.js' },
+      // `default`: resolved by `require` too (Jest)
+      '.': { types: './dist/index.d.ts', import: './dist/index.js', default: './dist/index.js' },
       ...(css ? { './style.css': './dist/style.css' } : {}),
     },
     files: ['dist'],

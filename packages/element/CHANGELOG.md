@@ -2,6 +2,13 @@
 
 Changes of `@fabwcie/free-drawing-element`. Each version is published by the release workflow of the library once it is not on npm yet.
 
+## 1.1.2 (2026-10-30)
+
+### Bug Fixes
+
+- The drawer follows the size of its element, no longer the one of the window when the element had the size of the window (or was hidden) when it was mounted: resized then, the drawer was bigger than its element (library 8.3.0 or later: `followWindow` option)
+- The package is resolved by tools using the `require` condition of `exports` too (Jest): `default` condition added
+
 ## 1.1.1 (2026-10-29)
 
 ### Bug Fixes

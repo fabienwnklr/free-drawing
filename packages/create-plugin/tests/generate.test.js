@@ -66,6 +66,12 @@ describe('Generated plugin', () => {
     expect(pkg.name).toBe('free-drawing-plugin-sticky-notes');
     expect(pkg.peerDependencies).toEqual({ '@fabwcie/free-drawing': versions.library, konva: versions.konva });
     expect(pkg.exports['./style.css']).toBe('./dist/style.css');
+    // resolved by require too (Jest)
+    expect(pkg.exports['.']).toEqual({
+      types: './dist/index.d.ts',
+      import: './dist/index.js',
+      default: './dist/index.js',
+    });
     expect(pkg.scripts.build).toContain('copyFileSync');
     expect(Object.keys(pkg.scripts)).toEqual(['build', 'typecheck', 'test', 'prepublishOnly']);
   });

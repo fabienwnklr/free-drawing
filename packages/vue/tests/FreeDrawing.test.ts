@@ -66,6 +66,8 @@ describe('FreeDrawing (Vue)', () => {
     expect(host.querySelector('.board')!.firstElementChild).toBe(drawer.$el);
     expect(drawer.$el.querySelector('canvas')).not.toBeNull();
     expect(drawer.options.localStorageKey).toBe(`vue-${count}`);
+    // its host followed, not the window (of the size of the window or hidden when mounted)
+    expect(drawer.options.followWindow).toBe(false);
     await vi.waitFor(() => expect(onReady).toHaveBeenCalledWith(drawer));
   });
 

@@ -69,15 +69,28 @@ export function getNames(name) {
 }
 
 /**
- * Name of a plugin can give identifiers: at least one word, starting with a letter
+ * Names of nodes the drawer finds by name (layers, background): drawing files and collaboration sessions drop them from
+ * shapes (a shape named `selection` would be found as the selection layer)
+ */
+const reservedShapeNames = ['background', 'grid', 'draw', 'selection'];
+
+/**
+ * Name of a plugin can give identifiers: at least one word, starting with a letter; its shapes are named by it
+ * (kebab-case), not as nodes of the drawer nor as shapes of the library (`drawer-...`)
  * @param {string} name name given by the developer
  * @returns {string | null} error, null when valid
  */
 export function checkName(name) {
   const parts = words(name);
+  const kebab = parts.join('-');
 
   if (!parts.length) return 'Give a name with letters, e.g. "Sticky notes"';
   if (!/^[a-z]/.test(parts[0])) return 'Start the name with a letter: it gives the names of classes';
+  if (reservedShapeNames.includes(kebab)) {
+    return `"${kebab}" names a part of the drawer: its shapes would lose their name in files, choose another name`;
+  }
+  if (kebab.startsWith('drawer-'))
+    return 'Names starting with "Drawer" are the ones of the library: choose another name';
 
   return null;
 }

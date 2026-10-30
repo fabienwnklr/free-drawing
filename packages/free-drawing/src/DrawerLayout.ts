@@ -48,10 +48,11 @@ export class DrawerLayout {
     this.$container.append(this.$header, this.$footer);
     drawer.$el.replaceChildren(this.$container);
 
-    const { width, height } = drawer.options;
+    const { width, height, followWindow } = drawer.options;
     const { clientWidth, clientHeight } = document.documentElement;
 
-    if (width === clientWidth && height === clientHeight) this._followWindow();
+    // by default a drawer of the size of the window (unless sized by its app: `followWindow` false)
+    if (followWindow ?? (width === clientWidth && height === clientHeight)) this._followWindow();
   }
 
   /**

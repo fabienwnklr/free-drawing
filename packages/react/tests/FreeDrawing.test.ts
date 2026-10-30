@@ -55,6 +55,8 @@ describe('FreeDrawing (React)', () => {
 
     expect(element.querySelector('canvas')).not.toBeNull();
     expect(ref.current!.options.localStorageKey).toBe(`react-${count}`);
+    // its host followed, not the window (of the size of the window or hidden when mounted)
+    expect(ref.current!.options.followWindow).toBe(false);
     await act(() => vi.waitFor(() => expect(onReady).toHaveBeenCalledWith(ref.current)));
   });
 

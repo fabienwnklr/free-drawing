@@ -22,13 +22,13 @@ import '@fabwcie/free-drawing/style.css';
 ```
 
 ```html
-<free-drawing theme="system" language="auto" style="height: 600px"></free-drawing>
+<free-drawing style="height: 600px"></free-drawing>
 
 <script type="module">
   const board = document.querySelector('free-drawing');
 
-  // options read when the drawer is created
-  board.options = { localStorageKey: 'my-board' };
+  // options read when the drawer is created: a theme and a language of options leave the ones chosen by the user
+  board.options = { localStorageKey: 'my-board', theme: 'system', language: 'auto' };
   // drawing changed: keep it anywhere as JSON
   board.addEventListener('drawerchange', (event) => console.log(event.detail.getDrawingFile()));
 </script>

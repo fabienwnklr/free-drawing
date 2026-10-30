@@ -70,7 +70,7 @@ export function applySettings(drawer: Drawer, settings: DrawerSettings) {
 
 /**
  * Drawer created in its own element of the host once the library is loaded (on mount, never on a server): of the size
- * of the host and following it, unless `width` or `height` is given
+ * of the host and following it (not the window: `followWindow` false), unless `width` or `height` is given
  * @param host Element of the component
  * @param getOptions Options and settings of the component when the library is loaded
  * @param handlers Calls of the drawer: created, ready, drawing changed
@@ -98,6 +98,8 @@ export function mountDrawer(host: HTMLElement, getOptions: () => MountOptions, h
         // size of the host, else of the window (e.g. height of a host whose height comes from its content)
         ...(!sized && host.clientWidth ? { width: host.clientWidth } : {}),
         ...(!sized && host.clientHeight ? { height: host.clientHeight } : {}),
+        // its host followed (`observer`), not the window: also of the size of the window or hidden when mounted
+        ...(!sized && { followWindow: false }),
         ...options,
       });
 

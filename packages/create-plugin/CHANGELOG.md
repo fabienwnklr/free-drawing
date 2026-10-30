@@ -2,6 +2,13 @@
 
 Changes of `@fabwcie/create-free-drawing-plugin` (`npm create @fabwcie/free-drawing-plugin`). Each version is published by the release workflow of the library once it is not on npm yet.
 
+## 1.3.2 (2026-10-30)
+
+### Bug Fixes
+
+- Generated packages are resolved by tools using the `require` condition of `exports` too (Jest): `default` condition added
+- Names of the drawer are refused (`Background`, `Grid`, `Draw`, `Selection`, names starting with `Drawer`): the shapes of the plugin, named by it, lost their name in drawing files and collaboration sessions
+
 ## 1.3.1 (2026-10-28)
 
 ### Bug Fixes

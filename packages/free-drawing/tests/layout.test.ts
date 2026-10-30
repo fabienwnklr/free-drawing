@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createDrawer } from './helpers';
 
 /** Classes of elements of a container, in order */
@@ -81,6 +81,35 @@ describe('Layout', () => {
 
     drawer.setting.toggleZenMode();
     expect(layout.$container.classList.contains('is-zen')).toBe(false);
+  });
+
+  it('Drawer of the size of the window follows it, unless `followWindow` is false (sized by its app)', () => {
+    const observed: Element[] = [];
+    const isFull = (drawer: ReturnType<typeof createDrawer>) => drawer.$drawerContainer.classList.contains('is-full');
+
+    vi.spyOn(document.documentElement, 'clientWidth', 'get').mockReturnValue(800);
+    vi.spyOn(document.documentElement, 'clientHeight', 'get').mockReturnValue(600);
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe($el: Element) {
+          observed.push($el);
+        }
+        disconnect() {}
+      }
+    );
+    try {
+      expect(isFull(createDrawer({ width: 800, height: 600 }))).toBe(true);
+      expect(observed).toContain(document.documentElement);
+      // components follow their host, of the size of the window when mounted or hidden
+      observed.length = 0;
+      expect(isFull(createDrawer({ width: 800, height: 600, followWindow: false }))).toBe(false);
+      expect(observed).not.toContain(document.documentElement);
+      expect(isFull(createDrawer({ width: 300, height: 200, followWindow: true }))).toBe(true);
+    } finally {
+      vi.unstubAllGlobals();
+      vi.restoreAllMocks();
+    }
   });
 
   it('Interface ignores pointer during pointer actions', () => {

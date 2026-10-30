@@ -25,6 +25,12 @@ export type DrawerOptions = {
   width: number;
   /** Height of drawer (px, default window height) */
   height: number;
+  /**
+   * Follow the size of the window (drawer resized with it): by default when the drawer has the size of the window when
+   * it is created; false for a drawer sized by its app (the components of React and Vue and the web component follow
+   * their host)
+   */
+  followWindow?: boolean;
   /** Stroke width of new shapes (px, default 5) */
   strokeWidth: number;
   /** Stroke style of lines, arrows, rectangles and ellipses (default 'solid'), dashes and dots follow stroke width */

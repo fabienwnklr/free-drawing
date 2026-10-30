@@ -33,6 +33,11 @@ describe('Names of a plugin', () => {
       'Give a name with letters, e.g. "Sticky notes"',
       'Start the name with a letter: it gives the names of classes',
     ]);
+    // names of its shapes dropped from drawing files and sessions: names of nodes of the drawer, of the library
+    for (const name of ['Background', 'Grid', 'Draw', 'Selection', 'Drawer rect', 'drawer frame box']) {
+      expect(checkName(name)).toEqual(expect.stringContaining('another name'));
+    }
+    expect(checkName('Drawer')).toBeNull();
     expect(['free-drawing-plugin-notes', '@me/notes', 'Notes', 'my notes'].map(checkPackageName)).toEqual([
       null,
       null,

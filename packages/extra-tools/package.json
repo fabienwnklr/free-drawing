@@ -1,7 +1,7 @@
 {
   "name": "@fabwcie/free-drawing-extra-tools",
   "description": "Extra tools of free-drawing, infinite canvas drawing board: heart, cloud, star, hexagon, block arrow, speech bubble, check box shapes and highlighter, as plugins",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "license": "MIT",
   "author": "Winkler Fabien <fabienwinkler@outlook.fr>",
@@ -10,7 +10,8 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     }
   },
   "files": [

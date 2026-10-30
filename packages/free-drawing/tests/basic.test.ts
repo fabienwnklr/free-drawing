@@ -4,7 +4,7 @@ import { Toolbar } from '@/components/toolbar/Toolbar';
 import { Zoom } from '@/components/tools/Zoom/Zoom';
 import { Help } from '@/components/tools/Help/Help';
 import { Settings } from '@/components/tools/Settings/Settings';
-import { readdirSync, lstatSync } from 'node:fs';
+import { readdirSync, lstatSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const folderWidgets = './src/components/toolbar/widgets';
@@ -37,5 +37,15 @@ describe('Basic integration', () => {
     expect(drawer.activeWidget).not.toBe(null);
     expect(drawer.activeWidget.id).eq('brush');
     expect(drawer.activeWidget.$button.classList.contains('active')).eq(true);
+  });
+});
+
+describe('Packages of the repository', () => {
+  it('Components and extra tools resolvable by require (Jest): exports with a `default` condition', () => {
+    for (const name of ['react', 'vue', 'element', 'extra-tools']) {
+      const { exports } = JSON.parse(readFileSync(join('..', name, 'package.json'), 'utf8'));
+
+      expect(exports['.']).toMatchObject({ import: './dist/index.js', default: './dist/index.js' });
+    }
   });
 });

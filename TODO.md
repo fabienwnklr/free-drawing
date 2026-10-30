@@ -52,13 +52,13 @@ Audit of 2026-10-29 (library 8.2.0): items ordered by priority in each section.
 
 ### Packages, docs
 
-- [ ] library not importable on a server: `window.innerWidth` read by `defaultOptions` when loaded (examples of the READMEs of the components and extra tools crash in SSR) (`constants.ts`, test importing it in Node)
-- [ ] drawer of a component following the window instead of its host (host of the size of the window or hidden when mounted, then resized: drawer bigger than its host) (`DrawerLayout._followWindow`, `mountDrawer`)
-- [ ] types of the public API not exported: `Replay`, `SpacePan`, `GridStyle`, `WheelAction`, `FreehandSettings`, `ReplayStep` (`index.ts`, check of `index.d.ts`)
-- [ ] quick starts of the docs and README of the web component give `theme="system" language="auto"` as props / attributes: choice of the user replaced at each load (in `options`)
-- [ ] components, extra tools and generated plugins export the `import` condition only: Jest (`require`) can't resolve them (`default`)
-- [ ] generator accepts names reserved by files (`Background`, `Grid`, `Draw`, `Selection`): shape names dropped by `parseName` (`checkName`)
-- [ ] docs: `library.change` missing from the events table, M listed as a tool of the library in plugins.md, `typedoc.json` excluding a missing `src/vite.env.d.ts`
+- [x] library not importable on a server: `window.innerWidth` read by `defaultOptions` when loaded (examples of the READMEs of the components and extra tools crash in SSR) (`constants.ts`, test importing it in Node)
+- [x] drawer of a component following the window instead of its host (host of the size of the window or hidden when mounted, then resized: drawer bigger than its host) (`DrawerLayout._followWindow`, `mountDrawer`)
+- [x] types of the public API not exported: `Replay`, `SpacePan`, `GridStyle`, `WheelAction`, `FreehandSettings`, `ReplayStep` (`index.ts`, check of `index.d.ts`)
+- [x] quick starts of the docs and README of the web component give `theme="system" language="auto"` as props / attributes: choice of the user replaced at each load (in `options`)
+- [x] components, extra tools and generated plugins export the `import` condition only: Jest (`require`) can't resolve them (`default`)
+- [x] generator accepts names reserved by files (`Background`, `Grid`, `Draw`, `Selection`): shape names dropped by `parseName` (`checkName`)
+- [x] docs: `library.change` missing from the events table, M listed as a tool of the library in plugins.md, `typedoc.json` excluding a missing `src/vite.env.d.ts`
 
 ## Improvements
 

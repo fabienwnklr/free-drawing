@@ -58,6 +58,8 @@ const drawer = new Drawer($el, {
 });
 ```
 
+A drawer is created in a browser. Apps rendered on a server (Next.js, Nuxt, Astro...) can import the library there: nothing reads the window until a drawer is created. A drawer of the size of the window when it is created follows it (`followWindow` option: false when your app sizes it).
+
 ## React, Vue and Web Component
 
 The library needs no framework. React and Vue apps can use its `FreeDrawing` component, other apps (Angular, Svelte, plain HTML...) its `<free-drawing>` element: they create the drawer when they are mounted (added to the page) and destroy it when they are unmounted, take the size of their element and follow their settings (`readOnly`, `theme`, `language`, `user`), with the same options and API:
@@ -76,6 +78,7 @@ Extra tools (shapes, highlighter) as plugins: [`@fabwcie/free-drawing-extra-tool
   tool: 'brush', // activate tool on init
   width: window.innerWidth, // width of drawer
   height: window.innerHeight, // height of drawer
+  followWindow: undefined, // resized with the window: by default when it has the size of the window, false when sized by the app
   strokeWidth: 5, // width for drawing stroke
   strokeStyle: 'solid', // 'solid' | 'dashed' | 'dotted', stroke of lines, arrows, rectangles and ellipses
   strokeColor: '#000', // color for drawing stroke
@@ -145,6 +148,7 @@ drawer.off('change', callback);
 | `language.change` | language | Language of interface changed |
 | `preferences.change` | preferences | Theme, language, grid, snapping or another preference changed (one event for several changes) |
 | `unsaved.change` | unsaved | Drawing has changes not saved yet (auto save off, save of `storage` in progress, failed save), or is saved again |
+| `library.change` | items of the library | Items of the library added, removed, renamed or imported |
 | `plugin.change` | plugin | Plugin disabled (`forceDisabled`) or enabled again |
 | `slideshow.change` | index of the slide | Slideshow started, showing another slide, or stopped (-1) |
 | `replay.change` | index of the shape | Replay started, showing another shape, or stopped (-1) |

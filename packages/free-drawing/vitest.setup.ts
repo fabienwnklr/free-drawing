@@ -16,16 +16,20 @@ const apis = [
   'createImageBitmap',
 ] as const;
 
-const canvasWindow = getCanvasWindow({ document: window.document });
+// tests of a page (jsdom): canvas of jsdom mocked; tests of a server (`@vitest-environment node`) have no window
+if (typeof window !== 'undefined') {
+  const canvasWindow = getCanvasWindow({ document: window.document });
 
-apis.forEach((api) => {
-  global[api] = canvasWindow[api];
-  global.window[api] = canvasWindow[api];
-  global.Blob = Blob;
-});
+  apis.forEach((api) => {
+    global[api] = canvasWindow[api];
+    global.window[api] = canvasWindow[api];
+    global.Blob = Blob;
+  });
+}
 
 // drawers of the test file destroyed: their memory and listeners of the page are not kept for the next files
 afterAll(async () => {
+  if (typeof window === 'undefined') return;
   // imported once canvas mocks are set
   const { drawers } = await import('./tests/helpers');
 
