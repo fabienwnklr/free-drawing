@@ -47,11 +47,13 @@ type FakeSocket = CollaborationSocket & {
   /** Connection lost unseen: messages lost (no acknowledgement), until `receive('disconnect')` */
   lost?: boolean;
   /** Messages slowed down by the network: received by the server once released, after messages of other users */
-  held?: [event: string, data: unknown, ack?: () => void][];
+  held?: [event: string, data: unknown, ack?: (answer?: unknown) => void][];
   /** Messages held received by the server */
   release: () => void;
   /** Server of previous versions: changes never acknowledged */
   noAck?: boolean;
+  /** Rate of messages of the server reached: final changes refused in their acknowledgement, previews dropped */
+  limited?: boolean;
 };
 
 /**
@@ -115,13 +117,17 @@ const createServer = () => {
         socket.held = undefined;
         for (const [event, data, ack] of held) socket.emit(event, data, ack);
       },
-      emit: vi.fn((event: string, data: unknown, ack?: () => void) => {
+      emit: vi.fn((event: string, data: unknown, ack?: (answer?: unknown) => void) => {
         if (socket.lost) return;
         if (socket.held) {
           socket.held.push([event, data, ack]);
           return;
         }
         if (socket.noAck) ack = undefined;
+        if (socket.limited && event === 'CHANGE') {
+          ack?.({ refused: 'rate' });
+          return;
+        }
         if (event === 'JOIN') {
           const { room, name, userId, ownerKey, invitedBy, keyCheck } = data as {
             room: string;
@@ -170,7 +176,7 @@ const createServer = () => {
             remove: [],
             order: [...roomData.shapes.keys()],
             full: true,
-            ...(roomData.kept && { kept: true }),
+            kept: !!roomData.kept,
             ...(roomData.background && { background: roomData.background }),
             ...(roomData.files?.size && { files: Object.fromEntries(roomData.files) }),
           });
@@ -253,7 +259,7 @@ const createServer = () => {
           // it (the server applies, relays and acknowledges a change at once)
           ack?.();
           if (change.background && !change.live) roomData.background = change.background;
-          roomData.kept = true;
+          if (!change.live) roomData.kept = true;
           roomData.files ??= new Map();
           for (const [id, file] of Object.entries(change.files ?? {})) roomData.files.set(id, file);
           for (const id of change.remove) shapes.delete(id);
@@ -1568,6 +1574,94 @@ describe('Collaboration', () => {
     expect(byId(carol, text.id())!.x()).toBe(40);
   });
 
+  it('Change refused by the server: changes of others left out for it applied, later ones too (the version of the room)', () => {
+    const connect = createServer();
+    const alice = createDrawer();
+    const bob = createDrawer();
+    const textOf = (drawer: Drawer, id: string) => byId(drawer, id)?.getAttr('text');
+
+    connect(alice, 'room', 'Alice', { userId: 'alice', ownerKey: 'secret' });
+    const bobSocket = connect(bob, 'room', 'Bob', { userId: 'bob' });
+    const text = addText(alice, 'A');
+    const other = addText(alice, 'O');
+
+    // a change of bob acknowledged: server of this version
+    addText(bob, 'B');
+    /** Changes of bob held by the network refused by the server (drawing too big): not applied, then acknowledged */
+    const refuse = () => {
+      const held = bobSocket.held!;
+
+      bobSocket.held = undefined;
+      for (const [, change, ack] of held) {
+        const { upsert, remove } = change as DrawingChange;
+        const ids = (upsert as string[]).map((json) => JSON.parse(json).attrs.id);
+
+        bobSocket.receive('REJECTED', { event: 'CHANGE', reason: 'too-big', upsert: ids, remove });
+        ack?.();
+      }
+    };
+
+    // change of bob slowed down: the one of alice applied first by the server, left out by bob meanwhile
+    bobSocket.held = [];
+    byId(bob, text.id())!.setAttr('text', 'Bob');
+    bob.stage.fire('change');
+    text.text('Alice');
+    alice.stage.fire('change');
+    expect(textOf(bob, text.id())).toBe('Bob');
+    refuse();
+    expect(textOf(bob, text.id())).toBe('Alice');
+
+    // shape of a refused change, not changed since: changes of others applied to it, not sent over them later
+    bobSocket.held = [];
+    byId(bob, other.id())!.setAttr('text', 'Bob');
+    bob.stage.fire('change');
+    refuse();
+    expect(textOf(bob, other.id())).toBe('Bob');
+    other.text('Alice');
+    alice.stage.fire('change');
+    expect(textOf(bob, other.id())).toBe('Alice');
+    addText(bob, 'C');
+    expect([textOf(alice, other.id()), textOf(alice, text.id())]).toEqual(['Alice', 'Alice']);
+
+    // left out, then applied by the server after it (acknowledged): forgotten, not applied by a later refusal
+    bobSocket.held = [];
+    byId(bob, text.id())!.setAttr('text', 'Bob 2');
+    bob.stage.fire('change');
+    text.text('Alice 2');
+    alice.stage.fire('change');
+    bobSocket.release();
+    expect(textOf(alice, text.id())).toBe('Bob 2');
+    bobSocket.held = [];
+    byId(bob, text.id())!.setAttr('text', 'Bob 3');
+    bob.stage.fire('change');
+    refuse();
+    expect(textOf(bob, text.id())).toBe('Bob 3');
+  });
+
+  it('Change beyond the rate of messages of the server, refused in its acknowledgement: sent again after a while', async () => {
+    const connect = createServer();
+    const alice = createDrawer();
+    const bob = createDrawer();
+    const { retryDelay } = Collaboration;
+
+    connect(alice, 'room', 'Alice', { userId: 'alice', ownerKey: 'secret' });
+    const bobSocket = connect(bob, 'room', 'Bob', { userId: 'bob' });
+    const text = addText(alice, 'A');
+
+    Collaboration.retryDelay = 20;
+    try {
+      bobSocket.limited = true;
+      byId(bob, text.id())!.setAttr('text', 'Bob');
+      bob.stage.fire('change');
+      expect(text.text()).toBe('A');
+      bobSocket.limited = false;
+      await wait();
+      expect(text.text()).toBe('Bob');
+    } finally {
+      Collaboration.retryDelay = retryDelay;
+    }
+  });
+
   it('Server of previous versions, acknowledging nothing: changes of others applied as they come', () => {
     const connect = createServer();
     const alice = createDrawer();
@@ -1625,6 +1719,44 @@ describe('Collaboration', () => {
     expect(text.x()).toBe(moved.x());
     expect(text.text()).toBe('A');
     expect(moved.x()).not.toBe(x);
+  });
+
+  it('Changes received during a drag applied without cutting it: one change of history, the shape sent once dropped', () => {
+    const connect = createServer();
+    const alice = createDrawer();
+    const bob = createDrawer();
+
+    connect(alice, 'room', 'Alice', { userId: 'alice', ownerKey: 'secret' });
+    const bobSocket = connect(bob, 'room', 'Bob', { userId: 'bob' });
+    const text = addText(alice, 'A');
+    const other = addText(alice, 'B');
+    const moved = byId(bob, text.id())!;
+    const selection = bob.getWidget<SelectWidget>('selection')!;
+    const x = moved.x();
+    const finalChanges = () =>
+      bobSocket.emit.mock.calls.filter(([event, change]) => event === 'CHANGE' && !(change as DrawingChange).live);
+
+    selection.setActive(true);
+    selection.select([moved]);
+    bob.stage.setPointersPositions(new MouseEvent('mousedown', { clientX: 60, clientY: 10 }));
+    moved.startDrag();
+    window.dispatchEvent(new MouseEvent('mousemove', { clientX: 110, clientY: 10 }));
+    bobSocket.emit.mockClear();
+    // changed by alice meanwhile: shown at once, the drag of bob not sent before it is dropped
+    other.text('B2');
+    alice.stage.fire('change');
+    expect(byId(bob, other.id())!.getAttr('text')).toBe('B2');
+    window.dispatchEvent(new MouseEvent('mousemove', { clientX: 160, clientY: 10 }));
+    expect(finalChanges()).toEqual([]);
+    window.dispatchEvent(new MouseEvent('mouseup', { clientX: 160, clientY: 10 }));
+    expect(finalChanges()).toHaveLength(1);
+    expect(text.x()).toBe(moved.x());
+
+    // one change: undo puts it back where the drag started, the change of alice kept
+    bob.undoRedo.undo();
+    expect(byId(bob, text.id())!.x()).toBe(x);
+    expect(byId(bob, other.id())!.getAttr('text')).toBe('B2');
+    expect(text.x()).toBe(x);
   });
 
   it('Changes received during a pointer action applied once the tool finished it: erased shapes recorded as they were', async () => {
@@ -1730,6 +1862,75 @@ describe('Collaboration', () => {
     // text and stroke of bob sent again
     expect(connect.rooms.get('room')!.shapes.size).toBe(2);
     expect(alice.getDrawingShapes().map((shape) => shape.getClassName())).toEqual(['Text', 'Line']);
+  });
+
+  it('Previews and discarded shapes not sent while joining again: users joining a room without drawing meanwhile keep their shapes', async () => {
+    const connect = createServer();
+    const alice = createDrawer();
+    const bob = createDrawer();
+    const aliceSocket = connect(alice, 'room', 'Alice', { userId: 'alice', ownerKey: 'secret' });
+    const bobSocket = connect(bob, 'room', 'Bob', { userId: 'bob' });
+    const texts = [addText(alice, 'A'), addText(alice, 'B')].map((text) => text.id());
+    const room = connect.rooms.get('room')!;
+    const reconnect = (socket: FakeSocket) => {
+      socket.room = undefined;
+      socket.receive('disconnect');
+    };
+
+    reconnect(bobSocket);
+    reconnect(aliceSocket);
+    // drawing of the room lost (server restarted, last user gone)
+    room.shapes.clear();
+    room.kept = false;
+
+    // bob joins again while drawing: no preview before the drawing of the room is merged, the room stays without drawing
+    bob.getWidget<BaseWidget>('brush')!.setActive(true);
+    fireMouse(bob, 'mousedown', 10, 10);
+    bobSocket.receive('connect');
+    bobSocket.emit.mockClear();
+    fireMouse(bob, 'mousemove', 50, 50);
+    await wait();
+    expect(bobSocket.emit).not.toHaveBeenCalledWith('CHANGE', expect.anything());
+    expect(room.kept).toBe(false);
+
+    // alice joins meanwhile: her drawing given to the room, not removed
+    aliceSocket.receive('connect');
+    expect(alice.getDrawingShapes().map((shape) => shape.id())).toEqual(texts);
+    fireMouse(bob, 'mouseup', 50, 50);
+    await Promise.resolve();
+    expect(bob.getDrawingShapes().map((shape) => shape.getClassName())).toEqual(['Text', 'Text', 'Line']);
+    expect(alice.getDrawingShapes().map((shape) => shape.getClassName())).toEqual(['Text', 'Text', 'Line']);
+
+    // shape released at its start once joined again (nothing drawn): its preview, sent before the connection was lost,
+    // removed from the room once its drawing is merged, nothing sent before
+    const known = new Set(room.shapes.keys());
+
+    bob.getWidget<BaseWidget>('square')!.setActive(true);
+    fireMouse(bob, 'mousedown', 300, 300);
+    fireMouse(bob, 'mousemove', 340, 340);
+    await wait();
+
+    const preview = [...room.shapes.keys()].find((id) => !known.has(id))!;
+
+    expect(preview).toBeDefined();
+    reconnect(bobSocket);
+    bobSocket.receive('connect');
+    bobSocket.emit.mockClear();
+    fireMouse(bob, 'mousemove', 300, 300);
+    fireMouse(bob, 'mouseup', 300, 300);
+    expect(bobSocket.emit).not.toHaveBeenCalledWith('CHANGE', expect.anything());
+    await Promise.resolve();
+    expect(room.shapes.has(preview)).toBe(false);
+    expect(room.shapes.size).toBe(3);
+
+    // previews of another user only (client of a previous version): not a drawing of the room either
+    reconnect(aliceSocket);
+    room.shapes.clear();
+    room.kept = false;
+    room.shapes.set('preview', JSON.stringify(new Rect({ id: 'preview', name: 'drawer-rect', width: 5 }).toObject()));
+    aliceSocket.receive('connect');
+    expect(alice.getDrawingShapes()).toHaveLength(3);
+    expect(room.shapes.size).toBe(4);
   });
 
   it('Page opened again in a room: its copy merged with the drawing of the room, changes of others kept', () => {

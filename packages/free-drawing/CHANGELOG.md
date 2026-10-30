@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [8.2.3](https://github.com/fabienwnklr/free-drawing/compare/v8.2.2...v8.2.3) (2026-10-30)
+
+
+### Bug Fixes
+
+* **collaboration:** previews of shapes being drawn and shapes discarded (simple click) are no longer sent while joining a room again, before its drawing is merged: they made a room without drawing (last user gone, server restarted) look kept, and users joining meanwhile lost every shape it knew. A room holding previews only is taken as without drawing
+* **collaboration:** a change refused by the server (drawing too big, right to draw removed meanwhile) no longer keeps the version of this user over the changes of others set aside for it: they are applied (the version of the room), and later changes of others to its shapes too (they were ignored until it could be sent, then overwritten by it)
+* **collaboration:** a change received while shapes are dragged or transformed no longer cuts the move in two changes of history (undo stopped halfway) nor sends the shapes in the middle of the move: it is shown at once, recorded with the move once dropped
+* **collaboration:** a change dropped by the server beyond its rate of messages (servers of this version refuse it in its acknowledgement) is sent again after a second, the changes of others set aside for it applied, instead of being taken for applied
+
 ## [8.2.2](https://github.com/fabienwnklr/free-drawing/compare/v8.2.1...v8.2.2) (2026-10-30)
 
 

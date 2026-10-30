@@ -76,8 +76,9 @@ export type DrawingChange = {
   /** Whole drawing of the room, sent by the server to a joining user (also empty) */
   full?: boolean;
   /**
-   * Whole drawing kept by the room since users sent it: an empty one was emptied by them; none for a room without
-   * drawing (new, last user gone, server restarted, servers of previous versions): joining users send theirs
+   * Whole drawing kept by the room since users sent a final change: an empty one was emptied by them; false for a room
+   * without drawing (new, last user gone, server restarted; previews of shapes being drawn only), none from servers of
+   * previous versions (an empty room has no drawing): joining users send theirs
    */
   kept?: boolean;
   /** Background color of the drawing, when changed (whole drawing: background of the room, none before a user sends it) */
@@ -93,6 +94,12 @@ export type ChangePart = {
   /** Ids of its shapes (`upsert`), marked synced once it is sent */
   ids: string[];
 };
+
+/**
+ * Answer of the server acknowledging a change: none once received (applied, or refused by `REJECTED`), `refused` when it
+ * was dropped beyond the rate of messages of the client (not applied, sent again); anything from servers (not trusted)
+ */
+export type ChangeAcknowledgement = { refused?: unknown } | null | undefined;
 
 /**
  * Part of a change sent, not acknowledged by the server yet: what it made known by the room, unsynced when the

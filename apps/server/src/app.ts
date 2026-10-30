@@ -53,21 +53,25 @@ const clientIp: RequestHandler = (req, _res, next) => {
   next();
 };
 
+/** Files of the server vite never serves, besides its defaults (environment, keys, git...): databases */
+const serverFiles = ['**/*.db', '**/*.db-*', '**/apps/server/data/**'];
+
 /**
- * Files vite never serves: its defaults (environment, keys, settings of package managers, git: a list given replaces
- * them), databases of the server
+ * Vite server of development: web app with hot reload through this server (no other port: several servers can run),
+ * files of the repository served (`/@fs/`) but secrets and databases (sessions, hashes of passwords)
+ * @param httpServer HTTP server of the app (hot reload)
+ * @returns Vite server in middleware mode
  */
-export const viteDeny = [
-  '.env',
-  '.env.*',
-  '*.{crt,pem,key,p12,pfx,cer,der}',
-  '.npmrc',
-  '.yarnrc.yml',
-  '**/.git/**',
-  '**/*.db',
-  '**/*.db-*',
-  '**/apps/server/data/**',
-];
+async function createViteServer(httpServer: HttpServer) {
+  const { createServer, resolveConfig } = await import('vite');
+  // a list given replaces the defaults of vite: kept
+  const { server } = await resolveConfig({ root: webRoot, configFile: false }, 'serve');
+
+  return createServer({
+    root: webRoot,
+    server: { middlewareMode: true, hmr: { server: httpServer }, fs: { deny: [...server.fs.deny, ...serverFiles] } },
+  });
+}
 
 /**
  * Web app (apps/web) with metas of this server: accounts and drawings API, live collaboration.
@@ -75,16 +79,7 @@ export const viteDeny = [
  * @returns Vite server of development (closed with the server), null in production
  */
 async function serveWeb(app: Express, httpServer: HttpServer, dev: boolean) {
-  const vite = dev
-    ? await (
-        await import('vite')
-      ).createServer({
-        root: webRoot,
-        // hot reload through this server: no other port (several servers can run); files of the repository served
-        // (`/@fs/`) but secrets and databases (sessions, hashes of passwords)
-        server: { middlewareMode: true, hmr: { server: httpServer }, fs: { deny: viteDeny } },
-      })
-    : null;
+  const vite = dev ? await createViteServer(httpServer) : null;
   const page = webRoot + (dev ? 'index.html' : 'dist/index.html');
 
   app.get(['/', '/index.html'], async (req, res, next) => {

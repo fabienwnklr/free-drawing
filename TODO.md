@@ -16,10 +16,10 @@ Audit of 2026-10-29 (library 8.2.0): items ordered by priority in each section.
 
 - [x] regression of 8.2: a frame or group changed here (shape of a frame dragged, stroke ending in it) skips the whole change of others, then is sent: shapes they drew in it removed for everyone (`_applyReceived` by top node: children merged three way, as `mergeState`)
 - [ ] room emptied, then refilled by a stale copy (computer asleep joining first): users joining later take its old shapes, shapes created since are removed (`_merge` of a room not `kept`: generation of the drawing of the room)
-- [ ] live previews and discards sent while joining again mark the room `kept`: users joining meanwhile lose every shape the room knew (`sendLive` / `discardLive` waiting for the merge, server: `kept` by final changes only)
-- [ ] change refused (`REJECTED` right, too big) once the parts of others were left out for it: version of this user kept, sent over theirs once allowed; a refused shape is "not sent" and ignores others until then (`_unsync`, `_withoutUnconfirmed`: parts left out applied on refusal)
-- [ ] change received during a drag or a transform: drag recorded in two history entries (undo stops halfway), shape sent in the middle of the drag (`receive`, history during konva drags)
-- [ ] change dropped by the rate limit of the server: neither acknowledged nor refused, lost for the room, its shapes ignore others for 60 s (server `socket.use`: refused)
+- [x] live previews and discards sent while joining again mark the room `kept`: users joining meanwhile lose every shape the room knew (`sendLive` / `discardLive` waiting for the merge, server: `kept` by final changes only)
+- [x] change refused (`REJECTED` right, too big) once the parts of others were left out for it: version of this user kept, sent over theirs once allowed; a refused shape is "not sent" and ignores others until then (`_unsync`, `_withoutUnconfirmed`: parts left out applied on refusal)
+- [x] change received during a drag or a transform: drag recorded in two history entries (undo stops halfway), shape sent in the middle of the drag (`receive`, history during konva drags)
+- [x] change dropped by the rate limit of the server: neither acknowledged nor refused, lost for the room, its shapes ignore others for 60 s (server `socket.use`: refused)
 
 ### Persistence and data
 

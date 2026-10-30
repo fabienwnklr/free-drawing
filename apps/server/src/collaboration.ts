@@ -718,9 +718,14 @@ export async function attachCollaboration(
   });
 
   io.on('connection', (socket: CollaborationSocket) => {
-    // messages of a client limited by event, more are ignored
-    socket.use(([event], next) => {
+    // messages of a client limited by event, more are ignored; a change asking an acknowledgement (final change) is
+    // refused in it: the client sends it again (else it would take it for applied)
+    socket.use((packet, next) => {
+      const [event] = packet;
+      const ack = packet.at(-1);
+
       if (allow(socket, event)) next();
+      else if (event === socketEvents.CHANGE && typeof ack === 'function') ack({ refused: 'rate' });
     });
 
     // join refused: room full, too many rooms created
@@ -835,13 +840,13 @@ export async function attachCollaboration(
       socket.emit(socketEvents.ROOM, { newUsersCanEdit: data.newUsersCanEdit, encrypted: !!data.keyCheck });
 
       // whole drawing of the room, also empty: a user joining merges it with its drawing (`kept`: emptied by users, not
-      // dropped)
+      // dropped; false: none, previews only)
       socket.emit(socketEvents.CHANGE, {
         upsert: toUpsert(data.shapes, !!data.keyCheck),
         remove: [],
         order: [...data.shapes.keys()],
         full: true,
-        ...(data.kept && { kept: true }),
+        kept: data.kept,
         ...(data.background && { background: data.background }),
         ...(data.files.size > 0 && { files: Object.fromEntries(data.files) }),
       });
@@ -1034,7 +1039,8 @@ export async function attachCollaboration(
       for (const [id, file] of newFiles) data.files.set(id, file);
       totalSize += size - data.size;
       data.size = size;
-      data.kept = true;
+      // drawing of the room once a final change is sent: previews of a user joining again are not one
+      if (!change.live) data.kept = true;
       if (change.background && !change.live) data.background = change.background;
       // drawing kept in stacking order (sent so to joining users), unknown shapes after
       if (change.order) {

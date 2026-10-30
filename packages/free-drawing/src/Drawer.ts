@@ -1507,6 +1507,19 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
   }
 
   /**
+   * Shapes of the drawing being dragged (also the handle of an arrow) or transformed, not the view: one change at the
+   * end (`_endDrag`), changes of collaborators received meanwhile are recorded with it
+   * @returns True during a drag or a transform of this drawer
+   */
+  _duringMove() {
+    const dragged = [...DD._dragElements.values()].some(
+      ({ node, dragStatus }) => dragStatus === 'dragging' && node !== this.stage && node.getStage() === this.stage
+    );
+
+    return dragged || !!this.getWidget<SelectWidget>('selection')?.transformer.isTransforming();
+  }
+
+  /**
    * Mouse wheel (`wheelAction` preference): zoom around the pointer (`zoom` option, by `scaling` option for a notch
    * of a mouse wheel, less for the small steps of a trackpad), Ctrl / Cmd + wheel moves the view (Shift + wheel:
    * horizontally); or the other way round. A pinch of a trackpad (wheel with `ctrlKey`, Ctrl key not pressed) zooms

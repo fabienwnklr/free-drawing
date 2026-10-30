@@ -6,13 +6,15 @@ import type { AddressInfo } from 'node:net';
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
-import { join as joinPath } from 'node:path';
+import { dirname, join as joinPath } from 'node:path';
 import { socketEvents } from '@free-drawing/protocol';
-import { resolveConfig } from 'vite';
-import { createServer, viteDeny } from '../src/app';
+import { createServer } from '../src/app';
 import { type ServerConfig, getConfig } from '../src/config';
 import { drawingsLimits } from '../src/api';
 import { clientOf, limits, roomLifetime } from '../src/collaboration';
+
+/** Folder of these tests */
+const testsDir = dirname(fileURLToPath(import.meta.url));
 
 const config: ServerConfig = {
   port: 0,
@@ -88,34 +90,35 @@ describe('Settings', () => {
 
   it('Development server: files of the repository served by vite, never databases nor secrets', async () => {
     // folders of the dependencies vite optimizes when it starts: the ones of this test removed (interrupted)
-    const viteCache = fileURLToPath(new URL('../../web/node_modules/.vite/', import.meta.url));
+    const viteCache = joinPath(testsDir, '../../web/node_modules/.vite/');
     const cached = () => (existsSync(viteCache) ? readdirSync(viteCache) : []);
     const before = new Set(cached());
     const dev = await createServer({ ...config, web: true });
-    const data = fileURLToPath(new URL('../data/', import.meta.url));
+    const data = joinPath(testsDir, '../data/');
     const database = joinPath(data, `vite-${process.pid}.db`);
+    // secret of the environment (refused by vite by default)
+    const env = joinPath(data, `.env.vite-${process.pid}`);
     // file asked by its path (`/@fs/` of vite)
     const served = (path: string) => request(dev.app).get(`/@fs/${path.replace(/\\/g, '/').replace(/^\//, '')}`);
 
     mkdirSync(data, { recursive: true });
     writeFileSync(database, 'sessions');
     writeFileSync(`${database}-wal`, 'sessions');
+    writeFileSync(env, 'SECRET=1');
     try {
-      expect((await served(fileURLToPath(new URL('../package.json', import.meta.url)))).status).toBe(200);
+      expect((await served(joinPath(testsDir, '../package.json'))).status).toBe(200);
       expect((await served(database)).status).toBe(403);
       expect((await served(`${database}-wal`)).status).toBe(403);
-
       // defaults of vite kept (a list given replaces them)
-      const { server: defaults } = await resolveConfig({ configFile: false }, 'serve');
-
-      expect(viteDeny).toEqual(expect.arrayContaining(defaults.fs.deny));
+      expect((await served(env)).status).toBe(403);
     } finally {
       rmSync(database, { force: true });
       rmSync(`${database}-wal`, { force: true });
+      rmSync(env, { force: true });
       await dev.close();
       for (const name of cached()) {
         if (!before.has(name) && name.startsWith('deps_temp'))
-          rmSync(viteCache + name, { recursive: true, force: true });
+          rmSync(joinPath(viteCache, name), { recursive: true, force: true });
       }
     }
   });
@@ -835,7 +838,7 @@ describe('Collaboration', () => {
     const nothing = empty.next(socketEvents.CHANGE);
 
     empty.socket.emit(socketEvents.JOIN, { room: 'room-6-empty', name: 'Empty', userId: 'empty-6' });
-    expect(await nothing).toEqual({ upsert: [], remove: [], order: [], full: true });
+    expect(await nothing).toEqual({ upsert: [], remove: [], order: [], full: true, kept: false });
 
     // pointer: position only
     const pointers = guest.next<{ position: unknown }>(socketEvents.POINTER);
@@ -1126,6 +1129,30 @@ describe('Collaboration', () => {
     }
   });
 
+  it('Changes beyond the rate of a client refused in their acknowledgement: not applied, sent again by the client', async () => {
+    const room = 'room-rate';
+    const owner = await joinRoom({ room, name: 'Owner', userId: 'owner-rate', ownerKey: 'secret rate' });
+    const answers = await Promise.all(
+      Array.from(
+        { length: 110 },
+        (_, i) =>
+          new Promise((resolve) =>
+            owner.socket.emit(socketEvents.CHANGE, { upsert: [rect(`rate-${i}`)], remove: [] }, resolve)
+          )
+      )
+    );
+
+    // 100 at once
+    expect(answers.filter((answer) => answer === undefined)).toHaveLength(100);
+    expect(answers.slice(100)).toEqual(Array(10).fill({ refused: 'rate' }));
+
+    const later = client();
+    const drawing = later.next<{ upsert: string[] }>(socketEvents.CHANGE);
+
+    later.socket.emit(socketEvents.JOIN, { room, name: 'Later', userId: 'later-rate' });
+    expect((await drawing).upsert).toHaveLength(100);
+  });
+
   it('Messages of an unexpected shape are ignored: the server keeps running', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const room = 'room-malformed';
@@ -1382,7 +1409,16 @@ describe('Collaboration', () => {
     const drawing = back.next(socketEvents.CHANGE);
 
     back.socket.emit(socketEvents.JOIN, { room, name: 'Owner', userId: 'owner-d', ownerKey: 'secret d' });
-    expect(await drawing).toEqual({ upsert: [], remove: [], order: [], full: true });
+    expect(await drawing).toEqual({ upsert: [], remove: [], order: [], full: true, kept: false });
+
+    // previews of a shape being drawn are not a drawing of the room: still not kept
+    back.socket.emit(socketEvents.CHANGE, { upsert: [rect('d2')], remove: [], live: true });
+
+    const later = client();
+    const preview = later.next(socketEvents.CHANGE);
+
+    later.socket.emit(socketEvents.JOIN, { room, name: 'Guest', userId: 'guest-d' });
+    expect(await preview).toEqual({ upsert: [rect('d2')], remove: [], order: ['d2'], full: true, kept: false });
   });
 
   it('Changes acknowledged; previews of shapes being drawn removed when their author leaves or loses the right', async () => {
