@@ -6,7 +6,7 @@ import { Text } from 'konva/lib/shapes/Text';
 import type { DrawingShape } from '@/@types/drawer';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import type { TextWidget } from '@/components/toolbar/widgets/Text/Text';
-import { drawerEvents, shapeLabels, shapeName } from '@/constants';
+import { drawerEvents, shapeName } from '@/constants';
 import type { Drawer } from '@/Drawer';
 import { getBoundText, getContainer, indexLayer, isContainer } from '@/utils/boundText';
 import { isComposing, uniqueId } from '@/utils/dom';
@@ -248,12 +248,10 @@ export class ShapeNavigation {
   /**
    * Type of a shape
    * @param shape Shape of the drawing
-   * @returns translated type (rectangle, note, frame...), class name of a shape of a plugin
+   * @returns translated type (rectangle, note, frame, type of a plugin...), class name of other shapes
    */
   private _type(shape: DrawingShape): string {
-    const type = Object.keys(shapeLabels).find((name) => shape.hasName(name));
-
-    return type ? this.drawer.t(shapeLabels[type]) : shape.getClassName();
+    return this.drawer._shapeType(shape);
   }
 
   /**

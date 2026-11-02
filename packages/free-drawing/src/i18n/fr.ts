@@ -396,6 +396,7 @@ export const fr: Translations = {
   'shapes.blockArrow': 'Flèche pleine',
   'shapes.bubble': 'Bulle',
   'shapes.checkbox': 'Case cochée',
+  'shapes.shape': 'Forme',
   'shapes.highlighter': 'Surlignage',
   'shapes.frame': 'Cadre',
   'shapes.frameName': 'Cadre {number}',

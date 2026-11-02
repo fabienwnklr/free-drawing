@@ -1,11 +1,22 @@
 import type { TranslationKey } from '@/@types/i18n';
-import type { PluginClass, PluginCommandMenu, PluginEntry, RegisteredCommand, WidgetClass } from '@/@types/plugin';
+import type { Node } from 'konva/lib/Node';
+import type {
+  PluginClass,
+  PluginCommandMenu,
+  PluginEntry,
+  PluginShapeType,
+  RegisteredCommand,
+  WidgetClass,
+} from '@/@types/plugin';
 import type { Command } from '@/@types/ui';
 import type { SelectWidget } from '@/components/toolbar/widgets/Select/Select';
 import { widgetNames } from '@/constants';
 import type { Drawer } from '@/Drawer';
 import type { Plugin } from '@/plugins/Plugin';
 import { matchesShortcut } from '@/utils/HotKey';
+
+/** Names of the layers of the drawer, found by name: not names of shapes of plugins (other names start with `drawer-`) */
+const reservedShapeNames = ['background', 'grid', 'draw', 'selection'];
 
 /**
  * Class of a plugin of the `plugins` drawer option
@@ -99,6 +110,8 @@ export class PluginCollection {
   widgets = new Map<string, WidgetClass>();
   /** Commands added by plugins (`Plugin.addCommand`) */
   commands: RegisteredCommand[] = [];
+  /** Types of the shapes of plugins (`Plugin.addShapeType`), by name of their shapes */
+  shapeTypes = new Map<string, PluginShapeType>();
   /** Resolved once every plugin is initialized (`init`, `afterInit`), waited by `drawer.ready` */
   ready: Promise<void> = Promise.resolve();
   /** `destroy` called: initialization still running stops (next plugins, menus) */
@@ -232,6 +245,36 @@ export class PluginCollection {
       throw new Error(`[free-drawing] widget "${id}" of plugin "${plugin.name}" already exists`);
     }
     this.widgets.set(id, widget);
+  }
+
+  /**
+   * Register the type of the shapes of a plugin (see `Plugin.addShapeType`)
+   * @param plugin Plugin adding it
+   * @param type Name of the shapes, label and icon
+   * @throws {Error} name of the library (`drawer-*`, names of its layers), not one word, or of another type
+   */
+  _addShapeType(plugin: Plugin, type: PluginShapeType) {
+    const { name } = type;
+
+    if (!/^[\w-]+$/.test(name) || name.startsWith('drawer-') || reservedShapeNames.includes(name)) {
+      throw new Error(
+        `[free-drawing] shape type "${name}" of plugin "${plugin.name}": one word, not a name of the library`
+      );
+    }
+    if (this.shapeTypes.has(name)) {
+      throw new Error(`[free-drawing] shape type "${name}" of plugin "${plugin.name}" already exists`);
+    }
+    this.shapeTypes.set(name, { ...type });
+  }
+
+  /**
+   * Type of a shape of a plugin (see `Plugin.addShapeType`)
+   * @param shape Drawing shape or group
+   * @returns type of the first name of a plugin it has, undefined for other shapes
+   */
+  getShapeType(shape: Node): PluginShapeType | undefined {
+    for (const type of this.shapeTypes.values()) if (shape.hasName(type.name)) return type;
+    return undefined;
   }
 
   /**

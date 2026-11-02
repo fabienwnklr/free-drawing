@@ -223,6 +223,11 @@ export const shapeName = {
   bubble: 'drawer-bubble',
   /** Check box path (square and check mark) */
   checkbox: 'drawer-checkbox',
+  /**
+   * Path shape of a plugin (`PathShapeWidget` naming its shapes with a name of its own, next to this one): behavior of
+   * the path shapes of the library (background, stroke style, text, arrows on its outline, hit inside)
+   */
+  pathShape: 'drawer-path-shape',
   /** Freehand stroke of highlighter */
   highlighter: 'drawer-highlighter',
   /** Frame holding shapes (see `Frame`) */
@@ -258,6 +263,7 @@ export const pathShapes = [
   shapeName.blockArrow,
   shapeName.bubble,
   shapeName.checkbox,
+  shapeName.pathShape,
 ];
 
 /**
@@ -349,6 +355,8 @@ export const shapeLabels: Record<string, TranslationKey> = {
   [shapeName.blockArrow]: 'shapes.blockArrow',
   [shapeName.bubble]: 'shapes.bubble',
   [shapeName.checkbox]: 'shapes.checkbox',
+  // after the shapes of the library: path shape of a plugin without type (`Plugin.addShapeType`)
+  [shapeName.pathShape]: 'shapes.shape',
   [shapeName.highlighter]: 'shapes.highlighter',
   [shapeName.frame]: 'shapes.frame',
   [shapeName.text]: 'shapes.text',

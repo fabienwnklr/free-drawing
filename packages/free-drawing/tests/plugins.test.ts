@@ -1,8 +1,25 @@
 import { describe, expect, it, vi } from 'vitest';
+import { Group } from 'konva/lib/Group';
+import { Path } from 'konva/lib/shapes/Path';
 import { Rect } from 'konva/lib/shapes/Rect';
-import { BaseWidget, Plugin, drawerEvents, shapeName, type Drawer, type PluginClass } from '@/index';
+import {
+  BaseWidget,
+  PathShapeWidget,
+  Plugin,
+  drawerEvents,
+  shapeName,
+  type Drawer,
+  type PluginClass,
+  type SelectWidget,
+} from '@/index';
 import { resolvePlugins } from '@/plugins/PluginCollection';
-import { createDrawer, keydown } from './helpers';
+import { getOutlineDistance } from '@/utils/binding';
+import { isContainer } from '@/utils/boundText';
+import { parseShape } from '@/utils/drawingFile';
+import { getDash } from '@/utils/stroke';
+import GroupIcon from '@/icons/group.svg?raw';
+import ShapesIcon from '@/icons/shapes.svg?raw';
+import { createDrawer, drag, keydown } from './helpers';
 
 /** Steps of plugins, in the order they ran */
 const steps: string[] = [];
@@ -82,6 +99,44 @@ class Stamps extends Plugin {
     this.drawer.addShape(new Rect({ name: shapeName.rect, width: 20, height: 20, stroke: '#000' }));
     this.drawer.stage.fire('change');
     this.stamps++;
+  }
+}
+
+/** Icon of the badges of a plugin */
+const badgeIcon = '<svg aria-hidden="true" focusable="false" class="badge"></svg>';
+
+/** Tool of a plugin drawing badges: a path shape of its own (square, its top corners cut) */
+class BadgeWidget extends PathShapeWidget {
+  protected shapeName = 'badge';
+  protected path = 'M0.5 0L1 0.3L1 1L0 1L0 0.3Z';
+
+  /**
+   * Badge tool
+   * @param drawer drawer of the tool
+   */
+  constructor(drawer: Drawer) {
+    super(drawer, 'badge', 'Badge', badgeIcon);
+  }
+}
+
+/** Plugin of badges: tool, types of its shapes and of its groups */
+class Badges extends Plugin {
+  static readonly pluginName = 'Badges';
+
+  /**
+   * Tool, texts and types of shapes
+   * @param drawer drawer of the plugin
+   */
+  constructor(drawer: Drawer) {
+    super(drawer);
+    this.addTranslations({
+      en: { 'tools.badge': 'Badge', 'badges.badge': 'Badge', 'badges.set': 'Set of badges' },
+      fr: { 'tools.badge': 'Insigne', 'badges.badge': 'Insigne', 'badges.set': "Jeu d'insignes" },
+    });
+    this.addWidget('badge', BadgeWidget);
+    this.addShapeType({ name: 'badge', label: 'badges.badge', icon: badgeIcon });
+    // group of the library: its icon kept
+    this.addShapeType({ name: 'badges', label: 'badges.set' });
   }
 }
 
@@ -400,5 +455,72 @@ describe('Plugins', () => {
     drawer.setReadOnly(false);
     expect(drawer.activeTool).toBe('selection');
     expect(drawer.getWidget<BaseWidget>('stamp')!.isDisabled).toBe(true);
+  });
+
+  it('Path shapes of plugins: background, stroke style, text and arrows on their outline as the ones of the library', () => {
+    const drawer = createDrawer({ plugins: [Badges] });
+
+    drawer.getWidget<BaseWidget>('badge')!.setActive(true);
+    drag(drawer, [100, 100], [300, 300]);
+
+    const badge = drawer.drawLayer.findOne<Path>('.badge')!;
+
+    expect(badge.name()).toBe(`${shapeName.pathShape} badge`);
+    expect(badge.data()).toBe('M100 0L200 60L200 200L0 200L0 60Z');
+    // holds a text, background and stroke style of the selection
+    expect(isContainer(badge)).toBe(true);
+    drawer.getWidget<SelectWidget>('selection')!.select([badge]);
+    drawer.setFillColor('#a5d8ff');
+    drawer.setStrokeStyle('dashed');
+    expect([badge.fill(), badge.dash()]).toEqual(['#a5d8ff', getDash('dashed', badge.strokeWidth())]);
+    // arrows linked on its outline: a corner of its box is out of it
+    expect(getOutlineDistance(badge, drawer.drawLayer, { x: 110, y: 110 })).toBeGreaterThan(20);
+    expect(getOutlineDistance(badge, drawer.drawLayer, { x: 200, y: 250 })).toBeLessThan(0);
+    // name kept by files: only on paths
+    const state = (className: string) => ({
+      className,
+      attrs: { name: `${shapeName.pathShape} badge`, data: 'M0 0Z' },
+    });
+
+    expect(parseShape(state('Path'))!.attrs.name).toBe(`${shapeName.pathShape} badge`);
+    expect(parseShape(state('Rect'))!.attrs.name).toBe('badge');
+  });
+
+  it('Types of shapes of plugins: label in the language of the drawer, icon of the layers panel, screen readers', () => {
+    const drawer = createDrawer({ plugins: [Badges], layersPanel: true });
+    const badge = drawer.addShape(new Path({ name: `${shapeName.pathShape} badge`, data: 'M0 0L10 0L10 10Z' }));
+    const set = drawer.addShape(new Group({ name: `${shapeName.group} badges` }));
+    // path shape of a plugin without type (or a drawer without the plugin)
+    const seal = drawer.addShape(new Path({ name: `${shapeName.pathShape} seal`, data: 'M0 0L10 10Z' }));
+    const labels = () => [badge, set, seal].map((shape) => drawer.getShapeLabel(shape));
+
+    drawer.stage.fire('change');
+    expect(labels()).toEqual(['Badge', 'Set of badges', 'Shape']);
+    drawer.setLanguage('fr');
+    expect(labels()).toEqual(['Insigne', "Jeu d'insignes", 'Forme']);
+    expect(drawer.navigation.describe(badge)).toContain('Insigne');
+    // a name given by the user first
+    badge.setAttr('label', 'Gold');
+    expect(drawer.getShapeLabel(badge)).toBe('Gold');
+
+    // markup as the panel gives it
+    const html = (svg: string) => Object.assign(document.createElement('span'), { innerHTML: svg }).innerHTML;
+
+    drawer.layersPanel!.toggle(true);
+    // top first: seal, set, badge
+    expect(
+      [...drawer.layersPanel!.$list.querySelectorAll('.drawer-layers-icon')].map(($icon) => $icon.innerHTML)
+    ).toEqual([ShapesIcon, GroupIcon, badgeIcon].map(html));
+    drawer.layersPanel!.toggle(false);
+  });
+
+  it('Types of shapes of plugins refused: names of the library, not one word, taken', () => {
+    const drawer = createDrawer({ plugins: [Badges] });
+    const badges = drawer.plugins.get(Badges)!;
+
+    for (const name of [shapeName.rect, 'drawer-badge', 'selection', 'two words', '']) {
+      expect(() => badges.addShapeType({ name, label: 'Badge' })).toThrow('one word, not a name of the library');
+    }
+    expect(() => badges.addShapeType({ name: 'badge', label: 'Badge' })).toThrow('shape type "badge" of plugin');
   });
 });

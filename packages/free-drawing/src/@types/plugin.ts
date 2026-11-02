@@ -52,6 +52,19 @@ export type PluginCommand = {
   run: () => void;
 };
 
+/**
+ * Type of the shapes of a plugin (`Plugin.addShapeType`): shapes having its name are named and shown by it in the
+ * layers panel and to screen readers (keyboard navigation)
+ */
+export type PluginShapeType = {
+  /** Name given to the shapes of the plugin (one word, next to a name of the library: `shapeName.rect`...) */
+  name: string;
+  /** Key of its text (translations of the plugin), or text: name of the type in the language of the drawer */
+  label: string;
+  /** SVG markup of its icon, shown in the layers panel (else the icon of the shape of the library) */
+  icon?: string;
+};
+
 /** Command added by a plugin, with its plugin (availability: plugin enabled) */
 export type RegisteredCommand = {
   /** Plugin adding it */

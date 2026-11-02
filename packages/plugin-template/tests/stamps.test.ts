@@ -2,7 +2,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { Ellipse } from 'konva/lib/shapes/Ellipse';
 import { Drawer, shapeName, type BaseWidget, type DrawerOptions, type SelectWidget } from '@fabwcie/free-drawing';
-import { StampCounterPlugin, StampsPlugin, stampName } from '../src';
+import { StampCounterPlugin, StampsPlugin, stampName, zoneName } from '../src';
 
 document.body.innerHTML = `<div id="drawer"></div>`;
 
@@ -109,19 +109,27 @@ describe('Stamps plugin (template)', () => {
     expect(drawer.undoRedo.canUndo()).toBe(false);
   });
 
-  it('Zone tool: shape drawn in the dragged box, named in the layers panel', async () => {
+  it('Zone tool: shape drawn in the dragged box, its corners fitted; shapes named in the language of the drawer', async () => {
     const drawer = createDrawer({ plugins: [StampsPlugin] });
 
     await drawer.ready;
     drawer.getWidget<BaseWidget>('zone')!.setActive(true);
     pointer(drawer, 'mousedown', 50, 50);
-    pointer(drawer, 'mousemove', 250, 150);
-    pointer(drawer, 'mouseup', 250, 150);
+    pointer(drawer, 'mousemove', 250, 90);
+    pointer(drawer, 'mouseup', 250, 90);
 
     const [zone] = drawer.getDrawingShapes();
 
-    expect([zone.x(), zone.y(), zone.width(), zone.height(), zone.attrs.label]).toEqual([50, 50, 200, 100, 'Zone']);
-    expect(zone.hasName('zone')).toBe(true);
+    // flat zone: corners rounded less (`onDrawEnd`)
+    expect([zone.x(), zone.y(), zone.width(), zone.height(), zone.attrs.cornerRadius]).toEqual([50, 50, 200, 40, 10]);
+    expect(zone.hasName(zoneName)).toBe(true);
+
+    // types of the shapes of the plugin (`addShapeType`): layers panel, screen readers
+    const stamp = drawer.plugins.get(StampsPlugin)!.stamp({ x: 0, y: 0 })!;
+
+    expect([drawer.getShapeLabel(zone), drawer.getShapeLabel(stamp)]).toEqual(['Zone', 'Stamp']);
+    drawer.setLanguage('es');
+    expect([drawer.getShapeLabel(zone), drawer.getShapeLabel(stamp)]).toEqual(['Zona', 'Sello']);
   });
 
   it('Commands: palette, shortcut, context menus; count also in read only', async () => {

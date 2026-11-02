@@ -6,6 +6,6 @@ import './style.css';
 export { StampsPlugin, stampName } from './StampsPlugin';
 export { StampCounterPlugin } from './StampCounterPlugin';
 export { StampWidget } from './widgets/StampWidget';
-export { ZoneWidget } from './widgets/ZoneWidget';
+export { ZoneWidget, zoneName } from './widgets/ZoneWidget';
 export { translations } from './translations';
 export type { StampsOptions } from './types';

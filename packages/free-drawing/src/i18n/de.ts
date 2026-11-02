@@ -396,6 +396,7 @@ export const de: Translations = {
   'shapes.blockArrow': 'Blockpfeil',
   'shapes.bubble': 'Sprechblase',
   'shapes.checkbox': 'Kontrollkästchen',
+  'shapes.shape': 'Form',
   'shapes.highlighter': 'Markierung',
   'shapes.frame': 'Rahmen',
   'shapes.frameName': 'Rahmen {number}',

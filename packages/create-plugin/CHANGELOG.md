@@ -2,6 +2,12 @@
 
 Changes of `@fabwcie/create-free-drawing-plugin` (`npm create @fabwcie/free-drawing-plugin`). Each version is published by the release workflow of the library once it is not on npm yet.
 
+## 1.4.0 (2026-11-02)
+
+### Features
+
+- The shapes of a generated plugin are named by their type (`addShapeType`, library 8.4): in the language of the drawer in the layers panel and for screen readers, with the icon of the plugin; they had a `label` attribute in the language of the drawer when they were drawn, taken for a name given by the user
+
 ## 1.3.2 (2026-10-30)
 
 ### Bug Fixes

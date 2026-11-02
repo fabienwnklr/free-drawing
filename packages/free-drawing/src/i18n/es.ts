@@ -394,6 +394,7 @@ export const es: Translations = {
   'shapes.blockArrow': 'Flecha de bloque',
   'shapes.bubble': 'Bocadillo',
   'shapes.checkbox': 'Casilla marcada',
+  'shapes.shape': 'Forma',
   'shapes.highlighter': 'Resaltado',
   'shapes.frame': 'Marco',
   'shapes.frameName': 'Marco {number}',

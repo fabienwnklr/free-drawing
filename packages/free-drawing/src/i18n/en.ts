@@ -405,6 +405,7 @@ export const en = {
   'shapes.blockArrow': 'Block arrow',
   'shapes.bubble': 'Speech bubble',
   'shapes.checkbox': 'Check box',
+  'shapes.shape': 'Shape',
   'shapes.highlighter': 'Highlight',
   'shapes.frame': 'Frame',
   'shapes.frameName': 'Frame {number}',

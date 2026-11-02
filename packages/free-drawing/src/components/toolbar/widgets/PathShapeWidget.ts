@@ -1,6 +1,7 @@
 import { Path } from 'konva/lib/shapes/Path';
 import type { Vector2d } from 'konva/lib/types';
 import { ShapeWidget, dragBox } from '@/components/toolbar/widgets/ShapeWidget';
+import { pathShapes, shapeName as shapeNames } from '@/constants';
 
 /**
  * Svg path of a box of width and height 1 (absolute commands of points: M, L, C, Z) scaled to a box
@@ -20,11 +21,12 @@ export function scalePath(path: string, width: number, height: number): string {
 
 /**
  * Tool drawing a closed shape in the dragged box (triangle, diamond, heart, cloud): background color, stroke style,
- * Shift draws it in a square
+ * Shift draws it in a square. Tools of plugins give their own name and path: their shapes behave as the path shapes
+ * of the library (named `shapeName.pathShape` too)
  */
 export abstract class PathShapeWidget extends ShapeWidget<Path> {
   protected hasFill = true;
-  /** Name of shapes (see `shapeName`) */
+  /** Name of shapes (see `shapeName`), a name of the plugin for a shape of a plugin (see `Plugin.addShapeType`) */
   protected abstract shapeName: string;
   /** Path in a box of width and height 1, see `scalePath` */
   protected abstract path: string;
@@ -32,7 +34,7 @@ export abstract class PathShapeWidget extends ShapeWidget<Path> {
   /**
    * Empty path at drag start, round joins
    * @param start Drag start, in drawing coordinates
-   * @returns Path named by `shapeName`
+   * @returns Path named by `shapeName`, and by `shapeName.pathShape` for a shape of a plugin
    */
   protected createShape(start: Vector2d) {
     return new Path({
@@ -42,7 +44,7 @@ export abstract class PathShapeWidget extends ShapeWidget<Path> {
       data: '',
       // no spike on sharp corners (tip of heart)
       lineJoin: 'round',
-      name: this.shapeName,
+      name: pathShapes.includes(this.shapeName) ? this.shapeName : `${shapeNames.pathShape} ${this.shapeName}`,
     });
   }
 

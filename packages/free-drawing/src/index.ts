@@ -108,6 +108,7 @@ export type {
   PluginCommandMenu,
   PluginOptions,
   PluginRequirement,
+  PluginShapeType,
   RegisteredCommand,
   WidgetClass,
 } from '@/@types/plugin';

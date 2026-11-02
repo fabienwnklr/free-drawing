@@ -2,7 +2,9 @@ import { Rect } from 'konva/lib/shapes/Rect';
 import type { Vector2d } from 'konva/lib/types';
 import { ShapeWidget, shapeName, type Drawer } from '@fabwcie/free-drawing';
 import { zoneIcon } from '../icons';
-import type { StampsPlugin } from '../StampsPlugin';
+
+/** Name marking zones, next to `shapeName.rect` (behavior of a rectangle), type of shapes of the plugin */
+export const zoneName = 'zone';
 
 /**
  * Tool of a plugin drawing in the dragged box, based on `ShapeWidget`: the base creates the shape on press, updates it
@@ -31,7 +33,7 @@ export class ZoneWidget extends ShapeWidget<Rect> {
   protected createShape(start: Vector2d) {
     return new Rect({
       ...this.shapeStyle,
-      name: `${shapeName.rect} zone`,
+      name: `${shapeName.rect} ${zoneName}`,
       x: start.x,
       y: start.y,
       width: 0,
@@ -67,10 +69,10 @@ export class ZoneWidget extends ShapeWidget<Rect> {
   }
 
   /**
-   * Drawing ended, before the change is saved: name of the zone in the layers panel
+   * Drawing ended, before the change is saved: corners of a small zone rounded less
    * @param shape zone drawn, null after a simple click (nothing drawn)
    */
   protected onDrawEnd(shape: Rect | null) {
-    shape?.setAttr('label', this.drawer.plugins.get<StampsPlugin>('Stamps')!.t('tools.zone'));
+    shape?.cornerRadius(Math.min(12, shape.width() / 4, shape.height() / 4));
   }
 }

@@ -2480,10 +2480,22 @@ export class Drawer extends MicroEvent<DrawerEventMap> {
     // attributes read from node (konva types those of each class, not of a shape or group)
     const node: Node = shape;
     const text = shape.hasName(shapeName.text) ? String(node.getAttr('text') ?? '').trim() : '';
-    const type = Object.keys(shapeLabels).find((name) => shape.hasName(name));
 
     // first line of a text
-    return node.getAttr('label') || text.split('\n')[0] || (type ? this.t(shapeLabels[type]) : shape.getClassName());
+    return node.getAttr('label') || text.split('\n')[0] || this._shapeType(shape);
+  }
+
+  /**
+   * Type of a shape (layers panel, screen readers): type of a plugin (`Plugin.addShapeType`), else of the library
+   * @param shape Shape or group
+   * @returns translated type (rectangle, note, type of a plugin...), class name of other shapes
+   */
+  _shapeType(shape: DrawingShape): string {
+    const pluginType = this.plugins.getShapeType(shape);
+    const type = Object.keys(shapeLabels).find((name) => shape.hasName(name));
+
+    if (pluginType) return this.t(pluginType.label as TranslationKey);
+    return type ? this.t(shapeLabels[type]) : shape.getClassName();
   }
 
   /**

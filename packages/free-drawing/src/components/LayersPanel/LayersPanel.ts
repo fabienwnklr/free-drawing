@@ -48,6 +48,7 @@ import { getFrameShapes, isFrame } from '@/utils/frame';
 import { getBoundText, getContainer, isBoundText } from '@/utils/boundText';
 import HighlighterIcon from '@/icons/highlighter.svg?raw';
 import NoteIcon from '@/icons/note.svg?raw';
+import ShapesIcon from '@/icons/shapes.svg?raw';
 
 /** Icons of shape types, as their tools */
 const typeIcons: Record<string, string> = {
@@ -67,6 +68,8 @@ const typeIcons: Record<string, string> = {
   [shapeName.blockArrow]: BlockArrowIcon,
   [shapeName.bubble]: BubbleIcon,
   [shapeName.checkbox]: CheckboxIcon,
+  // path shape of a plugin, after the ones of the library
+  [shapeName.pathShape]: ShapesIcon,
   [shapeName.frame]: FrameIcon,
   [shapeName.highlighter]: HighlighterIcon,
   [shapeName.text]: TextIcon,
@@ -414,6 +417,8 @@ export class LayersPanel {
     const locked = !shape.listening();
     const parent = shape.getParent();
     const type = Object.keys(typeIcons).find((name) => shape.hasName(name));
+    // type of a plugin first (`Plugin.addShapeType`)
+    const icon = this.drawer.plugins.getShapeType(shape)?.icon ?? (type ? typeIcons[type] : '');
     const $item = document.createElement('li');
     const $grip = document.createElement('span');
     const $name = createButton('drawer-layers-name');
@@ -457,7 +462,7 @@ export class LayersPanel {
 
     $name.dataset.part = 'name';
     $name.title = label;
-    $name.innerHTML = `<span class="drawer-layers-icon" aria-hidden="true">${type ? typeIcons[type] : ''}</span>`;
+    $name.innerHTML = `<span class="drawer-layers-icon" aria-hidden="true">${icon}</span>`;
     $label.classList.add('drawer-layers-label');
     $label.textContent = label;
     $name.append($label);

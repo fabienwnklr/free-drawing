@@ -29,6 +29,7 @@ What you write, and what the drawer does for you:
 | `this.addWidget('stamp', StampWidget)`                      | Button of the toolbar (icon, title, shortcut letter), placed by the `widgets` option, activated by its shortcut, listed in help and in the command palette, disabled in read only |
 | `this.addCommand({ ... })`                                  | Command of the palette (searched, translated), keyboard shortcut, line in help, item of the context menu, shown only when available                                               |
 | `this.addTranslations({ en, fr })`                          | Texts in the language of the drawer, updated when it changes, replaceable by the app                                                                                              |
+| `this.addShapeType({ name, label, icon })`                  | Name and icon of its shapes in the layers panel and for screen readers, in the language of the drawer                                                                             |
 | `drawer.addShape(shape)` then `drawer.stage.fire('change')` | Saving (localStorage or your storage), history, live collaboration, layers panel, selection and its options panel, files, links, exports                                          |
 | `this.listenTo(target, event, handler)`                     | Listeners removed when the plugin is destroyed                                                                                                                                    |
 | `this.getOptions(defaults)`                                 | Options given by each app with the class of the plugin (`plugins: [[StampsPlugin, { max: 20 }]]`)                                                                                 |
@@ -105,16 +106,16 @@ The command is in the command palette (Ctrl + K), Alt + N runs it, a right click
 
 ### Static members
 
-| Member              | Use                                                                                                                                                 |
-| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `static pluginName` | Unique name of the plugin, required (class names are changed by minification). Used by `drawer.plugins.get('Name')` and `requires`                 |
-| `static requires`   | Plugins required, created and initialized before this one: classes (added when the app does not give them) or names (the app must give them)        |
+| Member              | Use                                                                                                                                          |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `static pluginName` | Unique name of the plugin, required (class names are changed by minification). Used by `drawer.plugins.get('Name')` and `requires`           |
+| `static requires`   | Plugins required, created and initialized before this one: classes (added when the app does not give them) or names (the app must give them) |
 
 ### Steps
 
 | Step                  | When                                | What to do there                                                                                                                    |
 | --------------------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `constructor(drawer)` | With the drawer, before its toolbar | `addWidget`, `addTranslations`. The interface (toolbar, menus, help) does not exist yet                                             |
+| `constructor(drawer)` | With the drawer, before its toolbar | `addWidget`, `addTranslations`, `addShapeType`. The interface (toolbar, menus, help) does not exist yet                             |
 | `init()`              | Drawer created                      | `addCommand`, `listenTo`, elements of the interface. May return a promise: the next plugins wait for it, and so does `drawer.ready` |
 | `afterInit()`         | Every plugin initialized            | Use other plugins (`drawer.plugins.get`)                                                                                            |
 | `destroy()`           | `drawer.plugins.destroy()`          | Remove what the plugin added (elements, timers), then call `super.destroy()`: its listeners are removed                             |
@@ -131,6 +132,7 @@ Required plugins come first at each step. A missing plugin, two plugins of the s
 | `addTranslations(texts)`                               | Texts of the plugin by language                                                   |
 | `t(key, params)`                                       | Text in the language of the drawer, `{name}` placeholders replaced                |
 | `addWidget(id, WidgetClass)`                           | Tool of the toolbar                                                               |
+| `addShapeType({ name, label, icon })`                  | Type of the shapes of the plugin: their name and icon in the layers panel         |
 | `addCommand(command)`                                  | Command: palette, shortcut, help, context menu                                    |
 | `listenTo(target, event, handler)`                     | Listener of the drawer, of a Konva node or of a DOM element, removed by `destroy` |
 | `isEnabled`                                            | False in read only, or while disabled by `forceDisabled`                          |
@@ -171,6 +173,21 @@ class StampWidget extends BaseWidget {
 | `clearSelection()`                                  | Nothing selected                                                                                                                                                                   |
 
 `ShapeWidget` draws in the dragged box: it creates the shape on press, updates it while the pointer moves (shared live), removes it after a simple click, places it in frames, saves the change and gives back the selection tool. The tool implements `createShape(start)` and `updateShape(shape, start, end, constrain)`, may implement `onDrawEnd(shape)`, and gets the options panel of shape tools (stroke, background with `hasFill`, width, opacity) with `shapeStyle`.
+
+`PathShapeWidget` draws a shape of its own outline: give the name of its shapes and its path in a box of width and height 1 (absolute `M`, `L`, `C` and `Z` commands), the tool scales it to the dragged box (a square with Shift). Its shapes behave as the triangles and diamonds of the library: background color, dashed or dotted stroke, a text written inside, arrows linked to their outline, a click inside selects them; a drawer without the plugin shows them the same.
+
+```js
+import { PathShapeWidget } from '@fabwcie/free-drawing';
+
+class BadgeWidget extends PathShapeWidget {
+  shapeName = 'badge'; // name of its shapes, given with `shapeName.pathShape`
+  path = 'M0.5 0L1 0.3L1 1L0 1L0 0.3Z'; // square, its top corners cut
+
+  constructor(drawer) {
+    super(drawer, 'badge', 'Badge', badgeIcon, 'g');
+  }
+}
+```
 
 Tools are placed at their place in the `widgets` and `widgetGroups` options of the app, else at the end of the toolbar:
 
@@ -244,6 +261,12 @@ stamp.add(new Text({ name: shapeName.text, text: '✓' })); // edited by double 
 drawer.addShape(stamp); // ids, hit regions, moved with the selection tool
 drawer.placeInFrames([stamp]); // in the frame under it
 drawer.stage.fire('change'); // saved, history, collaboration, events
+```
+
+Give the type of these shapes with `addShapeType` in the constructor: the layers panel and screen readers name them by their type in the language of the drawer, with its icon in the layers panel (else the name and icon of the shape of the library: "Group", or "Shape" for the shapes of a `PathShapeWidget`). A name given by the user still comes first; do not set the `label` attribute, it is that name, in one language.
+
+```js
+this.addShapeType({ name: 'stamp', label: 'tools.stamp', icon: stampIcon }); // label: key of a text, or a text
 ```
 
 Attributes of shapes are saved with them (`shape.setAttr('rating', 4)`), and found again with `drawer.drawLayer.find('.stamp')`. `drawer.getPointerPosition()` gives the pointer in drawing coordinates, `drawer.getSelectedShapes()` the selection, `drawer.getWidget<SelectWidget>('selection')?.select(shapes)` selects shapes.

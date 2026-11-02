@@ -11,17 +11,18 @@ import {
   type DrawingShape,
   type SelectWidget,
 } from '@fabwcie/free-drawing';
-import { selectStampsIcon, stampIcon } from './icons';
+import { selectStampsIcon, stampIcon, zoneIcon } from './icons';
 import { translations } from './translations';
 import type { StampsOptions } from './types';
 import { StampWidget } from './widgets/StampWidget';
-import { ZoneWidget } from './widgets/ZoneWidget';
+import { ZoneWidget, zoneName } from './widgets/ZoneWidget';
 
 /**
  * Name marking stamps among the names of the library. Shapes of plugins are shapes of the library (here a group of an
  * ellipse and a text): files, links, history, export and collaboration handle them without anything else to do. Names
  * of the library (`shapeName.group`, `shapeName.ellipse`, `shapeName.text`) keep their behavior: options panel, text
- * edited by double click...
+ * edited by double click... This one is the type of the shapes of the plugin (`addShapeType`): name and icon in the
+ * layers panel. A drawer without the plugin shows them as shapes of the library
  */
 export const stampName = 'stamp';
 
@@ -30,7 +31,7 @@ export const stampName = 'stamp';
  * stamps given by the app. It shows every part of a plugin:
  * 1. static `pluginName` and `requires`;
  * 2. options of the app (`getOptions`);
- * 3. constructor, before the toolbar: texts (`addTranslations`) and tools (`addWidget`);
+ * 3. constructor, before the toolbar: texts (`addTranslations`), tools (`addWidget`) and types of shapes (`addShapeType`);
  * 4. `init`, once the drawer is created (may be asynchronous): commands (`addCommand`) and listeners (`listenTo`);
  * 5. `afterInit`, `destroy`;
  * 6. enabled state (`isEnabled`, `forceDisabled`, `clearForceDisabled`), texts (`t`);
@@ -78,6 +79,10 @@ export class StampsPlugin extends Plugin {
     // tools: at their place in the `widgets` (and `widgetGroups`) drawer option, else at the end of the toolbar
     this.addWidget('stamp', StampWidget);
     this.addWidget('zone', ZoneWidget);
+    // types of the shapes of the plugin: their name in the layers panel and for screen readers, in the language of the
+    // drawer, and their icon in the layers panel
+    this.addShapeType({ name: stampName, label: 'tools.stamp', icon: stampIcon });
+    this.addShapeType({ name: zoneName, label: 'tools.zone', icon: zoneIcon });
   }
 
   // 4. Init: drawer created ---------------------------------------------------------------------------------------
@@ -176,13 +181,8 @@ export class StampsPlugin extends Plugin {
     if (!this.isEnabled) return null;
 
     const { size, symbols, colors } = this.options;
-    // name in the layers panel (`label` attribute), in the language of the drawer
-    const stamp = new Group({
-      name: `${shapeName.group} ${stampName}`,
-      x: point.x,
-      y: point.y,
-      label: this.t('tools.stamp'),
-    });
+    // named as a group of the library (moved, selected and exported as one) and as a stamp (type of the plugin)
+    const stamp = new Group({ name: `${shapeName.group} ${stampName}`, x: point.x, y: point.y });
 
     stamp.add(
       new Ellipse({

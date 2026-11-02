@@ -5,8 +5,8 @@
  * tools its tests are run with in the repository of the library (tests check they stay the same)
  */
 export const versions = {
-  /** @fabwcie/free-drawing: plugins, `getOptions` of options given with the class, `getPointerPosition` */
-  library: '^8.0.0',
+  /** @fabwcie/free-drawing: plugins, `getOptions` of options given with the class, `getPointerPosition`, `addShapeType` (8.4) */
+  library: '^8.4.0',
   /** Konva, peer dependency of the library */
   konva: '^10.9.0',
   /** TypeScript */

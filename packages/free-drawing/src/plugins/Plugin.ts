@@ -5,6 +5,7 @@ import type {
   PluginCommand,
   PluginListener,
   PluginRequirement,
+  PluginShapeType,
   WidgetClass,
 } from '@/@types/plugin';
 import type { BaseWidget } from '@/components/toolbar/widgets/BaseWidget';
@@ -154,6 +155,18 @@ export abstract class Plugin {
   addWidget(id: string, widget: WidgetClass) {
     this.drawer.plugins._addWidget(this, id, widget);
     this.#widgets.push(id);
+  }
+
+  /**
+   * Type of the shapes of the plugin: shapes having its name get its label (layers panel, screen readers) and its icon
+   * (layers panel), in the language of the drawer (a `label` attribute would be the name given by the user, in one
+   * language). Call it in the constructor. Shapes of plugins are shapes of the library (rectangles, groups, path shapes
+   * of `PathShapeWidget`...) with a name of the plugin: a drawer without the plugin shows them, with the name of the
+   * shape of the library
+   * @param type Name of the shapes, label and icon
+   */
+  addShapeType(type: PluginShapeType) {
+    this.drawer.plugins._addShapeType(this, type);
   }
 
   /**

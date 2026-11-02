@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Each commit updates this file and the package version ([semver](https://semver.org/)).
 
+## [8.4.0](https://github.com/fabienwnklr/free-drawing/compare/v8.3.1...v8.4.0) (2026-11-02)
+
+
+### Features
+
+* **plugins:** `addShapeType({ name, label, icon })` gives the type of the shapes of a plugin: the layers panel and screen readers name them by their type in the language of the drawer, with its icon in the layers panel (before: the name of the shape of the library, "Group" or "Path", or a `label` attribute in one language, taken for a name given by the user)
+* **plugins:** path shapes of plugins (a `PathShapeWidget` with its own `shapeName` and `path`) behave as the path shapes of the library: background color, dashed and dotted strokes, a text written inside, arrows linked to their outline, a click inside selects them, named "Shape" without type; also in a drawer without the plugin (named `shapeName.pathShape` too)
+
 ## [8.3.1](https://github.com/fabienwnklr/free-drawing/compare/v8.3.0...v8.3.1) (2026-10-30)
 
 

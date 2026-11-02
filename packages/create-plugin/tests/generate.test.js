@@ -96,6 +96,11 @@ describe('Generated plugin', () => {
     ]);
     expect(plugin).not.toContain('this.addCommand(');
     expect(plugin).toContain('const [color, size] = [defaultColor, defaultSize];');
+    // shapes named by their type, in the language of the drawer (not by a `label` attribute of one language)
+    expect(plugin).toContain(
+      "this.addShapeType({ name: stickyNotesName, label: 'stickyNotes.name', icon: pluginIcon });"
+    );
+    expect(plugin).not.toContain('label: this.t(');
     expect(JSON.parse(files.get('package.json')).devDependencies).not.toHaveProperty('vitest');
   });
 
